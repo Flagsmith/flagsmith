@@ -1,6 +1,5 @@
 from django.conf.urls import url, include
 
-from environments.views import Identify
 from features.views import SDKFeatureStates
 
 urlpatterns = [
@@ -14,7 +13,6 @@ urlpatterns = [
         url(r'^e2etests/', include('e2etests.urls')),
 
         # Client SDK urls
-        url(r'^identify', Identify.as_view()),
         url(r'^flags/(?P<identifier>\w+)', SDKFeatureStates.as_view()),
         url(r'^flags/', SDKFeatureStates.as_view()),
 
