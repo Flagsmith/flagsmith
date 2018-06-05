@@ -11,7 +11,7 @@ from rest_framework_swagger.renderers import SwaggerUIRenderer, OpenAPIRenderer
 
 @api_view()
 @renderer_classes([SwaggerUIRenderer, OpenAPIRenderer, renderers.CoreJSONRenderer])
-@authentication_classes((TokenAuthentication, SessionAuthentication))
+@authentication_classes((SessionAuthentication,))
 @permission_classes((AllowAny,))
 @schema(None)
 def schema_view(request):

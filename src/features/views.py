@@ -168,8 +168,6 @@ class FeatureStateViewSet(viewsets.ModelViewSet):
 
 class SDKFeatureStates(GenericAPIView):
     serializer_class = FeatureStateSerializerFull
-    # Endpoint is unauthenticated but need to override authentication classes to avoid csrf errors
-    authentication_classes = (TokenAuthentication,)
     permission_classes = (AllowAny,)
 
     schema = AutoSchema(
