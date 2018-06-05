@@ -96,6 +96,10 @@ The dependency then needs to be added to the relevant requirements*.txt files as
 - Django 1.11.13
 - DjangoRestFramework 3.8.2 
 
+## Documentation
+
+Further documentation can be found [here](https://docs.bullet-train.io). 
+
 ## Contributing
 
 Please read [CONTRIBUTING.md](https://gist.github.com/kyle-ssg/c36a03aebe492e45cbd3eefb21cb0486) 
