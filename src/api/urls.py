@@ -11,6 +11,7 @@ urlpatterns = [
         url(r'^users/', include('users.urls')),
         url(r'^auth/', include('rest_auth.urls')),
         url(r'^auth/register/', include('rest_auth.registration.urls')),
+        url(r'^e2etests/', include('e2etests.urls')),
 
         # Client SDK urls
         url(r'^identify', Identify.as_view()),

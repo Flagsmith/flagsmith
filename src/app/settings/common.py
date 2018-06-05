@@ -62,6 +62,7 @@ INSTALLED_APPS = [
     'features',
     'rest_framework_swagger',
     'docs',
+    'e2etests'
 ]
 
 SITE_ID = 1
@@ -160,6 +161,7 @@ STATIC_ROOT = os.path.join(PROJECT_ROOT, '../../static/')
 CORS_ORIGIN_ALLOW_ALL = True
 CORS_ALLOW_HEADERS = default_headers + (
     'X-Environment-Key',
+    'X-E2E-Test-Auth-Token'
 )
 
 # Used on init to create admin user for the site, update accordingly before hitting /auth/init
@@ -180,3 +182,6 @@ SENDGRID_API_KEY = os.environ['SENDGRID_API_KEY']
 SWAGGER_SETTINGS = {
     "SHOW_REQUEST_HEADERS": True
 }
+
+# Email associated with user that is used by front end for end to end testing purposes
+FE_E2E_TEST_USER_EMAIL = "nightwatch@solidstategroup.com"
