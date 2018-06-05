@@ -1,0 +1,7 @@
+Hi there,
+
+You have been invited to join {{ org_name }} on Bullet Train. Please click on the link below to accept.
+
+{{ invite_url }}
+
+Bullet Train team

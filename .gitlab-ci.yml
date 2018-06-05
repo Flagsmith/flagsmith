@@ -1,0 +1,17 @@
+stages:
+    - deploydevelop
+    - deploymaster
+
+deploydevelop:
+    image: ilyasemenov/gitlab-ci-git-push
+    stage: deploydevelop
+    script: git-push dokku@dokku1.solidstategroup.com:bullet-train-api-dev
+    only:
+        - develop
+
+deploymaster:
+    image: ilyasemenov/gitlab-ci-git-push
+    stage: deploymaster
+    script: git-push dokku@dokku1.solidstategroup.com:bullet-train-api
+    only:
+        - master

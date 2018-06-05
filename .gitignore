@@ -1,0 +1,10 @@
+static/
+**/staticfiles/*
+*db.sqlite3*
+venv
+.venv
+*.pyc
+.idea
+.vscode
+*.log
+checkstyle.txt
