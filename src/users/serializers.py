@@ -65,4 +65,4 @@ class UserRegisterSerializer(RegisterSerializer):
 class InviteSerializer(serializers.ModelSerializer):
     class Meta:
         model = Invite
-        fields = ('email', 'organisation', 'frontend_base_url')
+        fields = ('email', 'organisation', 'frontend_base_url', 'invited_by')
