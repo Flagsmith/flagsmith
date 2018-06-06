@@ -163,6 +163,9 @@ CORS_ALLOW_HEADERS = default_headers + (
     'X-E2E-Test-Auth-Token'
 )
 
+DEFAULT_FROM_EMAIL = "noreply@bullet-train.io"
+
+
 # Used on init to create admin user for the site, update accordingly before hitting /auth/init
 ADMIN_EMAIL = "admin@example.com"
 ADMIN_INITIAL_PASSWORD = "password"
@@ -184,3 +187,5 @@ SWAGGER_SETTINGS = {
 
 # Email associated with user that is used by front end for end to end testing purposes
 FE_E2E_TEST_USER_EMAIL = "nightwatch@solidstategroup.com"
+
+

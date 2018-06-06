@@ -1,4 +1,5 @@
 from django.conf.urls import url, include
+from django.views.generic import TemplateView
 
 from features.views import SDKFeatureStates
 
@@ -10,6 +11,7 @@ urlpatterns = [
         url(r'^users/', include('users.urls')),
         url(r'^auth/', include('rest_auth.urls')),
         url(r'^auth/register/', include('rest_auth.registration.urls')),
+        url(r'^account/', include('allauth.urls')),
         url(r'^e2etests/', include('e2etests.urls')),
 
         # Client SDK urls
