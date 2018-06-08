@@ -8,6 +8,16 @@ class FeatureSerializer(serializers.ModelSerializer):
         model = Feature
         fields = "__all__"
 
+    def validate(self, data):
+        data = super(FeatureSerializer, self).validate(data)
+
+        if Feature.objects.filter(project=data['project'], name__iexact=data['name']).exists():
+            raise serializers.ValidationError("Feature with that name already exists for this "
+                                              "project. Note that feature names are case "
+                                              "insensitive.")
+
+        return data
+
 
 class FeatureStateSerializerFull(serializers.ModelSerializer):
     feature = FeatureSerializer()

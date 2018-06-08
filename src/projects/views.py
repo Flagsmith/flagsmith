@@ -53,12 +53,7 @@ class ProjectViewSet(viewsets.ModelViewSet):
             f_serializer = FeatureSerializer(data=data)
 
             if f_serializer.is_valid():
-                try:
-                    f_serializer.save()
-                except IntegrityError:
-                    error = {"detail": "Could not create feature, check that the feature name "
-                                       "is unique"}
-                    return Response(error, status=status.HTTP_400_BAD_REQUEST)
+                f_serializer.save()
                 return Response(f_serializer.data, status=status.HTTP_201_CREATED)
             else:
                 return Response(f_serializer.errors, status=status.HTTP_400_BAD_REQUEST)

@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
 from __future__ import unicode_literals
 
-from django.core.exceptions import ObjectDoesNotExist
-from django.db import models
+from django.core.exceptions import ObjectDoesNotExist, ValidationError, NON_FIELD_ERRORS
+from django.db import models, IntegrityError
 
 from projects.models import Project
 
@@ -48,10 +48,24 @@ class Feature(models.Model):
             FeatureState.objects.create(feature=self, environment=env, identity=None,
                                         enabled=self.default_enabled)
 
-    def __str__(self):
-        return "Project %s - Feature %s" % (self.project.name, self.name)
+    def validate_unique(self, *args, **kwargs):
+        """
+        Checks unique constraints on the model and raises ``ValidationError``
+        if any failed.
+        """
+        super(Feature, self).validate_unique(*args, **kwargs)
 
-    def __unicode__(self):
+        if Feature.objects.filter(project=self.project, name__iexact=self.name).exists():
+            raise ValidationError(
+                {
+                    NON_FIELD_ERRORS: [
+                        "Feature with that name already exists for this project. Note that feature "
+                        "names are case insensitive.",
+                    ],
+                }
+            )
+
+    def __str__(self):
         return "Project %s - Feature %s" % (self.project.name, self.name)
 
 
