@@ -61,16 +61,6 @@ If you're running the application using a Heroku-ish platform, you'll need to ed
 `app.settings.master`. If you're deploying itusing Docker, you'll need to update this value in 
 `app.settings.master-docker`.
 
-NOTE: It is important to also set an environment variable on whatever platform you are using for 
-`DJANGO_SECRET_KEY`. There is a function to create one in `app.settings.common` if none exists in 
-the environment variables, however, this is not suitable for use in production. To generate a new 
-secret key, you can use the function defined in `src/secret-key-gen.py` by simply running it from a 
-command prompt: 
-
-```
-python secret-key-gen.py 
-```
-
 ### Using Docker
 The application can be configured to run using docker with simply by running the following command:
 
@@ -79,7 +69,27 @@ docker-compose up
 ``` 
 
 This will use some default settings created in the `docker-compose.yml` file located in the root of 
-the project. These should be changed before using in any production environments.  
+the project. These should be changed before using in any production environments.
+
+### Environment Variables
+The application relies on the following environment variables to run: 
+
+* `DJANGO_ALLOWED_HOSTS`: comma separated list of hosts the application will run on in the given environment
+* `DJANGO_SETTINGS_MODULE`: python path to settings file for the given environment, e.g. "app.settings.develop"
+* `SENDGRID_API_KEY`: API key from sendgrid account which will need to be set up for emails to be sent from platform successfully
+* `DATABASE_URL`: required by develop and master environments, should be a standard format database url e.g. postgres://user:password@host:port/db_name
+* `DJANGO_SECRET_KEY`: see 'Creating a secret key' section below
+
+### Creating a secret key
+It is important to also set an environment variable on whatever platform you are using for 
+`DJANGO_SECRET_KEY`. There is a function to create one in `app.settings.common` if none exists in 
+the environment variables, however, this is not suitable for use in production. To generate a new 
+secret key, you can use the function defined in `src/secret-key-gen.py` by simply running it from a 
+command prompt: 
+
+```
+python secret-key-gen.py 
+``` 
 
 ## Adding dependencies
 To add a python dependency, run the following commands:
