@@ -7,7 +7,7 @@ from django.db import models
 from projects.models import Project
 
 
-# Feature State Types
+# Feature Types
 FLAG = 'FLAG'
 CONFIG = 'CONFIG'
 
@@ -18,12 +18,18 @@ BOOLEAN = "bool"
 
 
 class Feature(models.Model):
+    FEATURE_TYPES = (
+        (FLAG, 'Feature Flag'),
+        (CONFIG, 'Remote Config')
+    )
+
     name = models.CharField(max_length=2000)
     created_date = models.DateTimeField('DateCreated', auto_now_add=True)
     project = models.ForeignKey(Project, related_name='features')
     initial_value = models.CharField(max_length=2000, null=True, default=None)
     description = models.TextField(null=True)
     default_enabled = models.BooleanField(default=False)
+    type = models.CharField(max_length=50, choices=FEATURE_TYPES, default=FLAG)
 
     class Meta:
         ordering = ['id']
@@ -50,18 +56,12 @@ class Feature(models.Model):
 
 
 class FeatureState(models.Model):
-    FEATURE_STATE_TYPES = (
-        (FLAG, 'Feature Flag'),
-        (CONFIG, 'Remote Config')
-    )
-
     feature = models.ForeignKey(Feature, related_name='feature_states')
     environment = models.ForeignKey('environments.Environment', related_name='feature_states',
                                     null=True)
     identity = models.ForeignKey('environments.Identity', related_name='identity_features',
                                  null=True, default=None, blank=True)
     enabled = models.BooleanField(default=False)
-    type = models.CharField(max_length=50, choices=FEATURE_STATE_TYPES, default=FLAG)
 
     class Meta:
         unique_together = ("feature", "environment", "identity")
