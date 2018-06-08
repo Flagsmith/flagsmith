@@ -7,15 +7,14 @@ from django.db import models
 from projects.models import Project
 
 
+# Feature State Types
+FLAG = 'FLAG'
+CONFIG = 'CONFIG'
+
+# Feature State Value Types
 INTEGER = "int"
 STRING = "unicode"
 BOOLEAN = "bool"
-
-FEATURE_STATE_VALUE_TYPES = (
-    (INTEGER, 'Integer'),
-    (STRING, 'String'),
-    (BOOLEAN, 'Boolean')
-)
 
 
 class Feature(models.Model):
@@ -39,9 +38,8 @@ class Feature(models.Model):
         # create feature states for all environments in the project
         environments = self.project.environments.all()
         for env in environments:
-            feature_state = FeatureState(feature=self, environment=env, identity=None,
-                                         enabled=False)
-            feature_state.save()
+            FeatureState.objects.create(feature=self, environment=env, identity=None,
+                                        enabled=False)
 
     def __str__(self):
         return "Project %s - Feature %s" % (self.project.name, self.name)
@@ -51,12 +49,18 @@ class Feature(models.Model):
 
 
 class FeatureState(models.Model):
+    FEATURE_STATE_TYPES = (
+        (FLAG, 'Feature Flag'),
+        (CONFIG, 'Remote Config')
+    )
+
     feature = models.ForeignKey(Feature, related_name='feature_states')
     environment = models.ForeignKey('environments.Environment', related_name='feature_states',
                                     null=True)
     identity = models.ForeignKey('environments.Identity', related_name='identity_features',
                                  null=True, default=None, blank=True)
     enabled = models.BooleanField(default=False)
+    type = models.CharField(max_length=50, choices=FEATURE_STATE_TYPES, default=FLAG)
 
     class Meta:
         unique_together = ("feature", "environment", "identity")
@@ -121,6 +125,12 @@ class FeatureState(models.Model):
 
 
 class FeatureStateValue(models.Model):
+    FEATURE_STATE_VALUE_TYPES = (
+        (INTEGER, 'Integer'),
+        (STRING, 'String'),
+        (BOOLEAN, 'Boolean')
+    )
+
     feature_state = models.OneToOneField(FeatureState, related_name='feature_state_value')
     type = models.CharField(max_length=10, choices=FEATURE_STATE_VALUE_TYPES, default=STRING,
                             null=True, blank=True)
