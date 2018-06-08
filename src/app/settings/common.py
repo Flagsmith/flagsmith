@@ -28,6 +28,11 @@ if 'DJANGO_SECRET_KEY' not in os.environ:
 
 SECRET_KEY = os.environ['DJANGO_SECRET_KEY']
 
+if 'DJANGO_ALLOWED_HOSTS' in os.environ:
+    ALLOWED_HOSTS = os.environ['DJANGO_ALLOWED_HOSTS'].split(',')
+else:
+    ALLOWED_HOSTS = []
+
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 

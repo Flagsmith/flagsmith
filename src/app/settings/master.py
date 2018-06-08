@@ -3,8 +3,6 @@ import os
 
 import dj_database_url
 
-ALLOWED_HOSTS = [os.environ['DJANGO_ALLOWED_HOST']]
-
 DATABASES['default'] = dj_database_url.parse(os.environ['DATABASE_URL'])
 
 DEBUG = False
