@@ -50,7 +50,6 @@ class EnvironmentViewSet(viewsets.ModelViewSet):
         return queryset
 
 
-
 class IdentityViewSet(viewsets.ModelViewSet):
     """
     list:
@@ -96,51 +95,4 @@ class IdentityViewSet(viewsets.ModelViewSet):
         self.perform_create(serializer)
         headers = self.get_success_headers(serializer.data)
         return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
-
-
-class Identify(GenericAPIView):
-    """
-    Identify an identity.
-    """
-    serializer_class = IdentitySerializer
-    # Endpoint is unauthenticated but need to override authentication classes to avoid csrf errors
-    authentication_classes = (TokenAuthentication,)
-    permission_classes = (AllowAny,)
-
-    schema = AutoSchema(
-        manual_fields=[
-            coreapi.Field("X-Environment-Key", location="header",
-                          description="API Key for an Environment"),
-            coreapi.Field("environment", required=False, location="body")
-        ]
-    )
-
-    def post(self, request, *args, **kwargs):
-        if 'HTTP_X_ENVIRONMENT_KEY' not in request.META:
-            error = {"detail": "Environment Key header not provided"}
-            return Response(error, status=status.HTTP_400_BAD_REQUEST)
-
-        if 'identifier' not in request.data:
-            error = {"detail": "Identifier not provided"}
-            return Response(error, status=status.HTTP_400_BAD_REQUEST)
-
-        environment = get_object_or_404(Environment, api_key=request.META['HTTP_X_ENVIRONMENT_KEY'])
-
-        identifier = request.data["identifier"]
-
-        if Identity.objects.filter(identifier=identifier, environment=environment).count() > 0:
-            error = {"detail": "Identity with that identifier already exists for this environment"}
-            return Response(error, status=status.HTTP_400_BAD_REQUEST)
-
-        data = {
-            "environment": environment.id,
-            "identifier": identifier
-        }
-
-        serializer = self.get_serializer(data=data)
-        if serializer.is_valid():
-            serializer.save()
-            return Response(serializer.data, status=status.HTTP_201_CREATED)
-        else:
-            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 

@@ -2,7 +2,7 @@ from common import *
 import os
 
 
-ALLOWED_HOSTS = ['.ngrok.io', '127.0.0.1', 'localhost']
+ALLOWED_HOSTS.extend(['.ngrok.io', '127.0.0.1', 'localhost'])
 
 DATABASES = {
     'default': {

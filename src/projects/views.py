@@ -6,7 +6,7 @@ from rest_framework import viewsets, status
 from rest_framework.decorators import detail_route
 from rest_framework.response import Response
 
-from features.models import Feature, FeatureState
+from features.models import Feature, FeatureState, FLAG
 from features.serializers import FeatureSerializer
 from environments.serializers import EnvironmentSerializerLight
 from projects.models import Project
@@ -43,18 +43,17 @@ class ProjectViewSet(viewsets.ModelViewSet):
                 "initial_value":
                     request.data["initial_value"] if "initial_value" in request.data else None,
                 "description":
-                    request.data["description"] if "description" in request.data else None
+                    request.data["description"] if "description" in request.data else None,
+                "type":
+                    request.data["type"] if "type" in request.data else FLAG,
+                "default_enabled":
+                    request.data["default_enabled"] if "default_enabled" in request.data else False,
             }
 
             f_serializer = FeatureSerializer(data=data)
 
             if f_serializer.is_valid():
-                try:
-                    f_serializer.save()
-                except IntegrityError:
-                    error = {"detail": "Could not create feature, check that the feature name "
-                                       "is unique"}
-                    return Response(error, status=status.HTTP_400_BAD_REQUEST)
+                f_serializer.save()
                 return Response(f_serializer.data, status=status.HTTP_201_CREATED)
             else:
                 return Response(f_serializer.errors, status=status.HTTP_400_BAD_REQUEST)

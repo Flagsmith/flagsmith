@@ -1,4 +1,6 @@
 from django.conf import settings
+from django.contrib.sites.shortcuts import get_current_site
+from django.shortcuts import redirect
 from django.views import View
 from django.http import HttpResponse
 from rest_framework import viewsets, status
@@ -41,3 +43,10 @@ class FFAdminUserViewSet(viewsets.ModelViewSet):
         invite.delete()
 
         return Response(OrganisationSerializer(organisation).data, status=status.HTTP_200_OK)
+
+
+def password_reset_redirect(request, uidb64, token):
+    protocol = "https" if request.is_secure() else "https"
+    current_site = get_current_site(request)
+    domain = current_site.domain
+    return redirect(protocol + "://" + domain + "/password-reset/" + uidb64 + "/" + token)

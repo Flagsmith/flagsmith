@@ -28,6 +28,11 @@ if 'DJANGO_SECRET_KEY' not in os.environ:
 
 SECRET_KEY = os.environ['DJANGO_SECRET_KEY']
 
+if 'DJANGO_ALLOWED_HOSTS' in os.environ:
+    ALLOWED_HOSTS = os.environ['DJANGO_ALLOWED_HOSTS'].split(',')
+else:
+    ALLOWED_HOSTS = []
+
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
@@ -62,6 +67,7 @@ INSTALLED_APPS = [
     'features',
     'rest_framework_swagger',
     'docs',
+    'e2etests'
 ]
 
 SITE_ID = 1
@@ -75,7 +81,6 @@ REST_FRAMEWORK = {
     ],
     'DEFAULT_AUTHENTICATION_CLASSES': (
         'rest_framework.authentication.TokenAuthentication',
-        'rest_framework.authentication.SessionAuthentication'
     ),
     'PAGE_SIZE': 10,
     'UNICODE_JSON': False,
@@ -160,7 +165,11 @@ STATIC_ROOT = os.path.join(PROJECT_ROOT, '../../static/')
 CORS_ORIGIN_ALLOW_ALL = True
 CORS_ALLOW_HEADERS = default_headers + (
     'X-Environment-Key',
+    'X-E2E-Test-Auth-Token'
 )
+
+DEFAULT_FROM_EMAIL = "noreply@bullet-train.io"
+
 
 # Used on init to create admin user for the site, update accordingly before hitting /auth/init
 ADMIN_EMAIL = "admin@example.com"
@@ -180,3 +189,8 @@ SENDGRID_API_KEY = os.environ['SENDGRID_API_KEY']
 SWAGGER_SETTINGS = {
     "SHOW_REQUEST_HEADERS": True
 }
+
+# Email associated with user that is used by front end for end to end testing purposes
+FE_E2E_TEST_USER_EMAIL = "nightwatch@solidstategroup.com"
+
+

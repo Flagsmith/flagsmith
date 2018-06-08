@@ -26,9 +26,8 @@ class Environment(models.Model):
         # also create feature states for all features in the project
         features = self.project.features.all()
         for feature in features:
-            feature_state = FeatureState(feature=feature, environment=self, identity=None,
-                                         enabled=False)
-            feature_state.save()
+            FeatureState.objects.create(feature=feature, environment=self, identity=None,
+                                        enabled=feature.default_enabled)
 
     def __str__(self):
         return "Project %s - Environment %s" % (self.project.name, self.name)

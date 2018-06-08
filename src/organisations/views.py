@@ -61,7 +61,7 @@ class OrganisationViewSet(viewsets.ModelViewSet):
 
         for email in request.data["emails"]:
             invites.append({"email": email, "frontend_base_url": request.data["frontend_base_url"],
-                            "organisation": organisation.id})
+                            "organisation": organisation.id, "invited_by": self.request.user.id})
 
         invites_serializer = InviteSerializer(data=invites, many=True)
 

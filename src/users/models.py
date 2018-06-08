@@ -43,7 +43,6 @@ class UserManager(BaseUserManager):
 
 
 class FFAdminUser(AbstractUser):
-
     organisations = models.ManyToManyField(Organisation, related_name="users", blank=True)
     email = models.EmailField(unique=True, null=False)
     objects = UserManager()
@@ -54,10 +53,18 @@ class FFAdminUser(AbstractUser):
     class Meta:
         ordering = ['id']
 
-    def __str__(self):
-        return "%s %s" % (self.first_name, self.last_name)
+    def get_full_name(self):
+        if self.first_name:
+            full_name = self.first_name
+            if self.last_name:
+                full_name += " " + self.last_name
+                return full_name
+            else:
+                return full_name
+        else:
+            return None
 
-    def __unicode__(self):
+    def __str__(self):
         return "%s %s" % (self.first_name, self.last_name)
 
 
@@ -67,17 +74,18 @@ class Invite(models.Model):
     date_created = models.DateTimeField('DateCreated', auto_now_add=True)
     organisation = models.ForeignKey(Organisation, on_delete=models.CASCADE)
     frontend_base_url = models.CharField(max_length=500, null=False)
+    invited_by = models.ForeignKey(FFAdminUser, related_name='sent_invites', null=True)
 
     class Meta:
         unique_together = ('email', 'organisation')
-
-    def get_invite_uri(self):
-        return self.frontend_base_url + str(self.hash)
 
     def save(self, *args, **kwargs):
         # send email invite before saving invite
         self.send_invite_mail()
         super(Invite, self).save(*args, **kwargs)
+
+    def get_invite_uri(self):
+        return self.frontend_base_url + str(self.hash)
 
     def send_invite_mail(self):
         context = {
@@ -88,7 +96,19 @@ class Invite(models.Model):
         html_template = get_template('users/invite_to_org.html')
         plaintext_template = get_template('users/invite_to_org.txt')
 
-        subject = 'You have been invited to join an organisation on Bullet Train'
+        subject_string_with_name = '%s has invited you to join the organisation \'%s\' on Bullet Train'
+        subject_string_without_name = 'You have been invited to join the organisation \'%s\' on Bullet Train'
+
+        if self.invited_by:
+            invited_by_name = self.invited_by.get_full_name()
+        else:
+            invited_by_name = None
+
+        if invited_by_name:
+            subject = subject_string_with_name % (invited_by_name, self.organisation.name)
+        else:
+            subject = subject_string_without_name % self.organisation.name
+
         from_email = 'noreply@bullettrain.com'
         to = self.email
 
@@ -99,7 +119,4 @@ class Invite(models.Model):
         msg.send()
 
     def __str__(self):
-        return "%s %s" % (self.email, self.organisation.name)
-
-    def __unicode__(self):
         return "%s %s" % (self.email, self.organisation.name)

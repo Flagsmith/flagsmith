@@ -1,6 +1,5 @@
 import coreapi
 from rest_framework import status, viewsets
-from rest_framework.authentication import TokenAuthentication
 from rest_framework.generics import GenericAPIView, get_object_or_404
 from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
@@ -168,8 +167,6 @@ class FeatureStateViewSet(viewsets.ModelViewSet):
 
 class SDKFeatureStates(GenericAPIView):
     serializer_class = FeatureStateSerializerFull
-    # Endpoint is unauthenticated but need to override authentication classes to avoid csrf errors
-    authentication_classes = (TokenAuthentication,)
     permission_classes = (AllowAny,)
 
     schema = AutoSchema(

@@ -1,6 +1,6 @@
 from django.conf.urls import url, include
+from django.views.generic import TemplateView
 
-from environments.views import Identify
 from features.views import SDKFeatureStates
 
 urlpatterns = [
@@ -11,9 +11,10 @@ urlpatterns = [
         url(r'^users/', include('users.urls')),
         url(r'^auth/', include('rest_auth.urls')),
         url(r'^auth/register/', include('rest_auth.registration.urls')),
+        url(r'^account/', include('allauth.urls')),
+        url(r'^e2etests/', include('e2etests.urls')),
 
         # Client SDK urls
-        url(r'^identify', Identify.as_view()),
         url(r'^flags/(?P<identifier>\w+)', SDKFeatureStates.as_view()),
         url(r'^flags/', SDKFeatureStates.as_view()),
 

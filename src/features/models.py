@@ -1,29 +1,35 @@
 # -*- coding: utf-8 -*-
 from __future__ import unicode_literals
 
-from django.core.exceptions import ObjectDoesNotExist
-from django.db import models
+from django.core.exceptions import ObjectDoesNotExist, ValidationError, NON_FIELD_ERRORS
+from django.db import models, IntegrityError
 
 from projects.models import Project
 
 
+# Feature Types
+FLAG = 'FLAG'
+CONFIG = 'CONFIG'
+
+# Feature State Value Types
 INTEGER = "int"
 STRING = "unicode"
 BOOLEAN = "bool"
 
-FEATURE_STATE_VALUE_TYPES = (
-    (INTEGER, 'Integer'),
-    (STRING, 'String'),
-    (BOOLEAN, 'Boolean')
-)
-
 
 class Feature(models.Model):
+    FEATURE_TYPES = (
+        (FLAG, 'Feature Flag'),
+        (CONFIG, 'Remote Config')
+    )
+
     name = models.CharField(max_length=2000)
     created_date = models.DateTimeField('DateCreated', auto_now_add=True)
     project = models.ForeignKey(Project, related_name='features')
     initial_value = models.CharField(max_length=2000, null=True, default=None)
     description = models.TextField(null=True)
+    default_enabled = models.BooleanField(default=False)
+    type = models.CharField(max_length=50, choices=FEATURE_TYPES, default=FLAG)
 
     class Meta:
         ordering = ['id']
@@ -39,14 +45,27 @@ class Feature(models.Model):
         # create feature states for all environments in the project
         environments = self.project.environments.all()
         for env in environments:
-            feature_state = FeatureState(feature=self, environment=env, identity=None,
-                                         enabled=False)
-            feature_state.save()
+            FeatureState.objects.create(feature=self, environment=env, identity=None,
+                                        enabled=self.default_enabled)
+
+    def validate_unique(self, *args, **kwargs):
+        """
+        Checks unique constraints on the model and raises ``ValidationError``
+        if any failed.
+        """
+        super(Feature, self).validate_unique(*args, **kwargs)
+
+        if Feature.objects.filter(project=self.project, name__iexact=self.name).exists():
+            raise ValidationError(
+                {
+                    NON_FIELD_ERRORS: [
+                        "Feature with that name already exists for this project. Note that feature "
+                        "names are case insensitive.",
+                    ],
+                }
+            )
 
     def __str__(self):
-        return "Project %s - Feature %s" % (self.project.name, self.name)
-
-    def __unicode__(self):
         return "Project %s - Feature %s" % (self.project.name, self.name)
 
 
@@ -121,6 +140,12 @@ class FeatureState(models.Model):
 
 
 class FeatureStateValue(models.Model):
+    FEATURE_STATE_VALUE_TYPES = (
+        (INTEGER, 'Integer'),
+        (STRING, 'String'),
+        (BOOLEAN, 'Boolean')
+    )
+
     feature_state = models.OneToOneField(FeatureState, related_name='feature_state_value')
     type = models.CharField(max_length=10, choices=FEATURE_STATE_VALUE_TYPES, default=STRING,
                             null=True, blank=True)
