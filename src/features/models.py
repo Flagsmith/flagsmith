@@ -23,6 +23,7 @@ class Feature(models.Model):
     project = models.ForeignKey(Project, related_name='features')
     initial_value = models.CharField(max_length=2000, null=True, default=None)
     description = models.TextField(null=True)
+    default_enabled = models.BooleanField(default=False)
 
     class Meta:
         ordering = ['id']
@@ -39,7 +40,7 @@ class Feature(models.Model):
         environments = self.project.environments.all()
         for env in environments:
             FeatureState.objects.create(feature=self, environment=env, identity=None,
-                                        enabled=False)
+                                        enabled=self.default_enabled)
 
     def __str__(self):
         return "Project %s - Feature %s" % (self.project.name, self.name)
