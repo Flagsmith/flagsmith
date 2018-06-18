@@ -58,7 +58,7 @@ required git repo and pushing the code. The code for running the app is containe
 
 To get it running, you'll need to update the ALLOWED_HOSTS constant in the relevant settings file. 
 If you're running the application using a Heroku-ish platform, you'll need to edit this in 
-`app.settings.master`. If you're deploying itusing Docker, you'll need to update this value in 
+`app.settings.master`. If you're deploying it using Docker, you'll need to update this value in 
 `app.settings.master-docker`.
 
 ### Using Docker

@@ -229,7 +229,7 @@ class SDKFeatureStates(GenericAPIView):
                     error = {"detail": "Given feature not found"}
                     return Response(error, status=status.HTTP_404_NOT_FOUND)
 
-                environment_flag = FeatureState.objects.filter(environment=environment,
+                environment_flag = FeatureState.objects.get(environment=environment,
                                                                identity=None,
                                                                feature=feature)
                 return Response(self.get_serializer(environment_flag).data,
