@@ -1,3 +1,4 @@
+from django.conf import settings
 from django.contrib.auth.base_user import BaseUserManager
 from django.contrib.auth.models import AbstractUser
 from django.core.mail import EmailMultiAlternatives
@@ -109,7 +110,7 @@ class Invite(models.Model):
         else:
             subject = subject_string_without_name % self.organisation.name
 
-        from_email = 'noreply@bullettrain.com'
+        from_email = settings.DEFAULT_FROM_EMAIL
         to = self.email
 
         text_content = plaintext_template.render(context)
