@@ -184,7 +184,7 @@ ACCOUNT_EMAIL_VERIFICATION = 'none'  # TODO: configure email verification
 
 # SendGrid
 EMAIL_BACKEND = 'sgbackend.SendGridBackend'
-SENDGRID_API_KEY = os.environ['SENDGRID_API_KEY']
+SENDGRID_API_KEY = os.environ['SENDGRID_API_KEY'] if 'SENDGRID_API_KEY' in os.environ else None
 
 SWAGGER_SETTINGS = {
     "SHOW_REQUEST_HEADERS": True
