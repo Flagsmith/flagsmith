@@ -4,6 +4,8 @@ import os
 
 ALLOWED_HOSTS.extend(['.ngrok.io', '127.0.0.1', 'localhost'])
 
+DEBUG = True
+
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.sqlite3',
