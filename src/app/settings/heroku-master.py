@@ -3,8 +3,6 @@ import os
 
 import dj_database_url
 
-ALLOWED_HOSTS = [os.environ['DJANGO_ALLOWED_HOST']]
-
 DATABASES['default'] = dj_database_url.parse(os.environ['DATABASE_URL'])
 
 DEBUG = False
@@ -12,22 +10,29 @@ DEBUG = False
 LOGGING = {
     'version': 1,
     'disable_existing_loggers': False,
-    'handlers': {
-        'file': {
-            'level': 'ERROR',
-            'class': 'app.handlers.MakeFileHandler',
-            'filename': 'logs/django.log',
+    'formatters': {
+        'verbose': {
+            'format': '%(levelname)s %(asctime)s %(module)s %(process)d %(thread)d %(message)s'
         },
+        'simple': {
+            'format': '%(levelname)s %(message)s'
+        },
+    },
+    'handlers': {
         'console': {
-            'level': 'DEBUG',
-            'class': 'logging.StreamHandler'
-        }
+            'class': 'logging.StreamHandler',
+            'formatter': 'verbose'
+        },
     },
     'loggers': {
         'django': {
-            'handlers': ['file', 'console'],
-            'level': 'DEBUG',
+            'handlers': ['console'],
             'propagate': True,
+            'level': 'INFO'
         },
-    },
+        'gunicorn': {
+            'handlers': ['console'],
+            'level': 'DEBUG'
+        }
+    }
 }
