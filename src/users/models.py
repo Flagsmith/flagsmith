@@ -65,6 +65,9 @@ class FFAdminUser(AbstractUser):
         else:
             return None
 
+    def get_number_of_organisations(self):
+        return self.organisations.count()
+
     def __str__(self):
         return "%s %s" % (self.first_name, self.last_name)
 
