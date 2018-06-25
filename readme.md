@@ -7,10 +7,9 @@
 The following steps require an instance of postgres to be running locally on the default port (5432)  
 
 ```
-pip install virtualenv
-virtualenv .venv
-source .venv/bin/activate
-pip install -r requirements.txt
+pip install pipenv
+pipenv install
+pipenv shell
 python src/manage.py migrate
 python src/manage.py runserver
 ```
@@ -101,7 +100,7 @@ python secret-key-gen.py
 To add a python dependency, run the following commands:
 
 ```
-pip install <package name>
+pipenv install <package name>
 ```
 
 The dependency then needs to be added to the relevant requirements*.txt files as necessary. 
