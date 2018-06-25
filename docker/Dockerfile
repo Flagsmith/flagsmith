@@ -5,9 +5,11 @@ RUN apt-get update \
         postgresql-client \
     && rm -rf /var/lib/apt/lists/*
 
+RUN pip install pipenv
+
 WORKDIR /usr/src/app
-COPY requirements.txt ./
-RUN pip install -r requirements.txt
+COPY Pipfile* ./
+RUN pipenv install --system --deploy
 COPY src/ .
 
 ENV DJANGO_SETTINGS_MODULE=app.settings.master-docker
