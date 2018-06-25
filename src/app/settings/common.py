@@ -33,9 +33,6 @@ if 'DJANGO_ALLOWED_HOSTS' in os.environ:
 else:
     ALLOWED_HOSTS = []
 
-# SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
-
 import sys
 
 reload(sys)

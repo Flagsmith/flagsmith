@@ -4,6 +4,8 @@
 
 ## Development Environment
 
+The following steps require an instance of postgres to be running locally on the default port (5432)  
+
 ```
 pip install virtualenv
 virtualenv .venv
@@ -38,10 +40,17 @@ these details.
 ## Databases
 Databases are configured in app/settings/\<env\>.py
 
-We use sqlite locally as it's easy to get set up and doesn't require any additional dependencies, 
-etc. In production, the app is configured to use PostgreSQL when running using a Heroku-ish 
-platform. NoSQL database systems will require some more complicated set up as Django is not 
+The app is configured to use PostgreSQL for all environments currently. 
+NoSQL database systems will require some more complicated set up as Django is not 
 designed for use with NoSQL databases.
+
+When running locally, you'll need a local instance of postgres running. The easiest way to do this 
+is to use docker which is achievable with the following command: 
+
+```docker run --name local_postgres -d -P postgres```
+
+You'll also need to ensure that you have a value for POSTGRES_PASSWORD set as an environment 
+variable on you development machine.  
 
 When running on a Heroku-ish platform, the application reads the database connection in production 
 from an environment variable called `DATABASE_URL`. This should be configured in the Heroku-ish 
@@ -56,10 +65,7 @@ When running using Docker, it reads the database configuration from the settings
 The application should run on any Heroku-ish platform (e.g. Dokku, Flynn) by simply adding the 
 required git repo and pushing the code. The code for running the app is contained in the Procfile.
 
-To get it running, you'll need to update the ALLOWED_HOSTS constant in the relevant settings file. 
-If you're running the application using a Heroku-ish platform, you'll need to edit this in 
-`app.settings.master`. If you're deploying it using Docker, you'll need to update this value in 
-`app.settings.master-docker`.
+To get it running, you'll need to add the necessary config variables as outlined below. 
 
 ### Using Docker
 The application can be configured to run using docker with simply by running the following command:
