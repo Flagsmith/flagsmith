@@ -1,7 +1,7 @@
 from common import *
 
 
-ALLOWED_HOSTS = [os.environ['DJANGO_ALLOWED_HOST'], 'localhost']
+ALLOWED_HOSTS.extend(['.ngrok.io', '127.0.0.1', 'localhost'])
 
 DATABASES = {
     'default': {
@@ -19,18 +19,29 @@ DEBUG = False
 LOGGING = {
     'version': 1,
     'disable_existing_loggers': False,
+    'formatters': {
+        'verbose': {
+            'format': '%(levelname)s %(asctime)s %(module)s %(process)d %(thread)d %(message)s'
+        },
+        'simple': {
+            'format': '%(levelname)s %(message)s'
+        },
+    },
     'handlers': {
-        'file': {
-            'level': 'ERROR',
-            'class': 'app.handlers.MakeFileHandler',
-            'filename': 'logs/django.log',
-        }
+        'console': {
+            'class': 'logging.StreamHandler',
+            'formatter': 'verbose'
+        },
     },
     'loggers': {
         'django': {
-            'handlers': ['file'],
-            'level': 'ERROR',
+            'handlers': ['console'],
             'propagate': True,
+            'level': 'INFO'
         },
-    },
+        'gunicorn': {
+            'handlers': ['console'],
+            'level': 'DEBUG'
+        }
+    }
 }
