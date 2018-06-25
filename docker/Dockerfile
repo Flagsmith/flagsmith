@@ -6,8 +6,8 @@ RUN apt-get update \
     && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /usr/src/app
-COPY requirements-docker.txt ./
-RUN pip install -r requirements-docker.txt
+COPY requirements.txt ./
+RUN pip install -r requirements.txt
 COPY src/ .
 
 ENV DJANGO_SETTINGS_MODULE=app.settings.master-docker
