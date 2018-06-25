@@ -10,7 +10,7 @@ class CustomUserAdmin(UserAdmin):
     add_form = CustomUserCreationForm
     form = CustomUserChangeForm
     model = FFAdminUser
-    list_display = ['email']
+    list_display = ['email', 'get_number_of_organisations']
 
     fieldsets = UserAdmin.fieldsets + (
                     (_('Organisations'), {'fields': ('organisations',)}),
