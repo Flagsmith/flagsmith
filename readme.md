@@ -56,10 +56,7 @@ When running using Docker, it reads the database configuration from the settings
 The application should run on any Heroku-ish platform (e.g. Dokku, Flynn) by simply adding the 
 required git repo and pushing the code. The code for running the app is contained in the Procfile.
 
-To get it running, you'll need to update the ALLOWED_HOSTS constant in the relevant settings file. 
-If you're running the application using a Heroku-ish platform, you'll need to edit this in 
-`app.settings.master`. If you're deploying it using Docker, you'll need to update this value in 
-`app.settings.master-docker`.
+To get it running, you'll need to add the necessary config variables as outlined below. 
 
 ### Using Docker
 The application can be configured to run using docker with simply by running the following command:
