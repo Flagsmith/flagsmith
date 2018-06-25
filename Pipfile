@@ -1,0 +1,30 @@
+[[source]]
+url = "https://pypi.org/simple"
+verify_ssl = true
+name = "pypi"
+
+[dev-packages]
+
+[packages]
+appdirs = "*"
+django-cors-headers = "*"
+djangorestframework = "*"
+gunicorn = "*"
+pyparsing = "*"
+requests = "*"
+six = "*"
+whitenoise = "*"
+dj-database-url = "*"
+drf-nested-routers = "*"
+shortuuid = "*"
+django-rest-auth = "*"
+django-allauth = "*"
+sendgrid-django = "*"
+psycopg2-binary = "*"
+coreapi = "*"
+django-rest-swagger = "*"
+Django = "<2.0"
+numpy = "*"
+
+[requires]
+python_version = "2.7"
