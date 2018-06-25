@@ -10,7 +10,7 @@ The following steps require an instance of postgres to be running locally on the
 pip install virtualenv
 virtualenv .venv
 source .venv/bin/activate
-pip install -r requirements-local.txt
+pip install -r requirements.txt
 python src/manage.py migrate
 python src/manage.py runserver
 ```
