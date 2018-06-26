@@ -81,20 +81,17 @@ class FeatureState(models.Model):
         unique_together = ("feature", "environment", "identity")
         ordering = ['id']
 
-    def get_feature_state_value(self):
-        try:
-            value_type = self.feature_state_value.type
-        except ObjectDoesNotExist:
-            return None
-
-        if value_type == INTEGER:
-            return self.feature_state_value.integer_value
-        elif value_type == STRING:
-            return self.feature_state_value.string_value
-        elif value_type == BOOLEAN:
-            return self.feature_state_value.boolean_value
+    def __str__(self):
+        if self.environment is not None:
+            return "Project %s - Environment %s - Feature %s - Enabled: %r" % \
+                   (self.environment.project.name,
+                    self.environment.name, self.feature.name,
+                    self.enabled)
+        elif self.identity is not None:
+            return "Identity %s - Feature %s - Enabled: %r" % (self.identity.identifier,
+                                                               self.feature.name, self.enabled)
         else:
-            return None
+            return "Feature %s - Enabled: %r" % (self.feature.name, self.enabled)
 
     def save(self, *args, **kwargs):
         super(FeatureState, self).save(*args, **kwargs)
@@ -103,6 +100,14 @@ class FeatureState(models.Model):
         if not hasattr(self, 'feature_state_value'):
             FeatureStateValue.objects.create(feature_state=self,
                                              string_value=self.feature.initial_value)
+
+    def create_or_update_feature_state_value(self, value):
+        values = self.generate_feature_state_value_data(value)
+        if hasattr(self, 'feature_state_value'):
+            feature_state_value = FeatureStateValue.objects.update(**values)
+        else:
+            feature_state_value = FeatureStateValue.objects.create(**values)
+        return feature_state_value
 
     def generate_feature_state_value_data(self, value):
         """
@@ -122,21 +127,24 @@ class FeatureState(models.Model):
             # default to type = string if we cannot handle the type correctly
             fsv_dict = {"type": STRING, "string_value": value}
 
-        fsv_dict['feature_state'] = self.id
+        fsv_dict['feature_state'] = self
 
         return fsv_dict
 
-    def __str__(self):
-        if self.environment is not None:
-            return "Project %s - Environment %s - Feature %s - Enabled: %r" % \
-                   (self.environment.project.name,
-                    self.environment.name, self.feature.name,
-                    self.enabled)
-        elif self.identity is not None:
-            return "Identity %s - Feature %s - Enabled: %r" % (self.identity.identifier,
-                                                               self.feature.name, self.enabled)
+    def get_feature_state_value(self):
+        try:
+            value_type = self.feature_state_value.type
+        except ObjectDoesNotExist:
+            return None
+
+        if value_type == INTEGER:
+            return self.feature_state_value.integer_value
+        elif value_type == STRING:
+            return self.feature_state_value.string_value
+        elif value_type == BOOLEAN:
+            return self.feature_state_value.boolean_value
         else:
-            return "Feature %s - Enabled: %r" % (self.feature.name, self.enabled)
+            return None
 
 
 class FeatureStateValue(models.Model):
