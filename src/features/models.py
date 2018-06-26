@@ -104,7 +104,8 @@ class FeatureState(models.Model):
     def create_or_update_feature_state_value(self, value):
         values = self.generate_feature_state_value_data(value)
         if hasattr(self, 'feature_state_value'):
-            feature_state_value = FeatureStateValue.objects.update(**values)
+            FeatureStateValue.objects.filter(pk=self.feature_state_value.id).update(**values)
+            feature_state_value = self.feature_state_value.refresh_from_db()
         else:
             feature_state_value = FeatureStateValue.objects.create(**values)
         return feature_state_value
