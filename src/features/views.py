@@ -43,13 +43,16 @@ class FeatureStateViewSet(viewsets.ModelViewSet):
         environment = self.get_environment_from_request()
         data['environment'] = environment.id
 
+        if not self.kwargs.get('identity_identifier', None):
+            error = {"detail": "Creating feature state must include an identity"}
+            return Response(error, status=status.HTTP_400_BAD_REQUEST)
+
+        identity = self.get_identity_from_request(environment)
+        data['identity'] = identity.id
+
         if not self.validate_feature_provided_and_exists_in_project(environment.project):
             error = {"detail": "Feature not provided or doesn't exist in project"}
             return Response(error, status=status.HTTP_400_BAD_REQUEST)
-
-        if self.kwargs.get('identity_identifier', None):
-            identity = self.get_identity_from_request(environment)
-            data['identity'] = identity.id
 
         serializer = FeatureStateSerializerBasic(data=data)
         if serializer.is_valid():
