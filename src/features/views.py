@@ -6,9 +6,24 @@ from rest_framework.response import Response
 from rest_framework.schemas import AutoSchema
 
 from environments.models import Environment, Identity
+from projects.models import Project
 from .models import FeatureState, Feature
 from .serializers import FeatureStateSerializerBasic, FeatureStateSerializerFull, \
-    FeatureStateSerializerCreate
+    FeatureStateSerializerCreate, CreateFeatureSerializer, FeatureSerializer
+
+
+class FeatureViewSet(viewsets.ModelViewSet):
+    queryset = Feature.objects.all()
+
+    def get_serializer_class(self):
+        if self.action == 'create':
+            return CreateFeatureSerializer
+        else:
+            return FeatureSerializer
+
+    def get_queryset(self):
+        project = Project.objects.get(pk=self.kwargs['project_pk'])
+        return project.features.all()
 
 
 class FeatureStateViewSet(viewsets.ModelViewSet):
