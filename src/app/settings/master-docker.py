@@ -1,4 +1,4 @@
-from common import *
+from app.settings.common import *
 
 
 ALLOWED_HOSTS = [os.environ['DJANGO_ALLOWED_HOST'], 'localhost']
