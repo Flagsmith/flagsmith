@@ -11,6 +11,8 @@ https://docs.djangoproject.com/en/1.9/ref/settings/
 """
 
 import os
+import warnings
+
 from corsheaders.defaults import default_headers
 
 from app.utils import secret_key_gen
@@ -184,7 +186,9 @@ ACCOUNT_EMAIL_VERIFICATION = 'none'  # TODO: configure email verification
 
 # SendGrid
 EMAIL_BACKEND = 'sgbackend.SendGridBackend'
-SENDGRID_API_KEY = os.environ['SENDGRID_API_KEY']
+SENDGRID_API_KEY = os.environ.get('SENDGRID_API_KEY')
+if not SENDGRID_API_KEY:
+    warnings.warn("`SENDGRID_API_KEY` has not been configured. You will not receive emails.")
 
 SWAGGER_SETTINGS = {
     "SHOW_REQUEST_HEADERS": True
