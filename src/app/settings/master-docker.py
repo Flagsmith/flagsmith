@@ -1,4 +1,4 @@
-from common import *
+from app.settings.common import *
 
 
 ALLOWED_HOSTS.extend(['.ngrok.io', '127.0.0.1', 'localhost'])
