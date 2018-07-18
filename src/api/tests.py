@@ -394,7 +394,7 @@ class UserTestCase(TestCase):
 
         # Then
         self.assertEquals(register_response.status_code, status.HTTP_201_CREATED)
-        self.assertIn("key", register_response.content)
+        self.assertIn("key", register_response.data)
         # Check user was created
         self.assertEquals(FFAdminUser.objects.filter(email="johndoe@example.com").count(), 1)
         user = FFAdminUser.objects.get(email="johndoe@example.com")
@@ -408,10 +408,10 @@ class UserTestCase(TestCase):
                                               "johndoe@example.com", "johndoe123"),
                                           content_type='application/json')
         self.assertEquals(login_response.status_code, status.HTTP_200_OK)
-        self.assertIn("key", login_response.content)
+        self.assertIn("key", login_response.data)
 
         # verify key works on authenticated endpoint
-        content = json.loads(login_response.content)
+        content = login_response.data
         organisations_response = self.client.get("/api/v1/organisations/",
                                                  HTTP_AUTHORIZATION="Token " + content['key'])
         self.assertEquals(organisations_response.status_code, status.HTTP_200_OK)
