@@ -172,6 +172,9 @@ class SDKFeatureStates(GenericAPIView):
 
         environment = get_object_or_404(Environment, api_key=request.META['HTTP_X_ENVIRONMENT_KEY'])
 
+        # set flag against organisation to confirm they have got
+        organisation_has_got_feature(request, environment.project.organisation)
+
         if identifier:
             try:
                 identity = Identity.objects.get(identifier=identifier, environment=environment)
@@ -226,3 +229,23 @@ class SDKFeatureStates(GenericAPIView):
                                                                 identity=None)
                 return Response(self.get_serializer(environment_flags, many=True).data,
                                 status=status.HTTP_200_OK)
+
+
+def organisation_has_got_feature(request, organisation):
+    """
+    Helper method to set flag against organisation to confirm that they've requested their
+    feature states for analytics purposes
+
+    :param request: HTTP request
+    :return: True if value set. None otherwise.
+    """
+    if organisation.has_requested_features:
+        return None
+
+    referer = request.META.get("HTTP_REFERER")
+    if not referer or "bullet-train.io" in referer:
+        return None
+    else:
+        organisation.has_requested_features = True
+        organisation.save()
+        return True

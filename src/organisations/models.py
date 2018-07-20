@@ -6,6 +6,7 @@ from django.db import models
 
 class Organisation(models.Model):
     name = models.CharField(max_length=2000)
+    has_requested_features = models.BooleanField(default=False)
 
     class Meta:
         ordering = ['id']
