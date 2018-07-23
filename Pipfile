@@ -25,6 +25,3 @@ coreapi = "*"
 django-rest-swagger = "*"
 Django = "<2.0"
 numpy = "*"
-
-[requires]
-python_version = "2.7"
