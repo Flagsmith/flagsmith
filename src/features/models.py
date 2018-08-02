@@ -2,7 +2,7 @@
 from __future__ import unicode_literals
 
 from django.core.exceptions import ObjectDoesNotExist, ValidationError, NON_FIELD_ERRORS
-from django.db import models, IntegrityError
+from django.db import models
 
 from projects.models import Project
 
