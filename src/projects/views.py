@@ -77,13 +77,7 @@ class ProjectViewSet(viewsets.ModelViewSet):
                 return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
         elif request.method == "DELETE":
-            feature = Feature.objects.get(pk=request.data["id"])
-            feature.delete()
-
-            feature_states = FeatureState.objects.filter(feature=feature)
-            for fs in feature_states:
-                fs.delete()
-
+            Feature.objects.get(pk=request.data["id"]).delete()
             return Response(status=status.HTTP_200_OK)
 
         else:
