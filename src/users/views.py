@@ -39,7 +39,6 @@ class FFAdminUserViewSet(viewsets.ModelViewSet):
         user = request.user
 
         user.organisations.add(organisation)
-        user.save()
         invite.delete()
 
         return Response(OrganisationSerializer(organisation).data, status=status.HTTP_200_OK)
