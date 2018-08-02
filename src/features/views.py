@@ -127,6 +127,9 @@ class FeatureStateViewSet(viewsets.ModelViewSet):
                 feature_state_to_update
             )
 
+            if isinstance(feature_state_value, Response):
+                return feature_state_value
+
             feature_state_data['feature_state_value'] = feature_state_value.id
 
         serializer = FeatureStateSerializerBasic(feature_state_to_update, data=feature_state_data,
