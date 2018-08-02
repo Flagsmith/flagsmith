@@ -198,22 +198,22 @@ class SDKFeatureStates(GenericAPIView):
                 try:
                     feature = Feature.objects.get(name__iexact=request.GET['feature'],
                                                   project=environment.project)
-                    feature_state = FeatureState.objects.get(identity=identity,
-                                                             feature=feature,
-                                                             environment=environment)
-                    return Response(self.get_serializer(feature_state).data,
-                                    status=status.HTTP_200_OK)
-
                 except Feature.DoesNotExist:
                     error = {"detail": "Given feature not found"}
                     return Response(error, status=status.HTTP_404_NOT_FOUND)
 
+                try:
+                    feature_state = FeatureState.objects.get(identity=identity,
+                                                             feature=feature,
+                                                             environment=environment)
                 except FeatureState.DoesNotExist:
                     feature_state = FeatureState.objects.get(feature=feature,
                                                              environment=environment,
                                                              identity=None)
                     return Response(self.get_serializer(feature_state).data,
                                     status=status.HTTP_200_OK)
+                return Response(self.get_serializer(feature_state).data,
+                                status=status.HTTP_200_OK)
 
             identity_flags, environment_flags = identity.get_all_feature_states()
 
