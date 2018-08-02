@@ -3,6 +3,7 @@ from __future__ import unicode_literals
 
 from django.core.exceptions import ObjectDoesNotExist, ValidationError, NON_FIELD_ERRORS
 from django.db import models, IntegrityError
+from django.utils.encoding import python_2_unicode_compatible
 
 from projects.models import Project
 
@@ -17,6 +18,7 @@ STRING = "unicode"
 BOOLEAN = "bool"
 
 
+@python_2_unicode_compatible
 class Feature(models.Model):
     FEATURE_TYPES = (
         (FLAG, 'Feature Flag'),
@@ -69,6 +71,7 @@ class Feature(models.Model):
         return "Project %s - Feature %s" % (self.project.name, self.name)
 
 
+@python_2_unicode_compatible
 class FeatureState(models.Model):
     feature = models.ForeignKey(Feature, related_name='feature_states')
     environment = models.ForeignKey('environments.Environment', related_name='feature_states',
