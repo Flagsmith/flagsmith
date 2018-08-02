@@ -87,14 +87,13 @@ class FeatureState(models.Model):
         except ObjectDoesNotExist:
             return None
 
-        if value_type == INTEGER:
-            return self.feature_state_value.integer_value
-        elif value_type == STRING:
-            return self.feature_state_value.string_value
-        elif value_type == BOOLEAN:
-            return self.feature_state_value.boolean_value
-        else:
-            return None
+        type_mapping = {
+            INTEGER: self.feature_state_value.integer_value,
+            STRING: self.feature_state_value.string_value,
+            BOOLEAN: self.feature_state_value.boolean_value
+        }
+
+        return type_mapping.get(value_type)
 
     def save(self, *args, **kwargs):
         super(FeatureState, self).save(*args, **kwargs)
