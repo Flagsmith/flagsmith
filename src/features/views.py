@@ -48,7 +48,7 @@ class FeatureStateViewSet(viewsets.ModelViewSet):
         Override queryset to filter based on provided URL parameters.
         """
         environment_api_key = self.kwargs['environment_api_key']
-        identifier = self.kwargs.get('identity_identifier', None)
+        identifier = self.kwargs.get('identity_identifier')
         environment = Environment.objects.get(api_key=environment_api_key)
 
         if identifier:
