@@ -104,6 +104,14 @@ class FeatureState(models.Model):
             FeatureStateValue.objects.create(feature_state=self,
                                              string_value=self.feature.initial_value)
 
+    @staticmethod
+    def _get_feature_state_key_name(fsv_type):
+        return {
+            INTEGER: "integer_value",
+            BOOLEAN: "boolean_value",
+            STRING: "string_value",
+        }.get(fsv_type, "string_value")  # The default was chosen for backwards compatibility
+
     def generate_feature_state_value_data(self, value):
         """
         Takes the value of a feature state to generate a feature state value and returns dictionary
@@ -113,18 +121,14 @@ class FeatureState(models.Model):
         :return: dictionary to pass directly into feature state value serializer
         """
         fsv_type = type(value).__name__
+        accepted_types = (STRING, INTEGER, BOOLEAN)
 
-        if fsv_type == INTEGER:
-            fsv_dict = {"type": INTEGER, "integer_value": value}
-        elif fsv_type == BOOLEAN:
-            fsv_dict = {"type": BOOLEAN, "boolean_value": value}
-        else:
-            # default to type = string if we cannot handle the type correctly
-            fsv_dict = {"type": STRING, "string_value": value}
-
-        fsv_dict['feature_state'] = self.id
-
-        return fsv_dict
+        return {
+            # Default to string if not an anticipate type value to keep backwards compatibility.
+            "type": fsv_type if fsv_type in accepted_types else STRING,
+            "feature_state": self.id,
+            self._get_feature_state_key_name(fsv_type): value
+        }
 
     def __str__(self):
         if self.environment is not None:
