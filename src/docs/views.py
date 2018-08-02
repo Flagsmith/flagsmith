@@ -2,7 +2,7 @@
 from __future__ import unicode_literals
 
 from rest_framework import schemas, response, renderers
-from rest_framework.authentication import SessionAuthentication
+from rest_framework.authentication import SessionAuthentication, TokenAuthentication
 from rest_framework.decorators import api_view, renderer_classes, authentication_classes, \
     permission_classes, schema
 from rest_framework.permissions import AllowAny
