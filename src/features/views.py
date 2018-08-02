@@ -48,7 +48,7 @@ class FeatureStateViewSet(viewsets.ModelViewSet):
         Override queryset to filter based on provided URL parameters.
         """
         environment_api_key = self.kwargs['environment_api_key']
-        identifier = self.kwargs.get('identity_identifier', None)
+        identifier = self.kwargs.get('identity_identifier')
         environment = Environment.objects.get(api_key=environment_api_key)
 
         if identifier:
@@ -127,6 +127,9 @@ class FeatureStateViewSet(viewsets.ModelViewSet):
                 feature_state_to_update
             )
 
+            if isinstance(feature_state_value, Response):
+                return feature_state_value
+
             feature_state_data['feature_state_value'] = feature_state_value.id
 
         serializer = FeatureStateSerializerBasic(feature_state_to_update, data=feature_state_data,
@@ -195,22 +198,22 @@ class SDKFeatureStates(GenericAPIView):
                 try:
                     feature = Feature.objects.get(name__iexact=request.GET['feature'],
                                                   project=environment.project)
-                    feature_state = FeatureState.objects.get(identity=identity,
-                                                             feature=feature,
-                                                             environment=environment)
-                    return Response(self.get_serializer(feature_state).data,
-                                    status=status.HTTP_200_OK)
-
                 except Feature.DoesNotExist:
                     error = {"detail": "Given feature not found"}
                     return Response(error, status=status.HTTP_404_NOT_FOUND)
 
+                try:
+                    feature_state = FeatureState.objects.get(identity=identity,
+                                                             feature=feature,
+                                                             environment=environment)
                 except FeatureState.DoesNotExist:
                     feature_state = FeatureState.objects.get(feature=feature,
                                                              environment=environment,
                                                              identity=None)
                     return Response(self.get_serializer(feature_state).data,
                                     status=status.HTTP_200_OK)
+                return Response(self.get_serializer(feature_state).data,
+                                status=status.HTTP_200_OK)
 
             identity_flags, environment_flags = identity.get_all_feature_states()
 
