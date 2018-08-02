@@ -17,6 +17,7 @@ STRING = "unicode"
 BOOLEAN = "bool"
 
 
+@python_2_unicode_compatible
 class Feature(models.Model):
     FEATURE_TYPES = (
         (FLAG, 'Feature Flag'),
@@ -69,6 +70,7 @@ class Feature(models.Model):
         return "Project %s - Feature %s" % (self.project.name, self.name)
 
 
+@python_2_unicode_compatible
 class FeatureState(models.Model):
     feature = models.ForeignKey(Feature, related_name='feature_states')
     environment = models.ForeignKey('environments.Environment', related_name='feature_states',
@@ -87,14 +89,13 @@ class FeatureState(models.Model):
         except ObjectDoesNotExist:
             return None
 
-        if value_type == INTEGER:
-            return self.feature_state_value.integer_value
-        elif value_type == STRING:
-            return self.feature_state_value.string_value
-        elif value_type == BOOLEAN:
-            return self.feature_state_value.boolean_value
-        else:
-            return None
+        type_mapping = {
+            INTEGER: self.feature_state_value.integer_value,
+            STRING: self.feature_state_value.string_value,
+            BOOLEAN: self.feature_state_value.boolean_value
+        }
+
+        return type_mapping.get(value_type)
 
     def save(self, *args, **kwargs):
         super(FeatureState, self).save(*args, **kwargs)
@@ -103,6 +104,14 @@ class FeatureState(models.Model):
         if not hasattr(self, 'feature_state_value'):
             FeatureStateValue.objects.create(feature_state=self,
                                              string_value=self.feature.initial_value)
+
+    @staticmethod
+    def _get_feature_state_key_name(fsv_type):
+        return {
+            INTEGER: "integer_value",
+            BOOLEAN: "boolean_value",
+            STRING: "string_value",
+        }.get(fsv_type, "string_value")  # The default was chosen for backwards compatibility
 
     def generate_feature_state_value_data(self, value):
         """
@@ -113,18 +122,14 @@ class FeatureState(models.Model):
         :return: dictionary to pass directly into feature state value serializer
         """
         fsv_type = type(value).__name__
+        accepted_types = (STRING, INTEGER, BOOLEAN)
 
-        if fsv_type == INTEGER:
-            fsv_dict = {"type": INTEGER, "integer_value": value}
-        elif fsv_type == BOOLEAN:
-            fsv_dict = {"type": BOOLEAN, "boolean_value": value}
-        else:
-            # default to type = string if we cannot handle the type correctly
-            fsv_dict = {"type": STRING, "string_value": value}
-
-        fsv_dict['feature_state'] = self.id
-
-        return fsv_dict
+        return {
+            # Default to string if not an anticipate type value to keep backwards compatibility.
+            "type": fsv_type if fsv_type in accepted_types else STRING,
+            "feature_state": self.id,
+            self._get_feature_state_key_name(fsv_type): value
+        }
 
     def __str__(self):
         if self.environment is not None:

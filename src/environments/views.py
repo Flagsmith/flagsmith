@@ -32,14 +32,9 @@ class EnvironmentViewSet(viewsets.ModelViewSet):
     lookup_field = 'api_key'
 
     def get_queryset(self):
-        user_organisations = self.request.user.organisations.all()
-        user_projects = []
-
-        for user_org in user_organisations:
-            for project in user_org.projects.all():
-                user_projects.append(project.id)
-
-        queryset = Environment.objects.filter(project__in=user_projects)
+        queryset = Environment.objects.filter(
+            project__in=self.request.user.organisations.values_list('projects', flat=True)
+        )
 
         return queryset
 
@@ -70,8 +65,7 @@ class IdentityViewSet(viewsets.ModelViewSet):
 
     def get_queryset(self):
         env_key = self.kwargs['environment_api_key']
-        environment = Environment.objects.get(api_key=env_key)
-        return Identity.objects.filter(environment=environment)
+        return Identity.objects.filter(environment__api_key=env_key)
 
     def get_environment_from_request(self):
         """
