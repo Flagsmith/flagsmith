@@ -15,10 +15,7 @@ class OrganisationViewSet(viewsets.ModelViewSet):
     serializer_class = OrganisationSerializer
 
     def get_queryset(self):
-        if self.request.user.organisations:
-            return self.request.user.organisations.all()
-        else:
-            return []
+        return self.request.user.organisations.all()
 
     def create(self, request):
         """
