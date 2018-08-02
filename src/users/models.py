@@ -5,6 +5,7 @@ from django.db import models
 from django.template.loader import get_template
 
 from app.utils import create_hash
+from django.utils.encoding import python_2_unicode_compatible
 from organisations.models import Organisation
 
 
@@ -42,6 +43,7 @@ class UserManager(BaseUserManager):
         return self._create_user(email, password, **extra_fields)
 
 
+@python_2_unicode_compatible
 class FFAdminUser(AbstractUser):
     organisations = models.ManyToManyField(Organisation, related_name="users", blank=True)
     email = models.EmailField(unique=True, null=False)
@@ -54,20 +56,15 @@ class FFAdminUser(AbstractUser):
         ordering = ['id']
 
     def get_full_name(self):
-        if self.first_name:
-            full_name = self.first_name
-            if self.last_name:
-                full_name += " " + self.last_name
-                return full_name
-            else:
-                return full_name
-        else:
+        if not self.first_name:
             return None
+        return ' '.join([self.first_name, self.last_name]).strip()
 
     def __str__(self):
         return "%s %s" % (self.first_name, self.last_name)
 
 
+@python_2_unicode_compatible
 class Invite(models.Model):
     email = models.EmailField()
     hash = models.CharField(max_length=100, default=create_hash, unique=True)
