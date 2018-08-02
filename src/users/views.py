@@ -16,10 +16,11 @@ from users.models import FFAdminUser, Invite
 class AdminInitView(View):
     def get(self, request):
         if FFAdminUser.objects.count() == 0:
-            admin = FFAdminUser.objects.create_superuser(settings.ADMIN_EMAIL,
-                                                         settings.ADMIN_INITIAL_PASSWORD)
-            admin.is_active = True
-            admin.is_admin = True
+            admin = FFAdminUser.objects.create_superuser(
+                settings.ADMIN_EMAIL,
+                settings.ADMIN_INITIAL_PASSWORD,
+                is_active=True,
+            )
             admin.save()
             return HttpResponse("ADMIN USER CREATED")
         else:
