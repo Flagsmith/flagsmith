@@ -38,14 +38,9 @@ class EnvironmentViewSet(viewsets.ModelViewSet):
     lookup_field = 'api_key'
 
     def get_queryset(self):
-        user_organisations = self.request.user.organisations.all()
-        user_projects = []
-
-        for user_org in user_organisations:
-            for project in user_org.projects.all():
-                user_projects.append(project.id)
-
-        queryset = Environment.objects.filter(project__in=user_projects)
+        queryset = Environment.objects.filter(
+            project__in=self.request.user.organisations.values_list('projects', flat=True)
+        )
 
         return queryset
 
