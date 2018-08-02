@@ -10,17 +10,24 @@ from projects.models import Project
 
 class EnvironmentInline(admin.StackedInline):
     model = Environment
+    extra = 0
+    show_change_link = True
 
 
 class FeatureInline(admin.StackedInline):
     model = Feature
+    extra = 0
+    show_change_link = True
 
 
+@admin.register(Project)
 class ProjectAdmin(admin.ModelAdmin):
+    date_hierarchy = 'created_date'
     inlines = [
         EnvironmentInline,
         FeatureInline
     ]
-
-
-admin.site.register(Project, ProjectAdmin)
+    list_display = ('name', 'organisation', 'created_date', )
+    list_filter = ('created_date', 'organisation', 'environments', )
+    list_select_related = ('organisation',)
+    search_fields = ('organisation__name', )
