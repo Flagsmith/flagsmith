@@ -40,14 +40,10 @@ class ProjectViewSet(viewsets.ModelViewSet):
             data = {
                 "project": project.id,
                 "name": request.data["name"],
-                "initial_value":
-                    request.data["initial_value"] if "initial_value" in request.data else None,
-                "description":
-                    request.data["description"] if "description" in request.data else None,
-                "type":
-                    request.data["type"] if "type" in request.data else FLAG,
-                "default_enabled":
-                    request.data["default_enabled"] if "default_enabled" in request.data else False,
+                "initial_value": request.data.get("initial_value"),
+                "description": request.data.get("description"),
+                "type": request.data.get("type", FLAG),
+                "default_enabled": request.data.get("default_enabled", False),
             }
 
             f_serializer = FeatureSerializer(data=data)
