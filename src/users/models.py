@@ -54,15 +54,9 @@ class FFAdminUser(AbstractUser):
         ordering = ['id']
 
     def get_full_name(self):
-        if self.first_name:
-            full_name = self.first_name
-            if self.last_name:
-                full_name += " " + self.last_name
-                return full_name
-            else:
-                return full_name
-        else:
+        if not self.first_name:
             return None
+        return ' '.join([self.first_name, self.last_name]).strip()
 
     def __str__(self):
         return "%s %s" % (self.first_name, self.last_name)
