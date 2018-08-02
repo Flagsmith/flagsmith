@@ -76,8 +76,7 @@ class IdentityViewSet(viewsets.ModelViewSet):
 
     def get_queryset(self):
         env_key = self.kwargs['environment_api_key']
-        environment = Environment.objects.get(api_key=env_key)
-        return Identity.objects.filter(environment=environment)
+        return Identity.objects.filter(environment__api_key=env_key)
 
     def get_environment_from_request(self):
         """
