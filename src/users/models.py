@@ -1,3 +1,4 @@
+from django.conf import settings
 from django.contrib.auth.base_user import BaseUserManager
 from django.contrib.auth.models import AbstractUser
 from django.core.mail import EmailMultiAlternatives
@@ -93,25 +94,17 @@ class Invite(models.Model):
         html_template = get_template('users/invite_to_org.html')
         plaintext_template = get_template('users/invite_to_org.txt')
 
-        subject_string_with_name = '%s has invited you to join the organisation \'%s\' on Bullet Train'
-        subject_string_without_name = 'You have been invited to join the organisation \'%s\' on Bullet Train'
-
         if self.invited_by:
             invited_by_name = self.invited_by.get_full_name()
+            subject = settings.INVITE_SUBJECT_WITH_NAME % (invited_by_name, self.organisation.name)
         else:
-            invited_by_name = None
+            subject = settings.INVITE_SUBJECT_WITHOUT_NAME % self.organisation.name
 
-        if invited_by_name:
-            subject = subject_string_with_name % (invited_by_name, self.organisation.name)
-        else:
-            subject = subject_string_without_name % self.organisation.name
-
-        from_email = 'noreply@bullettrain.com'
         to = self.email
 
         text_content = plaintext_template.render(context)
         html_content = html_template.render(context)
-        msg = EmailMultiAlternatives(subject, text_content, from_email, [to])
+        msg = EmailMultiAlternatives(subject, text_content, settings.INVITE_FROM_EMAIL, [to])
         msg.attach_alternative(html_content, "text/html")
         msg.send()
 
