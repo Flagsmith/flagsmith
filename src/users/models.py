@@ -55,6 +55,7 @@ class FFAdminUser(AbstractUser):
 
     class Meta:
         ordering = ['id']
+        verbose_name = 'Feature flag admin user'
 
     def get_full_name(self):
         if not self.first_name:
