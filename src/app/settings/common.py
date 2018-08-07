@@ -175,6 +175,7 @@ DEFAULT_FROM_EMAIL = "noreply@bullet-train.io"
 
 
 # Used on init to create admin user for the site, update accordingly before hitting /auth/init
+ALLOW_ADMIN_INITIATION_VIA_URL = True
 ADMIN_EMAIL = "admin@example.com"
 ADMIN_INITIAL_PASSWORD = "password"
 
