@@ -172,6 +172,19 @@ CORS_ALLOW_HEADERS = default_headers + (
 )
 
 DEFAULT_FROM_EMAIL = "noreply@bullet-train.io"
+EMAIL_CONFIGURATION = {
+    # Invitations with name is anticipated to take two arguments. The persons name and the
+    # organisation name they are invited to.
+    'INVITE_SUBJECT_WITH_NAME': '%s has invited you to join the organisation \'%s\' on Bullet '
+                                'Train',
+    # Invitations without a name is anticipated to take one arguments. The organisation name they
+    # are invited to.
+    'INVITE_SUBJECT_WITHOUT_NAME': 'You have been invited to join the organisation \'%s\' on '
+                                   'Bullet Train',
+    # The email address invitations will be sent from.
+    'INVITE_FROM_EMAIL': 'noreply@bullettrain.com',
+
+}
 
 
 # Used on init to create admin user for the site, update accordingly before hitting /auth/init
