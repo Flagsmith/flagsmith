@@ -3,6 +3,7 @@ from __future__ import unicode_literals
 
 from django.core.exceptions import ObjectDoesNotExist, ValidationError, NON_FIELD_ERRORS
 from django.db import models
+from django.utils.encoding import python_2_unicode_compatible
 
 from projects.models import Project
 
