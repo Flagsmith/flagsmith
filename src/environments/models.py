@@ -2,6 +2,7 @@
 from __future__ import unicode_literals
 
 from django.db import models
+from django.utils.translation import ugettext_lazy as _
 
 from app.utils import create_hash
 from django.utils.encoding import python_2_unicode_compatible
@@ -13,7 +14,16 @@ from projects.models import Project
 class Environment(models.Model):
     name = models.CharField(max_length=2000)
     created_date = models.DateTimeField('DateCreated', auto_now_add=True)
-    project = models.ForeignKey(Project, related_name="environments")
+    project = models.ForeignKey(
+        Project,
+        related_name="environments",
+        help_text=_(
+            "Changing the project selected will remove all previous Feature States for the "
+            "previously associated projects Features that are related to this Environment. New "
+            "default Feature States will be created for the new selected projects Features for "
+            "this Environment."
+        )
+    )
     api_key = models.CharField(default=create_hash, unique=True, max_length=100)
 
     class Meta:
@@ -23,13 +33,28 @@ class Environment(models.Model):
         """
         Override save method to initialise feature states for all features in new environment
         """
+        requires_feature_state_creation = True if not self.pk else False
+        if self.pk:
+            old_environment = Environment.objects.get(pk=self.pk)
+            if old_environment.project != self.project:
+                FeatureState.objects.filter(
+                    feature__in=old_environment.project.features.values_list('pk', flat=True),
+                    environment=self,
+                ).all().delete()
+                requires_feature_state_creation = True
+
         super(Environment, self).save(*args, **kwargs)
 
-        # also create feature states for all features in the project
-        features = self.project.features.all()
-        for feature in features:
-            FeatureState.objects.create(feature=feature, environment=self, identity=None,
-                                        enabled=feature.default_enabled)
+        if requires_feature_state_creation:
+            # also create feature states for all features in the project
+            features = self.project.features.all()
+            for feature in features:
+                FeatureState.objects.create(
+                    feature=feature,
+                    environment=self,
+                    identity=None,
+                    enabled=feature.default_enabled
+                )
 
     def __str__(self):
         return "Project %s - Environment %s" % (self.project.name, self.name)
