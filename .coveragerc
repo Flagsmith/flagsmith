@@ -1,0 +1,14 @@
+[run]
+branch = True
+source = src/
+parallel = True
+concurrency = multiprocessing
+
+[report]
+show_missing = True
+omit =
+	*/migrations/*,
+	*/tests/*,
+	*/tests.py,
+	manage.py,
+	.tox/*

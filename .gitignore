@@ -8,3 +8,6 @@ venv
 .vscode
 *.log
 checkstyle.txt
+.tox/
+.coverage
+.coverage.*
