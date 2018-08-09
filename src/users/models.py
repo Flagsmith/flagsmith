@@ -97,15 +97,23 @@ class Invite(models.Model):
 
         if self.invited_by:
             invited_by_name = self.invited_by.get_full_name()
-            subject = settings.INVITE_SUBJECT_WITH_NAME % (invited_by_name, self.organisation.name)
+            subject = settings.EMAIL_CONFIGURATION.get('INVITE_SUBJECT_WITH_NAME') % (
+                invited_by_name, self.organisation.name
+            )
         else:
-            subject = settings.INVITE_SUBJECT_WITHOUT_NAME % self.organisation.name
+            subject = settings.EMAIL_CONFIGURATION.get('INVITE_SUBJECT_WITHOUT_NAME') % \
+                      self.organisation.name
 
         to = self.email
 
         text_content = plaintext_template.render(context)
         html_content = html_template.render(context)
-        msg = EmailMultiAlternatives(subject, text_content, settings.INVITE_FROM_EMAIL, [to])
+        msg = EmailMultiAlternatives(
+            subject,
+            text_content,
+            settings.EMAIL_CONFIGURATION.get('INVITE_FROM_EMAIL'),
+            [to]
+        )
         msg.attach_alternative(html_content, "text/html")
         msg.send()
 
