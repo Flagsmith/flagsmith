@@ -73,7 +73,12 @@ class Invite(models.Model):
     date_created = models.DateTimeField('DateCreated', auto_now_add=True)
     organisation = models.ForeignKey(Organisation, on_delete=models.CASCADE)
     frontend_base_url = models.CharField(max_length=500, null=False)
-    invited_by = models.ForeignKey(FFAdminUser, related_name='sent_invites', null=True)
+    invited_by = models.ForeignKey(
+        FFAdminUser,
+        related_name='sent_invites',
+        null=True,
+        on_delete=models.CASCADE,
+    )
 
     class Meta:
         unique_together = ('email', 'organisation')

@@ -13,7 +13,7 @@ from projects.models import Project
 class Environment(models.Model):
     name = models.CharField(max_length=2000)
     created_date = models.DateTimeField('DateCreated', auto_now_add=True)
-    project = models.ForeignKey(Project, related_name="environments")
+    project = models.ForeignKey(Project, related_name="environments", on_delete=models.CASCADE)
     api_key = models.CharField(default=create_hash, unique=True, max_length=100)
 
     class Meta:
@@ -39,7 +39,11 @@ class Environment(models.Model):
 class Identity(models.Model):
     identifier = models.CharField(max_length=2000)
     created_date = models.DateTimeField('DateCreated', auto_now_add=True)
-    environment = models.ForeignKey(Environment, related_name='identities')
+    environment = models.ForeignKey(
+        Environment,
+        related_name='identities',
+        on_delete=models.CASCADE,
+    )
 
     class Meta:
         verbose_name_plural = "Identities"

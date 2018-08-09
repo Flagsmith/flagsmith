@@ -27,7 +27,7 @@ class Feature(models.Model):
 
     name = models.CharField(max_length=2000)
     created_date = models.DateTimeField('DateCreated', auto_now_add=True)
-    project = models.ForeignKey(Project, related_name='features')
+    project = models.ForeignKey(Project, related_name='features', on_delete=models.CASCADE)
     initial_value = models.CharField(max_length=2000, null=True, default=None)
     description = models.TextField(null=True)
     default_enabled = models.BooleanField(default=False)
@@ -73,11 +73,21 @@ class Feature(models.Model):
 
 @python_2_unicode_compatible
 class FeatureState(models.Model):
-    feature = models.ForeignKey(Feature, related_name='feature_states')
-    environment = models.ForeignKey('environments.Environment', related_name='feature_states',
-                                    null=True)
-    identity = models.ForeignKey('environments.Identity', related_name='identity_features',
-                                 null=True, default=None, blank=True)
+    feature = models.ForeignKey(Feature, related_name='feature_states', on_delete=models.CASCADE)
+    environment = models.ForeignKey(
+        'environments.Environment',
+        related_name='feature_states',
+        null=True,
+        on_delete=models.CASCADE
+    )
+    identity = models.ForeignKey(
+        'environments.Identity',
+        related_name='identity_features',
+        null=True,
+        default=None,
+        blank=True,
+        on_delete=models.CASCADE,
+    )
     enabled = models.BooleanField(default=False)
 
     class Meta:
@@ -152,7 +162,11 @@ class FeatureStateValue(models.Model):
         (BOOLEAN, 'Boolean')
     )
 
-    feature_state = models.OneToOneField(FeatureState, related_name='feature_state_value')
+    feature_state = models.OneToOneField(
+        FeatureState,
+        related_name='feature_state_value',
+        on_delete=models.CASCADE,
+    )
     type = models.CharField(max_length=10, choices=FEATURE_STATE_VALUE_TYPES, default=STRING,
                             null=True, blank=True)
     boolean_value = models.NullBooleanField(null=True, blank=True)
