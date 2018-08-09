@@ -4,6 +4,7 @@ from __future__ import unicode_literals
 from django.core.exceptions import ObjectDoesNotExist, ValidationError, NON_FIELD_ERRORS
 from django.db import models
 from django.utils.encoding import python_2_unicode_compatible
+from django.utils.translation import ugettext_lazy as _
 
 from projects.models import Project
 
@@ -27,7 +28,16 @@ class Feature(models.Model):
 
     name = models.CharField(max_length=2000)
     created_date = models.DateTimeField('DateCreated', auto_now_add=True)
-    project = models.ForeignKey(Project, related_name='features')
+    project = models.ForeignKey(
+        Project,
+        related_name='features',
+        help_text=_(
+            "Changing the project selected will remove previous Feature States for the previously "
+            "associated projects Environments that are related to this Feature. New default "
+            "Feature States will be created for the new selected projects Environments for this "
+            "Feature."
+        )
+    )
     initial_value = models.CharField(max_length=2000, null=True, default=None)
     description = models.TextField(null=True)
     default_enabled = models.BooleanField(default=False)
@@ -42,13 +52,27 @@ class Feature(models.Model):
         """
         Override save method to initialise feature states for all environments
         """
+        if self.pk:
+            old_feature = Feature.objects.get(pk=self.pk)
+            if old_feature.project != self.project:
+                FeatureState.objects.filter(
+                    feature=self,
+                    environment=old_feature.project.environments.values_list('pk', flat=True),
+                ).all().delete()
+
         super(Feature, self).save(*args, **kwargs)
 
         # create feature states for all environments in the project
         environments = self.project.environments.all()
         for env in environments:
-            FeatureState.objects.create(feature=self, environment=env, identity=None,
-                                        enabled=self.default_enabled)
+            FeatureState.objects.update_or_create(
+                feature=self,
+                environment=env,
+                identity=None,
+                defaults={
+                    'enabled': self.default_enabled
+                },
+            )
 
     def validate_unique(self, *args, **kwargs):
         """
@@ -102,9 +126,12 @@ class FeatureState(models.Model):
         super(FeatureState, self).save(*args, **kwargs)
 
         # create default feature state value for feature state
-        if not hasattr(self, 'feature_state_value'):
-            FeatureStateValue.objects.create(feature_state=self,
-                                             string_value=self.feature.initial_value)
+        FeatureStateValue.objects.get_or_create(
+            feature_state=self,
+            defaults={
+                'string_value': self.feature.initial_value
+            }
+        )
 
     @staticmethod
     def _get_feature_state_key_name(fsv_type):
