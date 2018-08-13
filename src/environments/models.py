@@ -4,10 +4,12 @@ from __future__ import unicode_literals
 from django.db import models
 
 from app.utils import create_hash
+from django.utils.encoding import python_2_unicode_compatible
 from features.models import FeatureState
 from projects.models import Project
 
 
+@python_2_unicode_compatible
 class Environment(models.Model):
     name = models.CharField(max_length=2000)
     created_date = models.DateTimeField('DateCreated', auto_now_add=True)
@@ -32,10 +34,8 @@ class Environment(models.Model):
     def __str__(self):
         return "Project %s - Environment %s" % (self.project.name, self.name)
 
-    def __unicode__(self):
-        return "Project %s - Environment %s" % (self.project.name, self.name)
 
-
+@python_2_unicode_compatible
 class Identity(models.Model):
     identifier = models.CharField(max_length=2000)
     created_date = models.DateTimeField('DateCreated', auto_now_add=True)
@@ -60,7 +60,4 @@ class Identity(models.Model):
         return identity_flags, environment_flags
 
     def __str__(self):
-        return "Account %s" % self.identifier
-
-    def __unicode__(self):
         return "Account %s" % self.identifier

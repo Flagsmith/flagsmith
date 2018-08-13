@@ -6,6 +6,7 @@ from django.db import models
 from django.template.loader import get_template
 
 from app.utils import create_hash
+from django.utils.encoding import python_2_unicode_compatible
 from organisations.models import Organisation
 
 
@@ -43,6 +44,7 @@ class UserManager(BaseUserManager):
         return self._create_user(email, password, **extra_fields)
 
 
+@python_2_unicode_compatible
 class FFAdminUser(AbstractUser):
     organisations = models.ManyToManyField(Organisation, related_name="users", blank=True)
     email = models.EmailField(unique=True, null=False)
@@ -53,17 +55,12 @@ class FFAdminUser(AbstractUser):
 
     class Meta:
         ordering = ['id']
+        verbose_name = 'Feature flag admin user'
 
     def get_full_name(self):
-        if self.first_name:
-            full_name = self.first_name
-            if self.last_name:
-                full_name += " " + self.last_name
-                return full_name
-            else:
-                return full_name
-        else:
+        if not self.first_name:
             return None
+        return ' '.join([self.first_name, self.last_name]).strip()
 
     def get_number_of_organisations(self):
         return self.organisations.count()
@@ -95,6 +92,7 @@ class FFAdminUser(AbstractUser):
         return "%s %s" % (self.first_name, self.last_name)
 
 
+@python_2_unicode_compatible
 class Invite(models.Model):
     email = models.EmailField()
     hash = models.CharField(max_length=100, default=create_hash, unique=True)
@@ -120,26 +118,29 @@ class Invite(models.Model):
             "invite_url": self.get_invite_uri()
         }
 
+        html_template = get_template('users/invite_to_org.html')
         plaintext_template = get_template('users/invite_to_org.txt')
-
-        subject_string_with_name = '%s has invited you to join the organisation \'%s\' on Bullet Train'
-        subject_string_without_name = 'You have been invited to join the organisation \'%s\' on Bullet Train'
 
         if self.invited_by:
             invited_by_name = self.invited_by.get_full_name()
+            subject = settings.EMAIL_CONFIGURATION.get('INVITE_SUBJECT_WITH_NAME') % (
+                invited_by_name, self.organisation.name
+            )
         else:
-            invited_by_name = None
+            subject = settings.EMAIL_CONFIGURATION.get('INVITE_SUBJECT_WITHOUT_NAME') % \
+                      self.organisation.name
 
-        if invited_by_name:
-            subject = subject_string_with_name % (invited_by_name, self.organisation.name)
-        else:
-            subject = subject_string_without_name % self.organisation.name
-
-        from_email = settings.DEFAULT_FROM_EMAIL
         to = self.email
 
         text_content = plaintext_template.render(context)
-        msg = EmailMultiAlternatives(subject, text_content, from_email, [to])
+        html_content = html_template.render(context)
+        msg = EmailMultiAlternatives(
+            subject,
+            text_content,
+            settings.EMAIL_CONFIGURATION.get('INVITE_FROM_EMAIL'),
+            [to]
+        )
+        msg.attach_alternative(html_content, "text/html")
         msg.send()
 
     def __str__(self):
