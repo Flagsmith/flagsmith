@@ -16,5 +16,7 @@ class OrganisationAdmin(admin.ModelAdmin):
         ProjectInline
     ]
 
+    list_display = ['name', 'has_requested_features']
+
 
 admin.site.register(Organisation, OrganisationAdmin)
