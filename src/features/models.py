@@ -29,7 +29,7 @@ class Feature(models.Model):
     created_date = models.DateTimeField('DateCreated', auto_now_add=True)
     project = models.ForeignKey(Project, related_name='features')
     initial_value = models.CharField(max_length=2000, null=True, default=None)
-    description = models.TextField(null=True)
+    description = models.TextField(null=True, blank=True)
     default_enabled = models.BooleanField(default=False)
     type = models.CharField(max_length=50, choices=FEATURE_TYPES, default=FLAG)
 
