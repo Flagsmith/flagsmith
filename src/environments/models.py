@@ -55,7 +55,11 @@ class Identity(models.Model):
                                                                    identity=None)\
             .exclude(feature__in=identity_flags.values_list('feature__id', flat=True))
 
-        return identity_flags, environment_flags
+        flags = FeatureState.objects.filter(
+            id__in=list(identity_flags.values_list('id', flat=True)) +
+            list(environment_flags.values_list('id', flat=True))
+        )
+        return flags
 
     def __str__(self):
         return "Account %s" % self.identifier

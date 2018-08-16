@@ -88,8 +88,7 @@ class IdentityTestCase(TestCase):
         # For identity_1 all items in a different environment should not appear. Identity
         # specific flags should be returned as well as non-identity specific ones that have not
         # already been returned via the identity specific result.
-        identity_flags, environment_flags = identity_1.get_all_feature_states()
-        self.assertEqual(len(identity_flags), 1)
-        self.assertEqual(identity_flags[0], fs_identity_anticipated)
-        self.assertEqual(len(environment_flags), 1)
-        self.assertEqual(environment_flags[0], fs_environment_anticipated)
+        flags = identity_1.get_all_feature_states()
+        self.assertEqual(len(flags), 2)
+        self.assertIn(fs_environment_anticipated, flags)
+        self.assertIn(fs_identity_anticipated, flags)
