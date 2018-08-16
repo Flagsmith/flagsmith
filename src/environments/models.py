@@ -49,13 +49,11 @@ class Identity(models.Model):
         # get all features that have been overridden for an identity
         identity_flags = self.identity_features.filter(identity=self)
 
-        override_features = [flag.feature for flag in identity_flags]
-
         # get only feature states for features which are not associated with an identity
         # and are not in the to be overridden generated above
         environment_flags = self.environment.feature_states.filter(environment=self.environment,
                                                                    identity=None)\
-            .exclude(feature__in=override_features)
+            .exclude(feature__in=identity_flags.values_list('feature__id', flat=True))
 
         return identity_flags, environment_flags
 
