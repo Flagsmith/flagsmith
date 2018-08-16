@@ -6,9 +6,25 @@ from rest_framework.response import Response
 from rest_framework.schemas import AutoSchema
 
 from environments.models import Environment, Identity
+from projects.models import Project
 from .models import FeatureState, Feature
-from .serializers import FeatureStateSerializerBasic, FeatureStateValueSerializer, \
-    FeatureStateSerializerFull, FeatureStateSerializerCreate
+from .serializers import FeatureStateSerializerBasic, FeatureStateSerializerFull, \
+    FeatureStateSerializerCreate, CreateFeatureSerializer, FeatureSerializer, \
+    FeatureStateValueSerializer
+
+
+class FeatureViewSet(viewsets.ModelViewSet):
+    queryset = Feature.objects.all()
+
+    def get_serializer_class(self):
+        if self.action == 'create':
+            return CreateFeatureSerializer
+        else:
+            return FeatureSerializer
+
+    def get_queryset(self):
+        project = Project.objects.get(pk=self.kwargs['project_pk'])
+        return project.features.all()
 
 
 class FeatureStateViewSet(viewsets.ModelViewSet):
@@ -242,3 +258,23 @@ class SDKFeatureStates(GenericAPIView):
                                                                 identity=None)
                 return Response(self.get_serializer(environment_flags, many=True).data,
                                 status=status.HTTP_200_OK)
+
+
+def organisation_has_got_feature(request, organisation):
+    """
+    Helper method to set flag against organisation to confirm that they've requested their
+    feature states for analytics purposes
+
+    :param request: HTTP request
+    :return: True if value set. None otherwise.
+    """
+    if organisation.has_requested_features:
+        return None
+
+    referer = request.META.get("HTTP_REFERER")
+    if not referer or "bullet-train.io" in referer:
+        return None
+    else:
+        organisation.has_requested_features = True
+        organisation.save()
+        return True

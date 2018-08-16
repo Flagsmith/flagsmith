@@ -35,9 +35,6 @@ if 'DJANGO_ALLOWED_HOSTS' in os.environ:
 else:
     ALLOWED_HOSTS = []
 
-# SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
-
 import sys
 
 if sys.version[0] == '2':
@@ -85,7 +82,7 @@ REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': (
         'rest_framework.authentication.TokenAuthentication',
     ),
-    'PAGE_SIZE': 10,
+    'PAGE_SIZE': 999,
     'UNICODE_JSON': False,
     'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.PageNumberPagination'
 }

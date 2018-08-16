@@ -2,7 +2,7 @@
 from __future__ import unicode_literals
 
 from rest_framework import viewsets, status
-from rest_framework.decorators import detail_route
+from rest_framework.decorators import action
 from rest_framework.exceptions import ValidationError
 from rest_framework.response import Response
 
@@ -31,19 +31,19 @@ class OrganisationViewSet(viewsets.ModelViewSet):
         else:
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
-    @detail_route()
+    @action(detail=True)
     def projects(self, request, pk):
         organisation = self.get_object()
         projects = organisation.projects.all()
         return Response(ProjectSerializer(projects, many=True).data)
 
-    @detail_route()
+    @action(detail=True)
     def users(self, request, pk):
         organisation = self.get_object()
         users = organisation.users.all()
         return Response(UserFullSerializer(users, many=True).data)
 
-    @detail_route(methods=["POST"])
+    @action(detail=True, methods=["POST"])
     def invite(self, request, pk):
         organisation = self.get_object()
 

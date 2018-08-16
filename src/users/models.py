@@ -62,6 +62,32 @@ class FFAdminUser(AbstractUser):
             return None
         return ' '.join([self.first_name, self.last_name]).strip()
 
+    def get_number_of_organisations(self):
+        return self.organisations.count()
+
+    def get_number_of_projects(self):
+        count = 0
+        for org in self.organisations.all():
+            for _ in org.projects.all():
+                count += 1
+        return count
+
+    def get_number_of_features(self):
+        count = 0
+        for org in self.organisations.all():
+            for project in org.projects.all():
+                for _ in project.features.all():
+                    count += 1
+        return count
+
+    def get_number_of_environments(self):
+        count = 0
+        for org in self.organisations.all():
+            for project in org.projects.all():
+                for _ in project.environments.all():
+                    count += 1
+        return count
+
     def __str__(self):
         return "%s %s" % (self.first_name, self.last_name)
 
