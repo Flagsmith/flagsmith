@@ -215,13 +215,10 @@ class SDKFeatureStates(GenericAPIView):
                 return Response(self.get_serializer(feature_state).data,
                                 status=status.HTTP_200_OK)
 
-            identity_flags, environment_flags = identity.get_all_feature_states()
+            flags = identity.get_all_feature_states()
+            serialized_flags = self.get_serializer(flags, many=True)
 
-            serialized_env_flags = self.get_serializer(environment_flags, many=True)
-            serialized_id_flags = self.get_serializer(identity_flags, many=True)
-
-            return Response(serialized_env_flags.data + serialized_id_flags.data,
-                            status=status.HTTP_200_OK)
+            return Response(serialized_flags.data, status=status.HTTP_200_OK)
 
         else:
             if 'feature' in request.GET:
