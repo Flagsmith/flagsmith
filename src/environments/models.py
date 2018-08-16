@@ -4,6 +4,7 @@ from __future__ import unicode_literals
 from django.db import models
 
 from app.utils import create_hash
+from django.db.models import Q
 from django.utils.encoding import python_2_unicode_compatible
 from features.models import FeatureState
 from projects.models import Project
@@ -47,17 +48,21 @@ class Identity(models.Model):
 
     def get_all_feature_states(self):
         # get all features that have been overridden for an identity
-        identity_flags = self.identity_features.filter(identity=self)
-
-        # get only feature states for features which are not associated with an identity
-        # and are not in the to be overridden generated above
-        environment_flags = self.environment.feature_states.filter(environment=self.environment,
-                                                                   identity=None)\
-            .exclude(feature__in=identity_flags.values_list('feature__id', flat=True))
-
+        # and only feature states for features which are not associated with an identity
+        # and are not in the to be overridden
         flags = FeatureState.objects.filter(
-            id__in=list(identity_flags.values_list('id', flat=True)) +
-            list(environment_flags.values_list('id', flat=True))
+            Q(environment=self.environment) &
+            (
+                Q(identity=self) |
+                (
+                    Q(identity=None) &
+                    ~Q(
+                        id__in=self.identity_features.filter(identity=self).values_list(
+                            'feature__id', flat=True
+                        )
+                    )
+                )
+            ),
         )
         return flags
 
