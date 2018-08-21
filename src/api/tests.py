@@ -1,5 +1,3 @@
-import json
-
 from django.test import TestCase
 from rest_framework.authtoken.models import Token
 from rest_framework.test import APIClient
@@ -278,6 +276,7 @@ class IdentityTestCase(TestCase):
 
 class ProjectFeatureTestCase(TestCase):
     project_features_url = '/api/v1/projects/%s/features/'
+    project_feature_detail_url = '/api/v1/projects/%s/features/%d/'
     post_template = '{ "name": "%s", "project": %d, "initial_value": "%s" }'
 
     def set_up(self):
@@ -341,12 +340,12 @@ class ProjectFeatureTestCase(TestCase):
         feature = Feature.objects.get(name="test feature", project=project.id)
 
         # When
-        response = client.delete(self.project_features_url % project.id, data='{"id": %d}' %
-                                                                              feature.id,
+        response = client.delete(self.project_feature_detail_url % (project.id, feature.id),
+                                 data='{"id": %d}' % feature.id,
                                  content_type='application/json')
 
         # Then
-        self.assertEquals(response.status_code, status.HTTP_200_OK)
+        self.assertEquals(response.status_code, status.HTTP_204_NO_CONTENT)
         # check feature was deleted succesfully
         self.assertEquals(0, Feature.objects.filter(name="test feature",
                                                     project=project.id).count())
