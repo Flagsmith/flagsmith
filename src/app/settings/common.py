@@ -30,6 +30,9 @@ if 'DJANGO_SECRET_KEY' not in os.environ:
 
 SECRET_KEY = os.environ['DJANGO_SECRET_KEY']
 
+# Google Analytics Configuration
+GOOGLE_ANALYTICS_KEY = os.environ.get('GOOGLE_ANALYTICS_KEY')
+
 if 'DJANGO_ALLOWED_HOSTS' in os.environ:
     ALLOWED_HOSTS = os.environ['DJANGO_ALLOWED_HOSTS'].split(',')
 else:
@@ -67,7 +70,8 @@ INSTALLED_APPS = [
     'features',
     'rest_framework_swagger',
     'docs',
-    'e2etests'
+    'e2etests',
+    'analytics'
 ]
 
 SITE_ID = 1
@@ -91,7 +95,7 @@ REST_AUTH_REGISTER_SERIALIZERS = {
     'REGISTER_SERIALIZER': 'users.serializers.UserRegisterSerializer'
 }
 
-MIDDLEWARE_CLASSES = [
+MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
@@ -102,6 +106,9 @@ MIDDLEWARE_CLASSES = [
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
     'corsheaders.middleware.CorsMiddleware'
 ]
+
+if GOOGLE_ANALYTICS_KEY:
+    MIDDLEWARE.append('analytics.middleware.GoogleAnalyticsMiddleware')
 
 ROOT_URLCONF = 'app.urls'
 
@@ -208,5 +215,3 @@ SWAGGER_SETTINGS = {
 
 # Email associated with user that is used by front end for end to end testing purposes
 FE_E2E_TEST_USER_EMAIL = "nightwatch@solidstategroup.com"
-
-
