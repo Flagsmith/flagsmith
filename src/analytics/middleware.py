@@ -1,3 +1,5 @@
+from threading import Thread
+
 from .utils import track_request
 
 
@@ -7,8 +9,7 @@ class GoogleAnalyticsMiddleware:
 
     def __call__(self, request):
         # for each API request, trigger a call to Google Analytics to track the request
-        if request.path:
-            track_request(request.path)
+        Thread(target=track_request, args=[request.path]).start()
 
         response = self.get_response(request)
 
