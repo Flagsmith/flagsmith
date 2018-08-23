@@ -18,3 +18,12 @@ def track_request(uri):
     data = DEFAULT_DATA + "t=pageview&dp=" + urllib.quote(uri, safe='')
     requests.post(GOOGLE_ANALYTICS_COLLECT_URL, data=data)
 
+
+def track_event(category, action, label='', value=''):
+    data = DEFAULT_DATA + "t=event" + \
+           "&ec=" + category + \
+           "&ea=" + action + \
+           "&el=" + label + \
+           "&ev=" + value
+    requests.post(GOOGLE_ANALYTICS_COLLECT_URL, data=data)
+
