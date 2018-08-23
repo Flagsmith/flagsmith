@@ -1,6 +1,6 @@
 import urllib
-
 import requests
+
 from django.conf import settings
 
 GOOGLE_ANALYTICS_BASE_URL = "https://www.google-analytics.com"
