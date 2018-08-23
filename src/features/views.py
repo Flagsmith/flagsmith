@@ -208,7 +208,7 @@ class SDKFeatureStates(GenericAPIView):
         environment = get_object_or_404(Environment, api_key=request.META['HTTP_X_ENVIRONMENT_KEY'])
 
         if identifier:
-            Thread(track_event("identity_flags", "get", value=environment.api_key)).start()
+            Thread(track_event(environment.project.organisation.name, "identity_flags")).start()
 
             try:
                 identity = Identity.objects.get(identifier=identifier, environment=environment)
@@ -245,7 +245,7 @@ class SDKFeatureStates(GenericAPIView):
                             status=status.HTTP_200_OK)
 
         else:
-            Thread(track_event("flags", "get", value=environment.api_key)).start()
+            Thread(track_event(environment.project.organisation.name, "flags")).start()
 
             if 'feature' in request.GET:
                 try:

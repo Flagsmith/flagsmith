@@ -22,8 +22,9 @@ def track_request(uri):
 def track_event(category, action, label='', value=''):
     data = DEFAULT_DATA + "t=event" + \
            "&ec=" + category + \
-           "&ea=" + action + \
-           "&el=" + label + \
-           "&ev=" + value
+           "&ea=" + action
+    data = data + "&el=" + label if label else data
+    data = data + "&ev=" + value if value else data
+    print data
     requests.post(GOOGLE_ANALYTICS_COLLECT_URL, data=data)
 
