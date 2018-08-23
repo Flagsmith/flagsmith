@@ -1,3 +1,5 @@
+from threading import Thread
+
 import coreapi
 from rest_framework import status, viewsets
 from rest_framework.generics import GenericAPIView, get_object_or_404
@@ -5,6 +7,7 @@ from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
 from rest_framework.schemas import AutoSchema
 
+from analytics.utils import track_event
 from environments.models import Environment, Identity
 from projects.models import Project
 from .models import FeatureState, Feature
@@ -205,6 +208,8 @@ class SDKFeatureStates(GenericAPIView):
         environment = get_object_or_404(Environment, api_key=request.META['HTTP_X_ENVIRONMENT_KEY'])
 
         if identifier:
+            Thread(track_event(environment.project.organisation.name, "identity_flags")).start()
+
             try:
                 identity = Identity.objects.get(identifier=identifier, environment=environment)
             except Identity.DoesNotExist:
@@ -240,6 +245,8 @@ class SDKFeatureStates(GenericAPIView):
                             status=status.HTTP_200_OK)
 
         else:
+            Thread(track_event(environment.project.organisation.name, "flags")).start()
+
             if 'feature' in request.GET:
                 try:
                     feature = Feature.objects.get(name__iexact=request.GET['feature'],

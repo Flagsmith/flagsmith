@@ -84,6 +84,7 @@ The application relies on the following environment variables to run:
 * `SENDGRID_API_KEY`: API key from sendgrid account which will need to be set up for emails to be sent from platform successfully
 * `DATABASE_URL`: required by develop and master environments, should be a standard format database url e.g. postgres://user:password@host:port/db_name
 * `DJANGO_SECRET_KEY`: see 'Creating a secret key' section below
+* `GOOGLE_ANALYTICS_KEY`: if google analytics is required, add your tracking code
 
 ### Creating a secret key
 It is important to also set an environment variable on whatever platform you are using for 
