@@ -31,7 +31,7 @@ if 'DJANGO_SECRET_KEY' not in os.environ:
 SECRET_KEY = os.environ['DJANGO_SECRET_KEY']
 
 # Google Analytics Configuration
-GOOGLE_ANALYTICS_KEY = os.environ.get('GOOGLE_ANALYTICS_KEY')
+GOOGLE_ANALYTICS_KEY = os.environ.get('GOOGLE_ANALYTICS_KEY', '')
 
 if 'DJANGO_ALLOWED_HOSTS' in os.environ:
     ALLOWED_HOSTS = os.environ['DJANGO_ALLOWED_HOSTS'].split(',')
@@ -70,9 +70,11 @@ INSTALLED_APPS = [
     'features',
     'rest_framework_swagger',
     'docs',
-    'e2etests',
-    'analytics'
+    'e2etests'
 ]
+
+if GOOGLE_ANALYTICS_KEY:
+    INSTALLED_APPS.append('analytics')
 
 SITE_ID = 1
 
