@@ -12,3 +12,5 @@ omit =
 	*/tests.py,
 	manage.py,
 	.tox/*
+	*/app/wsgi.py
+	*/app/settings/*
