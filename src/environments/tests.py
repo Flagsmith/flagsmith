@@ -53,17 +53,9 @@ class IdentityTestCase(TestCase):
         )
 
         # User unassigned - automatically should be created via `Feature` save method.
-        FeatureState.objects.get(
-            feature=feature,
-            environment=self.environment,
-        )
         fs_environment_anticipated = FeatureState.objects.get(
             feature=feature_2,
             environment=self.environment,
-        )
-        FeatureState.objects.get(
-            feature=feature,
-            environment=environment_2,
         )
 
         # User assigned
