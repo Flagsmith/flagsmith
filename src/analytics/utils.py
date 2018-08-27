@@ -1,4 +1,4 @@
-import urllib
+from six.moves.urllib.parse import quote # python 2/3 compatible urllib import
 import requests
 
 from django.conf import settings
@@ -15,7 +15,7 @@ def track_request(uri):
 
     :param uri: (string) the request URI
     """
-    data = DEFAULT_DATA + "t=pageview&dp=" + urllib.quote(uri, safe='')
+    data = DEFAULT_DATA + "t=pageview&dp=" + quote(uri, safe='')
     requests.post(GOOGLE_ANALYTICS_COLLECT_URL, data=data)
 
 
