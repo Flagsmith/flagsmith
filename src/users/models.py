@@ -123,6 +123,8 @@ class Invite(models.Model):
 
         if self.invited_by:
             invited_by_name = self.invited_by.get_full_name()
+            if not invited_by_name:
+                invited_by_name = "A user"
             subject = settings.EMAIL_CONFIGURATION.get('INVITE_SUBJECT_WITH_NAME') % (
                 invited_by_name, self.organisation.name
             )
