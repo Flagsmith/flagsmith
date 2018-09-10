@@ -23,6 +23,12 @@ class UserLoginSerializer(serializers.ModelSerializer):
         fields = ('email', 'password')
 
 
+class UserListSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = FFAdminUser
+        fields = ('id', 'email', 'first_name', 'last_name')
+
+
 class UserRegisterSerializer(RegisterSerializer):
 
     first_name = serializers.CharField(required=True, write_only=True)
