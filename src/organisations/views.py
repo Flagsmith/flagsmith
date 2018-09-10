@@ -9,7 +9,7 @@ from rest_framework.response import Response
 from projects.serializers import ProjectSerializer
 from organisations.serializers import OrganisationSerializer
 from users.models import Invite
-from users.serializers import UserFullSerializer, InviteSerializer
+from users.serializers import UserFullSerializer, InviteSerializer, UserListSerializer
 
 
 class OrganisationViewSet(viewsets.ModelViewSet):
@@ -42,7 +42,7 @@ class OrganisationViewSet(viewsets.ModelViewSet):
     def users(self, request, pk):
         organisation = self.get_object()
         users = organisation.users.all()
-        return Response(UserFullSerializer(users, many=True).data)
+        return Response(UserListSerializer(users, many=True).data)
 
     @action(detail=True, methods=["POST"])
     def invite(self, request, pk):
