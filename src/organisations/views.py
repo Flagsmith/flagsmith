@@ -8,6 +8,7 @@ from rest_framework.response import Response
 
 from projects.serializers import ProjectSerializer
 from organisations.serializers import OrganisationSerializer
+from users.models import Invite
 from users.serializers import UserFullSerializer, InviteSerializer
 
 
@@ -56,6 +57,11 @@ class OrganisationViewSet(viewsets.ModelViewSet):
         invites = []
 
         for email in request.data["emails"]:
+            invite = Invite.objects.filter(email=email, organisation=organisation)
+            if invite.exists():
+                data = {"error": "Invite already exists for this email address."}
+                return Response(data, status=status.HTTP_400_BAD_REQUEST)
+
             invites.append({"email": email, "frontend_base_url": request.data["frontend_base_url"],
                             "organisation": organisation.id, "invited_by": self.request.user.id})
 
