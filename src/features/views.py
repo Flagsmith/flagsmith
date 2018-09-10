@@ -1,3 +1,5 @@
+from threading import Thread
+
 import coreapi
 from rest_framework import status, viewsets
 from rest_framework.generics import GenericAPIView, get_object_or_404
@@ -5,6 +7,7 @@ from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
 from rest_framework.schemas import AutoSchema
 
+from analytics.utils import track_event
 from environments.models import Environment, Identity
 from projects.models import Project
 from .models import FeatureState, Feature
@@ -202,62 +205,51 @@ class SDKFeatureStates(GenericAPIView):
             error = {"detail": "Environment Key header not provided"}
             return Response(error, status=status.HTTP_400_BAD_REQUEST)
 
-        environment = get_object_or_404(Environment, api_key=request.META['HTTP_X_ENVIRONMENT_KEY'])
+        environment_key = request.META['HTTP_X_ENVIRONMENT_KEY']
+        environment = Environment.objects.get(api_key=environment_key)
 
         if identifier:
-            try:
-                identity = Identity.objects.get(identifier=identifier, environment=environment)
-            except Identity.DoesNotExist:
-                identity = Identity.objects.create(identifier=identifier, environment=environment)
+            Thread(track_event(environment.project.organisation.name, "identity_flags")).start()
 
-            if 'feature' in request.GET:
-                try:
-                    feature = Feature.objects.get(name__iexact=request.GET['feature'],
-                                                  project=environment.project)
-                except Feature.DoesNotExist:
-                    error = {"detail": "Given feature not found"}
-                    return Response(error, status=status.HTTP_404_NOT_FOUND)
-
-                try:
-                    feature_state = FeatureState.objects.get(identity=identity,
-                                                             feature=feature,
-                                                             environment=environment)
-                except FeatureState.DoesNotExist:
-                    feature_state = FeatureState.objects.get(feature=feature,
-                                                             environment=environment,
-                                                             identity=None)
-                    return Response(self.get_serializer(feature_state).data,
-                                    status=status.HTTP_200_OK)
-                return Response(self.get_serializer(feature_state).data,
-                                status=status.HTTP_200_OK)
-
-            identity_flags, environment_flags = identity.get_all_feature_states()
-
-            serialized_env_flags = self.get_serializer(environment_flags, many=True)
-            serialized_id_flags = self.get_serializer(identity_flags, many=True)
-
-            return Response(serialized_env_flags.data + serialized_id_flags.data,
-                            status=status.HTTP_200_OK)
-
+            identity, _ = Identity.objects.get_or_create(
+                identifier=identifier,
+                environment=environment,
+            )
         else:
-            if 'feature' in request.GET:
-                try:
-                    feature = Feature.objects.get(name__iexact=request.GET['feature'],
-                                                  project=environment.project)
-                except Feature.DoesNotExist:
-                    error = {"detail": "Given feature not found"}
-                    return Response(error, status=status.HTTP_404_NOT_FOUND)
+            Thread(track_event(environment.project.organisation.name, "flags")).start()
+            identity = None
 
-                environment_flag = FeatureState.objects.get(environment=environment,
-                                                               identity=None,
-                                                               feature=feature)
-                return Response(self.get_serializer(environment_flag).data,
-                                status=status.HTTP_200_OK)
-            else:
-                environment_flags = FeatureState.objects.filter(environment=environment,
-                                                                identity=None)
-                return Response(self.get_serializer(environment_flags, many=True).data,
-                                status=status.HTTP_200_OK)
+        kwargs = {
+            'identity': identity,
+            'environment': environment,
+        }
+
+        if 'feature' in request.GET:
+            kwargs['feature__name__iexact'] = request.GET['feature']
+            try:
+                if identity:
+                    feature_state = identity.get_all_feature_states().get(
+                        feature__name__iexact=kwargs['feature__name__iexact'],
+                    )
+                else:
+                    feature_state = FeatureState.objects.get(**kwargs)
+            except FeatureState.DoesNotExist:
+                return Response(
+                    {"detail": "Given feature not found"},
+                    status=status.HTTP_404_NOT_FOUND
+                )
+
+            return Response(self.get_serializer(feature_state).data, status=status.HTTP_200_OK)
+
+        if identity:
+            flags = self.get_serializer(identity.get_all_feature_states(), many=True)
+            return Response(flags.data, status=status.HTTP_200_OK)
+
+        environment_flags = FeatureState.objects.filter(**kwargs)
+        return Response(
+            self.get_serializer(environment_flags, many=True).data,
+            status=status.HTTP_200_OK
+        )
 
 
 def organisation_has_got_feature(request, organisation):
