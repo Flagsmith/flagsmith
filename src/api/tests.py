@@ -64,6 +64,29 @@ class OrganisationTestCase(TestCase):
         # check hash was created
         self.assertTrue(invite.hash)
 
+    def test_should_fail_if_invite_exists_already(self):
+        # Given
+        client = self.set_up()
+        organisation = Organisation.objects.get(name="test org")
+        email = "test_2@example.com"
+        data = '{"emails":["%s"], "frontend_base_url": "https://example.com"}' % email
+
+        # When
+        response_success = client.post('/api/v1/organisations/%s/invite/' % organisation.id,
+                                       data=data,
+                                       content_type='application/json')
+        response_fail = client.post('/api/v1/organisations/%s/invite/' % organisation.id,
+                                    data=data,
+                                    content_type='application/json')
+
+        #Then
+        self.assertEquals(response_success.status_code, status.HTTP_201_CREATED)
+        self.assertEquals(response_fail.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn("error", response_fail.content)
+
+        invites = Invite.objects.filter(email=email, organisation=organisation)
+        self.assertEquals(len(invites), 1)
+
 
 class ProjectTestCase(TestCase):
 
