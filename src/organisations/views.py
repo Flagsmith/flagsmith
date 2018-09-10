@@ -9,7 +9,8 @@ from rest_framework.response import Response
 from projects.serializers import ProjectSerializer
 from organisations.serializers import OrganisationSerializer
 from users.models import Invite
-from users.serializers import UserFullSerializer, InviteSerializer, UserListSerializer
+from users.serializers import UserFullSerializer, InviteSerializer, UserListSerializer, \
+    InviteListSerializer
 
 
 class OrganisationViewSet(viewsets.ModelViewSet):
@@ -73,3 +74,18 @@ class OrganisationViewSet(viewsets.ModelViewSet):
             raise ValidationError(invites_serializer.errors)
 
         return Response(status=status.HTTP_201_CREATED)
+
+
+class InviteViewSet(viewsets.ModelViewSet):
+    serializer_class = InviteListSerializer
+
+    def get_queryset(self):
+        organisation_pk = self.kwargs.get('organisation_pk')
+        return Invite.objects.filter(organisation=organisation_pk)
+
+    @action(detail=True, methods=["POST"])
+    def resend(self, request, organisation_pk, pk):
+        invite = self.get_object()
+        invite.send_invite_mail()
+        return Response(status=status.HTTP_200_OK)
+

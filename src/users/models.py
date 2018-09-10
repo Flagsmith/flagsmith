@@ -97,12 +97,13 @@ class Invite(models.Model):
     email = models.EmailField()
     hash = models.CharField(max_length=100, default=create_hash, unique=True)
     date_created = models.DateTimeField('DateCreated', auto_now_add=True)
-    organisation = models.ForeignKey(Organisation, on_delete=models.CASCADE)
+    organisation = models.ForeignKey(Organisation, on_delete=models.CASCADE, related_name='invites')
     frontend_base_url = models.CharField(max_length=500, null=False)
     invited_by = models.ForeignKey(FFAdminUser, related_name='sent_invites', null=True)
 
     class Meta:
         unique_together = ('email', 'organisation')
+        ordering = ['organisation', 'date_created']
 
     def save(self, *args, **kwargs):
         # send email invite before saving invite

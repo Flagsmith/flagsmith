@@ -71,4 +71,12 @@ class UserRegisterSerializer(RegisterSerializer):
 class InviteSerializer(serializers.ModelSerializer):
     class Meta:
         model = Invite
-        fields = ('email', 'organisation', 'frontend_base_url', 'invited_by')
+        fields = ('email', 'organisation', 'frontend_base_url', 'invited_by', 'date_created')
+
+
+class InviteListSerializer(serializers.ModelSerializer):
+    invited_by = UserListSerializer()
+
+    class Meta:
+        model = Invite
+        fields = ('id', 'email', 'date_created', 'invited_by')

@@ -87,6 +87,26 @@ class OrganisationTestCase(TestCase):
         invites = Invite.objects.filter(email=email, organisation=organisation)
         self.assertEquals(len(invites), 1)
 
+    def test_should_return_all_invites_and_can_resend(self):
+        # Given
+        client = self.set_up()
+        organisation_2 = Organisation.objects.create(name="Test org 2")
+        invite_1 = Invite.objects.create(email="test_1@example.com",
+                                         frontend_base_url="https://www.example.com",
+                                         organisation=organisation_2)
+        invite_2 = Invite.objects.create(email="test_2@example.com",
+                                         frontend_base_url="https://www.example.com",
+                                         organisation=organisation_2)
+
+        # When
+        invite_list_response = client.get('/api/v1/organisations/%s/invites/' % organisation_2.id)
+        invite_resend_response = client.post('/api/v1/organisations/%s/invites/%s/resend/' % (
+            organisation_2.id, invite_1.id))
+
+        # Then
+        self.assertEquals(invite_list_response.status_code, status.HTTP_200_OK)
+        self.assertEquals(invite_resend_response.status_code, status.HTTP_200_OK)
+
 
 class ProjectTestCase(TestCase):
 
