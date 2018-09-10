@@ -213,7 +213,7 @@ class SDKFeatureStates(GenericAPIView):
 
             identity, _ = Identity.objects.get_or_create(
                 identifier=identifier,
-                environment__api_key=environment_key,
+                environment=environment,
             )
         else:
             Thread(track_event(environment.project.organisation.name, "flags")).start()
@@ -221,7 +221,7 @@ class SDKFeatureStates(GenericAPIView):
 
         kwargs = {
             'identity': identity,
-            'environment__api_key': environment_key,
+            'environment': environment,
         }
 
         if 'feature' in request.GET:
