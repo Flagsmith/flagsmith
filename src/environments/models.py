@@ -5,6 +5,7 @@ from django.db import models
 from django.utils.translation import ugettext_lazy as _
 
 from app.utils import create_hash
+from django.db.models import Q
 from django.utils.encoding import python_2_unicode_compatible
 from features.models import FeatureState
 from projects.models import Project
@@ -72,17 +73,23 @@ class Identity(models.Model):
 
     def get_all_feature_states(self):
         # get all features that have been overridden for an identity
-        identity_flags = self.identity_features.filter(identity=self)
-
-        override_features = [flag.feature for flag in identity_flags]
-
-        # get only feature states for features which are not associated with an identity
-        # and are not in the to be overridden generated above
-        environment_flags = self.environment.feature_states.filter(environment=self.environment,
-                                                                   identity=None)\
-            .exclude(feature__in=override_features)
-
-        return identity_flags, environment_flags
+        # and only feature states for features which are not associated with an identity
+        # and are not in the to be overridden
+        flags = FeatureState.objects.filter(
+            Q(environment=self.environment) &
+            (
+                Q(identity=self) |
+                (
+                    Q(identity=None) &
+                    ~Q(
+                        id__in=self.identity_features.filter(identity=self).values_list(
+                            'feature__id', flat=True
+                        )
+                    )
+                )
+            ),
+        )
+        return flags
 
     def __str__(self):
         return "Account %s" % self.identifier
