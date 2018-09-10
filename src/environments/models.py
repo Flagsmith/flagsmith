@@ -82,7 +82,7 @@ class Identity(models.Model):
                 (
                     Q(identity=None) &
                     ~Q(
-                        id__in=self.identity_features.filter(identity=self).values_list(
+                        feature__id__in=self.identity_features.filter(identity=self).values_list(
                             'feature__id', flat=True
                         )
                     )
