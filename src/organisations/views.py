@@ -9,7 +9,7 @@ from rest_framework.response import Response
 from projects.serializers import ProjectSerializer
 from organisations.serializers import OrganisationSerializer
 from users.models import Invite
-from users.serializers import UserFullSerializer, InviteSerializer, UserListSerializer, \
+from users.serializers import InviteSerializer, UserListSerializer, \
     InviteListSerializer
 
 
@@ -69,11 +69,10 @@ class OrganisationViewSet(viewsets.ModelViewSet):
         invites_serializer = InviteSerializer(data=invites, many=True)
 
         if invites_serializer.is_valid():
-            invites_serializer.save()
+            invite = invites_serializer.save()
+            return Response(InviteListSerializer(instance=invite, many=True).data, status=status.HTTP_201_CREATED)
         else:
             raise ValidationError(invites_serializer.errors)
-
-        return Response(status=status.HTTP_201_CREATED)
 
 
 class InviteViewSet(viewsets.ModelViewSet):
