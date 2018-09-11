@@ -69,11 +69,10 @@ class OrganisationViewSet(viewsets.ModelViewSet):
         invites_serializer = InviteSerializer(data=invites, many=True)
 
         if invites_serializer.is_valid():
-            invites_serializer.save()
+            invite = invites_serializer.save()
+            return Response(InviteListSerializer(instance=invite, many=True).data, status=status.HTTP_201_CREATED)
         else:
             raise ValidationError(invites_serializer.errors)
-
-        return Response(invites_serializer.data, status=status.HTTP_201_CREATED)
 
 
 class InviteViewSet(viewsets.ModelViewSet):
