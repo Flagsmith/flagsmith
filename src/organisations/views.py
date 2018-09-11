@@ -9,7 +9,7 @@ from rest_framework.response import Response
 from projects.serializers import ProjectSerializer
 from organisations.serializers import OrganisationSerializer
 from users.models import Invite
-from users.serializers import UserFullSerializer, InviteSerializer, UserListSerializer, \
+from users.serializers import InviteSerializer, UserListSerializer, \
     InviteListSerializer
 
 
@@ -73,7 +73,7 @@ class OrganisationViewSet(viewsets.ModelViewSet):
         else:
             raise ValidationError(invites_serializer.errors)
 
-        return Response(status=status.HTTP_201_CREATED)
+        return Response(invites_serializer.data, status=status.HTTP_201_CREATED)
 
 
 class InviteViewSet(viewsets.ModelViewSet):
