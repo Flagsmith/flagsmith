@@ -85,6 +85,7 @@ The application relies on the following environment variables to run:
 * `DATABASE_URL`: required by develop and master environments, should be a standard format database url e.g. postgres://user:password@host:port/db_name
 * `DJANGO_SECRET_KEY`: see 'Creating a secret key' section below
 * `GOOGLE_ANALYTICS_KEY`: if google analytics is required, add your tracking code
+* `GOOGLE_ANALYTICS_CLIENT_ID`: if google analytics is required, add a unique uuid to this environment variable. The application will generate one for you if not but this will change on every restart of the server application if one is not set as an environment variable. 
 
 ### Creating a secret key
 It is important to also set an environment variable on whatever platform you are using for 
