@@ -12,6 +12,7 @@ https://docs.djangoproject.com/en/1.9/ref/settings/
 
 import os
 import warnings
+import uuid
 
 from corsheaders.defaults import default_headers
 
@@ -32,6 +33,7 @@ SECRET_KEY = os.environ['DJANGO_SECRET_KEY']
 
 # Google Analytics Configuration
 GOOGLE_ANALYTICS_KEY = os.environ.get('GOOGLE_ANALYTICS_KEY', '')
+GOOGLE_ANALYTICS_CLIENT_ID = str(os.environ.get('GOOGLE_ANALYTICS_CLIENT_ID', uuid.uuid4()))
 
 if 'DJANGO_ALLOWED_HOSTS' in os.environ:
     ALLOWED_HOSTS = os.environ['DJANGO_ALLOWED_HOSTS'].split(',')
