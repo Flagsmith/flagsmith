@@ -6,7 +6,8 @@ from django.conf import settings
 GOOGLE_ANALYTICS_BASE_URL = "https://www.google-analytics.com"
 GOOGLE_ANALYTICS_COLLECT_URL = GOOGLE_ANALYTICS_BASE_URL + "/collect"
 GOOGLE_ANALYTICS_BATCH_URL = GOOGLE_ANALYTICS_BASE_URL + "/batch"
-DEFAULT_DATA = "v=1&tid=" + settings.GOOGLE_ANALYTICS_KEY + "&cid=555&"
+DEFAULT_DATA = "v=1&tid=" + settings.GOOGLE_ANALYTICS_KEY + "&cid=" + \
+               settings.GOOGLE_ANALYTICS_CLIENT_ID + "&"
 
 
 def track_request(uri):
