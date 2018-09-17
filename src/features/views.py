@@ -71,7 +71,8 @@ class FeatureStateViewSet(viewsets.ModelViewSet):
         environment = Environment.objects.get(api_key=environment_api_key)
 
         if identifier:
-            identity = Identity.objects.get(identifier=identifier, environment=environment)
+            identity = Identity.objects.get(
+                identifier=identifier, environment=environment)
         else:
             identity = None
 
@@ -81,7 +82,8 @@ class FeatureStateViewSet(viewsets.ModelViewSet):
         """
         Get environment object from URL parameters in request.
         """
-        environment = Environment.objects.get(api_key=self.kwargs['environment_api_key'])
+        environment = Environment.objects.get(
+            api_key=self.kwargs['environment_api_key'])
         return environment
 
     def get_identity_from_request(self, environment):
@@ -171,7 +173,8 @@ class FeatureStateViewSet(viewsets.ModelViewSet):
         return self.update(request, *args, **kwargs)
 
     def update_feature_state_value(self, instance, value, feature_state):
-        feature_state_value_dict = feature_state.generate_feature_state_value_data(value)
+        feature_state_value_dict = feature_state.generate_feature_state_value_data(
+            value)
 
         feature_state_value_serializer = FeatureStateValueSerializer(
             instance=instance,
@@ -209,7 +212,8 @@ class SDKFeatureStates(GenericAPIView):
         environment = Environment.objects.get(api_key=environment_key)
 
         if identifier:
-            Thread(track_event(environment.project.organisation.name, "identity_flags")).start()
+            Thread(track_event(environment.project.organisation.name,
+                               "identity_flags")).start()
 
             identity, _ = Identity.objects.get_or_create(
                 identifier=identifier,
@@ -242,7 +246,8 @@ class SDKFeatureStates(GenericAPIView):
             return Response(self.get_serializer(feature_state).data, status=status.HTTP_200_OK)
 
         if identity:
-            flags = self.get_serializer(identity.get_all_feature_states(), many=True)
+            flags = self.get_serializer(
+                identity.get_all_feature_states(), many=True)
             return Response(flags.data, status=status.HTTP_200_OK)
 
         environment_flags = FeatureState.objects.filter(**kwargs)
