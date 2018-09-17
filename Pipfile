@@ -4,6 +4,9 @@ verify_ssl = true
 name = "pypi"
 
 [dev-packages]
+pylint = "<2.0.0"
+"pep8" = "*"
+"autopep8" = "*"
 
 [packages]
 appdirs = "*"
