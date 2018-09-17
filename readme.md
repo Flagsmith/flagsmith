@@ -60,8 +60,8 @@ admin user to begin using the application.
 
 ### In a Heroku-ish environment
 
-Once the app has been deployed, you can initialise it to create a super user by hitting the 
-`/api/auth/init` endpoint. This will create a super user with the details configured in 
+Once the app has been deployed, you can initialise it to create a super user by sending a GET request 
+to  the `/api/v1/users/init` endpoint. This will create a super user with the details configured in 
 `app.settings.common` with the following parameters: 
 
 ```
