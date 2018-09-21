@@ -8,8 +8,7 @@ from django.utils.encoding import python_2_unicode_compatible
 from django.utils.translation import ugettext_lazy as _
 from django.dispatch import receiver
 from simple_history.models import HistoricalRecords
-# this won't work until a new release of the simple_history package is rolled out
-# from simple_history.signals import post_create_historical_record
+from simple_history.signals import post_create_historical_record
 
 from projects.models import Project
 
@@ -196,6 +195,6 @@ class FeatureStateValue(models.Model):
     history = HistoricalRecords()
 
 
-# @receiver(post_create_historical_record)
-# def post_create_historical_record(sender, instance, historical_instance, **kwargs):
-#     print("triggered post create historical record")
+@receiver(post_create_historical_record)
+def post_create_historical_record(sender, instance, history_instance, **kwargs):
+    print("triggered post create historical record")
