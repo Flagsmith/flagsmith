@@ -106,11 +106,11 @@
         },
         "django-simple-history": {
             "hashes": [
-                "sha256:426aead38ec1ee7911f8059dc6dcd9f3f375ffa15e11f5a4cd78222808040438",
-                "sha256:7203979afd5a7acca09376b711abd58cd873e88f7892453abfc1322bc67a9603"
+                "sha256:22d511573b441b405584a045c7d241bb41808d4b5fc39c21e4a6b59b0e4b6ae6",
+                "sha256:77a648542f6da7e17e62ab5e66528dea22b9d7f2eb92e4a1ba70ce6165b8ad83"
             ],
             "index": "pypi",
-            "version": "==2.3.0"
+            "version": "==2.4.0"
         },
         "djangorestframework": {
             "hashes": [
