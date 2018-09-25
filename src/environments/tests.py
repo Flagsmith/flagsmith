@@ -12,13 +12,22 @@ class EnvironmentTestCase(TestCase):
         cls.organisation = Organisation.objects.create(name="Test Org")
         cls.project = Project.objects.create(name="Test Project", organisation=cls.organisation)
         cls.feature = Feature.objects.create(name="Test Feature", project=cls.project)
-        cls.environment = Environment.objects.create(name="Test Environment", project=cls.project)
+        cls.environment = Environment.objects.create(name="Test Environment",
+                                                     project=cls.project)
 
     def test_environment_should_be_created_with_feature_states(self):
         feature_states = FeatureState.objects.filter(environment=self.environment)
 
         self.assertTrue(hasattr(self.environment, 'api_key'))
         self.assertEquals(feature_states.count(), 1)
+
+    def test_environment_can_be_created_with_webhooks_enabled(self):
+        environment_with_webhook = Environment.objects.create(name="Env with Webhooks",
+                                                              project=self.project,
+                                                              webhooks_enabled=True,
+                                                              webhook_url="https://sometesturl.org")
+
+        self.assertTrue(environment_with_webhook.name)
 
 
 class EnvironmentSaveTestCase(TestCase):

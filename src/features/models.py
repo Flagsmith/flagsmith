@@ -6,9 +6,7 @@ from django.core.exceptions import (NON_FIELD_ERRORS, ObjectDoesNotExist,
 from django.db import models
 from django.utils.encoding import python_2_unicode_compatible
 from django.utils.translation import ugettext_lazy as _
-from django.dispatch import receiver
 from simple_history.models import HistoricalRecords
-from simple_history.signals import post_create_historical_record
 
 from projects.models import Project
 
@@ -193,8 +191,3 @@ class FeatureStateValue(models.Model):
     integer_value = models.IntegerField(null=True, blank=True)
     string_value = models.CharField(null=True, max_length=2000, blank=True)
     history = HistoricalRecords()
-
-
-@receiver(post_create_historical_record)
-def post_create_historical_record(sender, instance, history_instance, **kwargs):
-    print("triggered post create historical record")
