@@ -31,3 +31,8 @@ class FeatureTestCase(TestCase):
 
         for feature_state in feature_states:
             self.assertEquals(feature_state.get_feature_state_value(), "This is a value")
+
+    def test_updating_feature_state_should_trigger_webhook(self):
+        feature = Feature.objects.create(name="Test Feature", project=self.project)
+        # TODO: implement webhook test method
+
