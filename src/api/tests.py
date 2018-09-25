@@ -1,3 +1,5 @@
+import json
+
 from django.test import TestCase
 from rest_framework.authtoken.models import Token
 from rest_framework.test import APIClient
@@ -82,7 +84,7 @@ class OrganisationTestCase(TestCase):
         #Then
         self.assertEquals(response_success.status_code, status.HTTP_201_CREATED)
         self.assertEquals(response_fail.status_code, status.HTTP_400_BAD_REQUEST)
-        self.assertIn("error", response_fail.content)
+        self.assertTrue("error" in json.loads(response_fail.content))
 
         invites = Invite.objects.filter(email=email, organisation=organisation)
         self.assertEquals(len(invites), 1)
