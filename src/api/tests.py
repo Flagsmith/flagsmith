@@ -503,12 +503,12 @@ class Helper:
 
     @staticmethod
     def clean_up():
-        Organisation.objects.all().delete()
-        Project.objects.all().delete()
-        Environment.objects.all().delete()
-        Feature.objects.all().delete()
         Identity.objects.all().delete()
         FeatureState.objects.all().delete()
+        Feature.objects.all().delete()
+        Environment.objects.all().delete()
+        Project.objects.all().delete()
+        Organisation.objects.all().delete()
 
     @staticmethod
     def create_ffadminuser():
