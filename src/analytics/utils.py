@@ -1,6 +1,6 @@
 import uuid
 
-from six.moves.urllib.parse import quote # python 2/3 compatible urllib import
+from six.moves.urllib.parse import quote  # python 2/3 compatible urllib import
 import requests
 
 from django.conf import settings
@@ -23,10 +23,8 @@ def track_request(uri):
 
 def track_event(category, action, label='', value=''):
     data = DEFAULT_DATA + "&t=event" + \
-           "&ec=" + category + \
-           "&ea=" + action + "&cid=" + str(uuid.uuid4())
+        "&ec=" + category + \
+        "&ea=" + action + "&cid=" + str(uuid.uuid4())
     data = data + "&el=" + label if label else data
     data = data + "&ev=" + value if value else data
-    print data
     requests.post(GOOGLE_ANALYTICS_COLLECT_URL, data=data)
-

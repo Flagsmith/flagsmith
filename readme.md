@@ -4,14 +4,14 @@
 
 ## Development Environment
 
-The following steps require an instance of postgres to be running locally on the default port (5432)  
+Before running the application, you'll need to configure a database for the application. The steps 
+to do this can be found in the following section entitled 'Databases'.  
 
 ```
 pip install pipenv
 pipenv install
-pipenv shell
-python src/manage.py migrate
-python src/manage.py runserver
+pipenv run python src/manage.py migrate 
+pipenv run python src/manage.py runserver
 ```
 
 The application can also be run locally using Docker Compose if required, however, it's beneficial 
@@ -22,9 +22,46 @@ simply run the following command from the project root:
 docker-compose up
 ```
 
+## Databases
+Databases are configured in app/settings/\<env\>.py
+
+The app is configured to use PostgreSQL for all environments. 
+
+When running locally, you'll need a local instance of postgres running. The easiest way to do this 
+is to use docker which is achievable with the following command: 
+
+```docker run --name local_postgres -d -P postgres```
+
+You'll also need to ensure that you have a value for POSTGRES_PASSWORD set as an environment 
+variable on your development machine.
+
+When running on a Heroku-ish platform, the application reads the database connection in production 
+from an environment variable called `DATABASE_URL`. This should be configured in the Heroku-ish 
+application configuration.
+
+When running the application using Docker, it reads the database configuration from the settings 
+located in `app.settings.master-docker`
+
 ## Initialising
-Once the app has been deployed, you can initialise it to create a super user by hitting the 
-`/api/auth/init` endpoint. This will create a super user with the details configured in 
+
+### Locally
+
+The application is built using django which comes with a handy set of admin pages available at 
+`/admin`. To access these, you'll need to create a super user. This can be done with the following
+command: 
+
+```
+pipenv run python src/manage.py createsuperuser
+```
+
+Once you've created the super user, you can use the details to log in at `/admin`. From here, you 
+can create an organisation and either create another user or simply assign the organisation to your
+admin user to begin using the application. 
+
+### In a Heroku-ish environment
+
+Once the app has been deployed, you can initialise it to create a super user by sending a GET request 
+to  the `/api/v1/users/init` endpoint. This will create a super user with the details configured in 
 `app.settings.common` with the following parameters: 
 
 ```
@@ -33,30 +70,8 @@ ADMIN_EMAIL,
 ADMIN_INITIAL_PASSWORD
 ``` 
 
-These can be updated before deployment, or equally, once initialised, you can log in and update 
-these details.
-
-## Databases
-Databases are configured in app/settings/\<env\>.py
-
-The app is configured to use PostgreSQL for all environments currently. 
-NoSQL database systems will require some more complicated set up as Django is not 
-designed for use with NoSQL databases.
-
-When running locally, you'll need a local instance of postgres running. The easiest way to do this 
-is to use docker which is achievable with the following command: 
-
-```docker run --name local_postgres -d -P postgres```
-
-You'll also need to ensure that you have a value for POSTGRES_PASSWORD set as an environment 
-variable on you development machine.  
-
-When running on a Heroku-ish platform, the application reads the database connection in production 
-from an environment variable called `DATABASE_URL`. This should be configured in the Heroku-ish 
-application configuration.  
-
-When running using Docker, it reads the database configuration from the settings located at 
-`app.settings.master-docker`
+Note that this functionality can be turned off in the settings if required by setting 
+`ALLOW_ADMIN_INITIATION_VIA_URL=False`. 
 
 ## Deploying
 
@@ -64,7 +79,7 @@ When running using Docker, it reads the database configuration from the settings
 The application should run on any Heroku-ish platform (e.g. Dokku, Flynn) by simply adding the 
 required git repo and pushing the code. The code for running the app is contained in the Procfile.
 
-To get it running, you'll need to add the necessary config variables as outlined below. 
+To get it running, you'll need to add the necessary config variables as outlined below.
 
 ### Using Docker
 The application can be configured to run using docker with simply by running the following command:
@@ -85,7 +100,6 @@ The application relies on the following environment variables to run:
 * `DATABASE_URL`: required by develop and master environments, should be a standard format database url e.g. postgres://user:password@host:port/db_name
 * `DJANGO_SECRET_KEY`: see 'Creating a secret key' section below
 * `GOOGLE_ANALYTICS_KEY`: if google analytics is required, add your tracking code
-* `GOOGLE_ANALYTICS_CLIENT_ID`: if google analytics is required, add a unique uuid to this environment variable. The application will generate one for you if not but this will change on every restart of the server application if one is not set as an environment variable. 
 
 ### Creating a secret key
 It is important to also set an environment variable on whatever platform you are using for 

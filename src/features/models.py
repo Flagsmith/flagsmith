@@ -1,13 +1,14 @@
 # -*- coding: utf-8 -*-
 from __future__ import unicode_literals
 
-from django.core.exceptions import ObjectDoesNotExist, ValidationError, NON_FIELD_ERRORS
+from django.core.exceptions import (NON_FIELD_ERRORS, ObjectDoesNotExist,
+                                    ValidationError)
 from django.db import models
 from django.utils.encoding import python_2_unicode_compatible
 from django.utils.translation import ugettext_lazy as _
+from simple_history.models import HistoricalRecords
 
 from projects.models import Project
-
 
 # Feature Types
 FLAG = 'FLAG'
@@ -42,6 +43,7 @@ class Feature(models.Model):
     description = models.TextField(null=True, blank=True)
     default_enabled = models.BooleanField(default=False)
     type = models.CharField(max_length=50, choices=FEATURE_TYPES, default=FLAG)
+    history = HistoricalRecords()
 
     class Meta:
         ordering = ['id']
@@ -57,7 +59,8 @@ class Feature(models.Model):
             if old_feature.project != self.project:
                 FeatureState.objects.filter(
                     feature=self,
-                    environment=old_feature.project.environments.values_list('pk', flat=True),
+                    environment=old_feature.project.environments.values_list(
+                        'pk', flat=True),
                 ).all().delete()
 
         super(Feature, self).save(*args, **kwargs)
@@ -103,6 +106,7 @@ class FeatureState(models.Model):
     identity = models.ForeignKey('environments.Identity', related_name='identity_features',
                                  null=True, default=None, blank=True)
     enabled = models.BooleanField(default=False)
+    history = HistoricalRecords()
 
     class Meta:
         unique_together = ("feature", "environment", "identity")
@@ -179,9 +183,11 @@ class FeatureStateValue(models.Model):
         (BOOLEAN, 'Boolean')
     )
 
-    feature_state = models.OneToOneField(FeatureState, related_name='feature_state_value')
+    feature_state = models.OneToOneField(
+        FeatureState, related_name='feature_state_value')
     type = models.CharField(max_length=10, choices=FEATURE_STATE_VALUE_TYPES, default=STRING,
                             null=True, blank=True)
     boolean_value = models.NullBooleanField(null=True, blank=True)
     integer_value = models.IntegerField(null=True, blank=True)
     string_value = models.CharField(null=True, max_length=2000, blank=True)
+    history = HistoricalRecords()
