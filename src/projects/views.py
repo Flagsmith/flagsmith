@@ -24,4 +24,5 @@ class ProjectViewSet(viewsets.ModelViewSet):
     def environments(self, request, pk):
         project = self.get_object()
         environments = project.environments.all()
-        return Response(EnvironmentSerializerLight(environments, many=True).data)
+        return Response(EnvironmentSerializerLight(environments,
+                                                   many=True).data)

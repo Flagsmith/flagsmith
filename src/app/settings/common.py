@@ -33,7 +33,6 @@ SECRET_KEY = os.environ['DJANGO_SECRET_KEY']
 
 # Google Analytics Configuration
 GOOGLE_ANALYTICS_KEY = os.environ.get('GOOGLE_ANALYTICS_KEY', '')
-GOOGLE_ANALYTICS_CLIENT_ID = str(os.environ.get('GOOGLE_ANALYTICS_CLIENT_ID', uuid.uuid4()))
 
 if 'DJANGO_ALLOWED_HOSTS' in os.environ:
     ALLOWED_HOSTS = os.environ['DJANGO_ALLOWED_HOSTS'].split(',')
@@ -72,7 +71,8 @@ INSTALLED_APPS = [
     'features',
     'rest_framework_swagger',
     'docs',
-    'e2etests'
+    'e2etests',
+    'simple_history'
 ]
 
 if GOOGLE_ANALYTICS_KEY:
@@ -108,7 +108,8 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.SessionAuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
-    'corsheaders.middleware.CorsMiddleware'
+    'corsheaders.middleware.CorsMiddleware',
+    'simple_history.middleware.HistoryRequestMiddleware'
 ]
 
 if GOOGLE_ANALYTICS_KEY:
@@ -211,7 +212,8 @@ ACCOUNT_EMAIL_VERIFICATION = 'none'  # TODO: configure email verification
 EMAIL_BACKEND = 'sgbackend.SendGridBackend'
 SENDGRID_API_KEY = os.environ.get('SENDGRID_API_KEY')
 if not SENDGRID_API_KEY:
-    warnings.warn("`SENDGRID_API_KEY` has not been configured. You will not receive emails.")
+    warnings.warn(
+        "`SENDGRID_API_KEY` has not been configured. You will not receive emails.")
 
 SWAGGER_SETTINGS = {
     "SHOW_REQUEST_HEADERS": True

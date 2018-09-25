@@ -6,4 +6,4 @@ from . import models
 class OrganisationSerializer(serializers.ModelSerializer):
     class Meta:
         model = models.Organisation
-        fields = ('id', 'name')
+        fields = ('id', 'name', 'webhook_notification_email')

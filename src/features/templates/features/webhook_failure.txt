@@ -1,0 +1,17 @@
+Hi there,
+
+We received a failure error code when attempting to call the webhook URL for one of your environments. The details of this error can be found below:
+
+Environment name: {{ environment_name }}
+
+Project name: {{ project_name }}
+
+HTTP status code: {{ status_code }}
+
+-----------------------------------------------------------
+
+Posted data was:
+
+{{ data|safe }}
+
+Bullet Train team

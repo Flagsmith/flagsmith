@@ -18,7 +18,7 @@ class EnvironmentSerializerLight(serializers.ModelSerializer):
 
     class Meta:
         model = Environment
-        fields = ('id', 'name', 'api_key', 'project')
+        fields = ('id', 'name', 'api_key', 'project', 'webhooks_enabled', 'webhook_url')
         read_only_fields = ('api_key',)
 
 

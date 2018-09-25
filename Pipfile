@@ -4,6 +4,9 @@ verify_ssl = true
 name = "pypi"
 
 [dev-packages]
+pylint = "<2.0.0"
+"pep8" = "*"
+"autopep8" = "*"
 
 [packages]
 appdirs = "*"
@@ -25,3 +28,5 @@ coreapi = "*"
 django-rest-swagger = "*"
 Django = "<2.0"
 numpy = "*"
+django-simple-history = "*"
+twisted = {version = "*", extras = ["tls"]}
