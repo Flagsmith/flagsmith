@@ -1,6 +1,5 @@
-import json
-
 import requests
+import json
 from django.conf import settings
 from django.core.mail import EmailMultiAlternatives
 from django.core.serializers.json import DjangoJSONEncoder
@@ -9,7 +8,14 @@ from django.template.loader import get_template
 
 def call_webhook(environment, data):
     try:
-        res = requests.post(environment.webhook_url, data=data)
+        headers = {'content-type': 'application/json'}
+        jsonData = json.dumps(
+                data,
+                sort_keys=True,
+                indent=2,
+                cls=DjangoJSONEncoder
+            )
+        res = requests.post(str(environment.webhook_url), data= jsonData, headers= headers)
     except requests.exceptions.ConnectionError:
         send_failure_email(environment, data, None)
         return
