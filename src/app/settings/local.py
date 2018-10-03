@@ -11,7 +11,7 @@ DATABASES = {
         'ENGINE': 'django.db.backends.postgresql',
         'NAME': 'bullettrain',
         'USER': 'postgres',
-        'PASSWORD': 'postgres',
+        'PASSWORD': os.environ['POSTGRES_PASSWORD'],
         'HOST': '127.0.0.1',
         'PORT': 5432
     }
