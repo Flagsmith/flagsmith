@@ -8,6 +8,9 @@ from webhooks.webhooks import call_webhook
 
 @receiver(post_create_historical_record, sender=HistoricalFeatureState)
 def trigger_webhook_for_feature_state_change(sender, instance, history_instance, **kwargs):
+    if not hasattr(instance, "environment"): 
+        return
+
     env = instance.environment
 
     if not env.webhooks_enabled:
