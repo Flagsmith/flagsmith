@@ -71,7 +71,8 @@ INSTALLED_APPS = [
     'features',
     'rest_framework_swagger',
     'docs',
-    'e2etests'
+    'e2etests',
+    'simple_history'
 ]
 
 if GOOGLE_ANALYTICS_KEY:
@@ -107,7 +108,8 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.SessionAuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
-    'corsheaders.middleware.CorsMiddleware'
+    'corsheaders.middleware.CorsMiddleware',
+    'simple_history.middleware.HistoryRequestMiddleware'
 ]
 
 if GOOGLE_ANALYTICS_KEY:
@@ -210,7 +212,8 @@ ACCOUNT_EMAIL_VERIFICATION = 'none'  # TODO: configure email verification
 EMAIL_BACKEND = 'sgbackend.SendGridBackend'
 SENDGRID_API_KEY = os.environ.get('SENDGRID_API_KEY')
 if not SENDGRID_API_KEY:
-    warnings.warn("`SENDGRID_API_KEY` has not been configured. You will not receive emails.")
+    warnings.warn(
+        "`SENDGRID_API_KEY` has not been configured. You will not receive emails.")
 
 SWAGGER_SETTINGS = {
     "SHOW_REQUEST_HEADERS": True

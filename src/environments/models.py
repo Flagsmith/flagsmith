@@ -26,6 +26,8 @@ class Environment(models.Model):
         )
     )
     api_key = models.CharField(default=create_hash, unique=True, max_length=100)
+    webhooks_enabled = models.BooleanField(default=False)
+    webhook_url = models.URLField(null=True, blank=True)
 
     class Meta:
         ordering = ['id']

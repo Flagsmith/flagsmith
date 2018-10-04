@@ -2,6 +2,7 @@
 from __future__ import unicode_literals
 
 from django.contrib import admin
+from simple_history.admin import SimpleHistoryAdmin
 
 from .models import Feature, FeatureState, FeatureStateValue
 
@@ -13,9 +14,10 @@ class FeatureStateValueInline(admin.StackedInline):
 
 
 @admin.register(Feature)
-class FeatureAdmin(admin.ModelAdmin):
+class FeatureAdmin(SimpleHistoryAdmin):
     date_hierarchy = 'created_date'
-    list_display = ('__str__', 'initial_value', 'default_enabled', 'type', 'created_date', )
+    list_display = ('__str__', 'initial_value',
+                    'default_enabled', 'type', 'created_date', )
     list_filter = ('type', 'default_enabled', 'created_date', 'project', )
     list_select_related = ('project', )
     search_fields = (
@@ -27,7 +29,7 @@ class FeatureAdmin(admin.ModelAdmin):
 
 
 @admin.register(FeatureState)
-class FeatureStateAdmin(admin.ModelAdmin):
+class FeatureStateAdmin(SimpleHistoryAdmin):
     inlines = [
         FeatureStateValueInline,
     ]
@@ -44,8 +46,9 @@ class FeatureStateAdmin(admin.ModelAdmin):
 
 
 @admin.register(FeatureStateValue)
-class FeatureStateValueAdmin(admin.ModelAdmin):
-    list_display = ('feature_state', 'type', 'boolean_value', 'integer_value', 'string_value', )
+class FeatureStateValueAdmin(SimpleHistoryAdmin):
+    list_display = ('feature_state', 'type', 'boolean_value',
+                    'integer_value', 'string_value', )
     list_filter = ('type', 'boolean_value', )
     list_select_related = ('feature_state',)
     raw_id_fields = ('feature_state', )
