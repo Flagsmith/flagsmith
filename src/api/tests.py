@@ -1,3 +1,5 @@
+import json
+
 from django.test import TestCase
 from rest_framework.authtoken.models import Token
 from rest_framework.test import APIClient
@@ -13,6 +15,7 @@ from users.models import FFAdminUser, Invite
 
 
 class OrganisationTestCase(TestCase):
+    post_template = '{ "name" : "%s", "webhook_notification_email": "%s" }'
     put_template = '{ "name" : "%s"}'
 
     def set_up(self):
@@ -31,6 +34,19 @@ class OrganisationTestCase(TestCase):
         # Then
         self.assertEquals(response.status_code, 200)
         self.assertTrue('count' in response.data and response.data['count'] == 1)
+
+    def test_should_create_new_organisation(self):
+        # Given
+        client = self.set_up()
+
+        # When
+        response = client.post('/api/v1/organisations/',
+                               data=self.post_template % ("Test create org", "test@email.com"),
+                               content_type='application/json')
+
+        # Then
+        self.assertEquals(response.status_code, 201)
+        self.assertTrue(Organisation.objects.get(name="Test create org").webhook_notification_email)
 
     def test_should_update_organisation_name(self):
         client = self.set_up()
@@ -82,7 +98,7 @@ class OrganisationTestCase(TestCase):
         #Then
         self.assertEquals(response_success.status_code, status.HTTP_201_CREATED)
         self.assertEquals(response_fail.status_code, status.HTTP_400_BAD_REQUEST)
-        self.assertIn("error", response_fail.content)
+        self.assertTrue("error" in json.loads(response_fail.content))
 
         invites = Invite.objects.filter(email=email, organisation=organisation)
         self.assertEquals(len(invites), 1)
@@ -134,6 +150,9 @@ class ProjectTestCase(TestCase):
 
 
 class EnvironmentTestCase(TestCase):
+    env_post_template_wout_webhook = '{"name": %s, "project": %d}'
+    env_post_template_with_webhook = '{"name": "%s", "project": %d, ' \
+                                     '"webhooks_enabled": "%r", "webhook_url": "%s"}'
     fs_put_template = '{ "id" : %d, "enabled" : "%r", "feature_state_value" : "%s" }'
 
     def set_up(self):
@@ -141,6 +160,30 @@ class EnvironmentTestCase(TestCase):
         user = Helper.create_ffadminuser()
         client.force_authenticate(user=user)
         return client
+
+    def test_should_create_environments_with_or_without_webhooks(self):
+        # Given
+        client = self.set_up()
+
+        # When
+        response_with_webhook = client.post('/api/v1/environments/',
+                                            data=self.env_post_template_with_webhook % (
+                                                "Test Env with Webhooks",
+                                                1,
+                                                True,
+                                                "https://sometesturl.org"
+                                            ), content_type="application/json")
+
+        response_wout_webhook = client.post('/api/v1/environments/',
+                                            data=self.env_post_template_wout_webhook % (
+                                                "Test Env without Webhooks",
+                                                1
+                                            ), content_type="application/json")
+
+        # Then
+        self.assertTrue(response_with_webhook.status_code, 201)
+        self.assertTrue(Environment.objects.get(name="Test Env with Webhooks").webhook_url)
+        self.assertTrue(response_wout_webhook.status_code, 201)
 
     def test_should_return_identities_for_an_environment(self):
         client = self.set_up()
@@ -501,12 +544,12 @@ class Helper:
 
     @staticmethod
     def clean_up():
-        Organisation.objects.all().delete()
-        Project.objects.all().delete()
-        Environment.objects.all().delete()
-        Feature.objects.all().delete()
         Identity.objects.all().delete()
         FeatureState.objects.all().delete()
+        Feature.objects.all().delete()
+        Environment.objects.all().delete()
+        Project.objects.all().delete()
+        Organisation.objects.all().delete()
 
     @staticmethod
     def create_ffadminuser():
