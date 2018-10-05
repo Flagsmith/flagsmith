@@ -10,6 +10,7 @@ class Organisation(models.Model):
     name = models.CharField(max_length=2000)
     has_requested_features = models.BooleanField(default=False)
     webhook_notification_email = models.EmailField(null=True, blank=True)
+    created_date = models.DateTimeField('DateCreated', auto_now_add=True)
 
     class Meta:
         ordering = ['id']
