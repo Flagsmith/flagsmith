@@ -30,3 +30,19 @@ deployawsstaging:
         - eb deploy $EB_ENVIRONMENT_STAGING
     only:
         - develop-aws
+
+
+deployawsstaging:
+    image: twstuart/elasticbeanstalk-pipenv
+    stage: deploy-aws
+    script:
+        - export DATABASE_URL='${DATABASE_URL_PRODUCTION}'
+        - pipenv lock --requirements > ./src/requirements.txt
+        - sh generate.sh
+        - git config --global user.email "build@gitlab.com" 
+        - git config --global user.name "Gitlab"
+        - git add . && git commit -m "Commit to EB"
+        - cd src
+        - eb deploy $EB_ENVIRONMENT_PRODUCTION
+    only:
+        - master-aws
