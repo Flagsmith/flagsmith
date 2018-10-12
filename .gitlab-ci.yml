@@ -20,6 +20,7 @@ deployawsstaging:
     image: twstuart/elasticbeanstalk-pipenv
     stage: deploy-aws
     script:
+        - export DATABASE_URL='${DATABASE_URL_STAGING}'
         - pipenv lock --requirements > ./src/requirements.txt
         - sh generate.sh
         - cd src
