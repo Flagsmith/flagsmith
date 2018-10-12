@@ -8,3 +8,5 @@ venv
 .vscode
 *.log
 checkstyle.txt
+requirements.txt
+options.config

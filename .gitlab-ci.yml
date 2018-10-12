@@ -1,17 +1,28 @@
 stages:
-    - deploydevelop
-    - deploymaster
+    - deploy
+    - deploy-aws
 
 deploydevelop:
     image: ilyasemenov/gitlab-ci-git-push
-    stage: deploydevelop
+    stage: deploy
     script: git-push dokku@dokku1.solidstategroup.com:bullet-train-api-dev
     only:
         - develop
 
 deploymaster:
     image: ilyasemenov/gitlab-ci-git-push
-    stage: deploymaster
+    stage: deploy
     script: git-push dokku@dokku1.solidstategroup.com:bullet-train-api
     only:
         - master
+
+deployawsstaging:
+    image: twstuart/elasticbeanstalk-pipenv
+    stage: deploy-aws
+    script:
+        - pipenv lock --requirements > ./src/requirements.txt
+        - sh generate.sh
+        - cd src
+        - eb deploy $EB_ENVIRONMENT_STAGING
+    only:
+        - develop-aws
