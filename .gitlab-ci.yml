@@ -32,7 +32,7 @@ deployawsstaging:
         - develop-aws
 
 
-deployawsstaging:
+deployawsmaster:
     image: twstuart/elasticbeanstalk-pipenv
     stage: deploy-aws
     script:
