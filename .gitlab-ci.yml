@@ -23,6 +23,7 @@ deployawsstaging:
         - export DATABASE_URL='${DATABASE_URL_STAGING}'
         - pipenv lock --requirements > ./src/requirements.txt
         - sh generate.sh
+        - git commit 
         - cd src
         - eb deploy $EB_ENVIRONMENT_STAGING
     only:
