@@ -8,4 +8,3 @@ venv
 .vscode
 *.log
 checkstyle.txt
-options.config
