@@ -25,7 +25,7 @@ deployawsstaging:
         - sh generate.sh
         - git config --global user.email "build@gitlab.com" 
         - git config --global user.name "Gitlab"
-        - git commit 
+        - git add . && git commit 
         - cd src
         - eb deploy $EB_ENVIRONMENT_STAGING
     only:
