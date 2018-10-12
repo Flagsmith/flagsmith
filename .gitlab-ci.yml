@@ -23,6 +23,7 @@ deployawsstaging:
         - export DATABASE_URL='${DATABASE_URL_STAGING}'
         - pipenv lock --requirements > ./src/requirements.txt
         - sh generate.sh
+        -  git config --global user.email "build@gitlab.com" --global user.name "Gitlab"
         - git commit 
         - cd src
         - eb deploy $EB_ENVIRONMENT_STAGING
