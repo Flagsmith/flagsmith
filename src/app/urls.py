@@ -8,6 +8,7 @@ urlpatterns = [
     url(r'^api/', include('api.urls', namespace='api')),
     url(r'^admin/', admin.site.urls),
     url(r'health', lambda r: HttpResponse("ok")),
+    url(r'', lambda r: HttpResponse("Bullet Train API")),
     
     # this url is used to generate email content for the password reset workflow
     url(r'^password-reset/confirm/(?P<uidb64>[0-9A-Za-z_\-]+)/(?P<token>[0-9A-Za-z]{1,'
