@@ -32,6 +32,7 @@ deployawsstaging:
         - eb deploy $EB_ENVIRONMENT_STAGING
     only:
         - develop-aws
+        - develop
 
 
 deployawsmaster:
@@ -50,3 +51,4 @@ deployawsmaster:
         - eb deploy $EB_ENVIRONMENT_PRODUCTION 
     only:
         - master-aws
+        - master
