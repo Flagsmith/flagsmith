@@ -32,7 +32,7 @@ deployawsstaging:
         - eb deploy $EB_ENVIRONMENT_STAGING
     only:
         - develop-aws
-
+        - develop
 
 deployawsmaster:
     image: twstuart/elasticbeanstalk-pipenv
@@ -50,3 +50,4 @@ deployawsmaster:
         - eb deploy $EB_ENVIRONMENT_PRODUCTION 
     only:
         - master-aws
+        - master
