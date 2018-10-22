@@ -1,7 +1,7 @@
 from rest_framework import serializers
 
 from features.serializers import FeatureStateSerializerFull
-from environments.models import Environment, Identity
+from environments.models import Environment, Identity, Trait
 from projects.serializers import ProjectSerializer
 
 
@@ -36,3 +36,23 @@ class IdentitySerializer(serializers.ModelSerializer):
     class Meta:
         model = Identity
         fields = ('id', 'identifier', 'environment')
+
+
+class TraitSerializer(serializers.ModelSerializer):
+    identity = IdentitySerializer
+
+    class Meta:
+        model = Trait
+        fields = ('id', 'trait_key', 'trait_value', 'identity')
+
+
+class TraitSerializerUpdate(serializers.ModelSerializer):
+
+    class Meta:
+        model = Trait
+        fields = ('trait_key', 'trait_value')
+
+
+class IdentitySerializerTraitFlags(serializers.Serializer):
+    flags = FeatureStateSerializerFull(many=True)
+    traits = TraitSerializer(many=True)
