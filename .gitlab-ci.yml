@@ -9,13 +9,6 @@ deploydevelop:
     only:
         - develop
 
-deploymaster:
-    image: ilyasemenov/gitlab-ci-git-push
-    stage: deploy
-    script: git-push dokku@dokku1.solidstategroup.com:bullet-train-api
-    only:
-        - master
-
 deployawsstaging:
     image: twstuart/elasticbeanstalk-pipenv
     stage: deploy-aws
@@ -31,7 +24,7 @@ deployawsstaging:
         - cd src
         - eb deploy $EB_ENVIRONMENT_STAGING
     only:
-        - develop-aws
+        - staging
 
 
 deployawsmaster:
@@ -49,4 +42,4 @@ deployawsmaster:
         - cd src
         - eb deploy $EB_ENVIRONMENT_PRODUCTION 
     only:
-        - master-aws
+        - master
