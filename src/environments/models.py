@@ -115,10 +115,22 @@ class Identity(models.Model):
 
 @python_2_unicode_compatible
 class Trait(models.Model):
+    TRAIT_VALUE_TYPES = (
+        (INTEGER, 'Integer'),
+        (STRING, 'String'),
+        (BOOLEAN, 'Boolean')
+    )
+
+    identity = models.ForeignKey('environments.Identity', related_name='identity_traits')
     trait_key = models.CharField(max_length=200)
+    type = models.CharField(max_length=10, choices=TRAIT_VALUE_TYPES, default=STRING,
+                            null=True, blank=True)
+    boolean_value = models.NullBooleanField(null=True, blank=True)
+    integer_value = models.IntegerField(null=True, blank=True)
+    string_value = models.CharField(null=True, max_length=2000, blank=True)
+
     created_date = models.DateTimeField('DateCreated', auto_now_add=True)
     updated_date = models.DateTimeField('DateUpdate', auto_now_add=True)
-    identity = models.ForeignKey('environments.Identity', related_name='identity_traits')
     history = HistoricalRecords()
 
     class Meta:
@@ -128,14 +140,14 @@ class Trait(models.Model):
 
     def get_trait_value(self):
         try:
-            value_type = self.trait_value.type
+            value_type = self.type
         except ObjectDoesNotExist:
             return None
 
         type_mapping = {
-            INTEGER: self.trait_value.integer_value,
-            STRING: self.trait_value.string_value,
-            BOOLEAN: self.trait_value.boolean_value
+            INTEGER: self.integer_value,
+            STRING: self.string_value,
+            BOOLEAN: self.boolean_value
         }
 
         return type_mapping.get(value_type)
@@ -178,22 +190,4 @@ class Trait(models.Model):
         }
 
     def __str__(self):
-        return "Identity: %s - Trait: %s " % (self.identity.identifier, self.trait_key)
-
-
-# Holds the actual value for User Trait
-class TraitValue(models.Model):
-    TRAIT_VALUE_TYPES = (
-        (INTEGER, 'Integer'),
-        (STRING, 'String'),
-        (BOOLEAN, 'Boolean')
-    )
-
-    trait = models.OneToOneField(
-        Trait, related_name='trait_value')
-    type = models.CharField(max_length=10, choices=TRAIT_VALUE_TYPES, default=STRING,
-                            null=True, blank=True)
-    boolean_value = models.NullBooleanField(null=True, blank=True)
-    integer_value = models.IntegerField(null=True, blank=True)
-    string_value = models.CharField(null=True, max_length=2000, blank=True)
-    history = HistoricalRecords()
+        return "Identity: %s - %s" % (self.identity.identifier, self.trait_key)
