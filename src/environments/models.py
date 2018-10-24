@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
 from __future__ import unicode_literals
 
+import logging
+
 from django.core.exceptions import (ObjectDoesNotExist)
 from django.db import models
 from django.db.models import Q
@@ -16,6 +18,10 @@ from projects.models import Project
 INTEGER = "int"
 STRING = "unicode"
 BOOLEAN = "bool"
+
+
+# Get an instance of a logger
+logger = logging.getLogger(__name__)
 
 
 @python_2_unicode_compatible
@@ -123,7 +129,7 @@ class Trait(models.Model):
 
     identity = models.ForeignKey('environments.Identity', related_name='identity_traits')
     trait_key = models.CharField(max_length=200)
-    type = models.CharField(max_length=10, choices=TRAIT_VALUE_TYPES, default=STRING,
+    value_type = models.CharField(max_length=10, choices=TRAIT_VALUE_TYPES, default=STRING,
                             null=True, blank=True)
     boolean_value = models.NullBooleanField(null=True, blank=True)
     integer_value = models.IntegerField(null=True, blank=True)
@@ -140,7 +146,7 @@ class Trait(models.Model):
 
     def get_trait_value(self):
         try:
-            value_type = self.type
+            value_type = self.value_type
         except ObjectDoesNotExist:
             return None
 
@@ -155,21 +161,13 @@ class Trait(models.Model):
     def save(self, *args, **kwargs):
         super(Trait, self).save(*args, **kwargs)
 
-        # create default trait value for user trait
-        # TraitValue.objects.get_or_create(
-        #     trait=self,
-        #     defaults={
-        #         'string_value': self.feature.initial_value
-        #     }
-        # )
-
     @staticmethod
-    def _get_trait_key_name(fsv_type):
+    def _get_trait_key_name(tv_type):
         return {
             INTEGER: "integer_value",
             BOOLEAN: "boolean_value",
             STRING: "string_value",
-        }.get(fsv_type, "string_value")  # The default was chosen for backwards compatibility
+        }.get(tv_type, "string_value")  # The default was chosen for backwards compatibility
 
     def generate_trait_value_data(self, value):
         """
@@ -179,14 +177,14 @@ class Trait(models.Model):
         :param value: feature state value of variable type
         :return: dictionary to pass directly into feature state value serializer
         """
-        fsv_type = type(value).__name__
+        tv_type = type(value).__name__
         accepted_types = (STRING, INTEGER, BOOLEAN)
 
         return {
             # Default to string if not an anticipate type value to keep backwards compatibility.
-            "type": fsv_type if fsv_type in accepted_types else STRING,
+            "type": tv_type if tv_type in accepted_types else STRING,
             "trait": self.id,
-            self._get_trait_key_name(fsv_type): value
+            self._get_trait_key_name(tv_type): value
         }
 
     def __str__(self):
