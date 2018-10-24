@@ -116,6 +116,33 @@ class TraitViewSet(viewsets.ModelViewSet):
     serializer_class = TraitSerializer
     lookup_field = 'trait_key'
 
+    def get_queryset(self):
+        """
+        Override queryset to filter based on provided URL parameters.
+        """
+        environment_api_key = self.kwargs['environment_api_key']
+        identifier = self.kwargs.get('identity_identifier')
+        environment = Environment.objects.get(api_key=environment_api_key)
+
+        if identifier:
+            identity = Identity.objects.get(identifier=identifier, environment=environment)
+        else:
+            identity = None
+
+        return Trait.objects.filter(environment=environment, identity=identity)
+
+    def get_environment_from_request(self):
+        """
+        Get environment object from URL parameters in request.
+        """
+        return Environment.objects.get(api_key=self.kwargs['environment_api_key'])
+
+    def get_identity_from_request(self, environment):
+        """
+        Get identity object from URL parameters in request.
+        """
+        return Identity.objects.get(identifier=self.kwargs['identity_identifier'], environment=environment)
+
     def create(self, request, *args, **kwargs):
         """
         Override create method to add identity (if present) from URL parameters.
@@ -132,6 +159,14 @@ class TraitViewSet(viewsets.ModelViewSet):
         headers = self.get_success_headers(serializer.data)
 
         return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
+
+    def update(self, request, *args, **kwargs):
+        """
+        Override update method to always assume update request is partial and create / update
+        feature state value.
+        """
+        trait_to_update = self.get_object()
+        trait_data = request.data
 
 
 class SDKIdentities(GenericAPIView):
