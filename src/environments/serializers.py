@@ -46,16 +46,19 @@ class TraitSerializer(serializers.ModelSerializer):
         model = Trait
         fields = ('id', 'trait_key', 'trait_value', 'identity')
 
-    @staticmethod
-    def get_trait_value(obj):
+    def get_trait_value(self, obj):
         return obj.get_trait_value()
 
 
 class TraitSerializerUpdate(serializers.ModelSerializer):
+    trait_value = serializers.SerializerMethodField()
 
     class Meta:
         model = Trait
         fields = ('trait_key', 'trait_value')
+
+    def get_trait_value(self, obj):
+        return obj.get_trait_value()
 
 
 # Serializer for returning both Feature Flags and User Traits
