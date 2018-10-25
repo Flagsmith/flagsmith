@@ -160,17 +160,18 @@ class TraitViewSet(viewsets.ModelViewSet):
 
         return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
 
-    def update(self, request, *args, **kwargs):
-        """
-        Override update method to always assume update request is partial and create / update
-        feature state value.
-        """
-        trait_to_update = self.get_object()
-        trait_data = request.data
+    # def update(self, request, *args, **kwargs):
+    #     """
+    #     Override update method to always assume update request is partial and create / update
+    #     feature state value.
+    #     """
+    #     trait_to_update = self.get_object()
+    #     trait_data = request.data
 
 
 class SDKIdentities(GenericAPIView):
     # API to handle /api/v1/identities/ endpoint to return Flags and Traits for user Identity
+    # if Identity does not exist it will create one, otherwise will fetch existing
 
     serializer_class = IdentitySerializerTraitFlags
     permission_classes = (AllowAny,)
@@ -184,8 +185,8 @@ class SDKIdentities(GenericAPIView):
         ]
     )
 
-    # identifier is an optional path parameter
-    def get(self, request, identifier=None, *args, **kwargs):
+    # identifier is in a path parameter
+    def get(self, request, identifier, *args, **kwargs):
         if 'HTTP_X_ENVIRONMENT_KEY' not in request.META:
             error = {"detail": "Environment Key header not provided"}
             return Response(error, status=status.HTTP_400_BAD_REQUEST)
@@ -193,25 +194,14 @@ class SDKIdentities(GenericAPIView):
         environment_key = request.META['HTTP_X_ENVIRONMENT_KEY']
         environment = Environment.objects.get(api_key=environment_key)
 
-        # if identifier:
-        # Thread(track_event(environment.project.organisation.name, "identity_flags")).start()
-        #
-        # identity, _ = Identity.objects.get_or_create(
-        #     identifier=identifier,
-        #     environment=environment,
-        # )
-        # else:
-        # Thread(track_event(environment.project.organisation.name, "flags")).start()
-        # identity = None
-
+        # if we have identifier fetch, or create if does not exist
         if identifier:
-            try:
-                identity = Identity.objects.get(identifier=identifier, environment=environment)
-            except Identity.DoesNotExist:
-                return Response(
-                    {"detail": "Given identifier not found"},
-                    status=status.HTTP_404_NOT_FOUND
-                )
+
+            identity, _ = Identity.objects.get_or_create(
+                identifier=identifier,
+                environment=environment,
+            )
+
         else:
             return Response(
                 {"detail": "Missing identifier"},
@@ -222,23 +212,6 @@ class SDKIdentities(GenericAPIView):
             'identity': identity,
             'environment': environment,
         }
-
-        # if 'feature' in request.GET:
-        #     kwargs['feature__name__iexact'] = request.GET['feature']
-        #     try:
-        #         if identity:
-        #             feature_state = identity.get_all_feature_states().get(
-        #                 feature__name__iexact=kwargs['feature__name__iexact'],
-        #             )
-        #         else:
-        #             feature_state = FeatureState.objects.get(**kwargs)
-        #     except FeatureState.DoesNotExist:
-        #         return Response(
-        #             {"detail": "Given feature not found"},
-        #             status=status.HTTP_404_NOT_FOUND
-        #         )
-        #
-        #     return Response(self.get_serializer(feature_state).data, status=status.HTTP_200_OK)
 
         if identity:
             traits_data = identity.get_all_user_traits()
@@ -253,18 +226,13 @@ class SDKIdentities(GenericAPIView):
         # We need object type to pass into our IdentitySerializerTraitFlags
         IdentityTraitFlags = namedtuple('IdentityTraitFlags', ('flags', 'traits'))
         traitsAndFlags = IdentityTraitFlags(
-            flags=FeatureState.objects.filter(**kwargs),
+            flags=identity.get_all_feature_states(),
             traits=traits_data,
         )
 
         serializer = IdentitySerializerTraitFlags(traitsAndFlags)
 
-        # environment_flags = FeatureState.objects.filter(**kwargs)
-        # self.get_serializer(traits, environment_flags)
-        return Response(
-            serializer.data,
-            status=status.HTTP_200_OK
-        )
+        return Response(serializer.data,status=status.HTTP_200_OK)
 
 
 class SDKTraits(GenericAPIView):
@@ -280,14 +248,43 @@ class SDKTraits(GenericAPIView):
             coreapi.Field("identifier", location="path",
                           description="Identity user identifier"),
             coreapi.Field("traitkey", location="path",
-                          description="User trait unique key value")
+                          description="User trait unique key")
         ]
     )
 
-    def put(self, request, identifier=None, traitkey=None, *args, **kwargs):
+    def post(self, request, identifier, traitkey, *args, **kwargs):
         if 'HTTP_X_ENVIRONMENT_KEY' not in request.META:
             error = {"detail": "Environment Key header not provided"}
             return Response(error, status=status.HTTP_400_BAD_REQUEST)
 
         environment_key = request.META['HTTP_X_ENVIRONMENT_KEY']
         environment = Environment.objects.get(api_key=environment_key)
+
+        # if we have identifier fetch, or create if does not exist
+        if identifier:
+
+            identity, _ = Identity.objects.get_or_create(
+                identifier=identifier,
+                environment=environment,
+            )
+
+        else:
+            return Response(
+                {"detail": "Missing identifier"},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        # if we have identity trait fetch, or create if does not exist
+        if traitkey:
+
+            # need to create one if does not exist
+            trait, _ = Trait.objects.get_or_create(
+                identity=identity.id,
+                trait_key=traitkey,
+            )
+
+        else:
+            return Response(
+                {"detail": "Missing trait key"},
+                status=status.HTTP_400_BAD_REQUEST
+            )
