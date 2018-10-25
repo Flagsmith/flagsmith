@@ -1,8 +1,6 @@
 # -*- coding: utf-8 -*-
 from __future__ import unicode_literals
 
-import logging
-
 from django.core.exceptions import (ObjectDoesNotExist)
 from django.db import models
 from django.db.models import Q
@@ -18,10 +16,6 @@ from projects.models import Project
 INTEGER = "int"
 STRING = "unicode"
 BOOLEAN = "bool"
-
-
-# Get an instance of a logger
-logger = logging.getLogger(__name__)
 
 
 @python_2_unicode_compatible
@@ -107,12 +101,8 @@ class Identity(models.Model):
         return flags
 
     def get_all_user_traits(self):
-        # get all features that have been overridden for an identity
-        # and only feature states for features which are not associated with an identity
-        # and are not in the to be overridden
-
+        # get all all user traits for an identity
         traits = Trait.objects.filter(identity=self)
-
         return traits
 
     def __str__(self):
