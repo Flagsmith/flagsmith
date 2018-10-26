@@ -38,19 +38,19 @@ class IdentitySerializer(serializers.ModelSerializer):
         fields = ('id', 'identifier', 'environment')
 
 
-class TraitSerializer(serializers.ModelSerializer):
+class TraitSerializerFull(serializers.ModelSerializer):
     identity = IdentitySerializer
     trait_value = serializers.SerializerMethodField()
 
     class Meta:
         model = Trait
-        fields = ('id', 'trait_key', 'trait_value', 'identity')
+        fields = "__all__"
 
     def get_trait_value(self, obj):
         return obj.get_trait_value()
 
 
-class TraitSerializerUpdate(serializers.ModelSerializer):
+class TraitSerializerBasic(serializers.ModelSerializer):
     trait_value = serializers.SerializerMethodField()
 
     class Meta:
@@ -64,4 +64,4 @@ class TraitSerializerUpdate(serializers.ModelSerializer):
 # Serializer for returning both Feature Flags and User Traits
 class IdentitySerializerTraitFlags(serializers.Serializer):
     flags = FeatureStateSerializerFull(many=True)
-    traits = TraitSerializer(many=True)
+    traits = TraitSerializerBasic(many=True)
