@@ -12,8 +12,9 @@ environments_router.register(r'identities', IdentityViewSet, base_name="environm
 
 identity_router = routers.NestedSimpleRouter(environments_router, r'identities', lookup="identity")
 identity_router.register(r'featurestates', FeatureStateViewSet, base_name="identity-featurestates")
-environments_router.register(r'featurestates', FeatureStateViewSet, base_name="environment-featurestates")
 identity_router.register(r'traits', TraitViewSet, base_name="identities-traits")
+environments_router.register(r'featurestates', FeatureStateViewSet, base_name="environment-featurestates")
+
 
 app_name = "environments"
 
