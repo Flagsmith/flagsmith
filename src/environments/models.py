@@ -126,7 +126,6 @@ class Trait(models.Model):
     string_value = models.CharField(null=True, max_length=2000, blank=True)
 
     created_date = models.DateTimeField('DateCreated', auto_now_add=True)
-    updated_date = models.DateTimeField('DateUpdate', auto_now_add=True)
     history = HistoricalRecords()
 
     class Meta:
@@ -161,19 +160,18 @@ class Trait(models.Model):
 
     def generate_trait_value_data(self, value):
         """
-        Takes the value of a feature state to generate a feature state value and returns dictionary
-        to use for passing into feature state value serializer
+        Takes the value and returns dictionary
+        to use for passing into trait value serializer
 
-        :param value: feature state value of variable type
-        :return: dictionary to pass directly into feature state value serializer
+        :param value: trait value of variable type
+        :return: dictionary to pass directly into trait serializer
         """
         tv_type = type(value).__name__
         accepted_types = (STRING, INTEGER, BOOLEAN)
 
         return {
             # Default to string if not an anticipate type value to keep backwards compatibility.
-            "type": tv_type if tv_type in accepted_types else STRING,
-            "trait": self.id,
+            "value_type": tv_type if tv_type in accepted_types else STRING,
             self._get_trait_key_name(tv_type): value
         }
 
