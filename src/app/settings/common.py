@@ -13,6 +13,7 @@ https://docs.djangoproject.com/en/1.9/ref/settings/
 import os
 import warnings
 import uuid
+import requests
 
 from corsheaders.defaults import default_headers
 
@@ -40,6 +41,16 @@ else:
     ALLOWED_HOSTS = []
 
 import sys
+
+# In order to run a load balanced solution, we need to whitelist the internal ip
+try:
+    internal_ip = requests.get('http://instance-data/latest/meta-data/local-ipv4').text
+except requests.exceptions.ConnectionError:
+    pass
+else:
+    ALLOWED_HOSTS.append(internal_ip)
+del requests
+
 
 if sys.version[0] == '2':
     reload(sys)

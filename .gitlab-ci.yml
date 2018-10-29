@@ -1,17 +1,45 @@
 stages:
-    - deploydevelop
-    - deploymaster
+    - deploy
+    - deploy-aws
 
 deploydevelop:
     image: ilyasemenov/gitlab-ci-git-push
-    stage: deploydevelop
+    stage: deploy
     script: git-push dokku@dokku1.solidstategroup.com:bullet-train-api-dev
     only:
         - develop
 
-deploymaster:
-    image: ilyasemenov/gitlab-ci-git-push
-    stage: deploymaster
-    script: git-push dokku@dokku1.solidstategroup.com:bullet-train-api
+deployawsstaging:
+    image: twstuart/elasticbeanstalk-pipenv
+    stage: deploy-aws
+    script:
+        - export DATABASE_URL=$DATABASE_URL_STAGING
+        - export GOOGLE_ANALYTICS_CLIENT_ID=$GOOGLE_ANALYTICS_CLIENT_ID_STAGING
+        - export GOOGLE_ANALYTICS_KEY=$GOOGLE_ANALYTICS_KEY_STAGING
+        - pipenv lock --requirements > ./src/requirements.txt
+        - sh generate.sh
+        - git config --global user.email "build@gitlab.com" 
+        - git config --global user.name "Gitlab"
+        - git add . && git commit -m "Commit to EB"
+        - cd src
+        - eb deploy $EB_ENVIRONMENT_STAGING
+    only:
+        - staging
+
+
+deployawsmaster:
+    image: twstuart/elasticbeanstalk-pipenv
+    stage: deploy-aws
+    script:
+        - export DATABASE_URL=$DATABASE_URL_PRODUCTION
+        - export GOOGLE_ANALYTICS_CLIENT_ID=$GOOGLE_ANALYTICS_CLIENT_ID_PRODUCTION
+        - export GOOGLE_ANALYTICS_KEY=$GOOGLE_ANALYTICS_KEY_PRODUCTION
+        - pipenv lock --requirements > ./src/requirements.txt
+        - sh generate.sh
+        - git config --global user.email "build@gitlab.com" 
+        - git config --global user.name "Gitlab"
+        - git add . && git commit -m "Commit to EB"
+        - cd src
+        - eb deploy $EB_ENVIRONMENT_PRODUCTION 
     only:
         - master
