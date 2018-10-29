@@ -127,7 +127,7 @@ class TraitViewSet(viewsets.ModelViewSet):
         else:
             identity = None
 
-        return Trait.objects.filter(environment=environment, identity=identity)
+        return Trait.objects.filter(identity=identity)
 
     def get_environment_from_request(self):
         """
