@@ -39,7 +39,7 @@ class IdentitySerializer(serializers.ModelSerializer):
 
 
 class TraitSerializerFull(serializers.ModelSerializer):
-    identity = IdentitySerializer
+    identity = IdentitySerializer()
     trait_value = serializers.SerializerMethodField()
 
     class Meta:
