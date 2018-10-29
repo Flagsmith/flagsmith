@@ -81,6 +81,18 @@ required git repo and pushing the code. The code for running the app is containe
 
 To get it running, you'll need to add the necessary config variables as outlined below.
 
+
+### Using ElasticBeanstalk
+The application will run within ElasticBeanstalk using the default Python setup.
+We've included the .ebextensions/ and .elasticbeanstalk/ directories which will run on ElasticBeanstalk.
+
+The changes required to run in your environment will be as follows
+
+`.elasticbeanstalk/config.yml` - update application_name and default_region to the relevant variables for your setup.
+
+`.ebextensions/options.config` - within the root of the project `generate.sh` will add in all environment variables that are required using your chosen CI/CD. Alternatively, you can add your own `options.config`.
+
+
 ### Using Docker
 The application can be configured to run using docker with simply by running the following command:
 
