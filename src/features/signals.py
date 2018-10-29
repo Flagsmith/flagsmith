@@ -12,6 +12,9 @@ def trigger_webhook_for_feature_state_change(sender, instance, history_instance,
     if instance is None:
         return
 
+    if not hasattr(instance, "_environment_cache"): 
+        return
+
     # If there is no environment on this instance
     if not hasattr(instance, "environment"): 
         return
