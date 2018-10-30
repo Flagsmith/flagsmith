@@ -90,7 +90,7 @@ class Identity(models.Model):
                     )
                 )
             ),
-        )
+        ).select_related("feature", "feature_state_value")
         return flags
 
     def __str__(self):
