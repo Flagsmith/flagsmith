@@ -14,6 +14,7 @@ import os
 import warnings
 import uuid
 import requests
+import sys
 
 from corsheaders.defaults import default_headers
 
@@ -40,7 +41,7 @@ if 'DJANGO_ALLOWED_HOSTS' in os.environ:
 else:
     ALLOWED_HOSTS = []
 
-import sys
+INTERNAL_IPS = ['127.0.0.1',]
 
 # In order to run a load balanced solution, we need to whitelist the internal ip
 try:
@@ -83,7 +84,8 @@ INSTALLED_APPS = [
     'rest_framework_swagger',
     'docs',
     'e2etests',
-    'simple_history'
+    'simple_history',
+    'debug_toolbar'
 ]
 
 if GOOGLE_ANALYTICS_KEY:
@@ -120,7 +122,8 @@ MIDDLEWARE = [
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
     'corsheaders.middleware.CorsMiddleware',
-    'simple_history.middleware.HistoryRequestMiddleware'
+    'simple_history.middleware.HistoryRequestMiddleware',
+    'debug_toolbar.middleware.DebugToolbarMiddleware',
 ]
 
 if GOOGLE_ANALYTICS_KEY:
