@@ -209,7 +209,7 @@ class SDKFeatureStates(GenericAPIView):
             return Response(error, status=status.HTTP_400_BAD_REQUEST)
 
         environment_key = request.META['HTTP_X_ENVIRONMENT_KEY']
-        environment = Environment.objects.get(api_key=environment_key)
+        environment = Environment.objects.select_related('project', 'project__organisation').get(api_key=environment_key)
 
         if identifier:
             track_event(environment.project.organisation.name, "identity_flags")
@@ -249,7 +249,7 @@ class SDKFeatureStates(GenericAPIView):
                 identity.get_all_feature_states(), many=True)
             return Response(flags.data, status=status.HTTP_200_OK)
 
-        environment_flags = FeatureState.objects.filter(**kwargs)
+        environment_flags = FeatureState.objects.filter(**kwargs).select_related("feature", "feature_state_value")
         return Response(
             self.get_serializer(environment_flags, many=True).data,
             status=status.HTTP_200_OK
