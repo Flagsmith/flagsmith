@@ -1,6 +1,6 @@
 from django.test import TestCase
 
-from .models import Environment, Identity
+from .models import Environment, Identity, Trait
 from features.models import Feature, FeatureState
 from organisations.models import Organisation
 from projects.models import Project
@@ -150,3 +150,45 @@ class IdentityTestCase(TestCase):
         self.assertEqual(len(flags), 2)
         self.assertIn(fs_environment_anticipated, flags)
         self.assertIn(fs_identity_anticipated, flags)
+
+
+class IdentityTestCase(TestCase):
+    @classmethod
+    def setUpTestData(cls):
+        cls.organisation = Organisation.objects.create(name="Test Org")
+        cls.project = Project.objects.create(name="Test Project", organisation=cls.organisation)
+        cls.environment = Environment.objects.create(name="Test Environment", project=cls.project)
+        cls.identity = Identity.objects.create(identifier="test-identity", environment=cls.environment)
+
+    def test_create_trait_should_assign_relevant_attributes(self):
+        trait = Trait.objects.create(trait_key="test-key", string_value="testing trait", identity=self.identity)
+
+        self.assertIsInstance(trait.identity, Identity)
+        self.assertTrue(hasattr(trait, 'trait_key'))
+        self.assertTrue(hasattr(trait, 'value_type'))
+        self.assertTrue(hasattr(trait, 'created_date'))
+
+    def test_on_update_trait_should_update_relevant_attributes(self):
+        trait = Trait.objects.create(trait_key="test-key", string_value="testing trait", identity=self.identity)
+
+        # TODO: need tests for updates
+
+    def test_create_trait_with_existing_key_and_identity_should_faile(self):
+        trait = Trait.objects.create(trait_key="test-key", string_value="testing trait", identity=self.identity)
+        # should fail
+        trait2 = Trait.objects.create(trait_key="test-key", string_value="testing trait", identity=self.identity)
+
+    def test_get_all_traits_for_identity(self):
+        identity2 = Identity.objects.create(identifier="test-identity_two", environment=self.environment)
+
+        Trait.objects.create(trait_key="test-key-one", string_value="testing trait", identity=self.identity)
+        Trait.objects.create(trait_key="test-key-two", string_value="testing trait", identity=self.identity)
+        Trait.objects.create(trait_key="test-key-three", string_value="testing trait", identity=self.identity)
+        Trait.objects.create(trait_key="test-key-three", string_value="testing trait", identity=identity2)
+
+        # Identity one should have 3
+        traits_identity_one = self.identity.get_all_user_traits()
+        self.assertEqual(len(traits_identity_one), 3)
+
+        traits_identity_two = identity2.get_all_user_traits()
+        self.assertEqual(len(traits_identity_two), 1)

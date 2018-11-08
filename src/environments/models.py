@@ -1,14 +1,21 @@
 # -*- coding: utf-8 -*-
 from __future__ import unicode_literals
 
+from django.core.exceptions import (ObjectDoesNotExist)
 from django.db import models
-from django.utils.translation import ugettext_lazy as _
-
-from app.utils import create_hash
 from django.db.models import Q
 from django.utils.encoding import python_2_unicode_compatible
+from django.utils.translation import ugettext_lazy as _
+from simple_history.models import HistoricalRecords
+
+from app.utils import create_hash
 from features.models import FeatureState
 from projects.models import Project
+
+# User Trait Value Types
+INTEGER = "int"
+STRING = "unicode"
+BOOLEAN = "bool"
 
 
 @python_2_unicode_compatible
@@ -93,5 +100,80 @@ class Identity(models.Model):
         ).select_related("feature", "feature_state_value")
         return flags
 
+    def get_all_user_traits(self):
+        # get all all user traits for an identity
+        traits = Trait.objects.filter(identity=self)
+        return traits
+
     def __str__(self):
         return "Account %s" % self.identifier
+
+
+@python_2_unicode_compatible
+class Trait(models.Model):
+    TRAIT_VALUE_TYPES = (
+        (INTEGER, 'Integer'),
+        (STRING, 'String'),
+        (BOOLEAN, 'Boolean')
+    )
+
+    identity = models.ForeignKey('environments.Identity', related_name='identity_traits')
+    trait_key = models.CharField(max_length=200)
+    value_type = models.CharField(max_length=10, choices=TRAIT_VALUE_TYPES, default=STRING,
+                            null=True, blank=True)
+    boolean_value = models.NullBooleanField(null=True, blank=True)
+    integer_value = models.IntegerField(null=True, blank=True)
+    string_value = models.CharField(null=True, max_length=2000, blank=True)
+
+    created_date = models.DateTimeField('DateCreated', auto_now_add=True)
+    history = HistoricalRecords()
+
+    class Meta:
+        verbose_name_plural = "User Traits"
+        unique_together = ("trait_key", "identity")
+        ordering = ['id']
+
+    def get_trait_value(self):
+        try:
+            value_type = self.value_type
+        except ObjectDoesNotExist:
+            return None
+
+        type_mapping = {
+            INTEGER: self.integer_value,
+            STRING: self.string_value,
+            BOOLEAN: self.boolean_value
+        }
+
+        return type_mapping.get(value_type)
+
+    def save(self, *args, **kwargs):
+        super(Trait, self).save(*args, **kwargs)
+
+    @staticmethod
+    def _get_trait_key_name(tv_type):
+        return {
+            INTEGER: "integer_value",
+            BOOLEAN: "boolean_value",
+            STRING: "string_value",
+        }.get(tv_type, "string_value")  # The default was chosen for backwards compatibility
+
+    def generate_trait_value_data(self, value):
+        """
+        Takes the value and returns dictionary
+        to use for passing into trait value serializer
+
+        :param value: trait value of variable type
+        :return: dictionary to pass directly into trait serializer
+        """
+        tv_type = type(value).__name__
+        accepted_types = (STRING, INTEGER, BOOLEAN)
+
+        return {
+            # Default to string if not an anticipate type value to keep backwards compatibility.
+            "value_type": tv_type if tv_type in accepted_types else STRING,
+            self._get_trait_key_name(tv_type): value
+        }
+
+    def __str__(self):
+        return "Identity: %s - %s" % (self.identity.identifier, self.trait_key)
