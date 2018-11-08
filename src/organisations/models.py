@@ -13,7 +13,7 @@ class Organisation(models.Model):
     webhook_notification_email = models.EmailField(null=True, blank=True)
     created_date = models.DateTimeField('DateCreated', auto_now_add=True)
     paid_subscription = models.BooleanField(default=False)
-    free_to_use_subscription = models.BooleanField(default=False)
+    free_to_use_subscription = models.BooleanField(default=True)
     plan = models.CharField(max_length=20, null=True, blank=True)
     subscription_date = models.DateTimeField('SubscriptionDate', blank=True, null=True)
     class Meta:
