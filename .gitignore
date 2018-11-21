@@ -8,3 +8,4 @@ venv
 .vscode
 *.log
 checkstyle.txt
+.python-version
