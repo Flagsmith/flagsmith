@@ -45,3 +45,4 @@ deployawsmaster:
         - eb deploy $EB_ENVIRONMENT_PRODUCTION 
     only:
         - master
+        - master-aws
