@@ -8,6 +8,14 @@ from webhooks.webhooks import call_webhook
 
 @receiver(post_create_historical_record, sender=HistoricalFeatureState)
 def trigger_webhook_for_feature_state_change(sender, instance, history_instance, **kwargs):
+    # If the instance is null, return
+    if instance is None:
+        return
+
+    if not hasattr(instance, "_environment_cache"): 
+        return
+
+    # If there is no environment on this instance
     if not hasattr(instance, "environment"): 
         return
 
