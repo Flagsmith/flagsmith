@@ -9,13 +9,6 @@ deploydevelop:
     only:
         - develop
 
-deploymaster:
-    image: ilyasemenov/gitlab-ci-git-push
-    stage: deploy
-    script: git-push dokku@dokku1.solidstategroup.com:bullet-train-api
-    only:
-        - master
-
 deployawsstaging:
     image: twstuart/elasticbeanstalk-pipenv
     stage: deploy-aws
@@ -23,6 +16,7 @@ deployawsstaging:
         - export DATABASE_URL=$DATABASE_URL_STAGING
         - export GOOGLE_ANALYTICS_CLIENT_ID=$GOOGLE_ANALYTICS_CLIENT_ID_STAGING
         - export GOOGLE_ANALYTICS_KEY=$GOOGLE_ANALYTICS_KEY_STAGING
+        - export DJANGO_SETTINGS_MODULE=$DJANGO_SETTINGS_MODULE_STAGING
         - pipenv lock --requirements > ./src/requirements.txt
         - sh generate.sh
         - git config --global user.email "build@gitlab.com" 
@@ -31,8 +25,8 @@ deployawsstaging:
         - cd src
         - eb deploy $EB_ENVIRONMENT_STAGING
     only:
-        - develop-aws
-        - develop
+        - staging
+
 
 deployawsmaster:
     image: twstuart/elasticbeanstalk-pipenv
@@ -41,6 +35,7 @@ deployawsmaster:
         - export DATABASE_URL=$DATABASE_URL_PRODUCTION
         - export GOOGLE_ANALYTICS_CLIENT_ID=$GOOGLE_ANALYTICS_CLIENT_ID_PRODUCTION
         - export GOOGLE_ANALYTICS_KEY=$GOOGLE_ANALYTICS_KEY_PRODUCTION
+        - export DJANGO_SETTINGS_MODULE=$DJANGO_SETTINGS_MODULE_PRODUCTION
         - pipenv lock --requirements > ./src/requirements.txt
         - sh generate.sh
         - git config --global user.email "build@gitlab.com" 
@@ -49,5 +44,4 @@ deployawsmaster:
         - cd src
         - eb deploy $EB_ENVIRONMENT_PRODUCTION 
     only:
-        - master-aws
         - master
