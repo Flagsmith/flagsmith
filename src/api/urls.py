@@ -1,6 +1,7 @@
 from django.conf.urls import url, include
 
 from features.views import SDKFeatureStates
+from environments.views import SDKIdentities, SDKTraits
 
 urlpatterns = [
     url(r'^v1/', include([
@@ -16,6 +17,9 @@ urlpatterns = [
         # Client SDK urls
         url(r'^flags/(?P<identifier>\w+)', SDKFeatureStates.as_view()),
         url(r'^flags/', SDKFeatureStates.as_view()),
+
+        url(r'^identities/(?P<identifier>\w+)/traits/(?P<trait_key>\w+)', SDKTraits.as_view()),
+        url(r'^identities/(?P<identifier>\w+)/', SDKIdentities.as_view()),
 
         # API documentation
         url(r'^docs/', include('docs.urls', namespace='docs'))
