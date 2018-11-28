@@ -79,6 +79,7 @@ class Identity(models.Model):
     class Meta:
         verbose_name_plural = "Identities"
         ordering = ['id']
+        unique_together = ('environment', 'identifier',)
 
     def get_all_feature_states(self):
         # get all features that have been overridden for an identity
