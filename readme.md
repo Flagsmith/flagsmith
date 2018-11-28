@@ -158,3 +158,14 @@ issue please search existing issues in order to prevent duplicates.
 If you have any questions about our projects you can email 
 <a href="mailto:projects@solidstategroup.com">projects@solidstategroup.com</a>.
 
+## Useful links
+
+[Website](https://bullet-train.io)
+
+[Documentation](https://docs.bullet-train.io/)
+
+[Code Examples](https://github.com/SolidStateGroup/bullet-train-docs)
+
+[Youtube Tutorials](https://www.youtube.com/channel/UCki7GZrOdZZcsV9rAIRchCw)
+
+
