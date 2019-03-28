@@ -258,7 +258,7 @@ class SDKFeatureStates(GenericAPIView):
         )
 
     @staticmethod
-    def get_environment_key_from_request(self, request):
+    def get_environment_key_from_request(request):
         environment_key = request.META['HTTP_X_ENVIRONMENT_KEY']
         try:
             environment = Environment.objects.select_related('project', 'project__organisation').get(
