@@ -1,6 +1,7 @@
 import coreapi
 import logging
 
+from django.core.exceptions import ObjectDoesNotExist
 from rest_framework import status, viewsets
 from rest_framework.generics import GenericAPIView, get_object_or_404
 from rest_framework.permissions import AllowAny
@@ -263,7 +264,7 @@ class SDKFeatureStates(GenericAPIView):
         try:
             environment = Environment.objects.select_related('project', 'project__organisation').get(
                 api_key=environment_key)
-        except self.DoesNotExist:
+        except ObjectDoesNotExist:
             error_details = "Environment not found for key: " + environment_key
             logger.error(error_details)
             error_response = {"error": error_details}
