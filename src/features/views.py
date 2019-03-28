@@ -1,6 +1,7 @@
-from threading import Thread
-
 import coreapi
+import logging
+
+from django.core.exceptions import ObjectDoesNotExist
 from rest_framework import status, viewsets
 from rest_framework.generics import GenericAPIView, get_object_or_404
 from rest_framework.permissions import AllowAny
@@ -14,6 +15,9 @@ from .models import FeatureState, Feature
 from .serializers import FeatureStateSerializerBasic, FeatureStateSerializerFull, \
     FeatureStateSerializerCreate, CreateFeatureSerializer, FeatureSerializer, \
     FeatureStateValueSerializer
+
+logger = logging.getLogger()
+logger.setLevel(logging.INFO)
 
 
 class FeatureViewSet(viewsets.ModelViewSet):
@@ -209,7 +213,15 @@ class SDKFeatureStates(GenericAPIView):
             return Response(error, status=status.HTTP_400_BAD_REQUEST)
 
         environment_key = request.META['HTTP_X_ENVIRONMENT_KEY']
-        environment = Environment.objects.select_related('project', 'project__organisation').get(api_key=environment_key)
+        try:
+            environment = Environment.objects.select_related('project', 'project__organisation').get(
+                api_key=environment_key)
+        except ObjectDoesNotExist:
+            error_details = "Environment not found for key: " + environment_key
+            logger.error(error_details)
+            error_response = {"error": error_details}
+
+            return Response(error_response, status=status.HTTP_400_BAD_REQUEST)
 
         if identifier:
             track_event(environment.project.organisation.name, "identity_flags")
