@@ -81,6 +81,7 @@ INSTALLED_APPS = [
     'projects',
     'environments',
     'features',
+    'segments',
     'rest_framework_swagger',
     'docs',
     'e2etests',
