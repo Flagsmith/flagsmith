@@ -10,7 +10,8 @@ RUN  apt-get clean && apt-get update \
 
 RUN pip install pipenv
 
-WORKDIR /usr/src/app
+WORKDIR /usr/src
+COPY src/ ./
 COPY Pipfile* ./
 RUN pipenv install --deploy
 
