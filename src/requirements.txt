@@ -16,7 +16,7 @@ django-cors-headers==2.4.0
 django-rest-auth==0.9.3
 django-rest-swagger==2.2.0
 django-simple-history==2.4.0
-django==1.11.16
+django==1.11.*
 djangorestframework==3.8.2
 drf-nested-routers==0.91
 enum34==1.1.6; python_version < '3'
