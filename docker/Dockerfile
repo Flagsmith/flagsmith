@@ -1,4 +1,4 @@
-FROM python:2.7
+FROM python:3.7
 
 RUN rm /var/lib/dpkg/info/format
 RUN printf "1\n" > /var/lib/dpkg/info/format
