@@ -9,7 +9,7 @@ services:
     build:
       context: .
       dockerfile: docker/Dockerfile
-    command: bash -c "ls -al && pipenv run python manage.py migrate --noinput
+    command: bash -c "pipenv run python manage.py migrate --noinput
               && pipenv run python manage.py collectstatic --noinput
               && pipenv run gunicorn --bind 0.0.0.0:8000 -w 3 app.wsgi"
     environment:
