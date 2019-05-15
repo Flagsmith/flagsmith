@@ -11,6 +11,7 @@ from rest_framework.schemas import AutoSchema
 from analytics.utils import track_event
 from environments.models import Environment, Identity
 from projects.models import Project
+from util.util import get_user_permitted_projects, get_user_permitted_environments
 from .models import FeatureState, Feature
 from .serializers import FeatureStateSerializerBasic, FeatureStateSerializerFull, \
     FeatureStateSerializerCreate, CreateFeatureSerializer, FeatureSerializer, \
@@ -30,8 +31,19 @@ class FeatureViewSet(viewsets.ModelViewSet):
             return FeatureSerializer
 
     def get_queryset(self):
-        project = Project.objects.get(pk=self.kwargs['project_pk'])
+        user_projects = get_user_permitted_projects(self.request.user)
+        project = get_object_or_404(user_projects, pk=self.kwargs['project_pk'])
+
         return project.features.all()
+
+    def create(self, request, *args, **kwargs):
+        project_id = request.data.get('project')
+        project = Project.objects.get(pk=project_id)
+
+        if project.organisation not in request.user.organisations.all():
+            return Response(status=status.HTTP_403_FORBIDDEN)
+
+        return super().create(request, *args, **kwargs)
 
 
 class FeatureStateViewSet(viewsets.ModelViewSet):
@@ -72,7 +84,7 @@ class FeatureStateViewSet(viewsets.ModelViewSet):
         """
         environment_api_key = self.kwargs['environment_api_key']
         identifier = self.kwargs.get('identity_identifier')
-        environment = Environment.objects.get(api_key=environment_api_key)
+        environment = get_object_or_404(get_user_permitted_environments(self.request.user), api_key=environment_api_key)
 
         if identifier:
             identity = Identity.objects.get(
@@ -104,6 +116,9 @@ class FeatureStateViewSet(viewsets.ModelViewSet):
         """
         data = request.data
         environment = self.get_environment_from_request()
+        if environment.project.organisation not in self.request.user.organisations.all():
+            return Response(status.HTTP_403_FORBIDDEN)
+
         data['environment'] = environment.id
 
         if 'feature' not in data:
