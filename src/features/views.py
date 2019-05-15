@@ -8,7 +8,7 @@ from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
 from rest_framework.schemas import AutoSchema
 
-from analytics.utils import track_event
+from analytics.track import track_event
 from environments.models import Environment, Identity
 from projects.models import Project
 from .models import FeatureState, Feature
@@ -224,14 +224,14 @@ class SDKFeatureStates(GenericAPIView):
             return Response(error_response, status=status.HTTP_400_BAD_REQUEST)
 
         if identifier:
-            track_event(environment.project.organisation.name, "identity_flags")
+            track_event(environment.project.organisation.get_unique_slug(), "identity_flags")
 
             identity, _ = Identity.objects.get_or_create(
                 identifier=identifier,
                 environment=environment,
             )
         else:
-            track_event(environment.project.organisation.name, "flags")
+            track_event(environment.project.organisation.get_unique_slug(), "flags")
             identity = None
 
         kwargs = {
