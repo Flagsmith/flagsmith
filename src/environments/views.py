@@ -1,16 +1,18 @@
 # -*- coding: utf-8 -*-
 from __future__ import unicode_literals
+
 from collections import namedtuple
 
 import coreapi
 from rest_framework import viewsets, status
-from rest_framework.generics import GenericAPIView
+from rest_framework.generics import GenericAPIView, get_object_or_404
 from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
 from rest_framework.schemas import AutoSchema
 
+from util.util import get_user_permitted_identities, get_user_permitted_environments, get_user_permitted_projects
 from .models import Environment, Identity, Trait
-from .serializers import EnvironmentSerializerLight, IdentitySerializer, TraitSerializerBasic, TraitSerializerFull,\
+from .serializers import EnvironmentSerializerLight, IdentitySerializer, TraitSerializerBasic, TraitSerializerFull, \
     IdentitySerializerTraitFlags
 
 
@@ -44,6 +46,16 @@ class EnvironmentViewSet(viewsets.ModelViewSet):
 
         return queryset
 
+    def create(self, request, *args, **kwargs):
+        project_pk = request.data.get('project')
+
+        if not project_pk:
+            return Response(data = {"detail": "No project provided"}, status=status.HTTP_400_BAD_REQUEST)
+
+        get_object_or_404(get_user_permitted_projects(self.request.user), pk=project_pk)
+
+        return super().create(request, *args, **kwargs)
+
 
 class IdentityViewSet(viewsets.ModelViewSet):
     """
@@ -70,8 +82,10 @@ class IdentityViewSet(viewsets.ModelViewSet):
     lookup_field = 'identifier'
 
     def get_queryset(self):
-        env_key = self.kwargs['environment_api_key']
-        return Identity.objects.filter(environment__api_key=env_key)
+        environment = self.get_environment_from_request()
+        user_permitted_identities = get_user_permitted_identities(self.request.user)
+
+        return user_permitted_identities.filter(environment__api_key=environment.api_key)
 
     def get_environment_from_request(self):
         """
@@ -82,6 +96,8 @@ class IdentityViewSet(viewsets.ModelViewSet):
 
     def create(self, request, *args, **kwargs):
         environment = self.get_environment_from_request()
+        if environment.project.organisation not in request.user.organisations.all():
+            return Response(status=status.HTTP_403_FORBIDDEN)
         data = request.data
         data['environment'] = environment.id
         serializer = self.get_serializer(data=data)
@@ -120,7 +136,7 @@ class TraitViewSet(viewsets.ModelViewSet):
         """
         environment_api_key = self.kwargs['environment_api_key']
         identifier = self.kwargs.get('identity_identifier')
-        environment = Environment.objects.get(api_key=environment_api_key)
+        environment = get_user_permitted_environments(self.request.user).get(api_key=environment_api_key)
 
         if identifier:
             identity = Identity.objects.get(identifier=identifier, environment=environment)
@@ -147,6 +163,9 @@ class TraitViewSet(viewsets.ModelViewSet):
         """
         data = request.data
         environment = self.get_environment_from_request()
+        if environment.project.organisation not in self.request.user.organisations.all():
+            return Response(status=status.HTTP_403_FORBIDDEN)
+
         identifier = self.kwargs.get('identity_identifier', None)
 
         # check if identity in data or in request
@@ -319,7 +338,7 @@ class SDKTraits(GenericAPIView):
                 status=status.HTTP_400_BAD_REQUEST
             )
 
-        if trait and'trait_value' in trait_data:
+        if trait and 'trait_value' in trait_data:
             # Check if trait value was provided with request data. If so, we need to figure out value_type from
             # the given value and also use correct value field e.g. boolean_value, integer_value or
             # string_value, and override request data

@@ -26,3 +26,11 @@ class ProjectViewSet(viewsets.ModelViewSet):
         environments = project.environments.all()
         return Response(EnvironmentSerializerLight(environments,
                                                    many=True).data)
+
+    def create(self, request, *args, **kwargs):
+        organisation_pk = request.data.get('organisation')
+
+        if not organisation_pk or organisation_pk not in [org.id for org in request.user.organisations.all()]:
+            return Response(status=status.HTTP_403_FORBIDDEN)
+
+        return super().create(request, *args, **kwargs)
