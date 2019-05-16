@@ -1,6 +1,6 @@
 from threading import Thread
 
-from .utils import track_request
+from .track import track_request
 
 
 class GoogleAnalyticsMiddleware:
