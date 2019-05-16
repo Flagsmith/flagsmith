@@ -16,8 +16,12 @@ class Organisation(models.Model):
     free_to_use_subscription = models.BooleanField(default=True)
     plan = models.CharField(max_length=20, null=True, blank=True)
     subscription_date = models.DateTimeField('SubscriptionDate', blank=True, null=True)
+
     class Meta:
         ordering = ['id']
 
     def __str__(self):
         return "Org %s" % self.name
+
+    def get_unique_slug(self):
+        return str(self.id) + "-" + self.name

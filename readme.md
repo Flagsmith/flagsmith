@@ -112,6 +112,8 @@ The application relies on the following environment variables to run:
 * `DATABASE_URL`: required by develop and master environments, should be a standard format database url e.g. postgres://user:password@host:port/db_name
 * `DJANGO_SECRET_KEY`: see 'Creating a secret key' section below
 * `GOOGLE_ANALYTICS_KEY`: if google analytics is required, add your tracking code
+* `GOOGLE_SERVICE_ACCOUNT`: service account json for accessing the google API, used for getting usage of an organisation - needs access to analytics.readonly scope 
+* `GA_TABLE_ID`: GA table ID (view) to query when looking for organisation usage
 
 ### Creating a secret key
 It is important to also set an environment variable on whatever platform you are using for 
@@ -157,4 +159,15 @@ issue please search existing issues in order to prevent duplicates.
 
 If you have any questions about our projects you can email 
 <a href="mailto:projects@solidstategroup.com">projects@solidstategroup.com</a>.
+
+## Useful links
+
+[Website](https://bullet-train.io)
+
+[Documentation](https://docs.bullet-train.io/)
+
+[Code Examples](https://github.com/SolidStateGroup/bullet-train-docs)
+
+[Youtube Tutorials](https://www.youtube.com/channel/UCki7GZrOdZZcsV9rAIRchCw)
+
 
