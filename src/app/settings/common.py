@@ -35,6 +35,12 @@ SECRET_KEY = os.environ['DJANGO_SECRET_KEY']
 
 # Google Analytics Configuration
 GOOGLE_ANALYTICS_KEY = os.environ.get('GOOGLE_ANALYTICS_KEY', '')
+GOOGLE_SERVICE_ACCOUNT = os.environ.get('GOOGLE_SERVICE_ACCOUNT')
+if not GOOGLE_SERVICE_ACCOUNT:
+    warnings.warn("GOOGLE_SERVICE_ACCOUNT not configured, getting organisation usage will not work")
+GA_TABLE_ID = os.environ.get('GA_TABLE_ID')
+if not GA_TABLE_ID:
+    warnings.warn("GA_TABLE_ID not configured, getting organisation usage will not work")
 
 if 'DJANGO_ALLOWED_HOSTS' in os.environ:
     ALLOWED_HOSTS = os.environ['DJANGO_ALLOWED_HOSTS'].split(',')

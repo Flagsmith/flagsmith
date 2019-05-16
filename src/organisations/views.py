@@ -6,6 +6,7 @@ from rest_framework.decorators import action
 from rest_framework.exceptions import ValidationError
 from rest_framework.response import Response
 
+from analytics.query import get_events_for_organisation
 from projects.serializers import ProjectSerializer
 from organisations.serializers import OrganisationSerializer
 from users.models import Invite
@@ -74,13 +75,29 @@ class OrganisationViewSet(viewsets.ModelViewSet):
         else:
             raise ValidationError(invites_serializer.errors)
 
+    @action(detail=True, methods=["GET"])
+    def usage(self, request, pk):
+        organisation = self.get_object()
+
+        try:
+            events = get_events_for_organisation(organisation)
+        except (TypeError, ValueError):
+            # TypeError can be thrown when getting service account if not configured
+            # ValueError can be thrown if GA returns a value that cannot be converted to integer
+            return Response({"error": "Couldn't get number of events for organisation."},
+                            status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+        return Response({"events": events}, status=status.HTTP_200_OK)
+
 
 class InviteViewSet(viewsets.ModelViewSet):
     serializer_class = InviteListSerializer
 
     def get_queryset(self):
         organisation_pk = self.kwargs.get('organisation_pk')
-        return Invite.objects.filter(organisation=organisation_pk)
+        if int(organisation_pk) not in [org.id for org in self.request.user.organisations.all()]:
+            return []
+        return Invite.objects.filter(organisation__id=organisation_pk)
 
     @action(detail=True, methods=["POST"])
     def resend(self, request, organisation_pk, pk):
