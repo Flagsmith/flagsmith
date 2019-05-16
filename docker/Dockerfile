@@ -1,4 +1,4 @@
-FROM python:2.7
+FROM python:3.7
 
 RUN rm /var/lib/dpkg/info/format
 RUN printf "1\n" > /var/lib/dpkg/info/format
@@ -10,7 +10,8 @@ RUN  apt-get clean && apt-get update \
 
 RUN pip install pipenv
 
-WORKDIR /usr/src/app
+WORKDIR /usr/src
+COPY src/ ./
 COPY Pipfile* ./
 RUN pipenv install --deploy
 
