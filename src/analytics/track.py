@@ -11,6 +11,7 @@ GOOGLE_ANALYTICS_COLLECT_URL = GOOGLE_ANALYTICS_BASE_URL + "/collect"
 GOOGLE_ANALYTICS_BATCH_URL = GOOGLE_ANALYTICS_BASE_URL + "/batch"
 DEFAULT_DATA = "v=1&tid=" + settings.GOOGLE_ANALYTICS_KEY
 
+
 def postpone(function):
     def decorator(*args, **kwargs):
         t = Thread(target = function, args=args, kwargs=kwargs)
@@ -18,9 +19,11 @@ def postpone(function):
         t.start()
     return decorator
 
+
 @postpone
 def post_async(url, data):
     requests.post(GOOGLE_ANALYTICS_COLLECT_URL, data=data)
+
 
 def track_request(uri):
     """
@@ -30,6 +33,7 @@ def track_request(uri):
     """
     data = DEFAULT_DATA + "t=pageview&dp=" + quote(uri, safe='')
     post_async(GOOGLE_ANALYTICS_COLLECT_URL, data=data)
+
 
 def track_event(category, action, label='', value=''):
     data = DEFAULT_DATA + "&t=event" + \
