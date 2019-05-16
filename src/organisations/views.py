@@ -95,7 +95,9 @@ class InviteViewSet(viewsets.ModelViewSet):
 
     def get_queryset(self):
         organisation_pk = self.kwargs.get('organisation_pk')
-        return Invite.objects.filter(organisation=organisation_pk)
+        if int(organisation_pk) not in [org.id for org in self.request.user.organisations.all()]:
+            return []
+        return Invite.objects.filter(organisation__id=organisation_pk)
 
     @action(detail=True, methods=["POST"])
     def resend(self, request, organisation_pk, pk):
