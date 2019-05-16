@@ -2,14 +2,14 @@ import logging
 
 from django.core.exceptions import ObjectDoesNotExist
 from rest_framework import viewsets, status
-from rest_framework.generics import GenericAPIView
+from rest_framework.generics import GenericAPIView, get_object_or_404
 from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
 
 from environments.exceptions import EnvironmentHeaderNotPresentError
 from environments.models import Environment
-from projects.models import Project
 from segments.serializers import SegmentSerializer
+from util.util import get_user_permitted_projects
 from . import serializers
 
 logger = logging.getLogger()
@@ -20,8 +20,14 @@ class SegmentViewSet(viewsets.ModelViewSet):
     serializer_class = serializers.SegmentSerializer
 
     def get_queryset(self):
-        project = Project.objects.get(pk=self.kwargs['project_pk'])
+        project = get_object_or_404(get_user_permitted_projects(self.request.user), pk=self.kwargs['project_pk'])
         return project.segments.all()
+
+    def create(self, request, *args, **kwargs):
+        project_pk = request.data.get('project')
+        if project_pk not in [project.id for project in get_user_permitted_projects(self.request.user)]:
+            return Response(status=status.HTTP_403_FORBIDDEN)
+        return super().create(request, *args, **kwargs)
 
 
 class SDKSegments(GenericAPIView):
