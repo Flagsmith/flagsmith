@@ -9,6 +9,7 @@ from django.utils.translation import ugettext_lazy as _
 from simple_history.models import HistoricalRecords
 
 from app.utils import create_hash
+from environments.exceptions import EnvironmentHeaderNotPresentError
 from features.models import FeatureState
 from projects.models import Project
 
@@ -68,6 +69,16 @@ class Environment(models.Model):
 
     def __str__(self):
         return "Project %s - Environment %s" % (self.project.name, self.name)
+
+    @staticmethod
+    def get_environment_from_request(request):
+        try:
+            environment_key = request.META['HTTP_X_ENVIRONMENT_KEY']
+        except KeyError:
+            raise EnvironmentHeaderNotPresentError
+
+        return Environment.objects.select_related('project', 'project__organisation').get(
+                api_key=environment_key)
 
 
 @python_2_unicode_compatible
