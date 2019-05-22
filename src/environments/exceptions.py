@@ -1,0 +1,2 @@
+class EnvironmentHeaderNotPresentError(Exception):
+    pass
