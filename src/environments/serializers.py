@@ -1,7 +1,7 @@
 from rest_framework import serializers
 
 from features.serializers import FeatureStateSerializerFull
-from environments.models import Environment, Identity, Trait
+from environments.models import Environment, Identity, Trait, AuditLog
 from projects.serializers import ProjectSerializer
 
 
@@ -65,3 +65,10 @@ class TraitSerializerBasic(serializers.ModelSerializer):
 class IdentitySerializerTraitFlags(serializers.Serializer):
     flags = FeatureStateSerializerFull(many=True)
     traits = TraitSerializerBasic(many=True)
+
+
+class AuditLogSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = AuditLog
+        fields = ('id', 'created_date', 'log', 'author')
