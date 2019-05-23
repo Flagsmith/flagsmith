@@ -4,7 +4,7 @@ from __future__ import unicode_literals
 from django.contrib import admin
 from simple_history.admin import SimpleHistoryAdmin
 
-from .models import Identity, Environment, Trait
+from .models import Identity, Environment, Trait, AuditLog
 
 
 @admin.register(Environment)
@@ -31,3 +31,11 @@ class TraitAdmin(SimpleHistoryAdmin):
     list_filter = ('value_type', 'created_date', 'identity',)
     raw_id_fields = ('identity',)
     search_fields = ('string_value', 'trait_key', 'identity__identifier',)
+
+
+@admin.register(AuditLog)
+class AuditLogAdmin(SimpleHistoryAdmin):
+    date_hierarchy = 'created_date'
+    list_display = ('__str__', 'created_date', 'environment',)
+    list_filter = ('created_date', 'environment',)
+    search_fields = ('log',)
