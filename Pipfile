@@ -3,6 +3,11 @@ url = "https://pypi.org/simple"
 verify_ssl = true
 name = "pypi"
 
+[scripts]
+runserver = "python src/manage.py runserver"
+makemigrations = "python src/manage.py makemigrations"
+migrate = "python src/manage.py migrate"
+
 [dev-packages]
 pylint = "<2.0.0"
 "pep8" = "*"
