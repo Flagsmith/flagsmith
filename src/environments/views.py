@@ -13,7 +13,7 @@ from rest_framework.schemas import AutoSchema
 from util.util import get_user_permitted_identities, get_user_permitted_environments, get_user_permitted_projects
 from .models import Environment, Identity, Trait
 from .serializers import EnvironmentSerializerLight, IdentitySerializer, TraitSerializerBasic, TraitSerializerFull, \
-    IdentitySerializerTraitFlags
+    IdentitySerializerTraitFlags, AuditLogSerializer
 
 
 class EnvironmentViewSet(viewsets.ModelViewSet):
@@ -354,3 +354,42 @@ class SDKTraits(GenericAPIView):
 
         else:
             return Response({"detail": "Failed to update user trait"}, status=status.HTTP_400_BAD_REQUEST)
+
+class AuditLogViewSet(viewsets.ModelViewSet):
+    """
+    list:
+    Get all audit logs within specified environment
+
+    create:
+    Create audit log within specified environment
+
+    retrieve:
+    Get specific audit log within specified environment
+    """
+
+    serializer_class = AuditLogSerializer
+
+    def get_queryset(self):
+        environment = self.get_environment_from_request()
+        user_permitted_identities = get_user_permitted_identities(self.request.user)
+
+        return user_permitted_identities.filter(environment__api_key=environment.api_key)
+
+    def get_environment_from_request(self):
+        """
+        Get environment object from URL parameters in request.
+        """
+        environment = Environment.objects.get(api_key=self.kwargs['environment_api_key'])
+        return environment
+
+    def create(self, request, *args, **kwargs):
+        environment = self.get_environment_from_request()
+        if environment.project.organisation not in request.user.organisations.all():
+            return Response(status=status.HTTP_403_FORBIDDEN)
+        data = request.data
+        data['environment'] = environment.id
+        serializer = self.get_serializer(data=data)
+        serializer.is_valid(raise_exception=True)
+        self.perform_create(serializer)
+        headers = self.get_success_headers(serializer.data)
+        return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
