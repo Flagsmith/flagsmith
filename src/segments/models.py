@@ -59,13 +59,13 @@ class Condition(models.Model):
 
     CONDITION_TYPES = (
         (EQUAL, "Exactly Matches"),
-        (GREATER_THAN, "Does not match"),
+        (GREATER_THAN, "Greater thank"),
         (LESS_THAN, "Less than"),
         (CONTAINS, "Contains"),
         (GREATER_THAN_INCLUSIVE, "Greater than or equal to"),
         (LESS_THAN_INCLUSIVE, "Less than or equal to"),
         (NOT_CONTAINS, "Does not contain"),
-        (NOT_EQUAL, "Not equals"),
+        (NOT_EQUAL, "Does not match"),
         (REGEX, "Matches regex")
     )
 
