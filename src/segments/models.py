@@ -39,7 +39,7 @@ class SegmentRule(models.Model):
         parents = [self.segment, self.rule]
         num_parents = sum(parent is not None for parent in parents)
         if num_parents != 1:
-            raise ValidationError("Segment rule must have exactly one parent, %d found", num_parents)
+            raise ValidationError("Segment rule must have exactly one parent, %d found" % num_parents)
 
     def __str__(self):
         return "rule %d" % self.id
