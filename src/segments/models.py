@@ -39,10 +39,10 @@ class SegmentRule(models.Model):
         parents = [self.segment, self.rule]
         num_parents = sum(parent is not None for parent in parents)
         if num_parents != 1:
-            raise ValidationError("Segment rule must have exactly one parent, %d found", num_parents)
+            raise ValidationError("Segment rule must have exactly one parent, %d found" % num_parents)
 
     def __str__(self):
-        return "%s rule for %s" % (self.type, str(self.segment) if self.segment else str(self.rule))
+        return "rule %d" % self.id
 
 
 @python_2_unicode_compatible
@@ -50,11 +50,23 @@ class Condition(models.Model):
     EQUAL = "EQUAL"
     GREATER_THAN = "GREATER_THAN"
     LESS_THAN = "LESS_THAN"
+    LESS_THAN_INCLUSIVE = "LESS_THAN_INCLUSIVE"
+    CONTAINS = "CONTAINS"
+    GREATER_THAN_INCLUSIVE = "GREATER_THAN_INCLUSIVE"
+    NOT_CONTAINS = "NOT_CONTAINS"
+    NOT_EQUAL = "NOT_EQUAL"
+    REGEX = "REGEX"
 
     CONDITION_TYPES = (
-        (EQUAL, "Exactly Equal"),
-        (GREATER_THAN, "Greater than"),
-        (LESS_THAN, "Less than")
+        (EQUAL, "Exactly Matches"),
+        (GREATER_THAN, "Does not match"),
+        (LESS_THAN, "Less than"),
+        (CONTAINS, "Contains"),
+        (GREATER_THAN_INCLUSIVE, "Greater than or equal to"),
+        (LESS_THAN_INCLUSIVE, "Less than or equal to"),
+        (NOT_CONTAINS, "Does not contain"),
+        (NOT_EQUAL, "Not equals"),
+        (REGEX, "Matches regex")
     )
 
     operator = models.CharField(choices=CONDITION_TYPES, max_length=500)
@@ -64,4 +76,4 @@ class Condition(models.Model):
     rule = models.ForeignKey(SegmentRule, on_delete=models.CASCADE, related_name="conditions")
 
     def __str__(self):
-        return "Condition for %s: %s %s %s" % (str(self.rule), self.property, self.operator, self.value)
+        return "Condition %d: %s %s %s" % (self.id, self.property, self.operator, self.value)
