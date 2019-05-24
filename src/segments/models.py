@@ -50,11 +50,23 @@ class Condition(models.Model):
     EQUAL = "EQUAL"
     GREATER_THAN = "GREATER_THAN"
     LESS_THAN = "LESS_THAN"
+    LESS_THAN_INCLUSIVE = "LESS_THAN_INCLUSIVE"
+    CONTAINS = "CONTAINS"
+    GREATER_THAN_INCLUSIVE = "GREATER_THAN_INCLUSIVE"
+    NOT_CONTAINS = "NOT_CONTAINS"
+    NOT_EQUAL = "NOT_EQUAL"
+    REGEX = "REGEX"
 
     CONDITION_TYPES = (
-        (EQUAL, "Exactly Equal"),
-        (GREATER_THAN, "Greater than"),
-        (LESS_THAN, "Less than")
+        (EQUAL, "Exactly Matches"),
+        (GREATER_THAN, "Does not match"),
+        (LESS_THAN, "Less than"),
+        (CONTAINS, "Contains"),
+        (GREATER_THAN_INCLUSIVE, "Greater than or equal to"),
+        (LESS_THAN_INCLUSIVE, "Less than or equal to"),
+        (NOT_CONTAINS, "Does not contain"),
+        (NOT_EQUAL, "Not equals"),
+        (REGEX, "Matches regex")
     )
 
     operator = models.CharField(choices=CONDITION_TYPES, max_length=500)
