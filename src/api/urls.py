@@ -1,8 +1,25 @@
 from django.conf.urls import url, include
 
+from rest_framework import permissions, authentication
+from drf_yasg.views import get_schema_view
+from drf_yasg import openapi
+
 from features.views import SDKFeatureStates
 from environments.views import SDKIdentities, SDKTraits
 from segments.views import SDKSegments
+
+schema_view = get_schema_view(
+    openapi.Info(
+        title="Bullet Train API",
+        default_version='v1',
+        description="",
+        license=openapi.License(name="BSD License"),
+        contact=openapi.Contact(email="supprt@bullet-train.io"),
+    ),
+    public=False,
+    permission_classes=(permissions.AllowAny,),
+    authentication_classes=(authentication.SessionAuthentication,)
+)
 
 urlpatterns = [
     url(r'^v1/', include([
@@ -25,6 +42,8 @@ urlpatterns = [
         url(r'^segments/', SDKSegments.as_view()),
 
         # API documentation
-        url(r'^docs/', include('docs.urls', namespace='docs'))
+        url(r'^swagger(?P<format>\.json|\.yaml)$', schema_view.without_ui(cache_timeout=0), name='schema-json'),
+        url(r'^docs/$', schema_view.with_ui('swagger', cache_timeout=0), name='schema-swagger-ui'),
+
     ], namespace='v1'))
 ]
