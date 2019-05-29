@@ -13,7 +13,7 @@ from rest_framework.schemas import AutoSchema
 from util.util import get_user_permitted_identities, get_user_permitted_environments, get_user_permitted_projects
 from .models import Environment, Identity, Trait
 from .serializers import EnvironmentSerializerLight, IdentitySerializer, TraitSerializerBasic, TraitSerializerFull, \
-    IdentitySerializerTraitFlags
+    IdentitySerializerTraitFlags, IdentitySerializerWithTraitsAndSegments
 
 
 class EnvironmentViewSet(viewsets.ModelViewSet):
@@ -50,7 +50,7 @@ class EnvironmentViewSet(viewsets.ModelViewSet):
         project_pk = request.data.get('project')
 
         if not project_pk:
-            return Response(data = {"detail": "No project provided"}, status=status.HTTP_400_BAD_REQUEST)
+            return Response(data={"detail": "No project provided"}, status=status.HTTP_400_BAD_REQUEST)
 
         get_object_or_404(get_user_permitted_projects(self.request.user), pk=project_pk)
 
@@ -253,11 +253,6 @@ class SDKIdentities(GenericAPIView):
                 status=status.HTTP_400_BAD_REQUEST
             )
 
-        kwargs = {
-            'identity': identity,
-            'environment': environment,
-        }
-
         if identity:
             traits_data = identity.get_all_user_traits()
             # traits_data = self.get_serializer(identity.get_all_user_traits(), many=True)
@@ -269,13 +264,14 @@ class SDKIdentities(GenericAPIView):
             )
 
         # We need object type to pass into our IdentitySerializerTraitFlags
-        IdentityTraitFlags = namedtuple('IdentityTraitFlags', ('flags', 'traits'))
-        traitsAndFlags = IdentityTraitFlags(
+        IdentityFlagsWithTraitsAndSegments = namedtuple('IdentityTraitFlagsSegments', ('flags', 'traits', 'segments'))
+        identity_flags_traits_segments = IdentityFlagsWithTraitsAndSegments(
             flags=identity.get_all_feature_states(),
             traits=traits_data,
+            segments=identity.get_segments()
         )
 
-        serializer = IdentitySerializerTraitFlags(traitsAndFlags)
+        serializer = IdentitySerializerWithTraitsAndSegments(identity_flags_traits_segments)
 
         return Response(serializer.data, status=status.HTTP_200_OK)
 

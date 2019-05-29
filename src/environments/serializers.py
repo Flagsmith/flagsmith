@@ -3,6 +3,7 @@ from rest_framework import serializers
 from features.serializers import FeatureStateSerializerFull
 from environments.models import Environment, Identity, Trait
 from projects.serializers import ProjectSerializer
+from segments.serializers import SegmentSerializerBasic
 
 
 class EnvironmentSerializerFull(serializers.ModelSerializer):
@@ -65,3 +66,15 @@ class TraitSerializerBasic(serializers.ModelSerializer):
 class IdentitySerializerTraitFlags(serializers.Serializer):
     flags = FeatureStateSerializerFull(many=True)
     traits = TraitSerializerBasic(many=True)
+
+
+class IdentitySerializerWithTraitsAndSegments(serializers.Serializer):
+    def update(self, instance, validated_data):
+        pass
+
+    def create(self, validated_data):
+        pass
+
+    flags = FeatureStateSerializerFull(many=True)
+    traits = TraitSerializerBasic(many=True)
+    segments = SegmentSerializerBasic(many=True)
