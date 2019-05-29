@@ -105,6 +105,9 @@ class FeatureState(models.Model):
                                     null=True)
     identity = models.ForeignKey('environments.Identity', related_name='identity_features',
                                  null=True, default=None, blank=True)
+    segment = models.ForeignKey('segments.Segment', related_name='segment_features', null=True, default=None,
+                                blank=True)
+
     enabled = models.BooleanField(default=False)
     history = HistoricalRecords()
 

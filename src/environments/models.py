@@ -78,7 +78,7 @@ class Environment(models.Model):
             raise EnvironmentHeaderNotPresentError
 
         return Environment.objects.select_related('project', 'project__organisation').get(
-                api_key=environment_key)
+            api_key=environment_key)
 
 
 @python_2_unicode_compatible
@@ -96,21 +96,35 @@ class Identity(models.Model):
         # get all features that have been overridden for an identity
         # and only feature states for features which are not associated with an identity
         # and are not in the to be overridden
+        segments = self.get_segments()
+        segment_feature_states = FeatureState.objects.filter(environment=self.environment, segment__in=segments)
+        overridden_feature_ids = [segment_feature_state.feature.id for segment_feature_state in segment_feature_states]
+
         flags = FeatureState.objects.filter(
             Q(environment=self.environment) &
             (
-                Q(identity=self) |
-                (
-                    Q(identity=None) &
-                    ~Q(
-                        feature__id__in=self.identity_features.filter(identity=self).values_list(
-                            'feature__id', flat=True
-                        )
+                    Q(identity=self) |
+                    Q(segment__in=self.get_segments()) |
+                    (
+                            Q(identity=None) &
+                            ~Q(
+                                feature__id__in=self.identity_features.filter(identity=self).values_list(
+                                    'feature__id', flat=True
+                                )
+                            ) &
+                            (Q(segment=None) &
+                             ~Q(feature_id__in=overridden_feature_ids))
                     )
-                )
             ),
         ).select_related("feature", "feature_state_value")
         return flags
+
+    def get_segments(self):
+        segments = []
+        for segment in self.environment.project.segments.all():
+            if segment.does_identity_match(self):
+                segments.append(segment)
+        return segments
 
     def get_all_user_traits(self):
         # get all all user traits for an identity
@@ -132,7 +146,7 @@ class Trait(models.Model):
     identity = models.ForeignKey('environments.Identity', related_name='identity_traits')
     trait_key = models.CharField(max_length=200)
     value_type = models.CharField(max_length=10, choices=TRAIT_VALUE_TYPES, default=STRING,
-                            null=True, blank=True)
+                                  null=True, blank=True)
     boolean_value = models.NullBooleanField(null=True, blank=True)
     integer_value = models.IntegerField(null=True, blank=True)
     string_value = models.CharField(null=True, max_length=2000, blank=True)
