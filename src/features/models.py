@@ -112,7 +112,7 @@ class FeatureState(models.Model):
     history = HistoricalRecords()
 
     class Meta:
-        unique_together = ("feature", "environment", "identity")
+        unique_together = [("feature", "environment", "identity"), ("feature", "environment", "segment")]
         ordering = ['id']
 
     def get_feature_state_value(self):
