@@ -81,7 +81,6 @@ class IdentityViewSet(viewsets.ModelViewSet):
     """
 
     serializer_class = IdentitySerializer
-    lookup_field = 'identifier'
 
     def get_queryset(self):
         environment = self.get_environment_from_request()
@@ -137,11 +136,11 @@ class TraitViewSet(viewsets.ModelViewSet):
         Override queryset to filter based on provided URL parameters.
         """
         environment_api_key = self.kwargs['environment_api_key']
-        identifier = self.kwargs.get('identity_identifier')
+        identity_pk = self.kwargs.get('identity_pk')
         environment = get_user_permitted_environments(self.request.user).get(api_key=environment_api_key)
 
-        if identifier:
-            identity = Identity.objects.get(identifier=identifier, environment=environment)
+        if identity_pk:
+            identity = Identity.objects.get(pk=identity_pk, environment=environment)
         else:
             identity = None
 
@@ -157,7 +156,7 @@ class TraitViewSet(viewsets.ModelViewSet):
         """
         Get identity object from URL parameters in request.
         """
-        return Identity.objects.get(identifier=self.kwargs['identity_identifier'], environment=environment)
+        return Identity.objects.get(pk=self.kwargs['identity_pk'])
 
     def create(self, request, *args, **kwargs):
         """
@@ -168,18 +167,17 @@ class TraitViewSet(viewsets.ModelViewSet):
         if environment.project.organisation not in self.request.user.organisations.all():
             return Response(status=status.HTTP_403_FORBIDDEN)
 
-        identifier = self.kwargs.get('identity_identifier', None)
+        identity_pk = self.kwargs.get('identity_pk')
 
         # check if identity in data or in request
-        if 'identity' not in data and not identifier:
+        if 'identity' not in data and not identity_pk:
             error = {"detail": "Identity not provided"}
             return Response(error, status=status.HTTP_400_BAD_REQUEST)
 
         # TODO: do we give priority to request identity or data?
         # Override with request identity
-        if identifier:
-            identity = self.get_identity_from_request(environment)
-            data['identity'] = identity.id
+        if identity_pk:
+            data['identity'] = identity_pk
 
         serializer = self.get_serializer(data=data)
         serializer.is_valid(raise_exception=True)
