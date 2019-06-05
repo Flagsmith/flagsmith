@@ -3,7 +3,7 @@ from drf_yasg import openapi
 from drf_yasg.views import get_schema_view
 from rest_framework import permissions, authentication
 
-from environments.views import SDKIdentitiesOld, SDKTraitsOld, SDKIdentities, SDKTraits
+from environments.views import SDKIdentitiesDeprecated, SDKTraitsDeprecated, SDKIdentities, SDKTraits
 from features.views import SDKFeatureStates
 from segments.views import SDKSegments
 
@@ -45,8 +45,8 @@ current_urls = [
 ]
 
 deprecated_urls = [
-    url(r'^identities/(?P<identifier>[-\w@%.]+)/traits/(?P<trait_key>[-\w.]+)', SDKTraitsOld.as_view()),
-    url(r'^identities/(?P<identifier>[-\w@%.]+)/', SDKIdentitiesOld.as_view()),
+    url(r'^identities/(?P<identifier>[-\w@%.]+)/traits/(?P<trait_key>[-\w.]+)', SDKTraitsDeprecated.as_view()),
+    url(r'^identities/(?P<identifier>[-\w@%.]+)/', SDKIdentitiesDeprecated.as_view()),
     url(r'^flags/(?P<identifier>[-\w@%.]+)', SDKFeatureStates.as_view())
 ]
 
