@@ -5,7 +5,7 @@ from collections import namedtuple
 
 import coreapi
 from django.core.exceptions import ObjectDoesNotExist
-from rest_framework import viewsets, status, mixins
+from rest_framework import viewsets, status
 from rest_framework.generics import GenericAPIView, get_object_or_404
 from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
@@ -215,6 +215,9 @@ class TraitViewSet(viewsets.ModelViewSet):
 
 
 class SDKIdentitiesOld(GenericAPIView):
+    """
+    THIS ENDPOINT IS DEPRECATED. Please use `/identities/?identifier=<identifier>` instead.
+    """
     # API to handle /api/v1/identities/ endpoint to return Flags and Traits for user Identity
     # if Identity does not exist it will create one, otherwise will fetch existing
 
@@ -327,6 +330,9 @@ class SDKTraitsOld(GenericAPIView):
     )
 
     def post(self, request, identifier, trait_key, *args, **kwargs):
+        """
+        THIS ENDPOINT IS DEPRECATED. Please use `/traits/` instead.
+        """
         if 'HTTP_X_ENVIRONMENT_KEY' not in request.META:
             error = {"detail": "Environment Key header not provided"}
             return Response(error, status=status.HTTP_400_BAD_REQUEST)
