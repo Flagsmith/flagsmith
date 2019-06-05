@@ -241,7 +241,8 @@ SWAGGER_SETTINGS = {
             'in': 'header',
             'name': 'Authorization'
         }
-    }
+    },
+    'EXCLUDE_NAMESPACES': ['deprecated']
 }
 
 LOGIN_URL = "/admin/login/"
