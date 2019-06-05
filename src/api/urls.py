@@ -1,11 +1,10 @@
 from django.conf.urls import url, include
-
-from rest_framework import permissions, authentication
-from drf_yasg.views import get_schema_view
 from drf_yasg import openapi
+from drf_yasg.views import get_schema_view
+from rest_framework import permissions, authentication
 
-from features.views import SDKFeatureStates
 from environments.views import SDKIdentitiesOld, SDKTraitsOld, SDKIdentities, SDKTraits
+from features.views import SDKFeatureStates
 from segments.views import SDKSegments
 
 schema_view = get_schema_view(
@@ -21,36 +20,37 @@ schema_view = get_schema_view(
     authentication_classes=(authentication.SessionAuthentication,)
 )
 
+current_urls = [
+    url(r'^organisations/', include('organisations.urls')),
+    url(r'^projects/', include('projects.urls')),
+    url(r'^environments/', include('environments.urls')),
+    url(r'^users/', include('users.urls')),
+    url(r'^auth/', include('rest_auth.urls')),
+    url(r'^auth/register/', include('rest_auth.registration.urls')),
+    url(r'^account/', include('allauth.urls')),
+    url(r'^e2etests/', include('e2etests.urls')),
+
+    # Client SDK urls
+    url(r'^flags/', SDKFeatureStates.as_view()),
+
+    url(r'^identities/$', SDKIdentities.as_view()),
+
+    url(r'^traits/$', SDKTraits.as_view()),
+
+    url(r'^segments/', SDKSegments.as_view()),
+
+    # API documentation
+    url(r'^swagger(?P<format>\.json|\.yaml)$', schema_view.without_ui(cache_timeout=0), name='schema-json'),
+    url(r'^docs/$', schema_view.with_ui('swagger', cache_timeout=0), name='schema-swagger-ui')
+]
+
+deprecated_urls = [
+    url(r'^identities/(?P<identifier>[-\w@%.]+)/traits/(?P<trait_key>[-\w.]+)', SDKTraitsOld.as_view()),
+    url(r'^identities/(?P<identifier>[-\w@%.]+)/', SDKIdentitiesOld.as_view()),
+    url(r'^flags/(?P<identifier>[-\w@%.]+)', SDKFeatureStates.as_view())
+]
+
 urlpatterns = [
-    url(r'^v1/', include([
-        url(r'^organisations/', include('organisations.urls')),
-        url(r'^projects/', include('projects.urls')),
-        url(r'^environments/', include('environments.urls')),
-        url(r'^users/', include('users.urls')),
-        url(r'^auth/', include('rest_auth.urls')),
-        url(r'^auth/register/', include('rest_auth.registration.urls')),
-        url(r'^account/', include('allauth.urls')),
-        url(r'^e2etests/', include('e2etests.urls')),
-
-        # Client SDK urls
-        url(r'^flags/', SDKFeatureStates.as_view()),
-
-        url(r'^identities/$', SDKIdentities.as_view()),
-
-        url(r'^traits/$', SDKTraits.as_view()),
-
-        url(r'^segments/', SDKSegments.as_view()),
-
-        # API documentation
-        url(r'^swagger(?P<format>\.json|\.yaml)$', schema_view.without_ui(cache_timeout=0), name='schema-json'),
-        url(r'^docs/$', schema_view.with_ui('swagger', cache_timeout=0), name='schema-swagger-ui'),
-
-        # old client SDK urls
-        url(r'', include([
-            url(r'^identities/(?P<identifier>[-\w@%.]+)/traits/(?P<trait_key>[-\w.]+)', SDKTraitsOld.as_view()), # deprecated
-            url(r'^identities/(?P<identifier>[-\w@%.]+)/', SDKIdentitiesOld.as_view()), # deprecated
-            url(r'^flags/(?P<identifier>[-\w@%.]+)', SDKFeatureStates.as_view()), # deprecated
-        ], namespace='deprecated'))
-
-    ], namespace='v1')),
+    url(r'^v1/', include(current_urls, namespace='v1')),
+    url(r'^v1/', include(deprecated_urls, namespace='deprecated'))
 ]
