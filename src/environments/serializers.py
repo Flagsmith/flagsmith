@@ -46,7 +46,8 @@ class TraitSerializerFull(serializers.ModelSerializer):
         model = Trait
         fields = "__all__"
 
-    def get_trait_value(self, obj):
+    @staticmethod
+    def get_trait_value(obj):
         return obj.get_trait_value()
 
 
@@ -57,7 +58,8 @@ class TraitSerializerBasic(serializers.ModelSerializer):
         model = Trait
         fields = ('trait_key', 'trait_value')
 
-    def get_trait_value(self, obj):
+    @staticmethod
+    def get_trait_value(obj):
         return obj.get_trait_value()
 
 
