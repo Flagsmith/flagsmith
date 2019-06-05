@@ -214,7 +214,7 @@ class TraitViewSet(viewsets.ModelViewSet):
         return self.update(request, *args, **kwargs)
 
 
-class SDKIdentitiesOld(GenericAPIView):
+class SDKIdentitiesDeprecated(GenericAPIView):
     """
     THIS ENDPOINT IS DEPRECATED. Please use `/identities/?identifier=<identifier>` instead.
     """
@@ -311,7 +311,7 @@ class SDKIdentities(GenericAPIView):
         return Response(data=response, status=status.HTTP_200_OK)
 
 
-class SDKTraitsOld(GenericAPIView):
+class SDKTraitsDeprecated(GenericAPIView):
     # API to handle /api/v1/identities/<identifier>/traits/<trait_key> endpoints
     # if Identity or Trait does not exist it will create one, otherwise will fetch existing
 
