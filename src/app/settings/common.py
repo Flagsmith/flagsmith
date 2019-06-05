@@ -237,7 +237,14 @@ if not SENDGRID_API_KEY:
         "`SENDGRID_API_KEY` has not been configured. You will not receive emails.")
 
 SWAGGER_SETTINGS = {
-    "SHOW_REQUEST_HEADERS": True
+    "SHOW_REQUEST_HEADERS": True,
+    'SECURITY_DEFINITIONS': {
+        'api_key': {
+            'type': 'apiKey',
+            'in': 'header',
+            'name': 'Authorization'
+        }
+    }
 }
 
 # Email associated with user that is used by front end for end to end testing purposes
