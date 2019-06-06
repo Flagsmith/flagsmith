@@ -224,7 +224,8 @@ class SDKFeatureStates(GenericAPIView):
 
     def get(self, request, identifier=None, *args, **kwargs):
         """
-        THIS ENDPOINT IS DEPRECATED. Please use `/identities/?identifier=<identifier>` instead.
+        USING THIS ENDPOINT WITH AN IDENTIFIER IS DEPRECATED.
+        Please use `/identities/?identifier=<identifier>` instead.
         """
         if 'HTTP_X_ENVIRONMENT_KEY' not in request.META:
             error = {"detail": "Environment Key header not provided"}
