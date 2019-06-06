@@ -83,12 +83,11 @@ class FeatureStateViewSet(viewsets.ModelViewSet):
         Override queryset to filter based on provided URL parameters.
         """
         environment_api_key = self.kwargs['environment_api_key']
-        identifier = self.kwargs.get('identity_identifier')
+        identity_pk = self.kwargs.get('identity_pk')
         environment = get_object_or_404(get_user_permitted_environments(self.request.user), api_key=environment_api_key)
 
-        if identifier:
-            identity = Identity.objects.get(
-                identifier=identifier, environment=environment)
+        if identity_pk:
+            identity = Identity.objects.get(pk=identity_pk)
         else:
             identity = None
 
@@ -106,8 +105,7 @@ class FeatureStateViewSet(viewsets.ModelViewSet):
         """
         Get identity object from URL parameters in request.
         """
-        identity = Identity.objects.get(identifier=self.kwargs['identity_identifier'],
-                                        environment=environment)
+        identity = Identity.objects.get(pk=self.kwargs['identity_pk'])
         return identity
 
     def create(self, request, *args, **kwargs):
@@ -131,9 +129,9 @@ class FeatureStateViewSet(viewsets.ModelViewSet):
             error = {"detail": "Feature does not exist in project"}
             return Response(error, status=status.HTTP_400_BAD_REQUEST)
 
-        if self.kwargs.get('identity_identifier', None):
-            identity = self.get_identity_from_request(environment)
-            data['identity'] = identity.id
+        identity_pk = self.kwargs.get('identity_pk')
+        if identity_pk:
+            data['identity'] = identity_pk
 
         serializer = FeatureStateSerializerBasic(data=data)
         if serializer.is_valid():
