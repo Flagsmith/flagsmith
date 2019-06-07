@@ -96,27 +96,29 @@ class Identity(models.Model):
         # get all features that have been overridden for an identity
         # and only feature states for features which are not associated with an identity
         # and are not in the to be overridden
-        segments = self.get_segments()
-        segment_feature_states = FeatureState.objects.filter(environment=self.environment, segment__in=segments)
-        overridden_feature_ids = [segment_feature_state.feature.id for segment_feature_state in segment_feature_states]
-
         flags = FeatureState.objects.filter(
             Q(environment=self.environment) &
             (
-                    Q(identity=self) |
-                    Q(segment__in=self.get_segments()) |
-                    (
-                            Q(identity=None) &
-                            ~Q(
-                                feature__id__in=self.identity_features.filter(identity=self).values_list(
-                                    'feature__id', flat=True
-                                )
-                            ) &
-                            (Q(segment=None) &
-                             ~Q(feature_id__in=overridden_feature_ids))
+                Q(identity=self) |
+                (
+                    Q(identity=None) &
+                    ~Q(
+                        feature__id__in=self.identity_features.filter(identity=self).values_list(
+                            'feature__id', flat=True
+                        )
                     )
+                )
             ),
         ).select_related("feature", "feature_state_value")
+
+        segments = self.get_segments()
+        # TODO: make this more efficient
+        for segment in segments:
+            for feature_segment in segment.feature_segments.all():
+                for flag in flags:
+                    if flag.feature == feature_segment.feature:
+                        flag.enabled = feature_segment.enabled
+
         return flags
 
     def get_segments(self):
