@@ -19,7 +19,7 @@ class Migration(migrations.Migration):
             fields=[
                 ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
                 ('priority', models.IntegerField(blank=True, null=True)),
-                ('feature', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to='features.Feature')),
+                ('feature', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='feature_segments', to='features.Feature')),
                 ('segment', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='feature_segments', to='segments.Segment')),
             ],
         ),

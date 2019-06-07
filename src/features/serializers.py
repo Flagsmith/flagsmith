@@ -22,7 +22,7 @@ class CreateFeatureSerializer(serializers.ModelSerializer):
 class FeatureSegmentCreateSerializer(serializers.ModelSerializer):
     class Meta:
         model = FeatureSegment
-        fields = ('feature', 'segment', 'priority')
+        fields = ('feature', 'segment', 'priority', 'enabled')
 
 
 class FeatureSegmentSerializer(serializers.ModelSerializer):
@@ -30,7 +30,7 @@ class FeatureSegmentSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = FeatureSegment
-        fields = ('segment', 'priority')
+        fields = ('segment', 'priority', 'enabled')
 
 
 class FeatureSerializer(serializers.ModelSerializer):

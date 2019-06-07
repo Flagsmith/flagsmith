@@ -207,6 +207,7 @@ class FeatureSegment(models.Model):
     feature = models.ForeignKey(Feature, on_delete=models.CASCADE, related_name="feature_segments")
     segment = models.ForeignKey('segments.Segment', related_name="feature_segments")
     priority = models.IntegerField(blank=True, null=True)
+    enabled = models.BooleanField(default=False)
 
     class Meta:
         unique_together = [('feature', 'segment'), ('feature', 'priority')]
