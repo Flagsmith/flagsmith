@@ -26,6 +26,7 @@ urlpatterns = [
         url(r'^organisations/', include('organisations.urls')),
         url(r'^projects/', include('projects.urls')),
         url(r'^environments/', include('environments.urls')),
+        url(r'^features/', include('features.urls')),
         url(r'^users/', include('users.urls')),
         url(r'^auth/', include('rest_auth.urls')),
         url(r'^auth/register/', include('rest_auth.registration.urls')),
