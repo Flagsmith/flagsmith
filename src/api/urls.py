@@ -1,12 +1,10 @@
 from django.conf.urls import url, include
-
-from rest_framework import permissions, authentication
-from drf_yasg.views import get_schema_view
 from drf_yasg import openapi
+from drf_yasg.views import get_schema_view
+from rest_framework import permissions, authentication
 
+from environments.views import SDKIdentitiesDeprecated, SDKTraitsDeprecated, SDKIdentities, SDKTraits
 from features.views import SDKFeatureStates
-from environments.views import SDKIdentities, SDKTraits
-from segments.views import SDKSegments
 
 schema_view = get_schema_view(
     openapi.Info(
@@ -34,17 +32,17 @@ urlpatterns = [
         url(r'^e2etests/', include('e2etests.urls')),
 
         # Client SDK urls
+        url(r'^flags/$', SDKFeatureStates.as_view()),
+        url(r'^identities/$', SDKIdentities.as_view()),
+        url(r'^traits/$', SDKTraits.as_view()),
+
+        # Deprecated SDK urls
+        url(r'^identities/(?P<identifier>[-\w@%.]+)/traits/(?P<trait_key>[-\w.]+)', SDKTraitsDeprecated.as_view()),
+        url(r'^identities/(?P<identifier>[-\w@%.]+)/', SDKIdentitiesDeprecated.as_view()),
         url(r'^flags/(?P<identifier>[-\w@%.]+)', SDKFeatureStates.as_view()),
-        url(r'^flags/', SDKFeatureStates.as_view()),
-
-        url(r'^identities/(?P<identifier>[-\w@%.]+)/traits/(?P<trait_key>[-\w.]+)', SDKTraits.as_view()),
-        url(r'^identities/(?P<identifier>[-\w@%.]+)/', SDKIdentities.as_view()),
-
-        url(r'^segments/', SDKSegments.as_view()),
 
         # API documentation
         url(r'^swagger(?P<format>\.json|\.yaml)$', schema_view.without_ui(cache_timeout=0), name='schema-json'),
-        url(r'^docs/$', schema_view.with_ui('swagger', cache_timeout=0), name='schema-swagger-ui'),
-
+        url(r'^docs/$', schema_view.with_ui('swagger', cache_timeout=0), name='schema-swagger-ui')
     ], namespace='v1'))
 ]
