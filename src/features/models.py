@@ -213,7 +213,7 @@ class FeatureSegment(models.Model):
 
     def save(self, *args, **kwargs):
         if not self.pk and not self.priority:
-            # set priority field on object creation
+            # intialise priority field on object creation if not set
             self.priority = get_next_segment_priority(self.feature)
         super(FeatureSegment, self).save(*args, **kwargs)
 
