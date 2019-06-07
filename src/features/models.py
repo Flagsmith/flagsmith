@@ -212,7 +212,7 @@ class FeatureSegment(models.Model):
         unique_together = [('feature', 'segment'), ('feature', 'priority')]
 
     def save(self, *args, **kwargs):
-        if not self.pk:
+        if not self.pk and not self.priority:
             # set priority field on object creation
             self.priority = get_next_segment_priority(self.feature)
         super(FeatureSegment, self).save(*args, **kwargs)
