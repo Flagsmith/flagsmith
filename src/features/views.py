@@ -2,7 +2,9 @@ import coreapi
 import logging
 
 from django.core.exceptions import ObjectDoesNotExist
+from django.db import transaction
 from rest_framework import status, viewsets, mixins
+from rest_framework.decorators import detail_route
 from rest_framework.generics import GenericAPIView, get_object_or_404
 from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
@@ -12,10 +14,10 @@ from analytics.track import track_event
 from environments.models import Environment, Identity
 from projects.models import Project
 from util.util import get_user_permitted_projects, get_user_permitted_environments
-from .models import FeatureState, Feature
+from .models import FeatureState, Feature, FeatureSegment
 from .serializers import FeatureStateSerializerBasic, FeatureStateSerializerFull, \
     FeatureStateSerializerCreate, CreateFeatureSerializer, FeatureSerializer, \
-    FeatureStateValueSerializer
+    FeatureStateValueSerializer, FeatureSegmentCreateSerializer
 
 logger = logging.getLogger()
 logger.setLevel(logging.INFO)
@@ -44,6 +46,25 @@ class FeatureViewSet(viewsets.ModelViewSet):
             return Response(status=status.HTTP_403_FORBIDDEN)
 
         return super().create(request, *args, **kwargs)
+
+    @detail_route(methods=["POST"])
+    @transaction.atomic
+    def segments(self, request, *args, **kwargs):
+        feature = self.get_object()
+        # delete existing segments to avoid priority clashes, note method is transactional so will roll back on error
+        FeatureSegment.objects.filter(feature=feature).delete()
+
+        self._create_feature_segments(feature, request.data)
+
+        return Response(data=FeatureSerializer(instance=feature).data, status=status.HTTP_200_OK)
+
+    @staticmethod
+    def _create_feature_segments(feature, feature_segment_data):
+        for feature_segment in feature_segment_data:
+            feature_segment["feature"] = feature.id
+            fs_serializer = FeatureSegmentCreateSerializer(data=feature_segment)
+            if fs_serializer.is_valid(raise_exception=True):
+                fs_serializer.save()
 
 
 class FeatureStateViewSet(viewsets.ModelViewSet):

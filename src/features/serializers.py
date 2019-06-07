@@ -19,12 +19,18 @@ class CreateFeatureSerializer(serializers.ModelSerializer):
         super(CreateFeatureSerializer, self).create(validated_data)
 
 
+class FeatureSegmentCreateSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = FeatureSegment
+        fields = ('feature', 'segment', 'priority')
+
+
 class FeatureSegmentSerializer(serializers.ModelSerializer):
     segment = SegmentSerializerBasic()
 
     class Meta:
         model = FeatureSegment
-        fields = ('id', 'segment', 'priority')
+        fields = ('segment', 'priority')
 
 
 class FeatureSerializer(serializers.ModelSerializer):
