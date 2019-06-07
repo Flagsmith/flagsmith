@@ -184,7 +184,8 @@ class Trait(models.Model):
             STRING: "string_value",
         }.get(tv_type, "string_value")  # The default was chosen for backwards compatibility
 
-    def generate_trait_value_data(self, value):
+    @staticmethod
+    def generate_trait_value_data(value):
         """
         Takes the value and returns dictionary
         to use for passing into trait value serializer
@@ -198,7 +199,7 @@ class Trait(models.Model):
         return {
             # Default to string if not an anticipate type value to keep backwards compatibility.
             "value_type": tv_type if tv_type in accepted_types else STRING,
-            self._get_trait_key_name(tv_type): value
+            Trait._get_trait_key_name(tv_type): value
         }
 
     def __str__(self):
