@@ -2,7 +2,7 @@ import coreapi
 import logging
 
 from django.core.exceptions import ObjectDoesNotExist
-from rest_framework import status, viewsets
+from rest_framework import status, viewsets, mixins
 from rest_framework.generics import GenericAPIView, get_object_or_404
 from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
@@ -11,6 +11,7 @@ from rest_framework.schemas import AutoSchema
 from analytics.track import track_event
 from environments.models import Environment, Identity
 from projects.models import Project
+from segments.models import Segment
 from util.util import get_user_permitted_projects, get_user_permitted_environments
 from .models import FeatureState, Feature
 from .serializers import FeatureStateSerializerBasic, FeatureStateSerializerFull, \
@@ -112,6 +113,7 @@ class FeatureStateViewSet(viewsets.ModelViewSet):
 
     def create(self, request, *args, **kwargs):
         """
+        DEPRECATED: please use `/features/featurestates/` instead.
         Override create method to add environment and identity (if present) from URL parameters.
         """
         data = request.data
@@ -207,6 +209,34 @@ class FeatureStateViewSet(viewsets.ModelViewSet):
                             status=status.HTTP_400_BAD_REQUEST)
 
         return feature_state_value
+
+
+class FeatureStateCreateViewSet(mixins.CreateModelMixin, viewsets.GenericViewSet):
+    serializer_class = FeatureStateSerializerBasic
+
+    def create(self, request, *args, **kwargs):
+        if not self._is_user_authorised(request):
+            return Response(status=status.HTTP_403_FORBIDDEN)
+
+        return super().create(request, *args, **kwargs)
+
+    @staticmethod
+    def _is_user_authorised(request):
+        data = request.data
+        environment = get_object_or_404(Environment.objects.all(), pk=data.get('environment'))
+        feature = get_object_or_404(Feature.objects.all(), pk=data.get('feature'))
+
+        identity_pk = data.get('identity')
+        if identity_pk:
+            identity = get_object_or_404(Identity.objects.all(), pk=identity_pk)
+            if identity.environment != environment:
+                return False
+
+        if environment.project.organisation not in request.user.organisations.all() or \
+                feature.project.organisation != environment.project.organisation:
+            return False
+
+        return True
 
 
 class SDKFeatureStates(GenericAPIView):
