@@ -5,6 +5,8 @@ from rest_framework import permissions, authentication
 
 from environments.views import SDKIdentitiesDeprecated, SDKTraitsDeprecated, SDKIdentities, SDKTraits
 from features.views import SDKFeatureStates
+from environments.views import SDKIdentities, SDKTraits
+from segments.views import SDKSegments
 
 schema_view = get_schema_view(
     openapi.Info(
@@ -35,6 +37,7 @@ urlpatterns = [
         url(r'^flags/$', SDKFeatureStates.as_view()),
         url(r'^identities/$', SDKIdentities.as_view()),
         url(r'^traits/$', SDKTraits.as_view()),
+        url(r'^segments/$', SDKSegments.as_view()),
 
         # Deprecated SDK urls
         url(r'^identities/(?P<identifier>[-\w@%.]+)/traits/(?P<trait_key>[-\w.]+)', SDKTraitsDeprecated.as_view()),
@@ -43,6 +46,7 @@ urlpatterns = [
 
         # API documentation
         url(r'^swagger(?P<format>\.json|\.yaml)$', schema_view.without_ui(cache_timeout=0), name='schema-json'),
-        url(r'^docs/$', schema_view.with_ui('swagger', cache_timeout=0), name='schema-swagger-ui')
+        url(r'^docs/$', schema_view.with_ui('swagger', cache_timeout=0), name='schema-swagger-ui'),
+
     ], namespace='v1'))
 ]

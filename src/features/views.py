@@ -167,6 +167,7 @@ class FeatureStateViewSet(viewsets.ModelViewSet):
             return Response(FeatureStateSerializerBasic(feature_state).data,
                             status=status.HTTP_201_CREATED, headers=headers)
         else:
+            logger.error(serializer.errors)
             error = {"detail": "Couldn't create feature state."}
             return Response(error, status=status.HTTP_400_BAD_REQUEST)
 
