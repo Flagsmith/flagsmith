@@ -1,25 +1,35 @@
 from rest_framework import serializers
 
-from .models import Feature, FeatureState, FeatureStateValue
+from segments.serializers import SegmentSerializerBasic
+from .models import Feature, FeatureState, FeatureStateValue, FeatureSegment
 
 
 class CreateFeatureSerializer(serializers.ModelSerializer):
     class Meta:
         model = Feature
         fields = "__all__"
+        read_only_fields = ('feature_segments',)
 
-    def validate(self, data):
-        data = super(CreateFeatureSerializer, self).validate(data)
-
-        if Feature.objects.filter(project=data['project'], name__iexact=data['name']).exists():
+    def create(self, validated_data):
+        if Feature.objects.filter(project=validated_data['project'], name__iexact=validated_data['name']).exists():
             raise serializers.ValidationError("Feature with that name already exists for this "
                                               "project. Note that feature names are case "
                                               "insensitive.")
 
-        return data
+        super(CreateFeatureSerializer, self).create(validated_data)
+
+
+class FeatureSegmentSerializer(serializers.ModelSerializer):
+    segment = SegmentSerializerBasic()
+
+    class Meta:
+        model = FeatureSegment
+        fields = ('id', 'segment', 'priority')
 
 
 class FeatureSerializer(serializers.ModelSerializer):
+    feature_segments = FeatureSegmentSerializer(many=True)
+
     class Meta:
         model = Feature
         fields = "__all__"

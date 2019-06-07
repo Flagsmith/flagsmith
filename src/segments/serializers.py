@@ -87,4 +87,4 @@ class SegmentSerializer(serializers.ModelSerializer):
 class SegmentSerializerBasic(serializers.ModelSerializer):
     class Meta:
         model = Segment
-        fields = ('name',)
+        fields = ('id', 'name', 'description')

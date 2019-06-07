@@ -192,3 +192,30 @@ class FeatureStateValue(models.Model):
     integer_value = models.IntegerField(null=True, blank=True)
     string_value = models.CharField(null=True, max_length=2000, blank=True)
     history = HistoricalRecords()
+
+
+def get_next_segment_priority(feature):
+    feature_segments = FeatureSegment.objects.filter(feature=feature).order_by('-priority')
+    if feature_segments.count() == 0:
+        return 1
+    else:
+        return feature_segments.first().priority + 1
+
+
+@python_2_unicode_compatible
+class FeatureSegment(models.Model):
+    feature = models.ForeignKey(Feature, on_delete=models.CASCADE, related_name="feature_segments")
+    segment = models.ForeignKey('segments.Segment', related_name="feature_segments")
+    priority = models.IntegerField(blank=True, null=True)
+
+    class Meta:
+        unique_together = [('feature', 'segment'), ('feature', 'priority')]
+
+    def save(self, *args, **kwargs):
+        if not self.pk:
+            # set priority field on object creation
+            self.priority = get_next_segment_priority(self.feature)
+        super(FeatureSegment, self).save(*args, **kwargs)
+
+    def __str__(self):
+        return "FeatureSegment for " + self.feature.name + " with priority " + str(self.priority)

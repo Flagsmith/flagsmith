@@ -11,7 +11,6 @@ from rest_framework.schemas import AutoSchema
 from analytics.track import track_event
 from environments.models import Environment, Identity
 from projects.models import Project
-from segments.models import Segment
 from util.util import get_user_permitted_projects, get_user_permitted_environments
 from .models import FeatureState, Feature
 from .serializers import FeatureStateSerializerBasic, FeatureStateSerializerFull, \
@@ -26,7 +25,7 @@ class FeatureViewSet(viewsets.ModelViewSet):
     queryset = Feature.objects.all()
 
     def get_serializer_class(self):
-        if self.action == 'create':
+        if self.action in ['create', 'update']:
             return CreateFeatureSerializer
         else:
             return FeatureSerializer
