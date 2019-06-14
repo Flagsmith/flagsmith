@@ -84,5 +84,7 @@ class SegmentSerializer(serializers.ModelSerializer):
             Condition.objects.create(rule=rule, **condition)
 
 
-
-
+class SegmentSerializerBasic(serializers.ModelSerializer):
+    class Meta:
+        model = Segment
+        fields = ('id', 'name', 'description')
