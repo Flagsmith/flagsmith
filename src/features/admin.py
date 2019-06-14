@@ -4,7 +4,7 @@ from __future__ import unicode_literals
 from django.contrib import admin
 from simple_history.admin import SimpleHistoryAdmin
 
-from .models import Feature, FeatureState, FeatureStateValue
+from .models import Feature, FeatureState, FeatureStateValue, FeatureSegment
 
 
 class FeatureStateValueInline(admin.StackedInline):
@@ -26,6 +26,19 @@ class FeatureAdmin(SimpleHistoryAdmin):
         'initial_value',
         'description',
     )
+
+
+@admin.register(FeatureSegment)
+class FeatureSegmentAdmin(admin.ModelAdmin):
+    model = FeatureSegment
+
+    def add_view(self, *args, **kwargs):
+        self.exclude = ('priority',)
+        return super(FeatureSegmentAdmin, self).add_view(*args, **kwargs)
+
+    def change_view(self, *args, **kwargs):
+        self.exclude = ()
+        return super(FeatureSegmentAdmin, self).change_view(*args, **kwargs)
 
 
 @admin.register(FeatureState)
