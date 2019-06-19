@@ -16,7 +16,7 @@ class CreateFeatureSerializer(serializers.ModelSerializer):
                                               "project. Note that feature names are case "
                                               "insensitive.")
 
-        super(CreateFeatureSerializer, self).create(validated_data)
+        return super(CreateFeatureSerializer, self).create(validated_data)
 
 
 class FeatureSegmentCreateSerializer(serializers.ModelSerializer):
