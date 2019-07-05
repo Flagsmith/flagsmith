@@ -51,6 +51,6 @@ deprecated_urls = [
 ]
 
 urlpatterns = [
+    url(r'^v1/', include(deprecated_urls, namespace='deprecated')),
     url(r'^v1/', include(current_urls, namespace='v1')),
-    url(r'^v1/', include(deprecated_urls, namespace='deprecated'))
 ]
