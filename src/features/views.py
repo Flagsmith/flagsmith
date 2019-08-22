@@ -4,7 +4,7 @@ import logging
 from django.core.exceptions import ObjectDoesNotExist
 from django.db import transaction
 from rest_framework import status, viewsets, mixins
-from rest_framework.decorators import detail_route
+from rest_framework.decorators import action
 from rest_framework.generics import GenericAPIView, get_object_or_404
 from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
@@ -47,7 +47,7 @@ class FeatureViewSet(viewsets.ModelViewSet):
 
         return super().create(request, *args, **kwargs)
 
-    @detail_route(methods=["POST"])
+    @action(detail=True, methods=["POST"])
     @transaction.atomic
     def segments(self, request, *args, **kwargs):
         feature = self.get_object()
