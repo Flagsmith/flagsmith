@@ -1,7 +1,7 @@
 from django.test import TestCase
 
 from environments.models import Environment
-from .models import Feature, FeatureState
+from src.features.models import Feature, FeatureState
 from organisations.models import Organisation
 from projects.models import Project
 
