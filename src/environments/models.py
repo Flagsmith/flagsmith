@@ -79,7 +79,7 @@ class Environment(models.Model):
             raise EnvironmentHeaderNotPresentError
 
         return Environment.objects.select_related('project', 'project__organisation').get(
-                api_key=environment_key)
+            api_key=environment_key)
 
 
 @python_2_unicode_compatible
@@ -111,7 +111,23 @@ class Identity(models.Model):
                 )
             ),
         ).select_related("feature", "feature_state_value")
+
+        segments = self.get_segments()
+        # TODO: make this more efficient
+        for segment in segments:
+            for feature_segment in segment.feature_segments.all():
+                for flag in flags:
+                    if flag.feature == feature_segment.feature:
+                        flag.enabled = feature_segment.enabled
+
         return flags
+
+    def get_segments(self):
+        segments = []
+        for segment in self.environment.project.segments.all():
+            if segment.does_identity_match(self):
+                segments.append(segment)
+        return segments
 
     def get_all_user_traits(self):
         # get all all user traits for an identity
@@ -133,7 +149,7 @@ class Trait(models.Model):
     identity = models.ForeignKey('environments.Identity', related_name='identity_traits')
     trait_key = models.CharField(max_length=200)
     value_type = models.CharField(max_length=10, choices=TRAIT_VALUE_TYPES, default=STRING,
-                            null=True, blank=True)
+                                  null=True, blank=True)
     boolean_value = models.NullBooleanField(null=True, blank=True)
     integer_value = models.IntegerField(null=True, blank=True)
     string_value = models.CharField(null=True, max_length=2000, blank=True)
@@ -171,7 +187,8 @@ class Trait(models.Model):
             STRING: "string_value",
         }.get(tv_type, "string_value")  # The default was chosen for backwards compatibility
 
-    def generate_trait_value_data(self, value):
+    @staticmethod
+    def generate_trait_value_data(value):
         """
         Takes the value and returns dictionary
         to use for passing into trait value serializer
@@ -185,7 +202,7 @@ class Trait(models.Model):
         return {
             # Default to string if not an anticipate type value to keep backwards compatibility.
             "value_type": tv_type if tv_type in accepted_types else STRING,
-            self._get_trait_key_name(tv_type): value
+            Trait._get_trait_key_name(tv_type): value
         }
 
     def __str__(self):
