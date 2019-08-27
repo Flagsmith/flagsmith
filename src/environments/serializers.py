@@ -1,7 +1,7 @@
 from rest_framework import serializers
 
 from features.serializers import FeatureStateSerializerFull
-from environments.models import Environment, Identity, Trait, AuditLog
+from environments.models import Environment, Identity, Trait
 from projects.serializers import ProjectSerializer
 from segments.serializers import SegmentSerializerBasic
 

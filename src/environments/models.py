@@ -207,17 +207,3 @@ class Trait(models.Model):
 
     def __str__(self):
         return "Identity: %s - %s" % (self.identity.identifier, self.trait_key)
-
-@python_2_unicode_compatible
-class AuditLog(models.Model):
-    created_date = models.DateTimeField('DateCreated', auto_now_add=True)
-    environment = models.ForeignKey(Environment, related_name='audit_logs')
-    log = models.TextField(null=False, blank=False)
-    author = models.ForeignKey(FFAdminUser, related_name='audit_logs', null=True)
-    
-    class Meta:
-        verbose_name_plural = "Audit Logs"
-        ordering = ['id']
-        
-    def __str__(self):
-        return "Audit Log %s" % self.id
