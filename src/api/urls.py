@@ -31,6 +31,7 @@ urlpatterns = [
         url(r'^auth/register/', include('rest_auth.registration.urls')),
         url(r'^account/', include('allauth.urls')),
         url(r'^e2etests/', include('e2etests.urls')),
+        url(r'^audit/', include('audit.urls')),
 
         # Client SDK urls
         url(r'^flags/$', SDKFeatureStates.as_view()),
