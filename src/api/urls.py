@@ -5,7 +5,6 @@ from rest_framework import permissions, authentication
 
 from environments.views import SDKIdentitiesDeprecated, SDKTraitsDeprecated, SDKIdentities, SDKTraits
 from features.views import SDKFeatureStates
-from environments.views import SDKIdentities, SDKTraits
 from segments.views import SDKSegments
 
 schema_view = get_schema_view(
