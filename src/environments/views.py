@@ -4,16 +4,18 @@ from __future__ import unicode_literals
 from collections import namedtuple
 
 import coreapi
+from django.core.exceptions import ObjectDoesNotExist
 from rest_framework import viewsets, status
 from rest_framework.generics import GenericAPIView, get_object_or_404
 from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
 from rest_framework.schemas import AutoSchema
 
+from features.serializers import FeatureStateSerializerFull
 from util.util import get_user_permitted_identities, get_user_permitted_environments, get_user_permitted_projects
 from .models import Environment, Identity, Trait
 from .serializers import EnvironmentSerializerLight, IdentitySerializer, TraitSerializerBasic, TraitSerializerFull, \
-    IdentitySerializerTraitFlags, AuditLogSerializer
+    IdentitySerializerTraitFlags, IdentitySerializerWithTraitsAndSegments
 
 
 class EnvironmentViewSet(viewsets.ModelViewSet):
@@ -50,7 +52,7 @@ class EnvironmentViewSet(viewsets.ModelViewSet):
         project_pk = request.data.get('project')
 
         if not project_pk:
-            return Response(data = {"detail": "No project provided"}, status=status.HTTP_400_BAD_REQUEST)
+            return Response(data={"detail": "No project provided"}, status=status.HTTP_400_BAD_REQUEST)
 
         get_object_or_404(get_user_permitted_projects(self.request.user), pk=project_pk)
 
@@ -79,7 +81,6 @@ class IdentityViewSet(viewsets.ModelViewSet):
     """
 
     serializer_class = IdentitySerializer
-    lookup_field = 'identifier'
 
     def get_queryset(self):
         environment = self.get_environment_from_request()
@@ -135,11 +136,11 @@ class TraitViewSet(viewsets.ModelViewSet):
         Override queryset to filter based on provided URL parameters.
         """
         environment_api_key = self.kwargs['environment_api_key']
-        identifier = self.kwargs.get('identity_identifier')
+        identity_pk = self.kwargs.get('identity_pk')
         environment = get_user_permitted_environments(self.request.user).get(api_key=environment_api_key)
 
-        if identifier:
-            identity = Identity.objects.get(identifier=identifier, environment=environment)
+        if identity_pk:
+            identity = Identity.objects.get(pk=identity_pk, environment=environment)
         else:
             identity = None
 
@@ -155,7 +156,7 @@ class TraitViewSet(viewsets.ModelViewSet):
         """
         Get identity object from URL parameters in request.
         """
-        return Identity.objects.get(identifier=self.kwargs['identity_identifier'], environment=environment)
+        return Identity.objects.get(pk=self.kwargs['identity_pk'])
 
     def create(self, request, *args, **kwargs):
         """
@@ -166,18 +167,17 @@ class TraitViewSet(viewsets.ModelViewSet):
         if environment.project.organisation not in self.request.user.organisations.all():
             return Response(status=status.HTTP_403_FORBIDDEN)
 
-        identifier = self.kwargs.get('identity_identifier', None)
+        identity_pk = self.kwargs.get('identity_pk')
 
         # check if identity in data or in request
-        if 'identity' not in data and not identifier:
+        if 'identity' not in data and not identity_pk:
             error = {"detail": "Identity not provided"}
             return Response(error, status=status.HTTP_400_BAD_REQUEST)
 
         # TODO: do we give priority to request identity or data?
         # Override with request identity
-        if identifier:
-            identity = self.get_identity_from_request(environment)
-            data['identity'] = identity.id
+        if identity_pk:
+            data['identity'] = identity_pk
 
         serializer = self.get_serializer(data=data)
         serializer.is_valid(raise_exception=True)
@@ -214,7 +214,10 @@ class TraitViewSet(viewsets.ModelViewSet):
         return self.update(request, *args, **kwargs)
 
 
-class SDKIdentities(GenericAPIView):
+class SDKIdentitiesDeprecated(GenericAPIView):
+    """
+    THIS ENDPOINT IS DEPRECATED. Please use `/identities/?identifier=<identifier>` instead.
+    """
     # API to handle /api/v1/identities/ endpoint to return Flags and Traits for user Identity
     # if Identity does not exist it will create one, otherwise will fetch existing
 
@@ -253,11 +256,6 @@ class SDKIdentities(GenericAPIView):
                 status=status.HTTP_400_BAD_REQUEST
             )
 
-        kwargs = {
-            'identity': identity,
-            'environment': environment,
-        }
-
         if identity:
             traits_data = identity.get_all_user_traits()
             # traits_data = self.get_serializer(identity.get_all_user_traits(), many=True)
@@ -269,18 +267,47 @@ class SDKIdentities(GenericAPIView):
             )
 
         # We need object type to pass into our IdentitySerializerTraitFlags
-        IdentityTraitFlags = namedtuple('IdentityTraitFlags', ('flags', 'traits'))
-        traitsAndFlags = IdentityTraitFlags(
+        IdentityFlagsWithTraitsAndSegments = namedtuple('IdentityTraitFlagsSegments', ('flags', 'traits', 'segments'))
+        identity_flags_traits_segments = IdentityFlagsWithTraitsAndSegments(
             flags=identity.get_all_feature_states(),
             traits=traits_data,
+            segments=identity.get_segments()
         )
 
-        serializer = IdentitySerializerTraitFlags(traitsAndFlags)
+        serializer = IdentitySerializerWithTraitsAndSegments(identity_flags_traits_segments)
 
         return Response(serializer.data, status=status.HTTP_200_OK)
 
 
-class SDKTraits(GenericAPIView):
+class SDKIdentities(GenericAPIView):
+    permission_classes = (AllowAny,)
+
+    def get(self, request):
+        try:
+            environment = Environment.objects.get(api_key=request.META.get('HTTP_X_ENVIRONMENT_KEY'))
+        except ObjectDoesNotExist:
+            error = {"detail": "Invalid environment key header"}
+            return Response(error, status=status.HTTP_400_BAD_REQUEST)
+
+        identifier = request.query_params.get('identifier')
+
+        if identifier:
+            identity, _ = Identity.objects.get_or_create(identifier=identifier, environment=environment)
+        else:
+            return Response({"detail": "Missing identifier"})
+
+        serialized_flags = FeatureStateSerializerFull(identity.get_all_feature_states(), many=True)
+        serialized_traits = TraitSerializerBasic(identity.get_all_user_traits(), many=True)
+
+        response = {
+            "flags": serialized_flags.data,
+            "traits": serialized_traits.data
+        }
+
+        return Response(data=response, status=status.HTTP_200_OK)
+
+
+class SDKTraitsDeprecated(GenericAPIView):
     # API to handle /api/v1/identities/<identifier>/traits/<trait_key> endpoints
     # if Identity or Trait does not exist it will create one, otherwise will fetch existing
 
@@ -299,6 +326,9 @@ class SDKTraits(GenericAPIView):
     )
 
     def post(self, request, identifier, trait_key, *args, **kwargs):
+        """
+        THIS ENDPOINT IS DEPRECATED. Please use `/traits/` instead.
+        """
         if 'HTTP_X_ENVIRONMENT_KEY' not in request.META:
             error = {"detail": "Environment Key header not provided"}
             return Response(error, status=status.HTTP_400_BAD_REQUEST)
@@ -354,6 +384,34 @@ class SDKTraits(GenericAPIView):
 
         else:
             return Response({"detail": "Failed to update user trait"}, status=status.HTTP_400_BAD_REQUEST)
+
+
+class SDKTraits(GenericAPIView):
+    permission_classes = (AllowAny,)
+
+    def post(self, request):
+        try:
+            environment = Environment.objects.get(api_key=request.META.get('HTTP_X_ENVIRONMENT_KEY'))
+        except ObjectDoesNotExist:
+            error = {"detail": "Invalid environment key header"}
+            return Response(error, status=status.HTTP_400_BAD_REQUEST)
+
+        data = request.data
+
+        identity_data = data.pop('identity')
+        identity, _ = Identity.objects.get_or_create(environment=environment, identifier=identity_data.get('identifier'))
+
+        trait_value_data = Trait.generate_trait_value_data(data.pop('trait_value'))
+
+        trait, _ = Trait.objects.get_or_create(identity=identity, trait_key=data.get('trait_key'))
+
+        serializer = TraitSerializerFull(instance=trait, data=trait_value_data, partial=True)
+        if serializer.is_valid():
+            serializer.save()
+        else:
+            return Response({"details": "Couldn't create Trait for identity"}, status=status.HTTP_400_BAD_REQUEST)
+
+        return Response(TraitSerializerBasic(trait).data, status=status.HTTP_200_OK)
 
 class AuditLogViewSet(viewsets.ModelViewSet):
     """

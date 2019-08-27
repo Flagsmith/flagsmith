@@ -3,6 +3,7 @@ from rest_framework import serializers
 from features.serializers import FeatureStateSerializerFull
 from environments.models import Environment, Identity, Trait, AuditLog
 from projects.serializers import ProjectSerializer
+from segments.serializers import SegmentSerializerBasic
 
 
 class EnvironmentSerializerFull(serializers.ModelSerializer):
@@ -46,7 +47,8 @@ class TraitSerializerFull(serializers.ModelSerializer):
         model = Trait
         fields = "__all__"
 
-    def get_trait_value(self, obj):
+    @staticmethod
+    def get_trait_value(obj):
         return obj.get_trait_value()
 
 
@@ -57,7 +59,8 @@ class TraitSerializerBasic(serializers.ModelSerializer):
         model = Trait
         fields = ('trait_key', 'trait_value')
 
-    def get_trait_value(self, obj):
+    @staticmethod
+    def get_trait_value(obj):
         return obj.get_trait_value()
 
 
@@ -67,8 +70,13 @@ class IdentitySerializerTraitFlags(serializers.Serializer):
     traits = TraitSerializerBasic(many=True)
 
 
-class AuditLogSerializer(serializers.ModelSerializer):
+class IdentitySerializerWithTraitsAndSegments(serializers.Serializer):
+    def update(self, instance, validated_data):
+        pass
 
-    class Meta:
-        model = AuditLog
-        fields = ('id', 'created_date', 'log', 'author')
+    def create(self, validated_data):
+        pass
+
+    flags = FeatureStateSerializerFull(many=True)
+    traits = TraitSerializerBasic(many=True)
+    segments = SegmentSerializerBasic(many=True)

@@ -58,7 +58,6 @@ else:
     ALLOWED_HOSTS.append(internal_ip)
 del requests
 
-
 if sys.version[0] == '2':
     reload(sys)
     sys.setdefaultencoding("utf-8")
@@ -88,11 +87,10 @@ INSTALLED_APPS = [
     'environments',
     'features',
     'segments',
-    'rest_framework_swagger',
-    'docs',
     'e2etests',
     'simple_history',
-    'debug_toolbar'
+    'debug_toolbar',
+    'drf_yasg'
 ]
 
 if GOOGLE_ANALYTICS_KEY:
@@ -216,7 +214,6 @@ EMAIL_CONFIGURATION = {
 
 }
 
-
 # Used on init to create admin user for the site, update accordingly before hitting /auth/init
 ALLOW_ADMIN_INITIATION_VIA_URL = True
 ADMIN_EMAIL = "admin@example.com"
@@ -237,8 +234,18 @@ if not SENDGRID_API_KEY:
         "`SENDGRID_API_KEY` has not been configured. You will not receive emails.")
 
 SWAGGER_SETTINGS = {
-    "SHOW_REQUEST_HEADERS": True
+    'SHOW_REQUEST_HEADERS': True,
+    'SECURITY_DEFINITIONS': {
+        'api_key': {
+            'type': 'apiKey',
+            'in': 'header',
+            'name': 'Authorization'
+        }
+    }
 }
+
+LOGIN_URL = "/admin/login/"
+LOGOUT_URL = "/admin/logout/"
 
 # Email associated with user that is used by front end for end to end testing purposes
 FE_E2E_TEST_USER_EMAIL = "nightwatch@solidstategroup.com"
