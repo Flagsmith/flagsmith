@@ -1,6 +1,7 @@
 import json
 from unittest import TestCase
 
+import pytest
 from rest_framework import status
 from rest_framework.test import APIClient
 
@@ -9,6 +10,7 @@ from util.tests import Helper
 from users.models import Invite
 
 
+@pytest.mark.django_db
 class OrganisationTestCase(TestCase):
     post_template = '{ "name" : "%s", "webhook_notification_email": "%s" }'
     put_template = '{ "name" : "%s"}'

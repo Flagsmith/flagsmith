@@ -1,5 +1,6 @@
 from unittest import TestCase
 
+import pytest
 from rest_framework import status
 from rest_framework.test import APIClient
 
@@ -10,6 +11,7 @@ from projects.models import Project
 from util.tests import Helper
 
 
+@pytest.mark.django_db
 class EnvironmentTestCase(TestCase):
     env_post_template_wout_webhook = '{"name": %s, "project": %d}'
     env_post_template_with_webhook = '{"name": "%s", "project": %d, ' \

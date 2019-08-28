@@ -1,5 +1,6 @@
 from unittest import TestCase
 
+import pytest
 from rest_framework.test import APIClient
 
 from organisations.models import Organisation
@@ -7,6 +8,7 @@ from projects.models import Project
 from util.tests import Helper
 
 
+@pytest.mark.django_db
 class ProjectTestCase(TestCase):
 
     def set_up(self):

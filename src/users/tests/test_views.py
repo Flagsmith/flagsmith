@@ -1,5 +1,6 @@
 from unittest import TestCase
 
+import pytest
 from rest_framework import status
 from rest_framework.authtoken.models import Token
 from rest_framework.test import APIClient
@@ -9,6 +10,7 @@ from util.tests import Helper
 from users.models import FFAdminUser, Invite
 
 
+@pytest.mark.django_db
 class UserTestCase(TestCase):
     auth_base_url = '/api/v1/auth/'
     register_template = '{ ' \
