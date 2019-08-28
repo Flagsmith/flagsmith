@@ -12,6 +12,8 @@ migrate = "python src/manage.py migrate"
 pylint = "<2.0.0"
 "pep8" = "*"
 "autopep8" = "*"
+pytest = "*"
+pytest-django = "*"
 
 [packages]
 appdirs = "*"
