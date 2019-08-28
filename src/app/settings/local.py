@@ -12,7 +12,7 @@ DATABASES = {
         'NAME': os.getenv('POSTGRES_DATABASE', 'bullettrain'),
         'USER': os.getenv('POSTGRES_USER', 'postgres'),
         'PASSWORD': os.environ['POSTGRES_PASSWORD'],
-        'HOST': '127.0.0.1',
-        'PORT': 5432
+        'HOST': os.getenv('POSTGRES_HOST', '127.0.0.1'),
+        'PORT': os.getenv('POSTGRES_PORT', 5432)
     }
 }
