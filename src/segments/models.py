@@ -40,11 +40,13 @@ class SegmentRule(models.Model):
     ALL_RULE = "ALL"
     ANY_RULE = "ANY"
     NONE_RULE = "NONE"
+    PERCENTAGE_SPLIT = "PERCENTAGE_SPLIT"
 
     RULE_TYPES = (
         (ALL_RULE, "all"),
         (ANY_RULE, "any"),
-        (NONE_RULE, "none")
+        (NONE_RULE, "none"),
+        (PERCENTAGE_SPLIT, "Percentage split")
     )
 
     segment = models.ForeignKey(Segment, on_delete=models.CASCADE, related_name="rules", null=True, blank=True)
