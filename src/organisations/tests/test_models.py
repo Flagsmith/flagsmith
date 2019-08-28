@@ -1,6 +1,6 @@
 from django.test import TestCase
 
-from .models import Organisation
+from src.organisations.models import Organisation
 
 
 class OrganisationTestCase(TestCase):
