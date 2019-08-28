@@ -1,5 +1,6 @@
 from unittest import TestCase
 
+import pytest
 from rest_framework import status
 from rest_framework.test import APIClient
 
@@ -10,6 +11,7 @@ from projects.models import Project
 from util.tests import Helper
 
 
+@pytest.mark.django_db
 class ProjectFeatureTestCase(TestCase):
     project_features_url = '/api/v1/projects/%s/features/'
     project_feature_detail_url = '/api/v1/projects/%s/features/%d/'

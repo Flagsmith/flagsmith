@@ -1,11 +1,13 @@
+import pytest
 from django.test import TestCase
 
-from src.environments.models import Environment, Identity, Trait
+from environments.models import Environment, Identity, Trait
 from features.models import Feature, FeatureState
 from organisations.models import Organisation
 from projects.models import Project
 
 
+@pytest.mark.django_db
 class EnvironmentSaveTestCase(TestCase):
     def setUp(self):
         self.organisation = Organisation.objects.create(name="Test Org")

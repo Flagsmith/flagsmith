@@ -1,8 +1,10 @@
+import pytest
 from django.test import TestCase
 
-from src.organisations.models import Organisation
+from organisations.models import Organisation
 
 
+@pytest.mark.django_db
 class OrganisationTestCase(TestCase):
     def test_can_create_organisation_with_and_without_webhook_notification_email(self):
         organisation_1 = Organisation.objects.create(name="Test org")
