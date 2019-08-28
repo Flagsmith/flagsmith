@@ -1,5 +1,7 @@
 # -*- coding: utf-8 -*-
 import re
+import sys
+import hashlib
 
 from django.core.exceptions import ValidationError
 from django.db import models
@@ -77,6 +79,16 @@ class SegmentRule(models.Model):
             matches_conditions = not any(condition.does_identity_match(identity) for condition in self.conditions.all())
 
         return matches_conditions and all(rule.does_identity_match(identity) for rule in self.rules.all())
+
+    def get_identity_percentage_value(self, identity: Identity) -> float:
+        """
+        Given a segment and an identity, generate a number between 0 and 1 to determine whether the identity falls
+        within a given percentile when using percentage split rules.
+        """
+        to_hash = f'{self.segment.id},{identity.id}'
+        hashed_value = hashlib.md5(to_hash.encode('utf-8'))
+        hashed_value_as_int = int(hashed_value.hexdigest(), base=16)
+        return (hashed_value_as_int % 9999) / 10000
 
 
 @python_2_unicode_compatible
