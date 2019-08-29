@@ -7,11 +7,14 @@ name = "pypi"
 runserver = "python src/manage.py runserver"
 makemigrations = "python src/manage.py makemigrations"
 migrate = "python src/manage.py migrate"
+test = "pytest"
 
 [dev-packages]
-pylint = "<2.0.0"
+pylint = "*"
 "pep8" = "*"
 "autopep8" = "*"
+pytest = "*"
+pytest-django = "*"
 
 [packages]
 appdirs = "*"
@@ -33,8 +36,10 @@ coreapi = "*"
 Django = "<2.0"
 numpy = "*"
 django-simple-history = "*"
-twisted = {version = "*", extras = ["tls"]}
+twisted = {version = "*",extras = ["tls"]}
 django-debug-toolbar = "*"
 google-api-python-client = "*"
 "oauth2client" = "*"
 djangorestframework-recursive = "*"
+drf-yasg = "*"
+packaging = "*"
