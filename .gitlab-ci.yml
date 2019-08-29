@@ -9,7 +9,10 @@ test:
   services:
     - postgres:10.9
   variables:
-    DJANGO_SETTINGS_MODULE: "conf.settings.test"
+    DJANGO_SETTINGS_MODULE: "app.settings.test"
+    DATABASE_URL: postgres://testuser:testpass@postgres/test_db
+    POSTGRES_USER: testuser
+    POSTGRES_PASSWORD: testpass
   script:
     - pipenv install --dev
     - pipenv run test
