@@ -6,8 +6,8 @@ from rest_framework.authtoken.models import Token
 from rest_framework.test import APIClient
 
 from organisations.models import Organisation
-from util.tests import Helper
 from users.models import FFAdminUser, Invite
+from util.tests import Helper
 
 
 @pytest.mark.django_db
@@ -25,11 +25,13 @@ class UserTestCase(TestCase):
                      '"password": "%s"' \
                      '}'
 
-    def set_up(self):
-        client = APIClient()
-        user = Helper.create_ffadminuser()
-        client.force_authenticate(user=user)
-        return client
+    def setUp(self):
+        self.client = APIClient()
+        self.user = Helper.create_ffadminuser()
+        self.client.force_authenticate(user=self.user)
+
+    def tearDown(self) -> None:
+        Helper.clean_up()
 
     def test_registration_and_login(self):
         Helper.generate_database_models()
@@ -66,24 +68,17 @@ class UserTestCase(TestCase):
                                                  HTTP_AUTHORIZATION="Token " + content['key'])
         self.assertEquals(organisations_response.status_code, status.HTTP_200_OK)
 
-        Helper.clean_up()
-
     def test_join_organisation(self):
         # Given
-        client = self.set_up()
-        organisation_2 = Organisation(name="test org 2")
-        organisation_2.save()
-        invite = Invite(email="test_user@test.com", organisation=organisation_2)
-        invite.save()
-        user = FFAdminUser.objects.get(email="test_user@test.com")
-        token = Token(user=user)
-        token.save()
+        organisation = Organisation.objects.create(name="test org")
+        invite = Invite.objects.create(email=self.user.email, organisation=organisation)
+        token = Token.objects.create(user=self.user)
 
         # When
-        response = client.post("/api/v1/users/join/" + invite.hash + "/",
-                               HTTP_AUTHORIZATION="Token " + token.key)
-        user.refresh_from_db()
+        response = self.client.post("/api/v1/users/join/" + invite.hash + "/",
+                                    HTTP_AUTHORIZATION="Token " + token.key)
+        self.user.refresh_from_db()
 
         # Then
-        self.assertEquals(response.status_code, status.HTTP_200_OK)
-        self.assertEquals(user.organisations.all().count(), 2)
+        assert response.status_code == status.HTTP_200_OK
+        assert organisation in self.user.organisations.all()
