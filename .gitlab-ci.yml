@@ -1,6 +1,22 @@
 stages:
+    - test
     - deploy
     - deploy-aws
+
+test:
+  image: kennethreitz/pipenv
+  stage: test
+  services:
+    - postgres:10.9
+  variables:
+    DJANGO_SETTINGS_MODULE: "app.settings.test"
+    DATABASE_URL: postgres://testuser:testpass@postgres/test_db
+    POSTGRES_USER: testuser
+    POSTGRES_PASSWORD: testpass
+  script:
+    - cd src
+    - pipenv install --dev
+    - pipenv run test
 
 deploydevelop:
     image: ilyasemenov/gitlab-ci-git-push

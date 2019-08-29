@@ -1,11 +1,13 @@
+import pytest
 from django.test import TestCase
 
 from environments.models import Environment
-from .models import Feature, FeatureState
+from features.models import Feature, FeatureState
 from organisations.models import Organisation
 from projects.models import Project
 
 
+@pytest.mark.django_db
 class FeatureTestCase(TestCase):
     @classmethod
     def setUpTestData(cls):
