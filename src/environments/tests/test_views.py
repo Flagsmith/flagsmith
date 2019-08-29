@@ -13,7 +13,7 @@ from util.tests import Helper
 
 @pytest.mark.django_db
 class EnvironmentTestCase(TestCase):
-    env_post_template_wout_webhook = '{"name": %s, "project": %d}'
+    env_post_template_wout_webhook = '{"name": "%s", "project": %d}'
     env_post_template_with_webhook = '{"name": "%s", "project": %d, ' \
                                      '"webhooks_enabled": "%r", "webhook_url": "%s"}'
     fs_put_template = '{ "id" : %d, "enabled" : "%r", "feature_state_value" : "%s" }'
@@ -22,6 +22,12 @@ class EnvironmentTestCase(TestCase):
         client = APIClient()
         user = Helper.create_ffadminuser()
         client.force_authenticate(user=user)
+
+        self.organisation = Organisation.objects.create(name='ssg')
+        user.organisations.add(self.organisation)
+
+        self.project = Project.objects.create(name='Test project', organisation=self.organisation)
+
         return client
 
     def test_should_create_environments_with_or_without_webhooks(self):
@@ -32,7 +38,7 @@ class EnvironmentTestCase(TestCase):
         response_with_webhook = client.post('/api/v1/environments/',
                                             data=self.env_post_template_with_webhook % (
                                                 "Test Env with Webhooks",
-                                                1,
+                                                self.project.id,
                                                 True,
                                                 "https://sometesturl.org"
                                             ), content_type="application/json")
@@ -40,13 +46,13 @@ class EnvironmentTestCase(TestCase):
         response_wout_webhook = client.post('/api/v1/environments/',
                                             data=self.env_post_template_wout_webhook % (
                                                 "Test Env without Webhooks",
-                                                1
+                                                self.project.id
                                             ), content_type="application/json")
 
         # Then
-        self.assertTrue(response_with_webhook.status_code, 201)
-        self.assertTrue(Environment.objects.get(name="Test Env with Webhooks").webhook_url)
-        self.assertTrue(response_wout_webhook.status_code, 201)
+        assert response_with_webhook.status_code == status.HTTP_201_CREATED
+        assert Environment.objects.get(name="Test Env with Webhooks").webhook_url
+        assert response_wout_webhook.status_code == status.HTTP_201_CREATED
 
     def test_should_return_identities_for_an_environment(self):
         client = self.set_up()
@@ -54,9 +60,7 @@ class EnvironmentTestCase(TestCase):
         # Given
         identifierOne = 'user1'
         identifierTwo = 'user2'
-        organisation = Organisation(name='ssg')
-        organisation.save()
-        project = Project(name='project1', organisation=organisation)
+        project = Project(name='project1', organisation=self.organisation)
         project.save()
         environment = Environment(name='environment1', project=project)
         environment.save()
@@ -64,8 +68,10 @@ class EnvironmentTestCase(TestCase):
         identityOne.save()
         identityTwo = Identity(identifier=identifierTwo, environment=environment)
         identityTwo.save()
+
         # When
         response = client.get('/api/v1/environments/%s/identities/' % environment.api_key)
+
         # Then
         self.assertEquals(response.data['results'][0]['identifier'], identifierOne)
         self.assertEquals(response.data['results'][1]['identifier'], identifierTwo)
@@ -73,10 +79,9 @@ class EnvironmentTestCase(TestCase):
     def test_should_update_value_of_feature_state(self):
         # Given
         client = self.set_up()
-        project = Project.objects.get(name="test project")
-        feature = Feature(name="feature", project=project)
+        feature = Feature(name="feature", project=self.project)
         feature.save()
-        environment = Environment.objects.get(name="test env")
+        environment = Environment.objects.create(name="test env", project=self.project)
         feature_state = FeatureState.objects.get(feature=feature, environment=environment)
 
         # When
@@ -96,6 +101,7 @@ class EnvironmentTestCase(TestCase):
         Helper.clean_up()
 
 
+@pytest.mark.django_db
 class IdentityTestCase(TestCase):
     identifier = 'user1'
     put_template = '{ "enabled" : "%r" }'
