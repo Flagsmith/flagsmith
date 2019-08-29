@@ -1,19 +1,21 @@
+import pytest
 from django.test import TestCase
 
-from .models import Environment, Identity, Trait
+from environments.models import Environment, Identity, Trait
 from features.models import Feature, FeatureState
 from organisations.models import Organisation
 from projects.models import Project
 
 
-class EnvironmentTestCase(TestCase):
-    @classmethod
-    def setUpTestData(cls):
-        cls.organisation = Organisation.objects.create(name="Test Org")
-        cls.project = Project.objects.create(name="Test Project", organisation=cls.organisation)
-        cls.feature = Feature.objects.create(name="Test Feature", project=cls.project)
-        cls.environment = Environment.objects.create(name="Test Environment",
-                                                     project=cls.project)
+@pytest.mark.django_db
+class EnvironmentSaveTestCase(TestCase):
+    def setUp(self):
+        self.organisation = Organisation.objects.create(name="Test Org")
+        self.project = Project.objects.create(name="Test Project", organisation=self.organisation)
+        self.feature = Feature.objects.create(name="Test Feature", project=self.project)
+        # The environment is initialised in a non-saved state as we want to test the save
+        # functionality.
+        self.environment = Environment(name="Test Environment", project=self.project)
 
     def test_environment_should_be_created_with_feature_states(self):
         feature_states = FeatureState.objects.filter(environment=self.environment)
@@ -28,16 +30,6 @@ class EnvironmentTestCase(TestCase):
                                                               webhook_url="https://sometesturl.org")
 
         self.assertTrue(environment_with_webhook.name)
-
-
-class EnvironmentSaveTestCase(TestCase):
-    def setUp(self):
-        self.organisation = Organisation.objects.create(name="Test Org")
-        self.project = Project.objects.create(name="Test Project", organisation=self.organisation)
-        self.feature = Feature.objects.create(name="Test Feature", project=self.project)
-        # The environment is initialised in a non-saved state as we want to test the save
-        # functionality.
-        self.environment = Environment(name="Test Environment", project=self.project)
 
     def test_on_creation_save_feature_states_get_created(self):
         # These should be no feature states before saving
@@ -95,6 +87,7 @@ class IdentityTestCase(TestCase):
         cls.organisation = Organisation.objects.create(name="Test Org")
         cls.project = Project.objects.create(name="Test Project", organisation=cls.organisation)
         cls.environment = Environment.objects.create(name="Test Environment", project=cls.project)
+        cls.identity = Identity.objects.create(identifier="test-identity", environment=cls.environment)
 
     def test_create_identity_should_assign_relevant_attributes(self):
         identity = Identity.objects.create(identifier="test-identity", environment=self.environment)
@@ -150,15 +143,6 @@ class IdentityTestCase(TestCase):
         self.assertEqual(len(flags), 2)
         self.assertIn(fs_environment_anticipated, flags)
         self.assertIn(fs_identity_anticipated, flags)
-
-
-class IdentityTestCase(TestCase):
-    @classmethod
-    def setUpTestData(cls):
-        cls.organisation = Organisation.objects.create(name="Test Org")
-        cls.project = Project.objects.create(name="Test Project", organisation=cls.organisation)
-        cls.environment = Environment.objects.create(name="Test Environment", project=cls.project)
-        cls.identity = Identity.objects.create(identifier="test-identity", environment=cls.environment)
 
     def test_create_trait_should_assign_relevant_attributes(self):
         trait = Trait.objects.create(trait_key="test-key", string_value="testing trait", identity=self.identity)
