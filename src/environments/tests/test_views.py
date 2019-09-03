@@ -1,10 +1,11 @@
 from unittest import TestCase
 
 import pytest
+from django.urls import reverse
 from rest_framework import status
-from rest_framework.test import APIClient
+from rest_framework.test import APIClient, APITestCase
 
-from environments.models import Environment, Identity
+from environments.models import Environment, Identity, Trait
 from features.models import Feature, FeatureState
 from organisations.models import Organisation
 from projects.models import Project
@@ -212,3 +213,61 @@ class IdentityTestCase(TestCase):
         # Then
         identity_features = FeatureState.objects.filter(identity=self.identity)
         assert identity_features.count() == 1
+
+
+@pytest.mark.django_db
+class SDKIdentitiesTestCase(APITestCase):
+    def setUp(self) -> None:
+        self.organisation = Organisation.objects.create(name='Test Org')
+        self.project = Project.objects.create(organisation=self.organisation, name='Test Project')
+        self.environment = Environment.objects.create(project=self.project, name='Test Environment')
+        self.feature_1 = Feature.objects.create(project=self.project, name='Test Feature 1')
+        self.feature_2 = Feature.objects.create(project=self.project, name='Test Feature 2')
+        self.identity = Identity.objects.create(environment=self.environment, identifier='test-identity')
+
+    def test_identities_endpoint_returns_all_feature_states_for_identity_if_feature_not_provided(self):
+        # Given
+        base_url = reverse('api:v1:sdk-identities')
+        url = base_url + '?identifier=' + self.identity.identifier
+
+        # When
+        self.client.credentials(HTTP_X_ENVIRONMENT_KEY=self.environment.api_key)
+        response = self.client.get(url)
+
+        # Then
+        assert response.status_code == status.HTTP_200_OK
+
+        # and
+        assert len(response.json().get('flags')) == 2
+
+    def test_identities_endpoint_returns_traits(self):
+        # Given
+        base_url = reverse('api:v1:sdk-identities')
+        url = base_url + '?identifier=' + self.identity.identifier
+        trait = Trait.objects.create(identity=self.identity, trait_key='trait_key', value_type='STRING',
+                                     string_value='trait_value')
+
+        # When
+        self.client.credentials(HTTP_X_ENVIRONMENT_KEY=self.environment.api_key)
+        response = self.client.get(url)
+
+        # Then
+        assert response.json().get('traits') is not None
+
+        # and
+        assert response.json().get('traits')[0].get('trait_value') == trait.get_trait_value()
+
+    def test_identities_endpoint_returns_single_feature_state_if_feature_provided(self):
+        # Given
+        base_url = reverse('api:v1:sdk-identities')
+        url = base_url + '?identifier=' + self.identity.identifier + '&feature=' + self.feature_1.name
+
+        # When
+        self.client.credentials(HTTP_X_ENVIRONMENT_KEY=self.environment.api_key)
+        response = self.client.get(url)
+
+        # Then
+        assert response.status_code == status.HTTP_200_OK
+
+        # and
+        assert response.json().get('feature').get('name') == self.feature_1.name
