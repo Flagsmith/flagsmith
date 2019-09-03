@@ -1,5 +1,5 @@
-from projects.models import Project
 from environments.models import Environment, Identity
+from projects.models import Project
 
 
 def get_user_permitted_projects(user):
@@ -15,3 +15,10 @@ def get_user_permitted_environments(user):
 def get_user_permitted_identities(user):
     user_environments = get_user_permitted_environments(user)
     return Identity.objects.filter(environment__in=[env.id for env in user_environments.all()])
+
+
+def get_environment_from_request(request):
+    try:
+        return Environment.objects.get(api_key=request.META.get('HTTP_X_ENVIRONMENT_KEY'))
+    except Environment.DoesNotExist:
+        return None
