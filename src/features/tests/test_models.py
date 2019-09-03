@@ -49,6 +49,8 @@ class FeatureTestCase(TestCase):
         # When
         feature_one.save()
 
+        # Then
         with pytest.raises(IntegrityError):
             feature_two.save()
+
 

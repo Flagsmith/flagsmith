@@ -302,18 +302,15 @@ class SDKIdentities(GenericAPIView):
             return self._get_all_feature_states_for_user_response(identity)
 
     def _get_single_feature_state_response(self, identity, feature_name):
-        try:
-            feature_state = identity.get_all_feature_states().get(
-                feature__name__iexact=feature_name
-            )
-        except FeatureState.DoesNotExist:
-            return Response(
-                {"detail": "Given feature not found"},
-                status=status.HTTP_404_NOT_FOUND
-            )
+        for feature_state in identity.get_all_feature_states():
+            if feature_state.feature.name == feature_name:
+                serializer = FeatureStateSerializerFull(feature_state)
+                return Response(data=serializer.data, status=status.HTTP_200_OK)
 
-        serializer = FeatureStateSerializerFull(feature_state)
-        return Response(data=serializer.data, status=status.HTTP_200_OK)
+        return Response(
+            {"detail": "Given feature not found"},
+            status=status.HTTP_404_NOT_FOUND
+        )
 
     def _get_all_feature_states_for_user_response(self, identity):
         serialized_flags = FeatureStateSerializerFull(identity.get_all_feature_states(), many=True)

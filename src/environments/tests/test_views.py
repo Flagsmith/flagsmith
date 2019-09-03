@@ -6,9 +6,10 @@ from rest_framework import status
 from rest_framework.test import APIClient, APITestCase
 
 from environments.models import Environment, Identity, Trait
-from features.models import Feature, FeatureState
+from features.models import Feature, FeatureState, FeatureSegment
 from organisations.models import Organisation
 from projects.models import Project
+from segments.models import Segment, SegmentRule, Condition
 from util.tests import Helper
 
 
@@ -225,6 +226,9 @@ class SDKIdentitiesTestCase(APITestCase):
         self.feature_2 = Feature.objects.create(project=self.project, name='Test Feature 2')
         self.identity = Identity.objects.create(environment=self.environment, identifier='test-identity')
 
+    def tearDown(self) -> None:
+        Segment.objects.all().delete()
+
     def test_identities_endpoint_returns_all_feature_states_for_identity_if_feature_not_provided(self):
         # Given
         base_url = reverse('api:v1:sdk-identities')
@@ -271,3 +275,50 @@ class SDKIdentitiesTestCase(APITestCase):
 
         # and
         assert response.json().get('feature').get('name') == self.feature_1.name
+
+    def test_identities_endpoint_returns_value_for_segment_if_identity_in_segment(self):
+        # Given
+        base_url = reverse('api:v1:sdk-identities')
+        url = base_url + '?identifier=' + self.identity.identifier
+
+        trait_key = 'trait_key'
+        trait_value = 'trait_value'
+        Trait.objects.create(identity=self.identity, trait_key=trait_key, value_type='STRING', string_value=trait_value)
+        segment = Segment.objects.create(name='Test Segment', project=self.project)
+        segment_rule = SegmentRule.objects.create(segment=segment, type=SegmentRule.ALL_RULE)
+        Condition.objects.create(operator='EQUAL', property=trait_key, value=trait_value, rule=segment_rule)
+        FeatureSegment.objects.create(segment=segment, feature=self.feature_2, enabled=True, priority=1)
+
+        # When
+        self.client.credentials(HTTP_X_ENVIRONMENT_KEY=self.environment.api_key)
+        response = self.client.get(url)
+
+        # Then
+        assert response.status_code == status.HTTP_200_OK
+
+        # and
+        assert response.json().get('flags')[1].get('enabled')
+
+    def test_identities_endpoint_returns_value_for_segment_if_identity_in_segment_and_feature_specified(self):
+        # Given
+        base_url = reverse('api:v1:sdk-identities')
+        url = base_url + '?identifier=' + self.identity.identifier + '&feature=' + self.feature_1.name
+
+        trait_key = 'trait_key'
+        trait_value = 'trait_value'
+        Trait.objects.create(identity=self.identity, trait_key=trait_key, value_type='STRING',
+                             string_value=trait_value)
+        segment = Segment.objects.create(name='Test Segment', project=self.project)
+        segment_rule = SegmentRule.objects.create(segment=segment, type=SegmentRule.ALL_RULE)
+        Condition.objects.create(operator='EQUAL', property=trait_key, value=trait_value, rule=segment_rule)
+        FeatureSegment.objects.create(segment=segment, feature=self.feature_1, enabled=True, priority=1)
+
+        # When
+        self.client.credentials(HTTP_X_ENVIRONMENT_KEY=self.environment.api_key)
+        response = self.client.get(url)
+
+        # Then
+        assert response.status_code == status.HTTP_200_OK
+
+        # and
+        assert response.json().get('enabled')
