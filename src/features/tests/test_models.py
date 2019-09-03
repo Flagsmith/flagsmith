@@ -1,4 +1,5 @@
 import pytest
+from django.db.utils import IntegrityError
 from django.test import TestCase
 
 from environments.models import Environment
@@ -37,4 +38,19 @@ class FeatureTestCase(TestCase):
     def test_updating_feature_state_should_trigger_webhook(self):
         feature = Feature.objects.create(name="Test Feature", project=self.project)
         # TODO: implement webhook test method
+
+    def test_cannot_create_feature_with_same_case_insensitive_name(self):
+        # Given
+        feature_name = 'Test Feature'
+
+        feature_one = Feature(project=self.project, name=feature_name)
+        feature_two = Feature(project=self.project, name=feature_name.lower())
+
+        # When
+        feature_one.save()
+
+        # Then
+        with pytest.raises(IntegrityError):
+            feature_two.save()
+
 
