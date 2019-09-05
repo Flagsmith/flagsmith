@@ -88,7 +88,7 @@ class SegmentRule(models.Model):
         to_hash = f'{self.segment.id},{identity.id}'
         hashed_value = hashlib.md5(to_hash.encode('utf-8'))
         hashed_value_as_int = int(hashed_value.hexdigest(), base=16)
-        return (hashed_value_as_int % 9999) / 10000
+        return (hashed_value_as_int % 9999) / 9998
 
 
 @python_2_unicode_compatible
