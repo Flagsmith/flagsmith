@@ -1,11 +1,14 @@
 from unittest import TestCase
 
+import pytest
+
 from environments.models import Identity, Environment
 from organisations.models import Organisation
 from projects.models import Project
 from segments.models import Segment, SegmentRule
 
 
+@pytest.mark.django_db
 class SegmentRuleTestCase(TestCase):
     def setUp(self) -> None:
         self.organisation = Organisation.objects.create(name='Test Org')
