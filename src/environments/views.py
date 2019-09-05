@@ -11,11 +11,13 @@ from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
 from rest_framework.schemas import AutoSchema
 
+from features.models import Feature, FeatureState
 from features.serializers import FeatureStateSerializerFull
-from util.util import get_user_permitted_identities, get_user_permitted_environments, get_user_permitted_projects
+from util.util import get_user_permitted_identities, get_user_permitted_environments, get_user_permitted_projects, \
+    get_environment_from_request
 from .models import Environment, Identity, Trait
 from .serializers import EnvironmentSerializerLight, IdentitySerializer, TraitSerializerBasic, TraitSerializerFull, \
-    IdentitySerializerTraitFlags
+    IdentitySerializerTraitFlags, IdentitySerializerWithTraitsAndSegments
 
 
 class EnvironmentViewSet(viewsets.ModelViewSet):
@@ -52,7 +54,7 @@ class EnvironmentViewSet(viewsets.ModelViewSet):
         project_pk = request.data.get('project')
 
         if not project_pk:
-            return Response(data = {"detail": "No project provided"}, status=status.HTTP_400_BAD_REQUEST)
+            return Response(data={"detail": "No project provided"}, status=status.HTTP_400_BAD_REQUEST)
 
         get_object_or_404(get_user_permitted_projects(self.request.user), pk=project_pk)
 
@@ -256,11 +258,6 @@ class SDKIdentitiesDeprecated(GenericAPIView):
                 status=status.HTTP_400_BAD_REQUEST
             )
 
-        kwargs = {
-            'identity': identity,
-            'environment': environment,
-        }
-
         if identity:
             traits_data = identity.get_all_user_traits()
             # traits_data = self.get_serializer(identity.get_all_user_traits(), many=True)
@@ -272,13 +269,14 @@ class SDKIdentitiesDeprecated(GenericAPIView):
             )
 
         # We need object type to pass into our IdentitySerializerTraitFlags
-        IdentityTraitFlags = namedtuple('IdentityTraitFlags', ('flags', 'traits'))
-        traitsAndFlags = IdentityTraitFlags(
+        IdentityFlagsWithTraitsAndSegments = namedtuple('IdentityTraitFlagsSegments', ('flags', 'traits', 'segments'))
+        identity_flags_traits_segments = IdentityFlagsWithTraitsAndSegments(
             flags=identity.get_all_feature_states(),
             traits=traits_data,
+            segments=identity.get_segments()
         )
 
-        serializer = IdentitySerializerTraitFlags(traitsAndFlags)
+        serializer = IdentitySerializerWithTraitsAndSegments(identity_flags_traits_segments)
 
         return Response(serializer.data, status=status.HTTP_200_OK)
 
@@ -287,19 +285,34 @@ class SDKIdentities(GenericAPIView):
     permission_classes = (AllowAny,)
 
     def get(self, request):
-        try:
-            environment = Environment.objects.get(api_key=request.META.get('HTTP_X_ENVIRONMENT_KEY'))
-        except ObjectDoesNotExist:
-            error = {"detail": "Invalid environment key header"}
-            return Response(error, status=status.HTTP_400_BAD_REQUEST)
-
         identifier = request.query_params.get('identifier')
+        if not identifier:
+            return Response({"detail": "Missing identifier"})  # TODO: add 400 status - will this break the clients?
 
-        if identifier:
-            identity, _ = Identity.objects.get_or_create(identifier=identifier, environment=environment)
+        environment = get_environment_from_request(request)
+        if not environment:
+            return Response({"detail": "Invalid environment key header"}, status=status.HTTP_400_BAD_REQUEST)
+
+        identity, _ = Identity.objects.get_or_create(identifier=identifier, environment=environment)
+
+        feature_name = request.query_params.get('feature')
+        if feature_name:
+            return self._get_single_feature_state_response(identity, feature_name)
         else:
-            return Response({"detail": "Missing identifier"})
+            return self._get_all_feature_states_for_user_response(identity)
 
+    def _get_single_feature_state_response(self, identity, feature_name):
+        for feature_state in identity.get_all_feature_states():
+            if feature_state.feature.name == feature_name:
+                serializer = FeatureStateSerializerFull(feature_state)
+                return Response(data=serializer.data, status=status.HTTP_200_OK)
+
+        return Response(
+            {"detail": "Given feature not found"},
+            status=status.HTTP_404_NOT_FOUND
+        )
+
+    def _get_all_feature_states_for_user_response(self, identity):
         serialized_flags = FeatureStateSerializerFull(identity.get_all_feature_states(), many=True)
         serialized_traits = TraitSerializerBasic(identity.get_all_user_traits(), many=True)
 
