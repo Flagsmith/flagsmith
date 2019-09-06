@@ -9,47 +9,46 @@ from segments.models import Segment, SegmentRule
 
 
 @pytest.mark.django_db
-class SegmentRuleTestCase(TestCase):
+class SegmentTestCase(TestCase):
     def setUp(self) -> None:
         self.organisation = Organisation.objects.create(name='Test Org')
         self.project = Project.objects.create(name='Test Project', organisation=self.organisation)
         self.environment = Environment.objects.create(name='Test Environment', project=self.project)
-        self.segment = Segment.objects.create(name='Test Segment', project=self.project)
         self.identity = Identity.objects.create(environment=self.environment, identifier='test_identity')
 
     def tearDown(self) -> None:
-        SegmentRule.objects.all().delete()
+        Segment.objects.all().delete()
         Identity.objects.all().delete()
 
     def test_percentage_value_for_given_segment_rule_and_identity_is_number_between_0_and_1(self):
         # Given
-        segment_rule = SegmentRule.objects.create(segment=self.segment, type=SegmentRule.PERCENTAGE_SPLIT)
+        segment = Segment.objects.create(name='Test Segment', project=self.project)
 
         # When
-        result = segment_rule.get_identity_percentage_value(self.identity)
+        result = segment.get_identity_percentage_value(self.identity)
 
         # Then
         assert 1 >= result >= 0
 
     def test_percentage_value_for_given_segment_rule_and_identity_is_the_same_each_time(self):
         # Given
-        segment_rule = SegmentRule.objects.create(segment=self.segment, type=SegmentRule.PERCENTAGE_SPLIT)
+        segment = Segment.objects.create(name='Test Segment', project=self.project)
 
         # When
-        result_1 = segment_rule.get_identity_percentage_value(self.identity)
-        result_2 = segment_rule.get_identity_percentage_value(self.identity)
+        result_1 = segment.get_identity_percentage_value(self.identity)
+        result_2 = segment.get_identity_percentage_value(self.identity)
 
         # Then
         assert result_1 == result_2
 
     def test_percentage_value_is_unique_for_different_identities(self):
         # Given
-        segment_rule = SegmentRule.objects.create(segment=self.segment, type=SegmentRule.PERCENTAGE_SPLIT)
+        segment = Segment.objects.create(name='Test Segment', project=self.project)
         another_identity = Identity.objects.create(environment=self.environment, identifier='another_test_identity')
 
         # When
-        result_1 = segment_rule.get_identity_percentage_value(self.identity)
-        result_2 = segment_rule.get_identity_percentage_value(another_identity)
+        result_1 = segment.get_identity_percentage_value(self.identity)
+        result_2 = segment.get_identity_percentage_value(another_identity)
 
         # Then
         assert result_1 != result_2
@@ -69,14 +68,14 @@ class SegmentRuleTestCase(TestCase):
         error_factor = 0.1
 
         # Given
-        segment_rule = SegmentRule.objects.create(segment=self.segment, type=SegmentRule.PERCENTAGE_SPLIT)
+        segment = Segment.objects.create(name='Test Segment', project=self.project)
         identities = []
         for i in range(test_sample):
             identities.append(Identity(environment=self.environment, identifier=str(i)))
         Identity.objects.bulk_create(identities)
 
         # When
-        values = [segment_rule.get_identity_percentage_value(identity) for identity in Identity.objects.all()]
+        values = [segment.get_identity_percentage_value(identity) for identity in Identity.objects.all()]
         values.sort()
 
         # Then
