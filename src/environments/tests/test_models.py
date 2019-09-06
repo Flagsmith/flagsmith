@@ -5,6 +5,7 @@ from environments.models import Environment, Identity, Trait
 from features.models import Feature, FeatureState
 from organisations.models import Organisation
 from projects.models import Project
+from util.tests import Helper
 
 
 @pytest.mark.django_db
@@ -18,10 +19,15 @@ class EnvironmentSaveTestCase(TestCase):
         self.environment = Environment(name="Test Environment", project=self.project)
 
     def test_environment_should_be_created_with_feature_states(self):
-        feature_states = FeatureState.objects.filter(environment=self.environment)
+        # Given - set up data
 
-        self.assertTrue(hasattr(self.environment, 'api_key'))
-        self.assertEquals(feature_states.count(), 1)
+        # When
+        self.environment.save()
+
+        # Then
+        feature_states = FeatureState.objects.filter(environment=self.environment)
+        assert hasattr(self.environment, 'api_key')
+        assert feature_states.count() == 1
 
     def test_environment_can_be_created_with_webhooks_enabled(self):
         environment_with_webhook = Environment.objects.create(name="Env with Webhooks",
@@ -82,18 +88,19 @@ class EnvironmentSaveTestCase(TestCase):
 
 
 class IdentityTestCase(TestCase):
-    @classmethod
-    def setUpTestData(cls):
-        cls.organisation = Organisation.objects.create(name="Test Org")
-        cls.project = Project.objects.create(name="Test Project", organisation=cls.organisation)
-        cls.environment = Environment.objects.create(name="Test Environment", project=cls.project)
-        cls.identity = Identity.objects.create(identifier="test-identity", environment=cls.environment)
+    def setUp(self):
+        self.organisation = Organisation.objects.create(name="Test Org")
+        self.project = Project.objects.create(name="Test Project", organisation=self.organisation)
+        self.environment = Environment.objects.create(name="Test Environment", project=self.project)
+
+    def tearDown(self) -> None:
+        Helper.clean_up()
 
     def test_create_identity_should_assign_relevant_attributes(self):
         identity = Identity.objects.create(identifier="test-identity", environment=self.environment)
 
-        self.assertIsInstance(identity.environment, Environment)
-        self.assertTrue(hasattr(identity, 'created_date'))
+        assert isinstance(identity.environment, Environment)
+        assert hasattr(identity, 'created_date')
 
     def test_get_all_feature_states(self):
         feature = Feature.objects.create(name="Test Feature", project=self.project)
@@ -145,7 +152,8 @@ class IdentityTestCase(TestCase):
         self.assertIn(fs_identity_anticipated, flags)
 
     def test_create_trait_should_assign_relevant_attributes(self):
-        trait = Trait.objects.create(trait_key="test-key", string_value="testing trait", identity=self.identity)
+        identity = Identity.objects.create(identifier='test-identity', environment=self.environment)
+        trait = Trait.objects.create(trait_key="test-key", string_value="testing trait", identity=identity)
 
         self.assertIsInstance(trait.identity, Identity)
         self.assertTrue(hasattr(trait, 'trait_key'))
@@ -153,25 +161,22 @@ class IdentityTestCase(TestCase):
         self.assertTrue(hasattr(trait, 'created_date'))
 
     def test_on_update_trait_should_update_relevant_attributes(self):
-        trait = Trait.objects.create(trait_key="test-key", string_value="testing trait", identity=self.identity)
+        identity = Identity.objects.create(identifier='test-identifier', environment=self.environment)
+        trait = Trait.objects.create(trait_key="test-key", string_value="testing trait", identity=identity)
 
         # TODO: need tests for updates
 
-    def test_create_trait_with_existing_key_and_identity_should_faile(self):
-        trait = Trait.objects.create(trait_key="test-key", string_value="testing trait", identity=self.identity)
-        # should fail
-        trait2 = Trait.objects.create(trait_key="test-key", string_value="testing trait", identity=self.identity)
-
     def test_get_all_traits_for_identity(self):
+        identity = Identity.objects.create(identifier='test-identifier', environment=self.environment)
         identity2 = Identity.objects.create(identifier="test-identity_two", environment=self.environment)
 
-        Trait.objects.create(trait_key="test-key-one", string_value="testing trait", identity=self.identity)
-        Trait.objects.create(trait_key="test-key-two", string_value="testing trait", identity=self.identity)
-        Trait.objects.create(trait_key="test-key-three", string_value="testing trait", identity=self.identity)
+        Trait.objects.create(trait_key="test-key-one", string_value="testing trait", identity=identity)
+        Trait.objects.create(trait_key="test-key-two", string_value="testing trait", identity=identity)
+        Trait.objects.create(trait_key="test-key-three", string_value="testing trait", identity=identity)
         Trait.objects.create(trait_key="test-key-three", string_value="testing trait", identity=identity2)
 
         # Identity one should have 3
-        traits_identity_one = self.identity.get_all_user_traits()
+        traits_identity_one = identity.get_all_user_traits()
         self.assertEqual(len(traits_identity_one), 3)
 
         traits_identity_two = identity2.get_all_user_traits()

@@ -1,19 +1,21 @@
 from unittest import TestCase
 
 import pytest
+from django.urls import reverse
 from rest_framework import status
-from rest_framework.test import APIClient
+from rest_framework.test import APIClient, APITestCase
 
-from environments.models import Environment, Identity
-from features.models import Feature, FeatureState
+from environments.models import Environment, Identity, Trait
+from features.models import Feature, FeatureState, FeatureSegment
 from organisations.models import Organisation
 from projects.models import Project
+from segments.models import Segment, SegmentRule, Condition
 from util.tests import Helper
 
 
 @pytest.mark.django_db
 class EnvironmentTestCase(TestCase):
-    env_post_template_wout_webhook = '{"name": %s, "project": %d}'
+    env_post_template_wout_webhook = '{"name": "%s", "project": %d}'
     env_post_template_with_webhook = '{"name": "%s", "project": %d, ' \
                                      '"webhooks_enabled": "%r", "webhook_url": "%s"}'
     fs_put_template = '{ "id" : %d, "enabled" : "%r", "feature_state_value" : "%s" }'
@@ -22,6 +24,12 @@ class EnvironmentTestCase(TestCase):
         client = APIClient()
         user = Helper.create_ffadminuser()
         client.force_authenticate(user=user)
+
+        self.organisation = Organisation.objects.create(name='ssg')
+        user.organisations.add(self.organisation)
+
+        self.project = Project.objects.create(name='Test project', organisation=self.organisation)
+
         return client
 
     def test_should_create_environments_with_or_without_webhooks(self):
@@ -32,7 +40,7 @@ class EnvironmentTestCase(TestCase):
         response_with_webhook = client.post('/api/v1/environments/',
                                             data=self.env_post_template_with_webhook % (
                                                 "Test Env with Webhooks",
-                                                1,
+                                                self.project.id,
                                                 True,
                                                 "https://sometesturl.org"
                                             ), content_type="application/json")
@@ -40,13 +48,13 @@ class EnvironmentTestCase(TestCase):
         response_wout_webhook = client.post('/api/v1/environments/',
                                             data=self.env_post_template_wout_webhook % (
                                                 "Test Env without Webhooks",
-                                                1
+                                                self.project.id
                                             ), content_type="application/json")
 
         # Then
-        self.assertTrue(response_with_webhook.status_code, 201)
-        self.assertTrue(Environment.objects.get(name="Test Env with Webhooks").webhook_url)
-        self.assertTrue(response_wout_webhook.status_code, 201)
+        assert response_with_webhook.status_code == status.HTTP_201_CREATED
+        assert Environment.objects.get(name="Test Env with Webhooks").webhook_url
+        assert response_wout_webhook.status_code == status.HTTP_201_CREATED
 
     def test_should_return_identities_for_an_environment(self):
         client = self.set_up()
@@ -54,9 +62,7 @@ class EnvironmentTestCase(TestCase):
         # Given
         identifierOne = 'user1'
         identifierTwo = 'user2'
-        organisation = Organisation(name='ssg')
-        organisation.save()
-        project = Project(name='project1', organisation=organisation)
+        project = Project(name='project1', organisation=self.organisation)
         project.save()
         environment = Environment(name='environment1', project=project)
         environment.save()
@@ -64,8 +70,10 @@ class EnvironmentTestCase(TestCase):
         identityOne.save()
         identityTwo = Identity(identifier=identifierTwo, environment=environment)
         identityTwo.save()
+
         # When
         response = client.get('/api/v1/environments/%s/identities/' % environment.api_key)
+
         # Then
         self.assertEquals(response.data['results'][0]['identifier'], identifierOne)
         self.assertEquals(response.data['results'][1]['identifier'], identifierTwo)
@@ -73,10 +81,9 @@ class EnvironmentTestCase(TestCase):
     def test_should_update_value_of_feature_state(self):
         # Given
         client = self.set_up()
-        project = Project.objects.get(name="test project")
-        feature = Feature(name="feature", project=project)
+        feature = Feature(name="feature", project=self.project)
         feature.save()
-        environment = Environment.objects.get(name="test env")
+        environment = Environment.objects.create(name="test env", project=self.project)
         feature_state = FeatureState.objects.get(feature=feature, environment=environment)
 
         # When
@@ -96,6 +103,7 @@ class EnvironmentTestCase(TestCase):
         Helper.clean_up()
 
 
+@pytest.mark.django_db
 class IdentityTestCase(TestCase):
     identifier = 'user1'
     put_template = '{ "enabled" : "%r" }'
@@ -104,120 +112,213 @@ class IdentityTestCase(TestCase):
     feature_states_detail_url = feature_states_url + "%d/"
     identities_url = '/api/v1/environments/%s/identities/%s/'
 
-    def set_up(self):
-        client = APIClient()
+    def setUp(self):
+        self.client = APIClient()
         user = Helper.create_ffadminuser()
-        client.force_authenticate(user=user)
-        return client
+        self.client.force_authenticate(user=user)
+
+        self.organisation = Organisation.objects.create(name='Test Org')
+        user.organisations.add(self.organisation)
+
+        self.project = Project.objects.create(name='Test project', organisation=self.organisation)
+        self.environment = Environment.objects.create(name='Test Environment', project=self.project)
+        self.identity = Identity.objects.create(identifier=self.identifier, environment=self.environment)
+
+    def tearDown(self) -> None:
+        Helper.clean_up()
 
     def test_should_return_identities_list_when_requested(self):
-        # Given
-        client = self.set_up()
-        identity, project = Helper.generate_database_models(identifier=self.identifier)
-        # When
-        response = client.get(self.identities_url % (identity.environment.api_key,
-                                                     identity.identifier))
-        # Then
-        self.assertEquals(response.status_code, 200)
-        Helper.clean_up()
+        # Given - set up data
 
-    def test_should_create_identityFeature_when_post(self):
-        # Given
-        client = self.set_up()
-        environment = Environment.objects.get(name="test env")
-        identity = Identity.objects.create(environment=environment, identifier="testidentity")
-        project = Project.objects.get(name="test project")
-        feature = Feature(name='feature1', project=project)
-        feature.save()
         # When
-        response = client.post(self.feature_states_url % (identity.environment.api_key,
-                                                          identity.identifier),
-                               data=self.post_template % (feature.id, True),
-                               content_type='application/json')
+        response = self.client.get(self.identities_url % (self.identity.environment.api_key,
+                                                          self.identity.id))
+
         # Then
-        identityFeature = identity.identity_features
-        self.assertEquals(response.status_code, status.HTTP_201_CREATED)
-        self.assertEquals(identityFeature.count(), 1)
-        Helper.clean_up()
+        assert response.status_code == status.HTTP_200_OK
+
+    def test_should_create_identity_feature_when_post(self):
+        # Given
+        feature = Feature.objects.create(name='feature1', project=self.project)
+
+        # When
+        response = self.client.post(self.feature_states_url % (self.identity.environment.api_key,
+                                                               self.identity.id),
+                                    data=self.post_template % (feature.id, True),
+                                    content_type='application/json')
+
+        # Then
+        identity_features = self.identity.identity_features
+        assert response.status_code == status.HTTP_201_CREATED
+        assert identity_features.count() == 1
 
     def test_should_return_BadRequest_when_duplicate_identityFeature_is_posted(self):
         # Given
-        client = self.set_up()
-        identity, project = Helper.generate_database_models(self.identifier)
-        feature = Feature(name='feature2', project=project)
-        feature.save()
+        feature = Feature.objects.create(name='feature2', project=self.project)
+
         # When
-        initialResponse = client.post(self.feature_states_url % (identity.environment.api_key,
-                                                                 identity.identifier),
-                                      data=self.post_template % (feature.id, True),
-                                      content_type='application/json')
-        secondResponse = client.post(self.feature_states_url % (identity.environment.api_key,
-                                                                identity.identifier),
-                                     data=self.post_template % (feature.id, True),
-                                     content_type='application/json')
+        initial_response = self.client.post(self.feature_states_url % (self.identity.environment.api_key,
+                                                                       self.identity.id),
+                                            data=self.post_template % (feature.id, True),
+                                            content_type='application/json')
+        second_response = self.client.post(self.feature_states_url % (self.identity.environment.api_key,
+                                                                      self.identity.id),
+                                           data=self.post_template % (feature.id, True),
+                                           content_type='application/json')
+
         # Then
-        identityFeature = identity.identity_features
-        self.assertEquals(initialResponse.status_code, status.HTTP_201_CREATED)
-        self.assertEquals(secondResponse.status_code, status.HTTP_400_BAD_REQUEST)
-        self.assertEquals(identityFeature.count(), 1)
-        Helper.clean_up()
+        identity_feature = self.identity.identity_features
+        assert initial_response.status_code == status.HTTP_201_CREATED
+        assert second_response.status_code == status.HTTP_400_BAD_REQUEST
+        assert identity_feature.count() == 1
 
     def test_should_change_enabled_state_when_put(self):
         # Given
-        client = self.set_up()
-        organisation = Organisation.objects.get(name="test org")
-        project = Project.objects.get(name="test project", organisation=organisation)
-        feature = Feature(name='feature1', project=project)
-        feature.save()
-        environment = Environment.objects.get(name="test env")
-        identity = Identity(identifier="test_identity", environment=environment)
-        identity.save()
-        feature_state = FeatureState(feature=feature,
-                                     identity=identity,
-                                     enabled=False,
-                                     environment=environment)
-        feature_state.save()
-        # When
-        response = client.put(self.feature_states_detail_url % (identity.environment.api_key,
-                                                                identity.identifier,
-                                                                feature_state.id),
-                              data=self.put_template % True,
-                              content_type='application/json')
-        feature_state.refresh_from_db()
-        # Then
-        self.assertEquals(response.status_code, status.HTTP_200_OK)
-        self.assertEquals(feature_state.enabled, True)
-        Helper.clean_up()
+        feature = Feature.objects.create(name='feature1', project=self.project)
+        feature_state = FeatureState.objects.create(feature=feature,
+                                                    identity=self.identity,
+                                                    enabled=False,
+                                                    environment=self.environment)
 
-    def test_should_remove_identityfeature_when_delete(self):
-        # Given
-        client = self.set_up()
-        organisation = Organisation.objects.get(name="test org")
-        project = Project.objects.get(name="test project", organisation=organisation)
-        feature_one = Feature(name='feature1', project=project)
-        feature_one.save()
-        feature_two = Feature(name='feature2', project=project)
-        feature_two.save()
-        environment = Environment.objects.get(name="test env")
-        identity = Identity(identifier="test_identity", environment=environment)
-        identity.save()
-        environment = Environment.objects.get(name="test env")
-        identity_feature_one = FeatureState(feature=feature_one,
-                                            identity=identity,
-                                            enabled=False,
-                                            environment=environment)
-        identity_feature_one.save()
-        identity_feature_two = FeatureState(feature=feature_two,
-                                            identity=identity,
-                                            enabled=True,
-                                            environment=environment)
-        identity_feature_two.save()
         # When
-        client.delete(self.feature_states_detail_url % (identity.environment.api_key,
-                                                        identity.identifier,
-                                                        identity_feature_one.id),
-                      content_type='application/json')
+        response = self.client.put(self.feature_states_detail_url % (self.identity.environment.api_key,
+                                                                     self.identity.id,
+                                                                     feature_state.id),
+                                   data=self.put_template % True,
+                                   content_type='application/json')
+        feature_state.refresh_from_db()
+
         # Then
-        identity_features = FeatureState.objects.filter(identity=identity)
-        self.assertEquals(identity_features.count(), 1)
-        Helper.clean_up()
+        assert response.status_code == status.HTTP_200_OK
+        assert feature_state.enabled == True
+
+    def test_should_remove_identity_feature_when_delete(self):
+        # Given
+        feature_one = Feature.objects.create(name='feature1', project=self.project)
+        feature_two = Feature.objects.create(name='feature2', project=self.project)
+        identity_feature_one = FeatureState.objects.create(feature=feature_one,
+                                                           identity=self.identity,
+                                                           enabled=False,
+                                                           environment=self.environment)
+        identity_feature_two = FeatureState.objects.create(feature=feature_two,
+                                                           identity=self.identity,
+                                                           enabled=True,
+                                                           environment=self.environment)
+
+        # When
+        self.client.delete(self.feature_states_detail_url % (self.identity.environment.api_key,
+                                                             self.identity.id,
+                                                             identity_feature_one.id),
+                           content_type='application/json')
+
+        # Then
+        identity_features = FeatureState.objects.filter(identity=self.identity)
+        assert identity_features.count() == 1
+
+
+@pytest.mark.django_db
+class SDKIdentitiesTestCase(APITestCase):
+    def setUp(self) -> None:
+        self.organisation = Organisation.objects.create(name='Test Org')
+        self.project = Project.objects.create(organisation=self.organisation, name='Test Project')
+        self.environment = Environment.objects.create(project=self.project, name='Test Environment')
+        self.feature_1 = Feature.objects.create(project=self.project, name='Test Feature 1')
+        self.feature_2 = Feature.objects.create(project=self.project, name='Test Feature 2')
+        self.identity = Identity.objects.create(environment=self.environment, identifier='test-identity')
+
+    def tearDown(self) -> None:
+        Segment.objects.all().delete()
+
+    def test_identities_endpoint_returns_all_feature_states_for_identity_if_feature_not_provided(self):
+        # Given
+        base_url = reverse('api:v1:sdk-identities')
+        url = base_url + '?identifier=' + self.identity.identifier
+
+        # When
+        self.client.credentials(HTTP_X_ENVIRONMENT_KEY=self.environment.api_key)
+        response = self.client.get(url)
+
+        # Then
+        assert response.status_code == status.HTTP_200_OK
+
+        # and
+        assert len(response.json().get('flags')) == 2
+
+    def test_identities_endpoint_returns_traits(self):
+        # Given
+        base_url = reverse('api:v1:sdk-identities')
+        url = base_url + '?identifier=' + self.identity.identifier
+        trait = Trait.objects.create(identity=self.identity, trait_key='trait_key', value_type='STRING',
+                                     string_value='trait_value')
+
+        # When
+        self.client.credentials(HTTP_X_ENVIRONMENT_KEY=self.environment.api_key)
+        response = self.client.get(url)
+
+        # Then
+        assert response.json().get('traits') is not None
+
+        # and
+        assert response.json().get('traits')[0].get('trait_value') == trait.get_trait_value()
+
+    def test_identities_endpoint_returns_single_feature_state_if_feature_provided(self):
+        # Given
+        base_url = reverse('api:v1:sdk-identities')
+        url = base_url + '?identifier=' + self.identity.identifier + '&feature=' + self.feature_1.name
+
+        # When
+        self.client.credentials(HTTP_X_ENVIRONMENT_KEY=self.environment.api_key)
+        response = self.client.get(url)
+
+        # Then
+        assert response.status_code == status.HTTP_200_OK
+
+        # and
+        assert response.json().get('feature').get('name') == self.feature_1.name
+
+    def test_identities_endpoint_returns_value_for_segment_if_identity_in_segment(self):
+        # Given
+        base_url = reverse('api:v1:sdk-identities')
+        url = base_url + '?identifier=' + self.identity.identifier
+
+        trait_key = 'trait_key'
+        trait_value = 'trait_value'
+        Trait.objects.create(identity=self.identity, trait_key=trait_key, value_type='STRING', string_value=trait_value)
+        segment = Segment.objects.create(name='Test Segment', project=self.project)
+        segment_rule = SegmentRule.objects.create(segment=segment, type=SegmentRule.ALL_RULE)
+        Condition.objects.create(operator='EQUAL', property=trait_key, value=trait_value, rule=segment_rule)
+        FeatureSegment.objects.create(segment=segment, feature=self.feature_2, enabled=True, priority=1)
+
+        # When
+        self.client.credentials(HTTP_X_ENVIRONMENT_KEY=self.environment.api_key)
+        response = self.client.get(url)
+
+        # Then
+        assert response.status_code == status.HTTP_200_OK
+
+        # and
+        assert response.json().get('flags')[1].get('enabled')
+
+    def test_identities_endpoint_returns_value_for_segment_if_identity_in_segment_and_feature_specified(self):
+        # Given
+        base_url = reverse('api:v1:sdk-identities')
+        url = base_url + '?identifier=' + self.identity.identifier + '&feature=' + self.feature_1.name
+
+        trait_key = 'trait_key'
+        trait_value = 'trait_value'
+        Trait.objects.create(identity=self.identity, trait_key=trait_key, value_type='STRING',
+                             string_value=trait_value)
+        segment = Segment.objects.create(name='Test Segment', project=self.project)
+        segment_rule = SegmentRule.objects.create(segment=segment, type=SegmentRule.ALL_RULE)
+        Condition.objects.create(operator='EQUAL', property=trait_key, value=trait_value, rule=segment_rule)
+        FeatureSegment.objects.create(segment=segment, feature=self.feature_1, enabled=True, priority=1)
+
+        # When
+        self.client.credentials(HTTP_X_ENVIRONMENT_KEY=self.environment.api_key)
+        response = self.client.get(url)
+
+        # Then
+        assert response.status_code == status.HTTP_200_OK
+
+        # and
+        assert response.json().get('enabled')

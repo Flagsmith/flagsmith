@@ -18,7 +18,6 @@ logger.setLevel(logging.INFO)
 
 class SegmentViewSet(viewsets.ModelViewSet):
     serializer_class = serializers.SegmentSerializer
-    pagination.PageNumberPagination.page_size = 10
 
     def get_queryset(self):
         project = get_object_or_404(get_user_permitted_projects(self.request.user), pk=self.kwargs['project_pk'])

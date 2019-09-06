@@ -35,16 +35,8 @@ class Helper:
     @staticmethod
     def create_ffadminuser():
         Helper.clean_up()
-        organisation = Organisation(name='test org')
-        organisation.save()
-        project = Project(name="test project", organisation=organisation)
-        project.save()
-        environment = Environment(name="test env", project=project)
-        environment.save()
         user = FFAdminUser(username="test_user", email="test_user@test.com",
                            first_name="test", last_name="user")
         user.set_password("testuser123")
-        user.save()
-        user.organisations.add(organisation)
         user.save()
         return user
