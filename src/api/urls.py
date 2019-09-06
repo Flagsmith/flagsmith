@@ -34,7 +34,7 @@ urlpatterns = [
 
     # Client SDK urls
     url(r'^flags/$', SDKFeatureStates.as_view()),
-    url(r'^identities/$', SDKIdentities.as_view()),
+    url(r'^identities/$', SDKIdentities.as_view(), name='sdk-identities'),
     url(r'^traits/$', SDKTraits.as_view()),
     url(r'^segments/$', SDKSegments.as_view()),
 

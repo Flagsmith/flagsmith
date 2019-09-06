@@ -17,82 +17,57 @@ class ProjectFeatureTestCase(TestCase):
     project_feature_detail_url = '/api/v1/projects/%s/features/%d/'
     post_template = '{ "name": "%s", "project": %d, "initial_value": "%s" }'
 
-    def set_up(self):
-        client = APIClient()
+    def setUp(self):
+        self.client = APIClient()
         user = Helper.create_ffadminuser()
-        client.force_authenticate(user=user)
-        return client
+        self.client.force_authenticate(user=user)
+
+        self.organisation = Organisation.objects.create(name='Test Org')
+
+        user.organisations.add(self.organisation)
+
+        self.project = Project.objects.create(name='Test project', organisation=self.organisation)
+        self.environment_1 = Environment.objects.create(name='Test environment 1', project=self.project)
+        self.environment_2 = Environment.objects.create(name='Test environment 2', project=self.project)
+
+    def tearDown(self) -> None:
+        Helper.clean_up()
 
     def test_should_create_feature_states_when_feature_created(self):
-        # Given
-        client = self.set_up()
-        project = Project.objects.get(name="test project")
-        environment_1 = Environment(name="env 1", project=project)
-        environment_2 = Environment(name="env 2", project=project)
-        environment_3 = Environment(name="env 3", project=project)
-        environment_1.save()
-        environment_2.save()
-        environment_3.save()
+        # Given - set up data
+        default_value = 'This is a value'
 
         # When
-        response = client.post(self.project_features_url % project.id,
-                               data=self.post_template % ("test feature", project.id,
-                                                          "This is a value"),
-                               content_type='application/json')
+        response = self.client.post(self.project_features_url % self.project.id,
+                                    data=self.post_template % ("test feature", self.project.id,
+                                                               default_value),
+                                    content_type='application/json')
 
         # Then
-        self.assertEquals(response.status_code, status.HTTP_201_CREATED)
+        assert response.status_code == status.HTTP_201_CREATED
         # check feature was created successfully
-        self.assertEquals(1, Feature.objects.filter(name="test feature",
-                                                    project=project.id).count())
-        feature = Feature.objects.get(name="test feature", project=project.id)
-        # check feature was added to all environments
-        self.assertEquals(1, FeatureState.objects.filter(environment=environment_1,
-                                                         feature=feature).count())
-        self.assertEquals(1, FeatureState.objects.filter(environment=environment_2,
-                                                         feature=feature).count())
-        self.assertEquals(1, FeatureState.objects.filter(environment=environment_3,
-                                                         feature=feature).count())
+        assert Feature.objects.filter(name="test feature", project=self.project.id).count() == 1
+
+        # check feature was added to environment
+        assert FeatureState.objects.filter(environment=self.environment_1).count() == 1
+        assert FeatureState.objects.filter(environment=self.environment_2).count() == 1
 
         # check that value was correctly added to feature state
-        feature_state = FeatureState.objects.get(environment=environment_1, feature=feature)
-        self.assertEquals("This is a value", feature_state.get_feature_state_value())
-
-        Helper.clean_up()
+        feature_state = FeatureState.objects.filter(environment=self.environment_1).first()
+        assert feature_state.get_feature_state_value() == default_value
 
     def test_should_delete_feature_states_when_feature_deleted(self):
         # Given
-        client = self.set_up()
-        organisation = Organisation.objects.get(name="test org")
-        project = Project(name="test project", organisation=organisation)
-        project.save()
-        environment_1 = Environment(name="env 1", project=project)
-        environment_2 = Environment(name="env 2", project=project)
-        environment_3 = Environment(name="env 3", project=project)
-        environment_1.save()
-        environment_2.save()
-        environment_3.save()
-        client.post(self.project_features_url % project.id,
-                    data=self.post_template % ("test feature", project.id, "This is a value"),
-                    content_type='application/json')
-        feature = Feature.objects.get(name="test feature", project=project.id)
+        feature = Feature.objects.create(name="test feature", project=self.project)
 
         # When
-        response = client.delete(self.project_feature_detail_url % (project.id, feature.id),
-                                 data='{"id": %d}' % feature.id,
-                                 content_type='application/json')
+        response = self.client.delete(self.project_feature_detail_url % (self.project.id, feature.id))
 
         # Then
-        self.assertEquals(response.status_code, status.HTTP_204_NO_CONTENT)
+        assert response.status_code == status.HTTP_204_NO_CONTENT
         # check feature was deleted succesfully
-        self.assertEquals(0, Feature.objects.filter(name="test feature",
-                                                    project=project.id).count())
-        # check feature was removed from all environments
-        self.assertEquals(0, FeatureState.objects.filter(environment=environment_1,
-                                                         feature=feature).count())
-        self.assertEquals(0, FeatureState.objects.filter(environment=environment_2,
-                                                         feature=feature).count())
-        self.assertEquals(0, FeatureState.objects.filter(environment=environment_3,
-                                                         feature=feature).count())
+        assert Feature.objects.filter(name="test feature", project=self.project.id).count() == 0
 
-        Helper.clean_up()
+        # check feature was removed from all environments
+        assert FeatureState.objects.filter(environment=self.environment_1, feature=feature).count() == 0
+        assert FeatureState.objects.filter(environment=self.environment_2, feature=feature).count() == 0
