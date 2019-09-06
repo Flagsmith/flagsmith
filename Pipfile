@@ -7,11 +7,14 @@ name = "pypi"
 runserver = "python src/manage.py runserver"
 makemigrations = "python src/manage.py makemigrations"
 migrate = "python src/manage.py migrate"
+test = "pytest"
 
 [dev-packages]
-pylint = "<2.0.0"
+pylint = "*"
 "pep8" = "*"
 "autopep8" = "*"
+pytest = "*"
+pytest-django = "*"
 
 [packages]
 appdirs = "*"
