@@ -1,4 +1,5 @@
 from rest_framework import serializers
+from rest_framework.exceptions import ValidationError
 from rest_framework.serializers import ListSerializer
 
 from rest_framework_recursive.fields import RecursiveField
@@ -11,6 +12,12 @@ class ConditionSerializer(serializers.ModelSerializer):
     class Meta:
         model = models.Condition
         fields = ('operator', 'property', 'value')
+
+    def validate(self, attrs):
+        super(ConditionSerializer, self).validate(attrs)
+        if attrs.get('operator') != models.PERCENTAGE_SPLIT and not attrs.get('property'):
+            raise ValidationError({'property': ['This field may not be blank.']})
+        return attrs
 
 
 class RuleSerializer(serializers.ModelSerializer):
