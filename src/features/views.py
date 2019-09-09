@@ -1,6 +1,6 @@
-import coreapi
 import logging
 
+import coreapi
 from django.core.exceptions import ObjectDoesNotExist
 from django.db import transaction
 from rest_framework import status, viewsets, mixins

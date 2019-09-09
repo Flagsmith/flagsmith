@@ -9,4 +9,4 @@ class AuditLogSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = AuditLog
-        fields = ('created_date', 'log', 'author')
+        fields = ('created_date', 'log', 'author', 'related_object_id', 'related_object_type')
