@@ -1,5 +1,6 @@
 from rest_framework import serializers
 
+from audit.models import AuditLog, RelatedObjectType, FEATURE_CREATED_MESSAGE, FEATURE_UPDATED_MESSAGE
 from segments.serializers import SegmentSerializerBasic
 from .models import Feature, FeatureState, FeatureStateValue, FeatureSegment
 
@@ -16,7 +17,20 @@ class CreateFeatureSerializer(serializers.ModelSerializer):
                                               "project. Note that feature names are case "
                                               "insensitive.")
 
-        return super(CreateFeatureSerializer, self).create(validated_data)
+        instance = super(CreateFeatureSerializer, self).create(validated_data)
+
+        self._create_audit_log(instance, True)
+
+        return instance
+
+    def update(self, instance, validated_data):
+        self._create_audit_log(instance, False)
+        return super(CreateFeatureSerializer, self).update(instance, validated_data)
+
+    def _create_audit_log(self, instance, created):
+        AuditLog.objects.create(author=self.request.user, related_object_id=instance.id,
+                                related_object_type=RelatedObjectType.FEATURE.name,
+                                log=FEATURE_CREATED_MESSAGE if created else FEATURE_UPDATED_MESSAGE)
 
 
 class FeatureSegmentCreateSerializer(serializers.ModelSerializer):
@@ -65,7 +79,6 @@ class FeatureStateSerializerBasic(serializers.ModelSerializer):
 
 
 class FeatureStateSerializerCreate(serializers.ModelSerializer):
-
     class Meta:
         model = FeatureState
         fields = ('feature', 'enabled')
