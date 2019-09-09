@@ -20,7 +20,7 @@ schema_view = get_schema_view(
     authentication_classes=(authentication.SessionAuthentication,)
 )
 
-urlpatterns = [
+current_urls = [
     url(r'^organisations/', include('organisations.urls')),
     url(r'^projects/', include('projects.urls')),
     url(r'^environments/', include('environments.urls')),
