@@ -102,11 +102,10 @@ class FeatureStateViewSet(viewsets.ModelViewSet):
 
     # Override serializer class to show correct information in docs
     def get_serializer_class(self):
-
-        if self.action not in ['list', 'retrieve']:
-            return FeatureStateSerializerCreate
-        else:
+        if self.action in ['list', 'retrieve', 'update']:
             return FeatureStateSerializerBasic
+        else:
+            return FeatureStateSerializerCreate
 
     def get_queryset(self):
         """
@@ -202,8 +201,8 @@ class FeatureStateViewSet(viewsets.ModelViewSet):
 
             feature_state_data['feature_state_value'] = feature_state_value.id
 
-        serializer = FeatureStateSerializerBasic(feature_state_to_update, data=feature_state_data,
-                                                 partial=True)
+        serializer = self.get_serializer(feature_state_to_update, data=feature_state_data,
+                                         partial=True)
         serializer.is_valid(raise_exception=True)
         self.perform_update(serializer)
 

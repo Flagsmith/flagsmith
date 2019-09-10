@@ -141,6 +141,9 @@ class EnvironmentTestCase(TestCase):
         # Then
         assert AuditLog.objects.filter(related_object_type=RelatedObjectType.FEATURE_STATE.name).count() == 1
 
+        # and
+        assert AuditLog.objects.first().author
+
 
 @pytest.mark.django_db
 class IdentityTestCase(TestCase):
