@@ -4,12 +4,13 @@ from django.db import models
 from django.utils.encoding import python_2_unicode_compatible
 
 FEATURE_CREATED_MESSAGE = "New Flag / Remote Config created: %s"
-FEATURE_UPDATED_MESSAGE = "Flag / Remove Config updated: %s"
+FEATURE_UPDATED_MESSAGE = "Flag / Remote Config updated: %s"
 SEGMENT_CREATED_MESSAGE = "New Segment created: %s"
 SEGMENT_UPDATED_MESSAGE = "Segment updated: %s"
 FEATURE_SEGMENT_UPDATED_MESSAGE = "Segment rules updated for flag: %s"
 ENVIRONMENT_CREATED_MESSAGE = "New Environment created: %s"
 ENVIRONMENT_UPDATED_MESSAGE = "Environment updated: %s"
+FEATURE_STATE_UPDATED_MESSAGE = "Flag state / Remote Config value updated for feature: %s"
 
 
 class RelatedObjectType(enum.Enum):

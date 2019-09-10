@@ -123,6 +123,24 @@ class EnvironmentTestCase(TestCase):
         # Then
         assert AuditLog.objects.filter(related_object_type=RelatedObjectType.ENVIRONMENT.name).count() == 1
 
+    def test_audit_log_created_when_feature_state_updated(self):
+        # Given
+        feature = Feature.objects.create(name="feature", project=self.project)
+        environment = Environment.objects.create(name="test env", project=self.project)
+        feature_state = FeatureState.objects.get(feature=feature, environment=environment)
+        url = reverse('api:v1:environments:environment-featurestates-detail',
+                      args=[environment.api_key, feature_state.id])
+        data = {
+            'id': feature.id,
+            'enabled': True
+        }
+
+        # When
+        self.client.put(url, data=data)
+
+        # Then
+        assert AuditLog.objects.filter(related_object_type=RelatedObjectType.FEATURE_STATE.name).count() == 1
+
 
 @pytest.mark.django_db
 class IdentityTestCase(TestCase):
