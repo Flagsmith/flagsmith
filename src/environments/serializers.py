@@ -40,6 +40,7 @@ class EnvironmentSerializerLight(serializers.ModelSerializer):
                                 related_object_id=instance.id,
                                 related_object_type=RelatedObjectType.ENVIRONMENT.name,
                                 environment=instance,
+                                project=instance.project,
                                 log=message)
 
 
