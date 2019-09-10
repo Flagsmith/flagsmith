@@ -3,8 +3,10 @@ import enum
 from django.db import models
 from django.utils.encoding import python_2_unicode_compatible
 
-FEATURE_CREATED_MESSAGE = "New Flag / Remote Config created"
-FEATURE_UPDATED_MESSAGE = "Flag / Remove Config updated"
+FEATURE_CREATED_MESSAGE = "New Flag / Remote Config created: %s"
+FEATURE_UPDATED_MESSAGE = "Flag / Remove Config updated: %s"
+SEGMENT_CREATED_MESSAGE = "New Segment created: %s"
+SEGMENT_UPDATED_MESSAGE = "Segment updated: %s"
 
 
 class RelatedObjectType(enum.Enum):
