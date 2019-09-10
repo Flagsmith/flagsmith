@@ -88,7 +88,8 @@ class SegmentSerializer(serializers.ModelSerializer):
 
     def _create_audit_log(self, instance, created):
         message = SEGMENT_CREATED_MESSAGE if created else SEGMENT_UPDATED_MESSAGE % instance.name
-        AuditLog.objects.create(author=self.request.user, related_object_id=instance.id,
+        request = self.request.get('request')
+        AuditLog.objects.create(author=request.user if request else None, related_object_id=instance.id,
                                 related_object_type=RelatedObjectType.SEGMENT.name,
                                 log=message)
 

@@ -8,6 +8,8 @@ FEATURE_UPDATED_MESSAGE = "Flag / Remove Config updated: %s"
 SEGMENT_CREATED_MESSAGE = "New Segment created: %s"
 SEGMENT_UPDATED_MESSAGE = "Segment updated: %s"
 FEATURE_SEGMENT_UPDATED_MESSAGE = "Segment rules updated for flag: %s"
+ENVIRONMENT_CREATED_MESSAGE = "New Environment created: %s"
+ENVIRONMENT_UPDATED_MESSAGE = "Environment updated: %s"
 
 
 class RelatedObjectType(enum.Enum):
