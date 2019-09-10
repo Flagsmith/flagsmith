@@ -73,6 +73,7 @@ class FeatureViewSet(viewsets.ModelViewSet):
         message = FEATURE_SEGMENT_UPDATED_MESSAGE % feature.name
         AuditLog.objects.create(author=self.request.user, related_object_id=feature.id,
                                 related_object_type=RelatedObjectType.FEATURE.name,
+                                project=feature.project,
                                 log=message)
 
 

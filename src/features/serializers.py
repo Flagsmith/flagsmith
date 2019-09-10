@@ -33,6 +33,7 @@ class CreateFeatureSerializer(serializers.ModelSerializer):
         request = self.context.get('request')
         AuditLog.objects.create(author=request.user if request else None, related_object_id=instance.id,
                                 related_object_type=RelatedObjectType.FEATURE.name,
+                                project=instance.project,
                                 log=message)
 
 
@@ -92,6 +93,7 @@ class FeatureStateSerializerBasic(serializers.ModelSerializer):
                                 related_object_id=instance.id,
                                 related_object_type=RelatedObjectType.FEATURE_STATE.name,
                                 environment=instance.environment,
+                                project=instance.project,
                                 log=message)
 
 

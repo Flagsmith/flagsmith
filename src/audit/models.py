@@ -3,6 +3,8 @@ import enum
 from django.db import models
 from django.utils.encoding import python_2_unicode_compatible
 
+from projects.models import Project
+
 FEATURE_CREATED_MESSAGE = "New Flag / Remote Config created: %s"
 FEATURE_UPDATED_MESSAGE = "Flag / Remote Config updated: %s"
 SEGMENT_CREATED_MESSAGE = "New Segment created: %s"
@@ -26,6 +28,7 @@ RELATED_OBJECT_TYPES = ((tag.name, tag.value) for tag in RelatedObjectType)
 @python_2_unicode_compatible
 class AuditLog(models.Model):
     created_date = models.DateTimeField('DateCreated', auto_now_add=True)
+    project = models.ForeignKey(Project, related_name='audit_logs', null=True)
     environment = models.ForeignKey(
         'environments.Environment', related_name='audit_logs', null=True)
     log = models.TextField()
@@ -36,6 +39,7 @@ class AuditLog(models.Model):
 
     class Meta:
         verbose_name_plural = "Audit Logs"
+        ordering = ('-created_date',)
 
     def __str__(self):
         return "Audit Log %s" % self.id
