@@ -5,6 +5,7 @@ from django.urls import reverse
 from rest_framework import status
 from rest_framework.test import APIClient, APITestCase
 
+from audit.models import AuditLog, RelatedObjectType
 from environments.models import Environment, Identity, Trait
 from features.models import Feature, FeatureState, FeatureSegment
 from organisations.models import Organisation
@@ -32,6 +33,7 @@ class EnvironmentTestCase(TestCase):
 
     def tearDown(self) -> None:
         Environment.objects.all().delete()
+        AuditLog.objects.all().delete()
 
     def test_should_create_environments_with_or_without_webhooks(self):
         # Given
@@ -94,7 +96,32 @@ class EnvironmentTestCase(TestCase):
 
     def test_audit_log_entry_created_when_new_environment_created(self):
         # Given
-        pass
+        url = reverse('api:v1:environments:environment-list')
+        data = {
+            'project': self.project.id,
+            'name': 'Test Environment'
+        }
+
+        # When
+        self.client.post(url, data=data)
+
+        # Then
+        assert AuditLog.objects.filter(related_object_type=RelatedObjectType.ENVIRONMENT.name).count() == 1
+
+    def test_audit_log_entry_created_when_environment_updated(self):
+        # Given
+        environment = Environment.objects.create(name='Test environment', project=self.project)
+        url = reverse('api:v1:environments:environment-detail', args=[environment.api_key])
+        data = {
+            'project': self.project.id,
+            'name': 'New name'
+        }
+
+        # When
+        self.client.put(url, data=data)
+
+        # Then
+        assert AuditLog.objects.filter(related_object_type=RelatedObjectType.ENVIRONMENT.name).count() == 1
 
 
 @pytest.mark.django_db

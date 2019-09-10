@@ -38,7 +38,7 @@ class EnvironmentSerializerLight(serializers.ModelSerializer):
         request = self.context.get('user')
         AuditLog.objects.create(author=request.user if request else None,
                                 related_object_id=instance.id,
-                                related_object_type=RelatedObjectType.FEATURE.name,
+                                related_object_type=RelatedObjectType.ENVIRONMENT.name,
                                 log=message)
 
 
