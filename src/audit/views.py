@@ -6,4 +6,6 @@ from audit.serializers import AuditLogSerializer
 
 class AuditLogViewSet(mixins.ListModelMixin, viewsets.GenericViewSet):
     serializer_class = AuditLogSerializer
-    queryset = AuditLog.objects.all()
+
+    def get_queryset(self):
+        return AuditLog.objects.filter(project__organisation__in=self.request.user.organisations.all())
