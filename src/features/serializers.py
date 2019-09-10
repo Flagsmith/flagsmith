@@ -29,7 +29,8 @@ class CreateFeatureSerializer(serializers.ModelSerializer):
 
     def _create_audit_log(self, instance, created):
         message = FEATURE_CREATED_MESSAGE if created else FEATURE_UPDATED_MESSAGE % instance.name
-        AuditLog.objects.create(author=self.request.user, related_object_id=instance.id,
+        request = self.context.get('request')
+        AuditLog.objects.create(author=request.user if request else None, related_object_id=instance.id,
                                 related_object_type=RelatedObjectType.FEATURE.name,
                                 log=message)
 
