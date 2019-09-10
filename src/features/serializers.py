@@ -87,7 +87,7 @@ class FeatureStateSerializerBasic(serializers.ModelSerializer):
 
     def _create_audit_log(self, instance):
         message = FEATURE_STATE_UPDATED_MESSAGE % instance.feature.name
-        request = self.context.get('user')
+        request = self.context.get('request')
         AuditLog.objects.create(author=request.user if request else None,
                                 related_object_id=instance.id,
                                 related_object_type=RelatedObjectType.FEATURE_STATE.name,
