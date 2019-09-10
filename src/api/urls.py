@@ -22,9 +22,9 @@ schema_view = get_schema_view(
 
 current_urls = [
     url(r'^organisations/', include('organisations.urls')),
-    url(r'^projects/', include('projects.urls')),
+    url(r'^projects/', include('projects.urls'), name='projects'),
     url(r'^environments/', include('environments.urls'), name='environments'),
-    url(r'^features/', include('features.urls')),
+    url(r'^features/', include('features.urls'), name='features'),
     url(r'^users/', include('users.urls')),
     url(r'^auth/', include('rest_auth.urls')),
     url(r'^auth/register/', include('rest_auth.registration.urls')),
