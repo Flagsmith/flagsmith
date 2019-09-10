@@ -93,7 +93,7 @@ class FeatureStateSerializerBasic(serializers.ModelSerializer):
                                 related_object_id=instance.id,
                                 related_object_type=RelatedObjectType.FEATURE_STATE.name,
                                 environment=instance.environment,
-                                project=instance.project,
+                                project=instance.environment.project,
                                 log=message)
 
 

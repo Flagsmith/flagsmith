@@ -1,3 +1,4 @@
+import json
 from unittest import TestCase
 
 import pytest
@@ -10,6 +11,7 @@ from environments.models import Environment
 from features.models import Feature, FeatureState
 from organisations.models import Organisation
 from projects.models import Project
+from segments.models import Segment
 from util.tests import Helper
 
 
@@ -102,6 +104,23 @@ class ProjectFeatureTestCase(TestCase):
 
         # When
         self.client.put(url, data=data)
+
+        # Then
+        assert AuditLog.objects.filter(related_object_type=RelatedObjectType.FEATURE.name).count() == 1
+
+    def test_audit_log_created_when_feature_segments_updated(self):
+        # Given
+        segment = Segment.objects.create(name='Test segment', project=self.project)
+        feature = Feature.objects.create(name='Test feature', project=self.project)
+        url = reverse('api:v1:projects:project-features-segments', args=[self.project.id, feature.id])
+        data = [{
+            'segment': segment.id,
+            'priority': 1,
+            'enabled': True
+        }]
+
+        # When
+        self.client.post(url, data=json.dumps(data), content_type='application/json')
 
         # Then
         assert AuditLog.objects.filter(related_object_type=RelatedObjectType.FEATURE.name).count() == 1
