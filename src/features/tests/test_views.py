@@ -89,3 +89,19 @@ class ProjectFeatureTestCase(TestCase):
 
         # Then
         assert AuditLog.objects.filter(related_object_type=RelatedObjectType.FEATURE.name).count() == 1
+
+    def test_audit_log_created_when_feature_updated(self):
+        # Given
+        feature = Feature.objects.create(name='Test Feature', project=self.project)
+        url = reverse('api:v1:projects:project-features-detail', args=[self.project.id, feature.id])
+        data = {
+            'name': 'Test Feature updated',
+            'type': 'FLAG',
+            'project': self.project.id
+        }
+
+        # When
+        self.client.put(url, data=data)
+
+        # Then
+        assert AuditLog.objects.filter(related_object_type=RelatedObjectType.FEATURE.name).count() == 1
