@@ -11,6 +11,7 @@ from rest_framework.response import Response
 from rest_framework.schemas import AutoSchema
 
 from analytics.track import track_event
+from audit.models import AuditLog, RelatedObjectType, FEATURE_SEGMENT_UPDATED_MESSAGE
 from environments.models import Environment, Identity
 from projects.models import Project
 from util.util import get_user_permitted_projects, get_user_permitted_environments
@@ -55,6 +56,7 @@ class FeatureViewSet(viewsets.ModelViewSet):
         FeatureSegment.objects.filter(feature=feature).delete()
 
         self._create_feature_segments(feature, request.data)
+        self._create_feature_segments_audit_log()
 
         return Response(data=FeatureSerializer(instance=feature).data, status=status.HTTP_200_OK)
 
@@ -65,6 +67,13 @@ class FeatureViewSet(viewsets.ModelViewSet):
             fs_serializer = FeatureSegmentCreateSerializer(data=feature_segment)
             if fs_serializer.is_valid(raise_exception=True):
                 fs_serializer.save()
+
+    def _create_feature_segments_audit_log(self):
+        feature = self.get_object()
+        message = FEATURE_SEGMENT_UPDATED_MESSAGE % feature.name
+        AuditLog.objects.create(author=self.request.user, related_object_id=feature.id,
+                                related_object_type=RelatedObjectType.FEATURE.name,
+                                log=message)
 
 
 class FeatureStateViewSet(viewsets.ModelViewSet):
