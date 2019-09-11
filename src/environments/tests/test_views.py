@@ -215,6 +215,74 @@ class IdentityTestCase(TestCase):
         identity_features = FeatureState.objects.filter(identity=self.identity)
         assert identity_features.count() == 1
 
+    def test_can_search_for_identities(self):
+        # Given
+        Identity.objects.create(identifier='user2', environment=self.environment)
+        base_url = reverse('api:v1:environments:environment-identities-list', args=[self.environment.api_key])
+        url = '%s?q=%s' % (base_url, self.identifier)
+
+        # When
+        res = self.client.get(url)
+
+        # Then
+        assert res.status_code == status.HTTP_200_OK
+
+        # and - only identity matching search appears
+        assert res.json().get('count') == 1
+
+    def test_search_is_case_insensitive(self):
+        # Given
+        Identity.objects.create(identifier='user2', environment=self.environment)
+        base_url = reverse('api:v1:environments:environment-identities-list', args=[self.environment.api_key])
+        url = '%s?q=%s' % (base_url, self.identifier.upper())
+
+        # When
+        res = self.client.get(url)
+
+        # Then
+        assert res.status_code == status.HTTP_200_OK
+
+        # and - identity matching search appears
+        assert res.json().get('count') == 1
+
+    def test_no_identities_returned_if_search_matches_none(self):
+        # Given
+        base_url = reverse('api:v1:environments:environment-identities-list', args=[self.environment.api_key])
+        url = '%s?q=%s' % (base_url, 'some invalid search string')
+
+        # When
+        res = self.client.get(url)
+
+        # Then
+        assert res.status_code == status.HTTP_200_OK
+
+        # and
+        assert res.json().get('count') == 0
+
+    def test_search_identities_still_allows_paging(self):
+        # Given
+        self._create_n_identities(10)
+        base_url = reverse('api:v1:environments:environment-identities-list', args=[self.environment.api_key])
+        url = '%s?q=%s' % (base_url, 'user')
+
+        res1 = self.client.get(url)
+        second_page = res1.json().get('next')
+
+        # When
+        res2 = self.client.get(second_page)
+
+        # Then
+        assert res2.status_code == status.HTTP_200_OK
+
+        # and
+        assert res2.json().get('results')
+
+    def _create_n_identities(self, n):
+        for i in range(2, n + 2):
+            identifier = 'user%d' % i
+            Identity.objects.create(identifier=identifier, environment=self.environment)
+
+
 
 @pytest.mark.django_db
 class SDKIdentitiesTestCase(APITestCase):
