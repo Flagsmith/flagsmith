@@ -33,6 +33,8 @@ if 'DJANGO_SECRET_KEY' not in os.environ:
 
 SECRET_KEY = os.environ['DJANGO_SECRET_KEY']
 
+HOSTED_SEATS_LIMIT = int(os.environ.get('HOSTED_SEATS_LIMIT', 0))
+
 # Google Analytics Configuration
 GOOGLE_ANALYTICS_KEY = os.environ.get('GOOGLE_ANALYTICS_KEY', '')
 GOOGLE_SERVICE_ACCOUNT = os.environ.get('GOOGLE_SERVICE_ACCOUNT')
