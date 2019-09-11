@@ -81,7 +81,7 @@ class IncrementTraitValueSerializer(serializers.Serializer):
         trait, _ = Trait.objects.get_or_create(**query_data, defaults=defaults)
 
         if trait.value_type != INTEGER:
-            return exceptions.ValidationError('Trait is not an integer.')
+            raise exceptions.ValidationError('Trait is not an integer.')
 
         trait.integer_value += validated_data.get('increment_by')
         trait.save()
