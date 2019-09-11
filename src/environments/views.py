@@ -20,7 +20,8 @@ from util.util import get_user_permitted_identities, get_user_permitted_environm
 from util.views import SDKAPIView
 from .models import Environment, Identity, Trait
 from .serializers import EnvironmentSerializerLight, IdentitySerializer, TraitSerializerBasic, TraitSerializerFull, \
-    IdentitySerializerTraitFlags, IdentitySerializerWithTraitsAndSegments, IncrementTraitValueSerializer
+    IdentitySerializerTraitFlags, IdentitySerializerWithTraitsAndSegments, IncrementTraitValueSerializer, \
+    CreateTraitSerializer
 
 
 class EnvironmentViewSet(viewsets.ModelViewSet):
@@ -395,25 +396,14 @@ class SDKTraits(mixins.CreateModelMixin, viewsets.GenericViewSet):
         if self.action == 'increment_value':
             return IncrementTraitValueSerializer
 
-        return TraitSerializerFull
+        return CreateTraitSerializer
 
-    @swagger_auto_schema(responses={200: TraitSerializerBasic})
+    @swagger_auto_schema(responses={200: CreateTraitSerializer})
     def create(self, request, *args, **kwargs):
-        identity_data = request.data.get('identity')
-        identity, _ = Identity.objects.get_or_create(environment=request.environment,
-                                                     identifier=identity_data.get('identifier'))
-
-        trait_value_data = Trait.generate_trait_value_data(request.data.get('trait_value'))
-
-        trait, _ = Trait.objects.get_or_create(identity=identity, trait_key=request.data.get('trait_key'))
-
-        serializer = TraitSerializerFull(instance=trait, data=trait_value_data, partial=True)
-        if serializer.is_valid():
-            serializer.save()
-        else:
-            return Response({"details": "Couldn't create Trait for identity"}, status=status.HTTP_400_BAD_REQUEST)
-
-        return Response(TraitSerializerBasic(trait).data, status=status.HTTP_200_OK)
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+        return Response(serializer.data, status=200)
 
     @swagger_auto_schema(responses={200: IncrementTraitValueSerializer})
     @action(detail=False, methods=["POST"], url_path='increment-value')

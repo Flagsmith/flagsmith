@@ -434,6 +434,20 @@ class SDKTraitsTest(APITestCase):
         # and
         assert Trait.objects.filter(identity__identifier=identifier, trait_key=self.trait_key).exists()
 
+    def test_trait_is_updated_if_already_exists(self):
+        # Given
+        url = reverse('api:v1:sdk-traits-list')
+        trait = Trait.objects.create(trait_key=self.trait_key, value_type=STRING, string_value=self.trait_value,
+                                     identity=self.identity)
+        new_value = 'Some new value'
+
+        # When
+        self.client.post(url, data=self._generate_json_trait_data(trait_value=new_value), content_type=self.JSON)
+
+        # Then
+        trait.refresh_from_db()
+        assert trait.get_trait_value() == new_value
+
     def test_increment_value_increments_trait_value_if_value_positive_integer(self):
         # Given
         initial_value = 2
