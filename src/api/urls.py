@@ -5,7 +5,6 @@ from rest_framework import permissions, authentication, routers
 
 from environments.views import SDKIdentitiesDeprecated, SDKTraitsDeprecated, SDKIdentities, SDKTraits
 from features.views import SDKFeatureStates
-from environments.views import SDKIdentities, SDKTraits
 from segments.views import SDKSegments
 
 schema_view = get_schema_view(
@@ -16,7 +15,7 @@ schema_view = get_schema_view(
         license=openapi.License(name="BSD License"),
         contact=openapi.Contact(email="supprt@bullet-train.io"),
     ),
-    public=False,
+    public=True,
     permission_classes=(permissions.AllowAny,),
     authentication_classes=(authentication.SessionAuthentication,)
 )
@@ -38,7 +37,7 @@ current_urls = [
     # Client SDK urls
     url(r'^flags/$', SDKFeatureStates.as_view()),
     url(r'^identities/$', SDKIdentities.as_view(), name='sdk-identities'),
-    url(r'^traits/', include(traits_router.urls)),
+    url(r'^traits/', include(traits_router.urls), name='traits'),
     url(r'^segments/$', SDKSegments.as_view()),
 
     # API documentation

@@ -4,9 +4,12 @@ from __future__ import unicode_literals
 from collections import namedtuple
 
 import coreapi
+from drf_yasg.utils import swagger_auto_schema
 from rest_framework import viewsets, status, mixins
+from rest_framework.authentication import SessionAuthentication, TokenAuthentication
 from rest_framework.decorators import action
 from rest_framework.generics import get_object_or_404
+from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.schemas import AutoSchema
 
@@ -394,6 +397,7 @@ class SDKTraits(mixins.CreateModelMixin, viewsets.GenericViewSet):
 
         return TraitSerializerFull
 
+    @swagger_auto_schema(responses={200: TraitSerializerBasic})
     def create(self, request, *args, **kwargs):
         identity_data = request.data.get('identity')
         identity, _ = Identity.objects.get_or_create(environment=request.environment,
@@ -411,6 +415,7 @@ class SDKTraits(mixins.CreateModelMixin, viewsets.GenericViewSet):
 
         return Response(TraitSerializerBasic(trait).data, status=status.HTTP_200_OK)
 
+    @swagger_auto_schema(responses={200: IncrementTraitValueSerializer})
     @action(detail=False, methods=["POST"], url_path='increment-value')
     def increment_value(self, request):
         serializer = self.get_serializer(data=request.data)
