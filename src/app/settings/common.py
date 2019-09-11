@@ -92,7 +92,8 @@ INSTALLED_APPS = [
     'e2etests',
     'simple_history',
     'debug_toolbar',
-    'drf_yasg'
+    'drf_yasg',
+    'audit'
 ]
 
 if GOOGLE_ANALYTICS_KEY:

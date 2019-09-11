@@ -5,7 +5,6 @@ from rest_framework import permissions, authentication
 
 from environments.views import SDKIdentitiesDeprecated, SDKTraitsDeprecated, SDKIdentities, SDKTraits
 from features.views import SDKFeatureStates
-from environments.views import SDKIdentities, SDKTraits
 from segments.views import SDKSegments
 
 schema_view = get_schema_view(
@@ -23,14 +22,15 @@ schema_view = get_schema_view(
 
 current_urls = [
     url(r'^organisations/', include('organisations.urls')),
-    url(r'^projects/', include('projects.urls')),
-    url(r'^environments/', include('environments.urls')),
+    url(r'^projects/', include('projects.urls'), name='projects'),
+    url(r'^environments/', include('environments.urls'), name='environments'),
+    url(r'^features/', include('features.urls'), name='features'),
     url(r'^users/', include('users.urls')),
     url(r'^auth/', include('rest_auth.urls')),
     url(r'^auth/register/', include('rest_auth.registration.urls')),
     url(r'^account/', include('allauth.urls')),
     url(r'^e2etests/', include('e2etests.urls')),
-    url(r'^features/', include('features.urls')),
+    url(r'^audit/', include('audit.urls')),
 
     # Client SDK urls
     url(r'^flags/$', SDKFeatureStates.as_view()),

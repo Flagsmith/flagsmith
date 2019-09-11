@@ -12,6 +12,7 @@ from app.utils import create_hash
 from environments.exceptions import EnvironmentHeaderNotPresentError
 from features.models import FeatureState
 from projects.models import Project
+from users.models import FFAdminUser
 
 # User Trait Value Types
 INTEGER = "int"
