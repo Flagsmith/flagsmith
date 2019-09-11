@@ -64,6 +64,57 @@ class TraitSerializerBasic(serializers.ModelSerializer):
         return obj.get_trait_value()
 
 
+class CreateTraitSerializer(serializers.Serializer):
+    class _IdentitySerializer(serializers.ModelSerializer):
+        class Meta:
+            model = Identity
+            fields = ('identifier',)
+
+    trait_key = serializers.CharField()
+    trait_value = serializers.CharField()
+    identity = _IdentitySerializer()
+
+    trait_value_data = {}
+
+    def to_representation(self, instance):
+        return {
+            'trait_value': instance.get_trait_value(),
+            'trait_key': instance.trait_key
+        }
+
+    def create(self, validated_data):
+        identity = self._get_identity(validated_data)
+
+        trait_data = {
+            'trait_key': validated_data['trait_key'],
+            'identity': identity
+        }
+
+        self.trait_value_data = Trait.generate_trait_value_data(validated_data['trait_value'])
+
+        trait, created = Trait.objects.get_or_create(**trait_data, defaults=self.trait_value_data)
+
+        return trait if created else self.update(trait, validated_data)
+
+    def _get_identity(self, validated_data):
+        identity_data = {
+            **validated_data['identity'],
+            'environment': self.context.get('request').environment
+        }
+        identity, _ = Identity.objects.get_or_create(**identity_data)
+        return identity
+
+    def update(self, instance, validated_data):
+        if not self.trait_value_data:
+            self.trait_value_data = Trait.generate_trait_value_data(validated_data['trait_value'])
+
+        for key, value in self.trait_value_data.items():
+            setattr(instance, key, value)
+
+        instance.save()
+        return instance
+
+
 class IncrementTraitValueSerializer(serializers.Serializer):
     trait_key = serializers.CharField()
     increment_by = serializers.IntegerField(write_only=True)
@@ -78,8 +129,8 @@ class IncrementTraitValueSerializer(serializers.Serializer):
         }
 
     def create(self, validated_data):
-        query_data, defaults = self._build_trait_data(validated_data)
-        trait, _ = Trait.objects.get_or_create(**query_data, defaults=defaults)
+        trait, _ = Trait.objects.get_or_create(**self._build_query_data(validated_data),
+                                               defaults=self._build_default_data())
 
         if trait.value_type != INTEGER:
             raise exceptions.ValidationError('Trait is not an integer.')
@@ -88,12 +139,12 @@ class IncrementTraitValueSerializer(serializers.Serializer):
         trait.save()
         return trait
 
-    def _build_trait_data(self, validated_data):
-        return self._build_query_data(validated_data), self._build_default_data()
-
     def _build_query_data(self, validated_data):
-        identity, _ = Identity.objects.get_or_create(identifier=validated_data.get('identifier'),
-                                                     environment=self.context.get('request').environment)
+        identity_data = {
+            'identifier': validated_data.get('identifier'),
+            'environment': self.context.get('request').environment
+        }
+        identity, _ = Identity.objects.get_or_create(**identity_data)
 
         return {
             'trait_key': validated_data.get('trait_key'),
