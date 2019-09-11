@@ -109,7 +109,7 @@ REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': (
         'rest_framework.authentication.TokenAuthentication',
     ),
-    'PAGE_SIZE': 999,
+    'PAGE_SIZE': 10,
     'UNICODE_JSON': False,
     'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.PageNumberPagination'
 }
@@ -250,3 +250,5 @@ LOGOUT_URL = "/admin/logout/"
 
 # Email associated with user that is used by front end for end to end testing purposes
 FE_E2E_TEST_USER_EMAIL = "nightwatch@solidstategroup.com"
+
+SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')

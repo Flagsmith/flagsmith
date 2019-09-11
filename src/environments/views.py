@@ -87,8 +87,12 @@ class IdentityViewSet(viewsets.ModelViewSet):
     def get_queryset(self):
         environment = self.get_environment_from_request()
         user_permitted_identities = get_user_permitted_identities(self.request.user)
+        queryset = user_permitted_identities.filter(environment__api_key=environment.api_key)
 
-        return user_permitted_identities.filter(environment__api_key=environment.api_key)
+        if self.request.query_params.get('q'):
+            queryset = queryset.filter(identifier__icontains=self.request.query_params.get('q'))
+
+        return queryset
 
     def get_environment_from_request(self):
         """
