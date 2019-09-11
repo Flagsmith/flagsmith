@@ -66,8 +66,9 @@ class TraitSerializerBasic(serializers.ModelSerializer):
 
 class IncrementTraitValueSerializer(serializers.Serializer):
     trait_key = serializers.CharField()
-    increment_by = serializers.IntegerField()
+    increment_by = serializers.IntegerField(write_only=True)
     identifier = serializers.CharField()
+    trait_value = serializers.IntegerField(read_only=True)
 
     def to_representation(self, instance):
         return {

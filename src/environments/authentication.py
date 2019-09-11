@@ -13,4 +13,4 @@ class EnvironmentKeyAuthentication(BaseAuthentication):
         try:
             request.environment = Environment.objects.get(api_key=request.META.get('HTTP_X_ENVIRONMENT_KEY'))
         except Environment.DoesNotExist:
-            exceptions.AuthenticationFailed('Invalid or missing Environment Key')
+            raise exceptions.AuthenticationFailed('Invalid or missing Environment Key')
