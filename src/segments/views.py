@@ -25,7 +25,7 @@ class SegmentViewSet(viewsets.ModelViewSet):
 
     def create(self, request, *args, **kwargs):
         project_pk = request.data.get('project')
-        if project_pk not in [project.id for project in get_user_permitted_projects(self.request.user)]:
+        if int(project_pk) not in [project.id for project in get_user_permitted_projects(self.request.user)]:
             return Response(status=status.HTTP_403_FORBIDDEN)
         return super().create(request, *args, **kwargs)
 

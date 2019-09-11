@@ -5,6 +5,7 @@ from django.urls import reverse
 from rest_framework import status
 from rest_framework.test import APIClient, APITestCase
 
+from audit.models import AuditLog, RelatedObjectType
 from environments.models import Environment, Identity, Trait
 from features.models import Feature, FeatureState, FeatureSegment
 from organisations.models import Organisation
@@ -20,36 +21,38 @@ class EnvironmentTestCase(TestCase):
                                      '"webhooks_enabled": "%r", "webhook_url": "%s"}'
     fs_put_template = '{ "id" : %d, "enabled" : "%r", "feature_state_value" : "%s" }'
 
-    def set_up(self):
-        client = APIClient()
+    def setUp(self):
+        self.client = APIClient()
         user = Helper.create_ffadminuser()
-        client.force_authenticate(user=user)
+        self.client.force_authenticate(user=user)
 
         self.organisation = Organisation.objects.create(name='ssg')
         user.organisations.add(self.organisation)
 
         self.project = Project.objects.create(name='Test project', organisation=self.organisation)
 
-        return client
+    def tearDown(self) -> None:
+        Environment.objects.all().delete()
+        AuditLog.objects.all().delete()
 
     def test_should_create_environments_with_or_without_webhooks(self):
         # Given
-        client = self.set_up()
+        url = reverse('api:v1:environments:environment-list')
 
         # When
-        response_with_webhook = client.post('/api/v1/environments/',
-                                            data=self.env_post_template_with_webhook % (
-                                                "Test Env with Webhooks",
-                                                self.project.id,
-                                                True,
-                                                "https://sometesturl.org"
-                                            ), content_type="application/json")
+        response_with_webhook = self.client.post(url,
+                                                 data=self.env_post_template_with_webhook % (
+                                                     "Test Env with Webhooks",
+                                                     self.project.id,
+                                                     True,
+                                                     "https://sometesturl.org"
+                                                 ), content_type="application/json")
 
-        response_wout_webhook = client.post('/api/v1/environments/',
-                                            data=self.env_post_template_wout_webhook % (
-                                                "Test Env without Webhooks",
-                                                self.project.id
-                                            ), content_type="application/json")
+        response_wout_webhook = self.client.post('/api/v1/environments/',
+                                                 data=self.env_post_template_wout_webhook % (
+                                                     "Test Env without Webhooks",
+                                                     self.project.id
+                                                 ), content_type="application/json")
 
         # Then
         assert response_with_webhook.status_code == status.HTTP_201_CREATED
@@ -57,50 +60,89 @@ class EnvironmentTestCase(TestCase):
         assert response_wout_webhook.status_code == status.HTTP_201_CREATED
 
     def test_should_return_identities_for_an_environment(self):
-        client = self.set_up()
-
         # Given
-        identifierOne = 'user1'
-        identifierTwo = 'user2'
-        project = Project(name='project1', organisation=self.organisation)
-        project.save()
-        environment = Environment(name='environment1', project=project)
-        environment.save()
-        identityOne = Identity(identifier=identifierOne, environment=environment)
-        identityOne.save()
-        identityTwo = Identity(identifier=identifierTwo, environment=environment)
-        identityTwo.save()
+        identifier_one = 'user1'
+        identifier_two = 'user2'
+        environment = Environment.objects.create(name='environment1', project=self.project)
+        Identity.objects.create(identifier=identifier_one, environment=environment)
+        Identity.objects.create(identifier=identifier_two, environment=environment)
+        url = reverse('api:v1:environments:environment-identities-list', args=[environment.api_key])
 
         # When
-        response = client.get('/api/v1/environments/%s/identities/' % environment.api_key)
+        response = self.client.get(url)
 
         # Then
-        self.assertEquals(response.data['results'][0]['identifier'], identifierOne)
-        self.assertEquals(response.data['results'][1]['identifier'], identifierTwo)
+        assert response.data['results'][0]['identifier'] == identifier_one
+        assert response.data['results'][1]['identifier'] == identifier_two
 
     def test_should_update_value_of_feature_state(self):
         # Given
-        client = self.set_up()
-        feature = Feature(name="feature", project=self.project)
-        feature.save()
+        feature = Feature.objects.create(name="feature", project=self.project)
         environment = Environment.objects.create(name="test env", project=self.project)
         feature_state = FeatureState.objects.get(feature=feature, environment=environment)
+        url = reverse('api:v1:environments:environment-featurestates-detail',
+                      args=[environment.api_key, feature_state.id])
 
         # When
-        response = client.put("/api/v1/environments/%s/featurestates/%d/" %
-                              (environment.api_key, feature_state.id),
-                              data=self.fs_put_template % (feature_state.id,
-                                                           True,
-                                                           "This is a value"),
-                              content_type='application/json')  # should change enabled to True
+        response = self.client.put(url, data=self.fs_put_template % (feature_state.id, True, "This is a value"),
+                                   content_type='application/json')
 
         # Then
-        self.assertEquals(response.status_code, status.HTTP_200_OK)
         feature_state.refresh_from_db()
-        self.assertEquals(feature_state.get_feature_state_value(), "This is a value")
-        self.assertEquals(feature_state.enabled, True)
 
-        Helper.clean_up()
+        assert response.status_code == status.HTTP_200_OK
+        assert feature_state.get_feature_state_value() == "This is a value"
+        assert feature_state.enabled
+
+    def test_audit_log_entry_created_when_new_environment_created(self):
+        # Given
+        url = reverse('api:v1:environments:environment-list')
+        data = {
+            'project': self.project.id,
+            'name': 'Test Environment'
+        }
+
+        # When
+        self.client.post(url, data=data)
+
+        # Then
+        assert AuditLog.objects.filter(related_object_type=RelatedObjectType.ENVIRONMENT.name).count() == 1
+
+    def test_audit_log_entry_created_when_environment_updated(self):
+        # Given
+        environment = Environment.objects.create(name='Test environment', project=self.project)
+        url = reverse('api:v1:environments:environment-detail', args=[environment.api_key])
+        data = {
+            'project': self.project.id,
+            'name': 'New name'
+        }
+
+        # When
+        self.client.put(url, data=data)
+
+        # Then
+        assert AuditLog.objects.filter(related_object_type=RelatedObjectType.ENVIRONMENT.name).count() == 1
+
+    def test_audit_log_created_when_feature_state_updated(self):
+        # Given
+        feature = Feature.objects.create(name="feature", project=self.project)
+        environment = Environment.objects.create(name="test env", project=self.project)
+        feature_state = FeatureState.objects.get(feature=feature, environment=environment)
+        url = reverse('api:v1:environments:environment-featurestates-detail',
+                      args=[environment.api_key, feature_state.id])
+        data = {
+            'id': feature.id,
+            'enabled': True
+        }
+
+        # When
+        self.client.put(url, data=data)
+
+        # Then
+        assert AuditLog.objects.filter(related_object_type=RelatedObjectType.FEATURE_STATE.name).count() == 1
+
+        # and
+        assert AuditLog.objects.first().author
 
 
 @pytest.mark.django_db

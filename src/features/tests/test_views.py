@@ -1,13 +1,17 @@
+import json
 from unittest import TestCase
 
 import pytest
+from django.urls import reverse
 from rest_framework import status
 from rest_framework.test import APIClient
 
+from audit.models import AuditLog, RelatedObjectType
 from environments.models import Environment
 from features.models import Feature, FeatureState
 from organisations.models import Organisation
 from projects.models import Project
+from segments.models import Segment
 from util.tests import Helper
 
 
@@ -31,7 +35,8 @@ class ProjectFeatureTestCase(TestCase):
         self.environment_2 = Environment.objects.create(name='Test environment 2', project=self.project)
 
     def tearDown(self) -> None:
-        Helper.clean_up()
+        AuditLog.objects.all().delete()
+        Feature.objects.all().delete()
 
     def test_should_create_feature_states_when_feature_created(self):
         # Given - set up data
@@ -71,3 +76,51 @@ class ProjectFeatureTestCase(TestCase):
         # check feature was removed from all environments
         assert FeatureState.objects.filter(environment=self.environment_1, feature=feature).count() == 0
         assert FeatureState.objects.filter(environment=self.environment_2, feature=feature).count() == 0
+
+    def test_audit_log_created_when_feature_created(self):
+        # Given
+        url = reverse('api:v1:projects:project-features-list', args=[self.project.id])
+        data = {
+            'name': 'Test feature flag',
+            'type': 'FLAG',
+            'project': self.project.id
+        }
+
+        # When
+        self.client.post(url, data=data)
+
+        # Then
+        assert AuditLog.objects.filter(related_object_type=RelatedObjectType.FEATURE.name).count() == 1
+
+    def test_audit_log_created_when_feature_updated(self):
+        # Given
+        feature = Feature.objects.create(name='Test Feature', project=self.project)
+        url = reverse('api:v1:projects:project-features-detail', args=[self.project.id, feature.id])
+        data = {
+            'name': 'Test Feature updated',
+            'type': 'FLAG',
+            'project': self.project.id
+        }
+
+        # When
+        self.client.put(url, data=data)
+
+        # Then
+        assert AuditLog.objects.filter(related_object_type=RelatedObjectType.FEATURE.name).count() == 1
+
+    def test_audit_log_created_when_feature_segments_updated(self):
+        # Given
+        segment = Segment.objects.create(name='Test segment', project=self.project)
+        feature = Feature.objects.create(name='Test feature', project=self.project)
+        url = reverse('api:v1:projects:project-features-segments', args=[self.project.id, feature.id])
+        data = [{
+            'segment': segment.id,
+            'priority': 1,
+            'enabled': True
+        }]
+
+        # When
+        self.client.post(url, data=json.dumps(data), content_type='application/json')
+
+        # Then
+        assert AuditLog.objects.filter(related_object_type=RelatedObjectType.FEATURE.name).count() == 1
