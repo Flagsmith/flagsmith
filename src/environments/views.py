@@ -4,17 +4,14 @@ from __future__ import unicode_literals
 from collections import namedtuple
 
 import coreapi
-from django.core.exceptions import ObjectDoesNotExist
 from rest_framework import viewsets, status
-from rest_framework.generics import GenericAPIView, get_object_or_404
-from rest_framework.permissions import AllowAny
+from rest_framework.generics import get_object_or_404
 from rest_framework.response import Response
 from rest_framework.schemas import AutoSchema
 
-from features.models import Feature, FeatureState
 from features.serializers import FeatureStateSerializerFull
-from util.util import get_user_permitted_identities, get_user_permitted_environments, get_user_permitted_projects, \
-    get_environment_from_request
+from util.util import get_user_permitted_identities, get_user_permitted_environments, get_user_permitted_projects
+from util.views import SDKAPIView
 from .models import Environment, Identity, Trait
 from .serializers import EnvironmentSerializerLight, IdentitySerializer, TraitSerializerBasic, TraitSerializerFull, \
     IdentitySerializerTraitFlags, IdentitySerializerWithTraitsAndSegments
@@ -220,7 +217,7 @@ class TraitViewSet(viewsets.ModelViewSet):
         return self.update(request, *args, **kwargs)
 
 
-class SDKIdentitiesDeprecated(GenericAPIView):
+class SDKIdentitiesDeprecated(SDKAPIView):
     """
     THIS ENDPOINT IS DEPRECATED. Please use `/identities/?identifier=<identifier>` instead.
     """
@@ -228,7 +225,6 @@ class SDKIdentitiesDeprecated(GenericAPIView):
     # if Identity does not exist it will create one, otherwise will fetch existing
 
     serializer_class = IdentitySerializerTraitFlags
-    permission_classes = (AllowAny,)
 
     schema = AutoSchema(
         manual_fields=[
@@ -241,19 +237,11 @@ class SDKIdentitiesDeprecated(GenericAPIView):
 
     # identifier is in a path parameter
     def get(self, request, identifier, *args, **kwargs):
-        if 'HTTP_X_ENVIRONMENT_KEY' not in request.META:
-            error = {"detail": "Environment Key header not provided"}
-            return Response(error, status=status.HTTP_400_BAD_REQUEST)
-
-        environment_key = request.META['HTTP_X_ENVIRONMENT_KEY']
-        environment = Environment.objects.get(api_key=environment_key)
-
         # if we have identifier fetch, or create if does not exist
         if identifier:
-
             identity, _ = Identity.objects.get_or_create(
                 identifier=identifier,
-                environment=environment,
+                environment=request.environment,
             )
 
         else:
@@ -285,19 +273,13 @@ class SDKIdentitiesDeprecated(GenericAPIView):
         return Response(serializer.data, status=status.HTTP_200_OK)
 
 
-class SDKIdentities(GenericAPIView):
-    permission_classes = (AllowAny,)
-
+class SDKIdentities(SDKAPIView):
     def get(self, request):
         identifier = request.query_params.get('identifier')
         if not identifier:
             return Response({"detail": "Missing identifier"})  # TODO: add 400 status - will this break the clients?
 
-        environment = get_environment_from_request(request)
-        if not environment:
-            return Response({"detail": "Invalid environment key header"}, status=status.HTTP_400_BAD_REQUEST)
-
-        identity, _ = Identity.objects.get_or_create(identifier=identifier, environment=environment)
+        identity, _ = Identity.objects.get_or_create(identifier=identifier, environment=request.environment)
 
         feature_name = request.query_params.get('feature')
         if feature_name:
@@ -328,12 +310,10 @@ class SDKIdentities(GenericAPIView):
         return Response(data=response, status=status.HTTP_200_OK)
 
 
-class SDKTraitsDeprecated(GenericAPIView):
+class SDKTraitsDeprecated(SDKAPIView):
     # API to handle /api/v1/identities/<identifier>/traits/<trait_key> endpoints
     # if Identity or Trait does not exist it will create one, otherwise will fetch existing
-
     serializer_class = TraitSerializerBasic
-    permission_classes = (AllowAny,)
 
     schema = AutoSchema(
         manual_fields=[
@@ -350,12 +330,6 @@ class SDKTraitsDeprecated(GenericAPIView):
         """
         THIS ENDPOINT IS DEPRECATED. Please use `/traits/` instead.
         """
-        if 'HTTP_X_ENVIRONMENT_KEY' not in request.META:
-            error = {"detail": "Environment Key header not provided"}
-            return Response(error, status=status.HTTP_400_BAD_REQUEST)
-
-        environment_key = request.META['HTTP_X_ENVIRONMENT_KEY']
-        environment = Environment.objects.get(api_key=environment_key)
         trait_data = request.data
 
         if 'trait_value' not in trait_data:
@@ -366,7 +340,7 @@ class SDKTraitsDeprecated(GenericAPIView):
         if identifier:
             identity, _ = Identity.objects.get_or_create(
                 identifier=identifier,
-                environment=environment,
+                environment=request.environment,
             )
 
         else:
@@ -407,20 +381,12 @@ class SDKTraitsDeprecated(GenericAPIView):
             return Response({"detail": "Failed to update user trait"}, status=status.HTTP_400_BAD_REQUEST)
 
 
-class SDKTraits(GenericAPIView):
-    permission_classes = (AllowAny,)
-
+class SDKTraits(SDKAPIView):
     def post(self, request):
-        try:
-            environment = Environment.objects.get(api_key=request.META.get('HTTP_X_ENVIRONMENT_KEY'))
-        except ObjectDoesNotExist:
-            error = {"detail": "Invalid environment key header"}
-            return Response(error, status=status.HTTP_400_BAD_REQUEST)
-
         data = request.data
 
         identity_data = data.pop('identity')
-        identity, _ = Identity.objects.get_or_create(environment=environment, identifier=identity_data.get('identifier'))
+        identity, _ = Identity.objects.get_or_create(environment=request.environment, identifier=identity_data.get('identifier'))
 
         trait_value_data = Trait.generate_trait_value_data(data.pop('trait_value'))
 
