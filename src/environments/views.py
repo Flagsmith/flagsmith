@@ -4,17 +4,20 @@ from __future__ import unicode_literals
 from collections import namedtuple
 
 import coreapi
-from rest_framework import viewsets, status
+from rest_framework import viewsets, status, mixins
+from rest_framework.decorators import action
 from rest_framework.generics import get_object_or_404
 from rest_framework.response import Response
 from rest_framework.schemas import AutoSchema
 
+from environments.authentication import EnvironmentKeyAuthentication
+from environments.permissions import EnvironmentKeyPermissions
 from features.serializers import FeatureStateSerializerFull
 from util.util import get_user_permitted_identities, get_user_permitted_environments, get_user_permitted_projects
 from util.views import SDKAPIView
 from .models import Environment, Identity, Trait
 from .serializers import EnvironmentSerializerLight, IdentitySerializer, TraitSerializerBasic, TraitSerializerFull, \
-    IdentitySerializerTraitFlags, IdentitySerializerWithTraitsAndSegments
+    IdentitySerializerTraitFlags, IdentitySerializerWithTraitsAndSegments, IncrementTraitValueSerializer
 
 
 class EnvironmentViewSet(viewsets.ModelViewSet):
@@ -175,7 +178,7 @@ class TraitViewSet(viewsets.ModelViewSet):
         # check if identity in data or in request
         if 'identity' not in data and not identity_pk:
             error = {"detail": "Identity not provided"}
-            return Response(error, status=status.HTTP_400_BAD_REQUEST)
+            return Response(error,   status=status.HTTP_400_BAD_REQUEST)
 
         # TODO: do we give priority to request identity or data?
         # Override with request identity
@@ -381,16 +384,24 @@ class SDKTraitsDeprecated(SDKAPIView):
             return Response({"detail": "Failed to update user trait"}, status=status.HTTP_400_BAD_REQUEST)
 
 
-class SDKTraits(SDKAPIView):
-    def post(self, request):
-        data = request.data
+class SDKTraits(mixins.CreateModelMixin, viewsets.GenericViewSet):
+    permission_classes = (EnvironmentKeyPermissions,)
+    authentication_classes = (EnvironmentKeyAuthentication,)
 
-        identity_data = data.pop('identity')
-        identity, _ = Identity.objects.get_or_create(environment=request.environment, identifier=identity_data.get('identifier'))
+    def get_serializer_class(self):
+        if self.action == 'increment_value':
+            return IncrementTraitValueSerializer
 
-        trait_value_data = Trait.generate_trait_value_data(data.pop('trait_value'))
+        return TraitSerializerFull
 
-        trait, _ = Trait.objects.get_or_create(identity=identity, trait_key=data.get('trait_key'))
+    def create(self, request, *args, **kwargs):
+        identity_data = request.data.get('identity')
+        identity, _ = Identity.objects.get_or_create(environment=request.environment,
+                                                     identifier=identity_data.get('identifier'))
+
+        trait_value_data = Trait.generate_trait_value_data(request.data.get('trait_value'))
+
+        trait, _ = Trait.objects.get_or_create(identity=identity, trait_key=request.data.get('trait_key'))
 
         serializer = TraitSerializerFull(instance=trait, data=trait_value_data, partial=True)
         if serializer.is_valid():
@@ -399,3 +410,11 @@ class SDKTraits(SDKAPIView):
             return Response({"details": "Couldn't create Trait for identity"}, status=status.HTTP_400_BAD_REQUEST)
 
         return Response(TraitSerializerBasic(trait).data, status=status.HTTP_200_OK)
+
+    @action(detail=False, methods=["POST"], url_path='increment-value')
+    def increment_value(self, request):
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+        return Response(serializer.data, status=200)
+

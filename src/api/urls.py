@@ -1,7 +1,7 @@
 from django.conf.urls import url, include
 from drf_yasg import openapi
 from drf_yasg.views import get_schema_view
-from rest_framework import permissions, authentication
+from rest_framework import permissions, authentication, routers
 
 from environments.views import SDKIdentitiesDeprecated, SDKTraitsDeprecated, SDKIdentities, SDKTraits
 from features.views import SDKFeatureStates
@@ -21,6 +21,9 @@ schema_view = get_schema_view(
     authentication_classes=(authentication.SessionAuthentication,)
 )
 
+traits_router = routers.DefaultRouter()
+traits_router.register(r'', SDKTraits, basename='sdk-traits')
+
 current_urls = [
     url(r'^organisations/', include('organisations.urls')),
     url(r'^projects/', include('projects.urls')),
@@ -35,7 +38,7 @@ current_urls = [
     # Client SDK urls
     url(r'^flags/$', SDKFeatureStates.as_view()),
     url(r'^identities/$', SDKIdentities.as_view(), name='sdk-identities'),
-    url(r'^traits/$', SDKTraits.as_view()),
+    url(r'^traits/', include(traits_router.urls)),
     url(r'^segments/$', SDKSegments.as_view()),
 
     # API documentation
