@@ -11,6 +11,7 @@ from environments.models import Environment, Identity, Trait, INTEGER, STRING
 from features.models import Feature, FeatureState, FeatureSegment
 from organisations.models import Organisation
 from projects.models import Project
+from segments import models
 from segments.models import Segment, SegmentRule, Condition
 from util.tests import Helper
 
@@ -428,6 +429,48 @@ class SDKIdentitiesTestCase(APITestCase):
 
         # and
         assert response.json().get('enabled')
+
+    def test_identities_endpoint_returns_value_for_segment_if_rule_type_percentage_split_and_identity_in_segment(self):
+        # Given
+        base_url = reverse('api:v1:sdk-identities')
+        url = base_url + '?identifier=' + self.identity.identifier
+
+        segment = Segment.objects.create(name='Test Segment', project=self.project)
+        segment_rule = SegmentRule.objects.create(segment=segment, type=SegmentRule.ALL_RULE)
+
+        identity_percentage_value = segment.get_identity_percentage_value(self.identity)
+        Condition.objects.create(operator=models.PERCENTAGE_SPLIT,
+                                 value=identity_percentage_value + (1 - identity_percentage_value) / 2,
+                                 rule=segment_rule)
+        FeatureSegment.objects.create(segment=segment, feature=self.feature_1, enabled=True, priority=1)
+
+        # When
+        self.client.credentials(HTTP_X_ENVIRONMENT_KEY=self.environment.api_key)
+        response = self.client.get(url)
+
+        # Then
+        assert response.json().get('flags')[0].get('enabled')
+
+    def test_identities_endpoint_returns_default_value_if_rule_type_percentage_split_and_identity_not_in_segment(self):
+        # Given
+        base_url = reverse('api:v1:sdk-identities')
+        url = base_url + '?identifier=' + self.identity.identifier
+
+        segment = Segment.objects.create(name='Test Segment', project=self.project)
+        segment_rule = SegmentRule.objects.create(segment=segment, type=SegmentRule.ALL_RULE)
+
+        identity_percentage_value = segment.get_identity_percentage_value(self.identity)
+        Condition.objects.create(operator=models.PERCENTAGE_SPLIT,
+                                 value=identity_percentage_value / 2,
+                                 rule=segment_rule)
+        FeatureSegment.objects.create(segment=segment, feature=self.feature_1, enabled=True, priority=1)
+
+        # When
+        self.client.credentials(HTTP_X_ENVIRONMENT_KEY=self.environment.api_key)
+        response = self.client.get(url)
+
+        # Then
+        assert not response.json().get('flags')[0].get('enabled')
 
 
 class SDKTraitsTest(APITestCase):

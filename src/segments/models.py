@@ -1,5 +1,7 @@
 # -*- coding: utf-8 -*-
 import re
+import sys
+import hashlib
 
 from django.core.exceptions import ValidationError
 from django.db import models
@@ -20,6 +22,7 @@ GREATER_THAN_INCLUSIVE = "GREATER_THAN_INCLUSIVE"
 NOT_CONTAINS = "NOT_CONTAINS"
 NOT_EQUAL = "NOT_EQUAL"
 REGEX = "REGEX"
+PERCENTAGE_SPLIT = "PERCENTAGE_SPLIT"
 
 
 @python_2_unicode_compatible
@@ -33,6 +36,16 @@ class Segment(models.Model):
 
     def does_identity_match(self, identity: Identity) -> bool:
         return all(rule.does_identity_match(identity) for rule in self.rules.all())
+
+    def get_identity_percentage_value(self, identity: Identity) -> float:
+        """
+        Given a segment and an identity, generate a number between 0 and 1 to determine whether the identity falls
+        within a given percentile when using percentage split rules.
+        """
+        to_hash = f'{self.id},{identity.id}'
+        hashed_value = hashlib.md5(to_hash.encode('utf-8'))
+        hashed_value_as_int = int(hashed_value.hexdigest(), base=16)
+        return (hashed_value_as_int % 9999) / 9998
 
 
 @python_2_unicode_compatible
@@ -88,11 +101,12 @@ class Condition(models.Model):
         (LESS_THAN_INCLUSIVE, "Less than or equal to"),
         (NOT_CONTAINS, "Does not contain"),
         (NOT_EQUAL, "Does not match"),
-        (REGEX, "Matches regex")
+        (REGEX, "Matches regex"),
+        (PERCENTAGE_SPLIT, "Percentage split")
     )
 
     operator = models.CharField(choices=CONDITION_TYPES, max_length=500)
-    property = models.CharField(max_length=1000)
+    property = models.CharField(blank=True, null=True, max_length=1000)
     value = models.CharField(max_length=1000)
 
     rule = models.ForeignKey(SegmentRule, on_delete=models.CASCADE, related_name="conditions")
@@ -101,6 +115,15 @@ class Condition(models.Model):
         return "Condition for %s: %s %s %s" % (str(self.rule), self.property, self.operator, self.value)
 
     def does_identity_match(self, identity: Identity) -> bool:
+        if self.operator == PERCENTAGE_SPLIT:
+            try:
+                float_value = float(self.value)
+            except ValueError:
+                return False
+
+            if self.rule.segment.get_identity_percentage_value(identity) <= float_value:
+                return True
+
         for trait in identity.identity_traits.all():
             if trait.trait_key == self.property:
                 if trait.value_type == INTEGER:
