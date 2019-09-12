@@ -4,6 +4,8 @@ from __future__ import unicode_literals
 from django.db import models
 from django.utils.encoding import python_2_unicode_compatible
 
+from organisations.chargebee import get_max_seats_for_plan
+
 
 @python_2_unicode_compatible
 class Organisation(models.Model):
@@ -21,6 +23,13 @@ class Organisation(models.Model):
     def get_unique_slug(self):
         return str(self.id) + "-" + self.name
 
+    @property
+    def num_seats(self):
+        return self.users.count()
+
+    def has_subscription(self):
+        return hasattr(self, 'subscription')
+
 
 class Subscription(models.Model):
     organisation = models.OneToOneField(Organisation, on_delete=models.CASCADE, related_name='subscription')
@@ -30,3 +39,11 @@ class Subscription(models.Model):
     free_to_use_subscription = models.BooleanField(default=True)
     plan = models.CharField(max_length=20, null=True, blank=True)
     pending_cancellation = models.BooleanField(default=False)
+    max_seats = models.IntegerField(blank=True, null=True)
+
+    def save(self, *args, **kwargs):
+        if self.plan and not self.max_seats:
+            self.max_seats = get_max_seats_for_plan(self.plan)
+        super(Subscription, self).save(*args, **kwargs)
+
+

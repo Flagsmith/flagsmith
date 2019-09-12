@@ -44,19 +44,7 @@ class FFAdminUserViewSet(viewsets.ModelViewSet):
         user.organisations.add(organisation)
         invite.delete()
 
-        self.alert_if_num_seats_above_limit(organisation)
-
         return Response(OrganisationSerializer(organisation).data, status=status.HTTP_200_OK)
-
-    def alert_if_num_seats_above_limit(self, organisation):
-        if settings.HOSTED_SEATS_LIMIT and organisation.users.count() > settings.HOSTED_SEATS_LIMIT:
-            send_mail(
-                subject='Organisation over number of seats',
-                message='Organisation %s has gone over the limit on number of seats' % str(organisation.name),
-                from_email=settings.DEFAULT_FROM_EMAIL,
-                recipient_list=FFAdminUser.get_admin_user_emails(),
-                fail_silently=True
-            )
 
 
 def password_reset_redirect(request, uidb64, token):

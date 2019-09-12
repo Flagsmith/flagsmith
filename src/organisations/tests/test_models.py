@@ -1,7 +1,9 @@
+from unittest import mock
+
 import pytest
 from django.test import TestCase
 
-from organisations.models import Organisation
+from organisations.models import Organisation, Subscription
 
 
 @pytest.mark.django_db
@@ -13,3 +15,39 @@ class OrganisationTestCase(TestCase):
 
         self.assertTrue(organisation_1.name)
         self.assertTrue(organisation_2.name)
+
+    @mock.patch('organisations.models.get_max_seats_for_plan')
+    def test_max_seats_set_for_subscription_on_save_if_not_already_set(self, mock_max_seats):
+        # Given
+        plan_id = 'test-plan'
+        max_seats = 3
+        organisation = Organisation.objects.create(name='Test org')
+        subscription = Subscription(organisation=organisation, plan=plan_id)
+        mock_max_seats.return_value = max_seats
+
+        # When
+        subscription.save()
+
+        # Then
+        mock_max_seats.assert_called_with(plan_id)
+
+        # and
+        assert subscription.max_seats == max_seats
+
+    @mock.patch('organisations.models.get_max_seats_for_plan')
+    def test_max_seats_not_set_for_subscription_on_save_if_already_set(self, mock_max_seats):
+        # Given
+        plan_id = 'test-plan'
+        max_seats = 3
+        organisation = Organisation.objects.create(name='Test org')
+        subscription = Subscription(organisation=organisation, plan=plan_id, max_seats=max_seats)
+
+        # When
+        subscription.save()
+
+        # Then
+        mock_max_seats.assert_not_called()
+
+        # and
+        assert subscription.max_seats == max_seats
+
