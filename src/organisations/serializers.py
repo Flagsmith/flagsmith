@@ -46,7 +46,7 @@ class OrganisationSerializer(serializers.ModelSerializer):
         return super(OrganisationSerializer, self).to_internal_value(data)
 
     def create(self, validated_data):
-        subscription_data = validated_data.pop('subscription')
+        subscription_data = validated_data.pop('subscription', {})
         organisation = super(OrganisationSerializer, self).create(validated_data)
         Subscription.objects.create(organisation=organisation, **subscription_data)
         return organisation
