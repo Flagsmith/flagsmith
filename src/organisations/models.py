@@ -13,6 +13,7 @@ class Organisation(models.Model):
     has_requested_features = models.BooleanField(default=False)
     webhook_notification_email = models.EmailField(null=True, blank=True)
     created_date = models.DateTimeField('DateCreated', auto_now_add=True)
+    alerted_over_plan_limit = models.BooleanField(default=False)
 
     class Meta:
         ordering = ['id']
