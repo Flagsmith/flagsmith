@@ -1,9 +1,10 @@
 from rest_framework import serializers
 
 from audit.models import AuditLog, RelatedObjectType, FEATURE_CREATED_MESSAGE, FEATURE_UPDATED_MESSAGE, \
-    FEATURE_STATE_UPDATED_MESSAGE
+    FEATURE_STATE_UPDATED_MESSAGE, IDENTITY_FEATURE_STATE_UPDATED_MESSAGE
+from features.utils import get_value_type
 from segments.serializers import SegmentSerializerBasic
-from .models import Feature, FeatureState, FeatureStateValue, FeatureSegment
+from .models import Feature, FeatureState, FeatureStateValue, FeatureSegment, STRING, INTEGER, BOOLEAN
 
 
 class CreateFeatureSerializer(serializers.ModelSerializer):
@@ -40,7 +41,17 @@ class CreateFeatureSerializer(serializers.ModelSerializer):
 class FeatureSegmentCreateSerializer(serializers.ModelSerializer):
     class Meta:
         model = FeatureSegment
-        fields = ('feature', 'segment', 'priority', 'enabled')
+        fields = ('feature', 'segment', 'priority', 'enabled', 'value')
+
+    def create(self, validated_data):
+        if validated_data.get('value') or validated_data.get('value') is False:
+            validated_data['value_type'] = get_value_type(validated_data['value'])
+        return super(FeatureSegmentCreateSerializer, self).create(validated_data)
+
+    def to_internal_value(self, data):
+        if data.get('value') or data.get('value') is False:
+            data['value'] = str(data['value'])
+        return super(FeatureSegmentCreateSerializer, self).to_internal_value(data)
 
 
 class FeatureSegmentSerializer(serializers.ModelSerializer):
@@ -81,26 +92,47 @@ class FeatureStateSerializerBasic(serializers.ModelSerializer):
     def get_feature_state_value(self, obj):
         return obj.get_feature_state_value()
 
+    def create(self, validated_data):
+        instance = super(FeatureStateSerializerBasic, self).create(validated_data)
+        self._create_audit_log(instance=instance)
+        return instance
+
     def update(self, instance, validated_data):
         updated_instance = super(FeatureStateSerializerBasic, self).update(instance, validated_data)
         self._create_audit_log(updated_instance)
         return updated_instance
 
     def _create_audit_log(self, instance):
-        message = FEATURE_STATE_UPDATED_MESSAGE % instance.feature.name
-        request = self.context.get('request')
-        AuditLog.objects.create(author=request.user if request else None,
-                                related_object_id=instance.id,
-                                related_object_type=RelatedObjectType.FEATURE_STATE.name,
-                                environment=instance.environment,
-                                project=instance.environment.project,
-                                log=message)
+        create_feature_state_audit_log(instance, self.context.get('request'))
 
 
 class FeatureStateSerializerCreate(serializers.ModelSerializer):
     class Meta:
         model = FeatureState
         fields = ('feature', 'enabled')
+
+    def create(self, validated_data):
+        instance = super(FeatureStateSerializerCreate, self).create(validated_data)
+        self._create_audit_log(instance=instance)
+        return instance
+
+    def _create_audit_log(self, instance):
+        create_feature_state_audit_log(instance, self.context.get('request'))
+
+
+def create_feature_state_audit_log(feature_state, request):
+    if feature_state.identity:
+        message = IDENTITY_FEATURE_STATE_UPDATED_MESSAGE % (feature_state.feature.name,
+                                                            feature_state.identity.identifier)
+    else:
+        message = FEATURE_STATE_UPDATED_MESSAGE % feature_state.feature.name
+
+    AuditLog.objects.create(author=request.user if request else None,
+                            related_object_id=feature_state.id,
+                            related_object_type=RelatedObjectType.FEATURE_STATE.name,
+                            environment=feature_state.environment,
+                            project=feature_state.environment.project,
+                            log=message)
 
 
 class FeatureStateValueSerializer(serializers.ModelSerializer):
