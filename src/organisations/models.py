@@ -44,3 +44,8 @@ class Subscription(models.Model):
     plan = models.CharField(max_length=20, null=True, blank=True)
     pending_cancellation = models.BooleanField(default=False)
     max_seats = models.IntegerField(default=0)
+
+    def save(self, *args, **kwargs):
+        if self.plan and not self.max_seats:
+            self.max_seats = get_max_seats_for_plan(self.plan)
+        super(Subscription, self).save(*args, **kwargs)

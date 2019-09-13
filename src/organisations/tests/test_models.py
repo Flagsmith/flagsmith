@@ -17,65 +17,46 @@ class OrganisationTestCase(TestCase):
         self.assertTrue(organisation_1.name)
         self.assertTrue(organisation_2.name)
 
-    @mock.patch('organisations.signals.get_max_seats_for_plan')
-    def test_max_seats_set_for_subscription_on_create(self, mock_max_seats):
+
+class SubscriptionTestCase(TestCase):
+    def setUp(self) -> None:
+        self.organisation = Organisation.objects.create(name='Test org')
+
+    def tearDown(self) -> None:
+        Subscription.objects.all().delete()
+
+    @mock.patch('organisations.signals.get_plan_id_from_subscription')
+    def test_max_seats_set_as_zero_if_subscription_has_no_subscription_id(self, mock_get_plan):
         # Given
+        subscription = Subscription(organisation=self.organisation)
+        mock_get_plan.return_value = None
+
+        # When
+        subscription.save()
+
+        # Then
+        assert subscription.max_seats == 0
+
+    @mock.patch('organisations.signals.get_plan_id_from_subscription')
+    @mock.patch('organisations.signals.get_max_seats_for_plan')
+    def test_plan_and_max_seats_set_on_save(self, mock_max_seats, mock_get_plan):
+        # Given
+        subscription_id = 'test-subscription-id'
+        subscription = Subscription(organisation=self.organisation, subscription_id=subscription_id)
+
         plan_id = 'test-plan'
+        mock_get_plan.return_value = plan_id
+
         max_seats = 3
-        organisation = Organisation.objects.create(name='Test org')
-        subscription = Subscription(organisation=organisation, plan=plan_id)
         mock_max_seats.return_value = max_seats
 
         # When
         subscription.save()
 
         # Then
+        mock_get_plan.assert_called_with(subscription_id)
+        assert subscription.plan == plan_id
+
+        # and
         mock_max_seats.assert_called_with(plan_id)
-
-        # and
         assert subscription.max_seats == max_seats
-
-    @mock.patch('organisations.signals.get_max_seats_for_plan')
-    def test_max_seats_not_set_for_subscription_on_update_if_same_plan(self, mock_max_seats):
-        # Given
-        plan_id = 'test-plan'
-        max_seats = 3
-        mock_max_seats.return_value = max_seats
-
-        organisation = Organisation.objects.create(name='Test org')
-        subscription = Subscription.objects.create(organisation=organisation, plan=plan_id)
-
-        # When
-        subscription.save()
-
-        # Then
-        mock_max_seats.assert_called_once()
-
-        # and
-        assert subscription.max_seats == max_seats
-
-    @mock.patch('organisations.signals.get_max_seats_for_plan')
-    def test_max_seats_set_for_subscription_on_save_if_plan_changed(self, mock_max_seats):
-        # Given
-        old_plan_id = 'test-plan'
-        new_plan_id = 'new-test-plan'
-        old_max_seats = 3
-        mock_max_seats.return_value = old_max_seats
-
-        new_max_seats = 5
-        mock_max_seats.return_value = new_max_seats
-
-        organisation = Organisation.objects.create(name='Test org')
-        subscription = Subscription.objects.create(organisation=organisation, plan=old_plan_id)
-
-        # When
-        subscription.plan = new_plan_id
-        subscription.save()
-
-        # Then
-        calls = [call(old_plan_id), call(new_plan_id)]
-        mock_max_seats.assert_has_calls(calls)
-
-        # and
-        assert subscription.max_seats == new_max_seats
-
