@@ -2,10 +2,11 @@ import pytest
 from django.db.utils import IntegrityError
 from django.test import TestCase
 
-from environments.models import Environment
-from features.models import Feature, FeatureState
+from environments.models import Environment, Identity, Trait, STRING
+from features.models import Feature, FeatureState, CONFIG, FeatureSegment, FeatureStateValue
 from organisations.models import Organisation
 from projects.models import Project
+from segments.models import Segment, SegmentRule, Condition, EQUAL
 
 
 @pytest.mark.django_db
@@ -53,4 +54,55 @@ class FeatureTestCase(TestCase):
         with pytest.raises(IntegrityError):
             feature_two.save()
 
+
+@pytest.mark.django_db
+class FeatureSegmentTest(TestCase):
+    def setUp(self) -> None:
+        self.organisation = Organisation.objects.create(name='Test org')
+        self.project = Project.objects.create(name='Test project', organisation=self.organisation)
+        self.environment = Environment.objects.create(name='Test environment', project=self.project)
+
+        self.initial_value = 'test'
+        self.remote_config = Feature.objects.create(name='Remote Config', type=CONFIG, initial_value='test',
+                                                    project=self.project)
+
+        self.segment = Segment.objects.create(name='Test segment', project=self.project)
+        segment_rule = SegmentRule.objects.create(segment=self.segment, type=SegmentRule.ALL_RULE)
+
+        self.condition_property = 'test_property'
+        self.condition_value = 'test_value'
+        Condition.objects.create(property=self.condition_property, value=self.condition_value,
+                                 operator=EQUAL, rule=segment_rule)
+
+        self.matching_identity = Identity.objects.create(identifier='user_1', environment=self.environment)
+        Trait.objects.create(identity=self.matching_identity, trait_key=self.condition_property, value_type=STRING,
+                             string_value=self.condition_value)
+
+        self.not_matching_identity = Identity.objects.create(identifier='user_2', environment=self.environment)
+
+    def test_can_create_segment_override_for_remote_config(self):
+        # Given
+        overridden_value = 'overridden value'
+        feature_segment = FeatureSegment.objects.create(feature=self.remote_config, segment=self.segment, priority=1)
+        FeatureStateValue.objects.filter(
+            feature_state__feature_segment=feature_segment).update(type=STRING, string_value=overridden_value)
+
+        # When
+        feature_states = self.matching_identity.get_all_feature_states()
+
+        # Then
+        assert feature_states.get(feature=self.remote_config).get_feature_state_value() == overridden_value
+
+    def test_feature_state_enabled_value_is_updated_when_feature_segment_updated(self):
+        # Given
+        feature_segment = FeatureSegment.objects.create(feature=self.remote_config, segment=self.segment, priority=1)
+        feature_state = FeatureState.objects.get(feature_segment=feature_segment, enabled=False)
+
+        # When
+        feature_segment.enabled = True
+        feature_segment.save()
+
+        # Then
+        feature_state.refresh_from_db()
+        assert feature_state.enabled
 

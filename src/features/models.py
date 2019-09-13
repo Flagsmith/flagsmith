@@ -8,16 +8,18 @@ from django.utils.encoding import python_2_unicode_compatible
 from django.utils.translation import ugettext_lazy as _
 from simple_history.models import HistoricalRecords
 
+from features.utils import get_boolean_from_string, get_integer_from_string, INTEGER, STRING, BOOLEAN
 from projects.models import Project
 
 # Feature Types
 FLAG = 'FLAG'
 CONFIG = 'CONFIG'
 
-# Feature State Value Types
-INTEGER = "int"
-STRING = "unicode"
-BOOLEAN = "bool"
+FEATURE_STATE_VALUE_TYPES = (
+    (INTEGER, 'Integer'),
+    (STRING, 'String'),
+    (BOOLEAN, 'Boolean')
+)
 
 
 @python_2_unicode_compatible
@@ -98,6 +100,44 @@ class Feature(models.Model):
         return "Project %s - Feature %s" % (self.project.name, self.name)
 
 
+def get_next_segment_priority(feature):
+    feature_segments = FeatureSegment.objects.filter(feature=feature).order_by('-priority')
+    if feature_segments.count() == 0:
+        return 1
+    else:
+        return feature_segments.first().priority + 1
+
+
+@python_2_unicode_compatible
+class FeatureSegment(models.Model):
+    feature = models.ForeignKey(Feature, on_delete=models.CASCADE, related_name="feature_segments")
+    segment = models.ForeignKey('segments.Segment', related_name="feature_segments")
+    priority = models.IntegerField(blank=True, null=True)
+    enabled = models.BooleanField(default=False)
+    value = models.CharField(max_length=2000, blank=True, null=True)
+    value_type = models.CharField(choices=FEATURE_STATE_VALUE_TYPES, max_length=50, blank=True, null=True)
+
+    class Meta:
+        unique_together = [('feature', 'segment'), ('feature', 'priority')]
+
+    def save(self, *args, **kwargs):
+        if not self.pk and not self.priority:
+            # intialise priority field on object creation if not set
+            self.priority = get_next_segment_priority(self.feature)
+
+        super(FeatureSegment, self).save(*args, **kwargs)
+
+        # create feature states
+        for environment in self.feature.project.environments.all():
+            fs, _ = FeatureState.objects.get_or_create(environment=environment, feature=self.feature,
+                                                       feature_segment=self)
+            fs.enabled = self.enabled
+            fs.save()
+
+    def __str__(self):
+        return "FeatureSegment for " + self.feature.name + " with priority " + str(self.priority)
+
+
 @python_2_unicode_compatible
 class FeatureState(models.Model):
     feature = models.ForeignKey(Feature, related_name='feature_states')
@@ -105,12 +145,14 @@ class FeatureState(models.Model):
                                     null=True)
     identity = models.ForeignKey('environments.Identity', related_name='identity_features',
                                  null=True, default=None, blank=True)
+    feature_segment = models.ForeignKey(FeatureSegment, related_name='feature_states', null=True, blank=True,
+                                        default=None)
 
     enabled = models.BooleanField(default=False)
     history = HistoricalRecords()
 
     class Meta:
-        unique_together = ("feature", "environment", "identity")
+        unique_together = (("feature", "environment", "identity"), ("feature", "environment", "feature_segment"))
         ordering = ['id']
 
     def get_feature_state_value(self):
@@ -133,10 +175,32 @@ class FeatureState(models.Model):
         # create default feature state value for feature state
         FeatureStateValue.objects.get_or_create(
             feature_state=self,
-            defaults={
+            defaults=self._get_defaults()
+        )
+
+    def _get_defaults(self):
+        if self.feature_segment:
+            return self._get_defaults_for_segment_feature_state()
+        else:
+            return {
                 'string_value': self.feature.initial_value
             }
-        )
+
+    def _get_defaults_for_segment_feature_state(self):
+        defaults = {
+            'type': self.feature_segment.value_type
+        }
+
+        key_name = self._get_feature_state_key_name(self.feature_segment.value_type)
+
+        if self.feature_segment.value_type == BOOLEAN:
+            defaults[key_name] = get_boolean_from_string(self.feature_segment.value)
+        elif self.feature_segment.value_type == INTEGER:
+            defaults[key_name] = get_integer_from_string(self.feature_segment.value)
+        else:
+            defaults[key_name] = self.feature_segment.value
+
+        return defaults
 
     @staticmethod
     def _get_feature_state_key_name(fsv_type):
@@ -178,45 +242,11 @@ class FeatureState(models.Model):
 
 
 class FeatureStateValue(models.Model):
-    FEATURE_STATE_VALUE_TYPES = (
-        (INTEGER, 'Integer'),
-        (STRING, 'String'),
-        (BOOLEAN, 'Boolean')
-    )
+    feature_state = models.OneToOneField(FeatureState, related_name='feature_state_value')
 
-    feature_state = models.OneToOneField(
-        FeatureState, related_name='feature_state_value')
     type = models.CharField(max_length=10, choices=FEATURE_STATE_VALUE_TYPES, default=STRING,
                             null=True, blank=True)
     boolean_value = models.NullBooleanField(null=True, blank=True)
     integer_value = models.IntegerField(null=True, blank=True)
     string_value = models.CharField(null=True, max_length=2000, blank=True)
     history = HistoricalRecords()
-
-
-def get_next_segment_priority(feature):
-    feature_segments = FeatureSegment.objects.filter(feature=feature).order_by('-priority')
-    if feature_segments.count() == 0:
-        return 1
-    else:
-        return feature_segments.first().priority + 1
-
-
-@python_2_unicode_compatible
-class FeatureSegment(models.Model):
-    feature = models.ForeignKey(Feature, on_delete=models.CASCADE, related_name="feature_segments")
-    segment = models.ForeignKey('segments.Segment', related_name="feature_segments")
-    priority = models.IntegerField(blank=True, null=True)
-    enabled = models.BooleanField(default=False)
-
-    class Meta:
-        unique_together = [('feature', 'segment'), ('feature', 'priority')]
-
-    def save(self, *args, **kwargs):
-        if not self.pk and not self.priority:
-            # intialise priority field on object creation if not set
-            self.priority = get_next_segment_priority(self.feature)
-        super(FeatureSegment, self).save(*args, **kwargs)
-
-    def __str__(self):
-        return "FeatureSegment for " + self.feature.name + " with priority " + str(self.priority)
