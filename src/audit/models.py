@@ -13,6 +13,8 @@ FEATURE_SEGMENT_UPDATED_MESSAGE = "Segment rules updated for flag: %s"
 ENVIRONMENT_CREATED_MESSAGE = "New Environment created: %s"
 ENVIRONMENT_UPDATED_MESSAGE = "Environment updated: %s"
 FEATURE_STATE_UPDATED_MESSAGE = "Flag state / Remote Config value updated for feature: %s"
+IDENTITY_FEATURE_STATE_UPDATED_MESSAGE = "Flag state / Remote config value updated for feature '%s' and identity '%s'"
+IDENTITY_FEATURE_STATE_DELETED_MESSAGE = "Flag state / Remote config value deleted for feature '%s' and identity '%s'"
 
 
 class RelatedObjectType(enum.Enum):

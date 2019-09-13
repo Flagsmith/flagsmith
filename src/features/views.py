@@ -11,7 +11,8 @@ from rest_framework.response import Response
 from rest_framework.schemas import AutoSchema
 
 from analytics.track import track_event
-from audit.models import AuditLog, RelatedObjectType, FEATURE_SEGMENT_UPDATED_MESSAGE
+from audit.models import AuditLog, RelatedObjectType, FEATURE_SEGMENT_UPDATED_MESSAGE, \
+    IDENTITY_FEATURE_STATE_DELETED_MESSAGE
 from environments.models import Environment, Identity
 from projects.models import Project
 from util.util import get_user_permitted_projects, get_user_permitted_environments
@@ -214,6 +215,24 @@ class FeatureStateViewSet(viewsets.ModelViewSet):
             serializer = self.get_serializer(feature_state_to_update)
 
         return Response(serializer.data)
+
+    def destroy(self, request, *args, **kwargs):
+        feature_state = get_object_or_404(self.get_queryset(), pk=kwargs.get('pk'))
+        res = super(FeatureStateViewSet, self).destroy(request, *args, **kwargs)
+        if res.status_code == status.HTTP_204_NO_CONTENT:
+            self._create_deleted_feature_state_audit_log(feature_state)
+        return res
+
+    def _create_deleted_feature_state_audit_log(self, feature_state):
+        message = IDENTITY_FEATURE_STATE_DELETED_MESSAGE % (feature_state.feature.name,
+                                                            feature_state.identity.identifier)
+
+        AuditLog.objects.create(author=self.request.user if self.request else None,
+                                related_object_id=feature_state.id,
+                                related_object_type=RelatedObjectType.FEATURE_STATE.name,
+                                environment=feature_state.environment,
+                                project=feature_state.environment.project,
+                                log=message)
 
     def partial_update(self, request, *args, **kwargs):
         """
