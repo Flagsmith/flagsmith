@@ -13,7 +13,7 @@ def prefill_subscription_data(apps, schema_editor):
     for org in Organisation.objects.all():
         subscription = Subscription(organisation=org)
         for field in org._meta.get_fields():
-            if hasattr(subscription, field.name):
+            if hasattr(subscription, field.name) and field.name != 'id':
                 setattr(subscription, field.name, getattr(org, field.name))
         subscription.save()
 
