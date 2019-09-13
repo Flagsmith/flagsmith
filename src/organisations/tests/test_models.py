@@ -25,17 +25,15 @@ class SubscriptionTestCase(TestCase):
     def tearDown(self) -> None:
         Subscription.objects.all().delete()
 
-    @mock.patch('organisations.signals.get_plan_id_from_subscription')
-    def test_max_seats_set_as_zero_if_subscription_has_no_subscription_id(self, mock_get_plan):
+    def test_max_seats_set_as_one_if_subscription_has_no_subscription_id(self):
         # Given
         subscription = Subscription(organisation=self.organisation)
-        mock_get_plan.return_value = None
 
         # When
         subscription.save()
 
         # Then
-        assert subscription.max_seats == 0
+        assert subscription.max_seats == 1
 
     @mock.patch('organisations.signals.get_plan_id_from_subscription')
     @mock.patch('organisations.signals.get_max_seats_for_plan')

@@ -19,3 +19,4 @@ def update_max_seats_if_plan_changed(sender, instance, *args, **kwargs):
         if not existing_object or current_plan != existing_object.plan:
             instance.max_seats = get_max_seats_for_plan(current_plan)
             instance.plan = current_plan
+            instance.organisation.reset_alert_status()

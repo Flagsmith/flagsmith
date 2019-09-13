@@ -34,6 +34,10 @@ class Organisation(models.Model):
     def over_plan_seats_limit(self):
         return self.has_subscription() and 0 < self.subscription.max_seats < self.num_seats
 
+    def reset_alert_status(self):
+        self.alerted_over_plan_limit = False
+        self.save()
+
 
 class Subscription(models.Model):
     organisation = models.OneToOneField(Organisation, on_delete=models.CASCADE, related_name='subscription')
@@ -43,7 +47,7 @@ class Subscription(models.Model):
     free_to_use_subscription = models.BooleanField(default=True)
     plan = models.CharField(max_length=20, null=True, blank=True)
     pending_cancellation = models.BooleanField(default=False)
-    max_seats = models.IntegerField(default=0)
+    max_seats = models.IntegerField(default=1)
 
     def save(self, *args, **kwargs):
         if self.plan and not self.max_seats:
