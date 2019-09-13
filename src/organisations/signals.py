@@ -1,3 +1,4 @@
+from django.conf import settings
 from django.db.models.signals import pre_save
 from django.dispatch import receiver
 
@@ -14,7 +15,7 @@ def update_max_seats_if_plan_changed(sender, instance, *args, **kwargs):
     except sender.DoesNotExist:
         pass
 
-    if instance.subscription_id:
+    if instance.subscription_id and settings.ENABLE_CHARGEBEE:
         current_plan = get_plan_id_from_subscription(instance.subscription_id)
         if not existing_object or current_plan != existing_object.plan:
             instance.max_seats = get_max_seats_for_plan(current_plan)
