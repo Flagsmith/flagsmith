@@ -59,6 +59,7 @@ class OrganisationTestCase(TestCase):
         response = self.client.put('/api/v1/organisations/%s/' % organisation.id,
                                    data=self.put_template % new_organisation_name,
                                    content_type='application/json')
+
         # Then
         organisation.refresh_from_db()
         assert response.status_code == status.HTTP_200_OK

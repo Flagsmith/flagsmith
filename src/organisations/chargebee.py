@@ -17,6 +17,5 @@ def get_plan_meta_data(plan_id):
 
 
 def _get_plan_details(plan_id):
-    return chargebee.Plan.retrieve(plan_id)
-
-
+    if plan_id:
+        return chargebee.Plan.retrieve(plan_id)
