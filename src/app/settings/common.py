@@ -254,3 +254,9 @@ LOGOUT_URL = "/admin/logout/"
 FE_E2E_TEST_USER_EMAIL = "nightwatch@solidstategroup.com"
 
 SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
+
+
+# Chargebee
+ENABLE_CHARGEBEE = os.environ.get('ENABLE_CHARGEBEE', False)
+CHARGEBEE_API_KEY = os.environ.get('CHARGEBEE_API_KEY')
+CHARGEBEE_SITE = os.environ.get('CHARGEBEE_SITE')
