@@ -31,7 +31,7 @@ def get_subscription_details(subscription_id):
 
 def get_max_seats_for_plan(plan_id):
     meta_data = get_plan_meta_data(plan_id)
-    return meta_data.get('seats', 0)
+    return meta_data.get('seats', 1)
 
 
 def get_plan_meta_data(plan_id):

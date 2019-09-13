@@ -15,6 +15,6 @@ class Migration(migrations.Migration):
         migrations.AlterField(
             model_name='subscription',
             name='max_seats',
-            field=models.IntegerField(default=0),
+            field=models.IntegerField(default=1),
         ),
     ]
