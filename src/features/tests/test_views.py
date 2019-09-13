@@ -6,9 +6,10 @@ from django.urls import reverse
 from rest_framework import status
 from rest_framework.test import APIClient
 
-from audit.models import AuditLog, RelatedObjectType
-from environments.models import Environment
-from features.models import Feature, FeatureState
+from audit.models import AuditLog, RelatedObjectType, IDENTITY_FEATURE_STATE_UPDATED_MESSAGE, \
+    IDENTITY_FEATURE_STATE_DELETED_MESSAGE
+from environments.models import Environment, Identity
+from features.models import Feature, FeatureState, FeatureSegment
 from organisations.models import Organisation
 from projects.models import Project
 from segments.models import Segment
@@ -37,6 +38,10 @@ class ProjectFeatureTestCase(TestCase):
     def tearDown(self) -> None:
         AuditLog.objects.all().delete()
         Feature.objects.all().delete()
+        FeatureState.objects.all().delete()
+        Segment.objects.all().delete()
+        FeatureSegment.objects.all().delete()
+        Identity.objects.all().delete()
 
     def test_should_create_feature_states_when_feature_created(self):
         # Given - set up data
@@ -124,3 +129,69 @@ class ProjectFeatureTestCase(TestCase):
 
         # Then
         assert AuditLog.objects.filter(related_object_type=RelatedObjectType.FEATURE.name).count() == 1
+
+    def test_audit_log_created_when_feature_state_created_for_identity(self):
+        # Given
+        feature = Feature.objects.create(name='Test feature', project=self.project)
+        identity = Identity.objects.create(identifier='test-identifier', environment=self.environment_1)
+        url = reverse('api:v1:environments:identity-featurestates-list', args=[self.environment_1.api_key,
+                                                                               identity.id])
+        data = {
+            "feature": feature.id,
+            "enabled": True
+        }
+
+        # When
+        self.client.post(url, data=json.dumps(data), content_type='application/json')
+
+        # Then
+        assert AuditLog.objects.filter(related_object_type=RelatedObjectType.FEATURE_STATE.name).count() == 1
+
+        # and
+        expected_log_message = IDENTITY_FEATURE_STATE_UPDATED_MESSAGE % (feature.name, identity.identifier)
+        audit_log = AuditLog.objects.get(related_object_type=RelatedObjectType.FEATURE_STATE.name)
+        assert audit_log.log == expected_log_message
+
+    def test_audit_log_created_when_feature_state_updated_for_identity(self):
+        # Given
+        feature = Feature.objects.create(name='Test feature', project=self.project)
+        identity = Identity.objects.create(identifier='test-identifier', environment=self.environment_1)
+        feature_state = FeatureState.objects.create(feature=feature, environment=self.environment_1, identity=identity,
+                                                    enabled=True)
+        url = reverse('api:v1:environments:identity-featurestates-detail', args=[self.environment_1.api_key,
+                                                                                 identity.id, feature_state.id])
+        data = {
+            "feature": feature.id,
+            "enabled": False
+        }
+
+        # When
+        res = self.client.put(url, data=json.dumps(data), content_type='application/json')
+
+        # Then
+        assert AuditLog.objects.filter(related_object_type=RelatedObjectType.FEATURE_STATE.name).count() == 1
+
+        # and
+        expected_log_message = IDENTITY_FEATURE_STATE_UPDATED_MESSAGE % (feature.name, identity.identifier)
+        audit_log = AuditLog.objects.get(related_object_type=RelatedObjectType.FEATURE_STATE.name)
+        assert audit_log.log == expected_log_message
+
+    def test_audit_log_created_when_feature_state_deleted_for_identity(self):
+        # Given
+        feature = Feature.objects.create(name='Test feature', project=self.project)
+        identity = Identity.objects.create(identifier='test-identifier', environment=self.environment_1)
+        feature_state = FeatureState.objects.create(feature=feature, environment=self.environment_1, identity=identity,
+                                                    enabled=True)
+        url = reverse('api:v1:environments:identity-featurestates-detail', args=[self.environment_1.api_key,
+                                                                                 identity.id, feature_state.id])
+
+        # When
+        res = self.client.delete(url)
+
+        # Then
+        assert AuditLog.objects.filter(related_object_type=RelatedObjectType.FEATURE_STATE.name).count() == 1
+
+        # and
+        expected_log_message = IDENTITY_FEATURE_STATE_DELETED_MESSAGE % (feature.name, identity.identifier)
+        audit_log = AuditLog.objects.get(related_object_type=RelatedObjectType.FEATURE_STATE.name)
+        assert audit_log.log == expected_log_message
