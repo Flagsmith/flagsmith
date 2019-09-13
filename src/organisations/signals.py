@@ -1,19 +1,21 @@
 from django.db.models.signals import pre_save
 from django.dispatch import receiver
 
-from organisations.chargebee import get_max_seats_for_plan
+from organisations.chargebee import get_max_seats_for_plan, get_plan_id_from_subscription
 from .models import Subscription
 
 
 @receiver(pre_save, sender=Subscription)
 def update_max_seats_if_plan_changed(sender, instance, *args, **kwargs):
-    new_object = False
-    obj = None
+    existing_object = None
 
     try:
-        obj = sender.objects.get(pk=instance.pk)
+        existing_object = sender.objects.get(pk=instance.pk)
     except sender.DoesNotExist:
-        new_object = True
+        pass
 
-    if instance.plan and (new_object or obj.plan != instance.plan or not instance.max_seats):
-        instance.max_seats = get_max_seats_for_plan(instance.plan)
+    if instance.subscription_id:
+        current_plan = get_plan_id_from_subscription(instance.subscription_id)
+        if not existing_object or current_plan != existing_object.plan:
+            instance.max_seats = get_max_seats_for_plan(current_plan)
+            instance.plan = current_plan
