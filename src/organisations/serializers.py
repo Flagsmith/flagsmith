@@ -52,6 +52,16 @@ class OrganisationSerializer(serializers.ModelSerializer):
         Subscription.objects.create(organisation=organisation, **subscription_data)
         return organisation
 
+    def update(self, instance, validated_data):
+        subscription_data = validated_data.pop('subscription', {})
+        self._update_subscription(instance, subscription_data)
+        return super(OrganisationSerializer, self).update(instance, validated_data)
+
+    def _update_subscription(self, organisation, subscription_data):
+        for key, value in subscription_data.items():
+            setattr(organisation.subscription, key, value)
+        organisation.subscription.save()
+
     def get_paid_subscription(self, instance):
         if hasattr(instance, 'subscription'):
             return instance.subscription.paid_subscription
