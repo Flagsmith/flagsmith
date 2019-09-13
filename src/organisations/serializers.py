@@ -35,14 +35,15 @@ class OrganisationSerializer(serializers.ModelSerializer):
         """
         Grab the subscription fields out of the posted data and correct the data to look as though they were passed as
         a nested subscription object. Note that this assumes use of one OR the other - if fields are passed in both
-        ways then those fields in the nested subscription object will be overwritten.
+        ways then those fields in the root subscription object will be ignored.
         """
-        subscription_data = {}
-        for field in self.subscription_fields:
-            if data.get(field):
-                subscription_data[field] = data.get(field)
-        if subscription_data:
-            data['subscription'] = subscription_data
+        if not data.get('subscription'):
+            subscription_data = {}
+            for field in self.subscription_fields:
+                if data.get(field):
+                    subscription_data[field] = data.get(field)
+            if subscription_data:
+                data['subscription'] = subscription_data
         return super(OrganisationSerializer, self).to_internal_value(data)
 
     def create(self, validated_data):
