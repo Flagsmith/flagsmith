@@ -1,8 +1,10 @@
 from rest_framework import serializers
+from rest_framework.exceptions import ValidationError
 from rest_framework.serializers import ListSerializer
 
 from rest_framework_recursive.fields import RecursiveField
 
+from audit.models import AuditLog, RelatedObjectType, SEGMENT_CREATED_MESSAGE, SEGMENT_UPDATED_MESSAGE
 from segments.models import Segment, SegmentRule, Condition
 from . import models
 
@@ -11,6 +13,12 @@ class ConditionSerializer(serializers.ModelSerializer):
     class Meta:
         model = models.Condition
         fields = ('operator', 'property', 'value')
+
+    def validate(self, attrs):
+        super(ConditionSerializer, self).validate(attrs)
+        if attrs.get('operator') != models.PERCENTAGE_SPLIT and not attrs.get('property'):
+            raise ValidationError({'property': ['This field may not be blank.']})
+        return attrs
 
 
 class RuleSerializer(serializers.ModelSerializer):
@@ -39,11 +47,13 @@ class SegmentSerializer(serializers.ModelSerializer):
         rules_data = validated_data.pop('rules', [])
         segment = Segment.objects.create(**validated_data)
         self._create_segment_rules(rules_data, segment=segment)
+        self._create_audit_log(segment, True)
         return segment
 
     def update(self, instance, validated_data):
         rules_data = validated_data.pop('rules', [])
         self._update_segment_rules(rules_data, segment=instance)
+        self._create_audit_log(instance, False)
         return super().update(instance, validated_data)
 
     def _update_segment_rules(self, rules_data, segment=None):
@@ -82,6 +92,14 @@ class SegmentSerializer(serializers.ModelSerializer):
     def _create_conditions(conditions_data, rule):
         for condition in conditions_data:
             Condition.objects.create(rule=rule, **condition)
+
+    def _create_audit_log(self, instance, created):
+        message = SEGMENT_CREATED_MESSAGE if created else SEGMENT_UPDATED_MESSAGE % instance.name
+        request = self.context.get('request')
+        AuditLog.objects.create(author=request.user if request else None, related_object_id=instance.id,
+                                related_object_type=RelatedObjectType.SEGMENT.name,
+                                project=instance.project,
+                                log=message)
 
 
 class SegmentSerializerBasic(serializers.ModelSerializer):

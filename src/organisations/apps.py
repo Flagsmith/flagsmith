@@ -6,3 +6,7 @@ from django.apps import AppConfig
 
 class OrganisationsConfig(AppConfig):
     name = 'organisations'
+
+    def ready(self):
+        # noinspection PyUnresolvedReferences
+        import organisations.signals

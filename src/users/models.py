@@ -57,6 +57,9 @@ class FFAdminUser(AbstractUser):
         ordering = ['id']
         verbose_name = 'Feature flag admin user'
 
+    def __str__(self):
+        return "%s %s" % (self.first_name, self.last_name)
+
     def get_full_name(self):
         if not self.first_name:
             return None
@@ -88,8 +91,9 @@ class FFAdminUser(AbstractUser):
                     count += 1
         return count
 
-    def __str__(self):
-        return "%s %s" % (self.first_name, self.last_name)
+    @staticmethod
+    def get_admin_user_emails():
+        return [user['email'] for user in FFAdminUser.objects.filter(is_staff=True).values('email')]
 
 
 @python_2_unicode_compatible

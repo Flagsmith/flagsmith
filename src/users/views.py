@@ -1,8 +1,9 @@
 from django.conf import settings
 from django.contrib.sites.shortcuts import get_current_site
+from django.core.mail import send_mail
+from django.http import HttpResponse
 from django.shortcuts import redirect
 from django.views import View
-from django.http import HttpResponse
 from rest_framework import viewsets, status
 from rest_framework.decorators import action
 from rest_framework.generics import get_object_or_404
@@ -31,7 +32,8 @@ class FFAdminUserViewSet(viewsets.ModelViewSet):
     serializer_class = serializers.UserFullSerializer
 
     def get_queryset(self):
-        return FFAdminUser.objects.filter(pk=self.request.user.id)
+        return FFAdminUser.objects.filter(pk=self.request.user.id).prefetch_related('organisations',
+                                                                                    'organisations__users')
 
     @action(detail=False, methods=["POST"], url_path="join/(?P<invite_hash>\w+)")
     def join_organisation(self, request, invite_hash):
