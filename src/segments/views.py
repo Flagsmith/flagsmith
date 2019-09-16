@@ -8,6 +8,7 @@ from rest_framework.response import Response
 
 from environments.exceptions import EnvironmentHeaderNotPresentError
 from environments.models import Environment
+from util.views import SDKAPIView
 from segments.serializers import SegmentSerializer
 from util.util import get_user_permitted_projects
 from . import serializers
@@ -25,12 +26,12 @@ class SegmentViewSet(viewsets.ModelViewSet):
 
     def create(self, request, *args, **kwargs):
         project_pk = request.data.get('project')
-        if project_pk not in [project.id for project in get_user_permitted_projects(self.request.user)]:
+        if int(project_pk) not in [project.id for project in get_user_permitted_projects(self.request.user)]:
             return Response(status=status.HTTP_403_FORBIDDEN)
         return super().create(request, *args, **kwargs)
 
 
-class SDKSegments(GenericAPIView):
+class SDKSegments(SDKAPIView):
     serializer_class = SegmentSerializer
     permission_classes = (AllowAny,)
 

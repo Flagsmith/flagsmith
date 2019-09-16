@@ -33,6 +33,8 @@ if 'DJANGO_SECRET_KEY' not in os.environ:
 
 SECRET_KEY = os.environ['DJANGO_SECRET_KEY']
 
+HOSTED_SEATS_LIMIT = int(os.environ.get('HOSTED_SEATS_LIMIT', 0))
+
 # Google Analytics Configuration
 GOOGLE_ANALYTICS_KEY = os.environ.get('GOOGLE_ANALYTICS_KEY', '')
 GOOGLE_SERVICE_ACCOUNT = os.environ.get('GOOGLE_SERVICE_ACCOUNT')
@@ -90,7 +92,8 @@ INSTALLED_APPS = [
     'e2etests',
     'simple_history',
     'debug_toolbar',
-    'drf_yasg'
+    'drf_yasg',
+    'audit'
 ]
 
 if GOOGLE_ANALYTICS_KEY:
@@ -108,7 +111,7 @@ REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': (
         'rest_framework.authentication.TokenAuthentication',
     ),
-    'PAGE_SIZE': 999,
+    'PAGE_SIZE': 10,
     'UNICODE_JSON': False,
     'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.PageNumberPagination'
 }
@@ -249,3 +252,11 @@ LOGOUT_URL = "/admin/logout/"
 
 # Email associated with user that is used by front end for end to end testing purposes
 FE_E2E_TEST_USER_EMAIL = "nightwatch@solidstategroup.com"
+
+SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
+
+
+# Chargebee
+ENABLE_CHARGEBEE = os.environ.get('ENABLE_CHARGEBEE', False)
+CHARGEBEE_API_KEY = os.environ.get('CHARGEBEE_API_KEY')
+CHARGEBEE_SITE = os.environ.get('CHARGEBEE_SITE')
