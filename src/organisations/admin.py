@@ -5,6 +5,7 @@ from django.contrib import admin
 
 from projects.models import Project
 from organisations.models import Organisation, Subscription
+from users.models import FFAdminUser
 
 
 class ProjectInline(admin.StackedInline):
@@ -20,9 +21,15 @@ class SubscriptionInline(admin.StackedInline):
     verbose_name_plural = 'Subscription'
 
 
+class UserInline(admin.TabularInline):
+    model = FFAdminUser.organisations.through
+    extra = 0
+    show_change_link = True
+
+
 @admin.register(Organisation)
 class OrganisationAdmin(admin.ModelAdmin):
-    inlines = [ProjectInline, SubscriptionInline]
+    inlines = [ProjectInline, SubscriptionInline, UserInline]
     list_display = ('__str__', )
     list_filter = ('projects', 'subscription__plan')
     search_fields = ('name', )
