@@ -1,26 +1,36 @@
 # -*- coding: utf-8 -*-
 from __future__ import unicode_literals
 
+import json
+
 from rest_framework import viewsets, status
 from rest_framework.decorators import action
 from rest_framework.exceptions import ValidationError
 from rest_framework.response import Response
 
 from analytics.query import get_events_for_organisation
-from projects.serializers import ProjectSerializer
 from organisations.serializers import OrganisationSerializer
+from projects.serializers import ProjectSerializer
 from users.models import Invite
-from users.serializers import InviteSerializer, UserListSerializer, \
-    InviteListSerializer
+from users.serializers import InviteSerializer, UserListSerializer, InviteListSerializer, UserIdSerializer
 
 
 class OrganisationViewSet(viewsets.ModelViewSet):
-    serializer_class = OrganisationSerializer
+    def get_serializer_class(self):
+        if self.action == 'remove_users':
+            return UserIdSerializer
+        return OrganisationSerializer
+
+    def get_serializer_context(self):
+        context = super(OrganisationViewSet, self).get_serializer_context()
+        if self.action == 'remove_users':
+            context['organisation'] = self.kwargs.get('pk')
+        return context
 
     def get_queryset(self):
         return self.request.user.organisations.all()
 
-    def create(self, request):
+    def create(self, request, **kwargs):
         """
         Override create method to add new organisation to authenticated user
         """
@@ -75,6 +85,16 @@ class OrganisationViewSet(viewsets.ModelViewSet):
         else:
             raise ValidationError(invites_serializer.errors)
 
+    @action(detail=True, methods=['POST'], url_path='remove-users')
+    def remove_users(self, request, pk):
+        """
+        Takes a list of users and removes them from the organisation provided in the url
+        """
+        serializer = self.get_serializer(data=request.data, many=True)
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+        return Response(serializer.data, status=200)
+
     @action(detail=True, methods=["GET"])
     def usage(self, request, pk):
         organisation = self.get_object()
@@ -104,4 +124,3 @@ class InviteViewSet(viewsets.ModelViewSet):
         invite = self.get_object()
         invite.send_invite_mail()
         return Response(status=status.HTTP_200_OK)
-

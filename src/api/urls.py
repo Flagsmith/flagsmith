@@ -24,7 +24,7 @@ traits_router = routers.DefaultRouter()
 traits_router.register(r'', SDKTraits, basename='sdk-traits')
 
 current_urls = [
-    url(r'^organisations/', include('organisations.urls')),
+    url(r'^organisations/', include('organisations.urls'), name='organisations'),
     url(r'^projects/', include('projects.urls'), name='projects'),
     url(r'^environments/', include('environments.urls'), name='environments'),
     url(r'^features/', include('features.urls'), name='features'),
