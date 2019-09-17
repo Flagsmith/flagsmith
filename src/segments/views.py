@@ -1,28 +1,45 @@
 import logging
 
 from django.core.exceptions import ObjectDoesNotExist
-from rest_framework import viewsets, status, pagination
-from rest_framework.generics import GenericAPIView, get_object_or_404
+from django.utils.decorators import method_decorator
+from drf_yasg import openapi
+from drf_yasg.utils import swagger_auto_schema
+from rest_framework import viewsets, status
+from rest_framework.generics import get_object_or_404
 from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
 
 from environments.exceptions import EnvironmentHeaderNotPresentError
-from environments.models import Environment
-from util.views import SDKAPIView
+from environments.models import Environment, Identity
 from segments.serializers import SegmentSerializer
 from util.util import get_user_permitted_projects
+from util.views import SDKAPIView
 from . import serializers
 
 logger = logging.getLogger()
 logger.setLevel(logging.INFO)
 
 
+@method_decorator(name='list', decorator=swagger_auto_schema(
+    manual_parameters=[
+        openapi.Parameter('identity', openapi.IN_QUERY,
+                          'Optionally provide the id of an identity to get only the segments they match',
+                          required=False, type=openapi.TYPE_INTEGER)
+    ]
+))
 class SegmentViewSet(viewsets.ModelViewSet):
     serializer_class = serializers.SegmentSerializer
 
     def get_queryset(self):
         project = get_object_or_404(get_user_permitted_projects(self.request.user), pk=self.kwargs['project_pk'])
-        return project.segments.all()
+        queryset = project.segments.all()
+
+        identity_pk = self.request.query_params.get('identity')
+        if identity_pk:
+            identity = Identity.objects.get(pk=identity_pk)
+            queryset = queryset.filter(id__in=[segment.id for segment in identity.get_segments()])
+
+        return queryset
 
     def create(self, request, *args, **kwargs):
         project_pk = request.data.get('project')

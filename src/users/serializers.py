@@ -4,9 +4,39 @@ from rest_auth.registration.serializers import RegisterSerializer
 
 from rest_framework import serializers
 from django.utils.translation import ugettext_lazy as _
+from rest_framework.exceptions import ValidationError
 
+from organisations.models import Organisation
 from organisations.serializers import OrganisationSerializer
 from .models import FFAdminUser, Invite
+
+
+class UserIdSerializer(serializers.Serializer):
+    id = serializers.IntegerField()
+
+    def update(self, instance, validated_data):
+        pass
+
+    def create(self, validated_data):
+        organisation = Organisation.objects.get(pk=self.context.get('organisation'))
+        user = self._get_user(validated_data)
+
+        if user and organisation in user.organisations.all():
+            user.organisations.remove(organisation)
+
+        return user
+
+    def validate(self, attrs):
+        if not FFAdminUser.objects.filter(pk=attrs.get('id')).exists():
+            message = 'User with id %d does not exist' % attrs.get('id')
+            raise ValidationError({'id': message})
+        return attrs
+
+    def _get_user(self, validated_data):
+        try:
+            return FFAdminUser.objects.get(pk=validated_data.get('id'))
+        except FFAdminUser.DoesNotExist:
+            return None
 
 
 class UserFullSerializer(serializers.ModelSerializer):
