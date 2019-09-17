@@ -75,9 +75,7 @@ class SegmentViewSetTestCase(APITestCase):
         matching_rule = SegmentRule.objects.create(segment=matching_segment, type=SegmentRule.ALL_RULE)
         Condition.objects.create(rule=matching_rule, property=trait_key, operator=EQUAL, value=trait_value)
 
-        non_matching_segment = Segment.objects.create(name='Non matching segment', project=self.project)
-        non_matching_rule = SegmentRule.objects.create(segment=non_matching_segment, type=SegmentRule.ALL_RULE)
-        Condition.objects.create(rule=non_matching_rule, property='foo', operator=EQUAL, value='bar')
+        Segment.objects.create(name='Non matching segment', project=self.project)
 
         environment = Environment.objects.create(name='Test environment', project=self.project)
         identity = Identity.objects.create(identifier='test-user', environment=environment)
