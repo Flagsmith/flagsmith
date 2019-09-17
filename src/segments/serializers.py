@@ -37,6 +37,11 @@ class SegmentSerializer(serializers.ModelSerializer):
         model = models.Segment
         fields = '__all__'
 
+    def validate(self, attrs):
+        if not attrs.get('rules'):
+            raise ValidationError({'rules': 'Segment cannot be created without any rules.'})
+        return attrs
+
     def create(self, validated_data):
         """
         Override create method to create segment with nested rules and conditions
