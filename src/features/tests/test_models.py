@@ -11,14 +11,13 @@ from segments.models import Segment, SegmentRule, Condition, EQUAL
 
 @pytest.mark.django_db
 class FeatureTestCase(TestCase):
-    @classmethod
-    def setUpTestData(cls):
-        cls.organisation = Organisation.objects.create(name="Test Org")
-        cls.project = Project.objects.create(name="Test Project", organisation=cls.organisation)
-        cls.environment_one = Environment.objects.create(name="Test Environment 1",
-                                                         project=cls.project)
-        cls.environment_two = Environment.objects.create(name="Test Environment 2",
-                                                         project=cls.project)
+    def setUp(self):
+        self.organisation = Organisation.objects.create(name="Test Org")
+        self.project = Project.objects.create(name="Test Project", organisation=self.organisation)
+        self.environment_one = Environment.objects.create(name="Test Environment 1",
+                                                          project=self.project)
+        self.environment_two = Environment.objects.create(name="Test Environment 2",
+                                                          project=self.project)
 
     def test_feature_should_create_feature_states_for_environments(self):
         feature = Feature.objects.create(name="Test Feature", project=self.project)
@@ -35,6 +34,30 @@ class FeatureTestCase(TestCase):
 
         for feature_state in feature_states:
             self.assertEquals(feature_state.get_feature_state_value(), "This is a value")
+
+    def test_creating_feature_with_integer_initial_value_should_set_integer_value_for_all_feature_states(self):
+        # Given
+        initial_value = 1
+        feature = Feature.objects.create(name='Test feature', project=self.project, initial_value=initial_value)
+
+        # When
+        feature_states = FeatureState.objects.filter(feature=feature)
+
+        # Then
+        for feature_state in feature_states:
+            assert feature_state.get_feature_state_value() == initial_value
+
+    def test_creating_feature_with_boolean_initial_value_should_set_boolean_value_for_all_feature_states(self):
+        # Given
+        initial_value = False
+        feature = Feature.objects.create(name='Test feature', project=self.project, initial_value=initial_value)
+
+        # When
+        feature_states = FeatureState.objects.filter(feature=feature)
+
+        # Then
+        for feature_state in feature_states:
+            assert feature_state.get_feature_state_value() == initial_value
 
     def test_updating_feature_state_should_trigger_webhook(self):
         feature = Feature.objects.create(name="Test Feature", project=self.project)
@@ -105,4 +128,3 @@ class FeatureSegmentTest(TestCase):
         # Then
         feature_state.refresh_from_db()
         assert feature_state.enabled
-

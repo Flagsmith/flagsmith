@@ -8,7 +8,7 @@ from django.utils.encoding import python_2_unicode_compatible
 from django.utils.translation import ugettext_lazy as _
 from simple_history.models import HistoricalRecords
 
-from features.utils import get_boolean_from_string, get_integer_from_string, INTEGER, STRING, BOOLEAN
+from features.utils import get_boolean_from_string, get_integer_from_string, INTEGER, STRING, BOOLEAN, get_value_type
 from projects.models import Project
 
 # Feature Types
@@ -182,9 +182,7 @@ class FeatureState(models.Model):
         if self.feature_segment:
             return self._get_defaults_for_segment_feature_state()
         else:
-            return {
-                'string_value': self.feature.initial_value
-            }
+            return self._get_defaults_for_environment_feature_state()
 
     def _get_defaults_for_segment_feature_state(self):
         defaults = {
@@ -199,6 +197,26 @@ class FeatureState(models.Model):
             defaults[key_name] = get_integer_from_string(self.feature_segment.value)
         else:
             defaults[key_name] = self.feature_segment.value
+
+        return defaults
+
+    def _get_defaults_for_environment_feature_state(self):
+        if not (self.feature.initial_value or self.feature.initial_value is False):
+            return None
+
+        value = self.feature.initial_value
+        type = get_value_type(value)
+        defaults = {
+            'type': type
+        }
+
+        key_name = self._get_feature_state_key_name(type)
+        if type == BOOLEAN:
+            defaults[key_name] = get_boolean_from_string(value)
+        elif type == INTEGER:
+            defaults[key_name] = get_integer_from_string(value)
+        else:
+            defaults[key_name] = value
 
         return defaults
 
