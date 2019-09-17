@@ -449,7 +449,9 @@ class SDKIdentitiesTestCase(APITestCase):
         response = self.client.get(url)
 
         # Then
-        assert response.json().get('flags')[0].get('enabled')
+        for flag in response.json()['flags']:
+            if flag['feature']['name'] == self.feature_1.name:
+                assert flag['enabled']
 
     def test_identities_endpoint_returns_default_value_if_rule_type_percentage_split_and_identity_not_in_segment(self):
         # Given
