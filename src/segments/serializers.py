@@ -37,6 +37,11 @@ class SegmentSerializer(serializers.ModelSerializer):
         model = models.Segment
         fields = '__all__'
 
+    def validate(self, attrs):
+        if not attrs.get('rules'):
+            raise ValidationError({'rules': 'Segment cannot be created without any rules.'})
+        return attrs
+
     def create(self, validated_data):
         """
         Override create method to create segment with nested rules and conditions
@@ -94,7 +99,7 @@ class SegmentSerializer(serializers.ModelSerializer):
             Condition.objects.create(rule=rule, **condition)
 
     def _create_audit_log(self, instance, created):
-        message = SEGMENT_CREATED_MESSAGE if created else SEGMENT_UPDATED_MESSAGE % instance.name
+        message = SEGMENT_CREATED_MESSAGE % instance.name if created else SEGMENT_UPDATED_MESSAGE % instance.name
         request = self.context.get('request')
         AuditLog.objects.create(author=request.user if request else None, related_object_id=instance.id,
                                 related_object_type=RelatedObjectType.SEGMENT.name,

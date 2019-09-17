@@ -326,6 +326,20 @@ class IdentityTestCase(TestCase):
             identifier = 'user%d' % i
             Identity.objects.create(identifier=identifier, environment=self.environment)
 
+    def test_can_delete_identity(self):
+        # Given
+        url = reverse('api:v1:environments:environment-identities-detail', args=[self.environment.api_key,
+                                                                                 self.identity.id])
+
+        # When
+        res = self.client.delete(url)
+
+        # Then
+        assert res.status_code == status.HTTP_204_NO_CONTENT
+
+        # and
+        assert not Identity.objects.filter(id=self.identity.id).exists()
+
 
 @pytest.mark.django_db
 class SDKIdentitiesTestCase(APITestCase):
@@ -449,7 +463,9 @@ class SDKIdentitiesTestCase(APITestCase):
         response = self.client.get(url)
 
         # Then
-        assert response.json().get('flags')[0].get('enabled')
+        for flag in response.json()['flags']:
+            if flag['feature']['name'] == self.feature_1.name:
+                assert flag['enabled']
 
     def test_identities_endpoint_returns_default_value_if_rule_type_percentage_split_and_identity_not_in_segment(self):
         # Given
@@ -626,3 +642,108 @@ class SDKTraitsTest(APITestCase):
             'trait_key': trait_key,
             'trait_value': trait_value
         })
+
+
+@pytest.mark.django_db
+class TraitViewSetTestCase(TestCase):
+    def setUp(self) -> None:
+        self.client = APIClient()
+        user = Helper.create_ffadminuser()
+        self.client.force_authenticate(user=user)
+
+        organisation = Organisation.objects.create(name='Test org')
+        user.organisations.add(organisation)
+
+        self.project = Project.objects.create(name='Test project', organisation=organisation)
+        self.environment = Environment.objects.create(name='Test environment', project=self.project)
+        self.identity = Identity.objects.create(identifier='test-user', environment=self.environment)
+
+    def test_can_delete_trait(self):
+        # Given
+        trait_key = 'trait_key'
+        trait_value = 'trait_value'
+        trait = Trait.objects.create(identity=self.identity, trait_key=trait_key, value_type=STRING,
+                                     string_value=trait_value)
+        url = reverse('api:v1:environments:identities-traits-detail',
+                      args=[self.environment.api_key, self.identity.id, trait.id])
+
+        # When
+        res = self.client.delete(url)
+
+        # Then
+        assert res.status_code == status.HTTP_204_NO_CONTENT
+
+        # and
+        assert not Trait.objects.filter(pk=trait.id).exists()
+
+    def test_delete_trait_only_deletes_single_trait_if_query_param_not_provided(self):
+        # Given
+        trait_key = 'trait_key'
+        trait_value = 'trait_value'
+        identity_2 = Identity.objects.create(identifier='test-user-2', environment=self.environment)
+
+        trait = Trait.objects.create(identity=self.identity, trait_key=trait_key, value_type=STRING,
+                                     string_value=trait_value)
+        trait_2 = Trait.objects.create(identity=identity_2, trait_key=trait_key, value_type=STRING,
+                                       string_value=trait_value)
+
+        url = reverse('api:v1:environments:identities-traits-detail',
+                      args=[self.environment.api_key, self.identity.id, trait.id])
+
+        # When
+        self.client.delete(url)
+
+        # Then
+        assert not Trait.objects.filter(pk=trait.id).exists()
+
+        # and
+        assert Trait.objects.filter(pk=trait_2.id).exists()
+
+    def test_delete_trait_deletes_all_traits_if_query_param_provided(self):
+        # Given
+        trait_key = 'trait_key'
+        trait_value = 'trait_value'
+        identity_2 = Identity.objects.create(identifier='test-user-2', environment=self.environment)
+
+        trait = Trait.objects.create(identity=self.identity, trait_key=trait_key, value_type=STRING,
+                                     string_value=trait_value)
+        trait_2 = Trait.objects.create(identity=identity_2, trait_key=trait_key, value_type=STRING,
+                                       string_value=trait_value)
+
+        base_url = reverse('api:v1:environments:identities-traits-detail',
+                           args=[self.environment.api_key, self.identity.id, trait.id])
+        url = base_url + '?deleteAllMatchingTraits=true'
+
+        # When
+        self.client.delete(url)
+
+        # Then
+        assert not Trait.objects.filter(pk=trait.id).exists()
+
+        # and
+        assert not Trait.objects.filter(pk=trait_2.id).exists()
+
+    def test_delete_trait_only_deletes_traits_in_current_environment(self):
+        # Given
+        environment_2 = Environment.objects.create(name='Test environment', project=self.project)
+        trait_key = 'trait_key'
+        trait_value = 'trait_value'
+        identity_2 = Identity.objects.create(identifier='test-user-2', environment=environment_2)
+
+        trait = Trait.objects.create(identity=self.identity, trait_key=trait_key, value_type=STRING,
+                                     string_value=trait_value)
+        trait_2 = Trait.objects.create(identity=identity_2, trait_key=trait_key, value_type=STRING,
+                                       string_value=trait_value)
+
+        base_url = reverse('api:v1:environments:identities-traits-detail',
+                           args=[self.environment.api_key, self.identity.id, trait.id])
+        url = base_url + '?deleteAllMatchingTraits=true'
+
+        # When
+        self.client.delete(url)
+
+        # Then
+        assert not Trait.objects.filter(pk=trait.id).exists()
+
+        # and
+        assert Trait.objects.filter(pk=trait_2.id).exists()
