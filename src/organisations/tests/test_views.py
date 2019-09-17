@@ -2,11 +2,12 @@ import json
 from unittest import TestCase
 
 import pytest
+from django.urls import reverse
 from rest_framework import status
 from rest_framework.test import APIClient
 
 from organisations.models import Organisation
-from users.models import Invite
+from users.models import Invite, FFAdminUser
 from util.tests import Helper
 
 
@@ -124,3 +125,24 @@ class OrganisationTestCase(TestCase):
         # Then
         assert invite_list_response.status_code == status.HTTP_200_OK
         assert invite_resend_response.status_code == status.HTTP_200_OK
+
+    def test_can_remove_a_user_from_an_organisation(self):
+        # Given
+        organisation = Organisation.objects.create(name='Test org')
+        self.user.organisations.add(organisation)
+
+        user_2 = FFAdminUser.objects.create(email='test@example.com')
+        user_2.organisations.add(organisation)
+
+        url = reverse('api:v1:organisations:organisation-remove-users', args=[organisation.pk])
+
+        data = [
+            {'id': user_2.pk}
+        ]
+
+        # When
+        res = self.client.post(url, data=json.dumps(data), content_type='application/json')
+
+        # Then
+        assert res.status_code == status.HTTP_200_OK
+        assert organisation not in user_2.organisations.all()
