@@ -22,7 +22,7 @@ class UserIdSerializer(serializers.Serializer):
         user = self._get_user(validated_data)
 
         if user and organisation in user.organisations.all():
-            user.organisations.remove(organisation)
+            user.remove_organisation(organisation)
 
         return user
 
