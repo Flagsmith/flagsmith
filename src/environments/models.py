@@ -12,7 +12,6 @@ from app.utils import create_hash
 from environments.exceptions import EnvironmentHeaderNotPresentError
 from features.models import FeatureState
 from projects.models import Project
-from users.models import FFAdminUser
 
 # User Trait Value Types
 INTEGER = "int"
@@ -97,28 +96,36 @@ class Identity(models.Model):
         # get all features that have been overridden for an identity
         # and only feature states for features which are not associated with an identity
         # and are not in the to be overridden
+        feature_ids_overridden_by_segment = self.get_segment_feature_states().values_list('feature__id', flat=True)
         flags = FeatureState.objects.filter(
             Q(environment=self.environment) &
             (
+                # first get all feature states that have been explicitly overridden for the identity
                 Q(identity=self) |
+
+                # next get all feature states that have been overridden for any segments the identity matches, ignoring
+                # any that are explicitly overridden for the identity as that still takes priority
+                # TODO: does this take priority into account?
+                Q(feature_segment__segment__in=self.get_segments()) & ~Q(
+                    feature__id__in=self.identity_features.values_list(
+                        'feature__id', flat=True
+                    )
+                ) |
+
+                # finally, get all feature states for the environment that haven't been overridden
                 (
                     Q(identity=None) &
                     ~Q(
-                        feature__id__in=self.identity_features.filter(identity=self).values_list(
+                        feature__id__in=self.identity_features.values_list(
                             'feature__id', flat=True
                         )
+                    ) &
+                    ~Q(
+                        feature__id__in=feature_ids_overridden_by_segment
                     )
                 )
             ),
         ).select_related("feature", "feature_state_value")
-
-        segments = self.get_segments()
-        # TODO: make this more efficient
-        for segment in segments:
-            for feature_segment in segment.feature_segments.all():
-                for flag in flags:
-                    if flag.feature == feature_segment.feature:
-                        flag.enabled = feature_segment.enabled
 
         return flags
 
@@ -128,6 +135,10 @@ class Identity(models.Model):
             if segment.does_identity_match(self):
                 segments.append(segment)
         return segments
+
+    def get_segment_feature_states(self):
+        return FeatureState.objects.filter(environment=self.environment,
+                                           feature_segment__segment__in=self.get_segments())
 
     def get_all_user_traits(self):
         # get all all user traits for an identity

@@ -4,12 +4,11 @@ from __future__ import unicode_literals
 from collections import namedtuple
 
 import coreapi
+from drf_yasg import openapi
 from drf_yasg.utils import swagger_auto_schema
 from rest_framework import viewsets, status, mixins
-from rest_framework.authentication import SessionAuthentication, TokenAuthentication
 from rest_framework.decorators import action
 from rest_framework.generics import get_object_or_404
-from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.schemas import AutoSchema
 
@@ -182,7 +181,7 @@ class TraitViewSet(viewsets.ModelViewSet):
         # check if identity in data or in request
         if 'identity' not in data and not identity_pk:
             error = {"detail": "Identity not provided"}
-            return Response(error,   status=status.HTTP_400_BAD_REQUEST)
+            return Response(error, status=status.HTTP_400_BAD_REQUEST)
 
         # TODO: do we give priority to request identity or data?
         # Override with request identity
@@ -222,6 +221,23 @@ class TraitViewSet(viewsets.ModelViewSet):
         Override partial_update as overridden update method assumes partial True for all requests.
         """
         return self.update(request, *args, **kwargs)
+
+    @swagger_auto_schema(manual_parameters=[
+        openapi.Parameter('deleteAllMatchingTraits', openapi.IN_QUERY,
+                          'Deletes all traits in this environment matching the key of the deleted trait',
+                          type=openapi.TYPE_BOOLEAN)
+    ])
+    def destroy(self, request, *args, **kwargs):
+        delete_all_traits = request.query_params.get('deleteAllMatchingTraits')
+        if delete_all_traits and delete_all_traits in ('true', 'True'):
+            trait = self.get_object()
+            self._delete_all_traits_matching_key(trait.trait_key, trait.identity.environment)
+            return Response(status=status.HTTP_204_NO_CONTENT)
+        else:
+            return super(TraitViewSet, self).destroy(request, *args, **kwargs)
+
+    def _delete_all_traits_matching_key(self, trait_key, environment):
+        Trait.objects.filter(trait_key=trait_key, identity__environment=environment).delete()
 
 
 class SDKIdentitiesDeprecated(SDKAPIView):
@@ -412,4 +428,3 @@ class SDKTraits(mixins.CreateModelMixin, viewsets.GenericViewSet):
         serializer.is_valid(raise_exception=True)
         serializer.save()
         return Response(serializer.data, status=200)
-

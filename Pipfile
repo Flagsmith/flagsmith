@@ -7,7 +7,7 @@ name = "pypi"
 runserver = "python src/manage.py runserver"
 makemigrations = "python src/manage.py makemigrations"
 migrate = "python src/manage.py migrate"
-test = "pytest"
+test = "pytest src -p no:warnings"
 shell = "src/manage.py shell"
 
 [dev-packages]
