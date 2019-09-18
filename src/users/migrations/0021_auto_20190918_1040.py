@@ -19,7 +19,7 @@ class Migration(migrations.Migration):
     ]
 
     operations = [
-        migrations.RunSQL(sql=forward_sql),
+        migrations.RunSQL(sql=forward_sql, reverse_sql=''),
         migrations.RemoveField(
             model_name='ffadminuser',
             name='organisations'
