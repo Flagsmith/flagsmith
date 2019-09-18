@@ -27,7 +27,7 @@ class OrganisationTestCase(TestCase):
     def test_should_return_organisation_list_when_requested(self):
         # Given
         organisation = Organisation.objects.create(name='Test org')
-        self.user.organisations.add(organisation)
+        self.user.add_organisation(organisation)
 
         # When
         response = self.client.get('/api/v1/organisations/')
@@ -54,7 +54,7 @@ class OrganisationTestCase(TestCase):
         original_organisation_name = "test org"
         new_organisation_name = "new test org"
         organisation = Organisation.objects.create(name=original_organisation_name)
-        self.user.organisations.add(organisation)
+        self.user.add_organisation(organisation)
 
         # When
         response = self.client.put('/api/v1/organisations/%s/' % organisation.id,
@@ -70,7 +70,7 @@ class OrganisationTestCase(TestCase):
         # Given
         org_name = "test_org"
         organisation = Organisation.objects.create(name=org_name)
-        self.user.organisations.add(organisation)
+        self.user.add_organisation(organisation)
 
         # When
         response = self.client.post('/api/v1/organisations/%s/invite/' % organisation.id,
@@ -87,7 +87,7 @@ class OrganisationTestCase(TestCase):
     def test_should_fail_if_invite_exists_already(self):
         # Given
         organisation = Organisation.objects.create(name="test org")
-        self.user.organisations.add(organisation)
+        self.user.add_organisation(organisation)
         email = "test_2@example.com"
         data = '{"emails":["%s"], "frontend_base_url": "https://example.com"}' % email
 
@@ -108,7 +108,7 @@ class OrganisationTestCase(TestCase):
     def test_should_return_all_invites_and_can_resend(self):
         # Given
         organisation = Organisation.objects.create(name="Test org 2")
-        self.user.organisations.add(organisation)
+        self.user.add_organisation(organisation)
 
         invite_1 = Invite.objects.create(email="test_1@example.com",
                                          frontend_base_url="https://www.example.com",
@@ -129,10 +129,10 @@ class OrganisationTestCase(TestCase):
     def test_can_remove_a_user_from_an_organisation(self):
         # Given
         organisation = Organisation.objects.create(name='Test org')
-        self.user.organisations.add(organisation)
+        self.user.add_organisation(organisation)
 
         user_2 = FFAdminUser.objects.create(email='test@example.com')
-        user_2.organisations.add(organisation)
+        user_2.add_organisation(organisation)
 
         url = reverse('api:v1:organisations:organisation-remove-users', args=[organisation.pk])
 

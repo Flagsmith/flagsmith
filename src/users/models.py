@@ -4,10 +4,10 @@ from django.contrib.auth.models import AbstractUser
 from django.core.mail import EmailMultiAlternatives
 from django.db import models
 from django.template.loader import get_template
+from django.utils.encoding import python_2_unicode_compatible
 
 from app.utils import create_hash
-from django.utils.encoding import python_2_unicode_compatible
-from organisations.models import Organisation
+from organisations.models import Organisation, UserOrganisation, OrganisationRole
 
 
 class UserManager(BaseUserManager):
@@ -46,7 +46,7 @@ class UserManager(BaseUserManager):
 
 @python_2_unicode_compatible
 class FFAdminUser(AbstractUser):
-    organisations = models.ManyToManyField(Organisation, related_name="users", blank=True)
+    organisations = models.ManyToManyField(Organisation, related_name="users", blank=True, through=UserOrganisation)
     email = models.EmailField(unique=True, null=False)
     objects = UserManager()
 
@@ -65,31 +65,11 @@ class FFAdminUser(AbstractUser):
             return None
         return ' '.join([self.first_name, self.last_name]).strip()
 
-    def get_number_of_organisations(self):
-        return self.organisations.count()
+    def add_organisation(self, organisation, role=OrganisationRole.USER):
+        UserOrganisation.objects.create(user=self, organisation=organisation, role=role)
 
-    def get_number_of_projects(self):
-        count = 0
-        for org in self.organisations.all():
-            for _ in org.projects.all():
-                count += 1
-        return count
-
-    def get_number_of_features(self):
-        count = 0
-        for org in self.organisations.all():
-            for project in org.projects.all():
-                for _ in project.features.all():
-                    count += 1
-        return count
-
-    def get_number_of_environments(self):
-        count = 0
-        for org in self.organisations.all():
-            for project in org.projects.all():
-                for _ in project.environments.all():
-                    count += 1
-        return count
+    def remove_organisation(self, organisation):
+        UserOrganisation.objects.filter(user=self, organisation=organisation).delete()
 
     @staticmethod
     def get_admin_user_emails():

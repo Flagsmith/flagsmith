@@ -38,7 +38,7 @@ class OrganisationViewSet(viewsets.ModelViewSet):
         serializer = OrganisationSerializer(data=request.data)
         if serializer.is_valid():
             org = serializer.save()
-            user.organisations.add(org)
+            user.add_organisation(org)
 
             return Response(serializer.data, status.HTTP_201_CREATED)
         else:

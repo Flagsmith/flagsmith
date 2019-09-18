@@ -44,7 +44,7 @@ class FFAdminUserViewSet(viewsets.ModelViewSet):
             return Response({'detail': 'Registered email does not match invited email'},
                             status=status.HTTP_400_BAD_REQUEST)
 
-        user.organisations.add(organisation)
+        user.add_organisation(organisation)
         invite.delete()
 
         return Response(OrganisationSerializer(organisation).data, status=status.HTTP_200_OK)

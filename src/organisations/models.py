@@ -1,10 +1,18 @@
 # -*- coding: utf-8 -*-
 from __future__ import unicode_literals
 
+import enum
+
 from django.db import models
 from django.utils.encoding import python_2_unicode_compatible
 
-from organisations.chargebee import get_max_seats_for_plan
+
+class OrganisationRole(enum.Enum):
+    ADMIN = "Admin"
+    USER = "User"
+
+
+organisation_roles = ((tag.name, tag.value) for tag in OrganisationRole)
 
 
 @python_2_unicode_compatible
@@ -21,6 +29,7 @@ class Organisation(models.Model):
     def __str__(self):
         return "Org %s" % self.name
 
+    # noinspection PyTypeChecker
     def get_unique_slug(self):
         return str(self.id) + "-" + self.name
 
@@ -37,6 +46,13 @@ class Organisation(models.Model):
     def reset_alert_status(self):
         self.alerted_over_plan_limit = False
         self.save()
+
+
+class UserOrganisation(models.Model):
+    user = models.ForeignKey('users.FFAdminUser', on_delete=models.CASCADE)
+    organisation = models.ForeignKey(Organisation, on_delete=models.CASCADE)
+    date_joined = models.DateTimeField(auto_now_add=True)
+    role = models.CharField(max_length=50, choices=organisation_roles)
 
 
 class Subscription(models.Model):
