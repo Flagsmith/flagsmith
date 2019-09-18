@@ -454,7 +454,7 @@ class SDKIdentitiesTestCase(APITestCase):
 
         identity_percentage_value = segment.get_identity_percentage_value(self.identity)
         Condition.objects.create(operator=models.PERCENTAGE_SPLIT,
-                                 value=identity_percentage_value + (1 - identity_percentage_value) / 2,
+                                 value=(identity_percentage_value + (1 - identity_percentage_value) / 2) * 100.0,
                                  rule=segment_rule)
         FeatureSegment.objects.create(segment=segment, feature=self.feature_1, enabled=True, priority=1)
 
