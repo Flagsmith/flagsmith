@@ -1,7 +1,8 @@
-from unittest import TestCase
+from unittest import TestCase, mock
 
 import pytest
 
+import segments
 from environments.models import Identity, Environment
 from organisations.models import Organisation
 from projects.models import Project
@@ -98,9 +99,9 @@ class SegmentRuleTest(TestCase):
 
     def test_get_segment_returns_parent_segment_for_nested_rule(self):
         # Given
-        parent_rule = SegmentRule.objects.create(segment=self.segment)
-        child_rule = SegmentRule.objects.create(rule=parent_rule)
-        grandchild_rule = SegmentRule.objects.create(rule=child_rule)
+        parent_rule = SegmentRule.objects.create(segment=self.segment, type=SegmentRule.ALL_RULE)
+        child_rule = SegmentRule.objects.create(rule=parent_rule, type=SegmentRule.ALL_RULE)
+        grandchild_rule = SegmentRule.objects.create(rule=child_rule, type=SegmentRule.ALL_RULE)
         Condition.objects.create(operator=PERCENTAGE_SPLIT, value=0.1, rule=grandchild_rule)
 
         # When
@@ -109,5 +110,27 @@ class SegmentRuleTest(TestCase):
         # Then
         assert segment == self.segment
 
+
+@pytest.mark.django_db
+class ConditionTest(TestCase):
+    def setUp(self) -> None:
+        self.organisation = Organisation.objects.create(name='Test Org')
+        self.project = Project.objects.create(name='Test Project', organisation=self.organisation)
+        self.environment = Environment.objects.create(name='Test Environment', project=self.project)
+        self.identity = Identity.objects.create(environment=self.environment, identifier='test_identity')
+        self.segment = Segment.objects.create(project=self.project, name='test_segment')
+        self.rule = SegmentRule.objects.create(segment=self.segment, type=SegmentRule.ALL_RULE)
+
+    @mock.patch.object(segments.models.Segment, 'get_identity_percentage_value')
+    def test_percentage_split_calculation_divides_value_by_100_before_comparison(self, get_identity_percentage_value):
+        # Given
+        condition = Condition.objects.create(rule=self.rule, operator=PERCENTAGE_SPLIT, value=10)
+        get_identity_percentage_value.return_value = 0.2
+
+        # When
+        res = condition.does_identity_match(self.identity)
+
+        # Then
+        assert not res
 
 

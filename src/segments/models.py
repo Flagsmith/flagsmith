@@ -126,14 +126,7 @@ class Condition(models.Model):
 
     def does_identity_match(self, identity: Identity) -> bool:
         if self.operator == PERCENTAGE_SPLIT:
-            try:
-                float_value = float(self.value)
-            except ValueError:
-                return False
-
-            segment = self.rule.get_segment()
-            if segment.get_identity_percentage_value(identity) <= float_value:
-                return True
+            return self._check_percentage_split_operator(identity)
 
         for trait in identity.identity_traits.all():
             if trait.trait_key == self.property:
@@ -143,6 +136,18 @@ class Condition(models.Model):
                     return self.check_boolean_value(trait.boolean_value)
                 else:
                     return self.check_string_value(trait.string_value)
+
+    def _check_percentage_split_operator(self, identity):
+        try:
+            float_value = float(self.value) / 100.0
+        except ValueError:
+            return False
+
+        segment = self.rule.get_segment()
+        if segment.get_identity_percentage_value(identity) <= float_value:
+            return True
+
+        return False
 
     def check_integer_value(self, value: int) -> bool:
         try:
