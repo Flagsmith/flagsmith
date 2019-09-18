@@ -18,7 +18,7 @@ class ProjectTestCase(TestCase):
         self.client.force_authenticate(user=user)
 
         self.organisation = Organisation.objects.create(name="Test org")
-        user.organisations.add(self.organisation)
+        user.add_organisation(self.organisation)
 
     def test_should_create_a_project(self):
         # Given
