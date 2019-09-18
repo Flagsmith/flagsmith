@@ -57,20 +57,20 @@ class Feature(models.Model):
         Override save method to initialise feature states for all environments
         """
         if self.pk:
+            # If the feature has moved to a new project, delete the feature states from the old project
             old_feature = Feature.objects.get(pk=self.pk)
             if old_feature.project != self.project:
                 FeatureState.objects.filter(
                     feature=self,
-                    environment=old_feature.project.environments.values_list(
-                        'pk', flat=True),
-                ).all().delete()
+                    environment__in=old_feature.project.environments.all(),
+                ).delete()
 
         super(Feature, self).save(*args, **kwargs)
 
         # create feature states for all environments in the project
         environments = self.project.environments.all()
         for env in environments:
-            FeatureState.objects.update_or_create(
+            FeatureState.objects.get_or_create(
                 feature=self,
                 environment=env,
                 identity=None,
@@ -170,6 +170,11 @@ class FeatureState(models.Model):
         return type_mapping.get(value_type)
 
     def save(self, *args, **kwargs):
+        # prevent duplicate feature states being created for an environment
+        if not self.pk and FeatureState.objects.filter(environment=self.environment, feature=self.feature).exists() \
+                and not (self.identity or self.feature_segment):
+            raise ValidationError('Feature state already exists for this environment and feature')
+
         super(FeatureState, self).save(*args, **kwargs)
 
         # create default feature state value for feature state

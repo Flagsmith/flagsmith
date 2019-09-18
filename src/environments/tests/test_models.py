@@ -66,7 +66,6 @@ class EnvironmentSaveTestCase(TestCase):
         self.feature.default_enabled = True
         self.feature.save()
 
-        self.environment.save()
         self.assertTrue(FeatureState.objects.get().enabled)
 
     def test_on_update_save_feature_states_dont_get_updated_if_identity_present(self):

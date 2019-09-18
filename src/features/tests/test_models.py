@@ -1,4 +1,5 @@
 import pytest
+from django.core.exceptions import ValidationError
 from django.db.utils import IntegrityError
 from django.test import TestCase
 
@@ -77,6 +78,20 @@ class FeatureTestCase(TestCase):
         with pytest.raises(IntegrityError):
             feature_two.save()
 
+    def test_updating_feature_name_should_update_feature_states(self):
+        # Given
+        old_feature_name = 'old_feature'
+        new_feature_name = 'new_feature'
+
+        feature = Feature.objects.create(project=self.project, name=old_feature_name)
+
+        # When
+        feature.name = new_feature_name
+        feature.save()
+
+        # Then
+        FeatureState.objects.filter(feature__name=new_feature_name).exists()
+
 
 @pytest.mark.django_db
 class FeatureSegmentTest(TestCase):
@@ -128,3 +143,23 @@ class FeatureSegmentTest(TestCase):
         # Then
         feature_state.refresh_from_db()
         assert feature_state.enabled
+
+
+@pytest.mark.django_db
+class FeatureStateTest(TestCase):
+    def setUp(self) -> None:
+        self.organisation = Organisation.objects.create(name='Test org')
+        self.project = Project.objects.create(name='Test project', organisation=self.organisation)
+        self.environment = Environment.objects.create(name='Test environment', project=self.project)
+        self.feature = Feature.objects.create(name='Test feature', project=self.project)
+
+    def test_cannot_create_duplicate_feature_state_in_an_environment(self):
+        # Given
+        duplicate_feature_state = FeatureState(feature=self.feature, environment=self.environment, enabled=True)
+
+        # When
+        with pytest.raises(ValidationError):
+            duplicate_feature_state.save()
+
+        # Then
+        assert FeatureState.objects.filter(feature=self.feature, environment=self.environment).count() == 1
