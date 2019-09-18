@@ -2,8 +2,9 @@ from rest_framework import serializers
 
 from audit.models import AuditLog, RelatedObjectType, FEATURE_CREATED_MESSAGE, FEATURE_UPDATED_MESSAGE, \
     FEATURE_STATE_UPDATED_MESSAGE, IDENTITY_FEATURE_STATE_UPDATED_MESSAGE
+from features.utils import get_value_type
 from segments.serializers import SegmentSerializerBasic
-from .models import Feature, FeatureState, FeatureStateValue, FeatureSegment
+from .models import Feature, FeatureState, FeatureStateValue, FeatureSegment, STRING, INTEGER, BOOLEAN
 
 
 class CreateFeatureSerializer(serializers.ModelSerializer):
@@ -40,7 +41,17 @@ class CreateFeatureSerializer(serializers.ModelSerializer):
 class FeatureSegmentCreateSerializer(serializers.ModelSerializer):
     class Meta:
         model = FeatureSegment
-        fields = ('feature', 'segment', 'priority', 'enabled')
+        fields = ('feature', 'segment', 'priority', 'enabled', 'value')
+
+    def create(self, validated_data):
+        if validated_data.get('value') or validated_data.get('value') is False:
+            validated_data['value_type'] = get_value_type(validated_data['value'])
+        return super(FeatureSegmentCreateSerializer, self).create(validated_data)
+
+    def to_internal_value(self, data):
+        if data.get('value') or data.get('value') is False:
+            data['value'] = str(data['value'])
+        return super(FeatureSegmentCreateSerializer, self).to_internal_value(data)
 
 
 class FeatureSegmentSerializer(serializers.ModelSerializer):
