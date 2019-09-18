@@ -1,6 +1,7 @@
 from unittest import TestCase
 
 import pytest
+from django.urls import reverse
 from rest_framework import status
 from rest_framework.authtoken.models import Token
 from rest_framework.test import APIClient
@@ -29,6 +30,8 @@ class UserTestCase(TestCase):
         self.client = APIClient()
         self.user = Helper.create_ffadminuser()
         self.client.force_authenticate(user=self.user)
+
+        self.organisation = Organisation.objects.create(name="test org")
 
     def tearDown(self) -> None:
         Helper.clean_up()
@@ -70,15 +73,28 @@ class UserTestCase(TestCase):
 
     def test_join_organisation(self):
         # Given
-        organisation = Organisation.objects.create(name="test org")
-        invite = Invite.objects.create(email=self.user.email, organisation=organisation)
-        token = Token.objects.create(user=self.user)
+        invite = Invite.objects.create(email=self.user.email, organisation=self.organisation)
+        url = reverse('api:v1:users:user-join-organisation', args=[invite.hash])
 
         # When
-        response = self.client.post("/api/v1/users/join/" + invite.hash + "/",
-                                    HTTP_AUTHORIZATION="Token " + token.key)
+        response = self.client.post(url)
         self.user.refresh_from_db()
 
         # Then
         assert response.status_code == status.HTTP_200_OK
-        assert organisation in self.user.organisations.all()
+        assert self.organisation in self.user.organisations.all()
+
+    def test_cannot_join_organisation_with_different_email_address_than_invite(self):
+        # Given
+        invite = Invite.objects.create(email='some-other-email@test.com', organisation=self.organisation)
+        url = reverse('api:v1:users:user-join-organisation', args=[invite.hash])
+
+        # When
+        res = self.client.post(url)
+
+        # Then
+        assert res.status_code == status.HTTP_400_BAD_REQUEST
+
+        # and
+        assert self.organisation not in self.user.organisations.all()
+

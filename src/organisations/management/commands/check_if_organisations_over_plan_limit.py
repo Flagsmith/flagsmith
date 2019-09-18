@@ -18,8 +18,9 @@ class Command(BaseCommand):
 def send_alert(organisation):
     send_mail(
         subject='Organisation over number of seats',
-        message='Organisation %s has gone over the limit on '
-                'number of seats (plan: %s)' % (str(organisation.name), organisation.subscription.plan),
+        message='Organisation %s has used %d seats which is over their plan limit of %d '
+                '(plan: %s)' % (str(organisation.name), organisation.num_seats, organisation.subscription.max_seats,
+                                organisation.subscription.plan),
         from_email=settings.DEFAULT_FROM_EMAIL,
         recipient_list=FFAdminUser.get_admin_user_emails(),
         fail_silently=True
