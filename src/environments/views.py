@@ -412,14 +412,25 @@ class SDKTraits(mixins.CreateModelMixin, viewsets.GenericViewSet):
         if self.action == 'increment_value':
             return IncrementTraitValueSerializer
 
-        return CreateTraitSerializer
+        return TraitSerializerFull
 
-    @swagger_auto_schema(responses={200: CreateTraitSerializer})
+    @swagger_auto_schema(responses={200: TraitSerializerBasic})
     def create(self, request, *args, **kwargs):
-        serializer = self.get_serializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
-        serializer.save()
-        return Response(serializer.data, status=200)
+        identity_data = request.data.get('identity')
+        identity, _ = Identity.objects.get_or_create(environment=request.environment,
+                                                     identifier=identity_data.get('identifier'))
+
+        trait_value_data = Trait.generate_trait_value_data(request.data.get('trait_value'))
+
+        trait, _ = Trait.objects.get_or_create(identity=identity, trait_key=request.data.get('trait_key'))
+
+        serializer = TraitSerializerFull(instance=trait, data=trait_value_data, partial=True)
+        if serializer.is_valid():
+            serializer.save()
+        else:
+            return Response({"details": "Couldn't create Trait for identity"}, status=status.HTTP_400_BAD_REQUEST)
+
+        return Response(TraitSerializerBasic(trait).data, status=status.HTTP_200_OK)
 
     @swagger_auto_schema(responses={200: IncrementTraitValueSerializer})
     @action(detail=False, methods=["POST"], url_path='increment-value')
