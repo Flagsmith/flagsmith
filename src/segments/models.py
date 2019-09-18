@@ -89,6 +89,16 @@ class SegmentRule(models.Model):
 
         return matches_conditions and all(rule.does_identity_match(identity) for rule in self.rules.all())
 
+    def get_segment(self):
+        """
+        rules can be a child of a parent rule instead of a segment, this method iterates back up the tree to find the
+        segment
+        """
+        rule = self
+        while not rule.segment:
+            rule = rule.rule
+        return rule.segment
+
 
 @python_2_unicode_compatible
 class Condition(models.Model):
@@ -121,7 +131,8 @@ class Condition(models.Model):
             except ValueError:
                 return False
 
-            if self.rule.segment.get_identity_percentage_value(identity) <= float_value:
+            segment = self.rule.get_segment()
+            if segment.get_identity_percentage_value(identity) <= float_value:
                 return True
 
         for trait in identity.identity_traits.all():
