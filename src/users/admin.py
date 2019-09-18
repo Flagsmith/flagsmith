@@ -11,29 +11,16 @@ class CustomUserAdmin(UserAdmin):
     add_form = CustomUserCreationForm
     form = CustomUserChangeForm
     model = FFAdminUser
-    list_display = ['email', 'get_number_of_organisations']
 
     add_fieldsets = (
         (None, {
             'classes': ('wide',),
-            'fields': ('username', 'password1', 'password2', 'organisations',),
-        })
+            'fields': ('email', 'password1', 'password2',),
+        }),
     )
 
-    fieldsets = UserAdmin.fieldsets + (
-        (_('Organisations'), {'fields': ('organisations',)}),
-        (_('Statistics'), {'fields': ('get_number_of_organisations',
-                                      'get_number_of_projects',
-                                      'get_number_of_features',
-                                      'get_number_of_environments')})
-
-    )
-    add_form = CustomUserCreationForm
     date_hierarchy = 'date_joined'
-    fieldsets = UserAdmin.fieldsets + (
-        (_('Organisations'), {'fields': ('organisations', )}),
-    )
-    form = CustomUserChangeForm
+
     list_display = (
         'email',
         'username',
@@ -43,30 +30,10 @@ class CustomUserAdmin(UserAdmin):
         'is_active',
         'date_joined',
     )
+
     list_filter = ('is_staff', 'is_active', 'date_joined', 'organisations', )
-    model = FFAdminUser
+
     search_fields = ('email', 'username', 'first_name', 'last_name', )
-
-    readonly_fields = ['get_number_of_organisations',
-                       'get_number_of_projects',
-                       'get_number_of_features',
-                       'get_number_of_environments']
-
-    def get_number_of_organisations(self, obj):
-        return obj.get_number_of_organisations()
-    get_number_of_organisations.short_description = "Number of Organisations"
-
-    def get_number_of_projects(self, obj):
-        return obj.get_number_of_projects()
-    get_number_of_projects.short_description = "Number of Projects"
-
-    def get_number_of_features(self, obj):
-        return obj.get_number_of_features()
-    get_number_of_features.short_description = "Number of Features"
-
-    def get_number_of_environments(self, obj):
-        return obj.get_number_of_environments()
-    get_number_of_environments.short_description = "Number of Environments"
 
 
 @admin.register(Invite)
