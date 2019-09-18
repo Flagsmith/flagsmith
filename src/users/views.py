@@ -1,6 +1,5 @@
 from django.conf import settings
 from django.contrib.sites.shortcuts import get_current_site
-from django.core.mail import send_mail
 from django.http import HttpResponse
 from django.shortcuts import redirect
 from django.views import View
@@ -40,6 +39,10 @@ class FFAdminUserViewSet(viewsets.ModelViewSet):
         invite = get_object_or_404(Invite, hash=invite_hash)
         organisation = invite.organisation
         user = request.user
+
+        if invite.email.lower() != user.email.lower():
+            return Response({'detail': 'Registered email does not match invited email'},
+                            status=status.HTTP_400_BAD_REQUEST)
 
         user.organisations.add(organisation)
         invite.delete()

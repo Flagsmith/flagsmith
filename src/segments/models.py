@@ -35,7 +35,7 @@ class Segment(models.Model):
         return "Segment - %s" % self.name
 
     def does_identity_match(self, identity: Identity) -> bool:
-        return all(rule.does_identity_match(identity) for rule in self.rules.all())
+        return self.rules.count() > 0 and all(rule.does_identity_match(identity) for rule in self.rules.all())
 
     def get_identity_percentage_value(self, identity: Identity) -> float:
         """
