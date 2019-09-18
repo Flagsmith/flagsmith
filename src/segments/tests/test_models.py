@@ -5,7 +5,7 @@ import pytest
 from environments.models import Identity, Environment
 from organisations.models import Organisation
 from projects.models import Project
-from segments.models import Segment, SegmentRule
+from segments.models import Segment, SegmentRule, PERCENTAGE_SPLIT, Condition
 
 
 @pytest.mark.django_db
@@ -85,4 +85,29 @@ class SegmentTestCase(TestCase):
             bucket_value_limit = min((j + 1) / num_test_buckets + error_factor * ((j + 1) / num_test_buckets), 1)
 
             assert all([value <= bucket_value_limit for value in values[bucket_start:bucket_end]])
+
+
+@pytest.mark.django_db
+class SegmentRuleTest(TestCase):
+    def setUp(self) -> None:
+        self.organisation = Organisation.objects.create(name='Test Org')
+        self.project = Project.objects.create(name='Test Project', organisation=self.organisation)
+        self.environment = Environment.objects.create(name='Test Environment', project=self.project)
+        self.identity = Identity.objects.create(environment=self.environment, identifier='test_identity')
+        self.segment = Segment.objects.create(project=self.project, name='test_segment')
+
+    def test_get_segment_returns_parent_segment_for_nested_rule(self):
+        # Given
+        parent_rule = SegmentRule.objects.create(segment=self.segment)
+        child_rule = SegmentRule.objects.create(rule=parent_rule)
+        grandchild_rule = SegmentRule.objects.create(rule=child_rule)
+        Condition.objects.create(operator=PERCENTAGE_SPLIT, value=0.1, rule=grandchild_rule)
+
+        # When
+        segment = grandchild_rule.get_segment()
+
+        # Then
+        assert segment == self.segment
+
+
 
