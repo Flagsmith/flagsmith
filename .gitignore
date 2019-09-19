@@ -9,3 +9,4 @@ venv
 *.log
 checkstyle.txt
 .python-version
+.env

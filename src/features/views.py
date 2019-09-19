@@ -1,33 +1,70 @@
-from threading import Thread
-
 import coreapi
-from rest_framework import status, viewsets
+import logging
+
+from django.core.exceptions import ObjectDoesNotExist
+from django.db import transaction
+from rest_framework import status, viewsets, mixins
+from rest_framework.decorators import action
 from rest_framework.generics import GenericAPIView, get_object_or_404
 from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
 from rest_framework.schemas import AutoSchema
 
-from analytics.utils import track_event
+from analytics.track import track_event
 from environments.models import Environment, Identity
 from projects.models import Project
-from .models import FeatureState, Feature
+from util.util import get_user_permitted_projects, get_user_permitted_environments
+from .models import FeatureState, Feature, FeatureSegment
 from .serializers import FeatureStateSerializerBasic, FeatureStateSerializerFull, \
     FeatureStateSerializerCreate, CreateFeatureSerializer, FeatureSerializer, \
-    FeatureStateValueSerializer
+    FeatureStateValueSerializer, FeatureSegmentCreateSerializer
+
+logger = logging.getLogger()
+logger.setLevel(logging.INFO)
 
 
 class FeatureViewSet(viewsets.ModelViewSet):
     queryset = Feature.objects.all()
 
     def get_serializer_class(self):
-        if self.action == 'create':
+        if self.action in ['create', 'update']:
             return CreateFeatureSerializer
         else:
             return FeatureSerializer
 
     def get_queryset(self):
-        project = Project.objects.get(pk=self.kwargs['project_pk'])
+        user_projects = get_user_permitted_projects(self.request.user)
+        project = get_object_or_404(user_projects, pk=self.kwargs['project_pk'])
+
         return project.features.all()
+
+    def create(self, request, *args, **kwargs):
+        project_id = request.data.get('project')
+        project = Project.objects.get(pk=project_id)
+
+        if project.organisation not in request.user.organisations.all():
+            return Response(status=status.HTTP_403_FORBIDDEN)
+
+        return super().create(request, *args, **kwargs)
+
+    @action(detail=True, methods=["POST"])
+    @transaction.atomic
+    def segments(self, request, *args, **kwargs):
+        feature = self.get_object()
+        # delete existing segments to avoid priority clashes, note method is transactional so will roll back on error
+        FeatureSegment.objects.filter(feature=feature).delete()
+
+        self._create_feature_segments(feature, request.data)
+
+        return Response(data=FeatureSerializer(instance=feature).data, status=status.HTTP_200_OK)
+
+    @staticmethod
+    def _create_feature_segments(feature, feature_segment_data):
+        for feature_segment in feature_segment_data:
+            feature_segment["feature"] = feature.id
+            fs_serializer = FeatureSegmentCreateSerializer(data=feature_segment)
+            if fs_serializer.is_valid(raise_exception=True):
+                fs_serializer.save()
 
 
 class FeatureStateViewSet(viewsets.ModelViewSet):
@@ -67,12 +104,11 @@ class FeatureStateViewSet(viewsets.ModelViewSet):
         Override queryset to filter based on provided URL parameters.
         """
         environment_api_key = self.kwargs['environment_api_key']
-        identifier = self.kwargs.get('identity_identifier')
-        environment = Environment.objects.get(api_key=environment_api_key)
+        identity_pk = self.kwargs.get('identity_pk')
+        environment = get_object_or_404(get_user_permitted_environments(self.request.user), api_key=environment_api_key)
 
-        if identifier:
-            identity = Identity.objects.get(
-                identifier=identifier, environment=environment)
+        if identity_pk:
+            identity = Identity.objects.get(pk=identity_pk)
         else:
             identity = None
 
@@ -90,16 +126,19 @@ class FeatureStateViewSet(viewsets.ModelViewSet):
         """
         Get identity object from URL parameters in request.
         """
-        identity = Identity.objects.get(identifier=self.kwargs['identity_identifier'],
-                                        environment=environment)
+        identity = Identity.objects.get(pk=self.kwargs['identity_pk'])
         return identity
 
     def create(self, request, *args, **kwargs):
         """
+        DEPRECATED: please use `/features/featurestates/` instead.
         Override create method to add environment and identity (if present) from URL parameters.
         """
         data = request.data
         environment = self.get_environment_from_request()
+        if environment.project.organisation not in self.request.user.organisations.all():
+            return Response(status.HTTP_403_FORBIDDEN)
+
         data['environment'] = environment.id
 
         if 'feature' not in data:
@@ -112,9 +151,9 @@ class FeatureStateViewSet(viewsets.ModelViewSet):
             error = {"detail": "Feature does not exist in project"}
             return Response(error, status=status.HTTP_400_BAD_REQUEST)
 
-        if self.kwargs.get('identity_identifier', None):
-            identity = self.get_identity_from_request(environment)
-            data['identity'] = identity.id
+        identity_pk = self.kwargs.get('identity_pk')
+        if identity_pk:
+            data['identity'] = identity_pk
 
         serializer = FeatureStateSerializerBasic(data=data)
         if serializer.is_valid():
@@ -128,6 +167,7 @@ class FeatureStateViewSet(viewsets.ModelViewSet):
             return Response(FeatureStateSerializerBasic(feature_state).data,
                             status=status.HTTP_201_CREATED, headers=headers)
         else:
+            logger.error(serializer.errors)
             error = {"detail": "Couldn't create feature state."}
             return Response(error, status=status.HTTP_400_BAD_REQUEST)
 
@@ -190,6 +230,34 @@ class FeatureStateViewSet(viewsets.ModelViewSet):
         return feature_state_value
 
 
+class FeatureStateCreateViewSet(mixins.CreateModelMixin, viewsets.GenericViewSet):
+    serializer_class = FeatureStateSerializerBasic
+
+    def create(self, request, *args, **kwargs):
+        if not self._is_user_authorised(request):
+            return Response(status=status.HTTP_403_FORBIDDEN)
+
+        return super().create(request, *args, **kwargs)
+
+    @staticmethod
+    def _is_user_authorised(request):
+        data = request.data
+        environment = get_object_or_404(Environment.objects.all(), pk=data.get('environment'))
+        feature = get_object_or_404(Feature.objects.all(), pk=data.get('feature'))
+
+        identity_pk = data.get('identity')
+        if identity_pk:
+            identity = get_object_or_404(Identity.objects.all(), pk=identity_pk)
+            if identity.environment != environment:
+                return False
+
+        if environment.project.organisation not in request.user.organisations.all() or \
+                feature.project.organisation != environment.project.organisation:
+            return False
+
+        return True
+
+
 class SDKFeatureStates(GenericAPIView):
     serializer_class = FeatureStateSerializerFull
     permission_classes = (AllowAny,)
@@ -204,22 +272,34 @@ class SDKFeatureStates(GenericAPIView):
     )
 
     def get(self, request, identifier=None, *args, **kwargs):
+        """
+        USING THIS ENDPOINT WITH AN IDENTIFIER IS DEPRECATED.
+        Please use `/identities/?identifier=<identifier>` instead.
+        """
         if 'HTTP_X_ENVIRONMENT_KEY' not in request.META:
             error = {"detail": "Environment Key header not provided"}
             return Response(error, status=status.HTTP_400_BAD_REQUEST)
 
         environment_key = request.META['HTTP_X_ENVIRONMENT_KEY']
-        environment = Environment.objects.select_related('project', 'project__organisation').get(api_key=environment_key)
+        try:
+            environment = Environment.objects.select_related('project', 'project__organisation').get(
+                api_key=environment_key)
+        except ObjectDoesNotExist:
+            error_details = "Environment not found for key: " + environment_key
+            logger.error(error_details)
+            error_response = {"error": error_details}
+
+            return Response(error_response, status=status.HTTP_400_BAD_REQUEST)
 
         if identifier:
-            track_event(environment.project.organisation.name, "identity_flags")
+            track_event(environment.project.organisation.get_unique_slug(), "identity_flags")
 
             identity, _ = Identity.objects.get_or_create(
                 identifier=identifier,
                 environment=environment,
             )
         else:
-            track_event(environment.project.organisation.name, "flags")
+            track_event(environment.project.organisation.get_unique_slug(), "flags")
             identity = None
 
         kwargs = {

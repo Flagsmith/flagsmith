@@ -4,7 +4,7 @@ from django.shortcuts import redirect
 from django.views import View
 from django.http import HttpResponse
 from rest_framework import viewsets, status
-from rest_framework.decorators import list_route
+from rest_framework.decorators import action
 from rest_framework.generics import get_object_or_404
 from rest_framework.response import Response
 
@@ -33,7 +33,7 @@ class FFAdminUserViewSet(viewsets.ModelViewSet):
     def get_queryset(self):
         return FFAdminUser.objects.filter(pk=self.request.user.id)
 
-    @list_route(methods=["POST"], url_path="join/(?P<invite_hash>\w+)")
+    @action(detail=False, methods=["POST"], url_path="join/(?P<invite_hash>\w+)")
     def join_organisation(self, request, invite_hash):
         invite = get_object_or_404(Invite, hash=invite_hash)
         organisation = invite.organisation

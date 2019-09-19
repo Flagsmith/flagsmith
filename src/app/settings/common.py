@@ -35,6 +35,12 @@ SECRET_KEY = os.environ['DJANGO_SECRET_KEY']
 
 # Google Analytics Configuration
 GOOGLE_ANALYTICS_KEY = os.environ.get('GOOGLE_ANALYTICS_KEY', '')
+GOOGLE_SERVICE_ACCOUNT = os.environ.get('GOOGLE_SERVICE_ACCOUNT')
+if not GOOGLE_SERVICE_ACCOUNT:
+    warnings.warn("GOOGLE_SERVICE_ACCOUNT not configured, getting organisation usage will not work")
+GA_TABLE_ID = os.environ.get('GA_TABLE_ID')
+if not GA_TABLE_ID:
+    warnings.warn("GA_TABLE_ID not configured, getting organisation usage will not work")
 
 if 'DJANGO_ALLOWED_HOSTS' in os.environ:
     ALLOWED_HOSTS = os.environ['DJANGO_ALLOWED_HOSTS'].split(',')
@@ -51,7 +57,6 @@ except requests.exceptions.ConnectionError:
 else:
     ALLOWED_HOSTS.append(internal_ip)
 del requests
-
 
 if sys.version[0] == '2':
     reload(sys)
@@ -81,11 +86,11 @@ INSTALLED_APPS = [
     'projects',
     'environments',
     'features',
-    'rest_framework_swagger',
-    'docs',
+    'segments',
     'e2etests',
     'simple_history',
-    'debug_toolbar'
+    'debug_toolbar',
+    'drf_yasg'
 ]
 
 if GOOGLE_ANALYTICS_KEY:
@@ -209,7 +214,6 @@ EMAIL_CONFIGURATION = {
 
 }
 
-
 # Used on init to create admin user for the site, update accordingly before hitting /auth/init
 ALLOW_ADMIN_INITIATION_VIA_URL = True
 ADMIN_EMAIL = "admin@example.com"
@@ -230,8 +234,18 @@ if not SENDGRID_API_KEY:
         "`SENDGRID_API_KEY` has not been configured. You will not receive emails.")
 
 SWAGGER_SETTINGS = {
-    "SHOW_REQUEST_HEADERS": True
+    'SHOW_REQUEST_HEADERS': True,
+    'SECURITY_DEFINITIONS': {
+        'api_key': {
+            'type': 'apiKey',
+            'in': 'header',
+            'name': 'Authorization'
+        }
+    }
 }
+
+LOGIN_URL = "/admin/login/"
+LOGOUT_URL = "/admin/logout/"
 
 # Email associated with user that is used by front end for end to end testing purposes
 FE_E2E_TEST_USER_EMAIL = "nightwatch@solidstategroup.com"
