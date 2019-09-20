@@ -78,7 +78,7 @@ class TraitSerializerBasic(serializers.ModelSerializer):
 
     class Meta:
         model = Trait
-        fields = ('trait_key', 'trait_value')
+        fields = ('id', 'trait_key', 'trait_value')
 
     @staticmethod
     def get_trait_value(obj):
