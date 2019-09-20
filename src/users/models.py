@@ -8,6 +8,7 @@ from django.utils.encoding import python_2_unicode_compatible
 
 from app.utils import create_hash
 from organisations.models import Organisation, UserOrganisation, OrganisationRole
+from users.exceptions import InvalidInviteError
 
 
 class UserManager(BaseUserManager):
@@ -65,6 +66,15 @@ class FFAdminUser(AbstractUser):
             return None
         return ' '.join([self.first_name, self.last_name]).strip()
 
+    def join_organisation(self, invite):
+        organisation = invite.organisation
+
+        if invite.email.lower() != self.email.lower():
+            raise InvalidInviteError('Registered email does not match invited email')
+
+        self.add_organisation(organisation)
+        invite.delete()
+
     def add_organisation(self, organisation, role=OrganisationRole.USER):
         UserOrganisation.objects.create(user=self, organisation=organisation, role=role)
 
@@ -72,12 +82,12 @@ class FFAdminUser(AbstractUser):
         UserOrganisation.objects.filter(user=self, organisation=organisation).delete()
 
     def get_organisation_role(self, organisation):
-        return self._get_user_organisation(organisation).role
+        return self.get_user_organisation(organisation).role
 
     def get_organisation_join_date(self, organisation):
-        return self._get_user_organisation(organisation).date_joined
+        return self.get_user_organisation(organisation).date_joined
 
-    def _get_user_organisation(self, organisation):
+    def get_user_organisation(self, organisation):
         return self.userorganisation_set.get(organisation=organisation)
 
     @staticmethod
