@@ -38,16 +38,20 @@ class OrganisationTestCase(TestCase):
 
     def test_should_create_new_organisation(self):
         # Given
-        org_name = "Test create org"
+        org_name = 'Test create org'
+        webhook_notification_email = 'test@email.com'
+        url = reverse('api:v1:organisations:organisation-list')
+        data = {
+            'name': org_name,
+            'webhook_notification_email': webhook_notification_email
+        }
 
         # When
-        response = self.client.post('/api/v1/organisations/',
-                                    data=self.post_template % (org_name, "test@email.com"),
-                                    content_type='application/json')
+        response = self.client.post(url, data=data)
 
         # Then
         assert response.status_code == status.HTTP_201_CREATED
-        assert Organisation.objects.get(name=org_name).webhook_notification_email
+        assert Organisation.objects.get(name=org_name).webhook_notification_email == webhook_notification_email
 
     def test_should_update_organisation_name(self):
         # Given

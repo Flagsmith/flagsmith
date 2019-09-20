@@ -1,8 +1,6 @@
 from rest_framework import serializers
 
-from organisations.models import Subscription, Organisation
-from users.models import FFAdminUser
-from . import models
+from .models import Organisation, Subscription, UserOrganisation
 
 
 class SubscriptionSerializer(serializers.ModelSerializer):
@@ -11,23 +9,27 @@ class SubscriptionSerializer(serializers.ModelSerializer):
         exclude = ('organisation',)
 
 
-class OrganisationSerializer(serializers.ModelSerializer):
+class OrganisationSerializerFull(serializers.ModelSerializer):
     # These fields are kept in for backwards compatibility with the FE for now,
     # will need to be removed in a future release in favour of nested subscription
-    paid_subscription = serializers.SerializerMethodField()
-    free_to_use_subscription = serializers.SerializerMethodField()
-    subscription_date = serializers.SerializerMethodField()
-    plan = serializers.SerializerMethodField()
-    pending_cancellation = serializers.SerializerMethodField()
+    paid_subscription = serializers.BooleanField(source='subscription.paid_subscription', required=False)
+    free_to_use_subscription = serializers.BooleanField(source='subscription.free_to_use_subscription', required=False)
+    subscription_date = serializers.DateTimeField(source='subscription.subscription_date', required=False)
+    plan = serializers.CharField(source='subscription.plan', required=False)
+    pending_cancellation = serializers.BooleanField(source='subscription.pending_cancellation', required=False)
 
     subscription = SubscriptionSerializer(required=False)
 
-    organisation_fields = ('id', 'name', 'created_date', 'webhook_notification_email', 'num_seats', 'subscription')
+    organisation_fields = (
+        'id', 'name', 'created_date', 'webhook_notification_email', 'num_seats', 'subscription'
+    )
+
     subscription_fields = (
-        'paid_subscription', 'free_to_use_subscription', 'subscription_date', 'plan', 'pending_cancellation')
+        'paid_subscription', 'free_to_use_subscription', 'subscription_date', 'plan', 'pending_cancellation'
+    )
 
     class Meta:
-        model = models.Organisation
+        model = Organisation
 
     def get_field_names(self, declared_fields, info):
         return self.organisation_fields + self.subscription_fields
@@ -45,18 +47,18 @@ class OrganisationSerializer(serializers.ModelSerializer):
                     subscription_data[field] = data.get(field)
             if subscription_data:
                 data['subscription'] = subscription_data
-        return super(OrganisationSerializer, self).to_internal_value(data)
+        return super(OrganisationSerializerFull, self).to_internal_value(data)
 
     def create(self, validated_data):
         subscription_data = validated_data.pop('subscription', {})
-        organisation = super(OrganisationSerializer, self).create(validated_data)
+        organisation = super(OrganisationSerializerFull, self).create(validated_data)
         Subscription.objects.create(organisation=organisation, **subscription_data)
         return organisation
 
     def update(self, instance, validated_data):
         subscription_data = validated_data.pop('subscription', {})
         self._update_subscription(instance, subscription_data)
-        return super(OrganisationSerializer, self).update(instance, validated_data)
+        return super(OrganisationSerializerFull, self).update(instance, validated_data)
 
     def _update_subscription(self, organisation, subscription_data):
         subscription, _ = Subscription.objects.get_or_create(organisation=organisation)
@@ -64,22 +66,16 @@ class OrganisationSerializer(serializers.ModelSerializer):
             setattr(subscription, key, value)
         subscription.save()
 
-    def get_paid_subscription(self, instance):
-        if hasattr(instance, 'subscription'):
-            return instance.subscription.paid_subscription
 
-    def get_free_to_use_subscription(self, instance):
-        if hasattr(instance, 'subscription'):
-            return instance.subscription.free_to_use_subscription
+class OrganisationSerializerBasic(serializers.ModelSerializer):
+    class Meta:
+        model = Organisation
+        fields = ('id', 'name')
 
-    def get_subscription_date(self, instance):
-        if hasattr(instance, 'subscription'):
-            return instance.subscription.subscription_date
 
-    def get_plan(self, instance):
-        if hasattr(instance, 'subscription'):
-            return instance.subscription.plan
+class UserOrganisationSerializer(serializers.ModelSerializer):
+    organisation = OrganisationSerializerBasic()
 
-    def get_pending_cancellation(self, instance):
-        if hasattr(instance, 'subscription'):
-            return instance.subscription.pending_cancellation
+    class Meta:
+        model = UserOrganisation
+        fields = ('role', 'organisation')
