@@ -1,3 +1,5 @@
+import logging
+
 from django.conf import settings
 from django.contrib.auth.base_user import BaseUserManager
 from django.contrib.auth.models import AbstractUser
@@ -9,6 +11,8 @@ from django.utils.encoding import python_2_unicode_compatible
 from app.utils import create_hash
 from organisations.models import Organisation, UserOrganisation, OrganisationRole
 from users.exceptions import InvalidInviteError
+
+logger = logging.getLogger(__name__)
 
 
 class UserManager(BaseUserManager):
@@ -82,13 +86,20 @@ class FFAdminUser(AbstractUser):
         UserOrganisation.objects.filter(user=self, organisation=organisation).delete()
 
     def get_organisation_role(self, organisation):
-        return self.get_user_organisation(organisation).role
+        user_organisation = self.get_user_organisation(organisation)
+        if user_organisation:
+            return user_organisation.role
 
     def get_organisation_join_date(self, organisation):
-        return self.get_user_organisation(organisation).date_joined
+        user_organisation = self.get_user_organisation(organisation)
+        if user_organisation:
+            return user_organisation.date_joined
 
     def get_user_organisation(self, organisation):
-        return self.userorganisation_set.get(organisation=organisation)
+        try:
+            return self.userorganisation_set.get(organisation=organisation)
+        except UserOrganisation.DoesNotExist:
+            logger.warning('User %d is not part of organisation %d' % (self.id, organisation.id))
 
     @staticmethod
     def get_admin_user_emails():

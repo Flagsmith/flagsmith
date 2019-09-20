@@ -7,7 +7,7 @@ from rest_framework import viewsets, status, mixins
 from rest_framework.decorators import api_view, action
 from rest_framework.response import Response
 
-from organisations.models import Organisation
+from organisations.models import Organisation, UserOrganisation
 from organisations.serializers import OrganisationSerializerFull, UserOrganisationSerializer
 from users.exceptions import InvalidInviteError
 from users.models import FFAdminUser, Invite

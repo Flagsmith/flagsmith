@@ -3,10 +3,9 @@ from unittest import TestCase
 import pytest
 from django.urls import reverse
 from rest_framework import status
-from rest_framework.authtoken.models import Token
 from rest_framework.test import APIClient
 
-from organisations.models import Organisation
+from organisations.models import Organisation, OrganisationRole
 from users.models import FFAdminUser, Invite
 from util.tests import Helper
 
@@ -98,3 +97,21 @@ class UserTestCase(TestCase):
         # and
         assert self.organisation not in self.user.organisations.all()
 
+    def test_can_update_role_for_a_user_in_organisation(self):
+        # Given
+        organisation_user = FFAdminUser.objects.create(email='org_user@org.com')
+        organisation_user.add_organisation(self.organisation)
+        url = reverse('api:v1:organisations:organisation-users-update-role', args=[self.organisation.pk,
+                                                                                   organisation_user.pk])
+        data = {
+            'role': OrganisationRole.ADMIN.name
+        }
+
+        # When
+        res = self.client.post(url, data=data)
+
+        # Then
+        assert res.status_code == status.HTTP_200_OK
+
+        # and
+        assert organisation_user.get_organisation_role(self.organisation) == OrganisationRole.ADMIN.name
