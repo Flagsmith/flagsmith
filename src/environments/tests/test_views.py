@@ -524,7 +524,8 @@ class SDKTraitsTest(APITestCase):
         trait_value = True
 
         # When
-        res = self.client.post(url, data=self._generate_json_trait_data(trait_value=trait_value), content_type=self.JSON)
+        res = self.client.post(url, data=self._generate_json_trait_data(trait_value=trait_value),
+                               content_type=self.JSON)
 
         # Then
         assert res.status_code == status.HTTP_200_OK
@@ -538,7 +539,8 @@ class SDKTraitsTest(APITestCase):
         trait_value = 12
 
         # When
-        res = self.client.post(url, data=self._generate_json_trait_data(trait_value=trait_value), content_type=self.JSON)
+        res = self.client.post(url, data=self._generate_json_trait_data(trait_value=trait_value),
+                               content_type=self.JSON)
 
         # Then
         assert res.status_code == status.HTTP_200_OK
