@@ -8,6 +8,7 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 
 from analytics.query import get_events_for_organisation
+from organisations.models import OrganisationRole
 from organisations.permissions import OrganisationPermission, NestedOrganisationEntityPermission
 from organisations.serializers import OrganisationSerializerFull
 from projects.serializers import ProjectSerializer
@@ -40,7 +41,7 @@ class OrganisationViewSet(viewsets.ModelViewSet):
         serializer = OrganisationSerializerFull(data=request.data)
         if serializer.is_valid():
             org = serializer.save()
-            user.add_organisation(org)
+            user.add_organisation(org, OrganisationRole.ADMIN)
 
             return Response(serializer.data, status.HTTP_201_CREATED)
         else:
