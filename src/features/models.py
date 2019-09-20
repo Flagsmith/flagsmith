@@ -70,7 +70,7 @@ class Feature(models.Model):
         # create feature states for all environments in the project
         environments = self.project.environments.all()
         for env in environments:
-            FeatureState.objects.get_or_create(
+            FeatureState.objects.update_or_create(
                 feature=self,
                 environment=env,
                 identity=None,
@@ -178,7 +178,7 @@ class FeatureState(models.Model):
         super(FeatureState, self).save(*args, **kwargs)
 
         # create default feature state value for feature state
-        FeatureStateValue.objects.get_or_create(
+        FeatureStateValue.objects.update_or_create(
             feature_state=self,
             defaults=self._get_defaults()
         )
