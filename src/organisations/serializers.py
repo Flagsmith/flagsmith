@@ -74,7 +74,7 @@ class OrganisationSerializerBasic(serializers.ModelSerializer):
 
 
 class UserOrganisationSerializer(serializers.ModelSerializer):
-    organisation = OrganisationSerializerBasic()
+    organisation = OrganisationSerializerBasic(read_only=True)
 
     class Meta:
         model = UserOrganisation

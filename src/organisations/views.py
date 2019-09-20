@@ -3,6 +3,7 @@ from __future__ import unicode_literals
 
 import json
 
+from django.shortcuts import get_object_or_404
 from rest_framework import viewsets, status
 from rest_framework.decorators import action
 from rest_framework.exceptions import ValidationError
@@ -11,8 +12,10 @@ from rest_framework.response import Response
 from analytics.query import get_events_for_organisation
 from organisations.serializers import OrganisationSerializerFull
 from projects.serializers import ProjectSerializer
+from users.exceptions import InvalidInviteError
 from users.models import Invite
 from users.serializers import InviteSerializer, UserListSerializer, InviteListSerializer, UserIdSerializer
+from users.views import join_organisation
 
 
 class OrganisationViewSet(viewsets.ModelViewSet):
@@ -51,12 +54,6 @@ class OrganisationViewSet(viewsets.ModelViewSet):
         organisation = self.get_object()
         projects = organisation.projects.all()
         return Response(ProjectSerializer(projects, many=True).data)
-
-    @action(detail=True)
-    def users(self, request, pk):
-        organisation = self.get_object()
-        users = organisation.users.all()
-        return Response(UserListSerializer(users, many=True, context={'organisation': organisation}).data)
 
     @action(detail=True, methods=["POST"])
     def invite(self, request, pk):
