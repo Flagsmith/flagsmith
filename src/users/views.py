@@ -5,9 +5,11 @@ from django.shortcuts import redirect, get_object_or_404
 from django.views import View
 from rest_framework import viewsets, status, mixins
 from rest_framework.decorators import api_view, action
+from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 
-from organisations.models import Organisation, UserOrganisation
+from organisations.models import Organisation
+from organisations.permissions import NestedOrganisationEntityPermission
 from organisations.serializers import OrganisationSerializerFull, UserOrganisationSerializer
 from users.exceptions import InvalidInviteError
 from users.models import FFAdminUser, Invite
@@ -29,6 +31,8 @@ class AdminInitView(View):
 
 
 class FFAdminUserViewSet(mixins.ListModelMixin, viewsets.GenericViewSet):
+    permission_classes = (IsAuthenticated, NestedOrganisationEntityPermission)
+
     def get_queryset(self):
         if self.kwargs.get('organisation_pk'):
             return FFAdminUser.objects.filter(organisations__id__contains=self.kwargs.get('organisation_pk'))

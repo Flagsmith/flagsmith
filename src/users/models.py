@@ -79,8 +79,11 @@ class FFAdminUser(AbstractUser):
         self.add_organisation(organisation)
         invite.delete()
 
+    def is_admin(self, organisation):
+        return self.get_organisation_role(organisation) == OrganisationRole.ADMIN.name
+
     def add_organisation(self, organisation, role=OrganisationRole.USER):
-        UserOrganisation.objects.create(user=self, organisation=organisation, role=role)
+        UserOrganisation.objects.create(user=self, organisation=organisation, role=role.name)
 
     def remove_organisation(self, organisation):
         UserOrganisation.objects.filter(user=self, organisation=organisation).delete()

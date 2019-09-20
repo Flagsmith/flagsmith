@@ -1,25 +1,22 @@
 # -*- coding: utf-8 -*-
 from __future__ import unicode_literals
 
-import json
-
-from django.shortcuts import get_object_or_404
 from rest_framework import viewsets, status
 from rest_framework.decorators import action
 from rest_framework.exceptions import ValidationError
+from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 
 from analytics.query import get_events_for_organisation
+from organisations.permissions import OrganisationPermission, NestedOrganisationEntityPermission
 from organisations.serializers import OrganisationSerializerFull
 from projects.serializers import ProjectSerializer
-from users.exceptions import InvalidInviteError
 from users.models import Invite
-from users.serializers import InviteSerializer, UserListSerializer, InviteListSerializer, UserIdSerializer
-from users.views import join_organisation
+from users.serializers import InviteSerializer, InviteListSerializer, UserIdSerializer
 
 
 class OrganisationViewSet(viewsets.ModelViewSet):
-    permission_classes = ()
+    permission_classes = (IsAuthenticated, OrganisationPermission)
 
     def get_serializer_class(self):
         if self.action == 'remove_users':
@@ -111,6 +108,7 @@ class OrganisationViewSet(viewsets.ModelViewSet):
 
 class InviteViewSet(viewsets.ModelViewSet):
     serializer_class = InviteListSerializer
+    permission_classes = (IsAuthenticated, NestedOrganisationEntityPermission)
 
     def get_queryset(self):
         organisation_pk = self.kwargs.get('organisation_pk')

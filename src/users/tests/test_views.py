@@ -97,8 +97,10 @@ class UserTestCase(TestCase):
         # and
         assert self.organisation not in self.user.organisations.all()
 
-    def test_can_update_role_for_a_user_in_organisation(self):
+    def test_admin_can_update_role_for_a_user_in_organisation(self):
         # Given
+        self.user.add_organisation(self.organisation, OrganisationRole.ADMIN)
+
         organisation_user = FFAdminUser.objects.create(email='org_user@org.com')
         organisation_user.add_organisation(self.organisation)
         url = reverse('api:v1:organisations:organisation-users-update-role', args=[self.organisation.pk,
@@ -115,3 +117,20 @@ class UserTestCase(TestCase):
 
         # and
         assert organisation_user.get_organisation_role(self.organisation) == OrganisationRole.ADMIN.name
+
+    def test_admin_can_get_users_in_organisation(self):
+        # Given
+        self.user.add_organisation(self.organisation, OrganisationRole.ADMIN)
+
+        organisation_user = FFAdminUser.objects.create(email='org_user@org.com')
+        organisation_user.add_organisation(self.organisation)
+        url = reverse('api:v1:organisations:organisation-users-list', args=[self.organisation.pk])
+        data = {
+            'role': OrganisationRole.ADMIN.name
+        }
+
+        # When
+        res = self.client.get(url, data=data)
+
+        # Then
+        assert res.status_code == status.HTTP_200_OK
