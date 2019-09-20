@@ -187,9 +187,6 @@ class Trait(models.Model):
 
         return type_mapping.get(value_type)
 
-    def save(self, *args, **kwargs):
-        super(Trait, self).save(*args, **kwargs)
-
     @staticmethod
     def _get_trait_key_name(tv_type):
         return {
