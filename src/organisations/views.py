@@ -9,17 +9,19 @@ from rest_framework.exceptions import ValidationError
 from rest_framework.response import Response
 
 from analytics.query import get_events_for_organisation
-from organisations.serializers import OrganisationSerializer
+from organisations.serializers import OrganisationSerializerFull
 from projects.serializers import ProjectSerializer
 from users.models import Invite
 from users.serializers import InviteSerializer, UserListSerializer, InviteListSerializer, UserIdSerializer
 
 
 class OrganisationViewSet(viewsets.ModelViewSet):
+    permission_classes = ()
+
     def get_serializer_class(self):
         if self.action == 'remove_users':
             return UserIdSerializer
-        return OrganisationSerializer
+        return OrganisationSerializerFull
 
     def get_serializer_context(self):
         context = super(OrganisationViewSet, self).get_serializer_context()
@@ -35,7 +37,7 @@ class OrganisationViewSet(viewsets.ModelViewSet):
         Override create method to add new organisation to authenticated user
         """
         user = request.user
-        serializer = OrganisationSerializer(data=request.data)
+        serializer = OrganisationSerializerFull(data=request.data)
         if serializer.is_valid():
             org = serializer.save()
             user.add_organisation(org)
@@ -54,7 +56,7 @@ class OrganisationViewSet(viewsets.ModelViewSet):
     def users(self, request, pk):
         organisation = self.get_object()
         users = organisation.users.all()
-        return Response(UserListSerializer(users, many=True).data)
+        return Response(UserListSerializer(users, many=True, context={'organisation': organisation}).data)
 
     @action(detail=True, methods=["POST"])
     def invite(self, request, pk):

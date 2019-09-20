@@ -8,7 +8,7 @@ from rest_framework.decorators import action
 from rest_framework.generics import get_object_or_404
 from rest_framework.response import Response
 
-from organisations.serializers import OrganisationSerializer
+from organisations.serializers import OrganisationSerializerFull
 from users import serializers
 from users.models import FFAdminUser, Invite
 
@@ -47,7 +47,7 @@ class FFAdminUserViewSet(viewsets.ModelViewSet):
         user.add_organisation(organisation)
         invite.delete()
 
-        return Response(OrganisationSerializer(organisation).data, status=status.HTTP_200_OK)
+        return Response(OrganisationSerializerFull(organisation).data, status=status.HTTP_200_OK)
 
 
 def password_reset_redirect(request, uidb64, token):

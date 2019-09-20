@@ -71,6 +71,15 @@ class FFAdminUser(AbstractUser):
     def remove_organisation(self, organisation):
         UserOrganisation.objects.filter(user=self, organisation=organisation).delete()
 
+    def get_organisation_role(self, organisation):
+        return self._get_user_organisation(organisation).role
+
+    def get_organisation_join_date(self, organisation):
+        return self._get_user_organisation(organisation).date_joined
+
+    def _get_user_organisation(self, organisation):
+        return self.userorganisation_set.get(organisation=organisation)
+
     @staticmethod
     def get_admin_user_emails():
         return [user['email'] for user in FFAdminUser.objects.filter(is_staff=True).values('email')]
