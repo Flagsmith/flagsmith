@@ -76,7 +76,7 @@ class FFAdminUser(AbstractUser):
         if invite.email.lower() != self.email.lower():
             raise InvalidInviteError('Registered email does not match invited email')
 
-        self.add_organisation(organisation, role=invite.role)
+        self.add_organisation(organisation, role=OrganisationRole(invite.role))
         invite.delete()
 
     def is_admin(self, organisation):

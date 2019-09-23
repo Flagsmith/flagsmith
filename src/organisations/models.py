@@ -8,8 +8,8 @@ from django.utils.encoding import python_2_unicode_compatible
 
 
 class OrganisationRole(enum.Enum):
-    ADMIN = "Admin"
-    USER = "User"
+    ADMIN = "ADMIN"
+    USER = "ADMIN"
 
 
 organisation_roles = ((tag.name, tag.value) for tag in OrganisationRole)
