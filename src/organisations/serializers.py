@@ -1,7 +1,7 @@
 from rest_framework import serializers
 
 from users.models import Invite
-from .models import Organisation, Subscription, UserOrganisation, organisation_roles
+from .models import Organisation, Subscription, UserOrganisation, organisation_roles, OrganisationRole
 
 
 class SubscriptionSerializer(serializers.ModelSerializer):
@@ -94,14 +94,24 @@ class InviteSerializer(serializers.ModelSerializer):
 
 
 class MultiInvitesSerializer(serializers.Serializer):
-    emails = InviteSerializer(many=True)
+    invites = InviteSerializer(many=True, required=False)
     frontend_base_url = serializers.CharField()
+    emails = serializers.ListSerializer(child=serializers.EmailField(), required=False)
 
     def create(self, validated_data):
         organisation = self._get_organisation()
         user = self._get_invited_by()
 
-        for invite in validated_data.get('emails'):
+        invites = validated_data.get('invites', [])
+
+        # for backwards compatibility, allow emails to be sent as a list of strings still
+        for email in validated_data.get('emails', []):
+            invites.append({
+                'email': email,
+                'role': OrganisationRole.USER.name
+            })
+
+        for invite in invites:
             data = {
                 **invite,
                 'invited_by': user,
@@ -113,6 +123,12 @@ class MultiInvitesSerializer(serializers.Serializer):
         # return the organisation to avoid rest framework error complaining that save should return an object
         return organisation
 
+    def validate(self, attrs):
+        for email in attrs.get('emails', []):
+            if Invite.objects.filter(email=email, organisation__id=self.context.get('organisation')).exists():
+                raise serializers.ValidationError({'emails': 'Invite for email %s already exists' % email})
+        return super(MultiInvitesSerializer, self).validate(attrs)
+
     def _get_invited_by(self):
         return self.context.get('request').user if self.context.get('request') else None
 
@@ -121,3 +137,4 @@ class MultiInvitesSerializer(serializers.Serializer):
             return Organisation.objects.get(pk=self.context.get('organisation'))
         except Organisation.DoesNotExist:
             raise serializers.ValidationError({'emails': 'Invalid organisation.'})
+

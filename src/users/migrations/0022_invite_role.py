@@ -16,6 +16,5 @@ class Migration(migrations.Migration):
             model_name='invite',
             name='role',
             field=models.CharField(default='USER', max_length=50),
-            preserve_default=False,
         ),
     ]
