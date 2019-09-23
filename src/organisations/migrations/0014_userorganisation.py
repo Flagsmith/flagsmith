@@ -7,6 +7,15 @@ from django.db import migrations, models
 import django.db.models.deletion
 
 
+forward_sql = 'INSERT INTO organisations_userorganisation (user_id, organisation_id, date_joined, "role") ' \
+              'SELECT ffadminuser_id, organisation_id, NOW(), \'ADMIN\' ' \
+              'FROM users_ffadminuser_organisations'
+
+reverse_sql = 'INSERT INTO users_ffadminuser_organisations (ffadminuser_id, organisation_id) ' \
+              'SELECT user_id, organisation_id ' \
+              'FROM organisations_userorganisation'
+
+
 class Migration(migrations.Migration):
 
     dependencies = [
@@ -25,4 +34,5 @@ class Migration(migrations.Migration):
                 ('user', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to=settings.AUTH_USER_MODEL)),
             ],
         ),
+        migrations.RunSQL(sql=forward_sql, reverse_sql=reverse_sql),
     ]
