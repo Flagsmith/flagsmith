@@ -10,7 +10,7 @@ from rest_framework.response import Response
 from analytics.query import get_events_for_organisation
 from organisations.models import OrganisationRole
 from organisations.permissions import OrganisationPermission, NestedOrganisationEntityPermission
-from organisations.serializers import OrganisationSerializerFull
+from organisations.serializers import OrganisationSerializerFull, MultiInvitesSerializer
 from projects.serializers import ProjectSerializer
 from users.models import Invite
 from users.serializers import InviteSerializer, InviteListSerializer, UserIdSerializer
@@ -22,11 +22,13 @@ class OrganisationViewSet(viewsets.ModelViewSet):
     def get_serializer_class(self):
         if self.action == 'remove_users':
             return UserIdSerializer
+        elif self.action == 'invite':
+            return MultiInvitesSerializer
         return OrganisationSerializerFull
 
     def get_serializer_context(self):
         context = super(OrganisationViewSet, self).get_serializer_context()
-        if self.action == 'remove_users':
+        if self.action in ('remove_users', 'invite'):
             context['organisation'] = self.kwargs.get('pk')
         return context
 
@@ -55,32 +57,10 @@ class OrganisationViewSet(viewsets.ModelViewSet):
 
     @action(detail=True, methods=["POST"])
     def invite(self, request, pk):
-        organisation = self.get_object()
-
-        if "emails" not in request.data:
-            raise ValidationError({"detail": "List of emails must be provided"})
-
-        if "frontend_base_url" not in request.data:
-            raise ValidationError({"detail": "Must provide base url"})
-
-        invites = []
-
-        for email in request.data["emails"]:
-            invite = Invite.objects.filter(email=email, organisation=organisation)
-            if invite.exists():
-                data = {"error": "Invite already exists for this email address."}
-                return Response(data, status=status.HTTP_400_BAD_REQUEST)
-
-            invites.append({"email": email, "frontend_base_url": request.data["frontend_base_url"],
-                            "organisation": organisation.id, "invited_by": self.request.user.id})
-
-        invites_serializer = InviteSerializer(data=invites, many=True)
-
-        if invites_serializer.is_valid():
-            invite = invites_serializer.save()
-            return Response(InviteListSerializer(instance=invite, many=True).data, status=status.HTTP_201_CREATED)
-        else:
-            raise ValidationError(invites_serializer.errors)
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+        return Response(status=status.HTTP_201_CREATED)
 
     @action(detail=True, methods=['POST'], url_path='remove-users')
     def remove_users(self, request, pk):

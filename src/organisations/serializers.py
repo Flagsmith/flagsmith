@@ -1,6 +1,7 @@
 from rest_framework import serializers
 
-from .models import Organisation, Subscription, UserOrganisation
+from users.models import Invite
+from .models import Organisation, Subscription, UserOrganisation, organisation_roles
 
 
 class SubscriptionSerializer(serializers.ModelSerializer):
@@ -79,3 +80,44 @@ class UserOrganisationSerializer(serializers.ModelSerializer):
     class Meta:
         model = UserOrganisation
         fields = ('role', 'organisation')
+
+
+class InviteSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Invite
+        fields = ('email', 'role')
+
+    def validate(self, attrs):
+        if Invite.objects.filter(email=attrs['email'], organisation__id=self.context.get('organisation')).exists():
+            raise serializers.ValidationError({'email': 'Invite for email %s already exists' % attrs['email']})
+        return super(InviteSerializer, self).validate(attrs)
+
+
+class MultiInvitesSerializer(serializers.Serializer):
+    emails = InviteSerializer(many=True)
+    frontend_base_url = serializers.CharField()
+
+    def create(self, validated_data):
+        organisation = self._get_organisation()
+        user = self._get_invited_by()
+
+        for invite in validated_data.get('emails'):
+            data = {
+                **invite,
+                'invited_by': user,
+                'organisation': organisation,
+                'frontend_base_url': validated_data['frontend_base_url']
+            }
+            Invite.objects.create(**data)
+
+        # return the organisation to avoid rest framework error complaining that save should return an object
+        return organisation
+
+    def _get_invited_by(self):
+        return self.context.get('request').user if self.context.get('request') else None
+
+    def _get_organisation(self):
+        try:
+            return Organisation.objects.get(pk=self.context.get('organisation'))
+        except Organisation.DoesNotExist:
+            raise serializers.ValidationError({'emails': 'Invalid organisation.'})

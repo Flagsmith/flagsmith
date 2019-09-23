@@ -9,7 +9,7 @@ from django.template.loader import get_template
 from django.utils.encoding import python_2_unicode_compatible
 
 from app.utils import create_hash
-from organisations.models import Organisation, UserOrganisation, OrganisationRole
+from organisations.models import Organisation, UserOrganisation, OrganisationRole, organisation_roles
 from users.exceptions import InvalidInviteError
 
 logger = logging.getLogger(__name__)
@@ -117,6 +117,7 @@ class Invite(models.Model):
     organisation = models.ForeignKey(Organisation, on_delete=models.CASCADE, related_name='invites')
     frontend_base_url = models.CharField(max_length=500, null=False)
     invited_by = models.ForeignKey(FFAdminUser, related_name='sent_invites', null=True)
+    role = models.CharField(choices=organisation_roles, max_length=50)
 
     class Meta:
         unique_together = ('email', 'organisation')
