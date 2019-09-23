@@ -12,6 +12,10 @@ forward_sql = 'INSERT INTO organisations_userorganisation (user_id, organisation
               'SELECT ffadminuser_id, organisation_id, NOW(), \'ADMIN\' ' \
               'FROM users_ffadminuser_organisations'
 
+reverse_sql = 'INSERT INTO users_ffadminuser_organisations (ffadminuser_id, organisation_id) ' \
+              'SELECT user_id, organisation_id' \
+              'FROM organisations_userorganisation'
+
 
 class Migration(migrations.Migration):
     dependencies = [
@@ -19,7 +23,6 @@ class Migration(migrations.Migration):
     ]
 
     operations = [
-        migrations.RunSQL(sql=forward_sql, reverse_sql=''),
         migrations.RemoveField(
             model_name='ffadminuser',
             name='organisations'
@@ -30,4 +33,5 @@ class Migration(migrations.Migration):
             field=models.ManyToManyField(blank=True, related_name='users', through='organisations.UserOrganisation',
                                          to='organisations.Organisation'),
         ),
+        migrations.RunSQL(sql=forward_sql, reverse_sql=reverse_sql),
     ]
