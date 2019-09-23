@@ -76,7 +76,7 @@ class FFAdminUser(AbstractUser):
         if invite.email.lower() != self.email.lower():
             raise InvalidInviteError('Registered email does not match invited email')
 
-        self.add_organisation(organisation)
+        self.add_organisation(organisation, role=invite.role)
         invite.delete()
 
     def is_admin(self, organisation):
@@ -117,7 +117,7 @@ class Invite(models.Model):
     organisation = models.ForeignKey(Organisation, on_delete=models.CASCADE, related_name='invites')
     frontend_base_url = models.CharField(max_length=500, null=False)
     invited_by = models.ForeignKey(FFAdminUser, related_name='sent_invites', null=True)
-    role = models.CharField(choices=organisation_roles, max_length=50)
+    role = models.CharField(choices=organisation_roles, max_length=50, default=OrganisationRole.USER.name)
 
     class Meta:
         unique_together = ('email', 'organisation')
