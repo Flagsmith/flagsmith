@@ -20,6 +20,7 @@ reverse_sql = 'INSERT INTO users_ffadminuser_organisations (ffadminuser_id, orga
 class Migration(migrations.Migration):
     dependencies = [
         ('users', '0020_auto_20181128_1012'),
+        ('organisations', '0014_userorganisation')
     ]
 
     operations = [
