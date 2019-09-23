@@ -14,7 +14,7 @@ class OrganisationSerializerFull(serializers.ModelSerializer):
     # will need to be removed in a future release in favour of nested subscription
     paid_subscription = serializers.BooleanField(source='subscription.paid_subscription', required=False)
     free_to_use_subscription = serializers.BooleanField(source='subscription.free_to_use_subscription', required=False)
-    subscription_date = serializers.DateTimeField(source='subscription.subscription_date', required=False)
+    subscription_date = serializers.DateField(source='subscription.subscription_date', required=False)
     plan = serializers.CharField(source='subscription.plan', required=False)
     pending_cancellation = serializers.BooleanField(source='subscription.pending_cancellation', required=False)
 
