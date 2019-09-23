@@ -110,7 +110,6 @@ class OrganisationTestCase(TestCase):
         # Then
         assert response_success.status_code == status.HTTP_201_CREATED
         assert response_fail.status_code == status.HTTP_400_BAD_REQUEST
-        assert "error" in json.loads(response_fail.content)
         assert Invite.objects.filter(email=email, organisation=organisation).count() == 1
 
     def test_should_return_all_invites_and_can_resend(self):
