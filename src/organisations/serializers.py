@@ -103,7 +103,7 @@ class UpdateSubscriptionSerializer(serializers.Serializer):
         if subscription_data:
             Subscription.objects.update_or_create(organisation=organisation, defaults=subscription_data)
         else:
-            raise serializers.ValidationError('Couldn\'t get subscription information from hosted page.')
+            raise serializers.ValidationError({'detail': 'Couldn\'t get subscription information from hosted page.'})
 
         return organisation
 
