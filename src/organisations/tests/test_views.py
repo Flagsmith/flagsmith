@@ -88,9 +88,7 @@ class OrganisationTestCase(TestCase):
 
         # Then
         assert response.status_code == status.HTTP_201_CREATED
-        invite = Invite.objects.get(email="test@example.com")
-        # check hash was created
-        assert invite.hash
+        assert Invite.objects.filter(email="test@example.com").exists()
 
     def test_should_fail_if_invite_exists_already(self):
         # Given
@@ -153,3 +151,51 @@ class OrganisationTestCase(TestCase):
         # Then
         assert res.status_code == status.HTTP_200_OK
         assert organisation not in user_2.organisations.all()
+
+    def test_can_invite_user_as_admin(self):
+        # Given
+        organisation = Organisation.objects.create(name='Test org')
+        self.user.add_organisation(organisation, OrganisationRole.ADMIN)
+        url = reverse('api:v1:organisations:organisation-invite', args=[organisation.pk])
+        invited_email = 'test@example.com'
+
+        data = {
+            'invites': [{
+                'email': invited_email,
+                'role': OrganisationRole.ADMIN.name
+            }],
+            'frontend_base_url': 'http://blah.com'
+        }
+
+        # When
+        self.client.post(url, data=json.dumps(data), content_type='application/json')
+
+        # Then
+        assert Invite.objects.filter(email=invited_email).exists()
+
+        # and
+        assert Invite.objects.get(email=invited_email).role == OrganisationRole.ADMIN.name
+
+    def test_can_invite_user_as_user(self):
+        # Given
+        organisation = Organisation.objects.create(name='Test org')
+        self.user.add_organisation(organisation, OrganisationRole.ADMIN)
+        url = reverse('api:v1:organisations:organisation-invite', args=[organisation.pk])
+        invited_email = 'test@example.com'
+
+        data = {
+            'invites': [{
+                'email': invited_email,
+                'role': OrganisationRole.USER.name
+            }],
+            'frontend_base_url': 'http://blah.com'
+        }
+
+        # When
+        self.client.post(url, data=json.dumps(data), content_type='application/json')
+
+        # Then
+        assert Invite.objects.filter(email=invited_email).exists()
+
+        # and
+        assert Invite.objects.get(email=invited_email).role == OrganisationRole.USER.name
