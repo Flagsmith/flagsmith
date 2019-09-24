@@ -97,6 +97,18 @@ class UserTestCase(TestCase):
         # and
         assert self.organisation not in self.user.organisations.all()
 
+    def test_can_join_organisation_as_admin_if_invite_role_is_admin(self):
+        # Given
+        invite = Invite.objects.create(email=self.user.email, organisation=self.organisation,
+                                       role=OrganisationRole.ADMIN.name)
+        url = reverse('api:v1:users:user-join-organisation', args=[invite.hash])
+
+        # When
+        self.client.post(url)
+
+        # Then
+        assert self.user.is_admin(self.organisation)
+
     def test_admin_can_update_role_for_a_user_in_organisation(self):
         # Given
         self.user.add_organisation(self.organisation, OrganisationRole.ADMIN)
