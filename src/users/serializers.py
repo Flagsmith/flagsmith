@@ -1,13 +1,12 @@
 from allauth.account.adapter import get_adapter
 from allauth.account.utils import setup_user_email
-from rest_auth.registration.serializers import RegisterSerializer
-
-from rest_framework import serializers
 from django.utils.translation import ugettext_lazy as _
+from rest_auth.registration.serializers import RegisterSerializer
+from rest_framework import serializers
 from rest_framework.exceptions import ValidationError
 
 from organisations.models import Organisation
-from organisations.serializers import OrganisationSerializer
+from organisations.serializers import UserOrganisationSerializer
 from .models import FFAdminUser, Invite
 
 
@@ -22,7 +21,7 @@ class UserIdSerializer(serializers.Serializer):
         user = self._get_user(validated_data)
 
         if user and organisation in user.organisations.all():
-            user.organisations.remove(organisation)
+            user.remove_organisation(organisation)
 
         return user
 
@@ -40,7 +39,7 @@ class UserIdSerializer(serializers.Serializer):
 
 
 class UserFullSerializer(serializers.ModelSerializer):
-    organisations = OrganisationSerializer(many=True)
+    organisations = UserOrganisationSerializer(source='userorganisation_set', many=True)
 
     class Meta:
         model = FFAdminUser
@@ -54,13 +53,29 @@ class UserLoginSerializer(serializers.ModelSerializer):
 
 
 class UserListSerializer(serializers.ModelSerializer):
+    role = serializers.SerializerMethodField(read_only=True)
+    join_date = serializers.SerializerMethodField(read_only=True)
+
+    default_fields = ('id', 'email', 'first_name', 'last_name')
+    organisation_users_fields = ('role', 'date_joined')
+
     class Meta:
         model = FFAdminUser
-        fields = ('id', 'email', 'first_name', 'last_name')
+
+    def get_field_names(self, declared_fields, info):
+        fields = self.default_fields
+        if self.context.get('organisation'):
+            fields += self.organisation_users_fields
+        return fields
+
+    def get_role(self, instance):
+        return instance.get_organisation_role(self.context.get('organisation'))
+
+    def get_join_date(self, instance):
+        return instance.get_organisation_join_date(self.context.get('organisation'))
 
 
 class UserRegisterSerializer(RegisterSerializer):
-
     first_name = serializers.CharField(required=True, write_only=True)
     last_name = serializers.CharField(required=True, write_only=True)
 
