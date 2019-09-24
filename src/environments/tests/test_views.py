@@ -29,7 +29,7 @@ class EnvironmentTestCase(TestCase):
         self.client.force_authenticate(user=user)
 
         self.organisation = Organisation.objects.create(name='ssg')
-        user.organisations.add(self.organisation)
+        user.add_organisation(self.organisation)
 
         self.project = Project.objects.create(name='Test project', organisation=self.organisation)
 
@@ -162,7 +162,7 @@ class IdentityTestCase(TestCase):
         self.client.force_authenticate(user=user)
 
         self.organisation = Organisation.objects.create(name='Test Org')
-        user.organisations.add(self.organisation)
+        user.add_organisation(self.organisation)
 
         self.project = Project.objects.create(name='Test project', organisation=self.organisation)
         self.environment = Environment.objects.create(name='Test Environment', project=self.project)
@@ -682,7 +682,7 @@ class TraitViewSetTestCase(TestCase):
         self.client.force_authenticate(user=user)
 
         organisation = Organisation.objects.create(name='Test org')
-        user.organisations.add(organisation)
+        user.add_organisation(organisation)
 
         self.project = Project.objects.create(name='Test project', organisation=organisation)
         self.environment = Environment.objects.create(name='Test environment', project=self.project)

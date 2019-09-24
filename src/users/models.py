@@ -1,13 +1,18 @@
+import logging
+
 from django.conf import settings
 from django.contrib.auth.base_user import BaseUserManager
 from django.contrib.auth.models import AbstractUser
 from django.core.mail import EmailMultiAlternatives
 from django.db import models
 from django.template.loader import get_template
+from django.utils.encoding import python_2_unicode_compatible
 
 from app.utils import create_hash
-from django.utils.encoding import python_2_unicode_compatible
-from organisations.models import Organisation
+from organisations.models import Organisation, UserOrganisation, OrganisationRole, organisation_roles
+from users.exceptions import InvalidInviteError
+
+logger = logging.getLogger(__name__)
 
 
 class UserManager(BaseUserManager):
@@ -46,7 +51,7 @@ class UserManager(BaseUserManager):
 
 @python_2_unicode_compatible
 class FFAdminUser(AbstractUser):
-    organisations = models.ManyToManyField(Organisation, related_name="users", blank=True)
+    organisations = models.ManyToManyField(Organisation, related_name="users", blank=True, through=UserOrganisation)
     email = models.EmailField(unique=True, null=False)
     objects = UserManager()
 
@@ -65,31 +70,39 @@ class FFAdminUser(AbstractUser):
             return None
         return ' '.join([self.first_name, self.last_name]).strip()
 
-    def get_number_of_organisations(self):
-        return self.organisations.count()
+    def join_organisation(self, invite):
+        organisation = invite.organisation
 
-    def get_number_of_projects(self):
-        count = 0
-        for org in self.organisations.all():
-            for _ in org.projects.all():
-                count += 1
-        return count
+        if invite.email.lower() != self.email.lower():
+            raise InvalidInviteError('Registered email does not match invited email')
 
-    def get_number_of_features(self):
-        count = 0
-        for org in self.organisations.all():
-            for project in org.projects.all():
-                for _ in project.features.all():
-                    count += 1
-        return count
+        self.add_organisation(organisation, role=OrganisationRole(invite.role))
+        invite.delete()
 
-    def get_number_of_environments(self):
-        count = 0
-        for org in self.organisations.all():
-            for project in org.projects.all():
-                for _ in project.environments.all():
-                    count += 1
-        return count
+    def is_admin(self, organisation):
+        return self.get_organisation_role(organisation) == OrganisationRole.ADMIN.name
+
+    def add_organisation(self, organisation, role=OrganisationRole.USER):
+        UserOrganisation.objects.create(user=self, organisation=organisation, role=role.name)
+
+    def remove_organisation(self, organisation):
+        UserOrganisation.objects.filter(user=self, organisation=organisation).delete()
+
+    def get_organisation_role(self, organisation):
+        user_organisation = self.get_user_organisation(organisation)
+        if user_organisation:
+            return user_organisation.role
+
+    def get_organisation_join_date(self, organisation):
+        user_organisation = self.get_user_organisation(organisation)
+        if user_organisation:
+            return user_organisation.date_joined
+
+    def get_user_organisation(self, organisation):
+        try:
+            return self.userorganisation_set.get(organisation=organisation)
+        except UserOrganisation.DoesNotExist:
+            logger.warning('User %d is not part of organisation %d' % (self.id, organisation.id))
 
     @staticmethod
     def get_admin_user_emails():
@@ -104,6 +117,7 @@ class Invite(models.Model):
     organisation = models.ForeignKey(Organisation, on_delete=models.CASCADE, related_name='invites')
     frontend_base_url = models.CharField(max_length=500, null=False)
     invited_by = models.ForeignKey(FFAdminUser, related_name='sent_invites', null=True)
+    role = models.CharField(choices=organisation_roles, max_length=50, default=OrganisationRole.USER.name)
 
     class Meta:
         unique_together = ('email', 'organisation')
