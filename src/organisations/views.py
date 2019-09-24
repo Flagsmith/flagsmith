@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 from __future__ import unicode_literals
 
+from drf_yasg.utils import swagger_auto_schema
 from rest_framework import viewsets, status
 from rest_framework.decorators import action
 from rest_framework.exceptions import ValidationError
@@ -10,7 +11,7 @@ from rest_framework.response import Response
 from analytics.query import get_events_for_organisation
 from organisations.models import OrganisationRole
 from organisations.permissions import OrganisationPermission, NestedOrganisationEntityPermission
-from organisations.serializers import OrganisationSerializerFull, MultiInvitesSerializer
+from organisations.serializers import OrganisationSerializerFull, MultiInvitesSerializer, UpdateSubscriptionSerializer
 from projects.serializers import ProjectSerializer
 from users.models import Invite
 from users.serializers import InviteSerializer, InviteListSerializer, UserIdSerializer
@@ -24,11 +25,13 @@ class OrganisationViewSet(viewsets.ModelViewSet):
             return UserIdSerializer
         elif self.action == 'invite':
             return MultiInvitesSerializer
+        elif self.action == 'update_subscription':
+            return UpdateSubscriptionSerializer
         return OrganisationSerializerFull
 
     def get_serializer_context(self):
         context = super(OrganisationViewSet, self).get_serializer_context()
-        if self.action in ('remove_users', 'invite'):
+        if self.action in ('remove_users', 'invite', 'update_subscription'):
             context['organisation'] = self.kwargs.get('pk')
         return context
 
@@ -85,6 +88,14 @@ class OrganisationViewSet(viewsets.ModelViewSet):
                             status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
         return Response({"events": events}, status=status.HTTP_200_OK)
+
+    @action(detail=True, methods=['POST'], url_path='update-subscription')
+    @swagger_auto_schema(responses={200: OrganisationSerializerFull})
+    def update_subscription(self, request, pk):
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+        return Response(status=status.HTTP_200_OK)
 
 
 class InviteViewSet(viewsets.ModelViewSet):

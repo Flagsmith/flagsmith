@@ -58,6 +58,6 @@ class UserOrganisation(models.Model):
 class Subscription(models.Model):
     organisation = models.OneToOneField(Organisation, on_delete=models.CASCADE, related_name='subscription')
     subscription_id = models.CharField(max_length=100, blank=True, null=True)
-    subscription_date = models.DateField(blank=True, null=True)
+    subscription_date = models.DateTimeField(blank=True, null=True)
     plan = models.CharField(max_length=20, null=True, blank=True)
     max_seats = models.IntegerField(default=1)

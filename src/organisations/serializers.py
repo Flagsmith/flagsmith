@@ -1,7 +1,8 @@
 from rest_framework import serializers
 
+from organisations.chargebee import get_subscription_data_from_hosted_page
 from users.models import Invite
-from .models import Organisation, Subscription, UserOrganisation, organisation_roles, OrganisationRole
+from .models import Organisation, Subscription, UserOrganisation, OrganisationRole
 
 
 class SubscriptionSerializer(serializers.ModelSerializer):
@@ -88,3 +89,29 @@ class MultiInvitesSerializer(serializers.Serializer):
         except Organisation.DoesNotExist:
             raise serializers.ValidationError({'emails': 'Invalid organisation.'})
 
+
+class UpdateSubscriptionSerializer(serializers.Serializer):
+    hosted_page_id = serializers.CharField()
+
+    def create(self, validated_data):
+        """
+        Get the subscription data from Chargebee hosted page and store in the subscription
+        """
+        organisation = self._get_organisation()
+        subscription_data = get_subscription_data_from_hosted_page(hosted_page_id=validated_data['hosted_page_id'])
+
+        if subscription_data:
+            Subscription.objects.update_or_create(organisation=organisation, defaults=subscription_data)
+        else:
+            raise serializers.ValidationError('Couldn\'t get subscription information from hosted page.')
+
+        return organisation
+
+    def update(self, instance, validated_data):
+        pass
+
+    def _get_organisation(self):
+        try:
+            return Organisation.objects.get(pk=self.context.get('organisation'))
+        except Organisation.DoesNotExist:
+            raise serializers.ValidationError('Invalid organisation.')
