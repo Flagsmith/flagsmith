@@ -3,14 +3,17 @@ from datetime import datetime
 from unittest import TestCase, mock
 
 import pytest
+from django.contrib.auth import get_user_model
 from django.urls import reverse
 from pytz import UTC
 from rest_framework import status
 from rest_framework.test import APIClient
 
-from organisations.models import Organisation, OrganisationRole
+from organisations.models import Organisation, OrganisationRole, Subscription
 from users.models import Invite, FFAdminUser
 from util.tests import Helper
+
+User = get_user_model()
 
 
 @pytest.mark.django_db
@@ -233,3 +236,59 @@ class OrganisationTestCase(TestCase):
 
         # and
         assert organisation.has_subscription() and organisation.subscription.subscription_id == subscription_id
+
+
+@pytest.mark.django_db
+class ChargeBeeWebhookTestCase(TestCase):
+    def setUp(self) -> None:
+        self.client = APIClient()
+        self.cb_user = User.objects.create(email='chargebee@bullet-train.io')
+        self.client.force_authenticate(self.cb_user)
+        self.organisation = Organisation.objects.create(name='Test org')
+
+    @mock.patch('organisations.models.get_max_seats_for_plan')
+    def test_when_subscription_plan_is_changed_max_seats_updated(self, mock_get_max_seats):
+        # Given
+        url = reverse('api:v1:chargebee-webhook')
+        subscription_id = 'subscription-id'
+        old_plan_id = 'old-plan-id'
+        old_max_seats = 1
+        subscription = Subscription.objects.create(organisation=self.organisation, subscription_id=subscription_id,
+                                                   plan=old_plan_id, max_seats=old_max_seats)
+
+        new_plan_id = 'new-plan-id'
+        new_max_seats = 3
+        mock_get_max_seats.return_value = new_max_seats
+
+        data = {
+            'content': {
+                'subscription': {
+                    'status': 'active',
+                    'id': subscription_id,
+                    'plan_id': new_plan_id
+                }
+            }
+        }
+
+        # When
+        res = self.client.post(url, data=json.dumps(data), content_type='application/json')
+
+        # Then
+        assert res.status_code == status.HTTP_200_OK
+
+        # and
+        subscription.refresh_from_db()
+        assert subscription.plan == new_plan_id
+        assert subscription.max_seats == new_max_seats
+
+    def test_when_subscription_plan_is_set_to_non_renewing_then_subscription_scheduled_for_cancellation(self):
+        pass
+
+    def test_when_subscription_plan_is_cancelled_then_subscription_cancelled(self):
+        pass
+
+    def test_when_cancelled_subscription_is_renewed_then_subscription_activated(self):
+        pass
+
+    def test_when_chargebee_webhook_received_with_unknown_subscription_id_then_404(self):
+        pass

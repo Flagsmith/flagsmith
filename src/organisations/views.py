@@ -1,20 +1,25 @@
 # -*- coding: utf-8 -*-
 from __future__ import unicode_literals
 
+import logging
+from datetime import datetime
+
 from drf_yasg.utils import swagger_auto_schema
 from rest_framework import viewsets, status
-from rest_framework.decorators import action
-from rest_framework.exceptions import ValidationError
+from rest_framework.authentication import BasicAuthentication
+from rest_framework.decorators import action, api_view, authentication_classes
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 
 from analytics.query import get_events_for_organisation
-from organisations.models import OrganisationRole
+from organisations.models import OrganisationRole, Subscription
 from organisations.permissions import OrganisationPermission, NestedOrganisationEntityPermission
 from organisations.serializers import OrganisationSerializerFull, MultiInvitesSerializer, UpdateSubscriptionSerializer
 from projects.serializers import ProjectSerializer
-from users.models import Invite
-from users.serializers import InviteSerializer, InviteListSerializer, UserIdSerializer
+from users.models import Invite, FFAdminUser
+from users.serializers import InviteListSerializer, UserIdSerializer
+
+logger = logging.getLogger(__name__)
 
 
 class OrganisationViewSet(viewsets.ModelViewSet):
@@ -113,3 +118,26 @@ class InviteViewSet(viewsets.ModelViewSet):
         invite = self.get_object()
         invite.send_invite_mail()
         return Response(status=status.HTTP_200_OK)
+
+
+@api_view(['POST'])
+@authentication_classes([BasicAuthentication])
+def chargebee_webhook(request):
+    if request.data.get('content') and 'subscription' in request.data.get('content'):
+        subscription_data = request.data['content']['subscription']
+
+        try:
+            existing_subscription = Subscription.objects.get(subscription_id=subscription_data.get('id'))
+        except (Subscription.DoesNotExist, Subscription.MultipleObjectsReturned):
+            error_message = 'Couldn\'t get unique subscription for ChargeBee id %s' % subscription_data.get('id')
+            logger.error(error_message)
+            return Response(data=error_message, status=status.HTTP_404_NOT_FOUND)
+
+        subscription_status = subscription_data.get('status')
+        if subscription_status == 'active':
+            if subscription_data.get('plan_id') != existing_subscription.plan:
+                existing_subscription.update_plan(subscription_data.get('plan_id'))
+        elif subscription_status in ('non_renewing', 'cancelled'):
+            existing_subscription.cancel(datetime.fromtimestamp(subscription_data.get('current_term_end')))
+
+    return Response(status=status.HTTP_200_OK)
