@@ -44,7 +44,7 @@ def get_max_seats_for_plan(plan_id):
 def get_plan_meta_data(plan_id):
     plan_details = get_plan_details(plan_id)
     if plan_details and hasattr(plan_details.plan, 'meta_data'):
-        return plan_details.plan.meta_data
+        return plan_details.plan.meta_data or {}
     return {}
 
 
