@@ -3,7 +3,7 @@ import logging
 from django.conf import settings
 from django.contrib.auth.base_user import BaseUserManager
 from django.contrib.auth.models import AbstractUser
-from django.core.mail import EmailMultiAlternatives
+from django.core.mail import EmailMultiAlternatives, send_mail
 from django.db import models
 from django.template.loader import get_template
 from django.utils.encoding import python_2_unicode_compatible
@@ -119,7 +119,17 @@ class FFAdminUser(AbstractUser):
         return Identity.objects.filter(environment__in=[env.id for env in user_environments.all()])
 
     @staticmethod
-    def get_admin_user_emails():
+    def send_alert_to_admin_users(subject, message):
+        send_mail(
+            subject=subject,
+            message=message,
+            from_email=settings.DEFAULT_FROM_EMAIL,
+            recipient_list=FFAdminUser._get_admin_user_emails(),
+            fail_silently=True
+        )
+
+    @staticmethod
+    def _get_admin_user_emails():
         return [user['email'] for user in FFAdminUser.objects.filter(is_staff=True).values('email')]
 
 
