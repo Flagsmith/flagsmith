@@ -14,7 +14,7 @@ def send_alert_if_cancelled(sender, instance, *args, **kwargs):
     except sender.DoesNotExist:
         return
 
-    if existing_object.cancellation_date and existing_object.cancellation_date != instance.cancellation_date:
+    if instance.cancellation_date and existing_object.cancellation_date != instance.cancellation_date:
         FFAdminUser.send_alert_to_admin_users(
             subject='Organisation %s has cancelled their subscription' % instance.organisation.name,
             message='Organisation %s has cancelled their subscription on %s' % (instance.organisation.name,

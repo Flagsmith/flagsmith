@@ -8,4 +8,5 @@ class OrganisationsConfig(AppConfig):
     name = 'organisations'
 
     def ready(self):
-        pass
+        # noinspection PyUnresolvedReferences
+        import organisations.signals

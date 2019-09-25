@@ -1,9 +1,10 @@
 import json
-from datetime import datetime
+from datetime import datetime, timedelta
 from unittest import TestCase, mock
 
 import pytest
 from django.contrib.auth import get_user_model
+from django.core import mail
 from django.urls import reverse
 from pytz import UTC
 from rest_framework import status
@@ -242,20 +243,22 @@ class OrganisationTestCase(TestCase):
 class ChargeBeeWebhookTestCase(TestCase):
     def setUp(self) -> None:
         self.client = APIClient()
-        self.cb_user = User.objects.create(email='chargebee@bullet-train.io')
+        self.cb_user = User.objects.create(email='chargebee@bullet-train.io', username='chargebee')
+        self.admin_user = User.objects.create(email='admin@bullet-train.io', username='admin', is_staff=True)
         self.client.force_authenticate(self.cb_user)
         self.organisation = Organisation.objects.create(name='Test org')
+
+        self.url = reverse('api:v1:chargebee-webhook')
+        self.subscription_id = 'subscription-id'
+        self.old_plan_id = 'old-plan-id'
+        self.old_max_seats = 1
+        self.subscription = Subscription.objects.create(organisation=self.organisation,
+                                                        subscription_id=self.subscription_id,
+                                                        plan=self.old_plan_id, max_seats=self.old_max_seats)
 
     @mock.patch('organisations.models.get_max_seats_for_plan')
     def test_when_subscription_plan_is_changed_max_seats_updated(self, mock_get_max_seats):
         # Given
-        url = reverse('api:v1:chargebee-webhook')
-        subscription_id = 'subscription-id'
-        old_plan_id = 'old-plan-id'
-        old_max_seats = 1
-        subscription = Subscription.objects.create(organisation=self.organisation, subscription_id=subscription_id,
-                                                   plan=old_plan_id, max_seats=old_max_seats)
-
         new_plan_id = 'new-plan-id'
         new_max_seats = 3
         mock_get_max_seats.return_value = new_max_seats
@@ -264,31 +267,107 @@ class ChargeBeeWebhookTestCase(TestCase):
             'content': {
                 'subscription': {
                     'status': 'active',
-                    'id': subscription_id,
+                    'id': self.subscription_id,
                     'plan_id': new_plan_id
                 }
             }
         }
 
         # When
-        res = self.client.post(url, data=json.dumps(data), content_type='application/json')
+        res = self.client.post(self.url, data=json.dumps(data), content_type='application/json')
 
         # Then
         assert res.status_code == status.HTTP_200_OK
 
         # and
-        subscription.refresh_from_db()
-        assert subscription.plan == new_plan_id
-        assert subscription.max_seats == new_max_seats
+        self.subscription.refresh_from_db()
+        assert self.subscription.plan == new_plan_id
+        assert self.subscription.max_seats == new_max_seats
 
-    def test_when_subscription_plan_is_set_to_non_renewing_then_subscription_scheduled_for_cancellation(self):
-        pass
+    def test_when_subscription_is_set_to_non_renewing_then_cancellation_date_set_and_alert_sent(self):
+        # Given
+        cancellation_date = datetime.now(tz=UTC) + timedelta(days=1)
+        data = {
+            'content': {
+                'subscription': {
+                    'status': 'non_renewing',
+                    'id': self.subscription_id,
+                    'current_term_end': datetime.timestamp(cancellation_date)
+                }
+            }
+        }
 
-    def test_when_subscription_plan_is_cancelled_then_subscription_cancelled(self):
-        pass
+        # When
+        self.client.post(self.url, data=json.dumps(data), content_type='application/json')
 
-    def test_when_cancelled_subscription_is_renewed_then_subscription_activated(self):
-        pass
+        # Then
+        self.subscription.refresh_from_db()
+        assert self.subscription.cancellation_date == cancellation_date
+
+        # and
+        assert len(mail.outbox) == 1
+
+    def test_when_subscription_is_cancelled_then_cancellation_date_set_and_alert_sent(self):
+        # Given
+        cancellation_date = datetime.now(tz=UTC) + timedelta(days=1)
+        data = {
+            'content': {
+                'subscription': {
+                    'status': 'cancelled',
+                    'id': self.subscription_id,
+                    'current_term_end': datetime.timestamp(cancellation_date)
+                }
+            }
+        }
+
+        # When
+        self.client.post(self.url, data=json.dumps(data), content_type='application/json')
+
+        # Then
+        self.subscription.refresh_from_db()
+        assert self.subscription.cancellation_date == cancellation_date
+
+        # and
+        assert len(mail.outbox) == 1
+
+    def test_when_cancelled_subscription_is_renewed_then_subscription_activated_and_no_cancellation_email_sent(self):
+        # Given
+        self.subscription.cancellation_date = datetime.now(tz=UTC) - timedelta(days=1)
+        self.subscription.save()
+        mail.outbox.clear()
+
+        data = {
+            'content': {
+                'subscription': {
+                    'status': 'active',
+                    'id': self.subscription_id,
+                }
+            }
+        }
+
+        # When
+        self.client.post(self.url, data=json.dumps(data), content_type='application/json')
+
+        # Then
+        self.subscription.refresh_from_db()
+        assert not self.subscription.cancellation_date
+
+        # and
+        assert not mail.outbox
 
     def test_when_chargebee_webhook_received_with_unknown_subscription_id_then_404(self):
-        pass
+        # Given
+        data = {
+            'content': {
+                'subscription': {
+                    'status': 'active',
+                    'id': 'some-random-id'
+                }
+            }
+        }
+
+        # When
+        res = self.client.post(self.url, data=json.dumps(data), content_type='application/json')
+
+        # Then
+        assert res.status_code == status.HTTP_404_NOT_FOUND
