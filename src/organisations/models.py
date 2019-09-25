@@ -2,9 +2,13 @@
 from __future__ import unicode_literals
 
 import enum
+from datetime import datetime
 
 from django.db import models
+from django.utils import timezone
 from django.utils.encoding import python_2_unicode_compatible
+
+from organisations.chargebee import get_max_seats_for_plan
 
 
 class OrganisationRole(enum.Enum):
@@ -61,3 +65,14 @@ class Subscription(models.Model):
     subscription_date = models.DateTimeField(blank=True, null=True)
     plan = models.CharField(max_length=20, null=True, blank=True)
     max_seats = models.IntegerField(default=1)
+    cancellation_date = models.DateTimeField(blank=True, null=True)
+
+    def update_plan(self, plan_id):
+        self.cancellation_date = None
+        self.plan = plan_id
+        self.max_seats = get_max_seats_for_plan(plan_id)
+        self.save()
+
+    def cancel(self, cancellation_date=timezone.now()):
+        self.cancellation_date = cancellation_date
+        self.save()
