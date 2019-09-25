@@ -1,8 +1,10 @@
 import json
-from unittest import TestCase
+from datetime import datetime
+from unittest import TestCase, mock
 
 import pytest
 from django.urls import reverse
+from pytz import UTC
 from rest_framework import status
 from rest_framework.test import APIClient
 
@@ -199,3 +201,35 @@ class OrganisationTestCase(TestCase):
 
         # and
         assert Invite.objects.get(email=invited_email).role == OrganisationRole.USER.name
+
+    @mock.patch('organisations.serializers.get_subscription_data_from_hosted_page')
+    def test_update_subscription_gets_subscription_data_from_chargebee(self, mock_get_subscription_data):
+        # Given
+        organisation = Organisation.objects.create(name='Test org')
+        self.user.add_organisation(organisation, OrganisationRole.ADMIN)
+        url = reverse('api:v1:organisations:organisation-update-subscription', args=[organisation.pk])
+
+        hosted_page_id = 'some-id'
+        data = {
+            'hosted_page_id': hosted_page_id
+        }
+
+        subscription_id = 'subscription-id'
+        mock_get_subscription_data.return_value = {
+            'subscription_id': subscription_id,
+            'plan': 'plan-id',
+            'max_seats': 3,
+            'subscription_date': datetime.now(tz=UTC)
+        }
+
+        # When
+        res = self.client.post(url, data=data)
+
+        # Then
+        assert res.status_code == status.HTTP_200_OK
+
+        # and
+        mock_get_subscription_data.assert_called_with(hosted_page_id=hosted_page_id)
+
+        # and
+        assert organisation.has_subscription() and organisation.subscription.subscription_id == subscription_id
