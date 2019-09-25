@@ -1,8 +1,13 @@
+import logging
+
+from django.conf import settings
 from rest_framework import serializers
 
 from organisations.chargebee import get_subscription_data_from_hosted_page
 from users.models import Invite
 from .models import Organisation, Subscription, UserOrganisation, OrganisationRole
+
+logger = logging.getLogger(__name__)
 
 
 class SubscriptionSerializer(serializers.ModelSerializer):
@@ -98,12 +103,16 @@ class UpdateSubscriptionSerializer(serializers.Serializer):
         Get the subscription data from Chargebee hosted page and store in the subscription
         """
         organisation = self._get_organisation()
-        subscription_data = get_subscription_data_from_hosted_page(hosted_page_id=validated_data['hosted_page_id'])
 
-        if subscription_data:
-            Subscription.objects.update_or_create(organisation=organisation, defaults=subscription_data)
+        if settings.ENABLE_CHARGEBEE:
+            subscription_data = get_subscription_data_from_hosted_page(hosted_page_id=validated_data['hosted_page_id'])
+
+            if subscription_data:
+                Subscription.objects.update_or_create(organisation=organisation, defaults=subscription_data)
+            else:
+                raise serializers.ValidationError({'detail': 'Couldn\'t get subscription information from hosted page.'})
         else:
-            raise serializers.ValidationError({'detail': 'Couldn\'t get subscription information from hosted page.'})
+            logger.warning('Chargebee not configured. Not verifying hosted page.')
 
         return organisation
 

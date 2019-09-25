@@ -123,6 +123,16 @@ class InviteViewSet(viewsets.ModelViewSet):
 @api_view(['POST'])
 @authentication_classes([BasicAuthentication])
 def chargebee_webhook(request):
+    """
+    Endpoint to handle webhooks from chargebee.
+
+     - If subscription is active, check to see if plan has changed and update if so. Always update cancellation date to
+       None to ensure that if a subscription is reactivated, it is updated on our end.
+
+     - If subscription is cancelled or not renewing, update subscription on our end to include cancellation date and
+       send alert to admin users.
+    """
+
     if request.data.get('content') and 'subscription' in request.data.get('content'):
         subscription_data = request.data['content']['subscription']
 
@@ -131,7 +141,7 @@ def chargebee_webhook(request):
         except (Subscription.DoesNotExist, Subscription.MultipleObjectsReturned):
             error_message = 'Couldn\'t get unique subscription for ChargeBee id %s' % subscription_data.get('id')
             logger.error(error_message)
-            return Response(data=error_message, status=status.HTTP_404_NOT_FOUND)
+            return Response(data=error_message, status=status.HTTP_400_BAD_REQUEST)
 
         subscription_status = subscription_data.get('status')
         if subscription_status == 'active':
