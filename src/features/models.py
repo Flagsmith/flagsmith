@@ -57,13 +57,13 @@ class Feature(models.Model):
         Override save method to initialise feature states for all environments
         """
         if self.pk:
+            # If the feature has moved to a new project, delete the feature states from the old project
             old_feature = Feature.objects.get(pk=self.pk)
             if old_feature.project != self.project:
                 FeatureState.objects.filter(
                     feature=self,
-                    environment=old_feature.project.environments.values_list(
-                        'pk', flat=True),
-                ).all().delete()
+                    environment__in=old_feature.project.environments.all(),
+                ).delete()
 
         super(Feature, self).save(*args, **kwargs)
 
@@ -170,9 +170,16 @@ class FeatureState(models.Model):
         return type_mapping.get(value_type)
 
     def save(self, *args, **kwargs):
+        # prevent duplicate feature states being created for an environment
+        if not self.pk and FeatureState.objects.filter(environment=self.environment, feature=self.feature).exists() \
+                and not (self.identity or self.feature_segment):
+            raise ValidationError('Feature state already exists for this environment and feature')
+
         super(FeatureState, self).save(*args, **kwargs)
 
         # create default feature state value for feature state
+        # note: this is get_or_create since feature state values are updated separately, and hence if this is set to
+        # update_or_create, it overwrites the FSV with the initial value again
         FeatureStateValue.objects.get_or_create(
             feature_state=self,
             defaults=self._get_defaults()
@@ -192,7 +199,10 @@ class FeatureState(models.Model):
         key_name = self._get_feature_state_key_name(self.feature_segment.value_type)
 
         if self.feature_segment.value_type == BOOLEAN:
-            defaults[key_name] = get_boolean_from_string(self.feature_segment.value)
+            if type(self.feature_segment.value) == BOOLEAN:
+                defaults[key_name] = self.feature_segment.value
+            else:
+                defaults[key_name] = get_boolean_from_string(self.feature_segment.value)
         elif self.feature_segment.value_type == INTEGER:
             defaults[key_name] = get_integer_from_string(self.feature_segment.value)
         else:
