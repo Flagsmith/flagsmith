@@ -242,6 +242,26 @@ class ProjectFeatureTestCase(TestCase):
         audit_log = AuditLog.objects.get(related_object_type=RelatedObjectType.FEATURE_STATE.name)
         assert audit_log.log == expected_log_message
 
+    def test_feature_state_values_should_be_updated_when_feature_initial_value_updated(self):
+        # Given
+        feature = Feature.objects.create(name='test-feature', project=self.project, type='CONFIG',
+                                         initial_value='initial-value')
+        new_value = 'new-value'
+        url = reverse('api:v1:projects:project-features-detail', args=[self.project.id, feature.id])
+        data = {
+            'initial_value': new_value
+        }
+
+        # When
+        response = self.client.patch(url, data=data)
+
+        # Then
+        assert response.status_code == status.HTTP_200_OK
+
+        # check feature state value was updated in all environments
+        assert all(feature_state.get_feature_state_value() == new_value
+                   for feature_state in FeatureState.objects.filter(feature=feature))
+
 
 @pytest.mark.django_db
 class FeatureSegmentViewTest(TestCase):
