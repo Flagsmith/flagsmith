@@ -3,7 +3,7 @@ from django.test import TestCase
 
 from environments.models import Environment, Identity, Trait
 from features.models import Feature, FeatureState, FeatureSegment
-from features.utils import STRING
+from features.utils import INTEGER, STRING, BOOLEAN
 from organisations.models import Organisation
 from projects.models import Project
 from segments.models import Segment, SegmentRule, Condition, EQUAL
@@ -238,3 +238,55 @@ class IdentityTestCase(TestCase):
         # Then
         assert not feature_states.get(feature=feature_flag).enabled
         assert feature_states.get(feature=remote_config).get_feature_state_value() == initial_value
+
+    def test_get_all_feature_states_for_identity_returns_correct_value_for_matching_segment_when_value_integer(self):
+        # Given
+        trait_key = 'trait-key'
+        trait_value = 'trait-value'
+        identity = Identity.objects.create(identifier='test-identity', environment=self.environment)
+        Trait.objects.create(identity=identity, trait_key=trait_key, string_value=trait_value)
+
+        segment = Segment.objects.create(name='Test segment', project=self.project)
+        rule = SegmentRule.objects.create(segment=segment, type=SegmentRule.ALL_RULE)
+        Condition.objects.create(rule=rule, property=trait_key, value=trait_value, operator=EQUAL)
+
+        remote_config = Feature.objects.create(name='test-remote-config', project=self.project,
+                                               initial_value='initial-value', type='CONFIG')
+
+        # Feature segment value is converted to string in the serializer so we set as a string value here to test
+        # bool value
+        overridden_value = '12'
+        FeatureSegment.objects.create(feature=remote_config, segment=segment,
+                                      value=overridden_value, value_type=INTEGER)
+
+        # When
+        feature_states = identity.get_all_feature_states()
+
+        # Then
+        assert feature_states.get(feature=remote_config).get_feature_state_value() == int(overridden_value)
+
+    def test_get_all_feature_states_for_identity_returns_correct_value_for_matching_segment_when_value_boolean(self):
+        # Given
+        trait_key = 'trait-key'
+        trait_value = 'trait-value'
+        identity = Identity.objects.create(identifier='test-identity', environment=self.environment)
+        Trait.objects.create(identity=identity, trait_key=trait_key, string_value=trait_value)
+
+        segment = Segment.objects.create(name='Test segment', project=self.project)
+        rule = SegmentRule.objects.create(segment=segment, type=SegmentRule.ALL_RULE)
+        Condition.objects.create(rule=rule, property=trait_key, value=trait_value, operator=EQUAL)
+
+        remote_config = Feature.objects.create(name='test-remote-config', project=self.project,
+                                               initial_value='initial-value', type='CONFIG')
+
+        # Feature segment value is converted to string in the serializer so we set as a string value here to test
+        # bool value
+        overridden_value = 'false'
+        FeatureSegment.objects.create(feature=remote_config, segment=segment,
+                                      value=overridden_value, value_type=BOOLEAN)
+
+        # When
+        feature_states = identity.get_all_feature_states()
+
+        # Then
+        assert not feature_states.get(feature=remote_config).get_feature_state_value()
