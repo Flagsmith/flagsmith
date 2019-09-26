@@ -115,6 +115,7 @@ class Identity(models.Model):
                 # finally, get all feature states for the environment that haven't been overridden
                 (
                     Q(identity=None) &
+                    Q(feature_segment=None) &
                     ~Q(
                         feature__id__in=self.identity_features.values_list(
                             'feature__id', flat=True
@@ -186,9 +187,6 @@ class Trait(models.Model):
         }
 
         return type_mapping.get(value_type)
-
-    def save(self, *args, **kwargs):
-        super(Trait, self).save(*args, **kwargs)
 
     @staticmethod
     def _get_trait_key_name(tv_type):

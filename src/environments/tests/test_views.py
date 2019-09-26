@@ -518,6 +518,36 @@ class SDKTraitsTest(APITestCase):
         # and
         assert Trait.objects.filter(identity=self.identity, trait_key=self.trait_key).exists()
 
+    def test_can_set_trait_with_boolean_value_for_an_identity(self):
+        # Given
+        url = reverse('api:v1:sdk-traits-list')
+        trait_value = True
+
+        # When
+        res = self.client.post(url, data=self._generate_json_trait_data(trait_value=trait_value),
+                               content_type=self.JSON)
+
+        # Then
+        assert res.status_code == status.HTTP_200_OK
+
+        # and
+        assert Trait.objects.get(identity=self.identity, trait_key=self.trait_key).get_trait_value() == trait_value
+
+    def test_can_set_trait_with_identity_value_for_an_identity(self):
+        # Given
+        url = reverse('api:v1:sdk-traits-list')
+        trait_value = 12
+
+        # When
+        res = self.client.post(url, data=self._generate_json_trait_data(trait_value=trait_value),
+                               content_type=self.JSON)
+
+        # Then
+        assert res.status_code == status.HTTP_200_OK
+
+        # and
+        assert Trait.objects.get(identity=self.identity, trait_key=self.trait_key).get_trait_value() == trait_value
+
     def test_add_trait_creates_identity_if_it_doesnt_exist(self):
         # Given
         url = reverse('api:v1:sdk-traits-list')

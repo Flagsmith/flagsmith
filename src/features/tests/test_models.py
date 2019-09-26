@@ -1,9 +1,11 @@
 import pytest
+from django.core.exceptions import ValidationError
 from django.db.utils import IntegrityError
 from django.test import TestCase
 
 from environments.models import Environment, Identity, Trait, STRING
 from features.models import Feature, FeatureState, CONFIG, FeatureSegment, FeatureStateValue
+from features.utils import INTEGER, BOOLEAN
 from organisations.models import Organisation
 from projects.models import Project
 from segments.models import Segment, SegmentRule, Condition, EQUAL
@@ -77,6 +79,20 @@ class FeatureTestCase(TestCase):
         with pytest.raises(IntegrityError):
             feature_two.save()
 
+    def test_updating_feature_name_should_update_feature_states(self):
+        # Given
+        old_feature_name = 'old_feature'
+        new_feature_name = 'new_feature'
+
+        feature = Feature.objects.create(project=self.project, name=old_feature_name)
+
+        # When
+        feature.name = new_feature_name
+        feature.save()
+
+        # Then
+        FeatureState.objects.filter(feature__name=new_feature_name).exists()
+
 
 @pytest.mark.django_db
 class FeatureSegmentTest(TestCase):
@@ -103,12 +119,38 @@ class FeatureSegmentTest(TestCase):
 
         self.not_matching_identity = Identity.objects.create(identifier='user_2', environment=self.environment)
 
-    def test_can_create_segment_override_for_remote_config(self):
+    def test_can_create_segment_override_for_string_remote_config(self):
         # Given
         overridden_value = 'overridden value'
         feature_segment = FeatureSegment.objects.create(feature=self.remote_config, segment=self.segment, priority=1)
         FeatureStateValue.objects.filter(
             feature_state__feature_segment=feature_segment).update(type=STRING, string_value=overridden_value)
+
+        # When
+        feature_states = self.matching_identity.get_all_feature_states()
+
+        # Then
+        assert feature_states.get(feature=self.remote_config).get_feature_state_value() == overridden_value
+
+    def test_can_create_segment_override_for_integer_remote_config(self):
+        # Given
+        overridden_value = 12
+        feature_segment = FeatureSegment.objects.create(feature=self.remote_config, segment=self.segment, priority=1)
+        FeatureStateValue.objects.filter(
+            feature_state__feature_segment=feature_segment).update(type=INTEGER, integer_value=overridden_value)
+
+        # When
+        feature_states = self.matching_identity.get_all_feature_states()
+
+        # Then
+        assert feature_states.get(feature=self.remote_config).get_feature_state_value() == overridden_value
+
+    def test_can_create_segment_override_for_boolean_remote_config(self):
+        # Given
+        overridden_value = False
+        feature_segment = FeatureSegment.objects.create(feature=self.remote_config, segment=self.segment, priority=1)
+        FeatureStateValue.objects.filter(
+            feature_state__feature_segment=feature_segment).update(type=BOOLEAN, boolean_value=overridden_value)
 
         # When
         feature_states = self.matching_identity.get_all_feature_states()
@@ -128,3 +170,23 @@ class FeatureSegmentTest(TestCase):
         # Then
         feature_state.refresh_from_db()
         assert feature_state.enabled
+
+
+@pytest.mark.django_db
+class FeatureStateTest(TestCase):
+    def setUp(self) -> None:
+        self.organisation = Organisation.objects.create(name='Test org')
+        self.project = Project.objects.create(name='Test project', organisation=self.organisation)
+        self.environment = Environment.objects.create(name='Test environment', project=self.project)
+        self.feature = Feature.objects.create(name='Test feature', project=self.project)
+
+    def test_cannot_create_duplicate_feature_state_in_an_environment(self):
+        # Given
+        duplicate_feature_state = FeatureState(feature=self.feature, environment=self.environment, enabled=True)
+
+        # When
+        with pytest.raises(ValidationError):
+            duplicate_feature_state.save()
+
+        # Then
+        assert FeatureState.objects.filter(feature=self.feature, environment=self.environment).count() == 1
