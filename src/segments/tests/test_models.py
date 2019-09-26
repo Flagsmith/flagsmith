@@ -132,5 +132,3 @@ class ConditionTest(TestCase):
 
         # Then
         assert not res
-
-
