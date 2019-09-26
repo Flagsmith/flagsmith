@@ -1,3 +1,4 @@
+from django.core.cache import cache
 from rest_framework import exceptions
 from rest_framework.authentication import BaseAuthentication
 
@@ -8,10 +9,15 @@ class EnvironmentKeyAuthentication(BaseAuthentication):
     """
     Custom authentication class to add the environment to the request for endpoints used by the clients.
     """
-
     def authenticate(self, request):
         try:
-            environment = Environment.objects.get(api_key=request.META.get('HTTP_X_ENVIRONMENT_KEY'))
+            environment = cache.get(request.META.get('HTTP_X_ENVIRONMENT_KEY'))
+            if environment:
+                request.environment = environment
+            else:
+                environment = Environment.objects.select_related('project__organisation').get(
+                    api_key=request.META.get('HTTP_X_ENVIRONMENT_KEY'))
+                cache.set(environment.api_key, environment)
         except Environment.DoesNotExist:
             raise exceptions.AuthenticationFailed('Invalid or missing Environment Key')
 
