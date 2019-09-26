@@ -13,7 +13,9 @@ from rest_framework.schemas import AutoSchema
 from analytics.track import track_event
 from audit.models import AuditLog, RelatedObjectType, FEATURE_SEGMENT_UPDATED_MESSAGE, \
     IDENTITY_FEATURE_STATE_DELETED_MESSAGE
+from environments.authentication import EnvironmentKeyAuthentication
 from environments.models import Environment, Identity
+from environments.permissions import EnvironmentKeyPermissions
 from projects.models import Project
 from util.util import get_user_permitted_projects, get_user_permitted_environments
 from .models import FeatureState, Feature, FeatureSegment
@@ -288,7 +290,8 @@ class FeatureStateCreateViewSet(mixins.CreateModelMixin, viewsets.GenericViewSet
 
 class SDKFeatureStates(GenericAPIView):
     serializer_class = FeatureStateSerializerFull
-    permission_classes = (AllowAny,)
+    permission_classes = (EnvironmentKeyPermissions,)
+    authentication_classes = (EnvironmentKeyAuthentication,)
 
     schema = AutoSchema(
         manual_fields=[
