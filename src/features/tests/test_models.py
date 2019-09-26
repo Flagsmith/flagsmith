@@ -93,20 +93,6 @@ class FeatureTestCase(TestCase):
         # Then
         FeatureState.objects.filter(feature__name=new_feature_name).exists()
 
-    def test_updating_feature_initial_value_should_update_feature_states(self):
-        # Given
-        feature = Feature.objects.create(project=self.project, name='test-feature', type='CONFIG',
-                                         initial_value='initial-value')
-
-        # When
-        new_value = 'new-value'
-        feature.initial_value = new_value
-        feature.save()
-
-        # Then
-        for feature_state in FeatureState.objects.filter(feature=feature):
-            assert feature_state.get_feature_state_value() == new_value
-
 
 @pytest.mark.django_db
 class FeatureSegmentTest(TestCase):
