@@ -197,7 +197,10 @@ class FeatureState(models.Model):
         key_name = self._get_feature_state_key_name(self.feature_segment.value_type)
 
         if self.feature_segment.value_type == BOOLEAN:
-            defaults[key_name] = get_boolean_from_string(self.feature_segment.value)
+            if type(self.feature_segment.value) == BOOLEAN:
+                defaults[key_name] = self.feature_segment.value
+            else:
+                defaults[key_name] = get_boolean_from_string(self.feature_segment.value)
         elif self.feature_segment.value_type == INTEGER:
             defaults[key_name] = get_integer_from_string(self.feature_segment.value)
         else:
