@@ -5,6 +5,7 @@ from django.test import TestCase
 
 from environments.models import Environment, Identity, Trait, STRING
 from features.models import Feature, FeatureState, CONFIG, FeatureSegment, FeatureStateValue
+from features.utils import INTEGER, BOOLEAN
 from organisations.models import Organisation
 from projects.models import Project
 from segments.models import Segment, SegmentRule, Condition, EQUAL
@@ -118,12 +119,38 @@ class FeatureSegmentTest(TestCase):
 
         self.not_matching_identity = Identity.objects.create(identifier='user_2', environment=self.environment)
 
-    def test_can_create_segment_override_for_remote_config(self):
+    def test_can_create_segment_override_for_string_remote_config(self):
         # Given
         overridden_value = 'overridden value'
         feature_segment = FeatureSegment.objects.create(feature=self.remote_config, segment=self.segment, priority=1)
         FeatureStateValue.objects.filter(
             feature_state__feature_segment=feature_segment).update(type=STRING, string_value=overridden_value)
+
+        # When
+        feature_states = self.matching_identity.get_all_feature_states()
+
+        # Then
+        assert feature_states.get(feature=self.remote_config).get_feature_state_value() == overridden_value
+
+    def test_can_create_segment_override_for_integer_remote_config(self):
+        # Given
+        overridden_value = 12
+        feature_segment = FeatureSegment.objects.create(feature=self.remote_config, segment=self.segment, priority=1)
+        FeatureStateValue.objects.filter(
+            feature_state__feature_segment=feature_segment).update(type=INTEGER, integer_value=overridden_value)
+
+        # When
+        feature_states = self.matching_identity.get_all_feature_states()
+
+        # Then
+        assert feature_states.get(feature=self.remote_config).get_feature_state_value() == overridden_value
+
+    def test_can_create_segment_override_for_boolean_remote_config(self):
+        # Given
+        overridden_value = False
+        feature_segment = FeatureSegment.objects.create(feature=self.remote_config, segment=self.segment, priority=1)
+        FeatureStateValue.objects.filter(
+            feature_state__feature_segment=feature_segment).update(type=BOOLEAN, boolean_value=overridden_value)
 
         # When
         feature_states = self.matching_identity.get_all_feature_states()

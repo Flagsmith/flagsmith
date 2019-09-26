@@ -115,6 +115,7 @@ class Identity(models.Model):
                 # finally, get all feature states for the environment that haven't been overridden
                 (
                     Q(identity=None) &
+                    Q(feature_segment=None) &
                     ~Q(
                         feature__id__in=self.identity_features.values_list(
                             'feature__id', flat=True
