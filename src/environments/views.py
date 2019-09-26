@@ -19,8 +19,7 @@ from util.util import get_user_permitted_identities, get_user_permitted_environm
 from util.views import SDKAPIView
 from .models import Environment, Identity, Trait
 from .serializers import EnvironmentSerializerLight, IdentitySerializer, TraitSerializerBasic, TraitSerializerFull, \
-    IdentitySerializerTraitFlags, IdentitySerializerWithTraitsAndSegments, IncrementTraitValueSerializer, \
-    CreateTraitSerializer
+    IdentitySerializerTraitFlags, IdentitySerializerWithTraitsAndSegments, IncrementTraitValueSerializer
 
 
 class EnvironmentViewSet(viewsets.ModelViewSet):
@@ -416,21 +415,28 @@ class SDKTraits(mixins.CreateModelMixin, viewsets.GenericViewSet):
 
     @swagger_auto_schema(responses={200: TraitSerializerBasic})
     def create(self, request, *args, **kwargs):
-        identity_data = request.data.get('identity')
-        identity, _ = Identity.objects.get_or_create(environment=request.environment,
-                                                     identifier=identity_data.get('identifier'))
+        """
+        This endpoint handles create and update since the SDK doesn't care whether it's updating or creating.
 
-        trait_value_data = Trait.generate_trait_value_data(request.data.get('trait_value'))
+        Note that the logic for manpulating the data is all here in the view because the front end currently sends up
+        the trait_value field as any of a number of data types so fitting this into a serializer field is tough.
 
-        trait, _ = Trait.objects.get_or_create(identity=identity, trait_key=request.data.get('trait_key'))
-
-        serializer = TraitSerializerFull(instance=trait, data=trait_value_data, partial=True)
-        if serializer.is_valid():
-            serializer.save()
-        else:
-            return Response({"details": "Couldn't create Trait for identity"}, status=status.HTTP_400_BAD_REQUEST)
-
+        TODO: store trait_value as a string and handle determining data type from the string value?
+        """
+        identity = self._get_identity(request.data.pop('identity'))
+        trait = self._get_or_create_trait_from_value(request.data.get('trait_key'), request.data.get('trait_value'),
+                                                     identity=identity)
         return Response(TraitSerializerBasic(trait).data, status=status.HTTP_200_OK)
+
+    def _get_identity(self, identity_data):
+        identity, _ = Identity.objects.get_or_create(environment=self.request.environment,
+                                                     identifier=identity_data.get('identifier'))
+        return identity
+
+    def _get_or_create_trait_from_value(self, trait_key, trait_value, identity):
+        trait_value_data = Trait.generate_trait_value_data(trait_value)
+        trait, _ = Trait.objects.update_or_create(identity=identity, trait_key=trait_key, defaults=trait_value_data)
+        return trait
 
     @swagger_auto_schema(responses={200: IncrementTraitValueSerializer})
     @action(detail=False, methods=["POST"], url_path='increment-value')
