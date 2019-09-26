@@ -4,8 +4,6 @@ from __future__ import unicode_literals
 from django.db import models
 from django.utils.encoding import python_2_unicode_compatible
 
-from organisations.chargebee import get_max_seats_for_plan
-
 
 @python_2_unicode_compatible
 class Organisation(models.Model):
@@ -14,6 +12,8 @@ class Organisation(models.Model):
     webhook_notification_email = models.EmailField(null=True, blank=True)
     created_date = models.DateTimeField('DateCreated', auto_now_add=True)
     alerted_over_plan_limit = models.BooleanField(default=False)
+    stop_serving_flags = models.BooleanField(default=False, help_text='Enable this to cease serving flags for this '
+                                                                      'organisation.')
 
     class Meta:
         ordering = ['id']
