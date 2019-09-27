@@ -93,17 +93,23 @@ class ProjectFeatureTestCase(TestCase):
     def test_should_create_feature_states_with_boolean_value_when_feature_created(self):
         # Given - set up data
         default_value = True
+        feature_name = 'Test feature'
+        data = {
+            'name': 'Test feature',
+            'project': self.project.id,
+            'initial_value': default_value
+        }
 
         # When
         response = self.client.post(self.project_features_url % self.project.id,
-                                    data=self.post_template % ("test feature", self.project.id,
-                                                               default_value),
+                                    data=json.dumps(data),
                                     content_type='application/json')
 
         # Then
         assert response.status_code == status.HTTP_201_CREATED
+
         # check feature was created successfully
-        assert Feature.objects.filter(name="test feature", project=self.project.id).count() == 1
+        assert Feature.objects.filter(name=feature_name, project=self.project.id).count() == 1
 
         # check feature was added to environment
         assert FeatureState.objects.filter(environment=self.environment_1).count() == 1
