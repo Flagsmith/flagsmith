@@ -30,7 +30,7 @@ class ProjectFeatureTestCase(TestCase):
 
         self.organisation = Organisation.objects.create(name='Test Org')
 
-        user.organisations.add(self.organisation)
+        user.add_organisation(self.organisation)
 
         self.project = Project.objects.create(name='Test project', organisation=self.organisation)
         self.environment_1 = Environment.objects.create(name='Test environment 1', project=self.project)
@@ -253,7 +253,7 @@ class FeatureSegmentViewTest(TestCase):
 
         organisation = Organisation.objects.create(name='Test Org')
 
-        user.organisations.add(organisation)
+        user.add_organisation(organisation)
 
         self.project = Project.objects.create(organisation=organisation, name='Test project')
         self.environment_1 = Environment.objects.create(project=self.project, name='Test environment 1')
