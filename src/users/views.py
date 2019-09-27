@@ -36,7 +36,7 @@ class FFAdminUserViewSet(mixins.ListModelMixin, viewsets.GenericViewSet):
 
     def get_queryset(self):
         if self.kwargs.get('organisation_pk'):
-            return FFAdminUser.objects.filter(organisations__id__contains=self.kwargs.get('organisation_pk'))
+            return FFAdminUser.objects.filter(organisations__id=self.kwargs.get('organisation_pk'))
         else:
             return FFAdminUser.objects.none()
 
