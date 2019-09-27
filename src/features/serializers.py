@@ -13,6 +13,11 @@ class CreateFeatureSerializer(serializers.ModelSerializer):
         fields = "__all__"
         read_only_fields = ('feature_segments',)
 
+    def to_internal_value(self, data):
+        if data.get('initial_value'):
+            data['initial_value'] = str(data.get('initial_value'))
+        return super(CreateFeatureSerializer, self).to_internal_value(data)
+
     def create(self, validated_data):
         if Feature.objects.filter(project=validated_data['project'], name__iexact=validated_data['name']).exists():
             raise serializers.ValidationError("Feature with that name already exists for this "
