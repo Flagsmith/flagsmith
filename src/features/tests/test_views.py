@@ -10,7 +10,7 @@ from audit.models import AuditLog, RelatedObjectType, IDENTITY_FEATURE_STATE_UPD
     IDENTITY_FEATURE_STATE_DELETED_MESSAGE
 from environments.models import Environment, Identity
 from features.models import Feature, FeatureState, FeatureSegment
-from organisations.models import Organisation
+from organisations.models import Organisation, OrganisationRole
 from projects.models import Project
 from segments.models import Segment
 from users.models import FFAdminUser
@@ -345,7 +345,7 @@ class FeatureStateViewSetTestCase(TestCase):
         self.feature = Feature.objects.create(name='test-feature', project=self.project, type='CONFIG',
                                               initial_value=12)
         self.user = FFAdminUser.objects.create(email='test@example.com')
-        self.user.organisations.add(self.organisation)
+        self.user.add_organisation(self.organisation, OrganisationRole.ADMIN)
         self.client = APIClient()
         self.client.force_authenticate(self.user)
 
