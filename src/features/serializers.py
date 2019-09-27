@@ -2,9 +2,10 @@ from rest_framework import serializers
 
 from audit.models import AuditLog, RelatedObjectType, FEATURE_CREATED_MESSAGE, FEATURE_UPDATED_MESSAGE, \
     FEATURE_STATE_UPDATED_MESSAGE, IDENTITY_FEATURE_STATE_UPDATED_MESSAGE
+from environments.models import Identity
 from features.utils import get_value_type
 from segments.serializers import SegmentSerializerBasic
-from .models import Feature, FeatureState, FeatureStateValue, FeatureSegment, STRING, INTEGER, BOOLEAN
+from .models import Feature, FeatureState, FeatureStateValue, FeatureSegment
 
 
 class CreateFeatureSerializer(serializers.ModelSerializer):
@@ -88,7 +89,13 @@ class FeatureStateSerializerFull(serializers.ModelSerializer):
 
 
 class FeatureStateSerializerBasic(serializers.ModelSerializer):
+    class _IdentitySerializer(serializers.ModelSerializer):
+        class Meta:
+            model = Identity
+            fields = ('id', 'identifier')
+
     feature_state_value = serializers.SerializerMethodField()
+    identity = _IdentitySerializer()
 
     class Meta:
         model = FeatureState

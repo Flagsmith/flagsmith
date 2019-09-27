@@ -3,6 +3,9 @@ import logging
 import coreapi
 from django.core.exceptions import ObjectDoesNotExist
 from django.db import transaction
+from django.utils.decorators import method_decorator
+from drf_yasg import openapi
+from drf_yasg.utils import swagger_auto_schema
 from rest_framework import status, viewsets, mixins
 from rest_framework.decorators import action
 from rest_framework.generics import GenericAPIView, get_object_or_404
@@ -78,6 +81,17 @@ class FeatureViewSet(viewsets.ModelViewSet):
                                 log=message)
 
 
+@method_decorator(name='list', decorator=swagger_auto_schema(
+    manual_parameters=[
+        openapi.Parameter(
+            'feature', openapi.IN_QUERY, 'ID of the feature to filter by.', required=False, type=openapi.TYPE_INTEGER),
+        openapi.Parameter(
+            'anyIdentity', openapi.IN_QUERY, 'Pass any value to get results that have an identity override. '
+                                             'Do not pass for default behaviour.',
+            required=False, type=openapi.TYPE_STRING
+        )
+    ]
+))
 class FeatureStateViewSet(viewsets.ModelViewSet):
     """
     View set to manage feature states. Nested beneath environments and environments + identities
@@ -101,7 +115,6 @@ class FeatureStateViewSet(viewsets.ModelViewSet):
     delete:
     Delete specific feature state
     """
-
     # Override serializer class to show correct information in docs
     def get_serializer_class(self):
         if self.action in ['list', 'retrieve', 'update']:
@@ -117,12 +130,19 @@ class FeatureStateViewSet(viewsets.ModelViewSet):
         identity_pk = self.kwargs.get('identity_pk')
         environment = get_object_or_404(get_user_permitted_environments(self.request.user), api_key=environment_api_key)
 
-        if identity_pk:
-            identity = Identity.objects.get(pk=identity_pk)
-        else:
-            identity = None
+        queryset = FeatureState.objects.filter(environment=environment)
 
-        return FeatureState.objects.filter(environment=environment, identity=identity)
+        if identity_pk:
+            queryset = queryset.filter(identity__pk=identity_pk)
+        elif 'anyIdentity' in self.request.query_params:
+            queryset = queryset.exclude(identity=None)
+        else:
+            queryset = queryset.filter(identity=None, feature_segment=None)
+
+        if self.request.query_params.get('feature'):
+            queryset = queryset.filter(feature__id=int(self.request.query_params.get('feature')))
+
+        return queryset
 
     def get_environment_from_request(self):
         """
