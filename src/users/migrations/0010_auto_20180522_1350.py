@@ -9,7 +9,7 @@ def migrate_org_to_orgs(apps, schema_editor):
     ff_admin_user_model = apps.get_model("users", "FFAdminUser")
     for user in ff_admin_user_model.objects.all():
         if user.organisation is not None:
-            user.organisations.add(user.organisation)
+            user.add_organisation(user.organisation)
 
 
 class Migration(migrations.Migration):
