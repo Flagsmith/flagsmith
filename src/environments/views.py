@@ -15,7 +15,6 @@ from rest_framework.schemas import AutoSchema
 from environments.authentication import EnvironmentKeyAuthentication
 from environments.permissions import EnvironmentKeyPermissions
 from features.serializers import FeatureStateSerializerFull
-from util.util import get_user_permitted_identities, get_user_permitted_environments, get_user_permitted_projects
 from util.views import SDKAPIView
 from .models import Environment, Identity, Trait
 from .serializers import EnvironmentSerializerLight, IdentitySerializer, TraitSerializerBasic, TraitSerializerFull, \
@@ -58,7 +57,7 @@ class EnvironmentViewSet(viewsets.ModelViewSet):
         if not project_pk:
             return Response(data={"detail": "No project provided"}, status=status.HTTP_400_BAD_REQUEST)
 
-        get_object_or_404(get_user_permitted_projects(self.request.user), pk=project_pk)
+        get_object_or_404(self.request.user.get_permitted_projects(), pk=project_pk)
 
         return super().create(request, *args, **kwargs)
 
@@ -88,7 +87,7 @@ class IdentityViewSet(viewsets.ModelViewSet):
 
     def get_queryset(self):
         environment = self.get_environment_from_request()
-        user_permitted_identities = get_user_permitted_identities(self.request.user)
+        user_permitted_identities = self.request.user.get_permitted_identities()
         queryset = user_permitted_identities.filter(environment__api_key=environment.api_key)
 
         if self.request.query_params.get('q'):
@@ -145,7 +144,7 @@ class TraitViewSet(viewsets.ModelViewSet):
         """
         environment_api_key = self.kwargs['environment_api_key']
         identity_pk = self.kwargs.get('identity_pk')
-        environment = get_user_permitted_environments(self.request.user).get(api_key=environment_api_key)
+        environment = self.request.user.get_permitted_environments().get(api_key=environment_api_key)
 
         if identity_pk:
             identity = Identity.objects.get(pk=identity_pk, environment=environment)

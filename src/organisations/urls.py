@@ -5,7 +5,6 @@ from organisations.views import InviteViewSet
 from users.views import FFAdminUserViewSet
 from . import views
 
-
 router = routers.DefaultRouter()
 router.register(r'', views.OrganisationViewSet, base_name="organisation")
 
@@ -17,5 +16,5 @@ app_name = "organisations"
 
 urlpatterns = [
     url(r'^', include(router.urls)),
-    url(r'^', include(organisations_router.urls))
+    url(r'^', include(organisations_router.urls)),
 ]

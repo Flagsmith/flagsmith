@@ -1,14 +1,20 @@
 import json
-from unittest import TestCase
+from datetime import datetime, timedelta
+from unittest import TestCase, mock
 
 import pytest
+from django.contrib.auth import get_user_model
+from django.core import mail
 from django.urls import reverse
+from pytz import UTC
 from rest_framework import status
 from rest_framework.test import APIClient
 
-from organisations.models import Organisation, OrganisationRole
+from organisations.models import Organisation, OrganisationRole, Subscription
 from users.models import Invite, FFAdminUser
 from util.tests import Helper
+
+User = get_user_model()
 
 
 @pytest.mark.django_db
@@ -211,3 +217,169 @@ class OrganisationTestCase(TestCase):
 
         # Then
         assert res.status_code == status.HTTP_200_OK
+
+    @mock.patch('organisations.serializers.get_subscription_data_from_hosted_page')
+    def test_update_subscription_gets_subscription_data_from_chargebee(self, mock_get_subscription_data):
+        # Given
+        organisation = Organisation.objects.create(name='Test org')
+        self.user.add_organisation(organisation, OrganisationRole.ADMIN)
+        url = reverse('api:v1:organisations:organisation-update-subscription', args=[organisation.pk])
+
+        hosted_page_id = 'some-id'
+        data = {
+            'hosted_page_id': hosted_page_id
+        }
+
+        subscription_id = 'subscription-id'
+        mock_get_subscription_data.return_value = {
+            'subscription_id': subscription_id,
+            'plan': 'plan-id',
+            'max_seats': 3,
+            'subscription_date': datetime.now(tz=UTC)
+        }
+
+        # When
+        res = self.client.post(url, data=data)
+
+        # Then
+        assert res.status_code == status.HTTP_200_OK
+
+        # and
+        mock_get_subscription_data.assert_called_with(hosted_page_id=hosted_page_id)
+
+        # and
+        assert organisation.has_subscription() and organisation.subscription.subscription_id == subscription_id
+
+
+@pytest.mark.django_db
+class ChargeBeeWebhookTestCase(TestCase):
+    def setUp(self) -> None:
+        self.client = APIClient()
+        self.cb_user = User.objects.create(email='chargebee@bullet-train.io', username='chargebee')
+        self.admin_user = User.objects.create(email='admin@bullet-train.io', username='admin', is_staff=True)
+        self.client.force_authenticate(self.cb_user)
+        self.organisation = Organisation.objects.create(name='Test org')
+
+        self.url = reverse('api:v1:chargebee-webhook')
+        self.subscription_id = 'subscription-id'
+        self.old_plan_id = 'old-plan-id'
+        self.old_max_seats = 1
+        self.subscription = Subscription.objects.create(organisation=self.organisation,
+                                                        subscription_id=self.subscription_id,
+                                                        plan=self.old_plan_id, max_seats=self.old_max_seats)
+
+    @mock.patch('organisations.models.get_max_seats_for_plan')
+    def test_when_subscription_plan_is_changed_max_seats_updated(self, mock_get_max_seats):
+        # Given
+        new_plan_id = 'new-plan-id'
+        new_max_seats = 3
+        mock_get_max_seats.return_value = new_max_seats
+
+        data = {
+            'content': {
+                'subscription': {
+                    'status': 'active',
+                    'id': self.subscription_id,
+                    'plan_id': new_plan_id
+                }
+            }
+        }
+
+        # When
+        res = self.client.post(self.url, data=json.dumps(data), content_type='application/json')
+
+        # Then
+        assert res.status_code == status.HTTP_200_OK
+
+        # and
+        self.subscription.refresh_from_db()
+        assert self.subscription.plan == new_plan_id
+        assert self.subscription.max_seats == new_max_seats
+
+    def test_when_subscription_is_set_to_non_renewing_then_cancellation_date_set_and_alert_sent(self):
+        # Given
+        cancellation_date = datetime.now(tz=UTC) + timedelta(days=1)
+        data = {
+            'content': {
+                'subscription': {
+                    'status': 'non_renewing',
+                    'id': self.subscription_id,
+                    'current_term_end': datetime.timestamp(cancellation_date)
+                }
+            }
+        }
+
+        # When
+        self.client.post(self.url, data=json.dumps(data), content_type='application/json')
+
+        # Then
+        self.subscription.refresh_from_db()
+        assert self.subscription.cancellation_date == cancellation_date
+
+        # and
+        assert len(mail.outbox) == 1
+
+    def test_when_subscription_is_cancelled_then_cancellation_date_set_and_alert_sent(self):
+        # Given
+        cancellation_date = datetime.now(tz=UTC) + timedelta(days=1)
+        data = {
+            'content': {
+                'subscription': {
+                    'status': 'cancelled',
+                    'id': self.subscription_id,
+                    'current_term_end': datetime.timestamp(cancellation_date)
+                }
+            }
+        }
+
+        # When
+        self.client.post(self.url, data=json.dumps(data), content_type='application/json')
+
+        # Then
+        self.subscription.refresh_from_db()
+        assert self.subscription.cancellation_date == cancellation_date
+
+        # and
+        assert len(mail.outbox) == 1
+
+    def test_when_cancelled_subscription_is_renewed_then_subscription_activated_and_no_cancellation_email_sent(self):
+        # Given
+        self.subscription.cancellation_date = datetime.now(tz=UTC) - timedelta(days=1)
+        self.subscription.save()
+        mail.outbox.clear()
+
+        data = {
+            'content': {
+                'subscription': {
+                    'status': 'active',
+                    'id': self.subscription_id,
+                }
+            }
+        }
+
+        # When
+        self.client.post(self.url, data=json.dumps(data), content_type='application/json')
+
+        # Then
+        self.subscription.refresh_from_db()
+        assert not self.subscription.cancellation_date
+
+        # and
+        assert not mail.outbox
+
+    def test_when_chargebee_webhook_received_with_unknown_subscription_id_then_404(self):
+        # Given
+        data = {
+            'content': {
+                'subscription': {
+                    'status': 'active',
+                    'id': 'some-random-id'
+                }
+            }
+        }
+
+        # When
+        res = self.client.post(self.url, data=json.dumps(data), content_type='application/json')
+
+        # Then
+        assert res.status_code == status.HTTP_400_BAD_REQUEST
