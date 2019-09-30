@@ -89,13 +89,7 @@ class FeatureStateSerializerFull(serializers.ModelSerializer):
 
 
 class FeatureStateSerializerBasic(serializers.ModelSerializer):
-    class _IdentitySerializer(serializers.ModelSerializer):
-        class Meta:
-            model = Identity
-            fields = ('id', 'identifier')
-
     feature_state_value = serializers.SerializerMethodField()
-    identity = _IdentitySerializer()
 
     class Meta:
         model = FeatureState
@@ -116,6 +110,15 @@ class FeatureStateSerializerBasic(serializers.ModelSerializer):
 
     def _create_audit_log(self, instance):
         create_feature_state_audit_log(instance, self.context.get('request'))
+
+
+class FeatureStateSerializerWithIdentity(FeatureStateSerializerBasic):
+    class _IdentitySerializer(serializers.ModelSerializer):
+        class Meta:
+            model = Identity
+            fields = ('id', 'identifier')
+
+    identity = _IdentitySerializer()
 
 
 class FeatureStateSerializerCreate(serializers.ModelSerializer):
