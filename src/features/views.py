@@ -22,7 +22,7 @@ from util.util import get_user_permitted_projects, get_user_permitted_environmen
 from .models import FeatureState, Feature, FeatureSegment
 from .serializers import FeatureStateSerializerBasic, FeatureStateSerializerFull, \
     FeatureStateSerializerCreate, CreateFeatureSerializer, FeatureSerializer, \
-    FeatureStateValueSerializer, FeatureSegmentCreateSerializer
+    FeatureStateValueSerializer, FeatureSegmentCreateSerializer, FeatureStateSerializerWithIdentity
 
 logger = logging.getLogger()
 logger.setLevel(logging.INFO)
@@ -117,7 +117,9 @@ class FeatureStateViewSet(viewsets.ModelViewSet):
     """
     # Override serializer class to show correct information in docs
     def get_serializer_class(self):
-        if self.action in ['list', 'retrieve', 'update']:
+        if self.action == 'list':
+            return FeatureStateSerializerWithIdentity
+        elif self.action in ['retrieve', 'update']:
             return FeatureStateSerializerBasic
         else:
             return FeatureStateSerializerCreate
