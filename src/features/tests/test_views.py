@@ -10,9 +10,10 @@ from audit.models import AuditLog, RelatedObjectType, IDENTITY_FEATURE_STATE_UPD
     IDENTITY_FEATURE_STATE_DELETED_MESSAGE
 from environments.models import Environment, Identity
 from features.models import Feature, FeatureState, FeatureSegment
-from organisations.models import Organisation
+from organisations.models import Organisation, OrganisationRole
 from projects.models import Project
 from segments.models import Segment
+from users.models import FFAdminUser
 from util.tests import Helper
 
 
@@ -29,7 +30,7 @@ class ProjectFeatureTestCase(TestCase):
 
         self.organisation = Organisation.objects.create(name='Test Org')
 
-        user.organisations.add(self.organisation)
+        user.add_organisation(self.organisation)
 
         self.project = Project.objects.create(name='Test project', organisation=self.organisation)
         self.environment_1 = Environment.objects.create(name='Test environment 1', project=self.project)
@@ -252,7 +253,7 @@ class FeatureSegmentViewTest(TestCase):
 
         organisation = Organisation.objects.create(name='Test Org')
 
-        user.organisations.add(organisation)
+        user.add_organisation(organisation)
 
         self.project = Project.objects.create(organisation=organisation, name='Test project')
         self.environment_1 = Environment.objects.create(project=self.project, name='Test environment 1')
@@ -333,3 +334,40 @@ class FeatureSegmentViewTest(TestCase):
         for env in Environment.objects.all():
             fs = FeatureState.objects.get(environment=env, feature_segment__segment=self.segment)
             assert fs.get_feature_state_value() == value
+
+
+@pytest.mark.django_db()
+class FeatureStateViewSetTestCase(TestCase):
+    def setUp(self) -> None:
+        self.organisation = Organisation.objects.create(name='Test org')
+        self.project = Project.objects.create(name='Test project', organisation=self.organisation)
+        self.environment = Environment.objects.create(project=self.project, name='Test environment')
+        self.feature = Feature.objects.create(name='test-feature', project=self.project, type='CONFIG',
+                                              initial_value=12)
+        self.user = FFAdminUser.objects.create(email='test@example.com')
+        self.user.add_organisation(self.organisation, OrganisationRole.ADMIN)
+        self.client = APIClient()
+        self.client.force_authenticate(self.user)
+
+    def test_update_feature_state_value_updates_feature_state_value(self):
+        # Given
+        feature_state = FeatureState.objects.get(environment=self.environment, feature=self.feature)
+        url = reverse('api:v1:environments:environment-featurestates-detail',
+                      args=[self.environment.api_key, feature_state.id])
+        new_value = 'new-value'
+        data = {
+            'id': feature_state.id,
+            'feature_state_value': new_value,
+            'enabled': False,
+            'feature': self.feature.id,
+            'environment': self.environment.id,
+            'identity': None,
+            'feature_segment': None
+        }
+
+        # When
+        self.client.put(url, data=json.dumps(data), content_type='application/json')
+
+        # Then
+        feature_state.refresh_from_db()
+        assert feature_state.get_feature_state_value() == new_value
