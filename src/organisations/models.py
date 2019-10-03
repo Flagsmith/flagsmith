@@ -8,6 +8,8 @@ from django.db import models
 from django.utils import timezone
 from django.utils.encoding import python_2_unicode_compatible
 
+from organisations.chargebee import get_max_seats_for_plan
+
 
 class OrganisationRole(enum.Enum):
     ADMIN = "ADMIN"
