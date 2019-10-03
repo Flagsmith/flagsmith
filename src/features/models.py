@@ -178,7 +178,9 @@ class FeatureState(models.Model):
         super(FeatureState, self).save(*args, **kwargs)
 
         # create default feature state value for feature state
-        FeatureStateValue.objects.update_or_create(
+        # note: this is get_or_create since feature state values are updated separately, and hence if this is set to
+        # update_or_create, it overwrites the FSV with the initial value again
+        FeatureStateValue.objects.get_or_create(
             feature_state=self,
             defaults=self._get_defaults()
         )

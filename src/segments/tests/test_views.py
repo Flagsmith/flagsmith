@@ -18,7 +18,7 @@ class SegmentViewSetTestCase(APITestCase):
     def setUp(self) -> None:
         self.user = User.objects.create(email='test@example.com')
         self.organisation = Organisation.objects.create(name='Test Organisation')
-        self.user.organisations.add(self.organisation)
+        self.user.add_organisation(self.organisation)
         self.client.force_authenticate(self.user)
         self.project = Project.objects.create(name='Test project', organisation=self.organisation)
 
