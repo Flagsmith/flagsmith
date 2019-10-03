@@ -3,13 +3,16 @@ import logging
 from django.conf import settings
 from django.contrib.auth.base_user import BaseUserManager
 from django.contrib.auth.models import AbstractUser
-from django.core.mail import EmailMultiAlternatives
+from django.core.mail import EmailMultiAlternatives, send_mail
 from django.db import models
 from django.template.loader import get_template
+
 from django.utils.encoding import python_2_unicode_compatible
 
 from app.utils import create_hash
+from environments.models import Environment, Identity
 from organisations.models import Organisation, UserOrganisation, OrganisationRole, organisation_roles
+from projects.models import Project
 from users.exceptions import InvalidInviteError
 
 logger = logging.getLogger(__name__)
@@ -104,8 +107,30 @@ class FFAdminUser(AbstractUser):
         except UserOrganisation.DoesNotExist:
             logger.warning('User %d is not part of organisation %d' % (self.id, organisation.id))
 
+    def get_permitted_projects(self):
+        user_org_ids = [org.id for org in self.organisations.all()]
+        return Project.objects.filter(organisation__in=user_org_ids)
+
+    def get_permitted_environments(self):
+        user_projects = self.get_permitted_projects()
+        return Environment.objects.filter(project__in=[project.id for project in user_projects.all()])
+
+    def get_permitted_identities(self):
+        user_environments = self.get_permitted_environments()
+        return Identity.objects.filter(environment__in=[env.id for env in user_environments.all()])
+
     @staticmethod
-    def get_admin_user_emails():
+    def send_alert_to_admin_users(subject, message):
+        send_mail(
+            subject=subject,
+            message=message,
+            from_email=settings.DEFAULT_FROM_EMAIL,
+            recipient_list=FFAdminUser._get_admin_user_emails(),
+            fail_silently=True
+        )
+
+    @staticmethod
+    def _get_admin_user_emails():
         return [user['email'] for user in FFAdminUser.objects.filter(is_staff=True).values('email')]
 
 

@@ -15,7 +15,6 @@ from audit.models import AuditLog, RelatedObjectType, FEATURE_SEGMENT_UPDATED_ME
     IDENTITY_FEATURE_STATE_DELETED_MESSAGE
 from environments.models import Environment, Identity
 from projects.models import Project
-from util.util import get_user_permitted_projects, get_user_permitted_environments
 from .models import FeatureState, Feature, FeatureSegment
 from .serializers import FeatureStateSerializerBasic, FeatureStateSerializerFull, \
     FeatureStateSerializerCreate, CreateFeatureSerializer, FeatureSerializer, \
@@ -35,7 +34,7 @@ class FeatureViewSet(viewsets.ModelViewSet):
             return FeatureSerializer
 
     def get_queryset(self):
-        user_projects = get_user_permitted_projects(self.request.user)
+        user_projects = self.request.user.get_permitted_projects()
         project = get_object_or_404(user_projects, pk=self.kwargs['project_pk'])
 
         return project.features.all()
@@ -115,7 +114,7 @@ class FeatureStateViewSet(viewsets.ModelViewSet):
         """
         environment_api_key = self.kwargs['environment_api_key']
         identity_pk = self.kwargs.get('identity_pk')
-        environment = get_object_or_404(get_user_permitted_environments(self.request.user), api_key=environment_api_key)
+        environment = get_object_or_404(self.request.user.get_permitted_environments(), api_key=environment_api_key)
 
         if identity_pk:
             identity = Identity.objects.get(pk=identity_pk)
