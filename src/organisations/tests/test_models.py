@@ -34,27 +34,3 @@ class SubscriptionTestCase(TestCase):
 
         # Then
         assert subscription.max_seats == 1
-
-    @mock.patch('organisations.signals.get_plan_id_from_subscription')
-    @mock.patch('organisations.signals.get_max_seats_for_plan')
-    def test_plan_and_max_seats_set_on_save(self, mock_max_seats, mock_get_plan):
-        # Given
-        subscription_id = 'test-subscription-id'
-        subscription = Subscription(organisation=self.organisation, subscription_id=subscription_id)
-
-        plan_id = 'test-plan'
-        mock_get_plan.return_value = plan_id
-
-        max_seats = 3
-        mock_max_seats.return_value = max_seats
-
-        # When
-        subscription.save()
-
-        # Then
-        mock_get_plan.assert_called_with(subscription_id)
-        assert subscription.plan == plan_id
-
-        # and
-        mock_max_seats.assert_called_with(plan_id)
-        assert subscription.max_seats == max_seats
