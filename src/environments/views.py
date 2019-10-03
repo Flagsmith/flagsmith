@@ -18,7 +18,8 @@ from features.serializers import FeatureStateSerializerFull
 from util.views import SDKAPIView
 from .models import Environment, Identity, Trait
 from .serializers import EnvironmentSerializerLight, IdentitySerializer, TraitSerializerBasic, TraitSerializerFull, \
-    IdentitySerializerTraitFlags, IdentitySerializerWithTraitsAndSegments, IncrementTraitValueSerializer
+    IdentitySerializerTraitFlags, IdentitySerializerWithTraitsAndSegments, IncrementTraitValueSerializer, \
+    TraitKeysSerializer, DeleteAllTraitKeysSerializer
 
 
 class EnvironmentViewSet(viewsets.ModelViewSet):
@@ -41,8 +42,20 @@ class EnvironmentViewSet(viewsets.ModelViewSet):
     delete:
     Delete an environment
     """
-    serializer_class = EnvironmentSerializerLight
     lookup_field = 'api_key'
+
+    def get_serializer_class(self):
+        if self.action == 'trait_keys':
+            return TraitKeysSerializer
+        if self.action == 'delete_traits':
+            return DeleteAllTraitKeysSerializer
+        return EnvironmentSerializerLight
+
+    def get_serializer_context(self):
+        context = super(EnvironmentViewSet, self).get_serializer_context()
+        if self.kwargs.get('api_key'):
+            context['environment'] = self.get_object()
+        return context
 
     def get_queryset(self):
         queryset = Environment.objects.filter(
@@ -60,6 +73,30 @@ class EnvironmentViewSet(viewsets.ModelViewSet):
         get_object_or_404(self.request.user.get_permitted_projects(), pk=project_pk)
 
         return super().create(request, *args, **kwargs)
+
+    @action(detail=True, methods=['GET'], url_path='trait-keys')
+    def trait_keys(self, request, *args, **kwargs):
+        keys = [trait_key for trait_key in Trait.objects.filter(
+                    identity__environment=self.get_object()).order_by().values_list('trait_key', flat=True).distinct()]
+
+        data = {
+            'keys': keys
+        }
+
+        serializer = self.get_serializer(data=data)
+        if serializer.is_valid():
+            return Response(serializer.data, status=status.HTTP_200_OK)
+        else:
+            return Response({'detail': 'Couldn\'t get trait keys'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+    @action(detail=True, methods=['POST'], url_path='delete-traits')
+    def delete_traits(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data)
+        if serializer.is_valid():
+            serializer.delete()
+            return Response(status=status.HTTP_200_OK)
+        else:
+            return Response({'detail': 'Couldn\'t delete trait keys.'}, status=status.HTTP_400_BAD_REQUEST)
 
 
 class IdentityViewSet(viewsets.ModelViewSet):
