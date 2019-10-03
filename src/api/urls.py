@@ -5,6 +5,7 @@ from rest_framework import permissions, authentication, routers
 
 from environments.views import SDKIdentitiesDeprecated, SDKTraitsDeprecated, SDKIdentities, SDKTraits
 from features.views import SDKFeatureStates
+from organisations.views import chargebee_webhook
 from segments.views import SDKSegments
 
 schema_view = get_schema_view(
@@ -34,6 +35,9 @@ current_urls = [
     url(r'^account/', include('allauth.urls')),
     url(r'^e2etests/', include('e2etests.urls')),
     url(r'^audit/', include('audit.urls')),
+
+    # Chargebee webhooks
+    url(r'cb-webhook/', chargebee_webhook, name='chargebee-webhook'),
 
     # Client SDK urls
     url(r'^flags/$', SDKFeatureStates.as_view()),
