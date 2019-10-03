@@ -122,7 +122,7 @@ class FeatureStateViewSet(viewsets.ModelViewSet):
         else:
             identity = None
 
-        return FeatureState.objects.filter(environment=environment, identity=identity)
+        return FeatureState.objects.filter(environment=environment, identity=identity, feature_segment=None)
 
     def get_environment_from_request(self):
         """
