@@ -3,7 +3,7 @@ from rest_framework import serializers
 from audit.models import AuditLog, RelatedObjectType, FEATURE_CREATED_MESSAGE, FEATURE_UPDATED_MESSAGE, \
     FEATURE_STATE_UPDATED_MESSAGE, IDENTITY_FEATURE_STATE_UPDATED_MESSAGE
 from environments.models import Identity
-from features.utils import get_value_type, get_boolean_from_string, get_integer_from_string
+from features.utils import get_value_type, get_boolean_from_string, get_integer_from_string, BOOLEAN, INTEGER
 from segments.serializers import SegmentSerializerBasic
 from .models import Feature, FeatureState, FeatureStateValue, FeatureSegment
 
