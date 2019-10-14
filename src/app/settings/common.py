@@ -93,7 +93,11 @@ INSTALLED_APPS = [
     'simple_history',
     'debug_toolbar',
     'drf_yasg',
-    'audit'
+    'audit',
+
+    # health check plugins
+    'health_check',
+    'health_check.db',
 ]
 
 if GOOGLE_ANALYTICS_KEY:
