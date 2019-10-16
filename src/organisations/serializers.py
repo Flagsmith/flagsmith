@@ -18,10 +18,16 @@ class SubscriptionSerializer(serializers.ModelSerializer):
 
 class OrganisationSerializerFull(serializers.ModelSerializer):
     subscription = SubscriptionSerializer(required=False)
+    role = serializers.SerializerMethodField()
 
     class Meta:
         model = Organisation
-        fields = ('id', 'name', 'created_date', 'webhook_notification_email', 'num_seats', 'subscription')
+        fields = ('id', 'name', 'created_date', 'webhook_notification_email', 'num_seats', 'subscription', 'role')
+
+    def get_role(self, instance):
+        if self.context.get('request'):
+            user = self.context['request'].user
+            return user.get_organisation_role(instance)
 
 
 class OrganisationSerializerBasic(serializers.ModelSerializer):
