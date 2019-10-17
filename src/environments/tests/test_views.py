@@ -29,7 +29,7 @@ class EnvironmentTestCase(TestCase):
         self.client.force_authenticate(user=user)
 
         self.organisation = Organisation.objects.create(name='ssg')
-        user.organisations.add(self.organisation)
+        user.add_organisation(self.organisation)
 
         self.project = Project.objects.create(name='Test project', organisation=self.organisation)
 
@@ -146,6 +146,81 @@ class EnvironmentTestCase(TestCase):
         # and
         assert AuditLog.objects.first().author
 
+    def test_get_all_trait_keys_for_environment_only_returns_distinct_keys(self):
+        # Given
+        trait_key_one = 'trait-key-one'
+        trait_key_two = 'trait-key-two'
+
+        environment = Environment.objects.create(project=self.project, name='Test Environment')
+
+        identity_one = Identity.objects.create(environment=environment, identifier='identity-one')
+        identity_two = Identity.objects.create(environment=environment, identifier='identity-two')
+
+        Trait.objects.create(identity=identity_one, trait_key=trait_key_one, string_value='blah', value_type=STRING)
+        Trait.objects.create(identity=identity_one, trait_key=trait_key_two, string_value='blah', value_type=STRING)
+        Trait.objects.create(identity=identity_two, trait_key=trait_key_one, string_value='blah', value_type=STRING)
+
+        url = reverse('api:v1:environments:environment-trait-keys', args=[environment.api_key])
+
+        # When
+        res = self.client.get(url)
+
+        # Then
+        assert res.status_code == status.HTTP_200_OK
+
+        # and - only distinct keys are returned
+        assert len(res.json().get('keys')) == 2
+
+    def test_delete_trait_keys_deletes_trait_for_all_users_in_that_environment(self):
+        # Given
+        environment_one = Environment.objects.create(project=self.project, name='Test Environment 1')
+        environment_two = Environment.objects.create(project=self.project, name='Test Environment 2')
+
+        identity_one_environment_one = Identity.objects.create(environment=environment_one,
+                                                               identifier='identity-one-env-one')
+        identity_one_environment_two = Identity.objects.create(environment=environment_two,
+                                                               identifier='identity-one-env-two')
+
+        trait_key = 'trait-key'
+        Trait.objects.create(identity=identity_one_environment_one, trait_key=trait_key, string_value='blah',
+                             value_type=STRING)
+        Trait.objects.create(identity=identity_one_environment_two, trait_key=trait_key, string_value='blah',
+                             value_type=STRING)
+
+        url = reverse('api:v1:environments:environment-delete-traits', args=[environment_one.api_key])
+
+        # When
+        self.client.post(url, data={'key': trait_key})
+
+        # Then
+        assert not Trait.objects.filter(identity=identity_one_environment_one, trait_key=trait_key).exists()
+
+        # and
+        assert Trait.objects.filter(identity=identity_one_environment_two, trait_key=trait_key).exists()
+
+    def test_delete_trait_keys_deletes_traits_matching_provided_key_only(self):
+        # Given
+        environment = Environment.objects.create(project=self.project, name='Test Environment')
+
+        identity = Identity.objects.create(identifier='test-identity', environment=environment)
+
+        trait_to_delete = 'trait-key-to-delete'
+        Trait.objects.create(identity=identity, trait_key=trait_to_delete, value_type=STRING, string_value='blah')
+
+        trait_to_persist = 'trait-key-to-persist'
+        Trait.objects.create(identity=identity, trait_key=trait_to_persist, value_type=STRING, string_value='blah')
+
+        url = reverse('api:v1:environments:environment-delete-traits', args=[environment.api_key])
+
+        # When
+        self.client.post(url, data={'key': trait_to_delete})
+
+        # Then
+        assert not Trait.objects.filter(identity=identity, trait_key=trait_to_delete).exists()
+
+        # and
+        assert Trait.objects.filter(identity=identity, trait_key=trait_to_persist).exists()
+
 
 @pytest.mark.django_db
 class IdentityTestCase(TestCase):
@@ -162,7 +237,7 @@ class IdentityTestCase(TestCase):
         self.client.force_authenticate(user=user)
 
         self.organisation = Organisation.objects.create(name='Test Org')
-        user.organisations.add(self.organisation)
+        user.add_organisation(self.organisation)
 
         self.project = Project.objects.create(name='Test project', organisation=self.organisation)
         self.environment = Environment.objects.create(name='Test Environment', project=self.project)
@@ -682,7 +757,7 @@ class TraitViewSetTestCase(TestCase):
         self.client.force_authenticate(user=user)
 
         organisation = Organisation.objects.create(name='Test org')
-        user.organisations.add(organisation)
+        user.add_organisation(organisation)
 
         self.project = Project.objects.create(name='Test project', organisation=organisation)
         self.environment = Environment.objects.create(name='Test environment', project=self.project)

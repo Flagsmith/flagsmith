@@ -3,6 +3,9 @@ import logging
 import coreapi
 from django.core.exceptions import ObjectDoesNotExist
 from django.db import transaction
+from django.utils.decorators import method_decorator
+from drf_yasg import openapi
+from drf_yasg.utils import swagger_auto_schema
 from rest_framework import status, viewsets, mixins
 from rest_framework.decorators import action
 from rest_framework.generics import GenericAPIView, get_object_or_404
@@ -13,13 +16,14 @@ from rest_framework.schemas import AutoSchema
 from analytics.track import track_event
 from audit.models import AuditLog, RelatedObjectType, FEATURE_SEGMENT_UPDATED_MESSAGE, \
     IDENTITY_FEATURE_STATE_DELETED_MESSAGE
+from environments.authentication import EnvironmentKeyAuthentication
 from environments.models import Environment, Identity
+from environments.permissions import EnvironmentKeyPermissions
 from projects.models import Project
-from util.util import get_user_permitted_projects, get_user_permitted_environments
 from .models import FeatureState, Feature, FeatureSegment
 from .serializers import FeatureStateSerializerBasic, FeatureStateSerializerFull, \
     FeatureStateSerializerCreate, CreateFeatureSerializer, FeatureSerializer, \
-    FeatureStateValueSerializer, FeatureSegmentCreateSerializer
+    FeatureStateValueSerializer, FeatureSegmentCreateSerializer, FeatureStateSerializerWithIdentity
 
 logger = logging.getLogger()
 logger.setLevel(logging.INFO)
@@ -35,7 +39,7 @@ class FeatureViewSet(viewsets.ModelViewSet):
             return FeatureSerializer
 
     def get_queryset(self):
-        user_projects = get_user_permitted_projects(self.request.user)
+        user_projects = self.request.user.get_permitted_projects()
         project = get_object_or_404(user_projects, pk=self.kwargs['project_pk'])
 
         return project.features.all()
@@ -78,6 +82,17 @@ class FeatureViewSet(viewsets.ModelViewSet):
                                 log=message)
 
 
+@method_decorator(name='list', decorator=swagger_auto_schema(
+    manual_parameters=[
+        openapi.Parameter(
+            'feature', openapi.IN_QUERY, 'ID of the feature to filter by.', required=False, type=openapi.TYPE_INTEGER),
+        openapi.Parameter(
+            'anyIdentity', openapi.IN_QUERY, 'Pass any value to get results that have an identity override. '
+                                             'Do not pass for default behaviour.',
+            required=False, type=openapi.TYPE_STRING
+        )
+    ]
+))
 class FeatureStateViewSet(viewsets.ModelViewSet):
     """
     View set to manage feature states. Nested beneath environments and environments + identities
@@ -101,10 +116,11 @@ class FeatureStateViewSet(viewsets.ModelViewSet):
     delete:
     Delete specific feature state
     """
-
     # Override serializer class to show correct information in docs
     def get_serializer_class(self):
-        if self.action in ['list', 'retrieve', 'update']:
+        if self.action == 'list':
+            return FeatureStateSerializerWithIdentity
+        elif self.action in ['retrieve', 'update']:
             return FeatureStateSerializerBasic
         else:
             return FeatureStateSerializerCreate
@@ -115,14 +131,21 @@ class FeatureStateViewSet(viewsets.ModelViewSet):
         """
         environment_api_key = self.kwargs['environment_api_key']
         identity_pk = self.kwargs.get('identity_pk')
-        environment = get_object_or_404(get_user_permitted_environments(self.request.user), api_key=environment_api_key)
+        environment = get_object_or_404(self.request.user.get_permitted_environments(), api_key=environment_api_key)
+
+        queryset = FeatureState.objects.filter(environment=environment, feature_segment=None)
 
         if identity_pk:
-            identity = Identity.objects.get(pk=identity_pk)
+            queryset = queryset.filter(identity__pk=identity_pk)
+        elif 'anyIdentity' in self.request.query_params:
+            queryset = queryset.exclude(identity=None)
         else:
-            identity = None
+            queryset = queryset.filter(identity=None, feature_segment=None)
 
-        return FeatureState.objects.filter(environment=environment, identity=identity)
+        if self.request.query_params.get('feature'):
+            queryset = queryset.filter(feature__id=int(self.request.query_params.get('feature')))
+
+        return queryset
 
     def get_environment_from_request(self):
         """
@@ -288,7 +311,8 @@ class FeatureStateCreateViewSet(mixins.CreateModelMixin, viewsets.GenericViewSet
 
 class SDKFeatureStates(GenericAPIView):
     serializer_class = FeatureStateSerializerFull
-    permission_classes = (AllowAny,)
+    permission_classes = (EnvironmentKeyPermissions,)
+    authentication_classes = (EnvironmentKeyAuthentication,)
 
     schema = AutoSchema(
         manual_fields=[
@@ -333,6 +357,7 @@ class SDKFeatureStates(GenericAPIView):
         kwargs = {
             'identity': identity,
             'environment': environment,
+            'feature_segment': None
         }
 
         if 'feature' in request.GET:

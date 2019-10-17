@@ -1,8 +1,13 @@
+import logging
+
+from django.conf import settings
 from rest_framework import serializers
 
-from organisations.models import Subscription, Organisation
-from users.models import FFAdminUser
-from . import models
+from organisations.chargebee import get_subscription_data_from_hosted_page
+from users.models import Invite, FFAdminUser
+from .models import Organisation, Subscription, UserOrganisation, OrganisationRole
+
+logger = logging.getLogger(__name__)
 
 
 class SubscriptionSerializer(serializers.ModelSerializer):
@@ -11,75 +16,139 @@ class SubscriptionSerializer(serializers.ModelSerializer):
         exclude = ('organisation',)
 
 
-class OrganisationSerializer(serializers.ModelSerializer):
-    # These fields are kept in for backwards compatibility with the FE for now,
-    # will need to be removed in a future release in favour of nested subscription
-    paid_subscription = serializers.SerializerMethodField()
-    free_to_use_subscription = serializers.SerializerMethodField()
-    subscription_date = serializers.SerializerMethodField()
-    plan = serializers.SerializerMethodField()
-    pending_cancellation = serializers.SerializerMethodField()
-
+class OrganisationSerializerFull(serializers.ModelSerializer):
     subscription = SubscriptionSerializer(required=False)
-
-    organisation_fields = ('id', 'name', 'created_date', 'webhook_notification_email', 'num_seats', 'subscription')
-    subscription_fields = (
-        'paid_subscription', 'free_to_use_subscription', 'subscription_date', 'plan', 'pending_cancellation')
+    role = serializers.SerializerMethodField()
 
     class Meta:
-        model = models.Organisation
+        model = Organisation
+        fields = ('id', 'name', 'created_date', 'webhook_notification_email', 'num_seats', 'subscription', 'role')
 
-    def get_field_names(self, declared_fields, info):
-        return self.organisation_fields + self.subscription_fields
+    def get_role(self, instance):
+        if self.context.get('request'):
+            user = self.context['request'].user
+            return user.get_organisation_role(instance)
 
-    def to_internal_value(self, data):
-        """
-        Grab the subscription fields out of the posted data and correct the data to look as though they were passed as
-        a nested subscription object. Note that this assumes use of one OR the other - if fields are passed in both
-        ways then those fields in the root subscription object will be ignored.
-        """
-        if not data.get('subscription'):
-            subscription_data = {}
-            for field in self.subscription_fields:
-                if data.get(field):
-                    subscription_data[field] = data.get(field)
-            if subscription_data:
-                data['subscription'] = subscription_data
-        return super(OrganisationSerializer, self).to_internal_value(data)
+
+class OrganisationSerializerBasic(serializers.ModelSerializer):
+    class Meta:
+        model = Organisation
+        fields = ('id', 'name')
+
+
+class UserOrganisationSerializer(serializers.ModelSerializer):
+    organisation = OrganisationSerializerBasic(read_only=True)
+
+    class Meta:
+        model = UserOrganisation
+        fields = ('role', 'organisation')
+
+
+class InviteSerializerFull(serializers.ModelSerializer):
+    class InvitedBySerializer(serializers.ModelSerializer):
+        class Meta:
+            model = FFAdminUser
+            fields = ('id', 'email', 'first_name', 'last_name')
+
+    invited_by = InvitedBySerializer()
+
+    class Meta:
+        model = Invite
+        fields = ('id', 'email', 'role', 'date_created', 'invited_by')
+
+
+class InviteSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Invite
+        fields = ('id', 'email', 'role', 'date_created')
+        read_only_fields = ('id', 'date_created')
+
+    def validate(self, attrs):
+        if Invite.objects.filter(email=attrs['email'], organisation__id=self.context.get('organisation')).exists():
+            raise serializers.ValidationError({'email': 'Invite for email %s already exists' % attrs['email']})
+        return super(InviteSerializer, self).validate(attrs)
+
+
+class MultiInvitesSerializer(serializers.Serializer):
+    invites = InviteSerializer(many=True, required=False)
+    frontend_base_url = serializers.CharField()
+    emails = serializers.ListSerializer(child=serializers.EmailField(), required=False)
 
     def create(self, validated_data):
-        subscription_data = validated_data.pop('subscription', {})
-        organisation = super(OrganisationSerializer, self).create(validated_data)
-        Subscription.objects.create(organisation=organisation, **subscription_data)
+        organisation = self._get_organisation()
+        user = self._get_invited_by()
+
+        invites = validated_data.get('invites', [])
+
+        # for backwards compatibility, allow emails to be sent as a list of strings still
+        for email in validated_data.get('emails', []):
+            invites.append({
+                'email': email,
+                'role': OrganisationRole.USER.name
+            })
+
+        created_invites = []
+        for invite in invites:
+            data = {
+                **invite,
+                'invited_by': user,
+                'organisation': organisation,
+                'frontend_base_url': validated_data['frontend_base_url']
+            }
+            created_invites.append(Invite.objects.create(**data))
+
+        # return the created_invites to serialize the data back to the front end
+        return created_invites
+
+    def to_representation(self, instance):
+        # Return the invites in a dictionary since the serializer expects a single instance to be returned, not a list
+        return {
+            'invites': [InviteSerializerFull(invite).data for invite in instance]
+        }
+
+    def validate(self, attrs):
+        for email in attrs.get('emails', []):
+            if Invite.objects.filter(email=email, organisation__id=self.context.get('organisation')).exists():
+                raise serializers.ValidationError({'emails': 'Invite for email %s already exists' % email})
+        return super(MultiInvitesSerializer, self).validate(attrs)
+
+    def _get_invited_by(self):
+        return self.context.get('request').user if self.context.get('request') else None
+
+    def _get_organisation(self):
+        try:
+            return Organisation.objects.get(pk=self.context.get('organisation'))
+        except Organisation.DoesNotExist:
+            raise serializers.ValidationError({'emails': 'Invalid organisation.'})
+
+
+class UpdateSubscriptionSerializer(serializers.Serializer):
+    hosted_page_id = serializers.CharField()
+
+    def create(self, validated_data):
+        """
+        Get the subscription data from Chargebee hosted page and store in the subscription
+        """
+        organisation = self._get_organisation()
+
+        if settings.ENABLE_CHARGEBEE:
+            subscription_data = get_subscription_data_from_hosted_page(hosted_page_id=validated_data['hosted_page_id'])
+
+            if subscription_data:
+                Subscription.objects.update_or_create(organisation=organisation, defaults=subscription_data)
+            else:
+                raise serializers.ValidationError(
+                    {'detail': 'Couldn\'t get subscription information from hosted page.'})
+        else:
+            logger.warning('Chargebee not configured. Not verifying hosted page.')
+
         return organisation
 
     def update(self, instance, validated_data):
-        subscription_data = validated_data.pop('subscription', {})
-        self._update_subscription(instance, subscription_data)
-        return super(OrganisationSerializer, self).update(instance, validated_data)
+        pass
 
-    def _update_subscription(self, organisation, subscription_data):
-        subscription, _ = Subscription.objects.get_or_create(organisation=organisation)
-        for key, value in subscription_data.items():
-            setattr(subscription, key, value)
-        subscription.save()
-
-    def get_paid_subscription(self, instance):
-        if hasattr(instance, 'subscription'):
-            return instance.subscription.paid_subscription
-
-    def get_free_to_use_subscription(self, instance):
-        if hasattr(instance, 'subscription'):
-            return instance.subscription.free_to_use_subscription
-
-    def get_subscription_date(self, instance):
-        if hasattr(instance, 'subscription'):
-            return instance.subscription.subscription_date
-
-    def get_plan(self, instance):
-        if hasattr(instance, 'subscription'):
-            return instance.subscription.plan
-
-    def get_pending_cancellation(self, instance):
-        if hasattr(instance, 'subscription'):
-            return instance.subscription.pending_cancellation
+    def _get_organisation(self):
+        try:
+            return Organisation.objects.get(pk=self.context.get('organisation'))
+        except Organisation.DoesNotExist:
+            raise serializers.ValidationError('Invalid organisation.')

@@ -2,9 +2,10 @@ from rest_framework import serializers
 
 from audit.models import AuditLog, RelatedObjectType, FEATURE_CREATED_MESSAGE, FEATURE_UPDATED_MESSAGE, \
     FEATURE_STATE_UPDATED_MESSAGE, IDENTITY_FEATURE_STATE_UPDATED_MESSAGE
-from features.utils import get_value_type
+from environments.models import Identity
+from features.utils import get_value_type, get_boolean_from_string, get_integer_from_string, BOOLEAN, INTEGER
 from segments.serializers import SegmentSerializerBasic
-from .models import Feature, FeatureState, FeatureStateValue, FeatureSegment, STRING, INTEGER, BOOLEAN
+from .models import Feature, FeatureState, FeatureStateValue, FeatureSegment
 
 
 class CreateFeatureSerializer(serializers.ModelSerializer):
@@ -61,10 +62,21 @@ class FeatureSegmentCreateSerializer(serializers.ModelSerializer):
 
 class FeatureSegmentSerializer(serializers.ModelSerializer):
     segment = SegmentSerializerBasic()
+    value = serializers.SerializerMethodField()
 
     class Meta:
         model = FeatureSegment
-        fields = ('segment', 'priority', 'enabled')
+        fields = ('segment', 'priority', 'enabled', 'value')
+
+    def get_value(self, instance):
+        if instance.value:
+            value_type = get_value_type(instance.value)
+            if value_type == BOOLEAN:
+                return get_boolean_from_string(instance.value)
+            elif value_type == INTEGER:
+                return get_integer_from_string(instance.value)
+
+        return instance.value
 
 
 class FeatureSerializer(serializers.ModelSerializer):
@@ -109,6 +121,15 @@ class FeatureStateSerializerBasic(serializers.ModelSerializer):
 
     def _create_audit_log(self, instance):
         create_feature_state_audit_log(instance, self.context.get('request'))
+
+
+class FeatureStateSerializerWithIdentity(FeatureStateSerializerBasic):
+    class _IdentitySerializer(serializers.ModelSerializer):
+        class Meta:
+            model = Identity
+            fields = ('id', 'identifier')
+
+    identity = _IdentitySerializer()
 
 
 class FeatureStateSerializerCreate(serializers.ModelSerializer):

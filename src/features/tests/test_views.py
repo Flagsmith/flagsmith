@@ -10,7 +10,7 @@ from audit.models import AuditLog, RelatedObjectType, IDENTITY_FEATURE_STATE_UPD
     IDENTITY_FEATURE_STATE_DELETED_MESSAGE
 from environments.models import Environment, Identity
 from features.models import Feature, FeatureState, FeatureSegment
-from organisations.models import Organisation
+from organisations.models import Organisation, OrganisationRole
 from projects.models import Project
 from segments.models import Segment
 from users.models import FFAdminUser
@@ -30,7 +30,7 @@ class ProjectFeatureTestCase(TestCase):
 
         self.organisation = Organisation.objects.create(name='Test Org')
 
-        user.organisations.add(self.organisation)
+        user.add_organisation(self.organisation)
 
         self.project = Project.objects.create(name='Test project', organisation=self.organisation)
         self.environment_1 = Environment.objects.create(name='Test environment 1', project=self.project)
@@ -259,7 +259,7 @@ class FeatureSegmentViewTest(TestCase):
 
         organisation = Organisation.objects.create(name='Test Org')
 
-        user.organisations.add(organisation)
+        user.add_organisation(organisation)
 
         self.project = Project.objects.create(organisation=organisation, name='Test project')
         self.environment_1 = Environment.objects.create(project=self.project, name='Test environment 1')
@@ -351,7 +351,7 @@ class FeatureStateViewSetTestCase(TestCase):
         self.feature = Feature.objects.create(name='test-feature', project=self.project, type='CONFIG',
                                               initial_value=12)
         self.user = FFAdminUser.objects.create(email='test@example.com')
-        self.user.organisations.add(self.organisation)
+        self.user.add_organisation(self.organisation, OrganisationRole.ADMIN)
         self.client = APIClient()
         self.client.force_authenticate(self.user)
 
@@ -377,3 +377,27 @@ class FeatureStateViewSetTestCase(TestCase):
         # Then
         feature_state.refresh_from_db()
         assert feature_state.get_feature_state_value() == new_value
+
+    def test_can_filter_feature_states_to_show_identity_overrides_only(self):
+        # Given
+        feature_state = FeatureState.objects.get(environment=self.environment, feature=self.feature)
+
+        identifier = 'test-identity'
+        identity = Identity.objects.create(identifier=identifier, environment=self.environment)
+        identity_feature_state = FeatureState.objects.create(environment=self.environment, feature=self.feature,
+                                                             identity=identity)
+
+        base_url = reverse('api:v1:environments:environment-featurestates-list', args=[self.environment.api_key])
+        url = base_url + '?anyIdentity&feature=' + str(self.feature.id)
+
+        # When
+        res = self.client.get(url)
+
+        # Then
+        assert res.status_code == status.HTTP_200_OK
+
+        # and
+        assert len(res.json().get('results')) == 1
+
+        # and
+        assert res.json()['results'][0]['identity']['identifier'] == identifier
