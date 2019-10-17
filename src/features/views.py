@@ -357,6 +357,7 @@ class SDKFeatureStates(GenericAPIView):
         kwargs = {
             'identity': identity,
             'environment': environment,
+            'feature_segment': None
         }
 
         if 'feature' in request.GET:
