@@ -93,7 +93,11 @@ INSTALLED_APPS = [
     'simple_history',
     'debug_toolbar',
     'drf_yasg',
-    'audit'
+    'audit',
+
+    # health check plugins
+    'health_check',
+    'health_check.db',
 ]
 
 if GOOGLE_ANALYTICS_KEY:
@@ -118,6 +122,10 @@ REST_FRAMEWORK = {
 
 REST_AUTH_REGISTER_SERIALIZERS = {
     'REGISTER_SERIALIZER': 'users.serializers.UserRegisterSerializer'
+}
+
+REST_AUTH_SERIALIZERS = {
+    'USER_DETAILS_SERIALIZER': 'users.serializers.UserFullSerializer'
 }
 
 MIDDLEWARE = [
@@ -260,3 +268,31 @@ SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
 ENABLE_CHARGEBEE = os.environ.get('ENABLE_CHARGEBEE', False)
 CHARGEBEE_API_KEY = os.environ.get('CHARGEBEE_API_KEY')
 CHARGEBEE_SITE = os.environ.get('CHARGEBEE_SITE')
+
+
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': False,
+    'formatters': {
+        'console_format': {
+            'format': '%(name)-12s %(levelname)-8s %(message)s'
+        }
+    },
+    'handlers': {
+        'console': {
+            'level': 'DEBUG',
+            'class': 'logging.StreamHandler',
+            'formatter': 'console_format',
+        },
+    },
+    'loggers': {
+        'django': {
+            'level': 'INFO',
+            'handlers': ['console']
+        },
+        '': {
+            'level': 'DEBUG',
+            'handlers': ['console'],
+        },
+    }
+}

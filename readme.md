@@ -1,5 +1,7 @@
 <img width="100%" src="./hero.png"/>
 
+[![Donate](https://liberapay.com/assets/widgets/donate.svg)](https://liberapay.com/Bullet-Train/donate)
+
 # Bullet Train REST API
 
 ## Development Environment

@@ -126,6 +126,18 @@ class IncrementTraitValueSerializer(serializers.Serializer):
         }
 
 
+class TraitKeysSerializer(serializers.Serializer):
+    keys = serializers.ListSerializer(child=serializers.CharField())
+
+
+class DeleteAllTraitKeysSerializer(serializers.Serializer):
+    key = serializers.CharField()
+
+    def delete(self):
+        environment = self.context.get('environment')
+        Trait.objects.filter(identity__environment=environment, trait_key=self.validated_data.get('key')).delete()
+
+
 # Serializer for returning both Feature Flags and User Traits
 class IdentitySerializerTraitFlags(serializers.Serializer):
     flags = FeatureStateSerializerFull(many=True)

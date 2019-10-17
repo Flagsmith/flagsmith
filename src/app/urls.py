@@ -8,7 +8,7 @@ from users.views import password_reset_redirect
 urlpatterns = [
     url(r'^api/', include('api.urls', namespace='api')),
     url(r'^admin/', admin.site.urls),
-    url(r'health', lambda r: HttpResponse("ok")),
+    url(r'^health', include('health_check.urls', namespace='health')),
     url(r'', lambda r: HttpResponse("Bullet Train API")),
     
     # this url is used to generate email content for the password reset workflow

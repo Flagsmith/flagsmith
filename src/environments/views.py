@@ -15,11 +15,11 @@ from rest_framework.schemas import AutoSchema
 from environments.authentication import EnvironmentKeyAuthentication
 from environments.permissions import EnvironmentKeyPermissions
 from features.serializers import FeatureStateSerializerFull
-from util.util import get_user_permitted_identities, get_user_permitted_environments, get_user_permitted_projects
 from util.views import SDKAPIView
 from .models import Environment, Identity, Trait
 from .serializers import EnvironmentSerializerLight, IdentitySerializer, TraitSerializerBasic, TraitSerializerFull, \
-    IdentitySerializerTraitFlags, IdentitySerializerWithTraitsAndSegments, IncrementTraitValueSerializer
+    IdentitySerializerTraitFlags, IdentitySerializerWithTraitsAndSegments, IncrementTraitValueSerializer, \
+    TraitKeysSerializer, DeleteAllTraitKeysSerializer
 
 
 class EnvironmentViewSet(viewsets.ModelViewSet):
@@ -42,8 +42,20 @@ class EnvironmentViewSet(viewsets.ModelViewSet):
     delete:
     Delete an environment
     """
-    serializer_class = EnvironmentSerializerLight
     lookup_field = 'api_key'
+
+    def get_serializer_class(self):
+        if self.action == 'trait_keys':
+            return TraitKeysSerializer
+        if self.action == 'delete_traits':
+            return DeleteAllTraitKeysSerializer
+        return EnvironmentSerializerLight
+
+    def get_serializer_context(self):
+        context = super(EnvironmentViewSet, self).get_serializer_context()
+        if self.kwargs.get('api_key'):
+            context['environment'] = self.get_object()
+        return context
 
     def get_queryset(self):
         queryset = Environment.objects.filter(
@@ -58,9 +70,33 @@ class EnvironmentViewSet(viewsets.ModelViewSet):
         if not project_pk:
             return Response(data={"detail": "No project provided"}, status=status.HTTP_400_BAD_REQUEST)
 
-        get_object_or_404(get_user_permitted_projects(self.request.user), pk=project_pk)
+        get_object_or_404(self.request.user.get_permitted_projects(), pk=project_pk)
 
         return super().create(request, *args, **kwargs)
+
+    @action(detail=True, methods=['GET'], url_path='trait-keys')
+    def trait_keys(self, request, *args, **kwargs):
+        keys = [trait_key for trait_key in Trait.objects.filter(
+                    identity__environment=self.get_object()).order_by().values_list('trait_key', flat=True).distinct()]
+
+        data = {
+            'keys': keys
+        }
+
+        serializer = self.get_serializer(data=data)
+        if serializer.is_valid():
+            return Response(serializer.data, status=status.HTTP_200_OK)
+        else:
+            return Response({'detail': 'Couldn\'t get trait keys'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+    @action(detail=True, methods=['POST'], url_path='delete-traits')
+    def delete_traits(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data)
+        if serializer.is_valid():
+            serializer.delete()
+            return Response(status=status.HTTP_200_OK)
+        else:
+            return Response({'detail': 'Couldn\'t delete trait keys.'}, status=status.HTTP_400_BAD_REQUEST)
 
 
 class IdentityViewSet(viewsets.ModelViewSet):
@@ -88,7 +124,7 @@ class IdentityViewSet(viewsets.ModelViewSet):
 
     def get_queryset(self):
         environment = self.get_environment_from_request()
-        user_permitted_identities = get_user_permitted_identities(self.request.user)
+        user_permitted_identities = self.request.user.get_permitted_identities()
         queryset = user_permitted_identities.filter(environment__api_key=environment.api_key)
 
         if self.request.query_params.get('q'):
@@ -145,7 +181,7 @@ class TraitViewSet(viewsets.ModelViewSet):
         """
         environment_api_key = self.kwargs['environment_api_key']
         identity_pk = self.kwargs.get('identity_pk')
-        environment = get_user_permitted_environments(self.request.user).get(api_key=environment_api_key)
+        environment = self.request.user.get_permitted_environments().get(api_key=environment_api_key)
 
         if identity_pk:
             identity = Identity.objects.get(pk=identity_pk, environment=environment)

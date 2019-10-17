@@ -1,5 +1,3 @@
-from django.conf import settings
-from django.core.mail import send_mail
 from django.core.management import BaseCommand
 
 from organisations.models import Organisation
@@ -16,12 +14,9 @@ class Command(BaseCommand):
 
 
 def send_alert(organisation):
-    send_mail(
+    FFAdminUser.send_alert_to_admin_users(
         subject='Organisation over number of seats',
         message='Organisation %s has used %d seats which is over their plan limit of %d '
                 '(plan: %s)' % (str(organisation.name), organisation.num_seats, organisation.subscription.max_seats,
-                                organisation.subscription.plan),
-        from_email=settings.DEFAULT_FROM_EMAIL,
-        recipient_list=FFAdminUser.get_admin_user_emails(),
-        fail_silently=True
+                                organisation.subscription.plan)
     )
