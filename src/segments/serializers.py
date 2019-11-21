@@ -20,6 +20,11 @@ class ConditionSerializer(serializers.ModelSerializer):
             raise ValidationError({'property': ['This field may not be blank.']})
         return attrs
 
+    def to_internal_value(self, data):
+        # convert value to a string - conversion to correct value type is handled elsewhere
+        data['value'] = str(data['value'])
+        return super(ConditionSerializer, self).to_internal_value(data)
+
 
 class RuleSerializer(serializers.ModelSerializer):
     conditions = ConditionSerializer(many=True, required=False)
