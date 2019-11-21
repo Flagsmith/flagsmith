@@ -104,3 +104,26 @@ class SegmentViewSetTestCase(APITestCase):
 
         # Then
         assert res.status_code == status.HTTP_400_BAD_REQUEST
+
+    def test_can_create_segments_with_boolean_condition(self):
+        # Given
+        url = reverse('api:v1:projects:project-segments-list', args=[self.project.id])
+        data = {
+            'name': 'New segment name',
+            'project': self.project.id,
+            'rules': [{
+                'type': 'ALL',
+                'rules': [],
+                'conditions': [{
+                    'operator': EQUAL,
+                    'property': 'test-property',
+                    'value': True
+                }]
+            }]
+        }
+
+        # When
+        res = self.client.post(url, data=json.dumps(data), content_type='application/json')
+
+        # Then
+        assert res.status_code == status.HTTP_201_CREATED
