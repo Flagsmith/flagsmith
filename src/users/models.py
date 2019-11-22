@@ -57,6 +57,12 @@ class FFAdminUser(AbstractUser):
     organisations = models.ManyToManyField(Organisation, related_name="users", blank=True, through=UserOrganisation)
     email = models.EmailField(unique=True, null=False)
     objects = UserManager()
+    username = models.CharField(
+        unique=True,
+        max_length=150,
+        null=True,
+        blank=True
+    )
 
     USERNAME_FIELD = 'email'
     REQUIRED_FIELDS = ['first_name', 'last_name']
