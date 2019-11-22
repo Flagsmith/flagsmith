@@ -82,4 +82,5 @@ def join_organisation(request, invite_hash):
         error_data = {'detail': str(e)}
         return Response(data=error_data, status=status.HTTP_400_BAD_REQUEST)
 
-    return Response(OrganisationSerializerFull(invite.organisation).data, status=status.HTTP_200_OK)
+    return Response(OrganisationSerializerFull(invite.organisation, context={'request': request}).data,
+                    status=status.HTTP_200_OK)
