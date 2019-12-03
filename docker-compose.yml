@@ -17,7 +17,7 @@ services:
       DJANGO_DB_USER: postgres
       DJANGO_DB_PASSWORD: password
       DJANGO_DB_PORT: 5432
-      DJANGO_ALLOWED_HOST: localhost
+      DJANGO_ALLOWED_HOSTS: localhost
     ports:
      - "8000:8000"
     depends_on:
