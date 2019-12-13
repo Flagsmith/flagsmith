@@ -16,10 +16,10 @@ from environments.authentication import EnvironmentKeyAuthentication
 from environments.permissions import EnvironmentKeyPermissions
 from features.serializers import FeatureStateSerializerFull
 from util.views import SDKAPIView
-from .models import Environment, Identity, Trait
+from .models import Environment, Identity, Trait, Webhook
 from .serializers import EnvironmentSerializerLight, IdentitySerializer, TraitSerializerBasic, TraitSerializerFull, \
     IdentitySerializerTraitFlags, IdentitySerializerWithTraitsAndSegments, IncrementTraitValueSerializer, \
-    TraitKeysSerializer, DeleteAllTraitKeysSerializer
+    TraitKeysSerializer, DeleteAllTraitKeysSerializer, WebhookSerializer
 
 
 class EnvironmentViewSet(viewsets.ModelViewSet):
@@ -77,7 +77,7 @@ class EnvironmentViewSet(viewsets.ModelViewSet):
     @action(detail=True, methods=['GET'], url_path='trait-keys')
     def trait_keys(self, request, *args, **kwargs):
         keys = [trait_key for trait_key in Trait.objects.filter(
-                    identity__environment=self.get_object()).order_by().values_list('trait_key', flat=True).distinct()]
+            identity__environment=self.get_object()).order_by().values_list('trait_key', flat=True).distinct()]
 
         data = {
             'keys': keys
@@ -481,3 +481,20 @@ class SDKTraits(mixins.CreateModelMixin, viewsets.GenericViewSet):
         serializer.is_valid(raise_exception=True)
         serializer.save()
         return Response(serializer.data, status=200)
+
+
+class WebhookViewSet(mixins.ListModelMixin, mixins.CreateModelMixin, mixins.UpdateModelMixin, mixins.DestroyModelMixin,
+                     viewsets.GenericViewSet):
+    serializer_class = WebhookSerializer
+    pagination_class = None
+
+    def get_queryset(self):
+        return Webhook.objects.filter(environment__api_key=self.kwargs.get('environment_api_key'))
+
+    def perform_create(self, serializer):
+        environment = Environment.objects.get(api_key=self.kwargs.get('environment_api_key'))
+        serializer.save(environment=environment)
+
+    def perform_update(self, serializer):
+        environment = Environment.objects.get(api_key=self.kwargs.get('environment_api_key'))
+        serializer.save(environment=environment)

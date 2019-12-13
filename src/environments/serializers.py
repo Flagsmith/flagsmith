@@ -1,7 +1,7 @@
 from rest_framework import serializers, exceptions
 
 from audit.models import ENVIRONMENT_CREATED_MESSAGE, ENVIRONMENT_UPDATED_MESSAGE, RelatedObjectType, AuditLog
-from environments.models import Environment, Identity, Trait, INTEGER
+from environments.models import Environment, Identity, Trait, INTEGER, Webhook
 from features.serializers import FeatureStateSerializerFull
 from projects.serializers import ProjectSerializer
 from segments.serializers import SegmentSerializerBasic
@@ -19,7 +19,7 @@ class EnvironmentSerializerFull(serializers.ModelSerializer):
 class EnvironmentSerializerLight(serializers.ModelSerializer):
     class Meta:
         model = Environment
-        fields = ('id', 'name', 'api_key', 'project', 'webhooks_enabled', 'webhook_url')
+        fields = ('id', 'name', 'api_key', 'project')
         read_only_fields = ('api_key',)
 
     def create(self, validated_data):
@@ -154,3 +154,10 @@ class IdentitySerializerWithTraitsAndSegments(serializers.Serializer):
     flags = FeatureStateSerializerFull(many=True)
     traits = TraitSerializerBasic(many=True)
     segments = SegmentSerializerBasic(many=True)
+
+
+class WebhookSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Webhook
+        fields = ('id', 'url', 'enabled', 'created_at', 'updated_at')
+        read_only_fields = ('id', 'created_at', 'updated_at')

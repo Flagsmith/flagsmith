@@ -4,7 +4,12 @@ from __future__ import unicode_literals
 from django.contrib import admin
 from simple_history.admin import SimpleHistoryAdmin
 
-from .models import Identity, Environment, Trait
+from .models import Identity, Environment, Trait, Webhook
+
+
+class WebhookInline(admin.TabularInline):
+    model = Webhook
+    extra = 0
 
 
 @admin.register(Environment)
@@ -13,6 +18,7 @@ class EnvironmentAdmin(admin.ModelAdmin):
     list_display = ('name', '__str__', 'created_date',)
     list_filter = ('created_date', 'project',)
     search_fields = ('name', 'project__name', 'api_key',)
+    inlines = (WebhookInline,)
 
 
 @admin.register(Identity)
