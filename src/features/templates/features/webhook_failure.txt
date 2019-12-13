@@ -8,6 +8,8 @@ Project name: {{ project_name }}
 
 HTTP status code: {{ status_code }}
 
+Webhook URL: {{ webhook_url }}
+
 -----------------------------------------------------------
 
 Posted data was:
