@@ -7,7 +7,7 @@ from rest_framework import status
 from rest_framework.test import APIClient, APITestCase
 
 from audit.models import AuditLog, RelatedObjectType
-from environments.models import Environment, Identity, Trait, INTEGER, STRING
+from environments.models import Environment, Identity, Trait, INTEGER, STRING, Webhook
 from features.models import Feature, FeatureState, FeatureSegment
 from organisations.models import Organisation
 from projects.models import Project
@@ -18,9 +18,7 @@ from util.tests import Helper
 
 @pytest.mark.django_db
 class EnvironmentTestCase(TestCase):
-    env_post_template_wout_webhook = '{"name": "%s", "project": %d}'
-    env_post_template_with_webhook = '{"name": "%s", "project": %d, ' \
-                                     '"webhooks_enabled": "%r", "webhook_url": "%s"}'
+    env_post_template = '{"name": "%s", "project": %d}'
     fs_put_template = '{ "id" : %d, "enabled" : "%r", "feature_state_value" : "%s" }'
 
     def setUp(self):
@@ -37,29 +35,19 @@ class EnvironmentTestCase(TestCase):
         Environment.objects.all().delete()
         AuditLog.objects.all().delete()
 
-    def test_should_create_environments_with_or_without_webhooks(self):
+    def test_should_create_environments(self):
         # Given
         url = reverse('api:v1:environments:environment-list')
+        data = {
+            'name': 'Test environment',
+            'project': self.project.id
+        }
 
         # When
-        response_with_webhook = self.client.post(url,
-                                                 data=self.env_post_template_with_webhook % (
-                                                     "Test Env with Webhooks",
-                                                     self.project.id,
-                                                     True,
-                                                     "https://sometesturl.org"
-                                                 ), content_type="application/json")
-
-        response_wout_webhook = self.client.post('/api/v1/environments/',
-                                                 data=self.env_post_template_wout_webhook % (
-                                                     "Test Env without Webhooks",
-                                                     self.project.id
-                                                 ), content_type="application/json")
+        response = self.client.post(url, data=data)
 
         # Then
-        assert response_with_webhook.status_code == status.HTTP_201_CREATED
-        assert Environment.objects.get(name="Test Env with Webhooks").webhook_url
-        assert response_wout_webhook.status_code == status.HTTP_201_CREATED
+        assert response.status_code == status.HTTP_201_CREATED
 
     def test_should_return_identities_for_an_environment(self):
         # Given
@@ -852,3 +840,98 @@ class TraitViewSetTestCase(TestCase):
 
         # and
         assert Trait.objects.filter(pk=trait_2.id).exists()
+
+
+@pytest.mark.django_db
+class WebhookViewSetTestCase(TestCase):
+    def setUp(self) -> None:
+        self.client = APIClient()
+        user = Helper.create_ffadminuser()
+        self.client.force_authenticate(user=user)
+
+        organisation = Organisation.objects.create(name='Test organisation')
+        project = Project.objects.create(name='Test project', organisation=organisation)
+        self.environment = Environment.objects.create(name='Test environment', project=project)
+
+        self.valid_webhook_url = 'http://my.webhook.com/webhooks'
+
+    def test_can_create_webhook_for_an_environment(self):
+        # Given
+        url = reverse('api:v1:environments:environment-webhooks-list', args=[self.environment.api_key])
+        data = {
+            'url': self.valid_webhook_url,
+            'enabled': True
+        }
+
+        # When
+        res = self.client.post(url, data)
+
+        # Then
+        assert res.status_code == status.HTTP_201_CREATED
+
+        # and
+        assert Webhook.objects.filter(environment=self.environment, **data).exists()
+
+    def test_can_update_webhook_for_an_environment(self):
+        # Given
+        webhook = Webhook.objects.create(url=self.valid_webhook_url, environment=self.environment)
+        url = reverse('api:v1:environments:environment-webhooks-detail', args=[self.environment.api_key, webhook.id])
+        data = {
+            'url': 'http://my.new.url.com/wehbooks',
+            'enabled': False
+        }
+
+        # When
+        res = self.client.put(url, data=json.dumps(data), content_type='application/json')
+
+        # Then
+        assert res.status_code == status.HTTP_200_OK
+
+        # and
+        webhook.refresh_from_db()
+        assert webhook.url == data['url'] and not webhook.enabled
+
+    def test_can_delete_webhook_for_an_environment(self):
+        # Given
+        webhook = Webhook.objects.create(url=self.valid_webhook_url, environment=self.environment)
+        url = reverse('api:v1:environments:environment-webhooks-detail', args=[self.environment.api_key, webhook.id])
+
+        # When
+        res = self.client.delete(url)
+
+        # Then
+        assert res.status_code == status.HTTP_204_NO_CONTENT
+
+        # and
+        assert not Webhook.objects.filter(id=webhook.id).exists()
+
+    def test_can_list_webhooks_for_an_environment(self):
+        # Given
+        webhook = Webhook.objects.create(url=self.valid_webhook_url, environment=self.environment)
+        url = reverse('api:v1:environments:environment-webhooks-list', args=[self.environment.api_key])
+
+        # When
+        res = self.client.get(url)
+
+        # Then
+        assert res.status_code == status.HTTP_200_OK
+
+        # and
+        assert res.json()[0]['id'] == webhook.id
+
+    def test_cannot_delete_webhooks_for_environment_user_does_not_belong_to(self):
+        # Given
+        new_organisation = Organisation.objects.create(name='New organisation')
+        new_project = Project.objects.create(name='New project', organisation=new_organisation)
+        new_environment = Environment.objects.create(name='New Environment', project=new_project)
+        webhook = Webhook.objects.create(url=self.valid_webhook_url, environment=new_environment)
+        url = reverse('api:v1:environments:environment-webhooks-detail', args=[self.environment.api_key, webhook.id])
+
+        # When
+        res = self.client.delete(url)
+
+        # Then
+        assert res.status_code == status.HTTP_404_NOT_FOUND
+
+        # and
+        assert Webhook.objects.filter(id=webhook.id).exists()
