@@ -34,8 +34,6 @@ class Environment(models.Model):
         )
     )
     api_key = models.CharField(default=create_hash, unique=True, max_length=100)
-    webhooks_enabled = models.BooleanField(default=False)
-    webhook_url = models.URLField(null=True, blank=True)
 
     class Meta:
         ordering = ['id']
@@ -216,3 +214,11 @@ class Trait(models.Model):
 
     def __str__(self):
         return "Identity: %s - %s" % (self.identity.identifier, self.trait_key)
+
+
+class Webhook(models.Model):
+    environment = models.ForeignKey(Environment, on_delete=models.CASCADE, related_name='webhooks')
+    url = models.URLField()
+    enabled = models.BooleanField(default=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
