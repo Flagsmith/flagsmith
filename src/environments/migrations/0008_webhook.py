@@ -16,6 +16,7 @@ def create_webhooks(apps, schema_editor):
             Webhook(environment=environment, url=environment.webhook_url, enabled=environment.webhooks_enabled))
 
     Webhook.objects.bulk_create(webhooks_to_create)
+    Environment.objects.exclude(webhook_url=None).update(webhook_url=None)
 
 
 def update_environment_webhooks(apps, schema_editor):
@@ -47,6 +48,4 @@ class Migration(migrations.Migration):
             ],
         ),
         migrations.RunPython(create_webhooks),
-        migrations.RemoveField(model_name='Environment', name='webhook_url'),
-        migrations.RemoveField(model_name='Environment', name='webhooks_enabled'),
     ]
