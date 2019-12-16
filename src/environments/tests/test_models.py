@@ -31,14 +31,6 @@ class EnvironmentSaveTestCase(TestCase):
         assert hasattr(self.environment, 'api_key')
         assert feature_states.count() == 1
 
-    def test_environment_can_be_created_with_webhooks_enabled(self):
-        environment_with_webhook = Environment.objects.create(name="Env with Webhooks",
-                                                              project=self.project,
-                                                              webhooks_enabled=True,
-                                                              webhook_url="https://sometesturl.org")
-
-        self.assertTrue(environment_with_webhook.name)
-
     def test_on_creation_save_feature_states_get_created(self):
         # These should be no feature states before saving
         self.assertEqual(FeatureState.objects.count(), 0)
