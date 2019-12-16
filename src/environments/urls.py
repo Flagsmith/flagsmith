@@ -2,13 +2,14 @@ from django.conf.urls import url, include
 from rest_framework_nested import routers
 
 from features.views import FeatureStateViewSet
-from .views import IdentityViewSet, EnvironmentViewSet, TraitViewSet
+from .views import IdentityViewSet, EnvironmentViewSet, TraitViewSet, WebhookViewSet
 
 router = routers.DefaultRouter()
 router.register(r'', EnvironmentViewSet, base_name="environment")
 
 environments_router = routers.NestedSimpleRouter(router, r'', lookup="environment")
 environments_router.register(r'identities', IdentityViewSet, base_name="environment-identities")
+environments_router.register(r'webhooks', WebhookViewSet, base_name='environment-webhooks')
 
 identity_router = routers.NestedSimpleRouter(environments_router, r'identities', lookup="identity")
 identity_router.register(r'featurestates', FeatureStateViewSet, base_name="identity-featurestates")
