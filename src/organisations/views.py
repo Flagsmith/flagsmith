@@ -109,7 +109,6 @@ class OrganisationViewSet(viewsets.ModelViewSet):
         return Response(OrganisationSerializerFull(instance=self.get_object()).data, status=status.HTTP_200_OK)
 
     @action(detail=True, methods=['GET'], url_path='portal-url')
-    @swagger_auto_schema(responses={200: OrganisationSerializerFull})
     def get_portal_url(self, request, pk):
         organisation = self.get_object()
         if not organisation.has_subscription():
