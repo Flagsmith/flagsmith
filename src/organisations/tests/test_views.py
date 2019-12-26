@@ -230,12 +230,15 @@ class OrganisationTestCase(TestCase):
             'hosted_page_id': hosted_page_id
         }
 
+        customer_id = 'customer-id'
+
         subscription_id = 'subscription-id'
         mock_get_subscription_data.return_value = {
             'subscription_id': subscription_id,
             'plan': 'plan-id',
             'max_seats': 3,
-            'subscription_date': datetime.now(tz=UTC)
+            'subscription_date': datetime.now(tz=UTC),
+            'customer_id': customer_id
         }
 
         # When
@@ -248,7 +251,8 @@ class OrganisationTestCase(TestCase):
         mock_get_subscription_data.assert_called_with(hosted_page_id=hosted_page_id)
 
         # and
-        assert organisation.has_subscription() and organisation.subscription.subscription_id == subscription_id
+        assert organisation.has_subscription() and organisation.subscription.subscription_id == subscription_id and \
+               organisation.subscription.customer_id == customer_id
 
 
 @pytest.mark.django_db
