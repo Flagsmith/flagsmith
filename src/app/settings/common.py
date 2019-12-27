@@ -297,7 +297,7 @@ LOGGING = {
     }
 }
 
-CACHE_FLAGS_SECONDS = os.environ.get('CACHE_FLAGS_SECONDS', 0)
+CACHE_FLAGS_SECONDS = int(os.environ.get('CACHE_FLAGS_SECONDS', 0))
 FLAGS_CACHE_LOCATION = 'environment-flags'
 ENVIRONMENT_CACHE_LOCATION = 'environment-objects'
 CACHES = {
