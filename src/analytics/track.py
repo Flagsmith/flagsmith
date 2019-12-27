@@ -14,7 +14,7 @@ DEFAULT_DATA = "v=1&tid=" + settings.GOOGLE_ANALYTICS_KEY
 
 def postpone(function):
     def decorator(*args, **kwargs):
-        t = Thread(target = function, args=args, kwargs=kwargs)
+        t = Thread(target=function, args=args, kwargs=kwargs)
         t.daemon = True
         t.start()
     return decorator

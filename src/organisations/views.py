@@ -4,6 +4,7 @@ from __future__ import unicode_literals
 import logging
 from datetime import datetime
 
+from django.contrib.sites.shortcuts import get_current_site
 from drf_yasg.utils import swagger_auto_schema
 from rest_framework import viewsets, status
 from rest_framework.authentication import BasicAuthentication
@@ -14,7 +15,8 @@ from rest_framework.response import Response
 from analytics.query import get_events_for_organisation
 from organisations.models import OrganisationRole, Subscription
 from organisations.permissions import OrganisationPermission, NestedOrganisationEntityPermission
-from organisations.serializers import OrganisationSerializerFull, MultiInvitesSerializer, UpdateSubscriptionSerializer
+from organisations.serializers import OrganisationSerializerFull, MultiInvitesSerializer, UpdateSubscriptionSerializer, \
+    PortalUrlSerializer
 from projects.serializers import ProjectSerializer
 from users.models import Invite
 from users.serializers import InviteListSerializer, UserIdSerializer
@@ -32,6 +34,8 @@ class OrganisationViewSet(viewsets.ModelViewSet):
             return MultiInvitesSerializer
         elif self.action == 'update_subscription':
             return UpdateSubscriptionSerializer
+        elif self.action == 'get_portal_url':
+            return PortalUrlSerializer
         return OrganisationSerializerFull
 
     def get_serializer_context(self):
@@ -103,6 +107,16 @@ class OrganisationViewSet(viewsets.ModelViewSet):
         serializer.is_valid(raise_exception=True)
         serializer.save()
         return Response(OrganisationSerializerFull(instance=self.get_object()).data, status=status.HTTP_200_OK)
+
+    @action(detail=True, methods=['GET'], url_path='portal-url')
+    def get_portal_url(self, request, pk):
+        organisation = self.get_object()
+        if not organisation.has_subscription():
+            return Response({'detail': 'Organisation has no subscription'}, status=status.HTTP_400_BAD_REQUEST)
+        redirect_url = get_current_site(request)
+        serializer = self.get_serializer(data={'url': organisation.subscription.get_portal_url(redirect_url)})
+        serializer.is_valid(raise_exception=True)
+        return Response(serializer.data)
 
 
 class InviteViewSet(viewsets.ModelViewSet):

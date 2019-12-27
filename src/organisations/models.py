@@ -8,7 +8,7 @@ from django.db import models
 from django.utils import timezone
 from django.utils.encoding import python_2_unicode_compatible
 
-from organisations.chargebee import get_max_seats_for_plan
+from organisations.chargebee import get_max_seats_for_plan, get_portal_url, get_customer_id_from_subscription_id
 
 
 class OrganisationRole(enum.Enum):
@@ -68,6 +68,7 @@ class Subscription(models.Model):
     plan = models.CharField(max_length=20, null=True, blank=True)
     max_seats = models.IntegerField(default=1)
     cancellation_date = models.DateTimeField(blank=True, null=True)
+    customer_id = models.CharField(max_length=100, blank=True, null=True)
 
     def update_plan(self, plan_id):
         self.cancellation_date = None
@@ -78,3 +79,13 @@ class Subscription(models.Model):
     def cancel(self, cancellation_date=timezone.now()):
         self.cancellation_date = cancellation_date
         self.save()
+
+    def get_portal_url(self, redirect_url):
+        if not self.subscription_id:
+            return None
+
+        if not self.customer_id:
+            self.customer_id = get_customer_id_from_subscription_id(self.subscription_id)
+            self.save()
+        return get_portal_url(self.customer_id, redirect_url)
+
