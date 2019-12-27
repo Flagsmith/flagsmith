@@ -1,7 +1,8 @@
 import logging
 
 import coreapi
-from django.core.exceptions import ObjectDoesNotExist
+from django.conf import settings
+from django.core.cache import caches
 from django.db import transaction
 from django.utils.decorators import method_decorator
 from drf_yasg import openapi
@@ -9,7 +10,6 @@ from drf_yasg.utils import swagger_auto_schema
 from rest_framework import status, viewsets, mixins
 from rest_framework.decorators import action
 from rest_framework.generics import GenericAPIView, get_object_or_404
-from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
 from rest_framework.schemas import AutoSchema
 
@@ -27,6 +27,8 @@ from .serializers import FeatureStateSerializerBasic, FeatureStateSerializerFull
 
 logger = logging.getLogger()
 logger.setLevel(logging.INFO)
+
+flags_cache = caches[settings.FLAGS_CACHE_LOCATION]
 
 
 class FeatureViewSet(viewsets.ModelViewSet):
@@ -116,6 +118,7 @@ class FeatureStateViewSet(viewsets.ModelViewSet):
     delete:
     Delete specific feature state
     """
+
     # Override serializer class to show correct information in docs
     def get_serializer_class(self):
         if self.action == 'list':
@@ -333,22 +336,38 @@ class SDKFeatureStates(GenericAPIView):
 
         track_event(request.environment.project.organisation.get_unique_slug(), "flags")
 
-        kwargs = {
+        filter_args = {
             'identity': None,
             'environment': request.environment,
         }
 
         if 'feature' in request.GET:
-            kwargs['feature__name__iexact'] = request.GET['feature']
+            filter_args['feature__name__iexact'] = request.GET['feature']
             try:
-                feature_state = FeatureState.objects.get(**kwargs)
+                feature_state = FeatureState.objects.get(**filter_args)
             except FeatureState.DoesNotExist:
                 return Response({"detail": "Given feature not found"}, status=status.HTTP_404_NOT_FOUND)
 
             return Response(self.get_serializer(feature_state).data)
 
-        environment_flags = FeatureState.objects.filter(**kwargs).select_related("feature", "feature_state_value")
-        return Response(self.get_serializer(environment_flags, many=True).data)
+        if settings.CACHE_FLAGS_SECONDS > 0:
+            data = self._get_flags_from_cache(filter_args, request.environment)
+        else:
+            data = self.get_serializer(
+                FeatureState.objects.filter(**filter_args).select_related("feature", "feature_state_value"),
+                many=True).data
+
+        return Response(data)
+
+    def _get_flags_from_cache(self, filter_args, environment):
+        data = flags_cache.get(environment.api_key)
+        if not data:
+            data = self.get_serializer(
+                FeatureState.objects.filter(**filter_args).select_related("feature", "feature_state_value"),
+                many=True).data
+            flags_cache.set(environment.api_key, data, settings.CACHE_FLAGS_SECONDS)
+
+        return data
 
     def _get_flags_response_with_identifier(self, request, identifier):
         track_event(request.environment.project.organisation.get_unique_slug(), "identity_flags")

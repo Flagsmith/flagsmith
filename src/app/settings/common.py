@@ -296,3 +296,21 @@ LOGGING = {
         },
     }
 }
+
+CACHE_FLAGS_SECONDS = os.environ.get('CACHE_FLAGS_SECONDS', 0)
+FLAGS_CACHE_LOCATION = 'environment-flags'
+ENVIRONMENT_CACHE_LOCATION = 'environment-objects'
+CACHES = {
+    'default': {
+        'BACKEND': 'django.core.cache.backends.locmem.LocMemCache',
+        'LOCATION': 'unique-snowflake',
+    },
+    ENVIRONMENT_CACHE_LOCATION: {
+        'BACKEND': 'django.core.cache.backends.locmem.LocMemCache',
+        'LOCATION': ENVIRONMENT_CACHE_LOCATION
+    },
+    FLAGS_CACHE_LOCATION: {
+        'BACKEND': 'django.core.cache.backends.locmem.LocMemCache',
+        'LOCATION': FLAGS_CACHE_LOCATION,
+    }
+}
