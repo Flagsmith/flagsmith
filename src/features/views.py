@@ -328,46 +328,47 @@ class SDKFeatureStates(GenericAPIView):
         USING THIS ENDPOINT WITH AN IDENTIFIER IS DEPRECATED.
         Please use `/identities/?identifier=<identifier>` instead.
         """
-        if 'HTTP_X_ENVIRONMENT_KEY' not in request.META:
-            error = {"detail": "Environment Key header not provided"}
-            return Response(error, status=status.HTTP_400_BAD_REQUEST)
-
-        environment_key = request.META['HTTP_X_ENVIRONMENT_KEY']
-        try:
-            environment = Environment.objects.select_related('project', 'project__organisation').get(
-                api_key=environment_key)
-        except ObjectDoesNotExist:
-            error_details = "Environment not found for key: " + environment_key
-            logger.error(error_details)
-            error_response = {"error": error_details}
-
-            return Response(error_response, status=status.HTTP_400_BAD_REQUEST)
-
         if identifier:
-            track_event(environment.project.organisation.get_unique_slug(), "identity_flags")
+            return self._get_flags_response_with_identifier(request, identifier)
 
-            identity, _ = Identity.objects.get_or_create(
-                identifier=identifier,
-                environment=environment,
-            )
-        else:
-            track_event(environment.project.organisation.get_unique_slug(), "flags")
-            identity = None
+        track_event(request.environment.project.organisation.get_unique_slug(), "flags")
 
         kwargs = {
-            'identity': identity,
-            'environment': environment,
+            'identity': None,
+            'environment': request.environment,
         }
 
         if 'feature' in request.GET:
             kwargs['feature__name__iexact'] = request.GET['feature']
             try:
-                if identity:
-                    feature_state = identity.get_all_feature_states().get(
-                        feature__name__iexact=kwargs['feature__name__iexact'],
-                    )
-                else:
-                    feature_state = FeatureState.objects.get(**kwargs)
+                feature_state = FeatureState.objects.get(**kwargs)
+            except FeatureState.DoesNotExist:
+                return Response({"detail": "Given feature not found"}, status=status.HTTP_404_NOT_FOUND)
+
+            return Response(self.get_serializer(feature_state).data)
+
+        environment_flags = FeatureState.objects.filter(**kwargs).select_related("feature", "feature_state_value")
+        return Response(self.get_serializer(environment_flags, many=True).data)
+
+    def _get_flags_response_with_identifier(self, request, identifier):
+        track_event(request.environment.project.organisation.get_unique_slug(), "identity_flags")
+
+        identity, _ = Identity.objects.get_or_create(
+            identifier=identifier,
+            environment=request.environment,
+        )
+
+        kwargs = {
+            'identity': identity,
+            'environment': request.environment,
+        }
+
+        if 'feature' in request.GET:
+            kwargs['feature__name__iexact'] = request.GET['feature']
+            try:
+                feature_state = identity.get_all_feature_states().get(
+                    feature__name__iexact=kwargs['feature__name__iexact'],
+                )
             except FeatureState.DoesNotExist:
                 return Response(
                     {"detail": "Given feature not found"},
@@ -376,16 +377,9 @@ class SDKFeatureStates(GenericAPIView):
 
             return Response(self.get_serializer(feature_state).data, status=status.HTTP_200_OK)
 
-        if identity:
-            flags = self.get_serializer(
-                identity.get_all_feature_states(), many=True)
-            return Response(flags.data, status=status.HTTP_200_OK)
-
-        environment_flags = FeatureState.objects.filter(**kwargs).select_related("feature", "feature_state_value")
-        return Response(
-            self.get_serializer(environment_flags, many=True).data,
-            status=status.HTTP_200_OK
-        )
+        flags = self.get_serializer(
+            identity.get_all_feature_states(), many=True)
+        return Response(flags.data, status=status.HTTP_200_OK)
 
 
 def organisation_has_got_feature(request, organisation):
