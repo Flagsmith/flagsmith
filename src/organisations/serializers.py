@@ -152,3 +152,7 @@ class UpdateSubscriptionSerializer(serializers.Serializer):
             return Organisation.objects.get(pk=self.context.get('organisation'))
         except Organisation.DoesNotExist:
             raise serializers.ValidationError('Invalid organisation.')
+
+
+class PortalUrlSerializer(serializers.Serializer):
+    url = serializers.URLField()

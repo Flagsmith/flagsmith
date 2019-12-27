@@ -12,10 +12,8 @@ class EnvironmentKeyAuthentication(BaseAuthentication):
     def authenticate(self, request):
         try:
             environment = cache.get(request.META.get('HTTP_X_ENVIRONMENT_KEY'))
-            if environment:
-                request.environment = environment
-            else:
-                environment = Environment.objects.select_related('project__organisation').get(
+            if not environment:
+                environment = Environment.objects.select_related('project', 'project__organisation').get(
                     api_key=request.META.get('HTTP_X_ENVIRONMENT_KEY'))
                 cache.set(environment.api_key, environment)
         except Environment.DoesNotExist:
