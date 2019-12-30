@@ -1,8 +1,11 @@
-from django.core.cache import cache
+from django.conf import settings
+from django.core.cache import caches
 from rest_framework import exceptions
 from rest_framework.authentication import BaseAuthentication
 
 from environments.models import Environment
+
+environment_cache = caches[settings.ENVIRONMENT_CACHE_LOCATION]
 
 
 class EnvironmentKeyAuthentication(BaseAuthentication):
@@ -11,13 +14,11 @@ class EnvironmentKeyAuthentication(BaseAuthentication):
     """
     def authenticate(self, request):
         try:
-            environment = cache.get(request.META.get('HTTP_X_ENVIRONMENT_KEY'))
-            if environment:
-                request.environment = environment
-            else:
-                environment = Environment.objects.select_related('project__organisation').get(
+            environment = environment_cache.get(request.META.get('HTTP_X_ENVIRONMENT_KEY'))
+            if not environment:
+                environment = Environment.objects.select_related('project', 'project__organisation').get(
                     api_key=request.META.get('HTTP_X_ENVIRONMENT_KEY'))
-                cache.set(environment.api_key, environment)
+                environment_cache.set(environment.api_key, environment)
         except Environment.DoesNotExist:
             raise exceptions.AuthenticationFailed('Invalid or missing Environment Key')
 
