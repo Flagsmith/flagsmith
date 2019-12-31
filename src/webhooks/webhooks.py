@@ -19,7 +19,7 @@ def call_webhooks(environment, data):
             res = requests.post(str(webhook.url), data=json_data, headers=headers)
         except requests.exceptions.ConnectionError:
             send_failure_email(webhook, data)
-            return
+            continue
 
         if res.status_code != 200:
             send_failure_email(webhook, data, res.status_code)
