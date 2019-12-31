@@ -2,7 +2,7 @@ from django.dispatch import receiver
 from simple_history.signals import post_create_historical_record
 
 from .models import HistoricalFeatureState
-from .serializers import FeatureStateSerializerFull
+from .serializers import FeatureStateSerializerFull, FeatureStateSerializerFullWithIdentity
 from webhooks.webhooks import call_webhooks
 
 
@@ -30,7 +30,7 @@ def trigger_webhook_for_feature_state_change(sender, instance, history_instance,
     data = {
         "event_type": "FLAG_UPDATED",
         "data": {
-            "new_state": FeatureStateSerializerFull(instance=instance).data,
+            "new_state": FeatureStateSerializerFullWithIdentity(instance=instance).data,
             "changed_by": changed_by,
             "timestamp": kwargs.get("history_date")
         }
