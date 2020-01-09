@@ -28,10 +28,6 @@ deployawsstaging:
     image: twstuart/elasticbeanstalk-pipenv
     stage: deploy-aws
     script:
-        - export DATABASE_URL=$DATABASE_URL_STAGING
-        - export GOOGLE_ANALYTICS_CLIENT_ID=$GOOGLE_ANALYTICS_CLIENT_ID_STAGING
-        - export GOOGLE_ANALYTICS_KEY=$GOOGLE_ANALYTICS_KEY_STAGING
-        - export DJANGO_SETTINGS_MODULE=$DJANGO_SETTINGS_MODULE_STAGING
         - pipenv lock --requirements > ./src/requirements.txt
         - sh generate.sh
         - git config --global user.email "build@gitlab.com" 
@@ -41,7 +37,6 @@ deployawsstaging:
         - eb deploy $EB_ENVIRONMENT_STAGING
     only:
         - staging
-
 
 deployawsmaster:
     image: twstuart/elasticbeanstalk-pipenv
