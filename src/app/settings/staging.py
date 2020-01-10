@@ -5,7 +5,7 @@ import dj_database_url
 
 DATABASES['default'] = dj_database_url.parse(os.environ['DATABASE_URL'], conn_max_age=60)
 
-DEBUG = True
+DEBUG = False
 
 LOGGING = {
     'version': 1,
@@ -36,3 +36,5 @@ LOGGING = {
         }
     }
 }
+
+REST_FRAMEWORK['PAGE_SIZE'] = 999

@@ -33,7 +33,7 @@ class EnvironmentSerializerLight(serializers.ModelSerializer):
         return updated_instance
 
     def _create_audit_log(self, instance, created):
-        message = ENVIRONMENT_CREATED_MESSAGE if created else ENVIRONMENT_UPDATED_MESSAGE % instance.name
+        message = (ENVIRONMENT_CREATED_MESSAGE if created else ENVIRONMENT_UPDATED_MESSAGE) % instance.name
         request = self.context.get('request')
         AuditLog.objects.create(author=request.user if request else None,
                                 related_object_id=instance.id,
