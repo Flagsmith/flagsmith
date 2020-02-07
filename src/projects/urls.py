@@ -7,11 +7,11 @@ from . import views
 
 
 router = routers.DefaultRouter()
-router.register(r'', views.ProjectViewSet, base_name="project")
+router.register(r'', views.ProjectViewSet, basename="project")
 
 projects_router = routers.NestedSimpleRouter(router, r'', lookup="project")
-projects_router.register(r'features', FeatureViewSet, base_name="project-features")
-projects_router.register(r'segments', SegmentViewSet, base_name="project-segments")
+projects_router.register(r'features', FeatureViewSet, basename="project-features")
+projects_router.register(r'segments', SegmentViewSet, basename="project-segments")
 
 app_name = "projects"
 
