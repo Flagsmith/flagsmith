@@ -6,7 +6,8 @@ from django.http import HttpResponse
 from users.views import password_reset_redirect
 
 urlpatterns = [
-    url(r'^api/', include('api.urls', namespace='api')),
+    url(r'^api/v1/', include('api.urls.deprecated', namespace='api-deprecated')),
+    url(r'^api/v1/', include('api.urls.v1', namespace='api-v1')),
     url(r'^admin/', admin.site.urls),
     url(r'^health', include('health_check.urls', namespace='health')),
     url(r'', lambda r: HttpResponse("Bullet Train API")),
