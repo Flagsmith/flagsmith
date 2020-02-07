@@ -30,12 +30,12 @@ RELATED_OBJECT_TYPES = ((tag.name, tag.value) for tag in RelatedObjectType)
 @python_2_unicode_compatible
 class AuditLog(models.Model):
     created_date = models.DateTimeField('DateCreated', auto_now_add=True)
-    project = models.ForeignKey(Project, related_name='audit_logs', null=True)
+    project = models.ForeignKey(Project, related_name='audit_logs', null=True, on_delete=models.SET_NULL)
     environment = models.ForeignKey(
-        'environments.Environment', related_name='audit_logs', null=True)
+        'environments.Environment', related_name='audit_logs', null=True, on_delete=models.SET_NULL)
     log = models.TextField()
     author = models.ForeignKey(
-        'users.FFAdminUser', related_name='audit_logs', null=True, blank=True)
+        'users.FFAdminUser', related_name='audit_logs', null=True, blank=True, on_delete=models.SET_NULL)
     related_object_id = models.IntegerField(null=True)
     related_object_type = models.CharField(max_length=20, null=True)
 

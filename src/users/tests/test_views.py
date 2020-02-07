@@ -73,7 +73,7 @@ class UserTestCase(TestCase):
     def test_join_organisation(self):
         # Given
         invite = Invite.objects.create(email=self.user.email, organisation=self.organisation)
-        url = reverse('api:v1:users:user-join-organisation', args=[invite.hash])
+        url = reverse('api-v1:users:user-join-organisation', args=[invite.hash])
 
         # When
         response = self.client.post(url)
@@ -88,7 +88,7 @@ class UserTestCase(TestCase):
         self.user.add_organisation(self.organisation)
         new_organisation = Organisation.objects.create(name='New org')
         invite = Invite.objects.create(email=self.user.email, organisation=new_organisation)
-        url = reverse('api:v1:users:user-join-organisation', args=[invite.hash])
+        url = reverse('api-v1:users:user-join-organisation', args=[invite.hash])
 
         # When
         response = self.client.post(url)
@@ -101,7 +101,7 @@ class UserTestCase(TestCase):
     def test_cannot_join_organisation_with_different_email_address_than_invite(self):
         # Given
         invite = Invite.objects.create(email='some-other-email@test.com', organisation=self.organisation)
-        url = reverse('api:v1:users:user-join-organisation', args=[invite.hash])
+        url = reverse('api-v1:users:user-join-organisation', args=[invite.hash])
 
         # When
         res = self.client.post(url)
@@ -116,7 +116,7 @@ class UserTestCase(TestCase):
         # Given
         invite = Invite.objects.create(email=self.user.email, organisation=self.organisation,
                                        role=OrganisationRole.ADMIN.name)
-        url = reverse('api:v1:users:user-join-organisation', args=[invite.hash])
+        url = reverse('api-v1:users:user-join-organisation', args=[invite.hash])
 
         # When
         self.client.post(url)
@@ -130,7 +130,7 @@ class UserTestCase(TestCase):
 
         organisation_user = FFAdminUser.objects.create(email='org_user@org.com')
         organisation_user.add_organisation(self.organisation)
-        url = reverse('api:v1:organisations:organisation-users-update-role', args=[self.organisation.pk,
+        url = reverse('api-v1:organisations:organisation-users-update-role', args=[self.organisation.pk,
                                                                                    organisation_user.pk])
         data = {
             'role': OrganisationRole.ADMIN.name
@@ -151,7 +151,7 @@ class UserTestCase(TestCase):
 
         organisation_user = FFAdminUser.objects.create(email='org_user@org.com')
         organisation_user.add_organisation(self.organisation)
-        url = reverse('api:v1:organisations:organisation-users-list', args=[self.organisation.pk])
+        url = reverse('api-v1:organisations:organisation-users-list', args=[self.organisation.pk])
         data = {
             'role': OrganisationRole.ADMIN.name
         }

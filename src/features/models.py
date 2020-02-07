@@ -39,7 +39,8 @@ class Feature(models.Model):
             "associated projects Environments that are related to this Feature. New default "
             "Feature States will be created for the new selected projects Environments for this "
             "Feature."
-        )
+        ),
+        on_delete=models.CASCADE
     )
     initial_value = models.CharField(max_length=2000, null=True, default=None)
     description = models.TextField(null=True, blank=True)
@@ -111,7 +112,7 @@ def get_next_segment_priority(feature):
 @python_2_unicode_compatible
 class FeatureSegment(models.Model):
     feature = models.ForeignKey(Feature, on_delete=models.CASCADE, related_name="feature_segments")
-    segment = models.ForeignKey('segments.Segment', related_name="feature_segments")
+    segment = models.ForeignKey('segments.Segment', related_name="feature_segments", on_delete=models.CASCADE)
     priority = models.IntegerField(blank=True, null=True)
     enabled = models.BooleanField(default=False)
     value = models.CharField(max_length=2000, blank=True, null=True)
@@ -140,13 +141,13 @@ class FeatureSegment(models.Model):
 
 @python_2_unicode_compatible
 class FeatureState(models.Model):
-    feature = models.ForeignKey(Feature, related_name='feature_states')
-    environment = models.ForeignKey('environments.Environment', related_name='feature_states',
-                                    null=True)
+    feature = models.ForeignKey(Feature, related_name='feature_states', on_delete=models.CASCADE)
+    environment = models.ForeignKey('environments.Environment', related_name='feature_states', null=True,
+                                    on_delete=models.CASCADE)
     identity = models.ForeignKey('environments.Identity', related_name='identity_features',
-                                 null=True, default=None, blank=True)
+                                 null=True, default=None, blank=True, on_delete=models.CASCADE)
     feature_segment = models.ForeignKey(FeatureSegment, related_name='feature_states', null=True, blank=True,
-                                        default=None)
+                                        default=None, on_delete=models.CASCADE)
 
     enabled = models.BooleanField(default=False)
     history = HistoricalRecords()
@@ -270,7 +271,7 @@ class FeatureState(models.Model):
 
 
 class FeatureStateValue(models.Model):
-    feature_state = models.OneToOneField(FeatureState, related_name='feature_state_value')
+    feature_state = models.OneToOneField(FeatureState, related_name='feature_state_value', on_delete=models.CASCADE)
 
     type = models.CharField(max_length=10, choices=FEATURE_STATE_VALUE_TYPES, default=STRING,
                             null=True, blank=True)

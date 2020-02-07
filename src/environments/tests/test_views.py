@@ -37,7 +37,7 @@ class EnvironmentTestCase(TestCase):
 
     def test_should_create_environments(self):
         # Given
-        url = reverse('api:v1:environments:environment-list')
+        url = reverse('api-v1:environments:environment-list')
         data = {
             'name': 'Test environment',
             'project': self.project.id
@@ -56,7 +56,7 @@ class EnvironmentTestCase(TestCase):
         environment = Environment.objects.create(name='environment1', project=self.project)
         Identity.objects.create(identifier=identifier_one, environment=environment)
         Identity.objects.create(identifier=identifier_two, environment=environment)
-        url = reverse('api:v1:environments:environment-identities-list', args=[environment.api_key])
+        url = reverse('api-v1:environments:environment-identities-list', args=[environment.api_key])
 
         # When
         response = self.client.get(url)
@@ -70,7 +70,7 @@ class EnvironmentTestCase(TestCase):
         feature = Feature.objects.create(name="feature", project=self.project)
         environment = Environment.objects.create(name="test env", project=self.project)
         feature_state = FeatureState.objects.get(feature=feature, environment=environment)
-        url = reverse('api:v1:environments:environment-featurestates-detail',
+        url = reverse('api-v1:environments:environment-featurestates-detail',
                       args=[environment.api_key, feature_state.id])
 
         # When
@@ -86,7 +86,7 @@ class EnvironmentTestCase(TestCase):
 
     def test_audit_log_entry_created_when_new_environment_created(self):
         # Given
-        url = reverse('api:v1:environments:environment-list')
+        url = reverse('api-v1:environments:environment-list')
         data = {
             'project': self.project.id,
             'name': 'Test Environment'
@@ -101,7 +101,7 @@ class EnvironmentTestCase(TestCase):
     def test_audit_log_entry_created_when_environment_updated(self):
         # Given
         environment = Environment.objects.create(name='Test environment', project=self.project)
-        url = reverse('api:v1:environments:environment-detail', args=[environment.api_key])
+        url = reverse('api-v1:environments:environment-detail', args=[environment.api_key])
         data = {
             'project': self.project.id,
             'name': 'New name'
@@ -118,7 +118,7 @@ class EnvironmentTestCase(TestCase):
         feature = Feature.objects.create(name="feature", project=self.project)
         environment = Environment.objects.create(name="test env", project=self.project)
         feature_state = FeatureState.objects.get(feature=feature, environment=environment)
-        url = reverse('api:v1:environments:environment-featurestates-detail',
+        url = reverse('api-v1:environments:environment-featurestates-detail',
                       args=[environment.api_key, feature_state.id])
         data = {
             'id': feature.id,
@@ -148,7 +148,7 @@ class EnvironmentTestCase(TestCase):
         Trait.objects.create(identity=identity_one, trait_key=trait_key_two, string_value='blah', value_type=STRING)
         Trait.objects.create(identity=identity_two, trait_key=trait_key_one, string_value='blah', value_type=STRING)
 
-        url = reverse('api:v1:environments:environment-trait-keys', args=[environment.api_key])
+        url = reverse('api-v1:environments:environment-trait-keys', args=[environment.api_key])
 
         # When
         res = self.client.get(url)
@@ -175,7 +175,7 @@ class EnvironmentTestCase(TestCase):
         Trait.objects.create(identity=identity_one_environment_two, trait_key=trait_key, string_value='blah',
                              value_type=STRING)
 
-        url = reverse('api:v1:environments:environment-delete-traits', args=[environment_one.api_key])
+        url = reverse('api-v1:environments:environment-delete-traits', args=[environment_one.api_key])
 
         # When
         self.client.post(url, data={'key': trait_key})
@@ -198,7 +198,7 @@ class EnvironmentTestCase(TestCase):
         trait_to_persist = 'trait-key-to-persist'
         Trait.objects.create(identity=identity, trait_key=trait_to_persist, value_type=STRING, string_value='blah')
 
-        url = reverse('api:v1:environments:environment-delete-traits', args=[environment.api_key])
+        url = reverse('api-v1:environments:environment-delete-traits', args=[environment.api_key])
 
         # When
         self.client.post(url, data={'key': trait_to_delete})
@@ -325,7 +325,7 @@ class IdentityTestCase(TestCase):
     def test_can_search_for_identities(self):
         # Given
         Identity.objects.create(identifier='user2', environment=self.environment)
-        base_url = reverse('api:v1:environments:environment-identities-list', args=[self.environment.api_key])
+        base_url = reverse('api-v1:environments:environment-identities-list', args=[self.environment.api_key])
         url = '%s?q=%s' % (base_url, self.identifier)
 
         # When
@@ -340,7 +340,7 @@ class IdentityTestCase(TestCase):
     def test_search_is_case_insensitive(self):
         # Given
         Identity.objects.create(identifier='user2', environment=self.environment)
-        base_url = reverse('api:v1:environments:environment-identities-list', args=[self.environment.api_key])
+        base_url = reverse('api-v1:environments:environment-identities-list', args=[self.environment.api_key])
         url = '%s?q=%s' % (base_url, self.identifier.upper())
 
         # When
@@ -354,7 +354,7 @@ class IdentityTestCase(TestCase):
 
     def test_no_identities_returned_if_search_matches_none(self):
         # Given
-        base_url = reverse('api:v1:environments:environment-identities-list', args=[self.environment.api_key])
+        base_url = reverse('api-v1:environments:environment-identities-list', args=[self.environment.api_key])
         url = '%s?q=%s' % (base_url, 'some invalid search string')
 
         # When
@@ -369,7 +369,7 @@ class IdentityTestCase(TestCase):
     def test_search_identities_still_allows_paging(self):
         # Given
         self._create_n_identities(10)
-        base_url = reverse('api:v1:environments:environment-identities-list', args=[self.environment.api_key])
+        base_url = reverse('api-v1:environments:environment-identities-list', args=[self.environment.api_key])
         url = '%s?q=%s' % (base_url, 'user')
 
         res1 = self.client.get(url)
@@ -391,7 +391,7 @@ class IdentityTestCase(TestCase):
 
     def test_can_delete_identity(self):
         # Given
-        url = reverse('api:v1:environments:environment-identities-detail', args=[self.environment.api_key,
+        url = reverse('api-v1:environments:environment-identities-detail', args=[self.environment.api_key,
                                                                                  self.identity.id])
 
         # When
@@ -420,7 +420,7 @@ class SDKIdentitiesTestCase(APITestCase):
 
     def test_identities_endpoint_returns_all_feature_states_for_identity_if_feature_not_provided(self):
         # Given
-        base_url = reverse('api:v1:sdk-identities')
+        base_url = reverse('api-v1:sdk-identities')
         url = base_url + '?identifier=' + self.identity.identifier
 
         # When
@@ -434,7 +434,7 @@ class SDKIdentitiesTestCase(APITestCase):
 
     def test_identities_endpoint_returns_traits(self):
         # Given
-        base_url = reverse('api:v1:sdk-identities')
+        base_url = reverse('api-v1:sdk-identities')
         url = base_url + '?identifier=' + self.identity.identifier
         trait = Trait.objects.create(identity=self.identity, trait_key='trait_key', value_type='STRING',
                                      string_value='trait_value')
@@ -450,7 +450,7 @@ class SDKIdentitiesTestCase(APITestCase):
 
     def test_identities_endpoint_returns_single_feature_state_if_feature_provided(self):
         # Given
-        base_url = reverse('api:v1:sdk-identities')
+        base_url = reverse('api-v1:sdk-identities')
         url = base_url + '?identifier=' + self.identity.identifier + '&feature=' + self.feature_1.name
 
         # When
@@ -464,7 +464,7 @@ class SDKIdentitiesTestCase(APITestCase):
 
     def test_identities_endpoint_returns_value_for_segment_if_identity_in_segment(self):
         # Given
-        base_url = reverse('api:v1:sdk-identities')
+        base_url = reverse('api-v1:sdk-identities')
         url = base_url + '?identifier=' + self.identity.identifier
 
         trait_key = 'trait_key'
@@ -486,7 +486,7 @@ class SDKIdentitiesTestCase(APITestCase):
 
     def test_identities_endpoint_returns_value_for_segment_if_identity_in_segment_and_feature_specified(self):
         # Given
-        base_url = reverse('api:v1:sdk-identities')
+        base_url = reverse('api-v1:sdk-identities')
         url = base_url + '?identifier=' + self.identity.identifier + '&feature=' + self.feature_1.name
 
         trait_key = 'trait_key'
@@ -509,7 +509,7 @@ class SDKIdentitiesTestCase(APITestCase):
 
     def test_identities_endpoint_returns_value_for_segment_if_rule_type_percentage_split_and_identity_in_segment(self):
         # Given
-        base_url = reverse('api:v1:sdk-identities')
+        base_url = reverse('api-v1:sdk-identities')
         url = base_url + '?identifier=' + self.identity.identifier
 
         segment = Segment.objects.create(name='Test Segment', project=self.project)
@@ -532,7 +532,7 @@ class SDKIdentitiesTestCase(APITestCase):
 
     def test_identities_endpoint_returns_default_value_if_rule_type_percentage_split_and_identity_not_in_segment(self):
         # Given
-        base_url = reverse('api:v1:sdk-identities')
+        base_url = reverse('api-v1:sdk-identities')
         url = base_url + '?identifier=' + self.identity.identifier
 
         segment = Segment.objects.create(name='Test Segment', project=self.project)
@@ -570,7 +570,7 @@ class SDKTraitsTest(APITestCase):
 
     def test_can_set_trait_for_an_identity(self):
         # Given
-        url = reverse('api:v1:sdk-traits-list')
+        url = reverse('api-v1:sdk-traits-list')
 
         # When
         res = self.client.post(url, data=self._generate_json_trait_data(), content_type=self.JSON)
@@ -583,7 +583,7 @@ class SDKTraitsTest(APITestCase):
 
     def test_can_set_trait_with_boolean_value_for_an_identity(self):
         # Given
-        url = reverse('api:v1:sdk-traits-list')
+        url = reverse('api-v1:sdk-traits-list')
         trait_value = True
 
         # When
@@ -598,7 +598,7 @@ class SDKTraitsTest(APITestCase):
 
     def test_can_set_trait_with_identity_value_for_an_identity(self):
         # Given
-        url = reverse('api:v1:sdk-traits-list')
+        url = reverse('api-v1:sdk-traits-list')
         trait_value = 12
 
         # When
@@ -613,7 +613,7 @@ class SDKTraitsTest(APITestCase):
 
     def test_add_trait_creates_identity_if_it_doesnt_exist(self):
         # Given
-        url = reverse('api:v1:sdk-traits-list')
+        url = reverse('api-v1:sdk-traits-list')
         identifier = 'new-identity'
 
         # When
@@ -630,7 +630,7 @@ class SDKTraitsTest(APITestCase):
 
     def test_trait_is_updated_if_already_exists(self):
         # Given
-        url = reverse('api:v1:sdk-traits-list')
+        url = reverse('api-v1:sdk-traits-list')
         trait = Trait.objects.create(trait_key=self.trait_key, value_type=STRING, string_value=self.trait_value,
                                      identity=self.identity)
         new_value = 'Some new value'
@@ -647,7 +647,7 @@ class SDKTraitsTest(APITestCase):
         initial_value = 2
         increment_by = 2
 
-        url = reverse('api:v1:sdk-traits-increment-value')
+        url = reverse('api-v1:sdk-traits-increment-value')
         trait = Trait.objects.create(identity=self.identity, trait_key=self.trait_key, value_type=INTEGER,
                                      integer_value=initial_value)
         data = {
@@ -668,7 +668,7 @@ class SDKTraitsTest(APITestCase):
         initial_value = 2
         increment_by = -2
 
-        url = reverse('api:v1:sdk-traits-increment-value')
+        url = reverse('api-v1:sdk-traits-increment-value')
         trait = Trait.objects.create(identity=self.identity, trait_key=self.trait_key, value_type=INTEGER,
                                      integer_value=initial_value)
         data = {
@@ -688,7 +688,7 @@ class SDKTraitsTest(APITestCase):
         # Given
         increment_by = 1
 
-        url = reverse('api:v1:sdk-traits-increment-value')
+        url = reverse('api-v1:sdk-traits-increment-value')
         data = {
             'trait_key': self.trait_key,
             'identifier': self.identity.identifier,
@@ -704,7 +704,7 @@ class SDKTraitsTest(APITestCase):
 
     def test_increment_value_returns_400_if_trait_value_not_integer(self):
         # Given
-        url = reverse('api:v1:sdk-traits-increment-value')
+        url = reverse('api-v1:sdk-traits-increment-value')
         Trait.objects.create(identity=self.identity, trait_key=self.trait_key, value_type=STRING, string_value='str')
         data = {
             'trait_key': self.trait_key,
@@ -757,7 +757,7 @@ class TraitViewSetTestCase(TestCase):
         trait_value = 'trait_value'
         trait = Trait.objects.create(identity=self.identity, trait_key=trait_key, value_type=STRING,
                                      string_value=trait_value)
-        url = reverse('api:v1:environments:identities-traits-detail',
+        url = reverse('api-v1:environments:identities-traits-detail',
                       args=[self.environment.api_key, self.identity.id, trait.id])
 
         # When
@@ -780,7 +780,7 @@ class TraitViewSetTestCase(TestCase):
         trait_2 = Trait.objects.create(identity=identity_2, trait_key=trait_key, value_type=STRING,
                                        string_value=trait_value)
 
-        url = reverse('api:v1:environments:identities-traits-detail',
+        url = reverse('api-v1:environments:identities-traits-detail',
                       args=[self.environment.api_key, self.identity.id, trait.id])
 
         # When
@@ -803,7 +803,7 @@ class TraitViewSetTestCase(TestCase):
         trait_2 = Trait.objects.create(identity=identity_2, trait_key=trait_key, value_type=STRING,
                                        string_value=trait_value)
 
-        base_url = reverse('api:v1:environments:identities-traits-detail',
+        base_url = reverse('api-v1:environments:identities-traits-detail',
                            args=[self.environment.api_key, self.identity.id, trait.id])
         url = base_url + '?deleteAllMatchingTraits=true'
 
@@ -828,7 +828,7 @@ class TraitViewSetTestCase(TestCase):
         trait_2 = Trait.objects.create(identity=identity_2, trait_key=trait_key, value_type=STRING,
                                        string_value=trait_value)
 
-        base_url = reverse('api:v1:environments:identities-traits-detail',
+        base_url = reverse('api-v1:environments:identities-traits-detail',
                            args=[self.environment.api_key, self.identity.id, trait.id])
         url = base_url + '?deleteAllMatchingTraits=true'
 
@@ -857,7 +857,7 @@ class WebhookViewSetTestCase(TestCase):
 
     def test_can_create_webhook_for_an_environment(self):
         # Given
-        url = reverse('api:v1:environments:environment-webhooks-list', args=[self.environment.api_key])
+        url = reverse('api-v1:environments:environment-webhooks-list', args=[self.environment.api_key])
         data = {
             'url': self.valid_webhook_url,
             'enabled': True
@@ -875,7 +875,7 @@ class WebhookViewSetTestCase(TestCase):
     def test_can_update_webhook_for_an_environment(self):
         # Given
         webhook = Webhook.objects.create(url=self.valid_webhook_url, environment=self.environment)
-        url = reverse('api:v1:environments:environment-webhooks-detail', args=[self.environment.api_key, webhook.id])
+        url = reverse('api-v1:environments:environment-webhooks-detail', args=[self.environment.api_key, webhook.id])
         data = {
             'url': 'http://my.new.url.com/wehbooks',
             'enabled': False
@@ -894,7 +894,7 @@ class WebhookViewSetTestCase(TestCase):
     def test_can_delete_webhook_for_an_environment(self):
         # Given
         webhook = Webhook.objects.create(url=self.valid_webhook_url, environment=self.environment)
-        url = reverse('api:v1:environments:environment-webhooks-detail', args=[self.environment.api_key, webhook.id])
+        url = reverse('api-v1:environments:environment-webhooks-detail', args=[self.environment.api_key, webhook.id])
 
         # When
         res = self.client.delete(url)
@@ -908,7 +908,7 @@ class WebhookViewSetTestCase(TestCase):
     def test_can_list_webhooks_for_an_environment(self):
         # Given
         webhook = Webhook.objects.create(url=self.valid_webhook_url, environment=self.environment)
-        url = reverse('api:v1:environments:environment-webhooks-list', args=[self.environment.api_key])
+        url = reverse('api-v1:environments:environment-webhooks-list', args=[self.environment.api_key])
 
         # When
         res = self.client.get(url)
@@ -925,7 +925,7 @@ class WebhookViewSetTestCase(TestCase):
         new_project = Project.objects.create(name='New project', organisation=new_organisation)
         new_environment = Environment.objects.create(name='New Environment', project=new_project)
         webhook = Webhook.objects.create(url=self.valid_webhook_url, environment=new_environment)
-        url = reverse('api:v1:environments:environment-webhooks-detail', args=[self.environment.api_key, webhook.id])
+        url = reverse('api-v1:environments:environment-webhooks-detail', args=[self.environment.api_key, webhook.id])
 
         # When
         res = self.client.delete(url)
