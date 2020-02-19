@@ -77,6 +77,7 @@ class FeatureSerializer(serializers.ModelSerializer):
 
 class FeatureStateSerializerFull(serializers.ModelSerializer):
     feature = CreateFeatureSerializer()
+    feature_segment = FeatureSegmentCreateSerializer()
     feature_state_value = serializers.SerializerMethodField()
 
     class Meta:
