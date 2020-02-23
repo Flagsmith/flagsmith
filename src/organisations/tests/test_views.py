@@ -387,3 +387,26 @@ class ChargeBeeWebhookTestCase(TestCase):
 
         # Then
         assert res.status_code == status.HTTP_400_BAD_REQUEST
+
+
+@pytest.mark.django_db
+class OrganisationWebhookViewSetTestCase(TestCase):
+    def setUp(self) -> None:
+        self.organisation = Organisation.objects.create(name='Test org')
+        self.user = FFAdminUser.objects.create(email='test@test.com')
+        self.user.add_organisation(self.organisation, OrganisationRole.ADMIN)
+        self.client = APIClient()
+        self.client.force_authenticate(self.user)
+        self.list_url = reverse('api-v1:organisations:organisation-webhooks-list', args=[self.organisation.id])
+
+    def test_user_can_create_new_webhook(self):
+        # Given
+        data = {
+            'url': 'https://test.com/my-webhook',
+        }
+
+        # When
+        response = self.client.post(self.list_url, data=data)
+
+        # Then
+        assert response.status_code == status.HTTP_201_CREATED
