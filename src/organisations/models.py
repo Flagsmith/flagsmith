@@ -89,3 +89,9 @@ class Subscription(models.Model):
             self.save()
         return get_portal_url(self.customer_id, redirect_url)
 
+
+class OrganisationWebhook(models.Model):
+    url = models.URLField()
+    name = models.CharField(max_length=100)
+    enabled = models.BooleanField(default=True)
+    organisation = models.ForeignKey(Organisation, on_delete=models.CASCADE, related_name='webhooks')
