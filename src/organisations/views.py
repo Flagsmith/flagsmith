@@ -175,14 +175,10 @@ class OrganisationWebhookViewSet(viewsets.ModelViewSet):
     permission_classes = [IsAuthenticated, NestedOrganisationEntityPermission]
 
     def get_queryset(self):
-        queryset = OrganisationWebhook.objects.filter(organisation__userorganisation__user=self.request.user)
+        if 'organisation_pk' not in self.kwargs:
+            raise ValidationError("Missing required path parameter 'organisation_pk'")
 
-        if self.action == 'list':
-            if 'organisation' not in self.request.query_params:
-                raise ValidationError("Missing required query parameter 'organisation'")
-            queryset = queryset.filter(organisation__id=self.request.query_params['organisation'])
-
-        return queryset
+        return OrganisationWebhook.objects.filter(organisation_id=self.kwargs['organisation_pk'])
 
     def perform_update(self, serializer):
         organisation_id = self.kwargs['organisation_pk']
