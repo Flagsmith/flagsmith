@@ -5,16 +5,16 @@ from features.views import FeatureStateViewSet
 from .views import IdentityViewSet, EnvironmentViewSet, TraitViewSet, WebhookViewSet
 
 router = routers.DefaultRouter()
-router.register(r'', EnvironmentViewSet, base_name="environment")
+router.register(r'', EnvironmentViewSet, basename="environment")
 
 environments_router = routers.NestedSimpleRouter(router, r'', lookup="environment")
-environments_router.register(r'identities', IdentityViewSet, base_name="environment-identities")
-environments_router.register(r'webhooks', WebhookViewSet, base_name='environment-webhooks')
+environments_router.register(r'identities', IdentityViewSet, basename="environment-identities")
+environments_router.register(r'webhooks', WebhookViewSet, basename='environment-webhooks')
 
 identity_router = routers.NestedSimpleRouter(environments_router, r'identities', lookup="identity")
-identity_router.register(r'featurestates', FeatureStateViewSet, base_name="identity-featurestates")
-identity_router.register(r'traits', TraitViewSet, base_name="identities-traits")
-environments_router.register(r'featurestates', FeatureStateViewSet, base_name="environment-featurestates")
+identity_router.register(r'featurestates', FeatureStateViewSet, basename="identity-featurestates")
+identity_router.register(r'traits', TraitViewSet, basename="identities-traits")
+environments_router.register(r'featurestates', FeatureStateViewSet, basename="environment-featurestates")
 
 
 app_name = "environments"

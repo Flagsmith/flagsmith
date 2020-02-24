@@ -147,7 +147,7 @@ class Invite(models.Model):
     date_created = models.DateTimeField('DateCreated', auto_now_add=True)
     organisation = models.ForeignKey(Organisation, on_delete=models.CASCADE, related_name='invites')
     frontend_base_url = models.CharField(max_length=500, null=False)
-    invited_by = models.ForeignKey(FFAdminUser, related_name='sent_invites', null=True)
+    invited_by = models.ForeignKey(FFAdminUser, related_name='sent_invites', null=True, on_delete=models.CASCADE)
     role = models.CharField(choices=organisation_roles, max_length=50, default=OrganisationRole.USER.name)
 
     class Meta:

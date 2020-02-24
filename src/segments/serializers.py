@@ -71,7 +71,7 @@ class SegmentSerializer(serializers.ModelSerializer):
         Since we don't have a unique identifier for the rules / conditions for the update, we assume that the client
         passes up the new configuration for the rules of the segment and simply wipe the old ones and create new ones
         """
-        segment.rules = []
+        segment.rules.set([])
         self._create_segment_rules(rules_data, segment=segment)
         segment.save()
 

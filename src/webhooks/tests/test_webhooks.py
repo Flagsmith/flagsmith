@@ -6,7 +6,7 @@ import pytest
 from environments.models import Environment, Webhook
 from organisations.models import Organisation
 from projects.models import Project
-from webhooks.webhooks import call_webhooks
+from webhooks.webhooks import call_environment_webhooks, WebhookEventType
 
 
 @pytest.mark.django_db
@@ -23,7 +23,7 @@ class WebhooksTestCase(TestCase):
         webhook_2 = Webhook.objects.create(url='http://url.2.com', enabled=True, environment=self.environment)
 
         # When
-        call_webhooks(environment=self.environment, data={})
+        call_environment_webhooks(environment=self.environment, data={}, event_type=WebhookEventType.FLAG_UPDATED)
 
         # Then
         assert len(mock_requests.post.call_args_list) == 2
@@ -40,7 +40,7 @@ class WebhooksTestCase(TestCase):
         Webhook.objects.create(url='http://url.1.com', enabled=False, environment=self.environment)
 
         # When
-        call_webhooks(environment=self.environment, data={})
+        call_environment_webhooks(environment=self.environment, data={}, event_type=WebhookEventType.FLAG_UPDATED)
 
         # Then
         mock_requests.post.assert_not_called()

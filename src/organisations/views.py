@@ -9,14 +9,15 @@ from drf_yasg.utils import swagger_auto_schema
 from rest_framework import viewsets, status
 from rest_framework.authentication import BasicAuthentication
 from rest_framework.decorators import action, api_view, authentication_classes
+from rest_framework.exceptions import ValidationError
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 
 from analytics.query import get_events_for_organisation
-from organisations.models import OrganisationRole, Subscription
+from organisations.models import OrganisationRole, Subscription, OrganisationWebhook
 from organisations.permissions import OrganisationPermission, NestedOrganisationEntityPermission
 from organisations.serializers import OrganisationSerializerFull, MultiInvitesSerializer, UpdateSubscriptionSerializer, \
-    PortalUrlSerializer
+    PortalUrlSerializer, OrganisationWebhookSerializer
 from projects.serializers import ProjectSerializer
 from users.models import Invite
 from users.serializers import InviteListSerializer, UserIdSerializer
@@ -167,3 +168,22 @@ def chargebee_webhook(request):
             existing_subscription.cancel(datetime.fromtimestamp(subscription_data.get('current_term_end')))
 
     return Response(status=status.HTTP_200_OK)
+
+
+class OrganisationWebhookViewSet(viewsets.ModelViewSet):
+    serializer_class = OrganisationWebhookSerializer
+    permission_classes = [IsAuthenticated, NestedOrganisationEntityPermission]
+
+    def get_queryset(self):
+        if 'organisation_pk' not in self.kwargs:
+            raise ValidationError("Missing required path parameter 'organisation_pk'")
+
+        return OrganisationWebhook.objects.filter(organisation_id=self.kwargs['organisation_pk'])
+
+    def perform_update(self, serializer):
+        organisation_id = self.kwargs['organisation_pk']
+        serializer.save(organisation_id=organisation_id)
+
+    def perform_create(self, serializer):
+        organisation_id = self.kwargs['organisation_pk']
+        serializer.save(organisation_id=organisation_id)

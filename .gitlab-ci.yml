@@ -20,7 +20,7 @@ test:
 deploydevelop:
     image: ilyasemenov/gitlab-ci-git-push
     stage: deploy
-    script: git-push dokku@dokku1.solidstategroup.com:bullet-train-api-dev
+    script: git-push dokku@bitwarden.bullet-train.io:bullet-train
     only:
         - develop
 
