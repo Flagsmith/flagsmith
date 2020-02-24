@@ -16,7 +16,9 @@ def trigger_webhook_for_feature_state_change(
     if instance is None:
         return
 
-    if not hasattr(instance, "_environment_cache"):
+    # Not entirely sure why this is necessary but we seem to be getting ~3 signals being triggered when updating a
+    # flag, this filters 2 of them out. Need to rewrite this whole function.
+    if not kwargs.get('history_user'):
         return
 
     # If there is no environment on this instance
