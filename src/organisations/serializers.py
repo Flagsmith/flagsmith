@@ -5,7 +5,7 @@ from rest_framework import serializers
 
 from organisations.chargebee import get_subscription_data_from_hosted_page
 from users.models import Invite, FFAdminUser
-from .models import Organisation, Subscription, UserOrganisation, OrganisationRole
+from .models import Organisation, Subscription, UserOrganisation, OrganisationRole, OrganisationWebhook
 
 logger = logging.getLogger(__name__)
 
@@ -156,3 +156,10 @@ class UpdateSubscriptionSerializer(serializers.Serializer):
 
 class PortalUrlSerializer(serializers.Serializer):
     url = serializers.URLField()
+
+
+class OrganisationWebhookSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = OrganisationWebhook
+        fields = ('id', 'url', 'enabled')
+        read_only_fields = ('id',)

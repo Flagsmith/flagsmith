@@ -27,7 +27,7 @@ class SegmentViewSetTestCase(APITestCase):
 
     def test_audit_log_created_when_segment_created(self):
         # Given
-        url = reverse('api:v1:projects:project-segments-list', args=[self.project.id])
+        url = reverse('api-v1:projects:project-segments-list', args=[self.project.id])
         data = {
             'name': 'Test Segment',
             'project': self.project.id,
@@ -48,7 +48,7 @@ class SegmentViewSetTestCase(APITestCase):
     def test_audit_log_created_when_segment_updated(self):
         # Given
         segment = Segment.objects.create(name='Test segment', project=self.project)
-        url = reverse('api:v1:projects:project-segments-detail', args=[self.project.id, segment.id])
+        url = reverse('api-v1:projects:project-segments-detail', args=[self.project.id, segment.id])
         data = {
             'name': 'New segment name',
             'project': self.project.id,
@@ -81,7 +81,7 @@ class SegmentViewSetTestCase(APITestCase):
         identity = Identity.objects.create(identifier='test-user', environment=environment)
         Trait.objects.create(identity=identity, trait_key=trait_key, value_type=STRING, string_value=trait_value)
 
-        base_url = reverse('api:v1:projects:project-segments-list', args=[self.project.id])
+        base_url = reverse('api-v1:projects:project-segments-list', args=[self.project.id])
         url = base_url + '?identity=%d' % identity.id
 
         # When
@@ -92,7 +92,7 @@ class SegmentViewSetTestCase(APITestCase):
 
     def test_cannot_create_segments_without_rules(self):
         # Given
-        url = reverse('api:v1:projects:project-segments-list', args=[self.project.id])
+        url = reverse('api-v1:projects:project-segments-list', args=[self.project.id])
         data = {
             'name': 'New segment name',
             'project': self.project.id,
@@ -107,7 +107,7 @@ class SegmentViewSetTestCase(APITestCase):
 
     def test_can_create_segments_with_boolean_condition(self):
         # Given
-        url = reverse('api:v1:projects:project-segments-list', args=[self.project.id])
+        url = reverse('api-v1:projects:project-segments-list', args=[self.project.id])
         data = {
             'name': 'New segment name',
             'project': self.project.id,

@@ -46,7 +46,7 @@ class OrganisationTestCase(TestCase):
         # Given
         org_name = 'Test create org'
         webhook_notification_email = 'test@email.com'
-        url = reverse('api:v1:organisations:organisation-list')
+        url = reverse('api-v1:organisations:organisation-list')
         data = {
             'name': org_name,
             'webhook_notification_email': webhook_notification_email
@@ -65,7 +65,7 @@ class OrganisationTestCase(TestCase):
         new_organisation_name = "new test org"
         organisation = Organisation.objects.create(name=original_organisation_name)
         self.user.add_organisation(organisation, OrganisationRole.ADMIN)
-        url = reverse('api:v1:organisations:organisation-detail', args=[organisation.pk])
+        url = reverse('api-v1:organisations:organisation-detail', args=[organisation.pk])
         data = {
             'name': new_organisation_name
         }
@@ -83,7 +83,7 @@ class OrganisationTestCase(TestCase):
         org_name = "test_org"
         organisation = Organisation.objects.create(name=org_name)
         self.user.add_organisation(organisation, OrganisationRole.ADMIN)
-        url = reverse('api:v1:organisations:organisation-invite', args=[organisation.pk])
+        url = reverse('api-v1:organisations:organisation-invite', args=[organisation.pk])
         data = {
             'emails': ['test@example.com'],
             'frontend_base_url': 'https://example.com'
@@ -105,7 +105,7 @@ class OrganisationTestCase(TestCase):
             'emails': [email],
             'frontend_base_url': 'https://example.com'
         }
-        url = reverse('api:v1:organisations:organisation-invite', args=[organisation.pk])
+        url = reverse('api-v1:organisations:organisation-invite', args=[organisation.pk])
 
         # When
         response_success = self.client.post(url, data=json.dumps(data), content_type='application/json')
@@ -145,7 +145,7 @@ class OrganisationTestCase(TestCase):
         user_2 = FFAdminUser.objects.create(email='test@example.com')
         user_2.add_organisation(organisation)
 
-        url = reverse('api:v1:organisations:organisation-remove-users', args=[organisation.pk])
+        url = reverse('api-v1:organisations:organisation-remove-users', args=[organisation.pk])
 
         data = [
             {'id': user_2.pk}
@@ -162,7 +162,7 @@ class OrganisationTestCase(TestCase):
         # Given
         organisation = Organisation.objects.create(name='Test org')
         self.user.add_organisation(organisation, OrganisationRole.ADMIN)
-        url = reverse('api:v1:organisations:organisation-invite', args=[organisation.pk])
+        url = reverse('api-v1:organisations:organisation-invite', args=[organisation.pk])
         invited_email = 'test@example.com'
 
         data = {
@@ -186,7 +186,7 @@ class OrganisationTestCase(TestCase):
         # Given
         organisation = Organisation.objects.create(name='Test org')
         self.user.add_organisation(organisation, OrganisationRole.ADMIN)
-        url = reverse('api:v1:organisations:organisation-invite', args=[organisation.pk])
+        url = reverse('api-v1:organisations:organisation-invite', args=[organisation.pk])
         invited_email = 'test@example.com'
 
         data = {
@@ -210,7 +210,7 @@ class OrganisationTestCase(TestCase):
         # Given
         organisation = Organisation.objects.create(name='Test org')
         self.user.add_organisation(organisation, OrganisationRole.USER)
-        url = reverse('api:v1:organisations:organisation-projects', args=[organisation.pk])
+        url = reverse('api-v1:organisations:organisation-projects', args=[organisation.pk])
 
         # When
         res = self.client.get(url)
@@ -223,7 +223,7 @@ class OrganisationTestCase(TestCase):
         # Given
         organisation = Organisation.objects.create(name='Test org')
         self.user.add_organisation(organisation, OrganisationRole.ADMIN)
-        url = reverse('api:v1:organisations:organisation-update-subscription', args=[organisation.pk])
+        url = reverse('api-v1:organisations:organisation-update-subscription', args=[organisation.pk])
 
         hosted_page_id = 'some-id'
         data = {
@@ -264,7 +264,7 @@ class ChargeBeeWebhookTestCase(TestCase):
         self.client.force_authenticate(self.cb_user)
         self.organisation = Organisation.objects.create(name='Test org')
 
-        self.url = reverse('api:v1:chargebee-webhook')
+        self.url = reverse('api-v1:chargebee-webhook')
         self.subscription_id = 'subscription-id'
         self.old_plan_id = 'old-plan-id'
         self.old_max_seats = 1
@@ -387,3 +387,26 @@ class ChargeBeeWebhookTestCase(TestCase):
 
         # Then
         assert res.status_code == status.HTTP_400_BAD_REQUEST
+
+
+@pytest.mark.django_db
+class OrganisationWebhookViewSetTestCase(TestCase):
+    def setUp(self) -> None:
+        self.organisation = Organisation.objects.create(name='Test org')
+        self.user = FFAdminUser.objects.create(email='test@test.com')
+        self.user.add_organisation(self.organisation, OrganisationRole.ADMIN)
+        self.client = APIClient()
+        self.client.force_authenticate(self.user)
+        self.list_url = reverse('api-v1:organisations:organisation-webhooks-list', args=[self.organisation.id])
+
+    def test_user_can_create_new_webhook(self):
+        # Given
+        data = {
+            'url': 'https://test.com/my-webhook',
+        }
+
+        # When
+        response = self.client.post(self.list_url, data=data)
+
+        # Then
+        assert response.status_code == status.HTTP_201_CREATED

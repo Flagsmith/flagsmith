@@ -11,7 +11,7 @@ from organisations.models import Organisation
 class Project(models.Model):
     name = models.CharField(max_length=2000)
     created_date = models.DateTimeField('DateCreated', auto_now_add=True)
-    organisation = models.ForeignKey(Organisation, related_name='projects')
+    organisation = models.ForeignKey(Organisation, related_name='projects', on_delete=models.CASCADE)
 
     class Meta:
         ordering = ['id']

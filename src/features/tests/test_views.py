@@ -137,7 +137,7 @@ class ProjectFeatureTestCase(TestCase):
 
     def test_audit_log_created_when_feature_created(self):
         # Given
-        url = reverse('api:v1:projects:project-features-list', args=[self.project.id])
+        url = reverse('api-v1:projects:project-features-list', args=[self.project.id])
         data = {
             'name': 'Test feature flag',
             'type': 'FLAG',
@@ -153,7 +153,7 @@ class ProjectFeatureTestCase(TestCase):
     def test_audit_log_created_when_feature_updated(self):
         # Given
         feature = Feature.objects.create(name='Test Feature', project=self.project)
-        url = reverse('api:v1:projects:project-features-detail', args=[self.project.id, feature.id])
+        url = reverse('api-v1:projects:project-features-detail', args=[self.project.id, feature.id])
         data = {
             'name': 'Test Feature updated',
             'type': 'FLAG',
@@ -170,7 +170,7 @@ class ProjectFeatureTestCase(TestCase):
         # Given
         segment = Segment.objects.create(name='Test segment', project=self.project)
         feature = Feature.objects.create(name='Test feature', project=self.project)
-        url = reverse('api:v1:projects:project-features-segments', args=[self.project.id, feature.id])
+        url = reverse('api-v1:projects:project-features-segments', args=[self.project.id, feature.id])
         data = [{
             'segment': segment.id,
             'priority': 1,
@@ -187,7 +187,7 @@ class ProjectFeatureTestCase(TestCase):
         # Given
         feature = Feature.objects.create(name='Test feature', project=self.project)
         identity = Identity.objects.create(identifier='test-identifier', environment=self.environment_1)
-        url = reverse('api:v1:environments:identity-featurestates-list', args=[self.environment_1.api_key,
+        url = reverse('api-v1:environments:identity-featurestates-list', args=[self.environment_1.api_key,
                                                                                identity.id])
         data = {
             "feature": feature.id,
@@ -211,7 +211,7 @@ class ProjectFeatureTestCase(TestCase):
         identity = Identity.objects.create(identifier='test-identifier', environment=self.environment_1)
         feature_state = FeatureState.objects.create(feature=feature, environment=self.environment_1, identity=identity,
                                                     enabled=True)
-        url = reverse('api:v1:environments:identity-featurestates-detail', args=[self.environment_1.api_key,
+        url = reverse('api-v1:environments:identity-featurestates-detail', args=[self.environment_1.api_key,
                                                                                  identity.id, feature_state.id])
         data = {
             "feature": feature.id,
@@ -235,7 +235,7 @@ class ProjectFeatureTestCase(TestCase):
         identity = Identity.objects.create(identifier='test-identifier', environment=self.environment_1)
         feature_state = FeatureState.objects.create(feature=feature, environment=self.environment_1, identity=identity,
                                                     enabled=True)
-        url = reverse('api:v1:environments:identity-featurestates-detail', args=[self.environment_1.api_key,
+        url = reverse('api-v1:environments:identity-featurestates-detail', args=[self.environment_1.api_key,
                                                                                  identity.id, feature_state.id])
 
         # When
@@ -269,7 +269,7 @@ class FeatureSegmentViewTest(TestCase):
 
     def test_when_feature_segments_updated_then_feature_states_updated_for_each_environment(self):
         # Given
-        url = reverse('api:v1:projects:project-features-segments', args=[self.project.id, self.feature.id])
+        url = reverse('api-v1:projects:project-features-segments', args=[self.project.id, self.feature.id])
         FeatureSegment.objects.create(segment=self.segment, feature=self.feature, enabled=False)
         data = [{
             'segment': self.segment.id,
@@ -286,7 +286,7 @@ class FeatureSegmentViewTest(TestCase):
 
     def test_when_feature_segments_created_with_integer_value_then_feature_states_created_with_integer_value(self):
         # Given
-        url = reverse('api:v1:projects:project-features-segments', args=[self.project.id, self.feature.id])
+        url = reverse('api-v1:projects:project-features-segments', args=[self.project.id, self.feature.id])
         value = 1
 
         data = [{
@@ -305,7 +305,7 @@ class FeatureSegmentViewTest(TestCase):
 
     def test_when_feature_segments_created_with_boolean_value_then_feature_states_created_with_boolean_value(self):
         # Given
-        url = reverse('api:v1:projects:project-features-segments', args=[self.project.id, self.feature.id])
+        url = reverse('api-v1:projects:project-features-segments', args=[self.project.id, self.feature.id])
         value = False
 
         data = [{
@@ -324,7 +324,7 @@ class FeatureSegmentViewTest(TestCase):
 
     def test_when_feature_segments_created_with_string_value_then_feature_states_created_with_string_value(self):
         # Given
-        url = reverse('api:v1:projects:project-features-segments', args=[self.project.id, self.feature.id])
+        url = reverse('api-v1:projects:project-features-segments', args=[self.project.id, self.feature.id])
         value = 'my_string'
 
         data = [{
@@ -358,7 +358,7 @@ class FeatureStateViewSetTestCase(TestCase):
     def test_update_feature_state_value_updates_feature_state_value(self):
         # Given
         feature_state = FeatureState.objects.get(environment=self.environment, feature=self.feature)
-        url = reverse('api:v1:environments:environment-featurestates-detail',
+        url = reverse('api-v1:environments:environment-featurestates-detail',
                       args=[self.environment.api_key, feature_state.id])
         new_value = 'new-value'
         data = {
@@ -387,7 +387,7 @@ class FeatureStateViewSetTestCase(TestCase):
         identity_feature_state = FeatureState.objects.create(environment=self.environment, feature=self.feature,
                                                              identity=identity)
 
-        base_url = reverse('api:v1:environments:environment-featurestates-list', args=[self.environment.api_key])
+        base_url = reverse('api-v1:environments:environment-featurestates-list', args=[self.environment.api_key])
         url = base_url + '?anyIdentity&feature=' + str(self.feature.id)
 
         # When

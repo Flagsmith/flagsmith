@@ -1,9 +1,10 @@
-from django.conf.urls import url, include
+from django.conf.urls import url
+from django.urls import include
 from drf_yasg import openapi
 from drf_yasg.views import get_schema_view
-from rest_framework import permissions, authentication, routers
+from rest_framework import routers, permissions, authentication
 
-from environments.views import SDKIdentitiesDeprecated, SDKTraitsDeprecated, SDKIdentities, SDKTraits
+from environments.views import SDKIdentities, SDKTraits
 from features.views import SDKFeatureStates
 from organisations.views import chargebee_webhook
 from segments.views import SDKSegments
@@ -24,7 +25,9 @@ schema_view = get_schema_view(
 traits_router = routers.DefaultRouter()
 traits_router.register(r'', SDKTraits, basename='sdk-traits')
 
-current_urls = [
+app_name = 'v1'
+
+urlpatterns = [
     url(r'^organisations/', include('organisations.urls'), name='organisations'),
     url(r'^projects/', include('projects.urls'), name='projects'),
     url(r'^environments/', include('environments.urls'), name='environments'),
@@ -48,15 +51,4 @@ current_urls = [
     # API documentation
     url(r'^swagger(?P<format>\.json|\.yaml)$', schema_view.without_ui(cache_timeout=0), name='schema-json'),
     url(r'^docs/$', schema_view.with_ui('swagger', cache_timeout=0), name='schema-swagger-ui')
-]
-
-deprecated_urls = [
-    url(r'^identities/(?P<identifier>[-\w@%.]+)/traits/(?P<trait_key>[-\w.]+)', SDKTraitsDeprecated.as_view()),
-    url(r'^identities/(?P<identifier>[-\w@%.]+)/', SDKIdentitiesDeprecated.as_view()),
-    url(r'^flags/(?P<identifier>[-\w@%.]+)', SDKFeatureStates.as_view())
-]
-
-urlpatterns = [
-    url(r'^v1/', include(deprecated_urls, namespace='deprecated')),
-    url(r'^v1/', include(current_urls, namespace='v1')),
 ]
