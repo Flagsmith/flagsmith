@@ -197,8 +197,7 @@ class FeatureStateViewSet(viewsets.ModelViewSet):
             headers = self.get_success_headers(serializer.data)
 
             if 'feature_state_value' in data:
-                self.update_feature_state_value(feature_state.feature_state_value,
-                                                data['feature_state_value'], feature_state)
+                self.update_feature_state_value(data['feature_state_value'], feature_state)
 
             return Response(FeatureStateSerializerBasic(feature_state).data,
                             status=status.HTTP_201_CREATED, headers=headers)
@@ -219,7 +218,6 @@ class FeatureStateViewSet(viewsets.ModelViewSet):
         # feature state value object and associate with feature state.
         if 'feature_state_value' in feature_state_data:
             feature_state_value = self.update_feature_state_value(
-                feature_state_to_update.feature_state_value,
                 feature_state_data['feature_state_value'],
                 feature_state_to_update
             )
@@ -266,14 +264,21 @@ class FeatureStateViewSet(viewsets.ModelViewSet):
         """
         return self.update(request, *args, **kwargs)
 
-    def update_feature_state_value(self, instance, value, feature_state):
+    def update_feature_state_value(self, value, feature_state):
         feature_state_value_dict = feature_state.generate_feature_state_value_data(
             value)
 
-        feature_state_value_serializer = FeatureStateValueSerializer(
-            instance=instance,
-            data=feature_state_value_dict
-        )
+        if hasattr(feature_state, "feature_state_value"):
+            feature_state_value_serializer = FeatureStateValueSerializer(
+                instance=feature_state.feature_state_value,
+                data=feature_state_value_dict
+            )
+        else:
+            data = {
+                **feature_state_value_dict,
+                'feature_state': feature_state.id
+            }
+            feature_state_value_serializer = FeatureStateValueSerializer(data=data)
 
         if feature_state_value_serializer.is_valid():
             feature_state_value = feature_state_value_serializer.save()
