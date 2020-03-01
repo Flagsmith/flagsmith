@@ -1,4 +1,5 @@
 from rest_framework import serializers
+from rest_framework.exceptions import ValidationError
 
 from audit.models import AuditLog, RelatedObjectType, FEATURE_CREATED_MESSAGE, FEATURE_UPDATED_MESSAGE, \
     FEATURE_STATE_UPDATED_MESSAGE, IDENTITY_FEATURE_STATE_UPDATED_MESSAGE
@@ -121,6 +122,12 @@ class FeatureStateSerializerBasic(serializers.ModelSerializer):
 
     def _create_audit_log(self, instance):
         create_feature_state_audit_log(instance, self.context.get('request'))
+
+    def validate(self, attrs):
+        if attrs.get('identity') and attrs.get('environment'):
+            if not attrs['identity'].environment == attrs['environment']:
+                raise ValidationError("Identity does not exist in environment.")
+        return attrs
 
 
 class FeatureStateSerializerWithIdentity(FeatureStateSerializerBasic):

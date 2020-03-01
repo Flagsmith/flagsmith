@@ -10,6 +10,7 @@ from drf_yasg.utils import swagger_auto_schema
 from rest_framework import status, viewsets, mixins
 from rest_framework.decorators import action
 from rest_framework.generics import GenericAPIView, get_object_or_404
+from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.schemas import AutoSchema
 
@@ -18,9 +19,10 @@ from audit.models import AuditLog, RelatedObjectType, FEATURE_SEGMENT_UPDATED_ME
     IDENTITY_FEATURE_STATE_DELETED_MESSAGE
 from environments.authentication import EnvironmentKeyAuthentication
 from environments.models import Environment, Identity
-from environments.permissions import EnvironmentKeyPermissions
+from environments.permissions import EnvironmentKeyPermissions, NestedEnvironmentPermissions
 from projects.models import Project
-from .models import FeatureState, Feature, FeatureSegment
+from .models import FeatureState, FeatureSegment
+from .permissions import FeaturePermissions, FeatureStatePermissions
 from .serializers import FeatureStateSerializerBasic, FeatureStateSerializerFull, \
     FeatureStateSerializerCreate, CreateFeatureSerializer, FeatureSerializer, \
     FeatureStateValueSerializer, FeatureSegmentCreateSerializer, FeatureStateSerializerWithIdentity
@@ -32,7 +34,7 @@ flags_cache = caches[settings.FLAGS_CACHE_LOCATION]
 
 
 class FeatureViewSet(viewsets.ModelViewSet):
-    queryset = Feature.objects.all()
+    permission_classes = [IsAuthenticated, FeaturePermissions]
 
     def get_serializer_class(self):
         if self.action in ['create', 'update']:
@@ -41,7 +43,7 @@ class FeatureViewSet(viewsets.ModelViewSet):
             return FeatureSerializer
 
     def get_queryset(self):
-        user_projects = self.request.user.get_permitted_projects()
+        user_projects = self.request.user.get_permitted_projects(["VIEW_PROJECT"])
         project = get_object_or_404(user_projects, pk=self.kwargs['project_pk'])
 
         return project.features.all()
@@ -99,25 +101,8 @@ class FeatureStateViewSet(viewsets.ModelViewSet):
     """
     View set to manage feature states. Nested beneath environments and environments + identities
     to allow for filtering on both.
-
-    list:
-    Get feature states for an environment or identity if provided
-
-    create:
-    Create feature state for an environment or identity if provided
-
-    retrieve:
-    Get specific feature state
-
-    update:
-    Update specific feature state
-
-    partial_update:
-    Partially update specific feature state
-
-    delete:
-    Delete specific feature state
     """
+    permission_classes = [IsAuthenticated, NestedEnvironmentPermissions]
 
     # Override serializer class to show correct information in docs
     def get_serializer_class(self):
@@ -134,7 +119,8 @@ class FeatureStateViewSet(viewsets.ModelViewSet):
         """
         environment_api_key = self.kwargs['environment_api_key']
         identity_pk = self.kwargs.get('identity_pk')
-        environment = get_object_or_404(self.request.user.get_permitted_environments(), api_key=environment_api_key)
+        environment = get_object_or_404(self.request.user.get_permitted_environments(['VIEW_ENVIRONMENT']),
+                                        api_key=environment_api_key)
 
         queryset = FeatureState.objects.filter(environment=environment, feature_segment=None)
 
@@ -291,30 +277,7 @@ class FeatureStateViewSet(viewsets.ModelViewSet):
 
 class FeatureStateCreateViewSet(mixins.CreateModelMixin, viewsets.GenericViewSet):
     serializer_class = FeatureStateSerializerBasic
-
-    def create(self, request, *args, **kwargs):
-        if not self._is_user_authorised(request):
-            return Response(status=status.HTTP_403_FORBIDDEN)
-
-        return super().create(request, *args, **kwargs)
-
-    @staticmethod
-    def _is_user_authorised(request):
-        data = request.data
-        environment = get_object_or_404(Environment.objects.all(), pk=data.get('environment'))
-        feature = get_object_or_404(Feature.objects.all(), pk=data.get('feature'))
-
-        identity_pk = data.get('identity')
-        if identity_pk:
-            identity = get_object_or_404(Identity.objects.all(), pk=identity_pk)
-            if identity.environment != environment:
-                return False
-
-        if environment.project.organisation not in request.user.organisations.all() or \
-                feature.project.organisation != environment.project.organisation:
-            return False
-
-        return True
+    permission_classes = [FeatureStatePermissions]
 
 
 class SDKFeatureStates(GenericAPIView):
