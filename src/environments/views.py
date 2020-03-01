@@ -4,45 +4,38 @@ from __future__ import unicode_literals
 from collections import namedtuple
 
 import coreapi
+from django.utils.decorators import method_decorator
 from drf_yasg import openapi
 from drf_yasg.utils import swagger_auto_schema
 from rest_framework import viewsets, status, mixins
 from rest_framework.decorators import action
-from rest_framework.generics import get_object_or_404
+from rest_framework.exceptions import ValidationError
+from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.schemas import AutoSchema
 
 from environments.authentication import EnvironmentKeyAuthentication
-from environments.permissions import EnvironmentKeyPermissions
+from environments.permissions import EnvironmentKeyPermissions, EnvironmentPermissions, NestedEnvironmentPermissions
 from features.serializers import FeatureStateSerializerFull
+from permissions.serializers import PermissionModelSerializer, MyUserObjectPermissionsSerializer
 from util.views import SDKAPIView
-from .models import Environment, Identity, Trait, Webhook
+from .models import Environment, Identity, Trait, Webhook, EnvironmentPermissionModel, UserEnvironmentPermission, \
+    UserPermissionGroupEnvironmentPermission
 from .serializers import EnvironmentSerializerLight, IdentitySerializer, TraitSerializerBasic, TraitSerializerFull, \
     IdentitySerializerTraitFlags, IdentitySerializerWithTraitsAndSegments, IncrementTraitValueSerializer, \
-    TraitKeysSerializer, DeleteAllTraitKeysSerializer, WebhookSerializer
+    TraitKeysSerializer, DeleteAllTraitKeysSerializer, WebhookSerializer, \
+    CreateUpdateUserEnvironmentPermissionSerializer, ListUserEnvironmentPermissionSerializer, \
+    CreateUpdateUserPermissionGroupEnvironmentPermissionSerializer, \
+    ListUserPermissionGroupEnvironmentPermissionSerializer
 
 
+@method_decorator(name='list', decorator=swagger_auto_schema(manual_parameters=[
+    openapi.Parameter('project', openapi.IN_QUERY,
+                      'ID of the project to filter by.', required=False, type=openapi.TYPE_INTEGER)
+]))
 class EnvironmentViewSet(viewsets.ModelViewSet):
-    """
-    list:
-    Get all environments for current user
-
-    create:
-    Create a new environment
-
-    retrieve:
-    Get a specific environment
-
-    update:
-    Update specific environment
-
-    partial_update:
-    Partially update specific environment
-
-    delete:
-    Delete an environment
-    """
     lookup_field = 'api_key'
+    permission_classes = [IsAuthenticated, EnvironmentPermissions]
 
     def get_serializer_class(self):
         if self.action == 'trait_keys':
@@ -58,21 +51,17 @@ class EnvironmentViewSet(viewsets.ModelViewSet):
         return context
 
     def get_queryset(self):
-        queryset = Environment.objects.filter(
-            project__in=self.request.user.organisations.values_list('projects', flat=True)
-        )
+        queryset = self.request.user.get_permitted_environments(['VIEW_ENVIRONMENT'])
+
+        project_id = self.request.query_params.get('project')
+        if project_id:
+            queryset = queryset.filter(project__id=project_id)
 
         return queryset
 
-    def create(self, request, *args, **kwargs):
-        project_pk = request.data.get('project')
-
-        if not project_pk:
-            return Response(data={"detail": "No project provided"}, status=status.HTTP_400_BAD_REQUEST)
-
-        get_object_or_404(self.request.user.get_permitted_projects(), pk=project_pk)
-
-        return super().create(request, *args, **kwargs)
+    def perform_create(self, serializer):
+        environment = serializer.save()
+        UserEnvironmentPermission.objects.create(user=self.request.user, environment=environment, admin=True)
 
     @action(detail=True, methods=['GET'], url_path='trait-keys')
     def trait_keys(self, request, *args, **kwargs):
@@ -98,29 +87,46 @@ class EnvironmentViewSet(viewsets.ModelViewSet):
         else:
             return Response({'detail': 'Couldn\'t delete trait keys.'}, status=status.HTTP_400_BAD_REQUEST)
 
+    @swagger_auto_schema(responses={200: PermissionModelSerializer})
+    @action(detail=False, methods=["GET"])
+    def permissions(self, *args, **kwargs):
+        return Response(PermissionModelSerializer(instance=EnvironmentPermissionModel.objects.all(), many=True).data)
+
+    @swagger_auto_schema(responses={200: MyUserObjectPermissionsSerializer})
+    @action(detail=True, methods=["GET"], url_path="my-permissions", url_name="my-permissions")
+    def user_permissions(self, request, *args, **kwargs):
+        # TODO: tidy this mess up
+        environment = self.get_object()
+
+        group_permissions = UserPermissionGroupEnvironmentPermission.objects.filter(group__users=request.user,
+                                                                                    environment=environment)
+        user_permissions = UserEnvironmentPermission.objects.filter(user=request.user, environment=environment)
+
+        permissions = set()
+        for group_permission in group_permissions:
+            permissions = permissions.union(
+                {permission.key for permission in group_permission.permissions.all() if permission.key})
+        for user_permission in user_permissions:
+            permissions = permissions.union(
+                {permission.key for permission in user_permission.permissions.all() if permission.key})
+
+        is_project_admin = request.user.is_project_admin(environment.project)
+
+        data = {
+            'admin': group_permissions.filter(admin=True).exists() or user_permissions.filter(
+                admin=True).exists() or is_project_admin,
+            'permissions': permissions
+        }
+
+        serializer = MyUserObjectPermissionsSerializer(data=data)
+        serializer.is_valid()
+
+        return Response(serializer.data)
+
 
 class IdentityViewSet(viewsets.ModelViewSet):
-    """
-    list:
-    Get all identities within specified environment
-
-    create:
-    Create identity within specified environment
-
-    retrieve:
-    Get specific identity within specified environment
-
-    update:
-    Update an identity within specified environment
-
-    partial_update:
-    Partially update an identity within specified environment
-
-    delete:
-    Delete an identity within specified environment
-    """
-
     serializer_class = IdentitySerializer
+    permission_classes = [IsAuthenticated, NestedEnvironmentPermissions]
 
     def get_queryset(self):
         environment = self.get_environment_from_request()
@@ -136,43 +142,18 @@ class IdentityViewSet(viewsets.ModelViewSet):
         """
         Get environment object from URL parameters in request.
         """
-        environment = Environment.objects.get(api_key=self.kwargs['environment_api_key'])
-        return environment
+        return Environment.objects.get(api_key=self.kwargs['environment_api_key'])
 
-    def create(self, request, *args, **kwargs):
+    def perform_create(self, serializer):
         environment = self.get_environment_from_request()
-        if environment.project.organisation not in request.user.organisations.all():
-            return Response(status=status.HTTP_403_FORBIDDEN)
-        data = request.data
-        data['environment'] = environment.id
-        serializer = self.get_serializer(data=data)
-        serializer.is_valid(raise_exception=True)
-        self.perform_create(serializer)
-        headers = self.get_success_headers(serializer.data)
-        return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
+        serializer.save(environment=environment)
+
+    def perform_update(self, serializer):
+        environment = self.get_environment_from_request()
+        serializer.save(environment=environment)
 
 
 class TraitViewSet(viewsets.ModelViewSet):
-    """
-    list:
-    Get all traits for given identity
-
-    create:
-    Create trait for identity
-
-    retrieve:
-    Get specific trait for specified identity
-
-    update:
-    Update a trait for specified identity
-
-    partial_update:
-    Partially update a trait for given identity
-
-    delete:
-    Delete a trait for given identity
-    """
-
     serializer_class = TraitSerializerFull
 
     def get_queryset(self):
@@ -181,7 +162,8 @@ class TraitViewSet(viewsets.ModelViewSet):
         """
         environment_api_key = self.kwargs['environment_api_key']
         identity_pk = self.kwargs.get('identity_pk')
-        environment = self.request.user.get_permitted_environments().get(api_key=environment_api_key)
+        environment = self.request.user.get_permitted_environments(['VIEW_ENVIRONMENT']).get(
+            api_key=environment_api_key)
 
         if identity_pk:
             identity = Identity.objects.get(pk=identity_pk, environment=environment)
@@ -273,6 +255,76 @@ class TraitViewSet(viewsets.ModelViewSet):
 
     def _delete_all_traits_matching_key(self, trait_key, environment):
         Trait.objects.filter(trait_key=trait_key, identity__environment=environment).delete()
+
+
+class WebhookViewSet(mixins.ListModelMixin, mixins.CreateModelMixin, mixins.UpdateModelMixin, mixins.DestroyModelMixin,
+                     viewsets.GenericViewSet):
+    serializer_class = WebhookSerializer
+    pagination_class = None
+    permission_classes = [IsAuthenticated, NestedEnvironmentPermissions]
+
+    def get_queryset(self):
+        return Webhook.objects.filter(environment__api_key=self.kwargs.get('environment_api_key'))
+
+    def perform_create(self, serializer):
+        environment = Environment.objects.get(api_key=self.kwargs.get('environment_api_key'))
+        serializer.save(environment=environment)
+
+    def perform_update(self, serializer):
+        environment = Environment.objects.get(api_key=self.kwargs.get('environment_api_key'))
+        serializer.save(environment=environment)
+
+
+class UserEnvironmentPermissionsViewSet(viewsets.ModelViewSet):
+    pagination_class = None
+    permission_classes = [IsAuthenticated, NestedEnvironmentPermissions]
+
+    def get_queryset(self):
+        if not self.kwargs.get('environment_api_key'):
+            raise ValidationError('Missing environment key.')
+
+        return UserEnvironmentPermission.objects.filter(environment__api_key=self.kwargs['environment_api_key'])
+
+    def get_serializer_class(self):
+        if self.action == 'list':
+            return ListUserEnvironmentPermissionSerializer
+
+        return CreateUpdateUserEnvironmentPermissionSerializer
+
+    def perform_create(self, serializer):
+        environment = Environment.objects.get(api_key=self.kwargs['environment_api_key'])
+        serializer.save(environment=environment)
+
+    def perform_update(self, serializer):
+        environment = Environment.objects.get(api_key=self.kwargs['environment_api_key'])
+        serializer.save(environment=environment)
+
+
+class UserPermissionGroupEnvironmentPermissionsViewSet(viewsets.ModelViewSet):
+    pagination_class = None
+    permission_classes = [IsAuthenticated, NestedEnvironmentPermissions]
+
+    def get_queryset(self):
+        if not self.kwargs.get('environment_api_key'):
+            raise ValidationError('Missing environment key.')
+
+        return UserPermissionGroupEnvironmentPermission.objects.filter(
+            environment__api_key=self.kwargs['environment_api_key']
+        )
+
+    def get_serializer_class(self):
+        if self.action == 'list':
+            return ListUserPermissionGroupEnvironmentPermissionSerializer
+
+        return CreateUpdateUserPermissionGroupEnvironmentPermissionSerializer
+
+    def perform_create(self, serializer):
+        environment = Environment.objects.get(api_key=self.kwargs['environment_api_key'])
+        serializer.save(environment=environment)
+
+    def perform_update(self, serializer):
+        environment = Environment.objects.get(api_key=self.kwargs['environment_api_key'])
+        serializer.save(environment=environment)
 
 
 class SDKIdentitiesDeprecated(SDKAPIView):
@@ -481,20 +533,3 @@ class SDKTraits(mixins.CreateModelMixin, viewsets.GenericViewSet):
         serializer.is_valid(raise_exception=True)
         serializer.save()
         return Response(serializer.data, status=200)
-
-
-class WebhookViewSet(mixins.ListModelMixin, mixins.CreateModelMixin, mixins.UpdateModelMixin, mixins.DestroyModelMixin,
-                     viewsets.GenericViewSet):
-    serializer_class = WebhookSerializer
-    pagination_class = None
-
-    def get_queryset(self):
-        return Webhook.objects.filter(environment__api_key=self.kwargs.get('environment_api_key'))
-
-    def perform_create(self, serializer):
-        environment = Environment.objects.get(api_key=self.kwargs.get('environment_api_key'))
-        serializer.save(environment=environment)
-
-    def perform_update(self, serializer):
-        environment = Environment.objects.get(api_key=self.kwargs.get('environment_api_key'))
-        serializer.save(environment=environment)

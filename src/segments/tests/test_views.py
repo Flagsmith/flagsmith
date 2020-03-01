@@ -7,7 +7,7 @@ from rest_framework.test import APITestCase
 
 from audit.models import RelatedObjectType, AuditLog
 from environments.models import Identity, Environment, Trait, STRING
-from organisations.models import Organisation
+from organisations.models import Organisation, OrganisationRole
 from projects.models import Project
 from segments.models import Segment, SegmentRule, Condition, EQUAL
 
@@ -18,7 +18,7 @@ class SegmentViewSetTestCase(APITestCase):
     def setUp(self) -> None:
         self.user = User.objects.create(email='test@example.com')
         self.organisation = Organisation.objects.create(name='Test Organisation')
-        self.user.add_organisation(self.organisation)
+        self.user.add_organisation(self.organisation, OrganisationRole.ADMIN)
         self.client.force_authenticate(self.user)
         self.project = Project.objects.create(name='Test project', organisation=self.organisation)
 
