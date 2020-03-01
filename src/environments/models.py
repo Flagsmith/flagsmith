@@ -11,6 +11,7 @@ from simple_history.models import HistoricalRecords
 from app.utils import create_hash
 from environments.exceptions import EnvironmentHeaderNotPresentError
 from features.models import FeatureState
+from permissions.models import BasePermissionModelABC, PermissionModel, ENVIRONMENT_PERMISSION_TYPE
 from projects.models import Project
 
 # User Trait Value Types
@@ -102,30 +103,30 @@ class Identity(models.Model):
             Q(environment=self.environment) &
             (
                 # first get all feature states that have been explicitly overridden for the identity
-                Q(identity=self) |
+                    Q(identity=self) |
 
-                # next get all feature states that have been overridden for any segments the identity matches, ignoring
-                # any that are explicitly overridden for the identity as that still takes priority
-                # TODO: does this take priority into account?
-                Q(feature_segment__segment__in=self.get_segments()) & ~Q(
-                    feature__id__in=self.identity_features.values_list(
-                        'feature__id', flat=True
-                    )
-                ) |
-
-                # finally, get all feature states for the environment that haven't been overridden
-                (
-                    Q(identity=None) &
-                    Q(feature_segment=None) &
-                    ~Q(
-                        feature__id__in=self.identity_features.values_list(
-                            'feature__id', flat=True
-                        )
-                    ) &
-                    ~Q(
-                        feature__id__in=feature_ids_overridden_by_segment
-                    )
+                    # next get all feature states that have been overridden for any segments the identity matches, ignoring
+                    # any that are explicitly overridden for the identity as that still takes priority
+                    # TODO: does this take priority into account?
+                    Q(feature_segment__segment__in=self.get_segments()) & ~Q(
+                feature__id__in=self.identity_features.values_list(
+                    'feature__id', flat=True
                 )
+            ) |
+
+                    # finally, get all feature states for the environment that haven't been overridden
+                    (
+                            Q(identity=None) &
+                            Q(feature_segment=None) &
+                            ~Q(
+                                feature__id__in=self.identity_features.values_list(
+                                    'feature__id', flat=True
+                                )
+                            ) &
+                            ~Q(
+                                feature__id__in=feature_ids_overridden_by_segment
+                            )
+                    )
             ),
         ).select_related("feature", "feature_state_value")
 
@@ -225,3 +226,25 @@ class Webhook(models.Model):
     enabled = models.BooleanField(default=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
+
+
+class EnvironmentPermissionManager(models.Manager):
+    def get_queryset(self):
+        return super(EnvironmentPermissionManager, self).get_queryset().filter(type=ENVIRONMENT_PERMISSION_TYPE)
+
+
+class EnvironmentPermissionModel(PermissionModel):
+    class Meta:
+        proxy = True
+
+    objects = EnvironmentPermissionManager()
+
+
+class UserEnvironmentPermission(BasePermissionModelABC):
+    user = models.ForeignKey('users.FFAdminUser', on_delete=models.CASCADE)
+    environment = models.ForeignKey(Environment, on_delete=models.CASCADE, related_query_name='userpermission')
+
+
+class UserPermissionGroupEnvironmentPermission(BasePermissionModelABC):
+    group = models.ForeignKey('users.UserPermissionGroup', on_delete=models.CASCADE)
+    environment = models.ForeignKey(Environment, on_delete=models.CASCADE, related_query_name='grouppermission')

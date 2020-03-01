@@ -30,19 +30,11 @@ class ProjectFeatureTestCase(TestCase):
 
         self.organisation = Organisation.objects.create(name='Test Org')
 
-        user.add_organisation(self.organisation)
+        user.add_organisation(self.organisation, OrganisationRole.ADMIN)
 
         self.project = Project.objects.create(name='Test project', organisation=self.organisation)
         self.environment_1 = Environment.objects.create(name='Test environment 1', project=self.project)
         self.environment_2 = Environment.objects.create(name='Test environment 2', project=self.project)
-
-    def tearDown(self) -> None:
-        AuditLog.objects.all().delete()
-        Feature.objects.all().delete()
-        FeatureState.objects.all().delete()
-        Segment.objects.all().delete()
-        FeatureSegment.objects.all().delete()
-        Identity.objects.all().delete()
 
     def test_should_create_feature_states_when_feature_created(self):
         # Given - set up data
@@ -259,7 +251,7 @@ class FeatureSegmentViewTest(TestCase):
 
         organisation = Organisation.objects.create(name='Test Org')
 
-        user.add_organisation(organisation)
+        user.add_organisation(organisation, OrganisationRole.ADMIN)
 
         self.project = Project.objects.create(organisation=organisation, name='Test project')
         self.environment_1 = Environment.objects.create(project=self.project, name='Test environment 1')
