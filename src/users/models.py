@@ -5,14 +5,15 @@ from django.contrib.auth.base_user import BaseUserManager
 from django.contrib.auth.models import AbstractUser
 from django.core.mail import EmailMultiAlternatives, send_mail
 from django.db import models
+from django.db.models import Q
 from django.template.loader import get_template
-
 from django.utils.encoding import python_2_unicode_compatible
 
 from app.utils import create_hash
-from environments.models import Environment, Identity
+from environments.models import UserEnvironmentPermission, UserPermissionGroupEnvironmentPermission, Environment, \
+    Identity
 from organisations.models import Organisation, UserOrganisation, OrganisationRole, organisation_roles
-from projects.models import Project
+from projects.models import UserProjectPermission, UserPermissionGroupProjectPermission, Project
 from users.exceptions import InvalidInviteError
 
 logger = logging.getLogger(__name__)
@@ -91,6 +92,10 @@ class FFAdminUser(AbstractUser):
     def is_admin(self, organisation):
         return self.get_organisation_role(organisation) == OrganisationRole.ADMIN.name
 
+    def get_admin_organisations(self):
+        return Organisation.objects.filter(userorganisation__user=self,
+                                           userorganisation__role=OrganisationRole.ADMIN.name)
+
     def add_organisation(self, organisation, role=OrganisationRole.USER):
         UserOrganisation.objects.create(user=self, organisation=organisation, role=role.name)
 
@@ -113,17 +118,73 @@ class FFAdminUser(AbstractUser):
         except UserOrganisation.DoesNotExist:
             logger.warning('User %d is not part of organisation %d' % (self.id, organisation.id))
 
-    def get_permitted_projects(self):
-        user_org_ids = [org.id for org in self.organisations.all()]
-        return Project.objects.filter(organisation__in=user_org_ids)
+    def get_permitted_projects(self, permissions):
+        """
+        Get all projects that the user has the given permissions for.
 
-    def get_permitted_environments(self):
-        user_projects = self.get_permitted_projects()
-        return Environment.objects.filter(project__in=[project.id for project in user_projects.all()])
+        Rules:
+            - User has the required permissions directly (UserProjectPermission)
+            - User is in a UserPermissionGroup that has required permissions (UserPermissionGroupProjectPermissions)
+            - User is an admin for the organisation the project belongs to
+        """
+        user_permission_query = Q()
+        group_permission_query = Q()
+        for permission in permissions:
+            user_permission_query = user_permission_query & Q(userpermission__permissions__key=permission)
+            group_permission_query = group_permission_query & Q(grouppermission__permissions__key=permission)
+
+        user_query = Q(userpermission__user=self) & (user_permission_query | Q(userpermission__admin=True))
+        group_query = Q(grouppermission__group__users=self) & (group_permission_query | Q(grouppermission__admin=True))
+        organisation_query = Q(organisation__userorganisation__user=self,
+                               organisation__userorganisation__role=OrganisationRole.ADMIN.name)
+
+        query = (user_query | group_query | organisation_query)
+
+        return Project.objects.filter(query).distinct()
+
+    def has_project_permission(self, permission, project):
+        if self.is_project_admin(project) or self.is_admin(project.organisation):
+            return True
+
+        return project in self.get_permitted_projects([permission])
+
+    def is_project_admin(self, project):
+        if self.is_admin(project.organisation):
+            return True
+
+        return UserProjectPermission.objects.filter(admin=True, user=self, project=project).exists() or \
+               UserPermissionGroupProjectPermission.objects.filter(group__users=self, admin=True,
+                                                                   project=project).exists()
+
+    def get_permitted_environments(self, permissions):
+        """
+        Get all environments that the user has the given permissions for.
+
+        Rules:
+            - User has the required permissions directly (UserEnvironmentPermission)
+            - User is in a UserPermissionGroup that has required permissions (UserPermissionGroupEnvironmentPermissions)
+            - User is an admin for the organisation the environment belongs to
+        """
+        user_permission_query = Q()
+        group_permission_query = Q()
+        for permission in permissions:
+            user_permission_query = user_permission_query & Q(userpermission__permissions__key=permission)
+            group_permission_query = group_permission_query & Q(grouppermission__permissions__key=permission)
+
+        user_query = Q(userpermission__user=self) & (user_permission_query | Q(userpermission__admin=True))
+        group_query = Q(grouppermission__group__users=self) & (group_permission_query | Q(grouppermission__admin=True))
+        organisation_query = Q(project__organisation__userorganisation__user=self,
+                               project__organisation__userorganisation__role=OrganisationRole.ADMIN.name)
+        project_admin_query = Q(project__userpermission__user=self, project__userpermission__admin=True) | Q(
+            project__grouppermission__group__users=self, project__grouppermission__admin=True)
+
+        query = (user_query | group_query | organisation_query | project_admin_query)
+
+        return Environment.objects.filter(query).distinct()
 
     def get_permitted_identities(self):
-        user_environments = self.get_permitted_environments()
-        return Identity.objects.filter(environment__in=[env.id for env in user_environments.all()])
+        return Identity.objects.filter(
+            environment__in=self.get_permitted_environments(permissions=['VIEW_ENVIRONMENT']))
 
     @staticmethod
     def send_alert_to_admin_users(subject, message):
@@ -138,6 +199,17 @@ class FFAdminUser(AbstractUser):
     @staticmethod
     def _get_admin_user_emails():
         return [user['email'] for user in FFAdminUser.objects.filter(is_staff=True).values('email')]
+
+    def belongs_to(self, organisation_id: int) -> bool:
+        return organisation_id in self.organisations.all().values_list('id', flat=True)
+
+    def is_environment_admin(self, environment):
+        if self.is_admin(environment.project.organisation) or self.is_project_admin(environment.project):
+            return True
+
+        return UserEnvironmentPermission.objects.filter(admin=True, user=self, environment=environment).exists() or \
+               UserPermissionGroupEnvironmentPermission.objects.filter(group__users=self, admin=True,
+                                                                       environment=environment).exists()
 
 
 @python_2_unicode_compatible
@@ -197,3 +269,26 @@ class Invite(models.Model):
 
     def __str__(self):
         return "%s %s" % (self.email, self.organisation.name)
+
+
+class UserPermissionGroup(models.Model):
+    """
+    Model to group users within an organisation for the purposes of permissioning.
+    """
+    name = models.CharField(max_length=200)
+    users = models.ManyToManyField('users.FFAdminUser', related_name='permission_groups')
+    organisation = models.ForeignKey(Organisation, on_delete=models.CASCADE, related_name='permission_groups')
+
+    def add_users_by_id(self, user_ids: list):
+        users_to_add = []
+        for user_id in user_ids:
+            try:
+                user = FFAdminUser.objects.get(id=user_id, organisations=self.organisation)
+            except FFAdminUser.DoesNotExist:
+                # re-raise exception with useful error message
+                raise FFAdminUser.DoesNotExist('User %d does not exist in this organisation' % user_id)
+            users_to_add.append(user)
+        self.users.add(*users_to_add)
+
+    def remove_users_by_id(self, user_ids: list):
+        self.users.remove(*user_ids)

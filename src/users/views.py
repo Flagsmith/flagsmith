@@ -3,17 +3,19 @@ from django.contrib.sites.shortcuts import get_current_site
 from django.http import HttpResponse
 from django.shortcuts import redirect, get_object_or_404
 from django.views import View
+from drf_yasg.utils import swagger_auto_schema
 from rest_framework import viewsets, status, mixins
 from rest_framework.decorators import api_view, action
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 
 from organisations.models import Organisation
-from organisations.permissions import NestedOrganisationEntityPermission
+from organisations.permissions import OrganisationUsersPermission, \
+    UserPermissionGroupPermission
 from organisations.serializers import OrganisationSerializerFull, UserOrganisationSerializer
 from users.exceptions import InvalidInviteError
-from users.models import FFAdminUser, Invite
-from users.serializers import UserListSerializer
+from users.models import FFAdminUser, Invite, UserPermissionGroup
+from users.serializers import UserListSerializer, UserPermissionGroupSerializerDetail, UserIdsSerializer
 
 
 class AdminInitView(View):
@@ -31,7 +33,7 @@ class AdminInitView(View):
 
 
 class FFAdminUserViewSet(mixins.ListModelMixin, viewsets.GenericViewSet):
-    permission_classes = (IsAuthenticated, NestedOrganisationEntityPermission)
+    permission_classes = (IsAuthenticated, OrganisationUsersPermission)
     pagination_class = None
 
     def get_queryset(self):
@@ -84,3 +86,36 @@ def join_organisation(request, invite_hash):
 
     return Response(OrganisationSerializerFull(invite.organisation, context={'request': request}).data,
                     status=status.HTTP_200_OK)
+
+
+class UserPermissionGroupViewSet(viewsets.ModelViewSet):
+    permission_classes = [IsAuthenticated, UserPermissionGroupPermission]
+    serializer_class = UserPermissionGroupSerializerDetail
+
+    def get_queryset(self):
+        organisation_pk = self.kwargs.get('organisation_pk')
+        return UserPermissionGroup.objects.filter(organisation__pk=organisation_pk)
+
+    def perform_create(self, serializer):
+        serializer.save(organisation_id=self.kwargs['organisation_pk'])
+
+    def perform_update(self, serializer):
+        serializer.save(organisation_id=self.kwargs['organisation_pk'])
+
+    @swagger_auto_schema(request_body=UserIdsSerializer, responses={200: UserPermissionGroupSerializerDetail})
+    @action(detail=True, methods=['POST'], url_path='add-users')
+    def add_users(self, request, organisation_pk, pk):
+        group = self.get_object()
+        try:
+            group.add_users_by_id(request.data['user_ids'])
+        except FFAdminUser.DoesNotExist as e:
+            return Response({'detail': str(e)}, status=status.HTTP_400_BAD_REQUEST)
+
+        return Response(UserPermissionGroupSerializerDetail(instance=group).data)
+
+    @swagger_auto_schema(request_body=UserIdsSerializer, responses={200: UserPermissionGroupSerializerDetail})
+    @action(detail=True, methods=['POST'], url_path='remove-users')
+    def remove_users(self, request, organisation_pk, pk):
+        group = self.get_object()
+        group.remove_users_by_id(request.data['user_ids'])
+        return Response(UserPermissionGroupSerializerDetail(instance=group).data)
