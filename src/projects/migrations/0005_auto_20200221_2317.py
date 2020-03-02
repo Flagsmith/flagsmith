@@ -12,7 +12,7 @@ def create_default_project_admins(apps, schema_editor):
     UserOrganisation = apps.get_model('organisations', 'UserOrganisation')
     UserProjectPermission = apps.get_model('projects', 'UserProjectPermission')
 
-    for user_organisation in UserOrganisation.objects.filter(role=OrganisationRole.USER):
+    for user_organisation in UserOrganisation.objects.filter(role=OrganisationRole.USER.name):
         for project in user_organisation.organisation.projects.all():
             UserProjectPermission.objects.create(project=project, user=user_organisation.user, admin=True)
 
