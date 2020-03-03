@@ -1,10 +1,14 @@
 from rest_framework import serializers, exceptions
+from rest_framework.exceptions import ValidationError
 
 from audit.models import ENVIRONMENT_CREATED_MESSAGE, ENVIRONMENT_UPDATED_MESSAGE, RelatedObjectType, AuditLog
-from environments.models import Environment, Identity, Trait, INTEGER, Webhook
+from environments.models import Environment, Identity, Trait, INTEGER, Webhook, UserEnvironmentPermission, \
+    UserPermissionGroupEnvironmentPermission
 from features.serializers import FeatureStateSerializerFull
+from permissions.serializers import CreateUpdateUserPermissionSerializerABC
 from projects.serializers import ProjectSerializer
 from segments.serializers import SegmentSerializerBasic
+from users.serializers import UserListSerializer, UserPermissionGroupSerializerDetail
 
 
 class EnvironmentSerializerFull(serializers.ModelSerializer):
@@ -56,6 +60,15 @@ class IdentitySerializer(serializers.ModelSerializer):
     class Meta:
         model = Identity
         fields = ('id', 'identifier', 'environment')
+        read_only_fields = ('id', 'environment')
+
+    def save(self, **kwargs):
+        environment = kwargs.get('environment')
+        identifier = self.validated_data.get('identifier')
+        if Identity.objects.filter(environment=environment, identifier=identifier).exists():
+            raise ValidationError(
+                {'identifier': "Identity with identifier '%s' already exists in this environment" % identifier})
+        return super(IdentitySerializer, self).save(**kwargs)
 
 
 class TraitSerializerFull(serializers.ModelSerializer):
@@ -161,3 +174,25 @@ class WebhookSerializer(serializers.ModelSerializer):
         model = Webhook
         fields = ('id', 'url', 'enabled', 'created_at', 'updated_at')
         read_only_fields = ('id', 'created_at', 'updated_at')
+
+
+class CreateUpdateUserEnvironmentPermissionSerializer(CreateUpdateUserPermissionSerializerABC):
+    class Meta(CreateUpdateUserPermissionSerializerABC.Meta):
+        model = UserEnvironmentPermission
+        fields = CreateUpdateUserPermissionSerializerABC.Meta.fields + ('user',)
+
+
+class ListUserEnvironmentPermissionSerializer(CreateUpdateUserEnvironmentPermissionSerializer):
+    user = UserListSerializer()
+
+
+class CreateUpdateUserPermissionGroupEnvironmentPermissionSerializer(CreateUpdateUserPermissionSerializerABC):
+    class Meta(CreateUpdateUserPermissionSerializerABC.Meta):
+        model = UserPermissionGroupEnvironmentPermission
+        fields = CreateUpdateUserPermissionSerializerABC.Meta.fields + ('group',)
+
+
+class ListUserPermissionGroupEnvironmentPermissionSerializer(
+    CreateUpdateUserPermissionGroupEnvironmentPermissionSerializer
+):
+    group = UserPermissionGroupSerializerDetail()

@@ -7,12 +7,14 @@ from rest_framework import status
 from rest_framework.test import APIClient, APITestCase
 
 from audit.models import AuditLog, RelatedObjectType
-from environments.models import Environment, Identity, Trait, INTEGER, STRING, Webhook
+from environments.models import Environment, Identity, Trait, INTEGER, STRING, Webhook, UserEnvironmentPermission, \
+    EnvironmentPermissionModel, UserPermissionGroupEnvironmentPermission
 from features.models import Feature, FeatureState, FeatureSegment
-from organisations.models import Organisation
-from projects.models import Project
+from organisations.models import Organisation, OrganisationRole
+from projects.models import Project, UserProjectPermission, ProjectPermissionModel
 from segments import models
 from segments.models import Segment, SegmentRule, Condition
+from users.models import FFAdminUser, UserPermissionGroup
 from util.tests import Helper
 
 
@@ -23,13 +25,19 @@ class EnvironmentTestCase(TestCase):
 
     def setUp(self):
         self.client = APIClient()
-        user = Helper.create_ffadminuser()
-        self.client.force_authenticate(user=user)
+        self.user = Helper.create_ffadminuser()
+        self.client.force_authenticate(user=self.user)
+
+        create_environment_permission = ProjectPermissionModel.objects.get(key="CREATE_ENVIRONMENT")
+        read_project_permission = ProjectPermissionModel.objects.get(key="VIEW_PROJECT")
 
         self.organisation = Organisation.objects.create(name='ssg')
-        user.add_organisation(self.organisation)
+        self.user.add_organisation(self.organisation, OrganisationRole.ADMIN)  # admin to bypass perms
 
         self.project = Project.objects.create(name='Test project', organisation=self.organisation)
+
+        user_project_permission = UserProjectPermission.objects.create(user=self.user, project=self.project)
+        user_project_permission.permissions.add(create_environment_permission, read_project_permission)
 
     def tearDown(self) -> None:
         Environment.objects.all().delete()
@@ -48,6 +56,10 @@ class EnvironmentTestCase(TestCase):
 
         # Then
         assert response.status_code == status.HTTP_201_CREATED
+
+        # and user is admin
+        assert UserEnvironmentPermission.objects.filter(user=self.user, admin=True,
+                                                        environment__id=response.json()['id']).exists()
 
     def test_should_return_identities_for_an_environment(self):
         # Given
@@ -209,6 +221,35 @@ class EnvironmentTestCase(TestCase):
         # and
         assert Trait.objects.filter(identity=identity, trait_key=trait_to_persist).exists()
 
+    def test_user_can_list_environment_permission(self):
+        # Given
+        url = reverse('api-v1:environments:environment-permissions')
+
+        # When
+        response = self.client.get(url)
+
+        # Then
+        assert response.status_code == status.HTTP_200_OK
+        assert len(response.json()) == 1  # hard code how many permissions we expect there to be
+
+    def test_environment_user_can_get_their_permissions(self):
+        # Given
+        user = FFAdminUser.objects.create(email='new-test@test.com')
+        user.add_organisation(self.organisation)
+        environment = Environment.objects.create(name='Test environment', project=self.project)
+        user_permission = UserEnvironmentPermission.objects.create(user=user, environment=environment)
+        user_permission.add_permission('VIEW_ENVIRONMENT')
+        url = reverse('api-v1:environments:environment-my-permissions', args=[environment.api_key])
+
+        # When
+        self.client.force_authenticate(user)
+        response = self.client.get(url)
+
+        # Then
+        assert response.status_code == status.HTTP_200_OK
+        assert not response.json()['admin']
+        assert 'VIEW_ENVIRONMENT' in response.json()['permissions']
+
 
 @pytest.mark.django_db
 class IdentityTestCase(TestCase):
@@ -225,14 +266,11 @@ class IdentityTestCase(TestCase):
         self.client.force_authenticate(user=user)
 
         self.organisation = Organisation.objects.create(name='Test Org')
-        user.add_organisation(self.organisation)
+        user.add_organisation(self.organisation, OrganisationRole.ADMIN)  # admin to bypass perms
 
         self.project = Project.objects.create(name='Test project', organisation=self.organisation)
         self.environment = Environment.objects.create(name='Test Environment', project=self.project)
         self.identity = Identity.objects.create(identifier=self.identifier, environment=self.environment)
-
-    def tearDown(self) -> None:
-        Helper.clean_up()
 
     def test_should_return_identities_list_when_requested(self):
         # Given - set up data
@@ -745,7 +783,7 @@ class TraitViewSetTestCase(TestCase):
         self.client.force_authenticate(user=user)
 
         organisation = Organisation.objects.create(name='Test org')
-        user.add_organisation(organisation)
+        user.add_organisation(organisation, OrganisationRole.ADMIN)
 
         self.project = Project.objects.create(name='Test project', organisation=organisation)
         self.environment = Environment.objects.create(name='Test environment', project=self.project)
@@ -850,6 +888,8 @@ class WebhookViewSetTestCase(TestCase):
         self.client.force_authenticate(user=user)
 
         organisation = Organisation.objects.create(name='Test organisation')
+        user.add_organisation(organisation, OrganisationRole.ADMIN)
+
         project = Project.objects.create(name='Test project', organisation=organisation)
         self.environment = Environment.objects.create(name='Test environment', project=project)
 
@@ -935,3 +975,191 @@ class WebhookViewSetTestCase(TestCase):
 
         # and
         assert Webhook.objects.filter(id=webhook.id).exists()
+
+
+@pytest.mark.django_db
+class UserEnvironmentPermissionsViewSetTestCase(TestCase):
+    def setUp(self) -> None:
+        self.organisation = Organisation.objects.create(name='Test')
+        self.project = Project.objects.create(name='Test', organisation=self.organisation)
+        self.environment = Environment.objects.create(name='Test', project=self.project)
+
+        # Admin to bypass permission checks
+        self.org_admin = FFAdminUser.objects.create(email='admin@test.com')
+        self.org_admin.add_organisation(self.organisation, OrganisationRole.ADMIN)
+
+        # create a project user
+        user = FFAdminUser.objects.create(email='user@test.com')
+        user.add_organisation(self.organisation, OrganisationRole.USER)
+        read_permission = EnvironmentPermissionModel.objects.get(key="VIEW_ENVIRONMENT")
+        self.user_environment_permission = UserEnvironmentPermission.objects.create(user=user,
+                                                                                    environment=self.environment)
+        self.user_environment_permission.permissions.set([read_permission])
+
+        self.client = APIClient()
+        self.client.force_authenticate(self.org_admin)
+
+        self.list_url = reverse('api-v1:environments:environment-user-permissions-list',
+                                args=[self.environment.api_key])
+        self.detail_url = reverse('api-v1:environments:environment-user-permissions-detail',
+                                  args=[self.environment.api_key, self.user_environment_permission.id])
+
+    def test_user_can_list_all_user_permissions_for_an_environment(self):
+        # Given - set up data
+
+        # When
+        response = self.client.get(self.list_url)
+
+        # Then
+        assert response.status_code == status.HTTP_200_OK
+        assert len(response.json()) == 1
+
+    def test_user_can_create_new_user_permission_for_an_environment(self):
+        # Given
+        new_user = FFAdminUser.objects.create(email='new_user@test.com')
+        new_user.add_organisation(self.organisation, OrganisationRole.USER)
+        data = {
+            'user': new_user.id,
+            'permissions': [
+                "VIEW_ENVIRONMENT",
+            ],
+            'admin': False
+        }
+
+        # When
+        response = self.client.post(self.list_url, data=json.dumps(data), content_type='application/json')
+
+        # Then
+        assert response.status_code == status.HTTP_201_CREATED
+        assert response.json()['permissions'] == data['permissions']
+
+        assert UserEnvironmentPermission.objects.filter(user=new_user, environment=self.environment).exists()
+        user_environment_permission = UserEnvironmentPermission.objects.get(user=new_user, environment=self.environment)
+        assert user_environment_permission.permissions.count() == 1
+
+    def test_user_can_update_user_permission_for_a_project(self):
+        # Given - empty user environment permission
+        another_user = FFAdminUser.objects.create(email='anotheruser@test.com')
+        empty_permission = UserEnvironmentPermission.objects.create(user=another_user, environment=self.environment)
+        data = {
+            'permissions': [
+                'VIEW_ENVIRONMENT'
+            ]
+        }
+        url = reverse('api-v1:environments:environment-user-permissions-detail', args=[self.environment.api_key,
+                                                                                       empty_permission.id])
+
+        # When
+        response = self.client.patch(url, data=json.dumps(data), content_type='application/json')
+
+        # Then
+        assert response.status_code == status.HTTP_200_OK
+
+        self.user_environment_permission.refresh_from_db()
+        assert 'VIEW_ENVIRONMENT' in self.user_environment_permission.permissions.values_list('key', flat=True)
+
+    def test_user_can_delete_user_permission_for_a_project(self):
+        # Given - set up data
+
+        # When
+        response = self.client.delete(self.detail_url)
+
+        # Then
+        assert response.status_code == status.HTTP_204_NO_CONTENT
+        assert not UserProjectPermission.objects.filter(id=self.user_environment_permission.id).exists()
+
+
+@pytest.mark.django_db
+class UserPermissionGroupProjectPermissionsViewSetTestCase(TestCase):
+    def setUp(self) -> None:
+        self.organisation = Organisation.objects.create(name='Test')
+        self.project = Project.objects.create(name='Test', organisation=self.organisation)
+        self.environment = Environment.objects.create(name='Test', project=self.project)
+
+        # Admin to bypass permission checks
+        self.org_admin = FFAdminUser.objects.create(email='admin@test.com')
+        self.org_admin.add_organisation(self.organisation, OrganisationRole.ADMIN)
+
+        # create a project user
+        self.user = FFAdminUser.objects.create(email='user@test.com')
+        self.user.add_organisation(self.organisation, OrganisationRole.USER)
+        read_permission = EnvironmentPermissionModel.objects.get(key="VIEW_ENVIRONMENT")
+
+        self.user_permission_group = UserPermissionGroup.objects.create(name='Test group',
+                                                                        organisation=self.organisation)
+        self.user_permission_group.users.add(self.user)
+
+        self.user_group_environment_permission = UserPermissionGroupEnvironmentPermission.objects.create(
+            group=self.user_permission_group,
+            environment=self.environment
+        )
+        self.user_group_environment_permission.permissions.set([read_permission])
+
+        self.client = APIClient()
+        self.client.force_authenticate(self.org_admin)
+
+        self.list_url = reverse('api-v1:environments:environment-user-group-permissions-list',
+                                args=[self.environment.api_key])
+        self.detail_url = reverse('api-v1:environments:environment-user-group-permissions-detail',
+                                  args=[self.environment.api_key, self.user_group_environment_permission.id])
+
+    def test_user_can_list_all_user_group_permissions_for_an_environment(self):
+        # Given - set up data
+
+        # When
+        response = self.client.get(self.list_url)
+
+        # Then
+        assert response.status_code == status.HTTP_200_OK
+        assert len(response.json()) == 1
+
+    def test_user_can_create_new_user_group_permission_for_an_environment(self):
+        # Given
+        new_group = UserPermissionGroup.objects.create(name='New group', organisation=self.organisation)
+        new_group.users.add(self.user)
+        data = {
+            'group': new_group.id,
+            'permissions': [
+                "VIEW_ENVIRONMENT",
+            ],
+            'admin': False
+        }
+
+        # When
+        response = self.client.post(self.list_url, data=json.dumps(data), content_type='application/json')
+
+        # Then
+        assert response.status_code == status.HTTP_201_CREATED
+        assert sorted(response.json()['permissions']) == sorted(data['permissions'])
+
+        assert UserPermissionGroupEnvironmentPermission.objects.filter(group=new_group,
+                                                                       environment=self.environment).exists()
+        user_group_environment_permission = UserPermissionGroupEnvironmentPermission.objects.get(group=new_group,
+                                                                                                 environment=self.environment)
+        assert user_group_environment_permission.permissions.count() == 1
+
+    def test_user_can_update_user_group_permission_for_an_environment(self):
+        # Given
+        data = {
+            'permissions': []
+        }
+
+        # When
+        response = self.client.patch(self.detail_url, data=json.dumps(data), content_type='application/json')
+
+        # Then
+        assert response.status_code == status.HTTP_200_OK
+
+        self.user_group_environment_permission.refresh_from_db()
+        assert self.user_group_environment_permission.permissions.count() == 0
+
+    def test_user_can_delete_user_permission_for_a_project(self):
+        # Given - set up data
+
+        # When
+        response = self.client.delete(self.detail_url)
+
+        # Then
+        assert response.status_code == status.HTTP_204_NO_CONTENT
+        assert not UserPermissionGroupEnvironmentPermission.objects.filter(
+            id=self.user_group_environment_permission.id).exists()

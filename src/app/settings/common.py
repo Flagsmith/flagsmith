@@ -94,6 +94,7 @@ INSTALLED_APPS = [
     'debug_toolbar',
     'drf_yasg',
     'audit',
+    'permissions',
 
     # health check plugins
     'health_check',
