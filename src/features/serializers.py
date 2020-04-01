@@ -90,7 +90,6 @@ class FeatureSerializer(serializers.ModelSerializer):
 
 class FeatureStateSerializerFull(serializers.ModelSerializer):
     feature = CreateFeatureSerializer()
-    feature_segment = FeatureSegmentCreateSerializer()
     feature_state_value = serializers.SerializerMethodField()
 
     class Meta:
@@ -145,6 +144,10 @@ class FeatureStateSerializerFullWithIdentity(FeatureStateSerializerFull):
 
     def get_identity_identifier(self, instance):
         return instance.identity.identifier if instance.identity else None
+
+
+class FeatureStateSerializerFullWithIdentityAndSegment(FeatureStateSerializerFullWithIdentity):
+    feature_segment = FeatureSegmentSerializer()
 
 
 class FeatureStateSerializerCreate(serializers.ModelSerializer):
