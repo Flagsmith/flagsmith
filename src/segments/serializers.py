@@ -20,6 +20,11 @@ class ConditionSerializer(serializers.ModelSerializer):
             raise ValidationError({'property': ['This field may not be blank.']})
         return attrs
 
+    def to_internal_value(self, data):
+        # convert value to a string - conversion to correct value type is handled elsewhere
+        data['value'] = str(data['value'])
+        return super(ConditionSerializer, self).to_internal_value(data)
+
 
 class RuleSerializer(serializers.ModelSerializer):
     conditions = ConditionSerializer(many=True, required=False)
@@ -66,7 +71,7 @@ class SegmentSerializer(serializers.ModelSerializer):
         Since we don't have a unique identifier for the rules / conditions for the update, we assume that the client
         passes up the new configuration for the rules of the segment and simply wipe the old ones and create new ones
         """
-        segment.rules = []
+        segment.rules.set([])
         self._create_segment_rules(rules_data, segment=segment)
         segment.save()
 

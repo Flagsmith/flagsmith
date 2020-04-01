@@ -1,5 +1,7 @@
 <img width="100%" src="./hero.png"/>
 
+[![Donate](https://liberapay.com/assets/widgets/donate.svg)](https://liberapay.com/Bullet-Train/donate)
+
 # Bullet Train REST API
 
 ## Development Environment
@@ -135,6 +137,16 @@ pipenv install <package name>
 
 The dependency then needs to be added to the relevant requirements*.txt files as necessary. 
 
+## Caching
+
+The application makes use of caching in a couple of locations: 
+
+1. Environment authentication - the application utilises an in memory cache for the environment object 
+on all endpoints that use the X-Environment-Key header. 
+2. Environment flags - the application utilises an in memory cache for the flags returned when calling 
+/flags. The number of seconds this is cached for is configurable using the environment variable 
+`"CACHE_FLAGS_SECONDS"` 
+
 ## Stack
 
 - Python 2.7.14
@@ -166,7 +178,7 @@ If you have any questions about our projects you can email
 
 [Documentation](https://docs.bullet-train.io/)
 
-[Code Examples](https://github.com/SolidStateGroup/bullet-train-docs)
+[Code Examples](https://github.com/BulletTrainHQ/bullet-train-examples)
 
 [Youtube Tutorials](https://www.youtube.com/channel/UCki7GZrOdZZcsV9rAIRchCw)
 

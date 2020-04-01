@@ -7,59 +7,59 @@ from rest_framework import status
 from rest_framework.test import APIClient, APITestCase
 
 from audit.models import AuditLog, RelatedObjectType
-from environments.models import Environment, Identity, Trait, INTEGER, STRING
+from environments.models import Environment, Identity, Trait, INTEGER, STRING, Webhook, UserEnvironmentPermission, \
+    EnvironmentPermissionModel, UserPermissionGroupEnvironmentPermission
 from features.models import Feature, FeatureState, FeatureSegment
-from organisations.models import Organisation
-from projects.models import Project
+from organisations.models import Organisation, OrganisationRole
+from projects.models import Project, UserProjectPermission, ProjectPermissionModel
 from segments import models
 from segments.models import Segment, SegmentRule, Condition
+from users.models import FFAdminUser, UserPermissionGroup
 from util.tests import Helper
 
 
 @pytest.mark.django_db
 class EnvironmentTestCase(TestCase):
-    env_post_template_wout_webhook = '{"name": "%s", "project": %d}'
-    env_post_template_with_webhook = '{"name": "%s", "project": %d, ' \
-                                     '"webhooks_enabled": "%r", "webhook_url": "%s"}'
+    env_post_template = '{"name": "%s", "project": %d}'
     fs_put_template = '{ "id" : %d, "enabled" : "%r", "feature_state_value" : "%s" }'
 
     def setUp(self):
         self.client = APIClient()
-        user = Helper.create_ffadminuser()
-        self.client.force_authenticate(user=user)
+        self.user = Helper.create_ffadminuser()
+        self.client.force_authenticate(user=self.user)
+
+        create_environment_permission = ProjectPermissionModel.objects.get(key="CREATE_ENVIRONMENT")
+        read_project_permission = ProjectPermissionModel.objects.get(key="VIEW_PROJECT")
 
         self.organisation = Organisation.objects.create(name='ssg')
-        user.organisations.add(self.organisation)
+        self.user.add_organisation(self.organisation, OrganisationRole.ADMIN)  # admin to bypass perms
 
         self.project = Project.objects.create(name='Test project', organisation=self.organisation)
+
+        user_project_permission = UserProjectPermission.objects.create(user=self.user, project=self.project)
+        user_project_permission.permissions.add(create_environment_permission, read_project_permission)
 
     def tearDown(self) -> None:
         Environment.objects.all().delete()
         AuditLog.objects.all().delete()
 
-    def test_should_create_environments_with_or_without_webhooks(self):
+    def test_should_create_environments(self):
         # Given
-        url = reverse('api:v1:environments:environment-list')
+        url = reverse('api-v1:environments:environment-list')
+        data = {
+            'name': 'Test environment',
+            'project': self.project.id
+        }
 
         # When
-        response_with_webhook = self.client.post(url,
-                                                 data=self.env_post_template_with_webhook % (
-                                                     "Test Env with Webhooks",
-                                                     self.project.id,
-                                                     True,
-                                                     "https://sometesturl.org"
-                                                 ), content_type="application/json")
-
-        response_wout_webhook = self.client.post('/api/v1/environments/',
-                                                 data=self.env_post_template_wout_webhook % (
-                                                     "Test Env without Webhooks",
-                                                     self.project.id
-                                                 ), content_type="application/json")
+        response = self.client.post(url, data=data)
 
         # Then
-        assert response_with_webhook.status_code == status.HTTP_201_CREATED
-        assert Environment.objects.get(name="Test Env with Webhooks").webhook_url
-        assert response_wout_webhook.status_code == status.HTTP_201_CREATED
+        assert response.status_code == status.HTTP_201_CREATED
+
+        # and user is admin
+        assert UserEnvironmentPermission.objects.filter(user=self.user, admin=True,
+                                                        environment__id=response.json()['id']).exists()
 
     def test_should_return_identities_for_an_environment(self):
         # Given
@@ -68,7 +68,7 @@ class EnvironmentTestCase(TestCase):
         environment = Environment.objects.create(name='environment1', project=self.project)
         Identity.objects.create(identifier=identifier_one, environment=environment)
         Identity.objects.create(identifier=identifier_two, environment=environment)
-        url = reverse('api:v1:environments:environment-identities-list', args=[environment.api_key])
+        url = reverse('api-v1:environments:environment-identities-list', args=[environment.api_key])
 
         # When
         response = self.client.get(url)
@@ -82,7 +82,7 @@ class EnvironmentTestCase(TestCase):
         feature = Feature.objects.create(name="feature", project=self.project)
         environment = Environment.objects.create(name="test env", project=self.project)
         feature_state = FeatureState.objects.get(feature=feature, environment=environment)
-        url = reverse('api:v1:environments:environment-featurestates-detail',
+        url = reverse('api-v1:environments:environment-featurestates-detail',
                       args=[environment.api_key, feature_state.id])
 
         # When
@@ -98,7 +98,7 @@ class EnvironmentTestCase(TestCase):
 
     def test_audit_log_entry_created_when_new_environment_created(self):
         # Given
-        url = reverse('api:v1:environments:environment-list')
+        url = reverse('api-v1:environments:environment-list')
         data = {
             'project': self.project.id,
             'name': 'Test Environment'
@@ -113,7 +113,7 @@ class EnvironmentTestCase(TestCase):
     def test_audit_log_entry_created_when_environment_updated(self):
         # Given
         environment = Environment.objects.create(name='Test environment', project=self.project)
-        url = reverse('api:v1:environments:environment-detail', args=[environment.api_key])
+        url = reverse('api-v1:environments:environment-detail', args=[environment.api_key])
         data = {
             'project': self.project.id,
             'name': 'New name'
@@ -130,7 +130,7 @@ class EnvironmentTestCase(TestCase):
         feature = Feature.objects.create(name="feature", project=self.project)
         environment = Environment.objects.create(name="test env", project=self.project)
         feature_state = FeatureState.objects.get(feature=feature, environment=environment)
-        url = reverse('api:v1:environments:environment-featurestates-detail',
+        url = reverse('api-v1:environments:environment-featurestates-detail',
                       args=[environment.api_key, feature_state.id])
         data = {
             'id': feature.id,
@@ -145,6 +145,110 @@ class EnvironmentTestCase(TestCase):
 
         # and
         assert AuditLog.objects.first().author
+
+    def test_get_all_trait_keys_for_environment_only_returns_distinct_keys(self):
+        # Given
+        trait_key_one = 'trait-key-one'
+        trait_key_two = 'trait-key-two'
+
+        environment = Environment.objects.create(project=self.project, name='Test Environment')
+
+        identity_one = Identity.objects.create(environment=environment, identifier='identity-one')
+        identity_two = Identity.objects.create(environment=environment, identifier='identity-two')
+
+        Trait.objects.create(identity=identity_one, trait_key=trait_key_one, string_value='blah', value_type=STRING)
+        Trait.objects.create(identity=identity_one, trait_key=trait_key_two, string_value='blah', value_type=STRING)
+        Trait.objects.create(identity=identity_two, trait_key=trait_key_one, string_value='blah', value_type=STRING)
+
+        url = reverse('api-v1:environments:environment-trait-keys', args=[environment.api_key])
+
+        # When
+        res = self.client.get(url)
+
+        # Then
+        assert res.status_code == status.HTTP_200_OK
+
+        # and - only distinct keys are returned
+        assert len(res.json().get('keys')) == 2
+
+    def test_delete_trait_keys_deletes_trait_for_all_users_in_that_environment(self):
+        # Given
+        environment_one = Environment.objects.create(project=self.project, name='Test Environment 1')
+        environment_two = Environment.objects.create(project=self.project, name='Test Environment 2')
+
+        identity_one_environment_one = Identity.objects.create(environment=environment_one,
+                                                               identifier='identity-one-env-one')
+        identity_one_environment_two = Identity.objects.create(environment=environment_two,
+                                                               identifier='identity-one-env-two')
+
+        trait_key = 'trait-key'
+        Trait.objects.create(identity=identity_one_environment_one, trait_key=trait_key, string_value='blah',
+                             value_type=STRING)
+        Trait.objects.create(identity=identity_one_environment_two, trait_key=trait_key, string_value='blah',
+                             value_type=STRING)
+
+        url = reverse('api-v1:environments:environment-delete-traits', args=[environment_one.api_key])
+
+        # When
+        self.client.post(url, data={'key': trait_key})
+
+        # Then
+        assert not Trait.objects.filter(identity=identity_one_environment_one, trait_key=trait_key).exists()
+
+        # and
+        assert Trait.objects.filter(identity=identity_one_environment_two, trait_key=trait_key).exists()
+
+    def test_delete_trait_keys_deletes_traits_matching_provided_key_only(self):
+        # Given
+        environment = Environment.objects.create(project=self.project, name='Test Environment')
+
+        identity = Identity.objects.create(identifier='test-identity', environment=environment)
+
+        trait_to_delete = 'trait-key-to-delete'
+        Trait.objects.create(identity=identity, trait_key=trait_to_delete, value_type=STRING, string_value='blah')
+
+        trait_to_persist = 'trait-key-to-persist'
+        Trait.objects.create(identity=identity, trait_key=trait_to_persist, value_type=STRING, string_value='blah')
+
+        url = reverse('api-v1:environments:environment-delete-traits', args=[environment.api_key])
+
+        # When
+        self.client.post(url, data={'key': trait_to_delete})
+
+        # Then
+        assert not Trait.objects.filter(identity=identity, trait_key=trait_to_delete).exists()
+
+        # and
+        assert Trait.objects.filter(identity=identity, trait_key=trait_to_persist).exists()
+
+    def test_user_can_list_environment_permission(self):
+        # Given
+        url = reverse('api-v1:environments:environment-permissions')
+
+        # When
+        response = self.client.get(url)
+
+        # Then
+        assert response.status_code == status.HTTP_200_OK
+        assert len(response.json()) == 1  # hard code how many permissions we expect there to be
+
+    def test_environment_user_can_get_their_permissions(self):
+        # Given
+        user = FFAdminUser.objects.create(email='new-test@test.com')
+        user.add_organisation(self.organisation)
+        environment = Environment.objects.create(name='Test environment', project=self.project)
+        user_permission = UserEnvironmentPermission.objects.create(user=user, environment=environment)
+        user_permission.add_permission('VIEW_ENVIRONMENT')
+        url = reverse('api-v1:environments:environment-my-permissions', args=[environment.api_key])
+
+        # When
+        self.client.force_authenticate(user)
+        response = self.client.get(url)
+
+        # Then
+        assert response.status_code == status.HTTP_200_OK
+        assert not response.json()['admin']
+        assert 'VIEW_ENVIRONMENT' in response.json()['permissions']
 
 
 @pytest.mark.django_db
@@ -162,14 +266,11 @@ class IdentityTestCase(TestCase):
         self.client.force_authenticate(user=user)
 
         self.organisation = Organisation.objects.create(name='Test Org')
-        user.organisations.add(self.organisation)
+        user.add_organisation(self.organisation, OrganisationRole.ADMIN)  # admin to bypass perms
 
         self.project = Project.objects.create(name='Test project', organisation=self.organisation)
         self.environment = Environment.objects.create(name='Test Environment', project=self.project)
         self.identity = Identity.objects.create(identifier=self.identifier, environment=self.environment)
-
-    def tearDown(self) -> None:
-        Helper.clean_up()
 
     def test_should_return_identities_list_when_requested(self):
         # Given - set up data
@@ -262,7 +363,7 @@ class IdentityTestCase(TestCase):
     def test_can_search_for_identities(self):
         # Given
         Identity.objects.create(identifier='user2', environment=self.environment)
-        base_url = reverse('api:v1:environments:environment-identities-list', args=[self.environment.api_key])
+        base_url = reverse('api-v1:environments:environment-identities-list', args=[self.environment.api_key])
         url = '%s?q=%s' % (base_url, self.identifier)
 
         # When
@@ -277,7 +378,7 @@ class IdentityTestCase(TestCase):
     def test_search_is_case_insensitive(self):
         # Given
         Identity.objects.create(identifier='user2', environment=self.environment)
-        base_url = reverse('api:v1:environments:environment-identities-list', args=[self.environment.api_key])
+        base_url = reverse('api-v1:environments:environment-identities-list', args=[self.environment.api_key])
         url = '%s?q=%s' % (base_url, self.identifier.upper())
 
         # When
@@ -291,7 +392,7 @@ class IdentityTestCase(TestCase):
 
     def test_no_identities_returned_if_search_matches_none(self):
         # Given
-        base_url = reverse('api:v1:environments:environment-identities-list', args=[self.environment.api_key])
+        base_url = reverse('api-v1:environments:environment-identities-list', args=[self.environment.api_key])
         url = '%s?q=%s' % (base_url, 'some invalid search string')
 
         # When
@@ -306,7 +407,7 @@ class IdentityTestCase(TestCase):
     def test_search_identities_still_allows_paging(self):
         # Given
         self._create_n_identities(10)
-        base_url = reverse('api:v1:environments:environment-identities-list', args=[self.environment.api_key])
+        base_url = reverse('api-v1:environments:environment-identities-list', args=[self.environment.api_key])
         url = '%s?q=%s' % (base_url, 'user')
 
         res1 = self.client.get(url)
@@ -328,7 +429,7 @@ class IdentityTestCase(TestCase):
 
     def test_can_delete_identity(self):
         # Given
-        url = reverse('api:v1:environments:environment-identities-detail', args=[self.environment.api_key,
+        url = reverse('api-v1:environments:environment-identities-detail', args=[self.environment.api_key,
                                                                                  self.identity.id])
 
         # When
@@ -357,7 +458,7 @@ class SDKIdentitiesTestCase(APITestCase):
 
     def test_identities_endpoint_returns_all_feature_states_for_identity_if_feature_not_provided(self):
         # Given
-        base_url = reverse('api:v1:sdk-identities')
+        base_url = reverse('api-v1:sdk-identities')
         url = base_url + '?identifier=' + self.identity.identifier
 
         # When
@@ -371,7 +472,7 @@ class SDKIdentitiesTestCase(APITestCase):
 
     def test_identities_endpoint_returns_traits(self):
         # Given
-        base_url = reverse('api:v1:sdk-identities')
+        base_url = reverse('api-v1:sdk-identities')
         url = base_url + '?identifier=' + self.identity.identifier
         trait = Trait.objects.create(identity=self.identity, trait_key='trait_key', value_type='STRING',
                                      string_value='trait_value')
@@ -387,7 +488,7 @@ class SDKIdentitiesTestCase(APITestCase):
 
     def test_identities_endpoint_returns_single_feature_state_if_feature_provided(self):
         # Given
-        base_url = reverse('api:v1:sdk-identities')
+        base_url = reverse('api-v1:sdk-identities')
         url = base_url + '?identifier=' + self.identity.identifier + '&feature=' + self.feature_1.name
 
         # When
@@ -401,7 +502,7 @@ class SDKIdentitiesTestCase(APITestCase):
 
     def test_identities_endpoint_returns_value_for_segment_if_identity_in_segment(self):
         # Given
-        base_url = reverse('api:v1:sdk-identities')
+        base_url = reverse('api-v1:sdk-identities')
         url = base_url + '?identifier=' + self.identity.identifier
 
         trait_key = 'trait_key'
@@ -423,7 +524,7 @@ class SDKIdentitiesTestCase(APITestCase):
 
     def test_identities_endpoint_returns_value_for_segment_if_identity_in_segment_and_feature_specified(self):
         # Given
-        base_url = reverse('api:v1:sdk-identities')
+        base_url = reverse('api-v1:sdk-identities')
         url = base_url + '?identifier=' + self.identity.identifier + '&feature=' + self.feature_1.name
 
         trait_key = 'trait_key'
@@ -446,7 +547,7 @@ class SDKIdentitiesTestCase(APITestCase):
 
     def test_identities_endpoint_returns_value_for_segment_if_rule_type_percentage_split_and_identity_in_segment(self):
         # Given
-        base_url = reverse('api:v1:sdk-identities')
+        base_url = reverse('api-v1:sdk-identities')
         url = base_url + '?identifier=' + self.identity.identifier
 
         segment = Segment.objects.create(name='Test Segment', project=self.project)
@@ -469,7 +570,7 @@ class SDKIdentitiesTestCase(APITestCase):
 
     def test_identities_endpoint_returns_default_value_if_rule_type_percentage_split_and_identity_not_in_segment(self):
         # Given
-        base_url = reverse('api:v1:sdk-identities')
+        base_url = reverse('api-v1:sdk-identities')
         url = base_url + '?identifier=' + self.identity.identifier
 
         segment = Segment.objects.create(name='Test Segment', project=self.project)
@@ -507,7 +608,7 @@ class SDKTraitsTest(APITestCase):
 
     def test_can_set_trait_for_an_identity(self):
         # Given
-        url = reverse('api:v1:sdk-traits-list')
+        url = reverse('api-v1:sdk-traits-list')
 
         # When
         res = self.client.post(url, data=self._generate_json_trait_data(), content_type=self.JSON)
@@ -518,9 +619,39 @@ class SDKTraitsTest(APITestCase):
         # and
         assert Trait.objects.filter(identity=self.identity, trait_key=self.trait_key).exists()
 
+    def test_can_set_trait_with_boolean_value_for_an_identity(self):
+        # Given
+        url = reverse('api-v1:sdk-traits-list')
+        trait_value = True
+
+        # When
+        res = self.client.post(url, data=self._generate_json_trait_data(trait_value=trait_value),
+                               content_type=self.JSON)
+
+        # Then
+        assert res.status_code == status.HTTP_200_OK
+
+        # and
+        assert Trait.objects.get(identity=self.identity, trait_key=self.trait_key).get_trait_value() == trait_value
+
+    def test_can_set_trait_with_identity_value_for_an_identity(self):
+        # Given
+        url = reverse('api-v1:sdk-traits-list')
+        trait_value = 12
+
+        # When
+        res = self.client.post(url, data=self._generate_json_trait_data(trait_value=trait_value),
+                               content_type=self.JSON)
+
+        # Then
+        assert res.status_code == status.HTTP_200_OK
+
+        # and
+        assert Trait.objects.get(identity=self.identity, trait_key=self.trait_key).get_trait_value() == trait_value
+
     def test_add_trait_creates_identity_if_it_doesnt_exist(self):
         # Given
-        url = reverse('api:v1:sdk-traits-list')
+        url = reverse('api-v1:sdk-traits-list')
         identifier = 'new-identity'
 
         # When
@@ -537,7 +668,7 @@ class SDKTraitsTest(APITestCase):
 
     def test_trait_is_updated_if_already_exists(self):
         # Given
-        url = reverse('api:v1:sdk-traits-list')
+        url = reverse('api-v1:sdk-traits-list')
         trait = Trait.objects.create(trait_key=self.trait_key, value_type=STRING, string_value=self.trait_value,
                                      identity=self.identity)
         new_value = 'Some new value'
@@ -554,7 +685,7 @@ class SDKTraitsTest(APITestCase):
         initial_value = 2
         increment_by = 2
 
-        url = reverse('api:v1:sdk-traits-increment-value')
+        url = reverse('api-v1:sdk-traits-increment-value')
         trait = Trait.objects.create(identity=self.identity, trait_key=self.trait_key, value_type=INTEGER,
                                      integer_value=initial_value)
         data = {
@@ -575,7 +706,7 @@ class SDKTraitsTest(APITestCase):
         initial_value = 2
         increment_by = -2
 
-        url = reverse('api:v1:sdk-traits-increment-value')
+        url = reverse('api-v1:sdk-traits-increment-value')
         trait = Trait.objects.create(identity=self.identity, trait_key=self.trait_key, value_type=INTEGER,
                                      integer_value=initial_value)
         data = {
@@ -595,7 +726,7 @@ class SDKTraitsTest(APITestCase):
         # Given
         increment_by = 1
 
-        url = reverse('api:v1:sdk-traits-increment-value')
+        url = reverse('api-v1:sdk-traits-increment-value')
         data = {
             'trait_key': self.trait_key,
             'identifier': self.identity.identifier,
@@ -611,7 +742,7 @@ class SDKTraitsTest(APITestCase):
 
     def test_increment_value_returns_400_if_trait_value_not_integer(self):
         # Given
-        url = reverse('api:v1:sdk-traits-increment-value')
+        url = reverse('api-v1:sdk-traits-increment-value')
         Trait.objects.create(identity=self.identity, trait_key=self.trait_key, value_type=STRING, string_value='str')
         data = {
             'trait_key': self.trait_key,
@@ -652,7 +783,7 @@ class TraitViewSetTestCase(TestCase):
         self.client.force_authenticate(user=user)
 
         organisation = Organisation.objects.create(name='Test org')
-        user.organisations.add(organisation)
+        user.add_organisation(organisation, OrganisationRole.ADMIN)
 
         self.project = Project.objects.create(name='Test project', organisation=organisation)
         self.environment = Environment.objects.create(name='Test environment', project=self.project)
@@ -664,7 +795,7 @@ class TraitViewSetTestCase(TestCase):
         trait_value = 'trait_value'
         trait = Trait.objects.create(identity=self.identity, trait_key=trait_key, value_type=STRING,
                                      string_value=trait_value)
-        url = reverse('api:v1:environments:identities-traits-detail',
+        url = reverse('api-v1:environments:identities-traits-detail',
                       args=[self.environment.api_key, self.identity.id, trait.id])
 
         # When
@@ -687,7 +818,7 @@ class TraitViewSetTestCase(TestCase):
         trait_2 = Trait.objects.create(identity=identity_2, trait_key=trait_key, value_type=STRING,
                                        string_value=trait_value)
 
-        url = reverse('api:v1:environments:identities-traits-detail',
+        url = reverse('api-v1:environments:identities-traits-detail',
                       args=[self.environment.api_key, self.identity.id, trait.id])
 
         # When
@@ -710,7 +841,7 @@ class TraitViewSetTestCase(TestCase):
         trait_2 = Trait.objects.create(identity=identity_2, trait_key=trait_key, value_type=STRING,
                                        string_value=trait_value)
 
-        base_url = reverse('api:v1:environments:identities-traits-detail',
+        base_url = reverse('api-v1:environments:identities-traits-detail',
                            args=[self.environment.api_key, self.identity.id, trait.id])
         url = base_url + '?deleteAllMatchingTraits=true'
 
@@ -735,7 +866,7 @@ class TraitViewSetTestCase(TestCase):
         trait_2 = Trait.objects.create(identity=identity_2, trait_key=trait_key, value_type=STRING,
                                        string_value=trait_value)
 
-        base_url = reverse('api:v1:environments:identities-traits-detail',
+        base_url = reverse('api-v1:environments:identities-traits-detail',
                            args=[self.environment.api_key, self.identity.id, trait.id])
         url = base_url + '?deleteAllMatchingTraits=true'
 
@@ -747,3 +878,288 @@ class TraitViewSetTestCase(TestCase):
 
         # and
         assert Trait.objects.filter(pk=trait_2.id).exists()
+
+
+@pytest.mark.django_db
+class WebhookViewSetTestCase(TestCase):
+    def setUp(self) -> None:
+        self.client = APIClient()
+        user = Helper.create_ffadminuser()
+        self.client.force_authenticate(user=user)
+
+        organisation = Organisation.objects.create(name='Test organisation')
+        user.add_organisation(organisation, OrganisationRole.ADMIN)
+
+        project = Project.objects.create(name='Test project', organisation=organisation)
+        self.environment = Environment.objects.create(name='Test environment', project=project)
+
+        self.valid_webhook_url = 'http://my.webhook.com/webhooks'
+
+    def test_can_create_webhook_for_an_environment(self):
+        # Given
+        url = reverse('api-v1:environments:environment-webhooks-list', args=[self.environment.api_key])
+        data = {
+            'url': self.valid_webhook_url,
+            'enabled': True
+        }
+
+        # When
+        res = self.client.post(url, data)
+
+        # Then
+        assert res.status_code == status.HTTP_201_CREATED
+
+        # and
+        assert Webhook.objects.filter(environment=self.environment, **data).exists()
+
+    def test_can_update_webhook_for_an_environment(self):
+        # Given
+        webhook = Webhook.objects.create(url=self.valid_webhook_url, environment=self.environment)
+        url = reverse('api-v1:environments:environment-webhooks-detail', args=[self.environment.api_key, webhook.id])
+        data = {
+            'url': 'http://my.new.url.com/wehbooks',
+            'enabled': False
+        }
+
+        # When
+        res = self.client.put(url, data=json.dumps(data), content_type='application/json')
+
+        # Then
+        assert res.status_code == status.HTTP_200_OK
+
+        # and
+        webhook.refresh_from_db()
+        assert webhook.url == data['url'] and not webhook.enabled
+
+    def test_can_delete_webhook_for_an_environment(self):
+        # Given
+        webhook = Webhook.objects.create(url=self.valid_webhook_url, environment=self.environment)
+        url = reverse('api-v1:environments:environment-webhooks-detail', args=[self.environment.api_key, webhook.id])
+
+        # When
+        res = self.client.delete(url)
+
+        # Then
+        assert res.status_code == status.HTTP_204_NO_CONTENT
+
+        # and
+        assert not Webhook.objects.filter(id=webhook.id).exists()
+
+    def test_can_list_webhooks_for_an_environment(self):
+        # Given
+        webhook = Webhook.objects.create(url=self.valid_webhook_url, environment=self.environment)
+        url = reverse('api-v1:environments:environment-webhooks-list', args=[self.environment.api_key])
+
+        # When
+        res = self.client.get(url)
+
+        # Then
+        assert res.status_code == status.HTTP_200_OK
+
+        # and
+        assert res.json()[0]['id'] == webhook.id
+
+    def test_cannot_delete_webhooks_for_environment_user_does_not_belong_to(self):
+        # Given
+        new_organisation = Organisation.objects.create(name='New organisation')
+        new_project = Project.objects.create(name='New project', organisation=new_organisation)
+        new_environment = Environment.objects.create(name='New Environment', project=new_project)
+        webhook = Webhook.objects.create(url=self.valid_webhook_url, environment=new_environment)
+        url = reverse('api-v1:environments:environment-webhooks-detail', args=[self.environment.api_key, webhook.id])
+
+        # When
+        res = self.client.delete(url)
+
+        # Then
+        assert res.status_code == status.HTTP_404_NOT_FOUND
+
+        # and
+        assert Webhook.objects.filter(id=webhook.id).exists()
+
+
+@pytest.mark.django_db
+class UserEnvironmentPermissionsViewSetTestCase(TestCase):
+    def setUp(self) -> None:
+        self.organisation = Organisation.objects.create(name='Test')
+        self.project = Project.objects.create(name='Test', organisation=self.organisation)
+        self.environment = Environment.objects.create(name='Test', project=self.project)
+
+        # Admin to bypass permission checks
+        self.org_admin = FFAdminUser.objects.create(email='admin@test.com')
+        self.org_admin.add_organisation(self.organisation, OrganisationRole.ADMIN)
+
+        # create a project user
+        user = FFAdminUser.objects.create(email='user@test.com')
+        user.add_organisation(self.organisation, OrganisationRole.USER)
+        read_permission = EnvironmentPermissionModel.objects.get(key="VIEW_ENVIRONMENT")
+        self.user_environment_permission = UserEnvironmentPermission.objects.create(user=user,
+                                                                                    environment=self.environment)
+        self.user_environment_permission.permissions.set([read_permission])
+
+        self.client = APIClient()
+        self.client.force_authenticate(self.org_admin)
+
+        self.list_url = reverse('api-v1:environments:environment-user-permissions-list',
+                                args=[self.environment.api_key])
+        self.detail_url = reverse('api-v1:environments:environment-user-permissions-detail',
+                                  args=[self.environment.api_key, self.user_environment_permission.id])
+
+    def test_user_can_list_all_user_permissions_for_an_environment(self):
+        # Given - set up data
+
+        # When
+        response = self.client.get(self.list_url)
+
+        # Then
+        assert response.status_code == status.HTTP_200_OK
+        assert len(response.json()) == 1
+
+    def test_user_can_create_new_user_permission_for_an_environment(self):
+        # Given
+        new_user = FFAdminUser.objects.create(email='new_user@test.com')
+        new_user.add_organisation(self.organisation, OrganisationRole.USER)
+        data = {
+            'user': new_user.id,
+            'permissions': [
+                "VIEW_ENVIRONMENT",
+            ],
+            'admin': False
+        }
+
+        # When
+        response = self.client.post(self.list_url, data=json.dumps(data), content_type='application/json')
+
+        # Then
+        assert response.status_code == status.HTTP_201_CREATED
+        assert response.json()['permissions'] == data['permissions']
+
+        assert UserEnvironmentPermission.objects.filter(user=new_user, environment=self.environment).exists()
+        user_environment_permission = UserEnvironmentPermission.objects.get(user=new_user, environment=self.environment)
+        assert user_environment_permission.permissions.count() == 1
+
+    def test_user_can_update_user_permission_for_a_project(self):
+        # Given - empty user environment permission
+        another_user = FFAdminUser.objects.create(email='anotheruser@test.com')
+        empty_permission = UserEnvironmentPermission.objects.create(user=another_user, environment=self.environment)
+        data = {
+            'permissions': [
+                'VIEW_ENVIRONMENT'
+            ]
+        }
+        url = reverse('api-v1:environments:environment-user-permissions-detail', args=[self.environment.api_key,
+                                                                                       empty_permission.id])
+
+        # When
+        response = self.client.patch(url, data=json.dumps(data), content_type='application/json')
+
+        # Then
+        assert response.status_code == status.HTTP_200_OK
+
+        self.user_environment_permission.refresh_from_db()
+        assert 'VIEW_ENVIRONMENT' in self.user_environment_permission.permissions.values_list('key', flat=True)
+
+    def test_user_can_delete_user_permission_for_a_project(self):
+        # Given - set up data
+
+        # When
+        response = self.client.delete(self.detail_url)
+
+        # Then
+        assert response.status_code == status.HTTP_204_NO_CONTENT
+        assert not UserProjectPermission.objects.filter(id=self.user_environment_permission.id).exists()
+
+
+@pytest.mark.django_db
+class UserPermissionGroupProjectPermissionsViewSetTestCase(TestCase):
+    def setUp(self) -> None:
+        self.organisation = Organisation.objects.create(name='Test')
+        self.project = Project.objects.create(name='Test', organisation=self.organisation)
+        self.environment = Environment.objects.create(name='Test', project=self.project)
+
+        # Admin to bypass permission checks
+        self.org_admin = FFAdminUser.objects.create(email='admin@test.com')
+        self.org_admin.add_organisation(self.organisation, OrganisationRole.ADMIN)
+
+        # create a project user
+        self.user = FFAdminUser.objects.create(email='user@test.com')
+        self.user.add_organisation(self.organisation, OrganisationRole.USER)
+        read_permission = EnvironmentPermissionModel.objects.get(key="VIEW_ENVIRONMENT")
+
+        self.user_permission_group = UserPermissionGroup.objects.create(name='Test group',
+                                                                        organisation=self.organisation)
+        self.user_permission_group.users.add(self.user)
+
+        self.user_group_environment_permission = UserPermissionGroupEnvironmentPermission.objects.create(
+            group=self.user_permission_group,
+            environment=self.environment
+        )
+        self.user_group_environment_permission.permissions.set([read_permission])
+
+        self.client = APIClient()
+        self.client.force_authenticate(self.org_admin)
+
+        self.list_url = reverse('api-v1:environments:environment-user-group-permissions-list',
+                                args=[self.environment.api_key])
+        self.detail_url = reverse('api-v1:environments:environment-user-group-permissions-detail',
+                                  args=[self.environment.api_key, self.user_group_environment_permission.id])
+
+    def test_user_can_list_all_user_group_permissions_for_an_environment(self):
+        # Given - set up data
+
+        # When
+        response = self.client.get(self.list_url)
+
+        # Then
+        assert response.status_code == status.HTTP_200_OK
+        assert len(response.json()) == 1
+
+    def test_user_can_create_new_user_group_permission_for_an_environment(self):
+        # Given
+        new_group = UserPermissionGroup.objects.create(name='New group', organisation=self.organisation)
+        new_group.users.add(self.user)
+        data = {
+            'group': new_group.id,
+            'permissions': [
+                "VIEW_ENVIRONMENT",
+            ],
+            'admin': False
+        }
+
+        # When
+        response = self.client.post(self.list_url, data=json.dumps(data), content_type='application/json')
+
+        # Then
+        assert response.status_code == status.HTTP_201_CREATED
+        assert sorted(response.json()['permissions']) == sorted(data['permissions'])
+
+        assert UserPermissionGroupEnvironmentPermission.objects.filter(group=new_group,
+                                                                       environment=self.environment).exists()
+        user_group_environment_permission = UserPermissionGroupEnvironmentPermission.objects.get(group=new_group,
+                                                                                                 environment=self.environment)
+        assert user_group_environment_permission.permissions.count() == 1
+
+    def test_user_can_update_user_group_permission_for_an_environment(self):
+        # Given
+        data = {
+            'permissions': []
+        }
+
+        # When
+        response = self.client.patch(self.detail_url, data=json.dumps(data), content_type='application/json')
+
+        # Then
+        assert response.status_code == status.HTTP_200_OK
+
+        self.user_group_environment_permission.refresh_from_db()
+        assert self.user_group_environment_permission.permissions.count() == 0
+
+    def test_user_can_delete_user_permission_for_a_project(self):
+        # Given - set up data
+
+        # When
+        response = self.client.delete(self.detail_url)
+
+        # Then
+        assert response.status_code == status.HTTP_204_NO_CONTENT
+        assert not UserPermissionGroupEnvironmentPermission.objects.filter(
+            id=self.user_group_environment_permission.id).exists()
