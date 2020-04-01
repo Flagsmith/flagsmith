@@ -7,7 +7,7 @@ from rest_framework.exceptions import ValidationError
 
 from organisations.models import Organisation
 from organisations.serializers import UserOrganisationSerializer
-from .models import FFAdminUser, Invite
+from .models import FFAdminUser, Invite, UserPermissionGroup
 
 
 class UserIdSerializer(serializers.Serializer):
@@ -125,3 +125,19 @@ class InviteListSerializer(serializers.ModelSerializer):
     class Meta:
         model = Invite
         fields = ('id', 'email', 'date_created', 'invited_by')
+
+
+class UserIdsSerializer(serializers.Serializer):
+    user_ids = serializers.ListField(serializers.IntegerField)
+
+
+class UserPermissionGroupSerializerList(serializers.ModelSerializer):
+    class Meta:
+        model = UserPermissionGroup
+        fields = ('id', 'name', 'users')
+        read_only_fields = ('id',)
+
+
+class UserPermissionGroupSerializerDetail(UserPermissionGroupSerializerList):
+    # TODO: remove users from here and just add a summary of number of users
+    users = UserListSerializer(many=True, read_only=True)

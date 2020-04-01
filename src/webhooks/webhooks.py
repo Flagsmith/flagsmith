@@ -21,7 +21,7 @@ class WebhookType(enum.Enum):
 
 
 def call_environment_webhooks(environment, data, event_type):
-    _call_webhooks(environment.webhooks.filter(enabled=True), data, event_type, WebhookType.ORGANISATION)
+    _call_webhooks(environment.webhooks.filter(enabled=True), data, event_type, WebhookType.ENVIRONMENT)
 
 
 def call_organisation_webhooks(organisation, data, event_type):
@@ -47,6 +47,7 @@ def _call_webhooks(webhooks, data, event_type, webhook_type):
 
 def send_failure_email(webhook, data, webhook_type, status_code=None):
     template_data = _get_failure_email_template_data(webhook, data, webhook_type, status_code)
+    organisation = webhook.organisation if webhook_type == WebhookType.ORGANISATION else webhook.environment.project.organisation
 
     text_template = get_template('features/webhook_failure.txt')
     text_content = text_template.render(template_data)
@@ -55,7 +56,7 @@ def send_failure_email(webhook, data, webhook_type, status_code=None):
         subject,
         text_content,
         settings.EMAIL_CONFIGURATION.get('INVITE_FROM_EMAIL'),
-        [webhook.environment.project.organisation.webhook_notification_email]
+        [organisation.webhook_notification_email]
     )
     msg.content_subtype = "plain"
     msg.send()
