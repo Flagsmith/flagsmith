@@ -11,6 +11,7 @@ from simple_history.models import HistoricalRecords
 from app.utils import create_hash
 from environments.exceptions import EnvironmentHeaderNotPresentError
 from features.models import FeatureState
+from permissions.models import BasePermissionModelABC, PermissionModel, ENVIRONMENT_PERMISSION_TYPE
 from projects.models import Project
 
 # User Trait Value Types
@@ -31,11 +32,12 @@ class Environment(models.Model):
             "previously associated projects Features that are related to this Environment. New "
             "default Feature States will be created for the new selected projects Features for "
             "this Environment."
-        )
+        ),
+        on_delete=models.CASCADE
     )
     api_key = models.CharField(default=create_hash, unique=True, max_length=100)
-    webhooks_enabled = models.BooleanField(default=False)
-    webhook_url = models.URLField(null=True, blank=True)
+    webhooks_enabled = models.BooleanField(default=False, help_text='DEPRECATED FIELD.')
+    webhook_url = models.URLField(null=True, blank=True, help_text='DEPRECATED FIELD.')
 
     class Meta:
         ordering = ['id']
@@ -85,7 +87,7 @@ class Environment(models.Model):
 class Identity(models.Model):
     identifier = models.CharField(max_length=2000)
     created_date = models.DateTimeField('DateCreated', auto_now_add=True)
-    environment = models.ForeignKey(Environment, related_name='identities')
+    environment = models.ForeignKey(Environment, related_name='identities', on_delete=models.CASCADE)
 
     class Meta:
         verbose_name_plural = "Identities"
@@ -101,29 +103,30 @@ class Identity(models.Model):
             Q(environment=self.environment) &
             (
                 # first get all feature states that have been explicitly overridden for the identity
-                Q(identity=self) |
+                    Q(identity=self) |
 
-                # next get all feature states that have been overridden for any segments the identity matches, ignoring
-                # any that are explicitly overridden for the identity as that still takes priority
-                # TODO: does this take priority into account?
-                Q(feature_segment__segment__in=self.get_segments()) & ~Q(
-                    feature__id__in=self.identity_features.values_list(
-                        'feature__id', flat=True
-                    )
-                ) |
-
-                # finally, get all feature states for the environment that haven't been overridden
-                (
-                    Q(identity=None) &
-                    ~Q(
-                        feature__id__in=self.identity_features.values_list(
-                            'feature__id', flat=True
-                        )
-                    ) &
-                    ~Q(
-                        feature__id__in=feature_ids_overridden_by_segment
-                    )
+                    # next get all feature states that have been overridden for any segments the identity matches, ignoring
+                    # any that are explicitly overridden for the identity as that still takes priority
+                    # TODO: does this take priority into account?
+                    Q(feature_segment__segment__in=self.get_segments()) & ~Q(
+                feature__id__in=self.identity_features.values_list(
+                    'feature__id', flat=True
                 )
+            ) |
+
+                    # finally, get all feature states for the environment that haven't been overridden
+                    (
+                            Q(identity=None) &
+                            Q(feature_segment=None) &
+                            ~Q(
+                                feature__id__in=self.identity_features.values_list(
+                                    'feature__id', flat=True
+                                )
+                            ) &
+                            ~Q(
+                                feature__id__in=feature_ids_overridden_by_segment
+                            )
+                    )
             ),
         ).select_related("feature", "feature_state_value")
 
@@ -157,7 +160,7 @@ class Trait(models.Model):
         (BOOLEAN, 'Boolean')
     )
 
-    identity = models.ForeignKey('environments.Identity', related_name='identity_traits')
+    identity = models.ForeignKey('environments.Identity', related_name='identity_traits', on_delete=models.CASCADE)
     trait_key = models.CharField(max_length=200)
     value_type = models.CharField(max_length=10, choices=TRAIT_VALUE_TYPES, default=STRING,
                                   null=True, blank=True)
@@ -187,9 +190,6 @@ class Trait(models.Model):
 
         return type_mapping.get(value_type)
 
-    def save(self, *args, **kwargs):
-        super(Trait, self).save(*args, **kwargs)
-
     @staticmethod
     def _get_trait_key_name(tv_type):
         return {
@@ -218,3 +218,33 @@ class Trait(models.Model):
 
     def __str__(self):
         return "Identity: %s - %s" % (self.identity.identifier, self.trait_key)
+
+
+class Webhook(models.Model):
+    environment = models.ForeignKey(Environment, on_delete=models.CASCADE, related_name='webhooks')
+    url = models.URLField()
+    enabled = models.BooleanField(default=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+
+class EnvironmentPermissionManager(models.Manager):
+    def get_queryset(self):
+        return super(EnvironmentPermissionManager, self).get_queryset().filter(type=ENVIRONMENT_PERMISSION_TYPE)
+
+
+class EnvironmentPermissionModel(PermissionModel):
+    class Meta:
+        proxy = True
+
+    objects = EnvironmentPermissionManager()
+
+
+class UserEnvironmentPermission(BasePermissionModelABC):
+    user = models.ForeignKey('users.FFAdminUser', on_delete=models.CASCADE)
+    environment = models.ForeignKey(Environment, on_delete=models.CASCADE, related_query_name='userpermission')
+
+
+class UserPermissionGroupEnvironmentPermission(BasePermissionModelABC):
+    group = models.ForeignKey('users.UserPermissionGroup', on_delete=models.CASCADE)
+    environment = models.ForeignKey(Environment, on_delete=models.CASCADE, related_query_name='grouppermission')

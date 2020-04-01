@@ -7,7 +7,7 @@ from rest_framework.test import APITestCase
 
 from audit.models import RelatedObjectType, AuditLog
 from environments.models import Identity, Environment, Trait, STRING
-from organisations.models import Organisation
+from organisations.models import Organisation, OrganisationRole
 from projects.models import Project
 from segments.models import Segment, SegmentRule, Condition, EQUAL
 
@@ -18,7 +18,7 @@ class SegmentViewSetTestCase(APITestCase):
     def setUp(self) -> None:
         self.user = User.objects.create(email='test@example.com')
         self.organisation = Organisation.objects.create(name='Test Organisation')
-        self.user.organisations.add(self.organisation)
+        self.user.add_organisation(self.organisation, OrganisationRole.ADMIN)
         self.client.force_authenticate(self.user)
         self.project = Project.objects.create(name='Test project', organisation=self.organisation)
 
@@ -27,7 +27,7 @@ class SegmentViewSetTestCase(APITestCase):
 
     def test_audit_log_created_when_segment_created(self):
         # Given
-        url = reverse('api:v1:projects:project-segments-list', args=[self.project.id])
+        url = reverse('api-v1:projects:project-segments-list', args=[self.project.id])
         data = {
             'name': 'Test Segment',
             'project': self.project.id,
@@ -48,7 +48,7 @@ class SegmentViewSetTestCase(APITestCase):
     def test_audit_log_created_when_segment_updated(self):
         # Given
         segment = Segment.objects.create(name='Test segment', project=self.project)
-        url = reverse('api:v1:projects:project-segments-detail', args=[self.project.id, segment.id])
+        url = reverse('api-v1:projects:project-segments-detail', args=[self.project.id, segment.id])
         data = {
             'name': 'New segment name',
             'project': self.project.id,
@@ -81,7 +81,7 @@ class SegmentViewSetTestCase(APITestCase):
         identity = Identity.objects.create(identifier='test-user', environment=environment)
         Trait.objects.create(identity=identity, trait_key=trait_key, value_type=STRING, string_value=trait_value)
 
-        base_url = reverse('api:v1:projects:project-segments-list', args=[self.project.id])
+        base_url = reverse('api-v1:projects:project-segments-list', args=[self.project.id])
         url = base_url + '?identity=%d' % identity.id
 
         # When
@@ -92,7 +92,7 @@ class SegmentViewSetTestCase(APITestCase):
 
     def test_cannot_create_segments_without_rules(self):
         # Given
-        url = reverse('api:v1:projects:project-segments-list', args=[self.project.id])
+        url = reverse('api-v1:projects:project-segments-list', args=[self.project.id])
         data = {
             'name': 'New segment name',
             'project': self.project.id,
@@ -104,3 +104,26 @@ class SegmentViewSetTestCase(APITestCase):
 
         # Then
         assert res.status_code == status.HTTP_400_BAD_REQUEST
+
+    def test_can_create_segments_with_boolean_condition(self):
+        # Given
+        url = reverse('api-v1:projects:project-segments-list', args=[self.project.id])
+        data = {
+            'name': 'New segment name',
+            'project': self.project.id,
+            'rules': [{
+                'type': 'ALL',
+                'rules': [],
+                'conditions': [{
+                    'operator': EQUAL,
+                    'property': 'test-property',
+                    'value': True
+                }]
+            }]
+        }
+
+        # When
+        res = self.client.post(url, data=json.dumps(data), content_type='application/json')
+
+        # Then
+        assert res.status_code == status.HTTP_201_CREATED

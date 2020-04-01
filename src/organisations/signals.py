@@ -1,23 +1,24 @@
-from django.conf import settings
+from datetime import datetime
+
 from django.db.models.signals import pre_save
 from django.dispatch import receiver
 
-from organisations.chargebee import get_max_seats_for_plan, get_plan_id_from_subscription
-from .models import Subscription
+from organisations.models import Subscription
+from users.models import FFAdminUser
 
 
 @receiver(pre_save, sender=Subscription)
-def update_max_seats_if_plan_changed(sender, instance, *args, **kwargs):
-    existing_object = None
-
+def send_alert_if_cancelled(sender, instance, *args, **kwargs):
     try:
         existing_object = sender.objects.get(pk=instance.pk)
     except sender.DoesNotExist:
-        pass
+        return
 
-    if instance.subscription_id and settings.ENABLE_CHARGEBEE:
-        current_plan = get_plan_id_from_subscription(instance.subscription_id)
-        if not existing_object or current_plan != existing_object.plan:
-            instance.max_seats = get_max_seats_for_plan(current_plan)
-            instance.plan = current_plan
-            instance.organisation.reset_alert_status()
+    if instance.cancellation_date and existing_object.cancellation_date != instance.cancellation_date:
+        FFAdminUser.send_alert_to_admin_users(
+            subject='Organisation %s has cancelled their subscription' % instance.organisation.name,
+            message='Organisation %s has cancelled their subscription on %s' % (instance.organisation.name,
+                                                                                datetime.strftime(
+                                                                                    instance.cancellation_date,
+                                                                                    '%Y-%m-%d %H:%M'))
+        )

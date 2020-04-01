@@ -10,9 +10,10 @@ from audit.models import AuditLog, RelatedObjectType, IDENTITY_FEATURE_STATE_UPD
     IDENTITY_FEATURE_STATE_DELETED_MESSAGE
 from environments.models import Environment, Identity
 from features.models import Feature, FeatureState, FeatureSegment
-from organisations.models import Organisation
+from organisations.models import Organisation, OrganisationRole
 from projects.models import Project
 from segments.models import Segment
+from users.models import FFAdminUser
 from util.tests import Helper
 
 
@@ -29,19 +30,11 @@ class ProjectFeatureTestCase(TestCase):
 
         self.organisation = Organisation.objects.create(name='Test Org')
 
-        user.organisations.add(self.organisation)
+        user.add_organisation(self.organisation, OrganisationRole.ADMIN)
 
         self.project = Project.objects.create(name='Test project', organisation=self.organisation)
         self.environment_1 = Environment.objects.create(name='Test environment 1', project=self.project)
         self.environment_2 = Environment.objects.create(name='Test environment 2', project=self.project)
-
-    def tearDown(self) -> None:
-        AuditLog.objects.all().delete()
-        Feature.objects.all().delete()
-        FeatureState.objects.all().delete()
-        Segment.objects.all().delete()
-        FeatureSegment.objects.all().delete()
-        Identity.objects.all().delete()
 
     def test_should_create_feature_states_when_feature_created(self):
         # Given - set up data
@@ -136,7 +129,7 @@ class ProjectFeatureTestCase(TestCase):
 
     def test_audit_log_created_when_feature_created(self):
         # Given
-        url = reverse('api:v1:projects:project-features-list', args=[self.project.id])
+        url = reverse('api-v1:projects:project-features-list', args=[self.project.id])
         data = {
             'name': 'Test feature flag',
             'type': 'FLAG',
@@ -152,7 +145,7 @@ class ProjectFeatureTestCase(TestCase):
     def test_audit_log_created_when_feature_updated(self):
         # Given
         feature = Feature.objects.create(name='Test Feature', project=self.project)
-        url = reverse('api:v1:projects:project-features-detail', args=[self.project.id, feature.id])
+        url = reverse('api-v1:projects:project-features-detail', args=[self.project.id, feature.id])
         data = {
             'name': 'Test Feature updated',
             'type': 'FLAG',
@@ -169,7 +162,7 @@ class ProjectFeatureTestCase(TestCase):
         # Given
         segment = Segment.objects.create(name='Test segment', project=self.project)
         feature = Feature.objects.create(name='Test feature', project=self.project)
-        url = reverse('api:v1:projects:project-features-segments', args=[self.project.id, feature.id])
+        url = reverse('api-v1:projects:project-features-segments', args=[self.project.id, feature.id])
         data = [{
             'segment': segment.id,
             'priority': 1,
@@ -186,7 +179,7 @@ class ProjectFeatureTestCase(TestCase):
         # Given
         feature = Feature.objects.create(name='Test feature', project=self.project)
         identity = Identity.objects.create(identifier='test-identifier', environment=self.environment_1)
-        url = reverse('api:v1:environments:identity-featurestates-list', args=[self.environment_1.api_key,
+        url = reverse('api-v1:environments:identity-featurestates-list', args=[self.environment_1.api_key,
                                                                                identity.id])
         data = {
             "feature": feature.id,
@@ -210,7 +203,7 @@ class ProjectFeatureTestCase(TestCase):
         identity = Identity.objects.create(identifier='test-identifier', environment=self.environment_1)
         feature_state = FeatureState.objects.create(feature=feature, environment=self.environment_1, identity=identity,
                                                     enabled=True)
-        url = reverse('api:v1:environments:identity-featurestates-detail', args=[self.environment_1.api_key,
+        url = reverse('api-v1:environments:identity-featurestates-detail', args=[self.environment_1.api_key,
                                                                                  identity.id, feature_state.id])
         data = {
             "feature": feature.id,
@@ -234,7 +227,7 @@ class ProjectFeatureTestCase(TestCase):
         identity = Identity.objects.create(identifier='test-identifier', environment=self.environment_1)
         feature_state = FeatureState.objects.create(feature=feature, environment=self.environment_1, identity=identity,
                                                     enabled=True)
-        url = reverse('api:v1:environments:identity-featurestates-detail', args=[self.environment_1.api_key,
+        url = reverse('api-v1:environments:identity-featurestates-detail', args=[self.environment_1.api_key,
                                                                                  identity.id, feature_state.id])
 
         # When
@@ -258,7 +251,7 @@ class FeatureSegmentViewTest(TestCase):
 
         organisation = Organisation.objects.create(name='Test Org')
 
-        user.organisations.add(organisation)
+        user.add_organisation(organisation, OrganisationRole.ADMIN)
 
         self.project = Project.objects.create(organisation=organisation, name='Test project')
         self.environment_1 = Environment.objects.create(project=self.project, name='Test environment 1')
@@ -268,7 +261,7 @@ class FeatureSegmentViewTest(TestCase):
 
     def test_when_feature_segments_updated_then_feature_states_updated_for_each_environment(self):
         # Given
-        url = reverse('api:v1:projects:project-features-segments', args=[self.project.id, self.feature.id])
+        url = reverse('api-v1:projects:project-features-segments', args=[self.project.id, self.feature.id])
         FeatureSegment.objects.create(segment=self.segment, feature=self.feature, enabled=False)
         data = [{
             'segment': self.segment.id,
@@ -285,7 +278,7 @@ class FeatureSegmentViewTest(TestCase):
 
     def test_when_feature_segments_created_with_integer_value_then_feature_states_created_with_integer_value(self):
         # Given
-        url = reverse('api:v1:projects:project-features-segments', args=[self.project.id, self.feature.id])
+        url = reverse('api-v1:projects:project-features-segments', args=[self.project.id, self.feature.id])
         value = 1
 
         data = [{
@@ -304,7 +297,7 @@ class FeatureSegmentViewTest(TestCase):
 
     def test_when_feature_segments_created_with_boolean_value_then_feature_states_created_with_boolean_value(self):
         # Given
-        url = reverse('api:v1:projects:project-features-segments', args=[self.project.id, self.feature.id])
+        url = reverse('api-v1:projects:project-features-segments', args=[self.project.id, self.feature.id])
         value = False
 
         data = [{
@@ -323,7 +316,7 @@ class FeatureSegmentViewTest(TestCase):
 
     def test_when_feature_segments_created_with_string_value_then_feature_states_created_with_string_value(self):
         # Given
-        url = reverse('api:v1:projects:project-features-segments', args=[self.project.id, self.feature.id])
+        url = reverse('api-v1:projects:project-features-segments', args=[self.project.id, self.feature.id])
         value = 'my_string'
 
         data = [{
@@ -339,3 +332,64 @@ class FeatureSegmentViewTest(TestCase):
         for env in Environment.objects.all():
             fs = FeatureState.objects.get(environment=env, feature_segment__segment=self.segment)
             assert fs.get_feature_state_value() == value
+
+
+@pytest.mark.django_db()
+class FeatureStateViewSetTestCase(TestCase):
+    def setUp(self) -> None:
+        self.organisation = Organisation.objects.create(name='Test org')
+        self.project = Project.objects.create(name='Test project', organisation=self.organisation)
+        self.environment = Environment.objects.create(project=self.project, name='Test environment')
+        self.feature = Feature.objects.create(name='test-feature', project=self.project, type='CONFIG',
+                                              initial_value=12)
+        self.user = FFAdminUser.objects.create(email='test@example.com')
+        self.user.add_organisation(self.organisation, OrganisationRole.ADMIN)
+        self.client = APIClient()
+        self.client.force_authenticate(self.user)
+
+    def test_update_feature_state_value_updates_feature_state_value(self):
+        # Given
+        feature_state = FeatureState.objects.get(environment=self.environment, feature=self.feature)
+        url = reverse('api-v1:environments:environment-featurestates-detail',
+                      args=[self.environment.api_key, feature_state.id])
+        new_value = 'new-value'
+        data = {
+            'id': feature_state.id,
+            'feature_state_value': new_value,
+            'enabled': False,
+            'feature': self.feature.id,
+            'environment': self.environment.id,
+            'identity': None,
+            'feature_segment': None
+        }
+
+        # When
+        self.client.put(url, data=json.dumps(data), content_type='application/json')
+
+        # Then
+        feature_state.refresh_from_db()
+        assert feature_state.get_feature_state_value() == new_value
+
+    def test_can_filter_feature_states_to_show_identity_overrides_only(self):
+        # Given
+        feature_state = FeatureState.objects.get(environment=self.environment, feature=self.feature)
+
+        identifier = 'test-identity'
+        identity = Identity.objects.create(identifier=identifier, environment=self.environment)
+        identity_feature_state = FeatureState.objects.create(environment=self.environment, feature=self.feature,
+                                                             identity=identity)
+
+        base_url = reverse('api-v1:environments:environment-featurestates-list', args=[self.environment.api_key])
+        url = base_url + '?anyIdentity&feature=' + str(self.feature.id)
+
+        # When
+        res = self.client.get(url)
+
+        # Then
+        assert res.status_code == status.HTTP_200_OK
+
+        # and
+        assert len(res.json().get('results')) == 1
+
+        # and
+        assert res.json()['results'][0]['identity']['identifier'] == identifier

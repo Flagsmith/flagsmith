@@ -93,7 +93,12 @@ INSTALLED_APPS = [
     'simple_history',
     'debug_toolbar',
     'drf_yasg',
-    'audit'
+    'audit',
+    'permissions',
+
+    # health check plugins
+    'health_check',
+    'health_check.db',
 ]
 
 if GOOGLE_ANALYTICS_KEY:
@@ -120,13 +125,16 @@ REST_AUTH_REGISTER_SERIALIZERS = {
     'REGISTER_SERIALIZER': 'users.serializers.UserRegisterSerializer'
 }
 
+REST_AUTH_SERIALIZERS = {
+    'USER_DETAILS_SERIALIZER': 'users.serializers.UserFullSerializer'
+}
+
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
-    'django.contrib.auth.middleware.SessionAuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
     'corsheaders.middleware.CorsMiddleware',
@@ -260,3 +268,49 @@ SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
 ENABLE_CHARGEBEE = os.environ.get('ENABLE_CHARGEBEE', False)
 CHARGEBEE_API_KEY = os.environ.get('CHARGEBEE_API_KEY')
 CHARGEBEE_SITE = os.environ.get('CHARGEBEE_SITE')
+
+
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': False,
+    'formatters': {
+        'console_format': {
+            'format': '%(name)-12s %(levelname)-8s %(message)s'
+        }
+    },
+    'handlers': {
+        'console': {
+            'level': 'DEBUG',
+            'class': 'logging.StreamHandler',
+            'formatter': 'console_format',
+        },
+    },
+    'loggers': {
+        'django': {
+            'level': 'INFO',
+            'handlers': ['console']
+        },
+        '': {
+            'level': 'DEBUG',
+            'handlers': ['console'],
+        },
+    }
+}
+
+CACHE_FLAGS_SECONDS = int(os.environ.get('CACHE_FLAGS_SECONDS', 0))
+FLAGS_CACHE_LOCATION = 'environment-flags'
+ENVIRONMENT_CACHE_LOCATION = 'environment-objects'
+CACHES = {
+    'default': {
+        'BACKEND': 'django.core.cache.backends.locmem.LocMemCache',
+        'LOCATION': 'unique-snowflake',
+    },
+    ENVIRONMENT_CACHE_LOCATION: {
+        'BACKEND': 'django.core.cache.backends.locmem.LocMemCache',
+        'LOCATION': ENVIRONMENT_CACHE_LOCATION
+    },
+    FLAGS_CACHE_LOCATION: {
+        'BACKEND': 'django.core.cache.backends.locmem.LocMemCache',
+        'LOCATION': FLAGS_CACHE_LOCATION,
+    }
+}

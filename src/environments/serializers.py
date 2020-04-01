@@ -1,10 +1,14 @@
 from rest_framework import serializers, exceptions
+from rest_framework.exceptions import ValidationError
 
 from audit.models import ENVIRONMENT_CREATED_MESSAGE, ENVIRONMENT_UPDATED_MESSAGE, RelatedObjectType, AuditLog
+from environments.models import Environment, Identity, Trait, INTEGER, Webhook, UserEnvironmentPermission, \
+    UserPermissionGroupEnvironmentPermission
 from features.serializers import FeatureStateSerializerFull
-from environments.models import Environment, Identity, Trait, INTEGER
+from permissions.serializers import CreateUpdateUserPermissionSerializerABC
 from projects.serializers import ProjectSerializer
 from segments.serializers import SegmentSerializerBasic
+from users.serializers import UserListSerializer, UserPermissionGroupSerializerDetail
 
 
 class EnvironmentSerializerFull(serializers.ModelSerializer):
@@ -17,12 +21,11 @@ class EnvironmentSerializerFull(serializers.ModelSerializer):
 
 
 class EnvironmentSerializerLight(serializers.ModelSerializer):
-
     class Meta:
         model = Environment
-        fields = ('id', 'name', 'api_key', 'project', 'webhooks_enabled', 'webhook_url')
+        fields = ('id', 'name', 'api_key', 'project')
         read_only_fields = ('api_key',)
-        
+
     def create(self, validated_data):
         instance = super(EnvironmentSerializerLight, self).create(validated_data)
         self._create_audit_log(instance, True)
@@ -34,7 +37,7 @@ class EnvironmentSerializerLight(serializers.ModelSerializer):
         return updated_instance
 
     def _create_audit_log(self, instance, created):
-        message = ENVIRONMENT_CREATED_MESSAGE if created else ENVIRONMENT_UPDATED_MESSAGE % instance.name
+        message = (ENVIRONMENT_CREATED_MESSAGE if created else ENVIRONMENT_UPDATED_MESSAGE) % instance.name
         request = self.context.get('request')
         AuditLog.objects.create(author=request.user if request else None,
                                 related_object_id=instance.id,
@@ -54,10 +57,18 @@ class IdentitySerializerFull(serializers.ModelSerializer):
 
 
 class IdentitySerializer(serializers.ModelSerializer):
-
     class Meta:
         model = Identity
         fields = ('id', 'identifier', 'environment')
+        read_only_fields = ('id', 'environment')
+
+    def save(self, **kwargs):
+        environment = kwargs.get('environment')
+        identifier = self.validated_data.get('identifier')
+        if Identity.objects.filter(environment=environment, identifier=identifier).exists():
+            raise ValidationError(
+                {'identifier': "Identity with identifier '%s' already exists in this environment" % identifier})
+        return super(IdentitySerializer, self).save(**kwargs)
 
 
 class TraitSerializerFull(serializers.ModelSerializer):
@@ -78,62 +89,11 @@ class TraitSerializerBasic(serializers.ModelSerializer):
 
     class Meta:
         model = Trait
-        fields = ('trait_key', 'trait_value')
+        fields = ('id', 'trait_key', 'trait_value')
 
     @staticmethod
     def get_trait_value(obj):
         return obj.get_trait_value()
-
-
-class CreateTraitSerializer(serializers.Serializer):
-    class _IdentitySerializer(serializers.ModelSerializer):
-        class Meta:
-            model = Identity
-            fields = ('identifier',)
-
-    trait_key = serializers.CharField()
-    trait_value = serializers.CharField()
-    identity = _IdentitySerializer()
-
-    trait_value_data = {}
-
-    def to_representation(self, instance):
-        return {
-            'trait_value': instance.get_trait_value(),
-            'trait_key': instance.trait_key
-        }
-
-    def create(self, validated_data):
-        identity = self._get_identity(validated_data)
-
-        trait_data = {
-            'trait_key': validated_data['trait_key'],
-            'identity': identity
-        }
-
-        self.trait_value_data = Trait.generate_trait_value_data(validated_data['trait_value'])
-
-        trait, created = Trait.objects.get_or_create(**trait_data, defaults=self.trait_value_data)
-
-        return trait if created else self.update(trait, validated_data)
-
-    def _get_identity(self, validated_data):
-        identity_data = {
-            **validated_data['identity'],
-            'environment': self.context.get('request').environment
-        }
-        identity, _ = Identity.objects.get_or_create(**identity_data)
-        return identity
-
-    def update(self, instance, validated_data):
-        if not self.trait_value_data:
-            self.trait_value_data = Trait.generate_trait_value_data(validated_data['trait_value'])
-
-        for key, value in self.trait_value_data.items():
-            setattr(instance, key, value)
-
-        instance.save()
-        return instance
 
 
 class IncrementTraitValueSerializer(serializers.Serializer):
@@ -178,6 +138,19 @@ class IncrementTraitValueSerializer(serializers.Serializer):
             'integer_value': 0
         }
 
+
+class TraitKeysSerializer(serializers.Serializer):
+    keys = serializers.ListSerializer(child=serializers.CharField())
+
+
+class DeleteAllTraitKeysSerializer(serializers.Serializer):
+    key = serializers.CharField()
+
+    def delete(self):
+        environment = self.context.get('environment')
+        Trait.objects.filter(identity__environment=environment, trait_key=self.validated_data.get('key')).delete()
+
+
 # Serializer for returning both Feature Flags and User Traits
 class IdentitySerializerTraitFlags(serializers.Serializer):
     flags = FeatureStateSerializerFull(many=True)
@@ -194,3 +167,32 @@ class IdentitySerializerWithTraitsAndSegments(serializers.Serializer):
     flags = FeatureStateSerializerFull(many=True)
     traits = TraitSerializerBasic(many=True)
     segments = SegmentSerializerBasic(many=True)
+
+
+class WebhookSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Webhook
+        fields = ('id', 'url', 'enabled', 'created_at', 'updated_at')
+        read_only_fields = ('id', 'created_at', 'updated_at')
+
+
+class CreateUpdateUserEnvironmentPermissionSerializer(CreateUpdateUserPermissionSerializerABC):
+    class Meta(CreateUpdateUserPermissionSerializerABC.Meta):
+        model = UserEnvironmentPermission
+        fields = CreateUpdateUserPermissionSerializerABC.Meta.fields + ('user',)
+
+
+class ListUserEnvironmentPermissionSerializer(CreateUpdateUserEnvironmentPermissionSerializer):
+    user = UserListSerializer()
+
+
+class CreateUpdateUserPermissionGroupEnvironmentPermissionSerializer(CreateUpdateUserPermissionSerializerABC):
+    class Meta(CreateUpdateUserPermissionSerializerABC.Meta):
+        model = UserPermissionGroupEnvironmentPermission
+        fields = CreateUpdateUserPermissionSerializerABC.Meta.fields + ('group',)
+
+
+class ListUserPermissionGroupEnvironmentPermissionSerializer(
+    CreateUpdateUserPermissionGroupEnvironmentPermissionSerializer
+):
+    group = UserPermissionGroupSerializerDetail()
