@@ -1,5 +1,5 @@
 import json
-from unittest import TestCase
+from unittest import TestCase, mock
 from unittest.case import TestCase
 
 import pytest
@@ -7,7 +7,7 @@ from django.urls import reverse
 from rest_framework import status
 from rest_framework.test import APIClient
 
-from organisations.models import Organisation, OrganisationRole
+from organisations.models import Organisation, OrganisationRole, Subscription
 from users.models import FFAdminUser, Invite, UserPermissionGroup
 from users.serializers import UserIdsSerializer
 from util.tests import Helper
@@ -126,6 +126,22 @@ class UserTestCase(TestCase):
 
         # Then
         assert self.user.is_admin(self.organisation)
+
+    @mock.patch('users.views.Thread')
+    def test_join_organisation_alerts_admin_users_if_exceeds_plan_limit(self, MockThread):
+        # Given
+        Subscription.objects.create(organisation=self.organisation, max_seats=1)
+        invite = Invite.objects.create(email=self.user.email, organisation=self.organisation)
+        url = reverse('api-v1:users:user-join-organisation', args=[invite.hash])
+
+        existing_org_user = FFAdminUser.objects.create(email='existing_org_user@example.com')
+        existing_org_user.add_organisation(self.organisation, OrganisationRole.USER)
+
+        # When
+        self.client.post(url)
+
+        # Then
+        MockThread.assert_called_with(target=FFAdminUser.send_organisation_over_limit_alert, args=[self.organisation])
 
     def test_admin_can_update_role_for_a_user_in_organisation(self):
         # Given
