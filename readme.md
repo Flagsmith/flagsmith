@@ -157,6 +157,14 @@ on all endpoints that use the X-Environment-Key header.
 - Django 1.11.13
 - DjangoRestFramework 3.8.2 
 
+## Static Files
+Although the application relies on very few static files, it is possible to optimise their configuration to 
+host these static files in S3. This is done using the relevant environment variables provided above. Note, however, 
+that in order to use the configuration, the environment that you are hosting on must have the correct AWS credentials
+configured. This can be done using environment variables or, in the case of AWS hosting such as Elastic Beanstalk, 
+you can add the correct permissions to the EC2 Role. The role will need full access to the specific bucket 
+that the static files are hosted in.
+
 ## Documentation
 
 Further documentation can be found [here](https://docs.bullet-train.io). 
