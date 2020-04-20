@@ -116,6 +116,9 @@ The application relies on the following environment variables to run:
 * `GOOGLE_ANALYTICS_KEY`: if google analytics is required, add your tracking code
 * `GOOGLE_SERVICE_ACCOUNT`: service account json for accessing the google API, used for getting usage of an organisation - needs access to analytics.readonly scope 
 * `GA_TABLE_ID`: GA table ID (view) to query when looking for organisation usage
+* `USE_S3_STORAGE`: 'True' to store static files in s3
+* `AWS_STORAGE_BUCKET_NAME`: bucket name to store static files. Required if `USE_S3_STORAGE' is true.
+* `AWS_S3_REGION_NAME`: region name of the static files bucket. Defaults to eu-west-2. 
 
 ### Creating a secret key
 It is important to also set an environment variable on whatever platform you are using for 
