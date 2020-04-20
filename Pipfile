@@ -49,3 +49,4 @@ python-http-client = "<3.2.0" # 3.2.0 is the latest but throws an error on insta
 django-health-check = "*"
 django-storages = "*"
 boto3 = "*"
+django-environ = "*"
