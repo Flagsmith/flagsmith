@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
 from __future__ import unicode_literals
 
+from django.conf import settings
+from django.core.cache import caches
 from django.core.exceptions import (ObjectDoesNotExist)
 from django.db import models
 from django.db.models import Q
@@ -18,6 +20,8 @@ from projects.models import Project
 INTEGER = "int"
 STRING = "unicode"
 BOOLEAN = "bool"
+
+environment_cache = caches[settings.ENVIRONMENT_CACHE_LOCATION]
 
 
 @python_2_unicode_compatible
@@ -81,6 +85,14 @@ class Environment(models.Model):
 
         return Environment.objects.select_related('project', 'project__organisation').get(
             api_key=environment_key)
+
+    @classmethod
+    def get_from_cache(cls, api_key):
+        environment = environment_cache.get(api_key)
+        if not environment:
+            environment = Environment.objects.select_related('project', 'project__organisation').get(api_key=api_key)
+            environment_cache.set(environment.api_key, environment)
+        return environment
 
 
 @python_2_unicode_compatible

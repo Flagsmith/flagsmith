@@ -302,8 +302,6 @@ class SDKFeatureStates(GenericAPIView):
         if identifier:
             return self._get_flags_response_with_identifier(request, identifier)
 
-        track_event(request.environment.project.organisation.get_unique_slug(), "flags")
-
         filter_args = {
             'identity': None,
             'environment': request.environment,
@@ -338,8 +336,6 @@ class SDKFeatureStates(GenericAPIView):
         return data
 
     def _get_flags_response_with_identifier(self, request, identifier):
-        track_event(request.environment.project.organisation.get_unique_slug(), "identity_flags")
-
         identity, _ = Identity.objects.get_or_create(
             identifier=identifier,
             environment=request.environment,
