@@ -146,6 +146,10 @@ class FeatureStateSerializerFullWithIdentity(FeatureStateSerializerFull):
         return instance.identity.identifier if instance.identity else None
 
 
+class FeatureStateSerializerFullWithIdentityAndSegment(FeatureStateSerializerFullWithIdentity):
+    feature_segment = FeatureSegmentSerializer()
+
+
 class FeatureStateSerializerCreate(serializers.ModelSerializer):
     class Meta:
         model = FeatureState
