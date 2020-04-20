@@ -1,3 +1,5 @@
+from threading import Thread
+
 from django.conf import settings
 from django.contrib.sites.shortcuts import get_current_site
 from django.http import HttpResponse
@@ -83,6 +85,9 @@ def join_organisation(request, invite_hash):
     except InvalidInviteError as e:
         error_data = {'detail': str(e)}
         return Response(data=error_data, status=status.HTTP_400_BAD_REQUEST)
+
+    if invite.organisation.over_plan_seats_limit():
+        Thread(target=FFAdminUser.send_organisation_over_limit_alert, args=[invite.organisation]).start()
 
     return Response(OrganisationSerializerFull(invite.organisation, context={'request': request}).data,
                     status=status.HTTP_200_OK)

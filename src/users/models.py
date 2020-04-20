@@ -196,6 +196,15 @@ class FFAdminUser(AbstractUser):
             fail_silently=True
         )
 
+    @classmethod
+    def send_organisation_over_limit_alert(cls, organisation):
+        cls.send_alert_to_admin_users(
+            subject='Organisation over number of seats',
+            message='Organisation %s has used %d seats which is over their plan limit of %d '
+                    '(plan: %s)' % (str(organisation.name), organisation.num_seats, organisation.subscription.max_seats,
+                                    organisation.subscription.plan)
+        )
+
     @staticmethod
     def _get_admin_user_emails():
         return [user['email'] for user in FFAdminUser.objects.filter(is_staff=True).values('email')]

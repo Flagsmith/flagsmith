@@ -12,13 +12,16 @@ https://docs.djangoproject.com/en/1.9/ref/settings/
 
 import os
 import warnings
-import uuid
+
+import environ
 import requests
 import sys
 
 from corsheaders.defaults import default_headers
 
 from app.utils import secret_key_gen
+
+env = environ.Env()
 
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -138,6 +141,7 @@ MIDDLEWARE = [
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
     'corsheaders.middleware.CorsMiddleware',
+    'app.middleware.AdminWhitelistMiddleware',
     'simple_history.middleware.HistoryRequestMiddleware',
     'debug_toolbar.middleware.DebugToolbarMiddleware',
 ]
@@ -314,3 +318,13 @@ CACHES = {
         'LOCATION': FLAGS_CACHE_LOCATION,
     }
 }
+
+if env.bool('USE_S3_STORAGE', default=False):
+    STATICFILES_STORAGE = 'storages.backends.s3boto3.S3Boto3Storage'
+    AWS_STORAGE_BUCKET_NAME = os.environ['AWS_STORAGE_BUCKET_NAME']
+    AWS_S3_REGION_NAME = os.environ.get('AWS_S3_REGION_NAME', 'eu-west-2')
+    AWS_LOCATION = 'static'
+    AWS_DEFAULT_ACL = 'public-read'
+    AWS_S3_ADDRESSING_STYLE = 'virtual'
+
+ALLOWED_ADMIN_IP_ADDRESSES = env.list('ALLOWED_ADMIN_IP_ADDRESSES', default=list())
