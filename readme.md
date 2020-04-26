@@ -118,7 +118,8 @@ The application relies on the following environment variables to run:
 * `GA_TABLE_ID`: GA table ID (view) to query when looking for organisation usage
 * `USE_S3_STORAGE`: 'True' to store static files in s3
 * `AWS_STORAGE_BUCKET_NAME`: bucket name to store static files. Required if `USE_S3_STORAGE' is true.
-* `AWS_S3_REGION_NAME`: region name of the static files bucket. Defaults to eu-west-2. 
+* `AWS_S3_REGION_NAME`: region name of the static files bucket. Defaults to eu-west-2.
+* `ALLOWED_ADMIN_IP_ADDRESSES`: restrict access to the django admin console to a comma separated list of IP addresses (e.g. `127.0.0.1,127.0.0.2`) 
 
 ### Creating a secret key
 It is important to also set an environment variable on whatever platform you are using for 
@@ -155,6 +156,14 @@ on all endpoints that use the X-Environment-Key header.
 - Python 2.7.14
 - Django 1.11.13
 - DjangoRestFramework 3.8.2 
+
+## Static Files
+Although the application relies on very few static files, it is possible to optimise their configuration to 
+host these static files in S3. This is done using the relevant environment variables provided above. Note, however, 
+that in order to use the configuration, the environment that you are hosting on must have the correct AWS credentials
+configured. This can be done using environment variables or, in the case of AWS hosting such as Elastic Beanstalk, 
+you can add the correct permissions to the EC2 Role. The role will need full access to the specific bucket 
+that the static files are hosted in.
 
 ## Documentation
 
