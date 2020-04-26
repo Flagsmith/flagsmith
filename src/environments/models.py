@@ -107,42 +107,43 @@ class Identity(models.Model):
         unique_together = ('environment', 'identifier',)
 
     def get_all_feature_states(self):
-        # get all features that have been overridden for an identity
-        # and only feature states for features which are not associated with an identity
-        # and are not in the to be overridden
-        feature_ids_overridden_by_segment = self.get_segment_feature_states().values_list('feature__id', flat=True)
-        flags = FeatureState.objects.filter(
-            Q(environment=self.environment) &
-            (
-                # first get all feature states that have been explicitly overridden for the identity
-                    Q(identity=self) |
+        """
+        Get all feature states for an identity. This method returns a single flag for each feature
+        in the identity's environment's project. The flag returned is the correct flag based on the
+        priorities as follows (highest -> lowest):
 
-                    # next get all feature states that have been overridden for any segments the identity matches, ignoring
-                    # any that are explicitly overridden for the identity as that still takes priority
-                    # TODO: does this take priority into account?
-                    Q(feature_segment__segment__in=self.get_segments()) & ~Q(
-                feature__id__in=self.identity_features.values_list(
-                    'feature__id', flat=True
-                )
-            ) |
+            1. Identity - flag override for this specific identity
+            2. Segment - flag overridden for a segment this identity belongs to
+            3. Environment - default value for the environment
 
-                    # finally, get all feature states for the environment that haven't been overridden
-                    (
-                            Q(identity=None) &
-                            Q(feature_segment=None) &
-                            ~Q(
-                                feature__id__in=self.identity_features.values_list(
-                                    'feature__id', flat=True
-                                )
-                            ) &
-                            ~Q(
-                                feature__id__in=feature_ids_overridden_by_segment
-                            )
-                    )
-            ),
-        ).select_related("feature", "feature_state_value")
+        :return: (list) flags for an identity with the correct values based on identity / segment priorities
+        """
+        segments = self.get_segments()
 
-        return flags
+        # define sub queries
+        belongs_to_environment_query = Q(environment=self.environment)
+        overridden_for_identity_query = Q(identity=self)
+        overridden_for_segment_query = Q(feature_segment__segment__in=segments)
+        environment_default_query = Q(identity=None, feature_segment=None)
+
+        # define the full query
+        full_query = belongs_to_environment_query & (
+            overridden_for_identity_query | overridden_for_segment_query | environment_default_query
+        )
+
+        select_related_args = ['feature', 'feature_state_value', 'feature_segment', 'feature_segment__segment']
+
+        all_flags = FeatureState.objects.select_related(*select_related_args).filter(full_query)
+
+        identity_flags = {}
+        for flag in all_flags:
+            if flag.feature_id not in identity_flags:
+                identity_flags[flag.feature_id] = flag
+            else:
+                if flag > identity_flags[flag.feature_id]:
+                    identity_flags[flag.feature_id] = flag
+
+        return list(identity_flags.values())
 
     def get_segments(self):
         segments = []
