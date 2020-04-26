@@ -130,7 +130,8 @@ class FeatureSegmentTest(TestCase):
         feature_states = self.matching_identity.get_all_feature_states()
 
         # Then
-        assert feature_states.get(feature=self.remote_config).get_feature_state_value() == overridden_value
+        feature_state = next(filter(lambda fs: fs.feature == self.remote_config, feature_states))
+        assert feature_state.get_feature_state_value() == overridden_value
 
     def test_can_create_segment_override_for_integer_remote_config(self):
         # Given
@@ -143,7 +144,8 @@ class FeatureSegmentTest(TestCase):
         feature_states = self.matching_identity.get_all_feature_states()
 
         # Then
-        assert feature_states.get(feature=self.remote_config).get_feature_state_value() == overridden_value
+        feature_state = next(filter(lambda fs: fs.feature == self.remote_config, feature_states))
+        assert feature_state.get_feature_state_value() == overridden_value
 
     def test_can_create_segment_override_for_boolean_remote_config(self):
         # Given
@@ -156,7 +158,8 @@ class FeatureSegmentTest(TestCase):
         feature_states = self.matching_identity.get_all_feature_states()
 
         # Then
-        assert feature_states.get(feature=self.remote_config).get_feature_state_value() == overridden_value
+        feature_state = next(filter(lambda fs: fs.feature == self.remote_config, feature_states))
+        assert feature_state.get_feature_state_value() == overridden_value
 
     def test_feature_state_enabled_value_is_updated_when_feature_segment_updated(self):
         # Given
@@ -170,6 +173,20 @@ class FeatureSegmentTest(TestCase):
         # Then
         feature_state.refresh_from_db()
         assert feature_state.enabled
+
+    def test_feature_segment_is_less_than_other_if_priority_lower(self):
+        # Given
+        feature_segment_1 = FeatureSegment.objects.create(feature=self.remote_config, segment=self.segment, priority=1)
+
+        another_segment = Segment.objects.create(name='Another segment', project=self.project)
+        feature_segment_2 = FeatureSegment.objects.create(feature=self.remote_config, segment=another_segment,
+                                                          priority=2)
+
+        # When
+        result = feature_segment_2 < feature_segment_1
+
+        # Then
+        assert result
 
 
 @pytest.mark.django_db
@@ -190,3 +207,74 @@ class FeatureStateTest(TestCase):
 
         # Then
         assert FeatureState.objects.filter(feature=self.feature, environment=self.environment).count() == 1
+
+    def test_feature_state_gt_operator(self):
+        # Given
+        identity = Identity.objects.create(identifier='test_identity', environment=self.environment)
+        segment_1 = Segment.objects.create(name='Test Segment 1', project=self.project)
+        segment_2 = Segment.objects.create(name='Test Segment 2', project=self.project)
+        feature_segment_p1 = FeatureSegment.objects.create(segment=segment_1, feature=self.feature, priority=1)
+        feature_segment_p2 = FeatureSegment.objects.create(segment=segment_2, feature=self.feature, priority=2)
+
+        # When
+        identity_state = FeatureState.objects.create(identity=identity, feature=self.feature,
+                                                     environment=self.environment)
+
+        segment_1_state = FeatureState.objects.get(feature_segment=feature_segment_p1, feature=self.feature,
+                                                   environment=self.environment)
+        segment_2_state = FeatureState.objects.get(feature_segment=feature_segment_p2, feature=self.feature,
+                                                   environment=self.environment)
+        default_env_state = FeatureState.objects.get(environment=self.environment, identity=None, feature_segment=None)
+
+        # Then - identity state is higher priority than all
+        assert identity_state > segment_1_state
+        assert identity_state > segment_2_state
+        assert identity_state > default_env_state
+
+        # and feature state with feature segment with highest priority is greater than feature state with lower
+        # priority feature segment and default environment state
+        assert segment_1_state > segment_2_state
+        assert segment_1_state > default_env_state
+
+        # and feature state with any segment is greater than default environment state
+        assert segment_2_state > default_env_state
+
+    def test_feature_state_gt_operator_throws_value_error_if_different_environments(self):
+        # Given
+        another_environment = Environment.objects.create(name='Another environment', project=self.project)
+        feature_state_env_1 = FeatureState.objects.filter(environment=self.environment).first()
+        feature_state_env_2 = FeatureState.objects.filter(environment=another_environment).first()
+
+        # When
+        with pytest.raises(ValueError):
+            result = feature_state_env_1 > feature_state_env_2
+
+        # Then - exception raised
+
+    def test_feature_state_gt_operator_throws_value_error_if_different_features(self):
+        # Given
+        another_feature = Feature.objects.create(name='Another feature', project=self.project)
+        feature_state_env_1 = FeatureState.objects.filter(feature=self.feature).first()
+        feature_state_env_2 = FeatureState.objects.filter(feature=another_feature).first()
+
+        # When
+        with pytest.raises(ValueError):
+            result = feature_state_env_1 > feature_state_env_2
+
+        # Then - exception raised
+
+    def test_feature_state_gt_operator_throws_value_error_if_different_identities(self):
+        # Given
+        identity_1 = Identity.objects.create(identifier="identity_1", environment=self.environment)
+        identity_2 = Identity.objects.create(identifier="identity_2", environment=self.environment)
+
+        feature_state_identity_1 = FeatureState.objects.create(feature=self.feature, environment=self.environment,
+                                                               identity=identity_1)
+        feature_state_identity_2 = FeatureState.objects.create(feature=self.feature, environment=self.environment,
+                                                               identity=identity_2)
+
+        # When
+        with pytest.raises(ValueError):
+            result = feature_state_identity_1 > feature_state_identity_2
+
+        # Then - exception raised
