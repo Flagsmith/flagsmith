@@ -1,12 +1,12 @@
 import pytest
-from django.test import TestCase
+from django.test import TestCase, TransactionTestCase
 
 from environments.models import Environment, Identity, Trait
 from features.models import Feature, FeatureState, FeatureSegment
 from features.utils import INTEGER, STRING, BOOLEAN
 from organisations.models import Organisation
 from projects.models import Project
-from segments.models import Segment, SegmentRule, Condition, EQUAL
+from segments.models import Segment, SegmentRule, Condition, EQUAL, GREATER_THAN_INCLUSIVE
 from util.tests import Helper
 
 
@@ -80,7 +80,7 @@ class EnvironmentSaveTestCase(TestCase):
         self.assertNotEqual(fs.enabled, FeatureState.objects.exclude(id=fs.id).get().enabled)
 
 
-class IdentityTestCase(TestCase):
+class IdentityTestCase(TransactionTestCase):
     def setUp(self):
         self.organisation = Organisation.objects.create(name="Test Org")
         self.project = Project.objects.create(name="Test Project", organisation=self.organisation)
@@ -199,8 +199,10 @@ class IdentityTestCase(TestCase):
         feature_states = identity.get_all_feature_states()
 
         # Then
-        assert feature_states.get(feature=feature_flag).enabled
-        assert feature_states.get(feature=remote_config).get_feature_state_value() == overridden_value
+        feature_flag_state = next(filter(lambda fs: fs.feature == feature_flag, feature_states))
+        remote_config_feature_state = next(filter(lambda fs: fs.feature == remote_config, feature_states))
+        assert feature_flag_state.enabled
+        assert remote_config_feature_state.get_feature_state_value() == overridden_value
 
     def test_get_all_feature_states_for_identity_returns_correct_values_for_identity_not_matching_segment(self):
         # Given
@@ -228,8 +230,10 @@ class IdentityTestCase(TestCase):
         feature_states = identity.get_all_feature_states()
 
         # Then
-        assert not feature_states.get(feature=feature_flag).enabled
-        assert feature_states.get(feature=remote_config).get_feature_state_value() == initial_value
+        feature_flag_state = next(filter(lambda fs: fs.feature == feature_flag, feature_states))
+        remote_config_feature_state = next(filter(lambda fs: fs.feature == remote_config, feature_states))
+        assert not feature_flag_state.enabled
+        assert remote_config_feature_state.get_feature_state_value() == initial_value
 
     def test_get_all_feature_states_for_identity_returns_correct_value_for_matching_segment_when_value_integer(self):
         # Given
@@ -255,7 +259,8 @@ class IdentityTestCase(TestCase):
         feature_states = identity.get_all_feature_states()
 
         # Then
-        assert feature_states.get(feature=remote_config).get_feature_state_value() == int(overridden_value)
+        feature_state = next(filter(lambda fs: fs.feature == remote_config, feature_states))
+        assert feature_state.get_feature_state_value() == int(overridden_value)
 
     def test_get_all_feature_states_for_identity_returns_correct_value_for_matching_segment_when_value_boolean(self):
         # Given
@@ -281,4 +286,44 @@ class IdentityTestCase(TestCase):
         feature_states = identity.get_all_feature_states()
 
         # Then
-        assert not feature_states.get(feature=remote_config).get_feature_state_value()
+        feature_state = next(filter(lambda fs: fs.feature == remote_config, feature_states))
+        assert not feature_state.get_feature_state_value()
+
+    def test_get_all_feature_states_highest_value_of_highest_priority_segment(self):
+        # Given - an identity with a trait that has an integer value of 10
+        trait_key = 'trait-key'
+        trait_value = 10
+        identity = Identity.objects.create(identifier='test-identity', environment=self.environment)
+        Trait.objects.create(identity=identity, trait_key=trait_key, integer_value=trait_value, value_type=INTEGER)
+
+        # and a segment that matches all identities with a trait value greater than or equal to 5
+        segment_1 = Segment.objects.create(name='Test segment 1', project=self.project)
+        rule = SegmentRule.objects.create(segment=segment_1, type=SegmentRule.ALL_RULE)
+        Condition.objects.create(rule=rule, property=trait_key, value=5, operator=GREATER_THAN_INCLUSIVE)
+
+        # and another segment that matches all identities with a trait value greater than or equal to 10
+        segment_2 = Segment.objects.create(name='Test segment 1', project=self.project)
+        rule = SegmentRule.objects.create(segment=segment_2, type=SegmentRule.ALL_RULE)
+        Condition.objects.create(rule=rule, property=trait_key, value=10, operator=GREATER_THAN_INCLUSIVE)
+
+        # and a remote config feature
+        initial_value = 'initial-value'
+        remote_config = Feature.objects.create(name='test-remote-config', project=self.project,
+                                               initial_value=initial_value, type='CONFIG')
+
+        # which is overridden by both segments with different values
+        overridden_value_1 = 'overridden-value-1'
+        FeatureSegment.objects.create(feature=remote_config, segment=segment_1,
+                                      value=overridden_value_1, value_type=STRING, priority=1)
+
+        overridden_value_2 = 'overridden-value-2'
+        FeatureSegment.objects.create(feature=remote_config, segment=segment_2,
+                                      value=overridden_value_2, value_type=STRING, priority=2)
+
+        # When - we get all feature states for an identity
+        feature_states = identity.get_all_feature_states()
+
+        # Then - only the flag associated with the highest priority feature segment is returned
+        assert len(feature_states) == 1
+        remote_config_feature_state = next(filter(lambda fs: fs.feature == remote_config, feature_states))
+        assert remote_config_feature_state.get_feature_state_value() == overridden_value_1

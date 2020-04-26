@@ -138,6 +138,13 @@ class FeatureSegment(models.Model):
     def __str__(self):
         return "FeatureSegment for " + self.feature.name + " with priority " + str(self.priority)
 
+    def __lt__(self, other):
+        """
+        Kind of counter intuitive but since priority 1 is highest, we want to check if priority is GREATER than the
+        priority of the other feature segment.
+        """
+        return other and self.priority > other.priority
+
 
 @python_2_unicode_compatible
 class FeatureState(models.Model):
@@ -155,6 +162,34 @@ class FeatureState(models.Model):
     class Meta:
         unique_together = (("feature", "environment", "identity"), ("feature", "environment", "feature_segment"))
         ordering = ['id']
+
+    def __gt__(self, other):
+        """
+        Checks if the current feature state is higher priority that the provided feature state.
+
+        :param other: (FeatureState) the feature state to compare the priority of
+        :return: True if self is higher priority than other
+        """
+        if self.environment != other.environment:
+            raise ValueError("Cannot compare feature states as they belong to different environments.")
+
+        if self.feature != other.feature:
+            raise ValueError("Cannot compare feature states as they belong to different features.")
+
+        if self.identity:
+            # identity is the highest priority so we can always return true
+            if other.identity and self.identity != other.identity:
+                raise ValueError("Cannot compare feature states as they are for different identities.")
+            return True
+
+        if self.feature_segment:
+            # Return true if other_feature_state has a lower priority feature segment and not an identity overridden
+            # flag, else False.
+            return not (other.identity or self.feature_segment < other.feature_segment)
+
+        # if we've reached here, then self is just the environment default. In this case, other is higher priority if
+        # it has a feature_segment or an identity
+        return not (other.feature_segment or other.identity)
 
     def get_feature_state_value(self):
         try:
