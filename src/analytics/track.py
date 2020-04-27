@@ -2,6 +2,8 @@ import uuid
 
 from django.core.cache import caches
 from six.moves.urllib.parse import quote  # python 2/3 compatible urllib import
+from influxdb_client import InfluxDBClient, Point
+from influxdb_client.client.write_api import SYNCHRONOUS
 import requests
 
 from threading import Thread
@@ -23,6 +25,8 @@ TRACKED_RESOURCE_ACTIONS = {
     "traits": "traits"
 }
 
+influxdb_client = InfluxDBClient(url=settings.INFLUXDB_URL, token=settings.INFLUXDB_TOKEN, org=settings.INFLUXDB_ORG)
+
 
 def postpone(function):
     def decorator(*args, **kwargs):
@@ -33,11 +37,16 @@ def postpone(function):
 
 
 @postpone
-def track_request_async(request):
-    return track_request(request)
+def track_request_googleanalytics_async(request):
+    return track_request_googleanalytics(request)
 
 
-def track_request(request):
+@postpone
+def track_request_influxdb_async(request):
+    return track_request_influxdb(request)
+
+
+def track_request_googleanalytics(request):
     """
     Utility function to track a request to the API with the specified URI
 
@@ -47,10 +56,16 @@ def track_request(request):
     data = DEFAULT_DATA + "t=pageview&dp=" + quote(uri, safe='')
     requests.post(GOOGLE_ANALYTICS_COLLECT_URL, data=data)
 
-    resource = uri.split('/')[3]  # uri will be in the form /api/v1/<resource>/...
-    if resource in TRACKED_RESOURCE_ACTIONS:
+    resource = get_resource_from_uri(request)
+    if resource is not None:
         environment = Environment.get_from_cache(request.headers.get('X-Environment-Key'))
-        track_event(environment.project.organisation.get_unique_slug(), TRACKED_RESOURCE_ACTIONS[resource])
+        track_event(environment.project.organisation.get_unique_slug(), resource)
+
+
+def get_resource_from_uri(request):
+    uri = request.path
+    resource = uri.split('/')[3]  # uri will be in the form /api/v1/<resource>/...
+    return TRACKED_RESOURCE_ACTIONS[resource]
 
 
 def track_event(category, action, label='', value=''):
@@ -60,3 +75,21 @@ def track_event(category, action, label='', value=''):
     data = data + "&el=" + label if label else data
     data = data + "&ev=" + value if value else data
     requests.post(GOOGLE_ANALYTICS_COLLECT_URL, data=data)
+
+
+def track_request_influxdb(request):
+    """
+    Sends API event data to InfluxDB 
+    """
+    environment = Environment.get_from_cache(request.headers.get('X-Environment-Key'))
+
+    point = Point("api_call") \
+        .tag("resource", get_resource_from_uri(request)) \
+        .tag("organisation", environment.project.organisation.get_unique_slug()) \
+        .tag("organisation_id", environment.project.organisation_id) \
+        .tag("project", environment.project.name) \
+        .tag("project_id", environment.project_id) \
+        .field("request_count", 1)
+
+    write_api = influxdb_client.write_api(write_options=SYNCHRONOUS)
+    write_api.write(bucket="api_prod", record=point)
