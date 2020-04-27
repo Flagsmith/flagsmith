@@ -1,3 +1,4 @@
+import logging
 import uuid
 
 from django.core.cache import caches
@@ -8,6 +9,8 @@ from threading import Thread
 from django.conf import settings
 
 from environments.models import Environment
+
+logger = logging.getLogger(__name__)
 
 environment_cache = caches[settings.ENVIRONMENT_CACHE_LOCATION]
 
@@ -44,10 +47,20 @@ def track_request(request):
     :param request: (HttpRequest) the request being made
     """
     uri = request.path
-    data = DEFAULT_DATA + "t=pageview&dp=" + quote(uri, safe='')
-    requests.post(GOOGLE_ANALYTICS_COLLECT_URL, data=data)
+    pageview_data = DEFAULT_DATA + "t=pageview&dp=" + quote(uri, safe='')
+    # send pageview request
+    requests.post(GOOGLE_ANALYTICS_COLLECT_URL, data=pageview_data)
 
-    resource = uri.split('/')[3]  # uri will be in the form /api/v1/<resource>/...
+    # split the uri so we can determine the resource that is being requested
+    # (note that because it starts with a /, the first item in the list will be a blank string)
+    split_uri = uri.split('/')[1:]
+    if not (len(split_uri) >= 3 and split_uri[0] == 'api'):
+        logger.debug('not tracking event for uri %s' % uri)
+        # this isn't an API request so we don't need to track an event for it
+        return
+
+    # uri will be in the form /api/v1/<resource>/...
+    resource = split_uri[2]
     if resource in TRACKED_RESOURCE_ACTIONS:
         environment = Environment.get_from_cache(request.headers.get('X-Environment-Key'))
         track_event(environment.project.organisation.get_unique_slug(), TRACKED_RESOURCE_ACTIONS[resource])
