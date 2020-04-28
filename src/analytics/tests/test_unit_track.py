@@ -2,7 +2,7 @@ from unittest import mock
 
 import pytest
 
-from analytics.track import track_request
+from analytics.track import track_request_googleanalytics
 
 
 @pytest.mark.parametrize("request_uri, expected_ga_requests", (
