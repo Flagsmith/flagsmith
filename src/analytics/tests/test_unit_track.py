@@ -13,7 +13,7 @@ from analytics.track import track_request
 ))
 @mock.patch("analytics.track.requests")
 @mock.patch("analytics.track.Environment")
-def test_track_request(MockEnvironment, mock_requests, request_uri, expected_ga_requests):
+def test_track_request_googleanalytics(MockEnvironment, mock_requests, request_uri, expected_ga_requests):
     """
     Verify that the correct number of calls are made to GA for the various uris.
 
@@ -28,7 +28,7 @@ def test_track_request(MockEnvironment, mock_requests, request_uri, expected_ga_
     request.headers = {"X-Environment-Key": environment_api_key}
 
     # When
-    track_request(request)
+    track_request_googleanalytics(request)
 
     # Then
     assert mock_requests.post.call_count == expected_ga_requests
