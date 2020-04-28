@@ -10,6 +10,7 @@ from analytics.track import track_request_googleanalytics
         ("/api/v1/identities/", 2),
         ("/api/v1/traits/", 2),
         ("/api/v1/features/", 1),
+        ("/health", 1)
 ))
 @mock.patch("analytics.track.requests")
 @mock.patch("analytics.track.Environment")

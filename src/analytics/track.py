@@ -1,3 +1,4 @@
+import logging
 import uuid
 
 from django.core.cache import caches
@@ -10,6 +11,8 @@ from threading import Thread
 from django.conf import settings
 
 from environments.models import Environment
+
+logger = logging.getLogger(__name__)
 
 environment_cache = caches[settings.ENVIRONMENT_CACHE_LOCATION]
 
@@ -46,26 +49,38 @@ def track_request_influxdb_async(request):
     return track_request_influxdb(request)
 
 
+def get_resource_from_uri(request):
+    """
+    split the uri so we can determine the resource that is being requested
+    (note that because it starts with a /, the first item in the list will be a blank string)
+
+    :param request: (HttpRequest) the request being made
+    """
+    uri = request.path
+    split_uri = uri.split('/')[1:]
+    if not (len(split_uri) >= 3 and split_uri[0] == 'api'):
+        logger.debug('not tracking event for uri %s' % uri)
+        # this isn't an API request so we don't need to track an event for it
+        return None
+
+    # uri will be in the form /api/v1/<resource>/...
+    return split_uri[2]
+
+
 def track_request_googleanalytics(request):
     """
     Utility function to track a request to the API with the specified URI
 
     :param request: (HttpRequest) the request being made
     """
-    uri = request.path
-    data = DEFAULT_DATA + "t=pageview&dp=" + quote(uri, safe='')
-    requests.post(GOOGLE_ANALYTICS_COLLECT_URL, data=data)
+    pageview_data = DEFAULT_DATA + "t=pageview&dp=" + quote(request.path, safe='')
+    # send pageview request
+    requests.post(GOOGLE_ANALYTICS_COLLECT_URL, data=pageview_data)
 
     resource = get_resource_from_uri(request)
-    if resource is not None:
+    if resource is not None and resource in TRACKED_RESOURCE_ACTIONS:
         environment = Environment.get_from_cache(request.headers.get('X-Environment-Key'))
         track_event(environment.project.organisation.get_unique_slug(), resource)
-
-
-def get_resource_from_uri(request):
-    uri = request.path
-    resource = uri.split('/')[3]  # uri will be in the form /api/v1/<resource>/...
-    return TRACKED_RESOURCE_ACTIONS[resource]
 
 
 def track_event(category, action, label='', value=''):
@@ -79,17 +94,22 @@ def track_event(category, action, label='', value=''):
 
 def track_request_influxdb(request):
     """
-    Sends API event data to InfluxDB 
+    Sends API event data to InfluxDB
+
+    :param request: (HttpRequest) the request being made
     """
-    environment = Environment.get_from_cache(request.headers.get('X-Environment-Key'))
+    resource = get_resource_from_uri(request)
 
-    point = Point("api_call") \
-        .tag("resource", get_resource_from_uri(request)) \
-        .tag("organisation", environment.project.organisation.get_unique_slug()) \
-        .tag("organisation_id", environment.project.organisation_id) \
-        .tag("project", environment.project.name) \
-        .tag("project_id", environment.project_id) \
-        .field("request_count", 1)
+    if resource is not None:
+        environment = Environment.get_from_cache(request.headers.get('X-Environment-Key'))
 
-    write_api = influxdb_client.write_api(write_options=SYNCHRONOUS)
-    write_api.write(bucket="api_prod", record=point)
+        point = Point("api_call") \
+            .tag("resource", get_resource_from_uri(request)) \
+            .tag("organisation", environment.project.organisation.get_unique_slug()) \
+            .tag("organisation_id", environment.project.organisation_id) \
+            .tag("project", environment.project.name) \
+            .tag("project_id", environment.project_id) \
+            .field("request_count", 1)
+
+        write_api = influxdb_client.write_api(write_options=SYNCHRONOUS)
+        write_api.write(bucket="api_prod", record=point)
