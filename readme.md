@@ -114,7 +114,10 @@ The application relies on the following environment variables to run:
 * `DATABASE_URL`: required by develop and master environments, should be a standard format database url e.g. postgres://user:password@host:port/db_name
 * `DJANGO_SECRET_KEY`: see 'Creating a secret key' section below
 * `GOOGLE_ANALYTICS_KEY`: if google analytics is required, add your tracking code
-* `GOOGLE_SERVICE_ACCOUNT`: service account json for accessing the google API, used for getting usage of an organisation - needs access to analytics.readonly scope 
+* `GOOGLE_SERVICE_ACCOUNT`: service account json for accessing the google API, used for getting usage of an organisation - needs access to analytics.readonly scope
+* `INFLUXDB_TOKEN`: If you want to send API events to InfluxDB, specify this write token.
+* `INFLUXDB_URL`: The URL for your InfluxDB database
+* `INFLUXDB_ORG`: The organisation string for your InfluxDB API call.
 * `GA_TABLE_ID`: GA table ID (view) to query when looking for organisation usage
 * `USE_S3_STORAGE`: 'True' to store static files in s3
 * `AWS_STORAGE_BUCKET_NAME`: bucket name to store static files. Required if `USE_S3_STORAGE' is true.
@@ -176,12 +179,12 @@ for details on our code of conduct, and the process for submitting pull requests
 
 ## Getting Help
 
-If you encounter a bug or feature request we would like to hear about it. Before you submit an 
-issue please search existing issues in order to prevent duplicates. 
+If you encounter a bug or feature request we would like to hear about it. Before you submit an
+issue please search existing issues in order to prevent duplicates.
 
 ## Get in touch
 
-If you have any questions about our projects you can email 
+If you have any questions about our projects you can email
 <a href="mailto:projects@solidstategroup.com">projects@solidstategroup.com</a>.
 
 ## Useful links
@@ -193,5 +196,3 @@ If you have any questions about our projects you can email
 [Code Examples](https://github.com/BulletTrainHQ/bullet-train-examples)
 
 [Youtube Tutorials](https://www.youtube.com/channel/UCki7GZrOdZZcsV9rAIRchCw)
-
-
