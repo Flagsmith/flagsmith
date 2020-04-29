@@ -305,6 +305,7 @@ class SDKFeatureStates(GenericAPIView):
         filter_args = {
             'identity': None,
             'environment': request.environment,
+            'feature_segment': None
         }
 
         if 'feature' in request.GET:
