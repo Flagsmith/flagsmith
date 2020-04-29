@@ -43,7 +43,7 @@ urlpatterns = [
     url(r'cb-webhook/', chargebee_webhook, name='chargebee-webhook'),
 
     # Client SDK urls
-    url(r'^flags/$', SDKFeatureStates.as_view()),
+    url(r'^flags/$', SDKFeatureStates.as_view(), name='flags'),
     url(r'^identities/$', SDKIdentities.as_view(), name='sdk-identities'),
     url(r'^traits/', include(traits_router.urls), name='traits'),
     url(r'^segments/$', SDKSegments.as_view()),
