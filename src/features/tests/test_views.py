@@ -4,12 +4,12 @@ from unittest import TestCase
 import pytest
 from django.urls import reverse
 from rest_framework import status
-from rest_framework.test import APIClient
+from rest_framework.test import APIClient, APITestCase
 
 from audit.models import AuditLog, RelatedObjectType, IDENTITY_FEATURE_STATE_UPDATED_MESSAGE, \
     IDENTITY_FEATURE_STATE_DELETED_MESSAGE
 from environments.models import Environment, Identity
-from features.models import Feature, FeatureState, FeatureSegment
+from features.models import Feature, FeatureState, FeatureSegment, CONFIG, FeatureStateValue
 from organisations.models import Organisation, OrganisationRole
 from projects.models import Project
 from segments.models import Segment
@@ -393,3 +393,38 @@ class FeatureStateViewSetTestCase(TestCase):
 
         # and
         assert res.json()['results'][0]['identity']['identifier'] == identifier
+
+
+@pytest.mark.django_db
+class SDKFeatureStatesTestCase(APITestCase):
+    def setUp(self) -> None:
+        self.environment_fs_value = 'environment'
+        self.identity_fs_value = 'identity'
+        self.segment_fs_value = 'segment'
+
+        self.organisation = Organisation.objects.create(name='Test organisation')
+        self.project = Project.objects.create(name='Test project', organisation=self.organisation)
+        self.environment = Environment.objects.create(name='Test environment', project=self.project)
+        self.feature = Feature.objects.create(name='Test feature', project=self.project, type=CONFIG, initial_value=self.environment_fs_value)
+        segment = Segment.objects.create(name='Test segment', project=self.project)
+        FeatureSegment.objects.create(segment=segment, feature=self.feature, value=self.segment_fs_value)
+        identity = Identity.objects.create(identifier='test', environment=self.environment)
+        identity_feature_state = FeatureState.objects.create(identity=identity, environment=self.environment, feature=self.feature)
+        FeatureStateValue.objects.filter(feature_state=identity_feature_state).update(string_value=self.identity_fs_value)
+
+        self.url = reverse('api-v1:flags')
+
+        self.client.credentials(HTTP_X_ENVIRONMENT_KEY=self.environment.api_key)
+
+    def test_get_flags(self):
+        # Given - setup data which includes a single feature overridden by a segment and an identity
+
+        # When - we get flags
+        response = self.client.get(self.url)
+
+        # Then - we only get a single flag back and that is the environment default
+        assert response.status_code == status.HTTP_200_OK
+        response_json = response.json()
+        assert len(response_json) == 1
+        assert response_json[0]["feature"]["id"] == self.feature.id
+        assert response_json[0]["feature_state_value"] == self.environment_fs_value
