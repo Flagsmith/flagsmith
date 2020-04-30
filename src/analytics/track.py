@@ -79,7 +79,7 @@ def track_request_googleanalytics(request):
 
     resource = get_resource_from_uri(request)
     
-    if resource is not None and resource in TRACKED_RESOURCE_ACTIONS:
+    if resource in TRACKED_RESOURCE_ACTIONS:
         environment = Environment.get_from_cache(request.headers.get('X-Environment-Key'))
         track_event(environment.project.organisation.get_unique_slug(), resource)
 
