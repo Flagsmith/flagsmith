@@ -47,9 +47,10 @@ GA_TABLE_ID = os.environ.get('GA_TABLE_ID')
 if not GA_TABLE_ID:
     warnings.warn("GA_TABLE_ID not configured, getting organisation usage will not work")
 
-INFLUXDB_TOKEN = os.environ.get('INFLUXDB_TOKEN', '')
-INFLUXDB_URL = os.environ.get('INFLUXDB_URL', '')
-INFLUXDB_ORG = os.environ.get('INFLUXDB_ORG', '')
+INFLUXDB_TOKEN = env.str('INFLUXDB_TOKEN', '')
+INFLUXDB_BUCKET = env.str('INFLUXDB_BUCKET', '')
+INFLUXDB_URL = env.str('INFLUXDB_URL', '')
+INFLUXDB_ORG = env.str('INFLUXDB_ORG', '')
 
 if 'DJANGO_ALLOWED_HOSTS' in os.environ:
     ALLOWED_HOSTS = os.environ['DJANGO_ALLOWED_HOSTS'].split(',')

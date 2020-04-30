@@ -49,17 +49,16 @@ def track_request_influxdb_async(request):
     return track_request_influxdb(request)
 
 
-def get_resource_from_uri(request):
+def get_resource_from_uri(request_uri):
     """
-    split the uri so we can determine the resource that is being requested
+    Split the uri so we can determine the resource that is being requested
     (note that because it starts with a /, the first item in the list will be a blank string)
 
     :param request: (HttpRequest) the request being made
     """
-    uri = request.path
-    split_uri = uri.split('/')[1:]
+    split_uri = request_uri.split('/')[1:]
     if not (len(split_uri) >= 3 and split_uri[0] == 'api'):
-        logger.debug('not tracking event for uri %s' % uri)
+        logger.debug('not tracking event for uri %s' % request_uri)
         # this isn't an API request so we don't need to track an event for it
         return None
 
@@ -77,7 +76,7 @@ def track_request_googleanalytics(request):
     # send pageview request
     requests.post(GOOGLE_ANALYTICS_COLLECT_URL, data=pageview_data)
 
-    resource = get_resource_from_uri(request)
+    resource = get_resource_from_uri(request.path)
     
     if resource in TRACKED_RESOURCE_ACTIONS:
         environment = Environment.get_from_cache(request.headers.get('X-Environment-Key'))
@@ -99,13 +98,13 @@ def track_request_influxdb(request):
 
     :param request: (HttpRequest) the request being made
     """
-    resource = get_resource_from_uri(request)
+    resource = get_resource_from_uri(request.path)
 
     if resource:
         environment = Environment.get_from_cache(request.headers.get('X-Environment-Key'))
 
         point = Point("api_call") \
-            .tag("resource", get_resource_from_uri(request)) \
+            .tag("resource", resource) \
             .tag("organisation", environment.project.organisation.get_unique_slug()) \
             .tag("organisation_id", environment.project.organisation_id) \
             .tag("project", environment.project.name) \
@@ -113,4 +112,4 @@ def track_request_influxdb(request):
             .field("request_count", 1)
 
         write_api = influxdb_client.write_api(write_options=SYNCHRONOUS)
-        write_api.write(bucket="api_prod", record=point)
+        write_api.write(bucket=settings.INFLUXDB_BUCKET, record=point)
