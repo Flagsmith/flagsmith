@@ -101,7 +101,7 @@ def track_request_influxdb(request):
     """
     resource = get_resource_from_uri(request)
 
-    if resource is not None:
+    if resource:
         environment = Environment.get_from_cache(request.headers.get('X-Environment-Key'))
 
         point = Point("api_call") \
