@@ -58,7 +58,7 @@ deployawsmaster:
         - git config --global user.name "Gitlab"
         - git add . && git commit -m "Commit to EB"
         - cd src
-        - eb deploy $EB_ENVIRONMENT_PRODUCTION 
+        - eb deploy $EB_ENVIRONMENT_PRODUCTION --timeout 30
     only:
         - master
         - master-aws
