@@ -189,6 +189,10 @@ class Trait(models.Model):
         unique_together = ("trait_key", "identity")
         ordering = ['id']
 
+    @property
+    def trait_value(self):
+        return self.get_trait_value()
+
     def get_trait_value(self):
         try:
             value_type = self.value_type
@@ -204,7 +208,7 @@ class Trait(models.Model):
         return type_mapping.get(value_type)
 
     @staticmethod
-    def _get_trait_key_name(tv_type):
+    def get_trait_value_key_name(tv_type):
         return {
             INTEGER: "integer_value",
             BOOLEAN: "boolean_value",
@@ -226,7 +230,7 @@ class Trait(models.Model):
         return {
             # Default to string if not an anticipate type value to keep backwards compatibility.
             "value_type": tv_type if tv_type in accepted_types else STRING,
-            Trait._get_trait_key_name(tv_type): value
+            Trait.get_trait_value_key_name(tv_type): value
         }
 
     def __str__(self):
