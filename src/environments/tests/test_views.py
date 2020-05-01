@@ -756,23 +756,54 @@ class SDKTraitsTest(APITestCase):
         # Then
         assert res.status_code == status.HTTP_400_BAD_REQUEST
 
-    def _generate_json_trait_data(self, identifier=None, trait_key=None, trait_value=None):
-        if not identifier:
-            identifier = self.identity.identifier
+    def test_bulk_create_traits(self):
+        # Given
+        num_traits = 20
+        url = reverse('api-v1:sdk-traits-bulk-create')
+        traits = [self._generate_trait_data(trait_key=f'trait_{i}') for i in range(num_traits)]
 
-        if not trait_key:
-            trait_key = self.trait_key
+        # When
+        response = self.client.put(url, data=json.dumps(traits), content_type='application/json')
 
-        if not trait_value:
-            trait_value = self.trait_value
+        # Then
+        assert response.status_code == status.HTTP_200_OK
+        assert Trait.objects.filter(identity=self.identity).count() == num_traits
 
-        return json.dumps({
+    def test_sending_null_value_in_bulk_create_deletes_trait_for_identity(self):
+        # Given
+        url = reverse('api-v1:sdk-traits-bulk-create')
+        trait = Trait.objects.create(trait_key=self.trait_key, value_type=STRING, string_value=self.trait_value,
+                                     identity=self.identity)
+        data = [{
+            'identity': {
+                'identifier': self.identity.identifier
+            },
+            'trait_key': self.trait_key,
+            'trait_value': None
+        }]
+
+        # When
+        response = self.client.put(url, data=json.dumps(data), content_type='application/json')
+
+        # Then
+        assert response.status_code == status.HTTP_200_OK
+        assert not Trait.objects.filter(id=trait.id).exists()
+
+    def _generate_trait_data(self, identifier=None, trait_key=None, trait_value=None):
+        identifier = identifier or self.identity.identifier
+        trait_key = trait_key or self.trait_key
+        trait_value = trait_value or self.trait_value
+
+        return {
             'identity': {
                 'identifier': identifier
             },
             'trait_key': trait_key,
             'trait_value': trait_value
-        })
+        }
+
+    def _generate_json_trait_data(self, identifier=None, trait_key=None, trait_value=None):
+        return json.dumps(self._generate_trait_data(identifier, trait_key, trait_value))
 
 
 @pytest.mark.django_db

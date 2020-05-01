@@ -20,13 +20,14 @@ from features.serializers import FeatureStateSerializerFull
 from permissions.serializers import PermissionModelSerializer, MyUserObjectPermissionsSerializer
 from util.views import SDKAPIView
 from .models import Environment, Identity, Trait, Webhook, EnvironmentPermissionModel, UserEnvironmentPermission, \
-    UserPermissionGroupEnvironmentPermission
+    UserPermissionGroupEnvironmentPermission, STRING, INTEGER, BOOLEAN
 from .serializers import EnvironmentSerializerLight, IdentitySerializer, TraitSerializerBasic, TraitSerializerFull, \
     IdentitySerializerTraitFlags, IdentitySerializerWithTraitsAndSegments, IncrementTraitValueSerializer, \
     TraitKeysSerializer, DeleteAllTraitKeysSerializer, WebhookSerializer, \
     CreateUpdateUserEnvironmentPermissionSerializer, ListUserEnvironmentPermissionSerializer, \
     CreateUpdateUserPermissionGroupEnvironmentPermissionSerializer, \
-    ListUserPermissionGroupEnvironmentPermissionSerializer
+    ListUserPermissionGroupEnvironmentPermissionSerializer, \
+    SDKCreateUpdateTraitSerializer, SDKBulkCreateUpdateTraitSerializer
 
 
 @method_decorator(name='list', decorator=swagger_auto_schema(manual_parameters=[
@@ -498,33 +499,20 @@ class SDKTraits(mixins.CreateModelMixin, viewsets.GenericViewSet):
     def get_serializer_class(self):
         if self.action == 'increment_value':
             return IncrementTraitValueSerializer
+        if self.action == 'bulk_create':
+            return SDKBulkCreateUpdateTraitSerializer
 
-        return TraitSerializerFull
+        return SDKCreateUpdateTraitSerializer
 
-    @swagger_auto_schema(responses={200: TraitSerializerBasic})
+    def get_serializer_context(self):
+        context = super(SDKTraits, self).get_serializer_context()
+        context['environment'] = self.request.environment
+        return context
+
     def create(self, request, *args, **kwargs):
-        """
-        This endpoint handles create and update since the SDK doesn't care whether it's updating or creating.
-
-        Note that the logic for manpulating the data is all here in the view because the front end currently sends up
-        the trait_value field as any of a number of data types so fitting this into a serializer field is tough.
-
-        TODO: store trait_value as a string and handle determining data type from the string value?
-        """
-        identity = self._get_identity(request.data.pop('identity'))
-        trait = self._get_or_create_trait_from_value(request.data.get('trait_key'), request.data.get('trait_value'),
-                                                     identity=identity)
-        return Response(TraitSerializerBasic(trait).data, status=status.HTTP_200_OK)
-
-    def _get_identity(self, identity_data):
-        identity, _ = Identity.objects.get_or_create(environment=self.request.environment,
-                                                     identifier=identity_data.get('identifier'))
-        return identity
-
-    def _get_or_create_trait_from_value(self, trait_key, trait_value, identity):
-        trait_value_data = Trait.generate_trait_value_data(trait_value)
-        trait, _ = Trait.objects.update_or_create(identity=identity, trait_key=trait_key, defaults=trait_value_data)
-        return trait
+        response = super(SDKTraits, self).create(request, *args, **kwargs)
+        response.status_code = status.HTTP_200_OK
+        return response
 
     @swagger_auto_schema(responses={200: IncrementTraitValueSerializer})
     @action(detail=False, methods=["POST"], url_path='increment-value')
@@ -533,3 +521,30 @@ class SDKTraits(mixins.CreateModelMixin, viewsets.GenericViewSet):
         serializer.is_valid(raise_exception=True)
         serializer.save()
         return Response(serializer.data, status=200)
+
+    @action(detail=False, methods=["PUT"], url_path='bulk')
+    def bulk_create(self, request):
+        try:
+            # endpoint allows users to delete existing traits by sending null values for the trait value
+            # so we need to filter those out here
+            traits = []
+            for idx, trait in enumerate(request.data):
+                if trait.get('trait_value') is None:
+                    Trait.objects.filter(
+                        trait_key=trait.get('trait_key'),
+                        identity__identifier=trait['identity']['identifier'],
+                        identity__environment=request.environment
+                    ).delete()
+                else:
+                    traits.append(trait)
+
+            serializer = self.get_serializer(data=traits, many=True)
+            serializer.is_valid(raise_exception=True)
+            serializer.save()
+            return Response(serializer.data, status=200)
+
+        except (TypeError, AttributeError) as excinfo:
+            error_message = 'Invalid request data: %s' % excinfo.exconly
+            return Response({'detail': error_message}, status=status.HTTP_400_BAD_REQUEST)
+
+
