@@ -1,9 +1,10 @@
+from drf_yasg.utils import swagger_serializer_method
 from rest_framework import serializers, exceptions
 from rest_framework.exceptions import ValidationError
 
 from audit.models import ENVIRONMENT_CREATED_MESSAGE, ENVIRONMENT_UPDATED_MESSAGE, RelatedObjectType, AuditLog
 from environments.models import Environment, Identity, Trait, INTEGER, Webhook, UserEnvironmentPermission, \
-    UserPermissionGroupEnvironmentPermission
+    UserPermissionGroupEnvironmentPermission, STRING, BOOLEAN
 from features.serializers import FeatureStateSerializerFull
 from permissions.serializers import CreateUpdateUserPermissionSerializerABC
 from projects.serializers import ProjectSerializer
@@ -47,6 +48,12 @@ class EnvironmentSerializerLight(serializers.ModelSerializer):
                                 log=message)
 
 
+class IdentifierOnlyIdentitySerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Identity
+        fields = ('identifier',)
+
+
 class IdentitySerializerFull(serializers.ModelSerializer):
     identity_features = FeatureStateSerializerFull(many=True)
     environment = EnvironmentSerializerFull()
@@ -84,16 +91,60 @@ class TraitSerializerFull(serializers.ModelSerializer):
         return obj.get_trait_value()
 
 
+class TraitValueField(serializers.Field):
+    """
+    Custom field to extract the type of the field on deserialization.
+    """
+    def to_internal_value(self, data):
+        return {
+            "type": type(data).__name__,
+            "value": data
+        }
+
+    def to_representation(self, value):
+        return value
+
+
 class TraitSerializerBasic(serializers.ModelSerializer):
-    trait_value = serializers.SerializerMethodField()
+    trait_value = TraitValueField()
 
     class Meta:
         model = Trait
         fields = ('id', 'trait_key', 'trait_value')
+        read_only_fields = ('id',)
 
-    @staticmethod
-    def get_trait_value(obj):
-        return obj.get_trait_value()
+
+class SDKCreateUpdateTraitSerializer(serializers.ModelSerializer):
+    identity = IdentifierOnlyIdentitySerializer()
+    trait_value = TraitValueField()
+    trait_key = serializers.CharField()
+
+    class Meta:
+        model = Trait
+        fields = ('identity', 'trait_value', 'trait_key')
+
+    def create(self, validated_data):
+        identity = self._get_identity(validated_data['identity']['identifier'])
+
+        trait_key = validated_data['trait_key']
+        trait_value = validated_data['trait_value']['value']
+        trait_value_type = validated_data['trait_value']['type']
+
+        value_key = Trait.get_trait_value_key_name(trait_value_type)
+
+        defaults = {
+            value_key: trait_value,
+            'value_type': trait_value_type if trait_value_type in [INTEGER, BOOLEAN] else STRING
+        }
+
+        return Trait.objects.update_or_create(identity=identity, trait_key=trait_key, defaults=defaults)[0]
+
+    def _get_identity(self, identifier):
+        return Identity.objects.get_or_create(identifier=identifier, environment=self.context['environment'])[0]
+
+
+class SDKBulkCreateUpdateTraitSerializer(SDKCreateUpdateTraitSerializer):
+    trait_value = TraitValueField(allow_null=True)
 
 
 class IncrementTraitValueSerializer(serializers.Serializer):
