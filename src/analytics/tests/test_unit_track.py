@@ -1,7 +1,9 @@
 from unittest import mock
 
 import pytest
+from django.conf import settings
 
+import analytics
 from analytics.track import track_request_googleanalytics, track_request_influxdb
 
 
@@ -35,16 +37,17 @@ def test_track_request_googleanalytics(MockEnvironment, mock_requests, request_u
     assert mock_requests.post.call_count == expected_ga_requests
 
 
-@pytest.mark.parametrize("request_uri", (
-        ("/api/v1/flags/"),
-        ("/api/v1/identities/"),
-        ("/api/v1/traits/"),
-        ("/api/v1/features/"),
-        ("/health")
+@pytest.mark.parametrize("request_uri, expected_resource", (
+        ("/api/v1/flags/", "flags"),
+        ("/api/v1/identities/", "identities"),
+        ("/api/v1/traits/", "traits"),
+        ("/api/v1/features/", "features"),
 ))
-@mock.patch("analytics.track.requests")
+@mock.patch("analytics.track.InfluxDBWrapper")
 @mock.patch("analytics.track.Environment")
-def test_track_request_influxdb(MockEnvironment, mock_requests, request_uri):
+def test_track_request_sends_data_to_influxdb_for_tracked_uris(
+    MockEnvironment, MockInfluxDBWrapper, request_uri, expected_resource
+):
     """
     Verify that the correct number of calls are made to InfluxDB for the various uris.
     """
@@ -54,5 +57,38 @@ def test_track_request_influxdb(MockEnvironment, mock_requests, request_uri):
     environment_api_key = "test"
     request.headers = {"X-Environment-Key": environment_api_key}
 
+    mock_influxdb = mock.MagicMock()
+    MockInfluxDBWrapper.return_value = mock_influxdb
+
     # When
     track_request_influxdb(request)
+
+    # Then
+    call_list = MockInfluxDBWrapper.call_args_list
+    assert len(call_list) == 1
+    assert call_list[0][1]["tags"]["resource"] == expected_resource
+
+
+@mock.patch("analytics.track.InfluxDBWrapper")
+@mock.patch("analytics.track.Environment")
+def test_track_request_does_not_send_data_to_influxdb_for_not_tracked_uris(
+    MockEnvironment, MockInfluxDBWrapper
+):
+    """
+    Verify that the correct number of calls are made to InfluxDB for the various uris.
+    """
+    # Given
+    request = mock.MagicMock()
+    request.path = "/health"
+    environment_api_key = "test"
+    request.headers = {"X-Environment-Key": environment_api_key}
+
+    mock_influxdb = mock.MagicMock()
+    MockInfluxDBWrapper.return_value = mock_influxdb
+
+    # When
+    track_request_influxdb(request)
+
+    # Then
+    MockInfluxDBWrapper.assert_not_called()
+
