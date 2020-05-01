@@ -1,3 +1,5 @@
+from unittest import mock
+
 import pytest
 from django.core.exceptions import ValidationError
 from django.db.utils import IntegrityError
@@ -197,7 +199,12 @@ class FeatureStateTest(TestCase):
         self.environment = Environment.objects.create(name='Test environment', project=self.project)
         self.feature = Feature.objects.create(name='Test feature', project=self.project)
 
-    def test_cannot_create_duplicate_feature_state_in_an_environment(self):
+    @mock.patch("features.models.trigger_feature_state_change_webhooks")
+    def test_cannot_create_duplicate_feature_state_in_an_environment(self, mock_trigger_webhooks):
+        """
+        Note that although the mock isn't used in this test, it throws an exception on it's thread so we mock it
+        here anyway.
+        """
         # Given
         duplicate_feature_state = FeatureState(feature=self.feature, environment=self.environment, enabled=True)
 
@@ -278,3 +285,14 @@ class FeatureStateTest(TestCase):
             result = feature_state_identity_1 > feature_state_identity_2
 
         # Then - exception raised
+
+    @mock.patch("features.models.trigger_feature_state_change_webhooks")
+    def test_save_calls_trigger_webhooks(self, mock_trigger_webhooks):
+        # Given
+        feature_state = FeatureState.objects.get(feature=self.feature, environment=self.environment)
+
+        # When
+        feature_state.save()
+
+        # Then
+        mock_trigger_webhooks.assert_called_with(feature_state)

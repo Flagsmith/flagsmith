@@ -9,7 +9,7 @@ https://docs.djangoproject.com/en/1.9/topics/settings/
 For the full list of settings and their values, see
 https://docs.djangoproject.com/en/1.9/ref/settings/
 """
-
+import logging
 import os
 import warnings
 
@@ -328,3 +328,5 @@ if env.bool('USE_S3_STORAGE', default=False):
     AWS_S3_ADDRESSING_STYLE = 'virtual'
 
 ALLOWED_ADMIN_IP_ADDRESSES = env.list('ALLOWED_ADMIN_IP_ADDRESSES', default=list())
+
+LOG_LEVEL = env.str('LOG_LEVEL', 'WARNING')
