@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 from __future__ import unicode_literals
 
 from django.core.exceptions import (NON_FIELD_ERRORS, ObjectDoesNotExist,
@@ -8,8 +7,12 @@ from django.utils.encoding import python_2_unicode_compatible
 from django.utils.translation import ugettext_lazy as _
 from simple_history.models import HistoricalRecords
 
+from features.tasks import trigger_feature_state_change_webhooks
 from features.utils import get_boolean_from_string, get_integer_from_string, INTEGER, STRING, BOOLEAN, get_value_type
 from projects.models import Project
+from util.logging import get_logger
+
+logger = get_logger(__name__)
 
 # Feature Types
 FLAG = 'FLAG'
@@ -138,6 +141,12 @@ class FeatureSegment(models.Model):
     def __str__(self):
         return "FeatureSegment for " + self.feature.name + " with priority " + str(self.priority)
 
+    def get_value(self):
+        return {
+            BOOLEAN: get_boolean_from_string(self.value),
+            INTEGER: get_boolean_from_string(self.value)
+        }.get(self.value_type, self.value)
+
     def __lt__(self, other):
         """
         Kind of counter intuitive but since priority 1 is highest, we want to check if priority is GREATER than the
@@ -205,6 +214,26 @@ class FeatureState(models.Model):
 
         return type_mapping.get(value_type)
 
+    @property
+    def previous_feature_state_value(self):
+        try:
+            history_instance = self.feature_state_value.history.first()
+        except ObjectDoesNotExist:
+            return None
+
+        previous_feature_state_value = history_instance.prev_record
+
+        if previous_feature_state_value:
+            value_type = previous_feature_state_value.type
+
+            type_mapping = {
+                INTEGER: previous_feature_state_value.integer_value,
+                STRING: previous_feature_state_value.string_value,
+                BOOLEAN: previous_feature_state_value.boolean_value
+            }
+
+            return type_mapping.get(value_type)
+
     def save(self, *args, **kwargs):
         # prevent duplicate feature states being created for an environment
         if not self.pk and FeatureState.objects.filter(environment=self.environment, feature=self.feature).exists() \
@@ -220,6 +249,8 @@ class FeatureState(models.Model):
             feature_state=self,
             defaults=self._get_defaults()
         )
+        # TODO: move this to an async call using celery or django-rq
+        trigger_feature_state_change_webhooks(self)
 
     def _get_defaults(self):
         if self.feature_segment:

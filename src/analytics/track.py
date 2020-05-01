@@ -5,10 +5,10 @@ from django.core.cache import caches
 from six.moves.urllib.parse import quote  # python 2/3 compatible urllib import
 import requests
 
-from threading import Thread
 from django.conf import settings
 
 from environments.models import Environment
+from util.util import postpone
 
 logger = logging.getLogger(__name__)
 
@@ -25,14 +25,6 @@ TRACKED_RESOURCE_ACTIONS = {
     "identities": "identity_flags",
     "traits": "traits"
 }
-
-
-def postpone(function):
-    def decorator(*args, **kwargs):
-        t = Thread(target=function, args=args, kwargs=kwargs)
-        t.daemon = True
-        t.start()
-    return decorator
 
 
 @postpone

@@ -8,4 +8,4 @@ class FeaturesConfig(AppConfig):
     name = 'features'
 
     def ready(self):
-        import features.signals
+        pass
