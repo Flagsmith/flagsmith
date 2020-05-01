@@ -1,15 +1,13 @@
 import logging
 import uuid
+from threading import Thread
 
+import requests
+from django.conf import settings
 from django.core.cache import caches
 from six.moves.urllib.parse import quote  # python 2/3 compatible urllib import
-from influxdb_client import InfluxDBClient, Point
-from influxdb_client.client.write_api import SYNCHRONOUS
-import requests
 
-from threading import Thread
-from django.conf import settings
-
+from analytics.influxdb_wrapper import InfluxDBWrapper
 from environments.models import Environment
 
 logger = logging.getLogger(__name__)
@@ -28,14 +26,13 @@ TRACKED_RESOURCE_ACTIONS = {
     "traits": "traits"
 }
 
-influxdb_client = InfluxDBClient(url=settings.INFLUXDB_URL, token=settings.INFLUXDB_TOKEN, org=settings.INFLUXDB_ORG)
-
 
 def postpone(function):
     def decorator(*args, **kwargs):
         t = Thread(target=function, args=args, kwargs=kwargs)
         t.daemon = True
         t.start()
+
     return decorator
 
 
@@ -77,7 +74,7 @@ def track_request_googleanalytics(request):
     requests.post(GOOGLE_ANALYTICS_COLLECT_URL, data=pageview_data)
 
     resource = get_resource_from_uri(request.path)
-    
+
     if resource in TRACKED_RESOURCE_ACTIONS:
         environment = Environment.get_from_cache(request.headers.get('X-Environment-Key'))
         track_event(environment.project.organisation.get_unique_slug(), resource)
@@ -85,8 +82,8 @@ def track_request_googleanalytics(request):
 
 def track_event(category, action, label='', value=''):
     data = DEFAULT_DATA + "&t=event" + \
-        "&ec=" + category + \
-        "&ea=" + action + "&cid=" + str(uuid.uuid4())
+           "&ec=" + category + \
+           "&ea=" + action + "&cid=" + str(uuid.uuid4())
     data = data + "&el=" + label if label else data
     data = data + "&ev=" + value if value else data
     requests.post(GOOGLE_ANALYTICS_COLLECT_URL, data=data)
@@ -103,13 +100,13 @@ def track_request_influxdb(request):
     if resource:
         environment = Environment.get_from_cache(request.headers.get('X-Environment-Key'))
 
-        point = Point("api_call") \
-            .tag("resource", resource) \
-            .tag("organisation", environment.project.organisation.get_unique_slug()) \
-            .tag("organisation_id", environment.project.organisation_id) \
-            .tag("project", environment.project.name) \
-            .tag("project_id", environment.project_id) \
-            .field("request_count", 1)
+        tags = {
+            "resource": resource,
+            "organisation": environment.project.organisation.get_unique_slug(),
+            "organisation_id": environment.project.organisation_id,
+            "project": environment.project.name,
+            "project_id": environment.project_id
+        }
 
-        write_api = influxdb_client.write_api(write_options=SYNCHRONOUS)
-        write_api.write(bucket=settings.INFLUXDB_BUCKET, record=point)
+        influxdb = InfluxDBWrapper("api_call", "request_count", 1, tags=tags)
+        influxdb.write()
