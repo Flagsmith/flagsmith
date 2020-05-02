@@ -18,9 +18,10 @@ from environments.authentication import EnvironmentKeyAuthentication
 from environments.permissions import EnvironmentKeyPermissions, EnvironmentPermissions, NestedEnvironmentPermissions
 from features.serializers import FeatureStateSerializerFull
 from permissions.serializers import PermissionModelSerializer, MyUserObjectPermissionsSerializer
+from util.logging import get_logger
 from util.views import SDKAPIView
 from .models import Environment, Identity, Trait, Webhook, EnvironmentPermissionModel, UserEnvironmentPermission, \
-    UserPermissionGroupEnvironmentPermission, STRING, INTEGER, BOOLEAN
+    UserPermissionGroupEnvironmentPermission
 from .serializers import EnvironmentSerializerLight, IdentitySerializer, TraitSerializerBasic, TraitSerializerFull, \
     IdentitySerializerTraitFlags, IdentitySerializerWithTraitsAndSegments, IncrementTraitValueSerializer, \
     TraitKeysSerializer, DeleteAllTraitKeysSerializer, WebhookSerializer, \
@@ -28,6 +29,8 @@ from .serializers import EnvironmentSerializerLight, IdentitySerializer, TraitSe
     CreateUpdateUserPermissionGroupEnvironmentPermissionSerializer, \
     ListUserPermissionGroupEnvironmentPermissionSerializer, \
     SDKCreateUpdateTraitSerializer, SDKBulkCreateUpdateTraitSerializer
+
+logger = get_logger(__name__)
 
 
 @method_decorator(name='list', decorator=swagger_auto_schema(manual_parameters=[
@@ -500,7 +503,7 @@ class SDKTraits(mixins.CreateModelMixin, viewsets.GenericViewSet):
         if self.action == 'increment_value':
             return IncrementTraitValueSerializer
         if self.action == 'bulk_create':
-            return SDKBulkCreateUpdateTraitSerializer
+            return SDKBulkCreateUpdateTraitSerializer(many=True)
 
         return SDKCreateUpdateTraitSerializer
 
@@ -509,12 +512,13 @@ class SDKTraits(mixins.CreateModelMixin, viewsets.GenericViewSet):
         context['environment'] = self.request.environment
         return context
 
+    @swagger_auto_schema(request_body=SDKCreateUpdateTraitSerializer)
     def create(self, request, *args, **kwargs):
         response = super(SDKTraits, self).create(request, *args, **kwargs)
         response.status_code = status.HTTP_200_OK
         return response
 
-    @swagger_auto_schema(responses={200: IncrementTraitValueSerializer})
+    @swagger_auto_schema(responses={200: IncrementTraitValueSerializer}, request_body=IncrementTraitValueSerializer)
     @action(detail=False, methods=["POST"], url_path='increment-value')
     def increment_value(self, request):
         serializer = self.get_serializer(data=request.data)
@@ -522,6 +526,7 @@ class SDKTraits(mixins.CreateModelMixin, viewsets.GenericViewSet):
         serializer.save()
         return Response(serializer.data, status=200)
 
+    @swagger_auto_schema(request_body=SDKCreateUpdateTraitSerializer(many=True))
     @action(detail=False, methods=["PUT"], url_path='bulk')
     def bulk_create(self, request):
         try:
@@ -544,7 +549,5 @@ class SDKTraits(mixins.CreateModelMixin, viewsets.GenericViewSet):
             return Response(serializer.data, status=200)
 
         except (TypeError, AttributeError) as excinfo:
-            error_message = 'Invalid request data: %s' % excinfo.exconly
-            return Response({'detail': error_message}, status=status.HTTP_400_BAD_REQUEST)
-
-
+            logger.error('Invalid request data: %s' % str(excinfo))
+            return Response({'detail': 'Invalid request data'}, status=status.HTTP_400_BAD_REQUEST)
