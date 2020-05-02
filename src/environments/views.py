@@ -503,7 +503,7 @@ class SDKTraits(mixins.CreateModelMixin, viewsets.GenericViewSet):
         if self.action == 'increment_value':
             return IncrementTraitValueSerializer
         if self.action == 'bulk_create':
-            return SDKBulkCreateUpdateTraitSerializer(many=True)
+            return SDKBulkCreateUpdateTraitSerializer
 
         return SDKCreateUpdateTraitSerializer
 
