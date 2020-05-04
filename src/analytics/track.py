@@ -1,12 +1,13 @@
 import logging
 import uuid
+from threading import Thread
 
+import requests
+from django.conf import settings
 from django.core.cache import caches
 from six.moves.urllib.parse import quote  # python 2/3 compatible urllib import
-import requests
 
-from django.conf import settings
-
+from analytics.influxdb_wrapper import InfluxDBWrapper
 from environments.models import Environment
 from util.util import postpone
 
@@ -28,40 +29,76 @@ TRACKED_RESOURCE_ACTIONS = {
 
 
 @postpone
-def track_request_async(request):
-    return track_request(request)
+def track_request_googleanalytics_async(request):
+    return track_request_googleanalytics(request)
 
 
-def track_request(request):
+@postpone
+def track_request_influxdb_async(request):
+    return track_request_influxdb(request)
+
+
+def get_resource_from_uri(request_uri):
+    """
+    Split the uri so we can determine the resource that is being requested
+    (note that because it starts with a /, the first item in the list will be a blank string)
+
+    :param request: (HttpRequest) the request being made
+    """
+    split_uri = request_uri.split('/')[1:]
+    if not (len(split_uri) >= 3 and split_uri[0] == 'api'):
+        logger.debug('not tracking event for uri %s' % request_uri)
+        # this isn't an API request so we don't need to track an event for it
+        return None
+
+    # uri will be in the form /api/v1/<resource>/...
+    return split_uri[2]
+
+
+def track_request_googleanalytics(request):
     """
     Utility function to track a request to the API with the specified URI
 
     :param request: (HttpRequest) the request being made
     """
-    uri = request.path
-    pageview_data = DEFAULT_DATA + "t=pageview&dp=" + quote(uri, safe='')
+    pageview_data = DEFAULT_DATA + "t=pageview&dp=" + quote(request.path, safe='')
     # send pageview request
     requests.post(GOOGLE_ANALYTICS_COLLECT_URL, data=pageview_data)
 
-    # split the uri so we can determine the resource that is being requested
-    # (note that because it starts with a /, the first item in the list will be a blank string)
-    split_uri = uri.split('/')[1:]
-    if not (len(split_uri) >= 3 and split_uri[0] == 'api'):
-        logger.debug('not tracking event for uri %s' % uri)
-        # this isn't an API request so we don't need to track an event for it
-        return
+    resource = get_resource_from_uri(request.path)
 
-    # uri will be in the form /api/v1/<resource>/...
-    resource = split_uri[2]
     if resource in TRACKED_RESOURCE_ACTIONS:
         environment = Environment.get_from_cache(request.headers.get('X-Environment-Key'))
-        track_event(environment.project.organisation.get_unique_slug(), TRACKED_RESOURCE_ACTIONS[resource])
+        track_event(environment.project.organisation.get_unique_slug(), resource)
 
 
 def track_event(category, action, label='', value=''):
     data = DEFAULT_DATA + "&t=event" + \
-        "&ec=" + category + \
-        "&ea=" + action + "&cid=" + str(uuid.uuid4())
+           "&ec=" + category + \
+           "&ea=" + action + "&cid=" + str(uuid.uuid4())
     data = data + "&el=" + label if label else data
     data = data + "&ev=" + value if value else data
     requests.post(GOOGLE_ANALYTICS_COLLECT_URL, data=data)
+
+
+def track_request_influxdb(request):
+    """
+    Sends API event data to InfluxDB
+
+    :param request: (HttpRequest) the request being made
+    """
+    resource = get_resource_from_uri(request.path)
+
+    if resource:
+        environment = Environment.get_from_cache(request.headers.get('X-Environment-Key'))
+
+        tags = {
+            "resource": resource,
+            "organisation": environment.project.organisation.get_unique_slug(),
+            "organisation_id": environment.project.organisation_id,
+            "project": environment.project.name,
+            "project_id": environment.project_id
+        }
+
+        influxdb = InfluxDBWrapper("api_call", "request_count", 1, tags=tags)
+        influxdb.write()
