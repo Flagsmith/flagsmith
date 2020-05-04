@@ -47,6 +47,11 @@ GA_TABLE_ID = os.environ.get('GA_TABLE_ID')
 if not GA_TABLE_ID:
     warnings.warn("GA_TABLE_ID not configured, getting organisation usage will not work")
 
+INFLUXDB_TOKEN = env.str('INFLUXDB_TOKEN', default='')
+INFLUXDB_BUCKET = env.str('INFLUXDB_BUCKET', default='')
+INFLUXDB_URL = env.str('INFLUXDB_URL', default='')
+INFLUXDB_ORG = env.str('INFLUXDB_ORG', default='')
+
 if 'DJANGO_ALLOWED_HOSTS' in os.environ:
     ALLOWED_HOSTS = os.environ['DJANGO_ALLOWED_HOSTS'].split(',')
 else:
@@ -104,7 +109,7 @@ INSTALLED_APPS = [
     'health_check.db',
 ]
 
-if GOOGLE_ANALYTICS_KEY:
+if GOOGLE_ANALYTICS_KEY or INFLUXDB_TOKEN:
     INSTALLED_APPS.append('analytics')
 
 SITE_ID = 1
@@ -148,6 +153,9 @@ MIDDLEWARE = [
 
 if GOOGLE_ANALYTICS_KEY:
     MIDDLEWARE.append('analytics.middleware.GoogleAnalyticsMiddleware')
+
+if INFLUXDB_TOKEN:
+    MIDDLEWARE.append('analytics.middleware.InfluxDBMiddleware')
 
 ROOT_URLCONF = 'app.urls'
 
