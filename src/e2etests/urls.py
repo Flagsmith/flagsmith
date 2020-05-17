@@ -6,5 +6,5 @@ app_name = "e2etests"
 
 
 urlpatterns = [
-    url(r'teardown/', Teardown.as_view())
+    url(r'teardown/', Teardown.as_view(), name='teardown')
 ]
