@@ -108,6 +108,7 @@ the project. These should be changed before using in any production environments
 ### Environment Variables
 The application relies on the following environment variables to run: 
 
+* `ENV`: string representing the current running environment, e.g. 'local', 'dev', 'prod'. Defaults to 'local'.
 * `DJANGO_ALLOWED_HOSTS`: comma separated list of hosts the application will run on in the given environment
 * `DJANGO_SETTINGS_MODULE`: python path to settings file for the given environment, e.g. "app.settings.develop"
 * `SENDGRID_API_KEY`: API key from sendgrid account which will need to be set up for emails to be sent from platform successfully
