@@ -89,7 +89,7 @@ def track_request_influxdb(request):
     """
     resource = get_resource_from_uri(request.path)
 
-    if resource:
+    if resource and resource in TRACKED_RESOURCE_ACTIONS:
         environment = Environment.get_from_cache(request.headers.get('X-Environment-Key'))
 
         tags = {
