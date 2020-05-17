@@ -8,6 +8,8 @@ from django.db import models
 from django.db.models import Q
 from django.template.loader import get_template
 from django.utils.encoding import python_2_unicode_compatible
+from django.utils.translation import gettext_lazy as _
+from trench.models import MFAMethod
 
 from app.utils import create_hash
 from environments.models import UserEnvironmentPermission, UserPermissionGroupEnvironmentPermission, Environment, \
@@ -64,6 +66,8 @@ class FFAdminUser(AbstractUser):
         null=True,
         blank=True
     )
+    first_name = models.CharField(_('first name'), max_length=30)
+    last_name = models.CharField(_('last name'), max_length=150)
 
     USERNAME_FIELD = 'email'
     REQUIRED_FIELDS = ['first_name', 'last_name']
