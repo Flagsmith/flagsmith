@@ -15,6 +15,7 @@ from environments.models import UserEnvironmentPermission, UserPermissionGroupEn
     Identity
 from organisations.models import Organisation, UserOrganisation, OrganisationRole, organisation_roles
 from projects.models import UserProjectPermission, UserPermissionGroupProjectPermission, Project
+from users.auth_type import AuthType
 from users.exceptions import InvalidInviteError
 
 logger = logging.getLogger(__name__)
@@ -78,6 +79,10 @@ class FFAdminUser(AbstractUser):
 
     def __str__(self):
         return "%s %s" % (self.first_name, self.last_name)
+
+    @property
+    def auth_type(self):
+        return AuthType.GOOGLE.value if self.google_user_id else AuthType.EMAIL.value
 
     def get_full_name(self):
         if not self.first_name:
