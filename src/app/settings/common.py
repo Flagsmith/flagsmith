@@ -357,7 +357,8 @@ DJOSER = {
     'SEND_ACTIVATION_EMAIL': False,
     'SERIALIZERS': {
         'token': 'custom_auth.serializers.CustomTokenSerializer',
-        'user_create': 'custom_auth.serializers.CustomUserCreateSerializer'
+        'user_create': 'custom_auth.serializers.CustomUserCreateSerializer',
+        'current_user': 'users.serializers.CustomCurrentUserSerializer',
     },
     'SET_PASSWORD_RETYPE': True,
     'PASSWORD_RESET_CONFIRM_RETYPE': True,
