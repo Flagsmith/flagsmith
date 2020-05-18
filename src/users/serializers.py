@@ -1,3 +1,4 @@
+from djoser.serializers import UserSerializer as DjoserUserSerializer
 from rest_framework import serializers
 from rest_framework.exceptions import ValidationError
 
@@ -99,3 +100,11 @@ class UserPermissionGroupSerializerList(serializers.ModelSerializer):
 class UserPermissionGroupSerializerDetail(UserPermissionGroupSerializerList):
     # TODO: remove users from here and just add a summary of number of users
     users = UserListSerializer(many=True, read_only=True)
+
+
+class CustomCurrentUserSerializer(DjoserUserSerializer):
+    auth_type = serializers.CharField(read_only=True)
+
+    class Meta(DjoserUserSerializer.Meta):
+        fields = DjoserUserSerializer.Meta.fields + ('auth_type',)
+
