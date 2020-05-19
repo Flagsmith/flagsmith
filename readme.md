@@ -56,7 +56,7 @@ command:
 pipenv run python src/manage.py createsuperuser
 ```
 
-Once you've created the super user, you can use the details to log in at `/admin`. From here, you 
+Once you've created the super user, you can use the details to log in at `/admin/`. From here, you 
 can create an organisation and either create another user or simply assign the organisation to your
 admin user to begin using the application. 
 
