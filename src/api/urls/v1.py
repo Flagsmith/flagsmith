@@ -33,11 +33,10 @@ urlpatterns = [
     url(r'^environments/', include('environments.urls'), name='environments'),
     url(r'^features/', include('features.urls'), name='features'),
     url(r'^users/', include('users.urls')),
-    url(r'^auth/', include('rest_auth.urls')),
-    url(r'^auth/register/', include('rest_auth.registration.urls')),
-    url(r'^account/', include('allauth.urls')),
     url(r'^e2etests/', include('e2etests.urls')),
     url(r'^audit/', include('audit.urls')),
+
+    url(r'^auth/', include('custom_auth.urls')),
 
     # Chargebee webhooks
     url(r'cb-webhook/', chargebee_webhook, name='chargebee-webhook'),

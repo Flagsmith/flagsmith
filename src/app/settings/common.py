@@ -12,6 +12,7 @@ https://docs.djangoproject.com/en/1.9/ref/settings/
 import logging
 import os
 import warnings
+from importlib import reload
 
 import environ
 import requests
@@ -27,9 +28,7 @@ env = environ.Env()
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 PROJECT_ROOT = os.path.abspath(os.path.dirname(__file__))
 
-# Quick-start development settings - unsuitable for production
-# See https://docs.djangoproject.com/en/1.9/howto/deployment/checklist/
-
+ENV = env('ENVIRONMENT', default='local')
 
 if 'DJANGO_SECRET_KEY' not in os.environ:
     secret_key_gen()
@@ -83,12 +82,9 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'rest_framework',
     'rest_framework.authtoken',
-    'rest_auth',
+    'djoser',
     'django.contrib.sites',
-    'allauth',
-    'allauth.account',
-    'allauth.socialaccount',
-    'rest_auth.registration',
+    'custom_auth',
     'api',
     'corsheaders',
     'users',
@@ -103,6 +99,9 @@ INSTALLED_APPS = [
     'drf_yasg',
     'audit',
     'permissions',
+
+    # 2FA
+    'trench',
 
     # health check plugins
     'health_check',
@@ -129,14 +128,6 @@ REST_FRAMEWORK = {
     'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.PageNumberPagination'
 }
 
-REST_AUTH_REGISTER_SERIALIZERS = {
-    'REGISTER_SERIALIZER': 'users.serializers.UserRegisterSerializer'
-}
-
-REST_AUTH_SERIALIZERS = {
-    'USER_DETAILS_SERIALIZER': 'users.serializers.UserFullSerializer'
-}
-
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
@@ -146,7 +137,6 @@ MIDDLEWARE = [
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
     'corsheaders.middleware.CorsMiddleware',
-    'app.middleware.AdminWhitelistMiddleware',
     'simple_history.middleware.HistoryRequestMiddleware',
     'debug_toolbar.middleware.DebugToolbarMiddleware',
 ]
@@ -156,6 +146,9 @@ if GOOGLE_ANALYTICS_KEY:
 
 if INFLUXDB_TOKEN:
     MIDDLEWARE.append('analytics.middleware.InfluxDBMiddleware')
+
+if ENV != 'local':
+    MIDDLEWARE.append('app.middleware.AdminWhitelistMiddleware')
 
 ROOT_URLCONF = 'app.urls'
 
@@ -338,3 +331,40 @@ if env.bool('USE_S3_STORAGE', default=False):
 ALLOWED_ADMIN_IP_ADDRESSES = env.list('ALLOWED_ADMIN_IP_ADDRESSES', default=list())
 
 LOG_LEVEL = env.str('LOG_LEVEL', 'WARNING')
+
+TRENCH_AUTH = {
+    'FROM_EMAIL': DEFAULT_FROM_EMAIL,
+    'BACKUP_CODES_QUANTITY': 5,
+    'BACKUP_CODES_LENGTH': 10,  # keep (quantity * length) under 200
+    'BACKUP_CODES_CHARACTERS': (
+        'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789'
+    ),
+    'DEFAULT_VALIDITY_PERIOD': 30,
+    'CONFIRM_BACKUP_CODES_REGENERATION_WITH_CODE': True,
+    'APPLICATION_ISSUER_NAME': 'app.bullet-train.io',
+    'MFA_METHODS': {
+        'app': {
+            'VERBOSE_NAME': 'TOTP App',
+            'VALIDITY_PERIOD': 60 * 10,
+            'USES_THIRD_PARTY_CLIENT': True,
+            'HANDLER': 'custom_auth.mfa.backends.application.CustomApplicationBackend',
+        },
+    },
+}
+
+DJOSER = {
+    'PASSWORD_RESET_CONFIRM_URL': 'password-reset/confirm/{uid}/{token}',
+    'SEND_ACTIVATION_EMAIL': False,
+    'SERIALIZERS': {
+        'token': 'custom_auth.serializers.CustomTokenSerializer',
+        'user_create': 'custom_auth.serializers.CustomUserCreateSerializer',
+        'current_user': 'users.serializers.CustomCurrentUserSerializer',
+    },
+    'SET_PASSWORD_RETYPE': True,
+    'PASSWORD_RESET_CONFIRM_RETYPE': True,
+    'HIDE_USERS': True,
+    'PERMISSIONS': {
+        'user': ['custom_auth.permissions.CurrentUser'],
+        'user_list': ['custom_auth.permissions.CurrentUser'],
+    }
+}
