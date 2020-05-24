@@ -41,7 +41,6 @@ def test_track_request_googleanalytics(MockEnvironment, mock_requests, request_u
         ("/api/v1/flags/", "flags"),
         ("/api/v1/identities/", "identities"),
         ("/api/v1/traits/", "traits"),
-        ("/api/v1/features/", "features"),
 ))
 @mock.patch("analytics.track.InfluxDBWrapper")
 @mock.patch("analytics.track.Environment")

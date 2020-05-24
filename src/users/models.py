@@ -8,12 +8,14 @@ from django.db import models
 from django.db.models import Q
 from django.template.loader import get_template
 from django.utils.encoding import python_2_unicode_compatible
+from django.utils.translation import gettext_lazy as _
 
 from app.utils import create_hash
 from environments.models import UserEnvironmentPermission, UserPermissionGroupEnvironmentPermission, Environment, \
     Identity
 from organisations.models import Organisation, UserOrganisation, OrganisationRole, organisation_roles
 from projects.models import UserProjectPermission, UserPermissionGroupProjectPermission, Project
+from users.auth_type import AuthType
 from users.exceptions import InvalidInviteError
 
 logger = logging.getLogger(__name__)
@@ -64,6 +66,9 @@ class FFAdminUser(AbstractUser):
         null=True,
         blank=True
     )
+    first_name = models.CharField(_('first name'), max_length=30)
+    last_name = models.CharField(_('last name'), max_length=150)
+    google_user_id = models.CharField(max_length=50, null=True, blank=True)
 
     USERNAME_FIELD = 'email'
     REQUIRED_FIELDS = ['first_name', 'last_name']
@@ -74,6 +79,10 @@ class FFAdminUser(AbstractUser):
 
     def __str__(self):
         return "%s %s" % (self.first_name, self.last_name)
+
+    @property
+    def auth_type(self):
+        return AuthType.GOOGLE.value if self.google_user_id else AuthType.EMAIL.value
 
     def get_full_name(self):
         if not self.first_name:
