@@ -1,5 +1,5 @@
 #!/bin/bash
 set -e
 
-pipenv run python /app/src/manage.py migrate
-pipenv run python src/manage.py runserver 0.0.0.0:8000
+.venv/bin/python src/manage.py migrate
+.venv/bin/python src/manage.py runserver 0.0.0.0:8000
