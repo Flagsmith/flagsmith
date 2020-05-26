@@ -10,3 +10,5 @@ venv
 checkstyle.txt
 .python-version
 .env
+.direnv
+.envrc
