@@ -368,3 +368,8 @@ DJOSER = {
         'user_list': ['custom_auth.permissions.CurrentUser'],
     }
 }
+
+
+# Github OAuth credentials
+GITHUB_CLIENT_ID = env.str('GITHUB_CLIENT_ID', '')
+GITHUB_CLIENT_SECRET = env.str('GITHUB_CLIENT_SECRET', '')
