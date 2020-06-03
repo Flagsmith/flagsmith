@@ -125,7 +125,10 @@ REST_FRAMEWORK = {
     ),
     'PAGE_SIZE': 10,
     'UNICODE_JSON': False,
-    'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.PageNumberPagination'
+    'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.PageNumberPagination',
+    'DEFAULT_THROTTLE_RATES': {
+        'login': '1/s'
+    }
 }
 
 MIDDLEWARE = [
