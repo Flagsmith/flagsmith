@@ -1,5 +1,6 @@
 import re
 
+import time
 import pyotp
 from django.core import mail
 from django.urls import reverse
@@ -41,6 +42,8 @@ class AuthIntegrationTestCase(APITestCase):
         assert register_response_success.status_code == status.HTTP_201_CREATED
         assert register_response_success.json()["key"]
 
+        # add delay to avoid HTTP_429 as we have throttle in place for login
+        time.sleep(1)
         # now verify we can login with the same credentials
         new_login_data = {
             "email": self.test_email,
@@ -78,6 +81,8 @@ class AuthIntegrationTestCase(APITestCase):
         )
         assert reset_password_confirm_response.status_code == status.HTTP_204_NO_CONTENT
 
+        # add delay to avoid HTTP_429 as we have throttle in place for login
+        time.sleep(1)
         # now check we can login with the new details
         new_login_data = {
             "email": self.test_email,
@@ -145,3 +150,34 @@ class AuthIntegrationTestCase(APITestCase):
         current_user_response = self.client.get(self.current_user_url)
         assert current_user_response.status_code == status.HTTP_200_OK
         assert current_user_response.json()["email"] == self.test_email
+
+    def test_throttle_login_workflows(self):
+        # register the user
+        register_data = {
+            "email": self.test_email,
+            "password": self.password,
+            "re_password": self.password,
+            "first_name": "test",
+            "last_name": "user",
+        }
+        register_response = self.client.post(
+            self.register_url, data=register_data
+        )
+        assert register_response.status_code == status.HTTP_201_CREATED
+        assert register_response.json()["key"]
+
+        # since we're hitting login in other tests we need to ensure that the
+        # first login request doesn't fail with HTTP_429
+        time.sleep(1)
+        # verify we can login with credentials
+        login_data = {
+            "email": self.test_email,
+            "password": self.password,
+        }
+        login_response = self.client.post(self.login_url, data=login_data)
+        assert login_response.status_code == status.HTTP_200_OK
+        assert login_response.json()["key"]
+
+        # try login in again, should deny, current limit 1 per second
+        login_response = self.client.post(self.login_url, data=login_data)
+        assert login_response.status_code == status.HTTP_429_TOO_MANY_REQUESTS
