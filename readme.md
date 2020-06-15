@@ -49,21 +49,21 @@ located in `app.settings.master-docker`
 ### Locally
 
 The application is built using django which comes with a handy set of admin pages available at 
-`/admin`. To access these, you'll need to create a super user. This can be done with the following
+`/admin/`. To access these, you'll need to create a super user. This can be done with the following
 command: 
 
 ```
 pipenv run python src/manage.py createsuperuser
 ```
 
-Once you've created the super user, you can use the details to log in at `/admin`. From here, you 
+Once you've created the super user, you can use the details to log in at `/admin/`. From here, you 
 can create an organisation and either create another user or simply assign the organisation to your
 admin user to begin using the application. 
 
 ### In a Heroku-ish environment
 
 Once the app has been deployed, you can initialise it to create a super user by sending a GET request 
-to  the `/api/v1/users/init` endpoint. This will create a super user with the details configured in 
+to  the `/api/v1/users/init/` endpoint. This will create a super user with the details configured in 
 `app.settings.common` with the following parameters: 
 
 ```
