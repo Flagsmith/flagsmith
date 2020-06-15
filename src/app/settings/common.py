@@ -147,7 +147,8 @@ if GOOGLE_ANALYTICS_KEY:
 if INFLUXDB_TOKEN:
     MIDDLEWARE.append('analytics.middleware.InfluxDBMiddleware')
 
-if ENV != 'local':
+ALLOWED_ADMIN_IP_ADDRESSES = env.list('ALLOWED_ADMIN_IP_ADDRESSES', default=list())
+if len(ALLOWED_ADMIN_IP_ADDRESSES) > 0:
     MIDDLEWARE.append('app.middleware.AdminWhitelistMiddleware')
 
 ROOT_URLCONF = 'app.urls'
@@ -327,8 +328,6 @@ if env.bool('USE_S3_STORAGE', default=False):
     AWS_LOCATION = 'static'
     AWS_DEFAULT_ACL = 'public-read'
     AWS_S3_ADDRESSING_STYLE = 'virtual'
-
-ALLOWED_ADMIN_IP_ADDRESSES = env.list('ALLOWED_ADMIN_IP_ADDRESSES', default=list())
 
 LOG_LEVEL = env.str('LOG_LEVEL', 'WARNING')
 
