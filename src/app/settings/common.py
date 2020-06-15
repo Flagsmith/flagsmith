@@ -125,7 +125,10 @@ REST_FRAMEWORK = {
     ),
     'PAGE_SIZE': 10,
     'UNICODE_JSON': False,
-    'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.PageNumberPagination'
+    'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.PageNumberPagination',
+    'DEFAULT_THROTTLE_RATES': {
+        'login': '1/s'
+    }
 }
 
 MIDDLEWARE = [
@@ -367,3 +370,8 @@ DJOSER = {
         'user_list': ['custom_auth.permissions.CurrentUser'],
     }
 }
+
+
+# Github OAuth credentials
+GITHUB_CLIENT_ID = env.str('GITHUB_CLIENT_ID', '')
+GITHUB_CLIENT_SECRET = env.str('GITHUB_CLIENT_SECRET', '')
