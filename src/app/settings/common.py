@@ -9,7 +9,6 @@ https://docs.djangoproject.com/en/1.9/topics/settings/
 For the full list of settings and their values, see
 https://docs.djangoproject.com/en/1.9/ref/settings/
 """
-import logging
 import os
 import warnings
 from importlib import reload
@@ -32,6 +31,8 @@ BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 PROJECT_ROOT = os.path.abspath(os.path.dirname(__file__))
 
 ENV = env('ENVIRONMENT', default='local')
+if ENV not in ('local', 'dev', 'staging', 'production'):
+    logger.error('ENVIRONMENT env variable must be one of local, dev, staging or production')
 
 if 'DJANGO_SECRET_KEY' not in os.environ:
     secret_key_gen()
