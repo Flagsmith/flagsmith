@@ -20,9 +20,6 @@ import sys
 from corsheaders.defaults import default_headers
 
 from app.utils import secret_key_gen
-from util.logging import get_logger
-
-logger = get_logger(__name__)
 
 env = environ.Env()
 
@@ -32,7 +29,7 @@ PROJECT_ROOT = os.path.abspath(os.path.dirname(__file__))
 
 ENV = env('ENVIRONMENT', default='local')
 if ENV not in ('local', 'dev', 'staging', 'production'):
-    logger.error('ENVIRONMENT env variable must be one of local, dev, staging or production')
+    warnings.warn('ENVIRONMENT env variable must be one of local, dev, staging or production')
 
 if 'DJANGO_SECRET_KEY' not in os.environ:
     secret_key_gen()
@@ -156,7 +153,7 @@ if INFLUXDB_TOKEN:
 
 ALLOWED_ADMIN_IP_ADDRESSES = env.list('ALLOWED_ADMIN_IP_ADDRESSES', default=list())
 if len(ALLOWED_ADMIN_IP_ADDRESSES) > 0:
-    logger.info('Restricting access to the admin site for ip addresses %s' % ', '.join(ALLOWED_ADMIN_IP_ADDRESSES))
+    warnings.warn('Restricting access to the admin site for ip addresses %s' % ', '.join(ALLOWED_ADMIN_IP_ADDRESSES))
     MIDDLEWARE.append('app.middleware.AdminWhitelistMiddleware')
 
 ROOT_URLCONF = 'app.urls'
