@@ -21,6 +21,9 @@ import sys
 from corsheaders.defaults import default_headers
 
 from app.utils import secret_key_gen
+from util.logging import get_logger
+
+logger = get_logger(__name__)
 
 env = environ.Env()
 
@@ -152,6 +155,7 @@ if INFLUXDB_TOKEN:
 
 ALLOWED_ADMIN_IP_ADDRESSES = env.list('ALLOWED_ADMIN_IP_ADDRESSES', default=list())
 if len(ALLOWED_ADMIN_IP_ADDRESSES) > 0:
+    logger.info('Restricting access to the admin site for ip addresses %s' % ', '.join(ALLOWED_ADMIN_IP_ADDRESSES))
     MIDDLEWARE.append('app.middleware.AdminWhitelistMiddleware')
 
 ROOT_URLCONF = 'app.urls'
