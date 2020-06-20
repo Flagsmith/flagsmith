@@ -55,7 +55,6 @@ class GithubUser:
     def _get_user_name_and_id(self):
         user_response = requests.get(f"{GITHUB_API_URL}/user", headers=self.headers)
         user_response_json = user_response.json()
-        logger.debug("Github user response json: %s" % user_response_json)
         full_name = user_response_json.get("name")
         first_name, last_name = get_first_and_last_name(full_name) if full_name else ["", ""]
         return {
