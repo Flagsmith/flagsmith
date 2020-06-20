@@ -4,15 +4,18 @@ from requests import RequestException
 
 from custom_auth.oauth.exceptions import GithubError
 from custom_auth.oauth.helpers.github_helpers import convert_response_data_to_dictionary, get_first_and_last_name
+from util.logging import get_logger
 
 GITHUB_API_URL = "https://api.github.com"
 GITHUB_OAUTH_URL = "https://github.com/login/oauth"
 
 NON_200_ERROR_MESSAGE = "Github returned {} status code when getting an access token."
 
+logger = get_logger(__name__)
+
 
 class GithubUser:
-    def __init__(self, code: str, client_id = None, client_secret = None):
+    def __init__(self, code: str, client_id: str = None, client_secret: str = None):
         self.client_id = client_id or settings.GITHUB_CLIENT_ID
         self.client_secret = client_secret or settings.GITHUB_CLIENT_SECRET
 
@@ -52,6 +55,7 @@ class GithubUser:
     def _get_user_name_and_id(self):
         user_response = requests.get(f"{GITHUB_API_URL}/user", headers=self.headers)
         user_response_json = user_response.json()
+        logger.debug("Github user response json: %s" % user_response_json)
         full_name = user_response_json.get("name")
         first_name, last_name = get_first_and_last_name(full_name) if full_name else ["", ""]
         return {
