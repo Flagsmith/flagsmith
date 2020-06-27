@@ -6,7 +6,7 @@ from django.db.utils import IntegrityError
 from django.test import TestCase
 
 from environments.models import Environment, Identity, Trait, STRING
-from features.models import Feature, FeatureState, CONFIG, FeatureSegment, FeatureStateValue
+from features.models import Feature, FeatureState, CONFIG, FeatureSegment, FeatureStateValue, FLAG
 from features.utils import INTEGER, BOOLEAN
 from organisations.models import Organisation
 from projects.models import Project
@@ -121,51 +121,65 @@ class FeatureSegmentTest(TestCase):
 
         self.not_matching_identity = Identity.objects.create(identifier='user_2', environment=self.environment)
 
-    def test_can_create_segment_override_for_string_remote_config(self):
+    def test_feature_segment_save_updates_string_feature_state_value_for_environment(self):
         # Given
         overridden_value = 'overridden value'
-        feature_segment = FeatureSegment.objects.create(feature=self.remote_config, segment=self.segment, priority=1)
-        FeatureStateValue.objects.filter(
-            feature_state__feature_segment=feature_segment).update(type=STRING, string_value=overridden_value)
+        feature_segment = FeatureSegment(
+            feature=self.remote_config,
+            segment=self.segment,
+            environment=self.environment,
+            value=overridden_value,
+            value_type=STRING
+        )
 
         # When
-        feature_states = self.matching_identity.get_all_feature_states()
+        feature_segment.save()
 
         # Then
-        feature_state = next(filter(lambda fs: fs.feature == self.remote_config, feature_states))
+        feature_state = FeatureState.objects.get(feature_segment=feature_segment, environment=self.environment)
         assert feature_state.get_feature_state_value() == overridden_value
 
-    def test_can_create_segment_override_for_integer_remote_config(self):
+    def test_feature_segment_save_updates_integer_feature_state_value_for_environment(self):
         # Given
         overridden_value = 12
-        feature_segment = FeatureSegment.objects.create(feature=self.remote_config, segment=self.segment, priority=1)
-        FeatureStateValue.objects.filter(
-            feature_state__feature_segment=feature_segment).update(type=INTEGER, integer_value=overridden_value)
+        feature_segment = FeatureSegment(
+            feature=self.remote_config,
+            segment=self.segment,
+            environment=self.environment,
+            value=str(overridden_value),
+            value_type=INTEGER
+        )
 
         # When
-        feature_states = self.matching_identity.get_all_feature_states()
+        feature_segment.save()
 
         # Then
-        feature_state = next(filter(lambda fs: fs.feature == self.remote_config, feature_states))
+        feature_state = FeatureState.objects.get(feature_segment=feature_segment, environment=self.environment)
         assert feature_state.get_feature_state_value() == overridden_value
 
-    def test_can_create_segment_override_for_boolean_remote_config(self):
+    def test_feature_segment_save_updates_boolean_feature_state_value_for_environment(self):
         # Given
         overridden_value = False
-        feature_segment = FeatureSegment.objects.create(feature=self.remote_config, segment=self.segment, priority=1)
-        FeatureStateValue.objects.filter(
-            feature_state__feature_segment=feature_segment).update(type=BOOLEAN, boolean_value=overridden_value)
+        feature_segment = FeatureSegment(
+            feature=self.remote_config,
+            segment=self.segment,
+            environment=self.environment,
+            value=str(overridden_value),
+            value_type=BOOLEAN
+        )
 
         # When
-        feature_states = self.matching_identity.get_all_feature_states()
+        feature_segment.save()
 
         # Then
-        feature_state = next(filter(lambda fs: fs.feature == self.remote_config, feature_states))
+        feature_state = FeatureState.objects.get(feature_segment=feature_segment, environment=self.environment)
         assert feature_state.get_feature_state_value() == overridden_value
 
     def test_feature_state_enabled_value_is_updated_when_feature_segment_updated(self):
         # Given
-        feature_segment = FeatureSegment.objects.create(feature=self.remote_config, segment=self.segment, priority=1)
+        feature_segment = FeatureSegment.objects.create(
+            feature=self.remote_config, segment=self.segment, environment=self.environment, priority=1
+        )
         feature_state = FeatureState.objects.get(feature_segment=feature_segment, enabled=False)
 
         # When
@@ -178,17 +192,60 @@ class FeatureSegmentTest(TestCase):
 
     def test_feature_segment_is_less_than_other_if_priority_lower(self):
         # Given
-        feature_segment_1 = FeatureSegment.objects.create(feature=self.remote_config, segment=self.segment, priority=1)
+        feature_segment_1 = FeatureSegment.objects.create(
+            feature=self.remote_config, segment=self.segment, environment=self.environment, priority=1
+        )
 
         another_segment = Segment.objects.create(name='Another segment', project=self.project)
-        feature_segment_2 = FeatureSegment.objects.create(feature=self.remote_config, segment=another_segment,
-                                                          priority=2)
+        feature_segment_2 = FeatureSegment.objects.create(
+            feature=self.remote_config, segment=another_segment, environment=self.environment, priority=2
+        )
 
         # When
         result = feature_segment_2 < feature_segment_1
 
         # Then
         assert result
+
+    def test_feature_segments_are_created_with_correct_priority(self):
+        # Given - 5 feature segments
+
+        # 2 with the same feature, environment but a different segment
+        another_segment = Segment.objects.create(name='Another segment', project=self.project)
+        feature_segment_1 = FeatureSegment.objects.create(
+            feature=self.remote_config, segment=self.segment, environment=self.environment
+        )
+
+        feature_segment_2 = FeatureSegment.objects.create(
+            feature=self.remote_config, segment=another_segment, environment=self.environment
+        )
+
+        # 1 with the same feature but a different environment
+        another_environment = Environment.objects.create(name='Another environment', project=self.project)
+        feature_segment_3 = FeatureSegment.objects.create(
+            feature=self.remote_config, segment=self.segment, environment=another_environment
+        )
+
+        # 1 with the same environment but a different feature
+        another_feature = Feature.objects.create(name='Another feature', project=self.project, type=FLAG)
+        feature_segment_4 = FeatureSegment.objects.create(
+            feature=another_feature, segment=self.segment, environment=self.environment
+        )
+
+        # 1 with a different feature and a different environment
+        feature_segment_5 = FeatureSegment.objects.create(
+            feature=another_feature, segment=self.segment, environment=another_environment
+        )
+
+        # Then
+        # the two with the same feature and environment are created with ascending priorities
+        assert feature_segment_1.priority == 0
+        assert feature_segment_2.priority == 1
+
+        # the ones with different combinations of features and environments are all created with a priority of 0
+        assert feature_segment_3.priority == 0
+        assert feature_segment_4.priority == 0
+        assert feature_segment_5.priority == 0
 
 
 @pytest.mark.django_db
@@ -220,8 +277,12 @@ class FeatureStateTest(TestCase):
         identity = Identity.objects.create(identifier='test_identity', environment=self.environment)
         segment_1 = Segment.objects.create(name='Test Segment 1', project=self.project)
         segment_2 = Segment.objects.create(name='Test Segment 2', project=self.project)
-        feature_segment_p1 = FeatureSegment.objects.create(segment=segment_1, feature=self.feature, priority=1)
-        feature_segment_p2 = FeatureSegment.objects.create(segment=segment_2, feature=self.feature, priority=2)
+        feature_segment_p1 = FeatureSegment.objects.create(
+            segment=segment_1, feature=self.feature, environment=self.environment, priority=1
+        )
+        feature_segment_p2 = FeatureSegment.objects.create(
+            segment=segment_2, feature=self.feature, environment=self.environment, priority=2
+        )
 
         # When
         identity_state = FeatureState.objects.create(identity=identity, feature=self.feature,
