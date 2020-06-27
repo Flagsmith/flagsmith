@@ -16,21 +16,33 @@ def test_migrate_feature_segments_forward(migrator):
     organisation = Organisation.objects.create(name='Test Organisation')
     project = Project.objects.create(name='Test project', organisation=organisation)
     feature = Feature.objects.create(name='Test feature', project=project)
-    segment = Segment.objects.create(name='Test segment', project=project)
+    segment_1 = Segment.objects.create(name='Test segment 1', project=project)
+    segment_2 = Segment.objects.create(name='Test segment 2', project=project)
     environment_1 = Environment.objects.create(name='Test environment 1', project=project)
     environment_2 = Environment.objects.create(name='Test environment 2', project=project)
 
-    # create a feature segment without an environment and with enabled overridden to true
-    OldFeatureSegment.objects.create(feature=feature, segment=segment, enabled=True, priority=0)
+    # create 2 feature segment without an environment and with enabled overridden to true
+    OldFeatureSegment.objects.create(feature=feature, segment=segment_1, enabled=True, priority=0)
+    OldFeatureSegment.objects.create(feature=feature, segment=segment_2, enabled=True, priority=1)
 
     # When
     new_state = migrator.apply_tested_migration(('features', '0018_auto_20200607_1057'))
     NewFeatureSegment = new_state.apps.get_model('features', 'FeatureSegment')
 
-    # Then
-    assert NewFeatureSegment.objects.count() == 2
-    assert NewFeatureSegment.objects.filter(environment__pk=environment_1.pk, enabled=True).exists()
-    assert NewFeatureSegment.objects.filter(environment__pk=environment_2.pk, enabled=True).exists()
+    # Then - there are 4 feature segments, for each feature segment, create 1 for each environment
+    assert NewFeatureSegment.objects.count() == 4
+    assert NewFeatureSegment.objects.filter(
+        segment_id=segment_1.id, environment__pk=environment_1.pk, enabled=True
+    ).exists()
+    assert NewFeatureSegment.objects.filter(
+        segment_id=segment_1.id, environment__pk=environment_2.pk, enabled=True
+    ).exists()
+    assert NewFeatureSegment.objects.filter(
+        segment_id=segment_2.id, environment__pk=environment_1.pk, enabled=True
+    ).exists()
+    assert NewFeatureSegment.objects.filter(
+        segment_id=segment_2.id, environment__pk=environment_2.pk, enabled=True
+    ).exists()
     assert not NewFeatureSegment.objects.filter(environment__isnull=True).exists()
 
 

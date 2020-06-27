@@ -10,7 +10,6 @@ logger.setLevel(logging.INFO)
 def migrate_feature_segments_forward(apps, schema_editor):
     FeatureSegment = apps.get_model('features', 'FeatureSegment')
 
-    feature_segments_to_create = []
     # iterate over all current feature segments and ensure that one exists for all environments in it's project
     for feature_segment in FeatureSegment.objects.all():
         for idx, environment in enumerate(feature_segment.feature.project.environments.all()):
@@ -28,10 +27,8 @@ def migrate_feature_segments_forward(apps, schema_editor):
                 new_feature_segment = feature_segment
                 new_feature_segment.pk = None
                 new_feature_segment.environment = environment
-
-                feature_segments_to_create.append(new_feature_segment)
-
-    FeatureSegment.objects.bulk_create(feature_segments_to_create)
+                # call save to ensure that the feature states are created
+                new_feature_segment.save()
 
     assert not FeatureSegment.objects.filter(environment__isnull=True).exists()
 
