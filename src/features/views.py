@@ -3,7 +3,6 @@ import logging
 import coreapi
 from django.conf import settings
 from django.core.cache import caches
-from django.db import transaction
 from django.utils.decorators import method_decorator
 from drf_yasg import openapi
 from drf_yasg.utils import swagger_auto_schema
@@ -14,9 +13,7 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.schemas import AutoSchema
 
-from analytics.track import track_event
-from audit.models import AuditLog, RelatedObjectType, FEATURE_SEGMENT_UPDATED_MESSAGE, \
-    IDENTITY_FEATURE_STATE_DELETED_MESSAGE
+from audit.models import AuditLog, RelatedObjectType, IDENTITY_FEATURE_STATE_DELETED_MESSAGE
 from environments.authentication import EnvironmentKeyAuthentication
 from environments.models import Environment, Identity
 from environments.permissions import EnvironmentKeyPermissions, NestedEnvironmentPermissions
@@ -25,7 +22,8 @@ from .models import FeatureState, FeatureSegment
 from .permissions import FeaturePermissions, FeatureStatePermissions
 from .serializers import FeatureStateSerializerBasic, FeatureStateSerializerFull, \
     FeatureStateSerializerCreate, CreateFeatureSerializer, FeatureSerializer, \
-    FeatureStateValueSerializer, FeatureSegmentCreateSerializer, FeatureStateSerializerWithIdentity
+    FeatureStateValueSerializer, FeatureSegmentCreateSerializer, FeatureStateSerializerWithIdentity, \
+    FeatureSegmentListSerializer, FeatureSegmentQuerySerializer, FeatureSegmentChangePrioritiesSerializer
 
 logger = logging.getLogger()
 logger.setLevel(logging.INFO)
@@ -56,34 +54,6 @@ class FeatureViewSet(viewsets.ModelViewSet):
             return Response(status=status.HTTP_403_FORBIDDEN)
 
         return super().create(request, *args, **kwargs)
-
-    @action(detail=True, methods=["POST"])
-    @transaction.atomic
-    def segments(self, request, *args, **kwargs):
-        feature = self.get_object()
-        # delete existing segments to avoid priority clashes, note method is transactional so will roll back on error
-        FeatureSegment.objects.filter(feature=feature).delete()
-
-        self._create_feature_segments(feature, request.data)
-        self._create_feature_segments_audit_log()
-
-        return Response(data=FeatureSerializer(instance=feature).data, status=status.HTTP_200_OK)
-
-    @staticmethod
-    def _create_feature_segments(feature, feature_segment_data):
-        for feature_segment in feature_segment_data:
-            feature_segment["feature"] = feature.id
-            fs_serializer = FeatureSegmentCreateSerializer(data=feature_segment)
-            if fs_serializer.is_valid(raise_exception=True):
-                fs_serializer.save()
-
-    def _create_feature_segments_audit_log(self):
-        feature = self.get_object()
-        message = FEATURE_SEGMENT_UPDATED_MESSAGE % feature.name
-        AuditLog.objects.create(author=self.request.user, related_object_id=feature.id,
-                                related_object_type=RelatedObjectType.FEATURE.name,
-                                project=feature.project,
-                                log=message)
 
 
 @method_decorator(name='list', decorator=swagger_auto_schema(
@@ -385,3 +355,48 @@ def organisation_has_got_feature(request, organisation):
         organisation.has_requested_features = True
         organisation.save()
         return True
+
+
+@method_decorator(name='list', decorator=swagger_auto_schema(query_serializer=FeatureSegmentQuerySerializer()))
+@method_decorator(
+    name='update_priorities', decorator=swagger_auto_schema(responses={200: FeatureSegmentListSerializer(many=True)})
+)
+class FeatureSegmentViewSet(
+    mixins.ListModelMixin,
+    mixins.CreateModelMixin,
+    mixins.UpdateModelMixin,
+    mixins.DestroyModelMixin,
+    viewsets.GenericViewSet
+):
+    def get_queryset(self):
+        permitted_projects = self.request.user.get_permitted_projects(['VIEW_PROJECT'])
+        queryset = FeatureSegment.objects.filter(feature__project__in=permitted_projects)
+
+        if self.action == 'list':
+            filter_serializer = FeatureSegmentQuerySerializer(data=self.request.query_params)
+            filter_serializer.is_valid(raise_exception=True)
+            return queryset.filter(**filter_serializer.data)
+
+        return queryset
+
+    def get_serializer_class(self):
+        if self.action in ['create', 'update', 'partial_update']:
+            return FeatureSegmentCreateSerializer
+
+        if self.action == 'update_priorities':
+            return FeatureSegmentChangePrioritiesSerializer
+
+        return FeatureSegmentListSerializer
+
+    def get_serializer(self, *args, **kwargs):
+        if self.action == 'update_priorities':
+            # update the serializer kwargs to ensure docs here are correct
+            kwargs = {**kwargs, 'many': True, 'partial': True}
+        return super(FeatureSegmentViewSet, self).get_serializer(*args, **kwargs)
+
+    @action(detail=False, methods=['POST'], url_path='update-priorities')
+    def update_priorities(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        updated_instances = serializer.save()
+        return Response(FeatureSegmentListSerializer(instance=updated_instances, many=True).data)

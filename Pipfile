@@ -16,6 +16,7 @@ pylint = "*"
 "autopep8" = "*"
 pytest = "*"
 pytest-django = "*"
+django-test-migrations = "*"
 
 [packages]
 appdirs = "*"
@@ -51,3 +52,4 @@ django-environ = "*"
 django-trench = "*"
 djoser = "*"
 influxdb-client = "*"
+django-ordered-model = "*"
