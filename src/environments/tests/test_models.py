@@ -190,9 +190,9 @@ class IdentityTestCase(TransactionTestCase):
         remote_config = Feature.objects.create(name='test-remote-config', project=self.project,
                                                initial_value='initial-value', type='CONFIG')
 
-        FeatureSegment.objects.create(feature=feature_flag, segment=segment, enabled=True)
+        FeatureSegment.objects.create(feature=feature_flag, segment=segment, environment=self.environment, enabled=True)
         overridden_value = 'overridden-value'
-        FeatureSegment.objects.create(feature=remote_config, segment=segment,
+        FeatureSegment.objects.create(feature=remote_config, segment=segment, environment=self.environment,
                                       value=overridden_value, value_type=STRING)
 
         # When
@@ -221,9 +221,9 @@ class IdentityTestCase(TransactionTestCase):
         remote_config = Feature.objects.create(name='test-remote-config', project=self.project,
                                                initial_value=initial_value, type='CONFIG')
 
-        FeatureSegment.objects.create(feature=feature_flag, segment=segment, enabled=True)
+        FeatureSegment.objects.create(feature=feature_flag, segment=segment, environment=self.environment, enabled=True)
         overridden_value = 'overridden-value'
-        FeatureSegment.objects.create(feature=remote_config, segment=segment,
+        FeatureSegment.objects.create(feature=remote_config, segment=segment, environment=self.environment,
                                       value=overridden_value, value_type=STRING)
 
         # When
@@ -252,7 +252,7 @@ class IdentityTestCase(TransactionTestCase):
         # Feature segment value is converted to string in the serializer so we set as a string value here to test
         # bool value
         overridden_value = '12'
-        FeatureSegment.objects.create(feature=remote_config, segment=segment,
+        FeatureSegment.objects.create(feature=remote_config, segment=segment, environment=self.environment,
                                       value=overridden_value, value_type=INTEGER)
 
         # When
@@ -279,7 +279,7 @@ class IdentityTestCase(TransactionTestCase):
         # Feature segment value is converted to string in the serializer so we set as a string value here to test
         # bool value
         overridden_value = 'false'
-        FeatureSegment.objects.create(feature=remote_config, segment=segment,
+        FeatureSegment.objects.create(feature=remote_config, segment=segment, environment=self.environment,
                                       value=overridden_value, value_type=BOOLEAN)
 
         # When
@@ -313,11 +313,11 @@ class IdentityTestCase(TransactionTestCase):
 
         # which is overridden by both segments with different values
         overridden_value_1 = 'overridden-value-1'
-        FeatureSegment.objects.create(feature=remote_config, segment=segment_1,
+        FeatureSegment.objects.create(feature=remote_config, segment=segment_1, environment=self.environment,
                                       value=overridden_value_1, value_type=STRING, priority=1)
 
         overridden_value_2 = 'overridden-value-2'
-        FeatureSegment.objects.create(feature=remote_config, segment=segment_2,
+        FeatureSegment.objects.create(feature=remote_config, segment=segment_2, environment=self.environment,
                                       value=overridden_value_2, value_type=STRING, priority=2)
 
         # When - we get all feature states for an identity
