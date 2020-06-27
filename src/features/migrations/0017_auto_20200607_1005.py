@@ -20,6 +20,6 @@ class Migration(migrations.Migration):
         ),
         migrations.AlterUniqueTogether(
             name='featuresegment',
-            unique_together={('feature', 'environment', 'priority'), ('feature', 'environment', 'segment')},
+            unique_together={('feature', 'environment', 'segment')},
         ),
     ]
