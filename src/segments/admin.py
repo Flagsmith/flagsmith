@@ -1,3 +1,4 @@
+from django.conf import settings
 from django.contrib import admin
 
 from segments.models import SegmentRule, Condition, Segment
@@ -15,15 +16,18 @@ class ConditionsInline(admin.StackedInline):
     show_change_link = True
 
 
-@admin.register(Segment)
 class SegmentAdmin(admin.ModelAdmin):
     inlines = [
         RulesInline
     ]
 
 
-@admin.register(SegmentRule)
-class SegmentRule(admin.ModelAdmin):
+class SegmentRuleAdmin(admin.ModelAdmin):
     inlines = [
         ConditionsInline
     ]
+
+
+if settings.ENV == ('local', 'dev'):
+    admin.site.register(Segment, SegmentAdmin)
+    admin.site.register(SegmentRule, SegmentRuleAdmin)

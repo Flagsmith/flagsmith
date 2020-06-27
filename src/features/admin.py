@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 from __future__ import unicode_literals
 
+from django.conf import settings
 from django.contrib import admin
 from simple_history.admin import SimpleHistoryAdmin
 
@@ -13,7 +14,6 @@ class FeatureStateValueInline(admin.StackedInline):
     show_change_link = True
 
 
-@admin.register(Feature)
 class FeatureAdmin(SimpleHistoryAdmin):
     date_hierarchy = 'created_date'
     list_display = ('__str__', 'initial_value',
@@ -28,7 +28,6 @@ class FeatureAdmin(SimpleHistoryAdmin):
     )
 
 
-@admin.register(FeatureSegment)
 class FeatureSegmentAdmin(admin.ModelAdmin):
     model = FeatureSegment
 
@@ -41,7 +40,6 @@ class FeatureSegmentAdmin(admin.ModelAdmin):
         return super(FeatureSegmentAdmin, self).change_view(*args, **kwargs)
 
 
-@admin.register(FeatureState)
 class FeatureStateAdmin(SimpleHistoryAdmin):
     inlines = [
         FeatureStateValueInline,
@@ -58,7 +56,6 @@ class FeatureStateAdmin(SimpleHistoryAdmin):
     )
 
 
-@admin.register(FeatureStateValue)
 class FeatureStateValueAdmin(SimpleHistoryAdmin):
     list_display = ('feature_state', 'type', 'boolean_value',
                     'integer_value', 'string_value', )
@@ -72,3 +69,10 @@ class FeatureStateValueAdmin(SimpleHistoryAdmin):
         'feature_state__environment__name',
         'feature_state__identity__identifier',
     )
+
+
+if settings.ENV in ('local', 'dev'):
+    admin.site.register(Feature, FeatureAdmin)
+    admin.site.register(FeatureState, FeatureStateAdmin)
+    admin.site.register(FeatureSegment, FeatureSegmentAdmin)
+    admin.site.register(FeatureStateValue, FeatureStateValueAdmin)
