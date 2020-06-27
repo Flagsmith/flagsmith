@@ -4,8 +4,8 @@ from rest_framework.exceptions import ValidationError
 from audit.models import AuditLog, RelatedObjectType, FEATURE_CREATED_MESSAGE, FEATURE_UPDATED_MESSAGE, \
     FEATURE_STATE_UPDATED_MESSAGE, IDENTITY_FEATURE_STATE_UPDATED_MESSAGE
 from environments.models import Identity
-from features.utils import get_value_type, get_boolean_from_string, get_integer_from_string, BOOLEAN, INTEGER
-from segments.serializers import SegmentSerializerBasic
+from features.utils import BOOLEAN, INTEGER, STRING
+from .fields import FeatureSegmentValueField
 from .models import Feature, FeatureState, FeatureStateValue, FeatureSegment
 
 
@@ -46,46 +46,61 @@ class CreateFeatureSerializer(serializers.ModelSerializer):
 
 
 class FeatureSegmentCreateSerializer(serializers.ModelSerializer):
+    value = FeatureSegmentValueField(required=False)
+
     class Meta:
         model = FeatureSegment
-        fields = ('feature', 'segment', 'priority', 'enabled', 'value')
+        fields = ('id', 'feature', 'segment', 'environment', 'priority', 'enabled', 'value')
+        read_only_fields = ('id', 'priority',)
 
     def create(self, validated_data):
-        if validated_data.get('value') or validated_data.get('value') is False:
-            validated_data['value_type'] = get_value_type(validated_data['value'])
+        validated_data['value_type'] = self.context.get('value_type', STRING)
         return super(FeatureSegmentCreateSerializer, self).create(validated_data)
 
-    def to_internal_value(self, data):
-        if data.get('value') or data.get('value') is False:
-            data['value'] = str(data['value'])
-        return super(FeatureSegmentCreateSerializer, self).to_internal_value(data)
+    def update(self, instance, validated_data):
+        validated_data['value_type'] = self.context.get('value_type', STRING)
+        return super(FeatureSegmentCreateSerializer, self).update(instance, validated_data)
 
 
-class FeatureSegmentSerializer(serializers.ModelSerializer):
-    segment = SegmentSerializerBasic()
+
+class FeatureSegmentQuerySerializer(serializers.Serializer):
+    environment = serializers.IntegerField()
+    feature = serializers.IntegerField()
+
+
+class FeatureSegmentListSerializer(serializers.ModelSerializer):
     value = serializers.SerializerMethodField()
 
     class Meta:
         model = FeatureSegment
-        fields = ('segment', 'priority', 'enabled', 'value')
+        fields = ('id', 'segment', 'priority', 'environment', 'enabled', 'value')
+        read_only_fields = ('id', 'segment', 'priority', 'environment', 'enabled', 'value')
 
     def get_value(self, instance):
-        if instance.value:
-            value_type = get_value_type(instance.value)
-            if value_type == BOOLEAN:
-                return get_boolean_from_string(instance.value)
-            elif value_type == INTEGER:
-                return get_integer_from_string(instance.value)
+        return instance.get_value()
 
-        return instance.value
+
+class FeatureSegmentChangePrioritiesSerializer(serializers.Serializer):
+    priority = serializers.IntegerField(min_value=0, help_text="Value to change the feature segment's priority to.")
+    id = serializers.IntegerField()
+
+    def create(self, validated_data):
+        try:
+            instance = FeatureSegment.objects.get(id=validated_data['id'])
+            return self.update(instance, validated_data)
+        except FeatureSegment.DoesNotExist:
+            raise ValidationError("No feature segment exists with id: %s" % validated_data['id'])
+
+    def update(self, instance, validated_data):
+        instance.to(validated_data['priority'])
+        return instance
 
 
 class FeatureSerializer(serializers.ModelSerializer):
-    feature_segments = FeatureSegmentSerializer(many=True)
-
     class Meta:
         model = Feature
-        fields = "__all__"
+        fields = ('id', 'name', 'created_date', 'initial_value', 'description', 'default_enabled', 'type')
+        writeonly_fields = ('initial_value', 'default_enabled')
 
 
 class FeatureStateSerializerFull(serializers.ModelSerializer):
@@ -144,10 +159,6 @@ class FeatureStateSerializerFullWithIdentity(FeatureStateSerializerFull):
 
     def get_identity_identifier(self, instance):
         return instance.identity.identifier if instance.identity else None
-
-
-class FeatureStateSerializerFullWithIdentityAndSegment(FeatureStateSerializerFullWithIdentity):
-    feature_segment = FeatureSegmentSerializer()
 
 
 class FeatureStateSerializerCreate(serializers.ModelSerializer):

@@ -5,8 +5,10 @@ from django.core.exceptions import (NON_FIELD_ERRORS, ObjectDoesNotExist,
 from django.db import models
 from django.utils.encoding import python_2_unicode_compatible
 from django.utils.translation import ugettext_lazy as _
+from ordered_model.models import OrderedModelBase
 from simple_history.models import HistoricalRecords
 
+from features.helpers import get_correctly_typed_value
 from features.tasks import trigger_feature_state_change_webhooks
 from features.utils import get_boolean_from_string, get_integer_from_string, INTEGER, STRING, BOOLEAN, get_value_type
 from projects.models import Project
@@ -38,10 +40,10 @@ class Feature(models.Model):
         Project,
         related_name='features',
         help_text=_(
-            "Changing the project selected will remove previous Feature States for the previously "
-            "associated projects Environments that are related to this Feature. New default "
-            "Feature States will be created for the new selected projects Environments for this "
-            "Feature."
+            'Changing the project selected will remove previous Feature States for the previously '
+            'associated projects Environments that are related to this Feature. New default '
+            'Feature States will be created for the new selected projects Environments for this '
+            'Feature.'
         ),
         on_delete=models.CASCADE
     )
@@ -54,12 +56,12 @@ class Feature(models.Model):
     class Meta:
         ordering = ['id']
         # Note: uniqueness is changed to reference lowercase name in explicit SQL in the migrations
-        unique_together = ("name", "project")
+        unique_together = ('name', 'project')
 
     def save(self, *args, **kwargs):
-        """
+        '''
         Override save method to initialise feature states for all environments
-        """
+        '''
         if self.pk:
             # If the feature has moved to a new project, delete the feature states from the old project
             old_feature = Feature.objects.get(pk=self.pk)
@@ -84,24 +86,24 @@ class Feature(models.Model):
             )
 
     def validate_unique(self, *args, **kwargs):
-        """
+        '''
         Checks unique constraints on the model and raises ``ValidationError``
         if any failed.
-        """
+        '''
         super(Feature, self).validate_unique(*args, **kwargs)
 
         if Feature.objects.filter(project=self.project, name__iexact=self.name).exists():
             raise ValidationError(
                 {
                     NON_FIELD_ERRORS: [
-                        "Feature with that name already exists for this project. Note that feature "
-                        "names are case insensitive.",
+                        'Feature with that name already exists for this project. Note that feature '
+                        'names are case insensitive.',
                     ],
                 }
             )
 
     def __str__(self):
-        return "Project %s - Feature %s" % (self.project.name, self.name)
+        return 'Project %s - Feature %s' % (self.project.name, self.name)
 
 
 def get_next_segment_priority(feature):
@@ -113,45 +115,49 @@ def get_next_segment_priority(feature):
 
 
 @python_2_unicode_compatible
-class FeatureSegment(models.Model):
-    feature = models.ForeignKey(Feature, on_delete=models.CASCADE, related_name="feature_segments")
-    segment = models.ForeignKey('segments.Segment', related_name="feature_segments", on_delete=models.CASCADE)
-    priority = models.IntegerField(blank=True, null=True)
+class FeatureSegment(OrderedModelBase):
+    feature = models.ForeignKey(Feature, on_delete=models.CASCADE, related_name='feature_segments')
+    segment = models.ForeignKey('segments.Segment', related_name='feature_segments', on_delete=models.CASCADE)
+    environment = models.ForeignKey(
+        'environments.Environment', on_delete=models.CASCADE, related_name='feature_segments'
+    )
+
     enabled = models.BooleanField(default=False)
     value = models.CharField(max_length=2000, blank=True, null=True)
     value_type = models.CharField(choices=FEATURE_STATE_VALUE_TYPES, max_length=50, blank=True, null=True)
 
+    # specific attributes for managing the order of feature segments
+    priority = models.PositiveIntegerField(editable=False, db_index=True)
+    order_field_name = 'priority'
+    order_with_respect_to = ('feature', 'environment')
+
+    # used for audit purposes
+    history = HistoricalRecords()
+
     class Meta:
-        unique_together = [('feature', 'segment'), ('feature', 'priority')]
+        unique_together = ('feature', 'environment', 'segment')
+        ordering = ('priority',)
 
     def save(self, *args, **kwargs):
-        if not self.pk and not self.priority:
-            # intialise priority field on object creation if not set
-            self.priority = get_next_segment_priority(self.feature)
-
         super(FeatureSegment, self).save(*args, **kwargs)
 
-        # create feature states
-        for environment in self.feature.project.environments.all():
-            fs, _ = FeatureState.objects.get_or_create(environment=environment, feature=self.feature,
-                                                       feature_segment=self)
-            fs.enabled = self.enabled
-            fs.save()
+        # update or create feature state for environment
+        FeatureState.objects.update_or_create(
+            environment=self.environment, feature=self.feature, feature_segment=self, defaults={"enabled": self.enabled}
+        )
 
     def __str__(self):
-        return "FeatureSegment for " + self.feature.name + " with priority " + str(self.priority)
+        return 'FeatureSegment for ' + self.feature.name + ' with priority ' + str(self.priority)
 
+    # noinspection PyTypeChecker
     def get_value(self):
-        return {
-            BOOLEAN: get_boolean_from_string(self.value),
-            INTEGER: get_boolean_from_string(self.value)
-        }.get(self.value_type, self.value)
+        return get_correctly_typed_value(self.value_type, self.value)
 
     def __lt__(self, other):
-        """
+        '''
         Kind of counter intuitive but since priority 1 is highest, we want to check if priority is GREATER than the
         priority of the other feature segment.
-        """
+        '''
         return other and self.priority > other.priority
 
 
@@ -169,26 +175,26 @@ class FeatureState(models.Model):
     history = HistoricalRecords()
 
     class Meta:
-        unique_together = (("feature", "environment", "identity"), ("feature", "environment", "feature_segment"))
+        unique_together = (('feature', 'environment', 'identity'), ('feature', 'environment', 'feature_segment'))
         ordering = ['id']
 
     def __gt__(self, other):
-        """
+        '''
         Checks if the current feature state is higher priority that the provided feature state.
 
         :param other: (FeatureState) the feature state to compare the priority of
         :return: True if self is higher priority than other
-        """
+        '''
         if self.environment != other.environment:
-            raise ValueError("Cannot compare feature states as they belong to different environments.")
+            raise ValueError('Cannot compare feature states as they belong to different environments.')
 
         if self.feature != other.feature:
-            raise ValueError("Cannot compare feature states as they belong to different features.")
+            raise ValueError('Cannot compare feature states as they belong to different features.')
 
         if self.identity:
             # identity is the highest priority so we can always return true
             if other.identity and self.identity != other.identity:
-                raise ValueError("Cannot compare feature states as they are for different identities.")
+                raise ValueError('Cannot compare feature states as they are for different identities.')
             return True
 
         if self.feature_segment:
@@ -300,40 +306,40 @@ class FeatureState(models.Model):
     @staticmethod
     def _get_feature_state_key_name(fsv_type):
         return {
-            INTEGER: "integer_value",
-            BOOLEAN: "boolean_value",
-            STRING: "string_value",
-        }.get(fsv_type, "string_value")  # The default was chosen for backwards compatibility
+            INTEGER: 'integer_value',
+            BOOLEAN: 'boolean_value',
+            STRING: 'string_value',
+        }.get(fsv_type, 'string_value')  # The default was chosen for backwards compatibility
 
     def generate_feature_state_value_data(self, value):
-        """
+        '''
         Takes the value of a feature state to generate a feature state value and returns dictionary
         to use for passing into feature state value serializer
 
         :param value: feature state value of variable type
         :return: dictionary to pass directly into feature state value serializer
-        """
+        '''
         fsv_type = type(value).__name__
         accepted_types = (STRING, INTEGER, BOOLEAN)
 
         return {
             # Default to string if not an anticipate type value to keep backwards compatibility.
-            "type": fsv_type if fsv_type in accepted_types else STRING,
-            "feature_state": self.id,
+            'type': fsv_type if fsv_type in accepted_types else STRING,
+            'feature_state': self.id,
             self._get_feature_state_key_name(fsv_type): value
         }
 
     def __str__(self):
         if self.environment is not None:
-            return "Project %s - Environment %s - Feature %s - Enabled: %r" % \
+            return 'Project %s - Environment %s - Feature %s - Enabled: %r' % \
                    (self.environment.project.name,
                     self.environment.name, self.feature.name,
                     self.enabled)
         elif self.identity is not None:
-            return "Identity %s - Feature %s - Enabled: %r" % (self.identity.identifier,
+            return 'Identity %s - Feature %s - Enabled: %r' % (self.identity.identifier,
                                                                self.feature.name, self.enabled)
         else:
-            return "Feature %s - Enabled: %r" % (self.feature.name, self.enabled)
+            return 'Feature %s - Enabled: %r' % (self.feature.name, self.enabled)
 
 
 class FeatureStateValue(models.Model):
