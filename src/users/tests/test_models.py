@@ -2,8 +2,9 @@ from unittest import TestCase
 
 import pytest
 
+from django.db.utils import IntegrityError
 from environments.models import UserEnvironmentPermission, EnvironmentPermissionModel, Environment
-from organisations.models import Organisation, OrganisationRole
+from organisations.models import Organisation, OrganisationRole, UserOrganisation
 from projects.models import Project, UserProjectPermission, ProjectPermissionModel
 from users.models import FFAdminUser
 
@@ -82,3 +83,13 @@ class FFAdminUserTestCase(TestCase):
 
         # Then
         assert environments.count() == 1
+
+    def test_unique_user_organisation(self):
+        # Given organisation and user
+
+        # When
+        self.user.add_organisation(self.organisation, OrganisationRole.ADMIN)
+
+        # Then
+        with pytest.raises(IntegrityError):
+            self.user.add_organisation(self.organisation, OrganisationRole.USER)
