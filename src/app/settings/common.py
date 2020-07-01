@@ -329,14 +329,6 @@ CACHES = {
     }
 }
 
-if env.bool('USE_S3_STORAGE', default=False):
-    STATICFILES_STORAGE = 'storages.backends.s3boto3.S3Boto3Storage'
-    AWS_STORAGE_BUCKET_NAME = os.environ['AWS_STORAGE_BUCKET_NAME']
-    AWS_S3_REGION_NAME = os.environ.get('AWS_S3_REGION_NAME', 'eu-west-2')
-    AWS_LOCATION = 'static'
-    AWS_DEFAULT_ACL = 'public-read'
-    AWS_S3_ADDRESSING_STYLE = 'virtual'
-
 LOG_LEVEL = env.str('LOG_LEVEL', 'WARNING')
 
 TRENCH_AUTH = {
