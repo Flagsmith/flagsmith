@@ -216,6 +216,7 @@ CORS_ALLOW_HEADERS = default_headers + (
 )
 
 DEFAULT_FROM_EMAIL = "noreply@bullet-train.io"
+SENDER_EMAIL = os.environ.get('SENDER_EMAIL', 'noreply@bullettrain.com')
 EMAIL_CONFIGURATION = {
     # Invitations with name is anticipated to take two arguments. The persons name and the
     # organisation name they are invited to.
@@ -226,9 +227,12 @@ EMAIL_CONFIGURATION = {
     'INVITE_SUBJECT_WITHOUT_NAME': 'You have been invited to join the organisation \'%s\' on '
                                    'Bullet Train',
     # The email address invitations will be sent from.
-    'INVITE_FROM_EMAIL': 'noreply@bullettrain.com',
+    'INVITE_FROM_EMAIL': SENDER_EMAIL,
 
 }
+
+AWS_SES_REGION_NAME = os.environ.get('AWS_SES_REGION_NAME')
+AWS_SES_REGION_ENDPOINT = os.environ.get('AWS_SES_REGION_ENDPOINT')
 
 # Used on init to create admin user for the site, update accordingly before hitting /auth/init
 ALLOW_ADMIN_INITIATION_VIA_URL = True
@@ -243,9 +247,9 @@ ACCOUNT_AUTHENTICATION_METHOD = 'email'
 ACCOUNT_EMAIL_VERIFICATION = 'none'  # TODO: configure email verification
 
 # SendGrid
-EMAIL_BACKEND = 'sgbackend.SendGridBackend'
+EMAIL_BACKEND = os.environ.get('EMAIL_BACKEND', 'sgbackend.SendGridBackend')
 SENDGRID_API_KEY = os.environ.get('SENDGRID_API_KEY')
-if not SENDGRID_API_KEY:
+if EMAIL_BACKEND == 'sgbackend.SendGridBackend' and not SENDGRID_API_KEY:
     warnings.warn(
         "`SENDGRID_API_KEY` has not been configured. You will not receive emails.")
 
