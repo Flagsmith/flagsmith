@@ -1,9 +1,9 @@
 from app.settings.common import *
 import os
 
-import dj_database_url
+from app.utils import parse_database_url
 
-DATABASES['default'] = dj_database_url.parse(os.environ['DATABASE_URL'], conn_max_age=60)
+DATABASES['default'] = parse_database_url(os.environ['DATABASE_URL'])
 
 DEBUG = False
 
