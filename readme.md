@@ -1,4 +1,4 @@
-<img width="100%" src="./hero.png"/>
+[<img alt="Feature Flag, Remote Config and A/B Testing platform, Bullet Train" width="100%" src="./hero.png"/>](https://bullet-train.io/)
 
 [![Donate](https://liberapay.com/assets/widgets/donate.svg)](https://liberapay.com/Bullet-Train/donate)
 
