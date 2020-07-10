@@ -29,6 +29,7 @@ from .serializers import EnvironmentSerializerLight, IdentitySerializer, TraitSe
     CreateUpdateUserPermissionGroupEnvironmentPermissionSerializer, \
     ListUserPermissionGroupEnvironmentPermissionSerializer, \
     SDKCreateUpdateTraitSerializer, SDKBulkCreateUpdateTraitSerializer
+from analytics.track import track_request_amplitude_async
 
 logger = get_logger(__name__)
 
@@ -397,11 +398,11 @@ class SDKIdentities(SDKAPIView):
 
         feature_name = request.query_params.get('feature')
         if feature_name:
-            return self._get_single_feature_state_response(identity, feature_name)
+            return self._get_single_feature_state_response(identity, feature_name, request)
         else:
-            return self._get_all_feature_states_for_user_response(identity)
+            return self._get_all_feature_states_for_user_response(identity, request)
 
-    def _get_single_feature_state_response(self, identity, feature_name):
+    def _get_single_feature_state_response(self, identity, feature_name, request):
         for feature_state in identity.get_all_feature_states():
             if feature_state.feature.name == feature_name:
                 serializer = FeatureStateSerializerFull(feature_state)
@@ -412,9 +413,14 @@ class SDKIdentities(SDKAPIView):
             status=status.HTTP_404_NOT_FOUND
         )
 
-    def _get_all_feature_states_for_user_response(self, identity):
-        serialized_flags = FeatureStateSerializerFull(identity.get_all_feature_states(), many=True)
+    def _get_all_feature_states_for_user_response(self, identity, request):
+        all_feature_states = identity.get_all_feature_states()
+        serialized_flags = FeatureStateSerializerFull(all_feature_states, many=True)
         serialized_traits = TraitSerializerBasic(identity.get_all_user_traits(), many=True)
+
+        # If we have an amplitude API key, send the flags viewed by the user to their API
+        if request.environment.amplitude_api_key is not None:
+            track_request_amplitude_async(request.environment, identity, all_feature_states)
 
         response = {
             "flags": serialized_flags.data,
