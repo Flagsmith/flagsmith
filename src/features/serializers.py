@@ -62,7 +62,6 @@ class FeatureSegmentCreateSerializer(serializers.ModelSerializer):
         return super(FeatureSegmentCreateSerializer, self).update(instance, validated_data)
 
 
-
 class FeatureSegmentQuerySerializer(serializers.Serializer):
     environment = serializers.IntegerField()
     feature = serializers.IntegerField()
