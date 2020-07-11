@@ -247,6 +247,22 @@ class FeatureSegmentTest(TestCase):
         assert feature_segment_4.priority == 0
         assert feature_segment_5.priority == 0
 
+    def test_feature_state_value_for_feature_segments(self):
+        # Given
+        segment = Segment.objects.create(name="Test Segment", project=self.project)
+
+        # When
+        feature_segment = FeatureSegment.objects.create(
+            segment=segment, feature=self.remote_config, environment=self.environment, value="test", value_type=STRING
+        )
+
+        # Then
+        feature_state = FeatureState.objects.get(feature=self.remote_config, feature_segment=feature_segment)
+        assert not FeatureStateValue.objects.filter(feature_state=feature_state).exists()
+
+        # and the feature_state value is correct
+        assert feature_state.get_feature_state_value() == feature_segment.get_value()
+
 
 @pytest.mark.django_db
 class FeatureStateTest(TestCase):
@@ -357,3 +373,4 @@ class FeatureStateTest(TestCase):
 
         # Then
         mock_trigger_webhooks.assert_called_with(feature_state)
+
