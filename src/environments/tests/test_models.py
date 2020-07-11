@@ -6,7 +6,7 @@ from features.models import Feature, FeatureState, FeatureSegment
 from features.utils import INTEGER, STRING, BOOLEAN
 from organisations.models import Organisation
 from projects.models import Project
-from segments.models import Segment, SegmentRule, Condition, EQUAL, GREATER_THAN_INCLUSIVE
+from segments.models import Segment, SegmentRule, Condition, EQUAL, GREATER_THAN_INCLUSIVE, GREATER_THAN
 from util.tests import Helper
 
 
@@ -327,3 +327,38 @@ class IdentityTestCase(TransactionTestCase):
         assert len(feature_states) == 1
         remote_config_feature_state = next(filter(lambda fs: fs.feature == remote_config, feature_states))
         assert remote_config_feature_state.get_feature_state_value() == overridden_value_1
+
+    def test_remote_config_override(self):
+        """specific test for bug raised following work to make feature segments unique to an environment"""
+        # GIVEN - an identity with a trait that has a value of 10
+        identity = Identity.objects.create(identifier="test", environment=self.environment)
+        trait = Trait.objects.create(identity=identity, trait_key="my_trait", integer_value=10, value_type=INTEGER)
+
+        # and a segment that matches users that have a value for this trait greater than 5
+        segment = Segment.objects.create(name="Test segment", project=self.project)
+        segment_rule = SegmentRule.objects.create(segment=segment, type=SegmentRule.ALL_RULE)
+        condition = Condition.objects.create(
+            rule=segment_rule, operator=GREATER_THAN, value="5", property=trait.trait_key
+        )
+
+        # and a feature that has a segment override in the same environment as the identity
+        remote_config = Feature.objects.create(name="my_feature", initial_value="initial value", project=self.project)
+        feature_segment = FeatureSegment.objects.create(
+            feature=remote_config,
+            environment=self.environment,
+            segment=segment,
+            value="overridden value 1",
+            value_type=STRING
+        )
+
+        # WHEN - the value on the feature segment is updated and we get all the feature states for the identity
+        feature_segment.value = "overridden value 2"
+        feature_segment.save()
+        feature_states = identity.get_all_feature_states()
+
+        # THEN - the feature state value is correctly set to the newly updated feature segment value
+        assert len(feature_states) == 1
+
+        overridden_feature_state = feature_states[0]
+        assert overridden_feature_state.get_feature_state_value() == feature_segment.value
+

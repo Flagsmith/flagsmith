@@ -207,6 +207,9 @@ class FeatureState(models.Model):
         return not (other.feature_segment or other.identity)
 
     def get_feature_state_value(self):
+        if self.feature_segment:
+            return self.feature_segment.get_value()
+
         try:
             value_type = self.feature_state_value.type
         except ObjectDoesNotExist:
@@ -251,10 +254,12 @@ class FeatureState(models.Model):
         # create default feature state value for feature state
         # note: this is get_or_create since feature state values are updated separately, and hence if this is set to
         # update_or_create, it overwrites the FSV with the initial value again
-        FeatureStateValue.objects.get_or_create(
-            feature_state=self,
-            defaults=self._get_defaults()
-        )
+        # Note: feature segments are handled differently as they have their own values
+        if not self.feature_segment:
+            FeatureStateValue.objects.get_or_create(
+                feature_state=self,
+                defaults=self._get_defaults()
+            )
         # TODO: move this to an async call using celery or django-rq
         trigger_feature_state_change_webhooks(self)
 
