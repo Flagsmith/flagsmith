@@ -192,6 +192,8 @@ If you have any questions about our projects you can email
 
 [Website](https://bullet-train.io)
 
+[Product Roadmap](https://product-hub.io/roadmap/5d81f2406180537538d99f28)
+
 [Documentation](https://docs.bullet-train.io/)
 
 [Code Examples](https://github.com/BulletTrainHQ/bullet-train-examples)
