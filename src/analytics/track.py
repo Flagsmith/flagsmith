@@ -32,7 +32,6 @@ TRACKED_RESOURCE_ACTIONS = {
 def track_request_googleanalytics_async(request):
     return track_request_googleanalytics(request)
 
-
 @postpone
 def track_request_influxdb_async(request):
     return track_request_influxdb(request)
@@ -41,6 +40,9 @@ def track_request_influxdb_async(request):
 def track_request_amplitude_async(environment, identity, all_feature_states):
     return track_request_amplitude(environment, identity, all_feature_states)
 
+@postpone
+def track_event_datadog_async(organisation, data, event_type):
+    return track_event_datadog(organisation, data, event_type)
 
 def get_resource_from_uri(request_uri):
     """
@@ -125,3 +127,17 @@ def track_request_amplitude(environment, identity, all_feature_states):
         "identification": json.dumps([identification])
     }
     response = requests.post(f"https://api.amplitude.com/identify", data=data)
+
+
+def track_event_datadog(organisation, data, event_type):
+    """
+    Sends Audit events to Datadog
+    """
+    event = {}
+    event["text"] = "this is a test"
+    event["title"] = "this is a title test"
+    
+    response = requests.post(
+        organisation.datadog_api_base_url + "api/v1/events?api_key=" + organisation.datadog_api_key, 
+        data=json.dumps(event))
+    print(str(response))
