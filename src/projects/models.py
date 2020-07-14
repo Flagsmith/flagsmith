@@ -13,8 +13,6 @@ class Project(models.Model):
     name = models.CharField(max_length=2000)
     created_date = models.DateTimeField('DateCreated', auto_now_add=True)
     organisation = models.ForeignKey(Organisation, related_name='projects', on_delete=models.CASCADE)
-    datadog_api_key = models.CharField(max_length=100, blank=True, null=True)
-    datadog_api_base_url = models.CharField(max_length=100, blank=True, null=True)
 
     class Meta:
         ordering = ['id']
