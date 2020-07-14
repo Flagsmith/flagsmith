@@ -7,6 +7,7 @@ from audit.models import AuditLog
 from audit.serializers import AuditLogSerializer
 from util.logging import get_logger
 from webhooks.webhooks import call_organisation_webhooks, WebhookEventType
+from analytics.track import track_event_datadog_async
 
 logger = get_logger(__name__)
 
@@ -19,9 +20,8 @@ def call_webhooks(sender, instance, **kwargs):
     organisation = instance.project.organisation or instance.environment.project.organisation
     call_organisation_webhooks(organisation, data, WebhookEventType.AUDIT_LOG_CREATED)
 
-    from analytics.track import track_event_datadog_async
-
+    
     # Send data to relevant integrations
-    track_event_datadog_async(organisation, data, WebhookEventType.AUDIT_LOG_CREATED)
+    track_event_datadog_async(instance.project, data, WebhookEventType.AUDIT_LOG_CREATED)
 
 

@@ -27,9 +27,6 @@ class Organisation(models.Model):
     alerted_over_plan_limit = models.BooleanField(default=False)
     stop_serving_flags = models.BooleanField(default=False, help_text='Enable this to cease serving flags for this '
                                                                       'organisation.')
-    datadog_api_key = models.CharField(max_length=100, blank=True, null=True)
-    datadog_api_base_url = models.CharField(max_length=100, blank=True, null=True)
-
     class Meta:
         ordering = ['id']
 

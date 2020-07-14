@@ -41,8 +41,8 @@ def track_request_amplitude_async(environment, identity, all_feature_states):
     return track_request_amplitude(environment, identity, all_feature_states)
 
 @postpone
-def track_event_datadog_async(organisation, data, event_type):
-    return track_event_datadog(organisation, data, event_type)
+def track_event_datadog_async(project, data, event_type):
+    return track_event_datadog(project, data, event_type)
 
 def get_resource_from_uri(request_uri):
     """
@@ -127,17 +127,17 @@ def track_request_amplitude(environment, identity, all_feature_states):
         "identification": json.dumps([identification])
     }
     response = requests.post(f"https://api.amplitude.com/identify", data=data)
+    logger.debug('Sent event to Amplitude with response code %s' % str(response))
 
-
-def track_event_datadog(organisation, data, event_type):
+def track_event_datadog(project, data, event_type):
     """
     Sends Audit events to Datadog
     """
     event = {}
-    event["text"] = "this is a test"
-    event["title"] = "this is a title test"
+    event["text"] = data["log"] + " by user " + data["author"]["email"]
+    event["title"] = "Bullet Train Feature Flag Event"
     
     response = requests.post(
-        organisation.datadog_api_base_url + "api/v1/events?api_key=" + organisation.datadog_api_key, 
+        project.datadog_api_base_url + "api/v1/events?api_key=" + project.datadog_api_key, 
         data=json.dumps(event))
-    print(str(response))
+    logger.debug('Sent event to DataDog with response code %s' % str(response))
