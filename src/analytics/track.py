@@ -1,8 +1,7 @@
 import logging
 import uuid
-from threading import Thread
 
-import requests, json
+import requests
 from django.conf import settings
 from django.core.cache import caches
 from six.moves.urllib.parse import quote  # python 2/3 compatible urllib import
@@ -36,13 +35,6 @@ def track_request_googleanalytics_async(request):
 def track_request_influxdb_async(request):
     return track_request_influxdb(request)
 
-@postpone
-def track_request_amplitude_async(environment, identity, all_feature_states):
-    return track_request_amplitude(environment, identity, all_feature_states)
-
-@postpone
-def track_event_datadog_async(project, data, event_type):
-    return track_event_datadog(project, data, event_type)
 
 def get_resource_from_uri(request_uri):
     """
@@ -108,36 +100,3 @@ def track_request_influxdb(request):
 
         influxdb = InfluxDBWrapper("api_call", "request_count", 1, tags=tags)
         influxdb.write()
-
-
-def track_request_amplitude(environment, identity, all_feature_states):
-    """
-    Sends Identity flags to Amplitude for AB testing
-    """
-    identification = {}
-    identification["user_id"] = identity.identifier
-
-    user_properties = {}
-    for feature_state in all_feature_states:
-        user_properties[str(feature_state.feature.name)] = feature_state.get_feature_state_value()     
-    identification["user_properties"] = user_properties
-
-    data = {
-        "api_key": environment.amplitude_api_key,
-        "identification": json.dumps([identification])
-    }
-    response = requests.post(f"https://api.amplitude.com/identify", data=data)
-    logger.debug('Sent event to Amplitude with response code %s' % str(response))
-
-def track_event_datadog(project, data, event_type):
-    """
-    Sends Audit events to Datadog
-    """
-    event = {}
-    event["text"] = data["log"] + " by user " + data["author"]["email"]
-    event["title"] = "Bullet Train Feature Flag Event"
-    
-    response = requests.post(
-        project.datadog_api_base_url + "api/v1/events?api_key=" + project.datadog_api_key, 
-        data=json.dumps(event))
-    logger.debug('Sent event to DataDog with response code %s' % str(response))

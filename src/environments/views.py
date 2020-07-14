@@ -17,6 +17,7 @@ from rest_framework.schemas import AutoSchema
 from environments.authentication import EnvironmentKeyAuthentication
 from environments.permissions import EnvironmentKeyPermissions, EnvironmentPermissions, NestedEnvironmentPermissions
 from features.serializers import FeatureStateSerializerFull
+from integrations.amplitude.amplitude import AmplitudeWrapper
 from permissions.serializers import PermissionModelSerializer, MyUserObjectPermissionsSerializer
 from util.logging import get_logger
 from util.views import SDKAPIView
@@ -29,7 +30,6 @@ from .serializers import EnvironmentSerializerLight, IdentitySerializer, TraitSe
     CreateUpdateUserPermissionGroupEnvironmentPermissionSerializer, \
     ListUserPermissionGroupEnvironmentPermissionSerializer, \
     SDKCreateUpdateTraitSerializer, SDKBulkCreateUpdateTraitSerializer
-from analytics.track import track_request_amplitude_async
 
 logger = get_logger(__name__)
 
@@ -419,8 +419,14 @@ class SDKIdentities(SDKAPIView):
         serialized_traits = TraitSerializerBasic(identity.get_all_user_traits(), many=True)
 
         # If we have an amplitude API key, send the flags viewed by the user to their API
-        if request.environment.amplitude_api_key is not None:
-            track_request_amplitude_async(request.environment, identity, all_feature_states)
+        if identity.environment.amplitude_api_key is not None:
+            amplitude = AmplitudeWrapper(identity.environment.api_key)
+            user_properties = {
+                feature_state.feature.name: feature_state.get_feature_state_value()
+                for feature_state
+                in all_feature_states
+            }
+            amplitude.identify_user_async(identity.identifier, **user_properties)
 
         response = {
             "flags": serialized_flags.data,

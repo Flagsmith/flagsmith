@@ -110,6 +110,9 @@ INSTALLED_APPS = [
 
     # Used for ordering models (e.g. FeatureSegment)
     'ordered_model',
+
+    # Third party integrations
+    'integrations.datadog'
 ]
 
 if GOOGLE_ANALYTICS_KEY or INFLUXDB_TOKEN:
