@@ -18,3 +18,10 @@ def call_webhooks(sender, instance, **kwargs):
         logger.warning('Audit log without project or environment. Not sending webhook.')
     organisation = instance.project.organisation or instance.environment.project.organisation
     call_organisation_webhooks(organisation, data, WebhookEventType.AUDIT_LOG_CREATED)
+
+    from analytics.track import track_event_datadog_async
+
+    # Send data to relevant integrations
+    track_event_datadog_async(organisation, data, WebhookEventType.AUDIT_LOG_CREATED)
+
+
