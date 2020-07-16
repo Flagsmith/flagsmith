@@ -8,7 +8,7 @@ from users.serializers import UserListSerializer, UserPermissionGroupSerializerL
 class ProjectSerializer(serializers.ModelSerializer):
     class Meta:
         model = Project
-        fields = ('id', 'name', 'organisation', 'datadog_api_key', 'datadog_api_base_url')
+        fields = ('id', 'name', 'organisation')
 
 
 class CreateUpdateUserProjectPermissionSerializer(CreateUpdateUserPermissionSerializerABC):

@@ -28,11 +28,11 @@ def send_audit_log_event_to_datadog(sender, instance, **kwargs):
         logger.warning("Audit log missing project, not sending data to DataDog.")
         return
 
-    data_dog_config = instance.project.data_dog_config
-    if not data_dog_config:
+    if not hasattr(instance.project, 'data_dog_config'):
         logger.debug("No datadog integration configured for project %s" % instance.project.id)
         return
 
+    data_dog_config = instance.project.data_dog_config
     data_dog = DataDogWrapper(base_url=data_dog_config.base_url, api_key=data_dog_config.api_key)
-    event_data = data_dog.generate_event_data(log=instance.log, email=instance.author.email)
+    event_data = data_dog.generate_event_data(log=instance.log, email=instance.author.email, environment_name=instance.environment.name.lower())
     data_dog.track_event_async(event=event_data)

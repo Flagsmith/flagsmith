@@ -1,4 +1,5 @@
 import requests
+import json
 
 from util.logging import get_logger
 from util.util import postpone
@@ -13,7 +14,7 @@ class DataDogWrapper:
 
     def _track_event(self, event: dict) -> None:
         url = f"{self.base_url}api/v1/events?api_key={self.api_key}"
-        response = requests.post(url, data=event)
+        response = requests.post(url, data=json.dumps(event))
         logger.debug("Sent event to DataDog. Response code was %s" % response.status_code)
 
     @postpone
@@ -21,8 +22,11 @@ class DataDogWrapper:
         self._track_event(event)
 
     @staticmethod
-    def generate_event_data(log: str, email: str):
-        return {
+    def generate_event_data(log: str, email: str, environment_name: str):
+        event_data = {
             "text": f"{log} by user {email}",
             "title": "Bullet Train Feature Flag Event"
         }
+
+        event_data["tags"] = ["env:" + environment_name]
+        return event_data
