@@ -1,5 +1,5 @@
 import json
-from unittest import TestCase
+from unittest import TestCase, mock
 
 import pytest
 from django.urls import reverse
@@ -10,11 +10,15 @@ from audit.models import AuditLog, RelatedObjectType, IDENTITY_FEATURE_STATE_UPD
     IDENTITY_FEATURE_STATE_DELETED_MESSAGE
 from environments.models import Environment, Identity
 from features.models import Feature, FeatureState, FeatureSegment, CONFIG, FeatureStateValue
+from features.utils import INTEGER, BOOLEAN, STRING
 from organisations.models import Organisation, OrganisationRole
 from projects.models import Project
 from segments.models import Segment
 from users.models import FFAdminUser
 from util.tests import Helper
+
+# patch this function as it's triggering extra threads and causing errors
+mock.patch("features.models.trigger_feature_state_change_webhooks").start()
 
 
 @pytest.mark.django_db
@@ -158,23 +162,6 @@ class ProjectFeatureTestCase(TestCase):
         # Then
         assert AuditLog.objects.filter(related_object_type=RelatedObjectType.FEATURE.name).count() == 1
 
-    def test_audit_log_created_when_feature_segments_updated(self):
-        # Given
-        segment = Segment.objects.create(name='Test segment', project=self.project)
-        feature = Feature.objects.create(name='Test feature', project=self.project)
-        url = reverse('api-v1:projects:project-features-segments', args=[self.project.id, feature.id])
-        data = [{
-            'segment': segment.id,
-            'priority': 1,
-            'enabled': True
-        }]
-
-        # When
-        self.client.post(url, data=json.dumps(data), content_type='application/json')
-
-        # Then
-        assert AuditLog.objects.filter(related_object_type=RelatedObjectType.FEATURE.name).count() == 1
-
     def test_audit_log_created_when_feature_state_created_for_identity(self):
         # Given
         feature = Feature.objects.create(name='Test feature', project=self.project)
@@ -259,79 +246,195 @@ class FeatureSegmentViewTest(TestCase):
         self.feature = Feature.objects.create(project=self.project, name='Test feature')
         self.segment = Segment.objects.create(project=self.project, name='Test segment')
 
-    def test_when_feature_segments_updated_then_feature_states_updated_for_each_environment(self):
+    def test_list_feature_segments(self):
         # Given
-        url = reverse('api-v1:projects:project-features-segments', args=[self.project.id, self.feature.id])
-        FeatureSegment.objects.create(segment=self.segment, feature=self.feature, enabled=False)
-        data = [{
+        base_url = reverse('api-v1:features:feature-segment-list')
+        url = f"{base_url}?environment={self.environment_1.id}&feature={self.feature.id}"
+        segment_2 = Segment.objects.create(project=self.project, name='Segment 2')
+        segment_3 = Segment.objects.create(project=self.project, name='Segment 3')
+
+        FeatureSegment.objects.create(
+            feature=self.feature, segment=self.segment, environment=self.environment_1, value="123", value_type=INTEGER
+        )
+        FeatureSegment.objects.create(
+            feature=self.feature, segment=segment_2, environment=self.environment_1, value="True", value_type=BOOLEAN
+        )
+        FeatureSegment.objects.create(
+            feature=self.feature, segment=segment_3, environment=self.environment_1, value="str", value_type=STRING
+        )
+        FeatureSegment.objects.create(feature=self.feature, segment=self.segment, environment=self.environment_2)
+
+        # When
+        response = self.client.get(url)
+
+        # Then
+        assert response.status_code == status.HTTP_200_OK
+        response_json = response.json()
+        assert response_json["count"] == 3
+        for result in response_json["results"]:
+            assert result["environment"] == self.environment_1.id
+
+    def test_create_feature_segment_with_integer_value(self):
+        # Given
+        data = {
+            "feature": self.feature.id,
+            "segment": self.segment.id,
+            "environment": self.environment_1.id,
+            "value": 123
+        }
+        url = reverse("api-v1:features:feature-segment-list")
+
+        # When
+        response = self.client.post(url, data=json.dumps(data), content_type='application/json')
+
+        # Then
+        assert response.status_code == status.HTTP_201_CREATED
+        response_json = response.json()
+        assert response_json["id"]
+        assert response_json["value"] == 123
+
+    def test_create_feature_segment_with_boolean_value(self):
+        # Given
+        data = {
+            "feature": self.feature.id,
+            "segment": self.segment.id,
+            "environment": self.environment_1.id,
+            "value": True
+        }
+        url = reverse("api-v1:features:feature-segment-list")
+
+        # When
+        response = self.client.post(url, data=json.dumps(data), content_type='application/json')
+
+        # Then
+        assert response.status_code == status.HTTP_201_CREATED
+        response_json = response.json()
+        assert response_json["id"]
+        assert response_json["value"] is True
+
+    def test_create_feature_segment_with_string_value(self):
+        # Given
+        data = {
+            "feature": self.feature.id,
+            "segment": self.segment.id,
+            "environment": self.environment_1.id,
+            "value": "string"
+        }
+        url = reverse("api-v1:features:feature-segment-list")
+
+        # When
+        response = self.client.post(url, data=json.dumps(data), content_type='application/json')
+
+        # Then
+        assert response.status_code == status.HTTP_201_CREATED
+        response_json = response.json()
+        assert response_json["id"]
+        assert response_json["value"] == "string"
+
+    def test_create_feature_segment_without_value(self):
+        # Given
+        data = {
+            "feature": self.feature.id,
+            "segment": self.segment.id,
+            "environment": self.environment_1.id,
+            "enabled": True
+        }
+        url = reverse("api-v1:features:feature-segment-list")
+
+        # When
+        response = self.client.post(url, data=json.dumps(data), content_type='application/json')
+
+        # Then
+        assert response.status_code == status.HTTP_201_CREATED
+        response_json = response.json()
+        assert response_json["id"]
+        assert response_json["enabled"] is True
+
+    def test_update_feature_segment(self):
+        # Given
+        feature_segment = FeatureSegment.objects.create(
+            feature=self.feature,
+            environment=self.environment_1,
+            segment=self.segment,
+            value="123",
+            value_type=INTEGER
+        )
+        url = reverse("api-v1:features:feature-segment-detail", args=[feature_segment.id])
+        data = {
+            "value": 456
+        }
+
+        # When
+        response = self.client.patch(url, data=json.dumps(data), content_type='application/json')
+
+        # Then
+        assert response.status_code == status.HTTP_200_OK
+        response_json = response.json()
+        assert response_json["value"] == 456
+
+    def test_delete_feature_segment(self):
+        # Given
+        feature_segment = FeatureSegment.objects.create(
+            feature=self.feature, environment=self.environment_1, segment=self.segment
+        )
+        url = reverse("api-v1:features:feature-segment-detail", args=[feature_segment.id])
+
+        # When
+        response = self.client.delete(url)
+
+        # Then
+        assert response.status_code == status.HTTP_204_NO_CONTENT
+        assert not FeatureSegment.objects.filter(id=feature_segment.id).exists()
+
+    def test_audit_log_created_when_feature_segment_created(self):
+        # Given
+        url = reverse('api-v1:features:feature-segment-list')
+        data = {
             'segment': self.segment.id,
-            'priority': 1,
+            'feature': self.feature.id,
+            'environment': self.environment_1.id,
             'enabled': True
-        }]
+        }
 
         # When
-        self.client.post(url, data=json.dumps(data), content_type='application/json')
+        response = self.client.post(url, data=data)
 
         # Then
-        for env in Environment.objects.all():
-            assert FeatureState.objects.get(environment=env, feature_segment__segment=self.segment).enabled
+        assert response.status_code == status.HTTP_201_CREATED
+        assert AuditLog.objects.filter(related_object_type=RelatedObjectType.FEATURE.name).count() == 1
 
-    def test_when_feature_segments_created_with_integer_value_then_feature_states_created_with_integer_value(self):
+    def test_priority_of_multiple_feature_segments(self):
         # Given
-        url = reverse('api-v1:projects:project-features-segments', args=[self.project.id, self.feature.id])
-        value = 1
+        url = reverse('api-v1:features:feature-segment-update-priorities')
 
-        data = [{
-            'segment': self.segment.id,
-            'priority': 1,
-            'value': value
-        }]
+        # another segment and 2 feature segments for the same feature / the 2 segments
+        another_segment = Segment.objects.create(name='Another segment', project=self.project)
+        feature_segment_default_data = {"environment": self.environment_1, "feature": self.feature}
+        feature_segment_1 = FeatureSegment.objects.create(segment=self.segment, **feature_segment_default_data)
+        feature_segment_2 = FeatureSegment.objects.create(segment=another_segment, **feature_segment_default_data)
 
-        # When
-        self.client.post(url, data=json.dumps(data), content_type='application/json')
-
-        # Then
-        for env in Environment.objects.all():
-            fs = FeatureState.objects.get(environment=env, feature_segment__segment=self.segment)
-            assert fs.get_feature_state_value() == value
-
-    def test_when_feature_segments_created_with_boolean_value_then_feature_states_created_with_boolean_value(self):
-        # Given
-        url = reverse('api-v1:projects:project-features-segments', args=[self.project.id, self.feature.id])
-        value = False
-
-        data = [{
-            'segment': self.segment.id,
-            'priority': 1,
-            'value': value
-        }]
+        # reorder the feature segments
+        assert feature_segment_1.priority == 0
+        assert feature_segment_2.priority == 1
+        data = [
+            {
+                'id': feature_segment_1.id,
+                'priority': 1,
+            },
+            {
+                'id': feature_segment_2.id,
+                'priority': 0,
+            },
+        ]
 
         # When
-        self.client.post(url, data=json.dumps(data), content_type='application/json')
+        response = self.client.post(url, data=json.dumps(data), content_type='application/json')
 
-        # Then
-        for env in Environment.objects.all():
-            fs = FeatureState.objects.get(environment=env, feature_segment__segment=self.segment)
-            assert fs.get_feature_state_value() == value
-
-    def test_when_feature_segments_created_with_string_value_then_feature_states_created_with_string_value(self):
-        # Given
-        url = reverse('api-v1:projects:project-features-segments', args=[self.project.id, self.feature.id])
-        value = 'my_string'
-
-        data = [{
-            'segment': self.segment.id,
-            'priority': 1,
-            'value': value
-        }]
-
-        # When
-        self.client.post(url, data=json.dumps(data), content_type='application/json')
-
-        # Then
-        for env in Environment.objects.all():
-            fs = FeatureState.objects.get(environment=env, feature_segment__segment=self.segment)
-            assert fs.get_feature_state_value() == value
+        # Then the segments are reordered
+        assert response.status_code == status.HTTP_200_OK
+        json_response = response.json()
+        assert json_response[0]['id'] == feature_segment_1.id
+        assert json_response[1]['id'] == feature_segment_2.id
 
 
 @pytest.mark.django_db()
@@ -407,7 +510,7 @@ class SDKFeatureStatesTestCase(APITestCase):
         self.environment = Environment.objects.create(name='Test environment', project=self.project)
         self.feature = Feature.objects.create(name='Test feature', project=self.project, type=CONFIG, initial_value=self.environment_fs_value)
         segment = Segment.objects.create(name='Test segment', project=self.project)
-        FeatureSegment.objects.create(segment=segment, feature=self.feature, value=self.segment_fs_value)
+        FeatureSegment.objects.create(segment=segment, feature=self.feature, value=self.segment_fs_value, environment=self.environment)
         identity = Identity.objects.create(identifier='test', environment=self.environment)
         identity_feature_state = FeatureState.objects.create(identity=identity, environment=self.environment, feature=self.feature)
         FeatureStateValue.objects.filter(feature_state=identity_feature_state).update(string_value=self.identity_fs_value)

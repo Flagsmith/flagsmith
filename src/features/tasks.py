@@ -69,10 +69,16 @@ def _get_feature_state_webhook_data(feature_state, previous=False):
             "description": feature.description,
             "initial_value": feature.initial_value,
             "name": feature.name,
-            "project": feature.project_id,
+            "project": {
+                "id": feature.project_id,
+                "name": feature.project.name,
+            },
             "type": feature.type,
         },
-        "environment": feature_state.environment_id,
+        "environment": {
+            "id": feature_state.environment_id,
+            "name": feature_state.environment.name,
+        },
         "identity": feature_state.identity_id,
         "identity_identifier": identity_identifier,
         "feature_segment": None,  # default to none, will be updated below if it exists
