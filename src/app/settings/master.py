@@ -40,4 +40,4 @@ LOGGING = {
 REST_FRAMEWORK['PAGE_SIZE'] = 999
 
 SECURE_SSL_REDIRECT = True
-SECURE_REDIRECT_EXEMPT = [r'^/$', r'^$']  # root is exempt as it's used for EB health checks
+SECURE_REDIRECT_EXEMPT = [r'^health$']  # /health is exempt as it's used for EB health checks

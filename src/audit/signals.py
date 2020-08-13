@@ -5,10 +5,10 @@ from django.dispatch import receiver
 
 from audit.models import AuditLog
 from audit.serializers import AuditLogSerializer
+from util.logging import get_logger
 from webhooks.webhooks import call_organisation_webhooks, WebhookEventType
 
-logger = logging.getLogger(__name__)
-logger.setLevel(logging.INFO)
+logger = get_logger(__name__)
 
 
 @receiver(post_save, sender=AuditLog)

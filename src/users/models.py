@@ -69,6 +69,7 @@ class FFAdminUser(AbstractUser):
     first_name = models.CharField(_('first name'), max_length=30)
     last_name = models.CharField(_('last name'), max_length=150)
     google_user_id = models.CharField(max_length=50, null=True, blank=True)
+    github_user_id = models.CharField(max_length=50, null=True, blank=True)
 
     USERNAME_FIELD = 'email'
     REQUIRED_FIELDS = ['first_name', 'last_name']
@@ -82,7 +83,13 @@ class FFAdminUser(AbstractUser):
 
     @property
     def auth_type(self):
-        return AuthType.GOOGLE.value if self.google_user_id else AuthType.EMAIL.value
+        if self.google_user_id:
+            return AuthType.GOOGLE.value
+
+        if self.github_user_id:
+            return AuthType.GITHUB.value
+
+        return AuthType.EMAIL.value
 
     def get_full_name(self):
         if not self.first_name:

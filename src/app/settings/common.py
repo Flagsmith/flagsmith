@@ -9,7 +9,6 @@ https://docs.djangoproject.com/en/1.9/topics/settings/
 For the full list of settings and their values, see
 https://docs.djangoproject.com/en/1.9/ref/settings/
 """
-import logging
 import os
 import warnings
 from importlib import reload
@@ -29,6 +28,8 @@ BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 PROJECT_ROOT = os.path.abspath(os.path.dirname(__file__))
 
 ENV = env('ENVIRONMENT', default='local')
+if ENV not in ('local', 'dev', 'staging', 'production'):
+    warnings.warn('ENVIRONMENT env variable must be one of local, dev, staging or production')
 
 if 'DJANGO_SECRET_KEY' not in os.environ:
     secret_key_gen()
@@ -106,6 +107,9 @@ INSTALLED_APPS = [
     # health check plugins
     'health_check',
     'health_check.db',
+
+    # Used for ordering models (e.g. FeatureSegment)
+    'ordered_model',
 ]
 
 if GOOGLE_ANALYTICS_KEY or INFLUXDB_TOKEN:
@@ -125,7 +129,10 @@ REST_FRAMEWORK = {
     ),
     'PAGE_SIZE': 10,
     'UNICODE_JSON': False,
-    'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.PageNumberPagination'
+    'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.PageNumberPagination',
+    'DEFAULT_THROTTLE_RATES': {
+        'login': '1/s'
+    }
 }
 
 MIDDLEWARE = [
@@ -147,7 +154,9 @@ if GOOGLE_ANALYTICS_KEY:
 if INFLUXDB_TOKEN:
     MIDDLEWARE.append('analytics.middleware.InfluxDBMiddleware')
 
-if ENV != 'local':
+ALLOWED_ADMIN_IP_ADDRESSES = env.list('ALLOWED_ADMIN_IP_ADDRESSES', default=list())
+if len(ALLOWED_ADMIN_IP_ADDRESSES) > 0:
+    warnings.warn('Restricting access to the admin site for ip addresses %s' % ', '.join(ALLOWED_ADMIN_IP_ADDRESSES))
     MIDDLEWARE.append('app.middleware.AdminWhitelistMiddleware')
 
 ROOT_URLCONF = 'app.urls'
@@ -320,16 +329,6 @@ CACHES = {
     }
 }
 
-if env.bool('USE_S3_STORAGE', default=False):
-    STATICFILES_STORAGE = 'storages.backends.s3boto3.S3Boto3Storage'
-    AWS_STORAGE_BUCKET_NAME = os.environ['AWS_STORAGE_BUCKET_NAME']
-    AWS_S3_REGION_NAME = os.environ.get('AWS_S3_REGION_NAME', 'eu-west-2')
-    AWS_LOCATION = 'static'
-    AWS_DEFAULT_ACL = 'public-read'
-    AWS_S3_ADDRESSING_STYLE = 'virtual'
-
-ALLOWED_ADMIN_IP_ADDRESSES = env.list('ALLOWED_ADMIN_IP_ADDRESSES', default=list())
-
 LOG_LEVEL = env.str('LOG_LEVEL', 'WARNING')
 
 TRENCH_AUTH = {
@@ -368,3 +367,8 @@ DJOSER = {
         'user_list': ['custom_auth.permissions.CurrentUser'],
     }
 }
+
+
+# Github OAuth credentials
+GITHUB_CLIENT_ID = env.str('GITHUB_CLIENT_ID', '')
+GITHUB_CLIENT_SECRET = env.str('GITHUB_CLIENT_SECRET', '')
