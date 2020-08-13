@@ -12,3 +12,4 @@ checkstyle.txt
 .env
 .direnv
 .envrc
+.elasticbeanstalk/
