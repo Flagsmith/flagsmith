@@ -511,7 +511,9 @@ class SDKIdentitiesTestCase(APITestCase):
         segment = Segment.objects.create(name='Test Segment', project=self.project)
         segment_rule = SegmentRule.objects.create(segment=segment, type=SegmentRule.ALL_RULE)
         Condition.objects.create(operator='EQUAL', property=trait_key, value=trait_value, rule=segment_rule)
-        FeatureSegment.objects.create(segment=segment, feature=self.feature_2, enabled=True, priority=1)
+        FeatureSegment.objects.create(
+            segment=segment, feature=self.feature_2, environment=self.environment, enabled=True, priority=1
+        )
 
         # When
         response = self.client.get(url)
@@ -534,7 +536,9 @@ class SDKIdentitiesTestCase(APITestCase):
         segment = Segment.objects.create(name='Test Segment', project=self.project)
         segment_rule = SegmentRule.objects.create(segment=segment, type=SegmentRule.ALL_RULE)
         Condition.objects.create(operator='EQUAL', property=trait_key, value=trait_value, rule=segment_rule)
-        FeatureSegment.objects.create(segment=segment, feature=self.feature_1, enabled=True, priority=1)
+        FeatureSegment.objects.create(
+            segment=segment, feature=self.feature_1, environment=self.environment, enabled=True, priority=1
+        )
 
         # When
         response = self.client.get(url)
@@ -557,7 +561,9 @@ class SDKIdentitiesTestCase(APITestCase):
         Condition.objects.create(operator=models.PERCENTAGE_SPLIT,
                                  value=(identity_percentage_value + (1 - identity_percentage_value) / 2) * 100.0,
                                  rule=segment_rule)
-        FeatureSegment.objects.create(segment=segment, feature=self.feature_1, enabled=True, priority=1)
+        FeatureSegment.objects.create(
+            segment=segment, feature=self.feature_1, environment=self.environment, enabled=True, priority=1
+        )
 
         # When
         self.client.credentials(HTTP_X_ENVIRONMENT_KEY=self.environment.api_key)
@@ -580,7 +586,9 @@ class SDKIdentitiesTestCase(APITestCase):
         Condition.objects.create(operator=models.PERCENTAGE_SPLIT,
                                  value=identity_percentage_value / 2,
                                  rule=segment_rule)
-        FeatureSegment.objects.create(segment=segment, feature=self.feature_1, enabled=True, priority=1)
+        FeatureSegment.objects.create(
+            segment=segment, feature=self.feature_1, environment=self.environment, enabled=True, priority=1
+        )
 
         # When
         self.client.credentials(HTTP_X_ENVIRONMENT_KEY=self.environment.api_key)

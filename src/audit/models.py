@@ -9,7 +9,7 @@ FEATURE_CREATED_MESSAGE = "New Flag / Remote Config created: %s"
 FEATURE_UPDATED_MESSAGE = "Flag / Remote Config updated: %s"
 SEGMENT_CREATED_MESSAGE = "New Segment created: %s"
 SEGMENT_UPDATED_MESSAGE = "Segment updated: %s"
-FEATURE_SEGMENT_UPDATED_MESSAGE = "Segment rules updated for flag: %s"
+FEATURE_SEGMENT_UPDATED_MESSAGE = "Segment rules updated for flag: %s in environment: %s"
 ENVIRONMENT_CREATED_MESSAGE = "New Environment created: %s"
 ENVIRONMENT_UPDATED_MESSAGE = "Environment updated: %s"
 FEATURE_STATE_UPDATED_MESSAGE = "Flag state / Remote Config value updated for feature: %s"
@@ -45,3 +45,15 @@ class AuditLog(models.Model):
 
     def __str__(self):
         return "Audit Log %s" % self.id
+
+    @classmethod
+    def create_record(cls, obj, obj_type, log_message, author, project=None, environment=None):
+        cls.objects.create(
+            related_object_id=obj.id,
+            related_object_type=obj_type.name,
+            log=log_message,
+            author=author,
+            project=project,
+            environment=environment
+        )
+
