@@ -59,6 +59,9 @@ class UserOrganisation(models.Model):
     date_joined = models.DateTimeField(auto_now_add=True)
     role = models.CharField(max_length=50, choices=organisation_roles)
 
+    class Meta:
+        unique_together = ('user', 'organisation',)
+
 
 class Subscription(models.Model):
     organisation = models.OneToOneField(Organisation, on_delete=models.CASCADE, related_name='subscription')

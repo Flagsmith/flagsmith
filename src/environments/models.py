@@ -123,7 +123,9 @@ class Identity(models.Model):
         # define sub queries
         belongs_to_environment_query = Q(environment=self.environment)
         overridden_for_identity_query = Q(identity=self)
-        overridden_for_segment_query = Q(feature_segment__segment__in=segments)
+        overridden_for_segment_query = Q(
+            feature_segment__segment__in=segments, feature_segment__environment=self.environment
+        )
         environment_default_query = Q(identity=None, feature_segment=None)
 
         # define the full query
@@ -135,6 +137,8 @@ class Identity(models.Model):
 
         all_flags = FeatureState.objects.select_related(*select_related_args).filter(full_query)
 
+        # iterate over all the flags and build a dictionary keyed on feature with the highest priority flag
+        # for the given identity as the value.
         identity_flags = {}
         for flag in all_flags:
             if flag.feature_id not in identity_flags:
