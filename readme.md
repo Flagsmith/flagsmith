@@ -1,4 +1,4 @@
-<img width="100%" src="./hero.png"/>
+[<img alt="Feature Flag, Remote Config and A/B Testing platform, Bullet Train" width="100%" src="./hero.png"/>](https://bullet-train.io/)
 
 [![Donate](https://liberapay.com/assets/widgets/donate.svg)](https://liberapay.com/Bullet-Train/donate)
 
@@ -124,7 +124,6 @@ The application relies on the following environment variables to run:
 * `INFLUXDB_URL`: The URL for your InfluxDB database
 * `INFLUXDB_ORG`: The organisation string for your InfluxDB API call.
 * `GA_TABLE_ID`: GA table ID (view) to query when looking for organisation usage
-* `USE_S3_STORAGE`: 'True' to store static files in s3
 * `AWS_STORAGE_BUCKET_NAME`: bucket name to store static files. Required if `USE_S3_STORAGE' is true.
 * `AWS_S3_REGION_NAME`: region name of the static files bucket. Defaults to eu-west-2.
 * `ALLOWED_ADMIN_IP_ADDRESSES`: restrict access to the django admin console to a comma separated list of IP addresses (e.g. `127.0.0.1,127.0.0.2`) 
@@ -195,6 +194,8 @@ If you have any questions about our projects you can email
 ## Useful links
 
 [Website](https://bullet-train.io)
+
+[Product Roadmap](https://product-hub.io/roadmap/5d81f2406180537538d99f28)
 
 [Documentation](https://docs.bullet-train.io/)
 
