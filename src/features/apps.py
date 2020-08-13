@@ -8,4 +8,5 @@ class FeaturesConfig(AppConfig):
     name = 'features'
 
     def ready(self):
-        pass
+        # noinspection PyUnresolvedReferences
+        import features.signals
