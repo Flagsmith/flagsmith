@@ -80,6 +80,7 @@ class Feature(models.Model):
                 feature=self,
                 environment=env,
                 identity=None,
+                feature_segment=None,
                 defaults={
                     'enabled': self.default_enabled
                 },
