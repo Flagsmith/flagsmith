@@ -25,6 +25,7 @@ class FeatureAdmin(SimpleHistoryAdmin):
         'name',
         'initial_value',
         'description',
+        'tags__label'
     )
 
 
