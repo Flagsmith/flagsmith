@@ -4,13 +4,13 @@ import pytest
 from django.core.exceptions import ValidationError
 from django.db.utils import IntegrityError
 from django.test import TestCase
-
 from environments.models import Environment, Identity, Trait, STRING
 from features.models import Feature, FeatureState, CONFIG, FeatureSegment, FeatureStateValue, FLAG
 from features.utils import INTEGER, BOOLEAN
 from organisations.models import Organisation
 from projects.models import Project
 from segments.models import Segment, SegmentRule, Condition, EQUAL
+from projects.tags.models import Tag
 
 
 @pytest.mark.django_db
@@ -94,6 +94,49 @@ class FeatureTestCase(TestCase):
 
         # Then
         FeatureState.objects.filter(feature__name=new_feature_name).exists()
+
+    def test_cannot_create_feature_with_same_case_insensitive_name(self):
+        # unit test to validate validate_unique() method
+
+        # Given
+        feature_name = 'Test Feature'
+        Feature.objects.create(name=feature_name, type=CONFIG, initial_value='test', project=self.project)
+
+        # When
+        with self.assertRaises(ValidationError):
+            feature_two = Feature(name=feature_name.lower(), type=CONFIG, initial_value='test', project=self.project)
+            feature_two.full_clean()
+
+    def test_updating_feature_should_allow_case_insensitive_name(self):
+        # Given
+        feature_name = 'Test Feature'
+
+        feature = Feature.objects.create(project=self.project, name=feature_name, initial_value='test')
+
+        # When
+        feature.name = feature_name.lower()
+        feature.full_clean()  # should not raise error as the same Object
+
+    def test_when_create_feature_with_tags_then_success(self):
+
+        # Given
+        tag1 = Tag.objects.create(label='Test Tag',
+                           color='#fffff',
+                           description='Test Tag description',
+                           project=self.project)
+        tag2 = Tag.objects.create(label='Test Tag',
+                           color='#fffff',
+                           description='Test Tag description',
+                           project=self.project)
+        feature = Feature.objects.create(project=self.project, name="test feature")
+
+        # When
+        tags_for_feature = Tag.objects.all()
+        feature.tags.set(tags_for_feature)
+        feature.save()
+
+        self.assertEqual(feature.tags.count(), 2)
+        self.assertEqual(list(feature.tags.all()), [tag1, tag2])
 
 
 @pytest.mark.django_db
