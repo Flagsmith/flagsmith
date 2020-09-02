@@ -84,6 +84,9 @@ class IdentityTestCase(TransactionTestCase):
     def setUp(self):
         self.organisation = Organisation.objects.create(name="Test Org")
         self.project = Project.objects.create(name="Test Project", organisation=self.organisation)
+        self.projectFlagDisabled = Project.objects.create(name="Project Flag Disabled",
+                                                          organisation=self.organisation,
+                                                          hide_disabled_flags=True)
         self.environment = Environment.objects.create(name="Test Environment", project=self.project)
 
     def tearDown(self) -> None:
@@ -142,6 +145,38 @@ class IdentityTestCase(TransactionTestCase):
         flags = identity_1.get_all_feature_states()
         self.assertEqual(len(flags), 2)
         self.assertIn(fs_environment_anticipated, flags)
+        self.assertIn(fs_identity_anticipated, flags)
+
+    def test_get_all_feature_states_exclude_disabled(self):
+
+        feature = Feature.objects.create(name="Test Feature", project=self.projectFlagDisabled)
+        feature_2 = Feature.objects.create(name="Test Feature 2", project=self.projectFlagDisabled, default_enabled=True)
+        other_environment = Environment.objects.create(name="Test Environment 2", project=self.projectFlagDisabled)
+
+        identity_1 = Identity.objects.create(
+            identifier="test-identity-1",
+            environment=other_environment,
+        )
+        identity_2 = Identity.objects.create(
+            identifier="test-identity-2",
+            environment=self.environment,
+        )
+
+        # User assigned
+        fs_identity_anticipated = FeatureState.objects.create(
+            feature=feature_2,
+            environment=other_environment,
+            identity=identity_1,
+        )
+        FeatureState.objects.create(
+            feature=feature,
+            environment=self.environment,
+            identity=identity_2,
+        )
+
+        # Disabled feature should be ignored if Project has hide_disabled_flags = True.
+        flags = identity_1.get_all_feature_states()
+        self.assertEqual(len(flags), 1)
         self.assertIn(fs_identity_anticipated, flags)
 
     def test_create_trait_should_assign_relevant_attributes(self):
