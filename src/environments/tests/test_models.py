@@ -150,9 +150,7 @@ class IdentityTestCase(TransactionTestCase):
     def test_get_all_feature_states_exclude_disabled(self):
 
         feature = Feature.objects.create(name="Test Feature", project=self.project_flag_disabled)
-        feature_2 = Feature.objects.create(name="Test Feature 2",
-                                           project=self.project_flag_disabled,
-                                           default_enabled=True)
+        feature_2 = Feature.objects.create(name="Test Feature 2", project=self.project_flag_disabled)
         other_environment = Environment.objects.create(name="Test Environment 2", project=self.project_flag_disabled)
 
         identity_1 = Identity.objects.create(
@@ -165,9 +163,16 @@ class IdentityTestCase(TransactionTestCase):
         )
 
         # User assigned
-        fs_identity_anticipated = FeatureState.objects.create(
+        FeatureState.objects.create(
+            feature=feature,
+            environment=other_environment,
+            enabled=True,
+            identity=identity_1,
+        )
+        fs_identity_ignored = FeatureState.objects.create(
             feature=feature_2,
             environment=other_environment,
+            enabled=False,
             identity=identity_1,
         )
         FeatureState.objects.create(
@@ -179,7 +184,7 @@ class IdentityTestCase(TransactionTestCase):
         # Disabled feature should be ignored if Project has hide_disabled_flags = True.
         flags = identity_1.get_all_feature_states()
         self.assertEqual(len(flags), 1)
-        self.assertIn(fs_identity_anticipated, flags)
+        self.assertNotIn(fs_identity_ignored, flags)
 
     def test_create_trait_should_assign_relevant_attributes(self):
         identity = Identity.objects.create(identifier='test-identity', environment=self.environment)
