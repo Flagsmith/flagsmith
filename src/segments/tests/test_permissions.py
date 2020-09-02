@@ -1,7 +1,6 @@
 from unittest import TestCase, mock
 
 import pytest
-from rest_framework.test import APIClient
 
 from environments.models import Environment, UserEnvironmentPermission, Identity
 from organisations.models import Organisation
@@ -63,19 +62,29 @@ class SegmentPermissionsTestCase(TestCase):
         # then
         assert all(results)
 
-    def test_project_user_has_no_permission(self):
+    def test_project_user_has_list_permission(self):
         # Given
         mock_request.user = self.project_user
         mock_view.detail = False
 
         # When
-        results = []
-        for action in ('list', 'create'):
-            mock_view.action = action
-            results.append(segment_permissions.has_permission(mock_request, mock_view))
+        mock_view.action = 'list'
+        result = segment_permissions.has_permission(mock_request, mock_view)
 
         # Then
-        assert all([result is False for result in results])
+        assert result
+
+    def test_project_user_has_no_create_permission(self):
+        # Given
+        mock_request.user = self.project_user
+        mock_view.detail = False
+
+        # When
+        mock_view.action = 'create'
+        result = segment_permissions.has_permission(mock_request, mock_view)
+
+        # Then
+        assert not result
 
     def test_project_user_has_no_object_permission(self):
         # Given

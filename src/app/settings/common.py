@@ -100,6 +100,7 @@ INSTALLED_APPS = [
     'drf_yasg',
     'audit',
     'permissions',
+    'projects.tags',
 
     # 2FA
     'trench',
