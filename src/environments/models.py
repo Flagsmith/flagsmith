@@ -10,7 +10,7 @@ from django.db.models import Q
 from django.utils.encoding import python_2_unicode_compatible
 from django.utils.translation import ugettext_lazy as _
 from environments.exceptions import EnvironmentHeaderNotPresentError
-from features.models import FeatureState
+from features.models import FeatureState, FLAG
 from permissions.models import BasePermissionModelABC, PermissionModel, ENVIRONMENT_PERMISSION_TYPE
 from projects.models import Project
 from simple_history.models import HistoricalRecords
@@ -137,7 +137,8 @@ class Identity(models.Model):
         # When Project's hide_disabled_flags enabled, exclude disabled Features from the list
         all_flags = FeatureState.objects.select_related(*select_related_args).filter(full_query).exclude(
             feature__project__hide_disabled_flags=True,
-            enabled=False
+            enabled=False,
+            feature__type=FLAG
         )
 
         # iterate over all the flags and build a dictionary keyed on feature with the highest priority flag
