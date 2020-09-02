@@ -58,12 +58,16 @@ class ProjectFeatureTestCase(TestCase):
     def test_should_create_feature_states_when_feature_created(self):
         # Given - set up data
         default_value = 'This is a value'
+        data = {
+            "name": "test feature",
+            "initial_value": default_value,
+            "type": CONFIG,
+            "project": self.project.id,
+        }
+        url = reverse('api-v1:projects:project-features-list', args=[self.project.id])
 
         # When
-        response = self.client.post(self.project_features_url % self.project.id,
-                                    data=self.post_template % ("test feature", self.project.id,
-                                                               default_value),
-                                    content_type='application/json')
+        response = self.client.post(url, data=json.dumps(data), content_type='application/json')
 
         # Then
         assert response.status_code == status.HTTP_201_CREATED
@@ -81,12 +85,16 @@ class ProjectFeatureTestCase(TestCase):
     def test_should_create_feature_states_with_integer_value_when_feature_created(self):
         # Given - set up data
         default_value = 12
+        url = reverse('api-v1:projects:project-features-list', args=[self.project.id])
+        data = {
+            "name": "test feature",
+            "type": CONFIG,
+            "initial_value": default_value,
+            "project": self.project.id,
+        }
 
         # When
-        response = self.client.post(self.project_features_url % self.project.id,
-                                    data=self.post_template % ("test feature", self.project.id,
-                                                               default_value),
-                                    content_type='application/json')
+        response = self.client.post(url, data=json.dumps(data), content_type='application/json')
 
         # Then
         assert response.status_code == status.HTTP_201_CREATED
@@ -107,14 +115,14 @@ class ProjectFeatureTestCase(TestCase):
         feature_name = 'Test feature'
         data = {
             'name': 'Test feature',
+            'initial_value': default_value,
+            'type': CONFIG,
             'project': self.project.id,
-            'initial_value': default_value
         }
+        url = reverse('api-v1:projects:project-features-list', args=[self.project.id])
 
         # When
-        response = self.client.post(self.project_features_url % self.project.id,
-                                    data=json.dumps(data),
-                                    content_type='application/json')
+        response = self.client.post(url, data=json.dumps(data), content_type='application/json')
 
         # Then
         assert response.status_code == status.HTTP_201_CREATED
