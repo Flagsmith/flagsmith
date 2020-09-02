@@ -84,7 +84,7 @@ class IdentityTestCase(TransactionTestCase):
     def setUp(self):
         self.organisation = Organisation.objects.create(name="Test Org")
         self.project = Project.objects.create(name="Test Project", organisation=self.organisation)
-        self.projectFlagDisabled = Project.objects.create(name="Project Flag Disabled",
+        self.project_flag_disabled = Project.objects.create(name="Project Flag Disabled",
                                                           organisation=self.organisation,
                                                           hide_disabled_flags=True)
         self.environment = Environment.objects.create(name="Test Environment", project=self.project)
@@ -149,8 +149,10 @@ class IdentityTestCase(TransactionTestCase):
 
     def test_get_all_feature_states_exclude_disabled(self):
 
-        feature = Feature.objects.create(name="Test Feature", project=self.projectFlagDisabled)
-        feature_2 = Feature.objects.create(name="Test Feature 2", project=self.projectFlagDisabled, default_enabled=True)
+        feature = Feature.objects.create(name="Test Feature", project=self.project_flag_disabled)
+        feature_2 = Feature.objects.create(name="Test Feature 2",
+                                           project=self.project_flag_disabled,
+                                           default_enabled=True)
         other_environment = Environment.objects.create(name="Test Environment 2", project=self.projectFlagDisabled)
 
         identity_1 = Identity.objects.create(
