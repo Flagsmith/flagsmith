@@ -44,6 +44,13 @@ class CreateFeatureSerializer(serializers.ModelSerializer):
                                 project=instance.project,
                                 log=message)
 
+    def validate(self, attrs):
+        # If tags selected check they from the same Project as Feature Project
+        if any(tag.project_id != attrs['project'].id for tag in attrs.get('tags', [])):
+            raise ValidationError("Selected Tags must be from the same Project as current Feature")
+
+        return attrs
+
 
 class FeatureSegmentCreateSerializer(serializers.ModelSerializer):
     value = FeatureSegmentValueField(required=False)
