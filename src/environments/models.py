@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 from __future__ import unicode_literals
 
+from app.utils import create_hash
 from django.conf import settings
 from django.core.cache import caches
 from django.core.exceptions import (ObjectDoesNotExist)
@@ -8,13 +9,11 @@ from django.db import models
 from django.db.models import Q
 from django.utils.encoding import python_2_unicode_compatible
 from django.utils.translation import ugettext_lazy as _
-from simple_history.models import HistoricalRecords
-
-from app.utils import create_hash
 from environments.exceptions import EnvironmentHeaderNotPresentError
 from features.models import FeatureState
 from permissions.models import BasePermissionModelABC, PermissionModel, ENVIRONMENT_PERMISSION_TYPE
 from projects.models import Project
+from simple_history.models import HistoricalRecords
 
 # User Trait Value Types
 INTEGER = "int"
@@ -130,12 +129,16 @@ class Identity(models.Model):
 
         # define the full query
         full_query = belongs_to_environment_query & (
-            overridden_for_identity_query | overridden_for_segment_query | environment_default_query
+                overridden_for_identity_query | overridden_for_segment_query | environment_default_query
         )
 
         select_related_args = ['feature', 'feature_state_value', 'feature_segment', 'feature_segment__segment']
 
-        all_flags = FeatureState.objects.select_related(*select_related_args).filter(full_query)
+        # When Project's hide_disabled_flags enabled, exclude disabled Features from the list
+        all_flags = FeatureState.objects.select_related(*select_related_args).filter(full_query).exclude(
+            feature__project__hide_disabled_flags=True,
+            feature__default_enabled=False
+        )
 
         # iterate over all the flags and build a dictionary keyed on feature with the highest priority flag
         # for the given identity as the value.
