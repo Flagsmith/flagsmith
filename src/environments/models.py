@@ -137,7 +137,7 @@ class Identity(models.Model):
         # When Project's hide_disabled_flags enabled, exclude disabled Features from the list
         all_flags = FeatureState.objects.select_related(*select_related_args).filter(full_query).exclude(
             feature__project__hide_disabled_flags=True,
-            feature__default_enabled=False
+            enabled=False
         )
 
         # iterate over all the flags and build a dictionary keyed on feature with the highest priority flag
