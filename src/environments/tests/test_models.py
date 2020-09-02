@@ -153,7 +153,7 @@ class IdentityTestCase(TransactionTestCase):
         feature_2 = Feature.objects.create(name="Test Feature 2",
                                            project=self.project_flag_disabled,
                                            default_enabled=True)
-        other_environment = Environment.objects.create(name="Test Environment 2", project=self.projectFlagDisabled)
+        other_environment = Environment.objects.create(name="Test Environment 2", project=self.project_flag_disabled)
 
         identity_1 = Identity.objects.create(
             identifier="test-identity-1",
