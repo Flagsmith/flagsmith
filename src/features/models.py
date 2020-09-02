@@ -259,7 +259,7 @@ class FeatureState(models.Model):
         # note: this is get_or_create since feature state values are updated separately, and hence if this is set to
         # update_or_create, it overwrites the FSV with the initial value again
         # Note: feature segments are handled differently as they have their own values
-        if not self.feature_segment:
+        if not self.feature_segment and self.feature.type == CONFIG:
             FeatureStateValue.objects.get_or_create(
                 feature_state=self,
                 defaults=self._get_defaults()

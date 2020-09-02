@@ -32,7 +32,7 @@ class FeatureTestCase(TestCase):
 
     def test_creating_feature_with_initial_value_should_set_value_for_all_feature_states(self):
         feature = Feature.objects.create(name="Test Feature", project=self.project,
-                                         initial_value="This is a value")
+                                         initial_value="This is a value", type=CONFIG)
 
         feature_states = FeatureState.objects.filter(feature=feature)
 
@@ -42,7 +42,7 @@ class FeatureTestCase(TestCase):
     def test_creating_feature_with_integer_initial_value_should_set_integer_value_for_all_feature_states(self):
         # Given
         initial_value = 1
-        feature = Feature.objects.create(name='Test feature', project=self.project, initial_value=initial_value)
+        feature = Feature.objects.create(name='Test feature', project=self.project, initial_value=initial_value, type=CONFIG)
 
         # When
         feature_states = FeatureState.objects.filter(feature=feature)
@@ -54,7 +54,7 @@ class FeatureTestCase(TestCase):
     def test_creating_feature_with_boolean_initial_value_should_set_boolean_value_for_all_feature_states(self):
         # Given
         initial_value = False
-        feature = Feature.objects.create(name='Test feature', project=self.project, initial_value=initial_value)
+        feature = Feature.objects.create(name='Test feature', project=self.project, initial_value=initial_value, type=CONFIG)
 
         # When
         feature_states = FeatureState.objects.filter(feature=feature)
