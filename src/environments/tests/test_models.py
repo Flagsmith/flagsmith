@@ -148,15 +148,15 @@ class IdentityTestCase(TransactionTestCase):
 
         # Given
         # a project with hide_disabled_flags enabled
-        self.project_flag_disabled = Project.objects.create(name="Project Flag Disabled",
+        project_flag_disabled = Project.objects.create(name="Project Flag Disabled",
                                                             organisation=self.organisation,
                                                             hide_disabled_flags=True)
 
         # and a set of features and environments for that project
-        feature = Feature.objects.create(name="Test Feature", project=self.project_flag_disabled)
-        feature_2 = Feature.objects.create(name="Test Feature 2", project=self.project_flag_disabled)
-        remote_config = Feature.objects.create(name="Test Feature 3", project=self.project_flag_disabled, type=CONFIG)
-        other_environment = Environment.objects.create(name="Test Environment 2", project=self.project_flag_disabled)
+        feature = Feature.objects.create(name="Test Feature", project=project_flag_disabled)
+        feature_2 = Feature.objects.create(name="Test Feature 2", project=project_flag_disabled)
+        remote_config = Feature.objects.create(name="Test Feature 3", project=project_flag_disabled, type=CONFIG)
+        other_environment = Environment.objects.create(name="Test Environment 2", project=project_flag_disabled)
 
         identity_1 = Identity.objects.create(
             identifier="test-identity-1",
