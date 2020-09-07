@@ -84,9 +84,6 @@ class IdentityTestCase(TransactionTestCase):
     def setUp(self):
         self.organisation = Organisation.objects.create(name="Test Org")
         self.project = Project.objects.create(name="Test Project", organisation=self.organisation)
-        self.project_flag_disabled = Project.objects.create(name="Project Flag Disabled",
-                                                          organisation=self.organisation,
-                                                          hide_disabled_flags=True)
         self.environment = Environment.objects.create(name="Test Environment", project=self.project)
 
     def tearDown(self) -> None:
@@ -149,9 +146,16 @@ class IdentityTestCase(TransactionTestCase):
 
     def test_get_all_feature_states_exclude_disabled(self):
 
+        # Given
+        # a project with hide_disabled_flags enabled
+        self.project_flag_disabled = Project.objects.create(name="Project Flag Disabled",
+                                                            organisation=self.organisation,
+                                                            hide_disabled_flags=True)
+
+        # and a set of features and environments for that project
         feature = Feature.objects.create(name="Test Feature", project=self.project_flag_disabled)
         feature_2 = Feature.objects.create(name="Test Feature 2", project=self.project_flag_disabled)
-        feature_3 = Feature.objects.create(name="Test Feature 3", project=self.project_flag_disabled, type=CONFIG)
+        remote_config = Feature.objects.create(name="Test Feature 3", project=self.project_flag_disabled, type=CONFIG)
         other_environment = Environment.objects.create(name="Test Environment 2", project=self.project_flag_disabled)
 
         identity_1 = Identity.objects.create(
@@ -170,14 +174,14 @@ class IdentityTestCase(TransactionTestCase):
             enabled=True,
             identity=identity_1,
         )
-        fs_identity_ignored = FeatureState.objects.create(
+        disabled_flag = FeatureState.objects.create(
             feature=feature_2,
             environment=other_environment,
             enabled=False,
             identity=identity_1,
         )
-        fs_identity_anticipated = FeatureState.objects.create(
-            feature=feature_3,
+        remote_config = FeatureState.objects.create(
+            feature=remote_config,
             environment=other_environment,
             enabled=False,
             identity=identity_1,
@@ -188,12 +192,32 @@ class IdentityTestCase(TransactionTestCase):
             identity=identity_2,
         )
 
-        # Disabled Feature of type FLAG should be ignored if
-        # Project has hide_disabled_flags = True.
-        flags = identity_1.get_all_feature_states()
-        self.assertEqual(len(flags), 2)
-        self.assertNotIn(fs_identity_ignored, flags)
-        self.assertIn(fs_identity_anticipated, flags)
+        # When
+        # we get all flags for an environment
+        env_flags = FeatureState.objects.filter(environment=other_environment)
+
+        # And
+        # we get flags for identity
+        identity_flags = identity_1.get_all_feature_states()
+
+        # Then
+        # disabled flags are in environment flags
+        assert disabled_flag in env_flags
+
+        # But
+        # not returned for identity
+        assert disabled_flag not in identity_flags
+
+        # And
+        # remote configs are in environment flags and in identity flags
+        assert remote_config in identity_flags
+        assert remote_config in env_flags
+
+        # And
+        # identity flags are in environment flags
+        for flag in identity_flags:
+            assert flag in env_flags
+
 
     def test_create_trait_should_assign_relevant_attributes(self):
         identity = Identity.objects.create(identifier='test-identity', environment=self.environment)
