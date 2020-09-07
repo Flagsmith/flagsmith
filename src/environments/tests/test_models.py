@@ -218,7 +218,6 @@ class IdentityTestCase(TransactionTestCase):
         for flag in identity_flags:
             assert flag in env_flags
 
-
     def test_create_trait_should_assign_relevant_attributes(self):
         identity = Identity.objects.create(identifier='test-identity', environment=self.environment)
         trait = Trait.objects.create(trait_key="test-key", string_value="testing trait", identity=identity)
