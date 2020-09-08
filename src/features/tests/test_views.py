@@ -533,7 +533,6 @@ class SDKFeatureStatesTestCase(APITestCase):
         assert response_json[0]["feature_state_value"] == self.environment_fs_value
 
     def test_get_flags_exclude_disabled(self):
-        # Given - setup data which includes a single feature overridden by a segment and an identity
 
         # Given
         # a project with hide_disabled_flags enabled
