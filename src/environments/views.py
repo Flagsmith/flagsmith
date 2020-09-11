@@ -23,12 +23,12 @@ from util.views import SDKAPIView
 from .models import Environment, Identity, Trait, Webhook, EnvironmentPermissionModel, UserEnvironmentPermission, \
     UserPermissionGroupEnvironmentPermission
 from .serializers import EnvironmentSerializerLight, IdentitySerializer, TraitSerializerBasic, TraitSerializerFull, \
-    IdentitySerializerTraitFlags, IdentitySerializerWithTraitsAndSegments, IncrementTraitValueSerializer, \
+    IdentitySerializerWithTraitsAndSegments, IncrementTraitValueSerializer, \
     TraitKeysSerializer, DeleteAllTraitKeysSerializer, WebhookSerializer, \
     CreateUpdateUserEnvironmentPermissionSerializer, ListUserEnvironmentPermissionSerializer, \
     CreateUpdateUserPermissionGroupEnvironmentPermissionSerializer, \
     ListUserPermissionGroupEnvironmentPermissionSerializer, \
-    SDKCreateUpdateTraitSerializer, SDKBulkCreateUpdateTraitSerializer
+    SDKCreateUpdateTraitSerializer, SDKBulkCreateUpdateTraitSerializer, IdentifyWithTraitsSerializer
 
 logger = get_logger(__name__)
 
@@ -338,7 +338,7 @@ class SDKIdentitiesDeprecated(SDKAPIView):
     # API to handle /api/v1/identities/ endpoint to return Flags and Traits for user Identity
     # if Identity does not exist it will create one, otherwise will fetch existing
 
-    serializer_class = IdentitySerializerTraitFlags
+    serializer_class = IdentifyWithTraitsSerializer
 
     schema = AutoSchema(
         manual_fields=[
@@ -388,6 +388,9 @@ class SDKIdentitiesDeprecated(SDKAPIView):
 
 
 class SDKIdentities(SDKAPIView):
+    serializer_class = IdentifyWithTraitsSerializer
+    pagination_class = None  # set here to ensure documentation is correct
+
     def get(self, request):
         identifier = request.query_params.get('identifier')
         if not identifier:
@@ -401,6 +404,23 @@ class SDKIdentities(SDKAPIView):
         else:
             return self._get_all_feature_states_for_user_response(identity)
 
+    def get_serializer_context(self):
+        context = super(SDKIdentities, self).get_serializer_context()
+        if hasattr(self.request, 'environment'):
+            # only set it if the request has the attribute to ensure that the
+            # documentation works correctly still
+            context['environment'] = self.request.environment
+        return context
+
+    def post(self, request):
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        instance = serializer.save()
+
+        # we need to serialize the response again to ensure that the trait values are serialized correctly
+        response_serializer = IdentifyWithTraitsSerializer(instance=instance)
+        return Response(response_serializer.data)
+
     def _get_single_feature_state_response(self, identity, feature_name):
         for feature_state in identity.get_all_feature_states():
             if feature_state.feature.name == feature_name:
@@ -412,7 +432,14 @@ class SDKIdentities(SDKAPIView):
             status=status.HTTP_404_NOT_FOUND
         )
 
-    def _get_all_feature_states_for_user_response(self, identity):
+    def _get_all_feature_states_for_user_response(self, identity, trait_models=None):
+        """
+        Get all feature states for an identity
+
+        :param identity: Identity model to return feature states for
+        :param trait_models: optional list of trait_models to pass in for organisations that don't persist them
+        :return: Response containing lists of both serialized flags and traits
+        """
         serialized_flags = FeatureStateSerializerFull(identity.get_all_feature_states(), many=True)
         serialized_traits = TraitSerializerBasic(identity.get_all_user_traits(), many=True)
 
