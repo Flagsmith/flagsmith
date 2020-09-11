@@ -597,6 +597,66 @@ class SDKIdentitiesTestCase(APITestCase):
         # Then
         assert not response.json().get('flags')[0].get('enabled')
 
+    def test_post_identify_with_persistence(self):
+        # Given
+        url = reverse('api-v1:sdk-identities')
+        data = {
+            'identifier': self.identity.identifier,
+            'traits': [
+                {
+                    'trait_key': 'my_trait',
+                    'trait_value': 123
+                },
+                {
+                    'trait_key': 'my_other_trait',
+                    'trait_value': 'a value'
+                }
+            ]
+        }
+
+        # When
+        self.client.credentials(HTTP_X_ENVIRONMENT_KEY=self.environment.api_key)
+        response = self.client.post(url, data=json.dumps(data), content_type='application/json')
+
+        # Then
+        response_json = response.json()
+        assert response_json["flags"]
+        assert response_json["traits"]
+
+        assert self.identity.identity_traits.count() == 2
+
+    def test_post_identify_without_persistence(self):
+        # Given
+        url = reverse('api-v1:sdk-identities')
+
+        self.organisation.persist_trait_data = False
+        self.organisation.save()
+
+        data = {
+            'identifier': self.identity.identifier,
+            'traits': [
+                {
+                    'trait_key': 'my_trait',
+                    'trait_value': 123
+                },
+                {
+                    'trait_key': 'my_other_trait',
+                    'trait_value': 'a value'
+                }
+            ]
+        }
+
+        # When
+        self.client.credentials(HTTP_X_ENVIRONMENT_KEY=self.environment.api_key)
+        response = self.client.post(url, data=json.dumps(data), content_type='application/json')
+
+        # Then
+        response_json = response.json()
+        assert response_json["flags"]
+        assert response_json["traits"]
+
+        assert self.identity.identity_traits.count() == 0
+
 
 class SDKTraitsTest(APITestCase):
     JSON = 'application/json'
