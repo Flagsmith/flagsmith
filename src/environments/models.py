@@ -13,7 +13,8 @@ from django.utils.translation import ugettext_lazy as _
 from simple_history.models import HistoricalRecords
 
 from app.utils import create_hash
-from environments.exceptions import EnvironmentHeaderNotPresentError
+from environments.exceptions import EnvironmentHeaderNotPresentError, \
+    TraitPersistenceError
 from features.models import FeatureState
 from permissions.models import BasePermissionModelABC, PermissionModel, ENVIRONMENT_PERMISSION_TYPE
 from projects.models import Project
@@ -169,6 +170,16 @@ class Trait(models.Model):
 
     def __str__(self):
         return "Identity: %s - %s" % (self.identity.identifier, self.trait_key)
+
+    def save(self, *args, **kwargs):
+        if not self.identity.environment.project.organisation.persist_trait_data:
+            # this is a final line of defense to ensure that traits are never saved
+            # for organisations which have the flag set to not persist trait data
+            raise TraitPersistenceError(
+                "Not possible to persist traits for this organisation."
+            )
+
+        return super(Trait, self).save(*args, **kwargs)
 
 
 @python_2_unicode_compatible
