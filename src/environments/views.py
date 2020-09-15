@@ -15,7 +15,8 @@ from rest_framework.response import Response
 from rest_framework.schemas import AutoSchema
 
 from environments.authentication import EnvironmentKeyAuthentication
-from environments.permissions import EnvironmentKeyPermissions, EnvironmentPermissions, NestedEnvironmentPermissions
+from environments.permissions import EnvironmentKeyPermissions, EnvironmentPermissions, \
+    NestedEnvironmentPermissions, TraitPersistencePermissions
 from features.serializers import FeatureStateSerializerFull
 from permissions.serializers import PermissionModelSerializer, MyUserObjectPermissionsSerializer
 from util.logging import get_logger
@@ -191,6 +192,8 @@ class TraitViewSet(viewsets.ModelViewSet):
     def create(self, request, *args, **kwargs):
         """
         Override create method to add identity (if present) from URL parameters.
+
+        TODO: fix this - it doesn't work, the FE uses the SDK endpoint instead
         """
         data = request.data
         environment = self.get_environment_from_request()
@@ -523,7 +526,7 @@ class SDKTraitsDeprecated(SDKAPIView):
 
 
 class SDKTraits(mixins.CreateModelMixin, viewsets.GenericViewSet):
-    permission_classes = (EnvironmentKeyPermissions,)
+    permission_classes = (EnvironmentKeyPermissions, TraitPersistencePermissions)
     authentication_classes = (EnvironmentKeyAuthentication,)
 
     def get_serializer_class(self):
