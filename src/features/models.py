@@ -12,6 +12,7 @@ from features.helpers import get_correctly_typed_value
 from features.tasks import trigger_feature_state_change_webhooks
 from features.utils import get_boolean_from_string, get_integer_from_string, INTEGER, STRING, BOOLEAN, get_value_type
 from projects.models import Project
+from projects.tags.models import Tag
 from util.logging import get_logger
 
 logger = get_logger(__name__)
@@ -40,10 +41,10 @@ class Feature(models.Model):
         Project,
         related_name='features',
         help_text=_(
-            'Changing the project selected will remove previous Feature States for the previously '
+            'Changing the project selected will remove previous Feature States for the previously'
             'associated projects Environments that are related to this Feature. New default '
             'Feature States will be created for the new selected projects Environments for this '
-            'Feature.'
+            'Feature. Also this will remove any Tags associated with a feature as Tags are Project defined'
         ),
         on_delete=models.CASCADE
     )
@@ -52,6 +53,7 @@ class Feature(models.Model):
     default_enabled = models.BooleanField(default=False)
     type = models.CharField(max_length=50, choices=FEATURE_TYPES, default=FLAG)
     history = HistoricalRecords()
+    tags = models.ManyToManyField(Tag, blank=True)
 
     class Meta:
         ordering = ['id']
@@ -80,6 +82,7 @@ class Feature(models.Model):
                 feature=self,
                 environment=env,
                 identity=None,
+                feature_segment=None,
                 defaults={
                     'enabled': self.default_enabled
                 },
@@ -92,7 +95,8 @@ class Feature(models.Model):
         '''
         super(Feature, self).validate_unique(*args, **kwargs)
 
-        if Feature.objects.filter(project=self.project, name__iexact=self.name).exists():
+        # handle case insensitive names per project, as above check allows it
+        if Feature.objects.filter(project=self.project, name__iexact=self.name).exclude(pk=self.pk).exists():
             raise ValidationError(
                 {
                     NON_FIELD_ERRORS: [
@@ -255,7 +259,7 @@ class FeatureState(models.Model):
         # note: this is get_or_create since feature state values are updated separately, and hence if this is set to
         # update_or_create, it overwrites the FSV with the initial value again
         # Note: feature segments are handled differently as they have their own values
-        if not self.feature_segment:
+        if not self.feature_segment and self.feature.type == CONFIG:
             FeatureStateValue.objects.get_or_create(
                 feature_state=self,
                 defaults=self._get_defaults()
