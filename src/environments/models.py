@@ -14,7 +14,6 @@ from django.utils.translation import ugettext_lazy as _
 from environments.exceptions import EnvironmentHeaderNotPresentError, \
     TraitPersistenceError
 from features.models import FeatureState, FLAG
-from permissions.models import BasePermissionModelABC, PermissionModel, ENVIRONMENT_PERMISSION_TYPE
 from projects.models import Project
 from simple_history.models import HistoricalRecords
 
@@ -257,6 +256,76 @@ class Identity(models.Model):
     def __str__(self):
         return "Account %s" % self.identifier
 
+    def generate_traits(self, trait_data_items, persist=False):
+        """
+        Given a list of trait data items, validated by TraitSerializerFull, generate
+        a list of TraitModel objects for the given identity.
+
+        :param trait_data_items: list of dictionaries validated by TraitSerializerFull
+        :param persist: determines whether the traits should be persisted to db
+        :return: list of TraitModels
+        """
+        trait_models = []
+        for trait_data_item in trait_data_items:
+            trait_key = trait_data_item['trait_key']
+            trait_value = trait_data_item['trait_value']
+            trait_models.append(
+                Trait(
+                    trait_key=trait_key,
+                    identity=self,
+                    **Trait.generate_trait_value_data(trait_value)
+                )
+            )
+
+        if persist:
+            Trait.objects.bulk_create(trait_models)
+
+        return trait_models
+
+    def update_traits(self, trait_data_items):
+        """
+        Given a list of traits, update any that already exist and create any new ones.
+        Return the full list of traits for the given identity after these changes.
+
+        :param trait_data_items: list of dictionaries validated by TraitSerializerFull
+        :return: queryset of updated trait models
+        """
+        current_traits = self.get_all_user_traits()
+
+        new_traits = []
+        keys_to_delete = []
+
+        for trait_data_item in trait_data_items:
+            trait_key = trait_data_item['trait_key']
+            trait_value = trait_data_item['trait_value']
+
+            if trait_value is None:
+                # build a list of trait keys to delete having been nulled by the
+                # input data
+                keys_to_delete.append(trait_key)
+                continue
+
+            trait_value_data = Trait.generate_trait_value_data(trait_value)
+
+            if current_traits.filter(trait_key=trait_key).exists():
+                current_trait = current_traits.get(trait_key=trait_key)
+                for attr, value in trait_value_data.items():
+                    setattr(current_trait, attr, value)
+                current_trait.save()
+            else:
+                # create a new trait and append it to the list of new traits
+                new_traits.append(Trait.objects.create(
+                    trait_key=trait_key, identity=self, **trait_value_data
+                ))
+
+        # delete the traits that had their keys set to None
+        if keys_to_delete:
+            current_traits.filter(trait_key__in=keys_to_delete).delete()
+
+        # return the full list of traits for this identity by refreshing from the db
+        # TODO: handle this in the above logic to avoid a second hit to the DB
+        return self.get_all_user_traits()
+
 
 class Webhook(models.Model):
     environment = models.ForeignKey(Environment, on_delete=models.CASCADE, related_name='webhooks')
@@ -264,25 +333,3 @@ class Webhook(models.Model):
     enabled = models.BooleanField(default=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
-
-
-class EnvironmentPermissionManager(models.Manager):
-    def get_queryset(self):
-        return super(EnvironmentPermissionManager, self).get_queryset().filter(type=ENVIRONMENT_PERMISSION_TYPE)
-
-
-class EnvironmentPermissionModel(PermissionModel):
-    class Meta:
-        proxy = True
-
-    objects = EnvironmentPermissionManager()
-
-
-class UserEnvironmentPermission(BasePermissionModelABC):
-    user = models.ForeignKey('users.FFAdminUser', on_delete=models.CASCADE)
-    environment = models.ForeignKey(Environment, on_delete=models.CASCADE, related_query_name='userpermission')
-
-
-class UserPermissionGroupEnvironmentPermission(BasePermissionModelABC):
-    group = models.ForeignKey('users.UserPermissionGroup', on_delete=models.CASCADE)
-    environment = models.ForeignKey(Environment, on_delete=models.CASCADE, related_query_name='grouppermission')

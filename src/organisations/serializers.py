@@ -22,7 +22,19 @@ class OrganisationSerializerFull(serializers.ModelSerializer):
 
     class Meta:
         model = Organisation
-        fields = ('id', 'name', 'created_date', 'webhook_notification_email', 'num_seats', 'subscription', 'role')
+        fields = (
+            'id',
+            'name',
+            'created_date',
+            'webhook_notification_email',
+            'num_seats',
+            'subscription',
+            'role',
+            'persist_trait_data'
+        )
+        read_only_fields = (
+            'id', 'created_date', 'num_seats', 'role', 'persist_trait_data'
+        )
 
     def get_role(self, instance):
         if self.context.get('request'):
