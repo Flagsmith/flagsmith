@@ -647,3 +647,38 @@ class SDKFeatureStatesTestCase(APITestCase):
         assert len(response_json) == 1
         assert response_json[0]["feature"]["id"] == self.feature.id
         assert response_json[0]["feature_state_value"] == self.environment_fs_value
+
+    def test_get_flags_exclude_disabled(self):
+
+        # Given
+        # a project with hide_disabled_flags enabled
+        project_flag_disabled = Project.objects.create(name="Project Flag Disabled",
+                                                       organisation=self.organisation,
+                                                       hide_disabled_flags=True)
+
+        # and a set of features and environments for that project
+        other_environment = Environment.objects.create(name="Test Environment 2", project=project_flag_disabled)
+        disabled_flag = Feature.objects.create(name="Flag 1", project=project_flag_disabled)
+        config_flag = Feature.objects.create(name="Config", project=project_flag_disabled, type=CONFIG)
+        enabled_flag = Feature.objects.create(name="Flag 2", project=project_flag_disabled, default_enabled=True)
+
+        # When
+        # we get all flags for an environment
+        self.client.credentials(HTTP_X_ENVIRONMENT_KEY=other_environment.api_key)
+        response = self.client.get(self.url)
+
+        # Then
+        assert response.status_code == status.HTTP_200_OK
+        response_json = response.json()
+        assert len(response_json) == 2
+
+        # disabled flags are not returned
+        for flag in response_json:
+            assert flag["feature"]["id"] != disabled_flag.id
+
+        # And
+        # but enabled ones and remote configs are
+        assert response_json[0]["feature"]["id"] == config_flag.id
+        assert response_json[1]["feature"]["id"] == enabled_flag.id
+
+

@@ -8,7 +8,7 @@ from users.serializers import UserListSerializer, UserPermissionGroupSerializerL
 class ProjectSerializer(serializers.ModelSerializer):
     class Meta:
         model = Project
-        fields = ('id', 'name', 'organisation')
+        fields = ('id', 'name', 'organisation', 'hide_disabled_flags')
 
 
 class CreateUpdateUserProjectPermissionSerializer(CreateUpdateUserPermissionSerializerABC):
