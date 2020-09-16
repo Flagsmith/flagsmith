@@ -1,11 +1,10 @@
 import pytest
 
-from features.utils import get_value_type, INTEGER, FLOAT, STRING, BOOLEAN
+from features.utils import get_value_type, INTEGER, STRING, BOOLEAN
 
 
 @pytest.mark.parametrize("value, expected_type", (
         ("1", INTEGER),
-        ("12.34", FLOAT),
         ("a string", STRING),
         ("True", BOOLEAN),
         ("true", BOOLEAN),
