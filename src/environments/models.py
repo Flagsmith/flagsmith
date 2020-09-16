@@ -21,6 +21,7 @@ from simple_history.models import HistoricalRecords
 INTEGER = "int"
 STRING = "unicode"
 BOOLEAN = "bool"
+FLOAT = "float"
 
 environment_cache = caches[settings.ENVIRONMENT_CACHE_LOCATION]
 
@@ -103,7 +104,8 @@ class Trait(models.Model):
     TRAIT_VALUE_TYPES = (
         (INTEGER, 'Integer'),
         (STRING, 'String'),
-        (BOOLEAN, 'Boolean')
+        (BOOLEAN, 'Boolean'),
+        (FLOAT, 'Float')
     )
 
     identity = models.ForeignKey('environments.Identity', related_name='identity_traits', on_delete=models.CASCADE)
@@ -113,6 +115,7 @@ class Trait(models.Model):
     boolean_value = models.NullBooleanField(null=True, blank=True)
     integer_value = models.IntegerField(null=True, blank=True)
     string_value = models.CharField(null=True, max_length=2000, blank=True)
+    float_value = models.FloatField(null=True, blank=True)
 
     created_date = models.DateTimeField('DateCreated', auto_now_add=True)
     history = HistoricalRecords()
@@ -135,7 +138,8 @@ class Trait(models.Model):
         type_mapping = {
             INTEGER: self.integer_value,
             STRING: self.string_value,
-            BOOLEAN: self.boolean_value
+            BOOLEAN: self.boolean_value,
+            FLOAT: self.float_value
         }
 
         return type_mapping.get(value_type)
@@ -146,6 +150,7 @@ class Trait(models.Model):
             INTEGER: "integer_value",
             BOOLEAN: "boolean_value",
             STRING: "string_value",
+            FLOAT: "float_value",
         }.get(tv_type, "string_value")  # The default was chosen for backwards compatibility
 
     @staticmethod
@@ -158,7 +163,7 @@ class Trait(models.Model):
         :return: dictionary to pass directly into trait serializer
         """
         tv_type = type(value).__name__
-        accepted_types = (STRING, INTEGER, BOOLEAN)
+        accepted_types = (STRING, INTEGER, BOOLEAN, FLOAT)
 
         return {
             # Default to string if not an anticipate type value to keep backwards compatibility.

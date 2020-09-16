@@ -3,7 +3,7 @@ from rest_framework.exceptions import ValidationError
 
 from audit.models import ENVIRONMENT_CREATED_MESSAGE, ENVIRONMENT_UPDATED_MESSAGE, RelatedObjectType, AuditLog
 from environments.fields import TraitValueField
-from environments.models import Environment, Identity, Trait, INTEGER, Webhook, STRING, BOOLEAN
+from environments.models import Environment, Identity, Trait, INTEGER, Webhook, STRING, BOOLEAN, FLOAT
 from features.serializers import FeatureStateSerializerFull
 from projects.serializers import ProjectSerializer
 from segments.serializers import SegmentSerializerBasic
@@ -117,7 +117,7 @@ class SDKCreateUpdateTraitSerializer(serializers.ModelSerializer):
 
         defaults = {
             value_key: trait_value,
-            'value_type': trait_value_type if trait_value_type in [INTEGER, BOOLEAN] else STRING
+            'value_type': trait_value_type if trait_value_type in [INTEGER, BOOLEAN, FLOAT] else STRING
         }
 
         return Trait.objects.update_or_create(identity=identity, trait_key=trait_key, defaults=defaults)[0]
