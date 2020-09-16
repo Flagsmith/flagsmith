@@ -2,8 +2,7 @@
 
 from django.db import migrations
 
-
-from environments.permissions import ENVIRONMENT_PERMISSIONS
+from environments.permissions.constants import ENVIRONMENT_PERMISSIONS
 
 
 def create_default_permissions(apps, schema_editor):
