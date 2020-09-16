@@ -1,8 +1,8 @@
-from drf_yasg.utils import swagger_serializer_method
 from rest_framework import serializers, exceptions
 from rest_framework.exceptions import ValidationError
 
 from audit.models import ENVIRONMENT_CREATED_MESSAGE, ENVIRONMENT_UPDATED_MESSAGE, RelatedObjectType, AuditLog
+from environments.fields import TraitValueField
 from environments.models import Environment, Identity, Trait, INTEGER, Webhook, UserEnvironmentPermission, \
     UserPermissionGroupEnvironmentPermission, STRING, BOOLEAN
 from features.serializers import FeatureStateSerializerFull
@@ -89,20 +89,6 @@ class TraitSerializerFull(serializers.ModelSerializer):
     @staticmethod
     def get_trait_value(obj):
         return obj.get_trait_value()
-
-
-class TraitValueField(serializers.Field):
-    """
-    Custom field to extract the type of the field on deserialization.
-    """
-    def to_internal_value(self, data):
-        return {
-            "type": type(data).__name__,
-            "value": data
-        }
-
-    def to_representation(self, value):
-        return value
 
 
 class TraitSerializerBasic(serializers.ModelSerializer):
@@ -202,12 +188,6 @@ class DeleteAllTraitKeysSerializer(serializers.Serializer):
         Trait.objects.filter(identity__environment=environment, trait_key=self.validated_data.get('key')).delete()
 
 
-# Serializer for returning both Feature Flags and User Traits
-class IdentitySerializerTraitFlags(serializers.Serializer):
-    flags = FeatureStateSerializerFull(many=True)
-    traits = TraitSerializerBasic(many=True)
-
-
 class IdentitySerializerWithTraitsAndSegments(serializers.Serializer):
     def update(self, instance, validated_data):
         pass
@@ -247,3 +227,47 @@ class ListUserPermissionGroupEnvironmentPermissionSerializer(
     CreateUpdateUserPermissionGroupEnvironmentPermissionSerializer
 ):
     group = UserPermissionGroupSerializerDetail()
+
+
+class IdentifyWithTraitsSerializer(serializers.Serializer):
+    identifier = serializers.CharField(write_only=True, required=True)
+    traits = TraitSerializerBasic(required=False, many=True)
+    flags = FeatureStateSerializerFull(read_only=True, many=True)
+
+    def create(self, validated_data):
+        """
+        Create the identity with the associated traits
+        (optionally store traits if flag set on org)
+        """
+        environment = self.context['environment']
+        identity, created = Identity.objects.get_or_create(
+            identifier=validated_data['identifier'], environment=environment
+        )
+
+        if not created and environment.project.organisation.persist_trait_data:
+            # if this is an update and we're persisting traits, then we need to
+            # partially update any traits and return the full list
+            return self.update(instance=identity, validated_data=validated_data)
+
+        # generate traits for the identity and store them if configured to do so
+        trait_models = identity.generate_traits(
+            validated_data.get('traits', []),
+            persist=environment.project.organisation.persist_trait_data
+        )
+
+        return {
+            "identity": identity,
+            "traits": trait_models,
+            "flags": identity.get_all_feature_states(traits=trait_models)
+        }
+
+    def update(self, instance, validated_data):
+        """ partially update any traits and return the full list of traits and flags """
+        trait_data_items = validated_data.get('traits', [])
+        updated_traits = instance.update_traits(trait_data_items)
+
+        return {
+            "identity": instance,
+            "traits": updated_traits,
+            "flags": instance.get_all_feature_states(traits=updated_traits)
+        }
