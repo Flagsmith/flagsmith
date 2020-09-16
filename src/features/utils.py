@@ -2,11 +2,19 @@
 INTEGER = "int"
 STRING = "unicode"
 BOOLEAN = "bool"
+FLOAT = "float"
 
 
-def get_value_type(value):
+def get_value_type(value: str) -> str:
+    """
+    Given a string, determine what type of value is contained in the string.
+
+    e.g. "12" -> "int", "12.34" -> "float", etc.
+    """
     if is_integer(value):
         return INTEGER
+    elif is_float(value):
+        return FLOAT
     elif is_boolean(value):
         return BOOLEAN
     else:
@@ -16,6 +24,14 @@ def get_value_type(value):
 def is_integer(value):
     try:
         int(value)
+        return True
+    except ValueError:
+        return False
+
+
+def is_float(value):
+    try:
+        float(value)
         return True
     except ValueError:
         return False
