@@ -31,9 +31,6 @@ class OrganisationTestCase(TestCase):
         self.user = Helper.create_ffadminuser()
         self.client.force_authenticate(user=self.user)
 
-    def tearDown(self) -> None:
-        Helper.clean_up()
-
     def test_should_return_organisation_list_when_requested(self):
         # Given
         organisation = Organisation.objects.create(name='Test org')
@@ -45,6 +42,11 @@ class OrganisationTestCase(TestCase):
         # Then
         assert response.status_code == status.HTTP_200_OK
         assert 'count' in response.data and response.data['count'] == 1
+
+        # and certain required fields are there
+        response_json = response.json()
+        org_data = response_json['results'][0]
+        assert 'persist_trait_data' in org_data
 
     def test_should_create_new_organisation(self):
         # Given
