@@ -876,8 +876,19 @@ class SDKTraitsTest(APITestCase):
     def test_sending_null_value_in_bulk_create_deletes_trait_for_identity(self):
         # Given
         url = reverse('api-v1:sdk-traits-bulk-create')
-        trait = Trait.objects.create(trait_key=self.trait_key, value_type=STRING, string_value=self.trait_value,
-                                     identity=self.identity)
+        trait_to_delete = Trait.objects.create(
+            trait_key=self.trait_key,
+            value_type=STRING,
+            string_value=self.trait_value,
+            identity=self.identity
+        )
+        trait_key_to_keep = "another_trait_key"
+        trait_to_keep = Trait.objects.create(
+            trait_key=trait_key_to_keep,
+            value_type=STRING,
+            string_value="value is irrelevant",
+            identity=self.identity
+        )
         data = [{
             'identity': {
                 'identifier': self.identity.identifier
@@ -890,8 +901,14 @@ class SDKTraitsTest(APITestCase):
         response = self.client.put(url, data=json.dumps(data), content_type='application/json')
 
         # Then
+        # the request is successful
         assert response.status_code == status.HTTP_200_OK
-        assert not Trait.objects.filter(id=trait.id).exists()
+
+        # and the trait is deleted
+        assert not Trait.objects.filter(id=trait_to_delete.id).exists()
+
+        # but the trait missing from the request is left untouched
+        assert Trait.objects.filter(id=trait_to_keep.id).exists()
 
     def _generate_trait_data(self, identifier=None, trait_key=None, trait_value=None):
         identifier = identifier or self.identity.identifier
