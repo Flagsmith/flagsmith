@@ -16,7 +16,6 @@ from app.utils import create_hash
 from environments.exceptions import EnvironmentHeaderNotPresentError, \
     TraitPersistenceError
 from features.models import FeatureState
-from permissions.models import BasePermissionModelABC, PermissionModel, ENVIRONMENT_PERMISSION_TYPE
 from projects.models import Project
 
 # User Trait Value Types
@@ -328,25 +327,3 @@ class Webhook(models.Model):
     enabled = models.BooleanField(default=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
-
-
-class EnvironmentPermissionManager(models.Manager):
-    def get_queryset(self):
-        return super(EnvironmentPermissionManager, self).get_queryset().filter(type=ENVIRONMENT_PERMISSION_TYPE)
-
-
-class EnvironmentPermissionModel(PermissionModel):
-    class Meta:
-        proxy = True
-
-    objects = EnvironmentPermissionManager()
-
-
-class UserEnvironmentPermission(BasePermissionModelABC):
-    user = models.ForeignKey('users.FFAdminUser', on_delete=models.CASCADE)
-    environment = models.ForeignKey(Environment, on_delete=models.CASCADE, related_query_name='userpermission')
-
-
-class UserPermissionGroupEnvironmentPermission(BasePermissionModelABC):
-    group = models.ForeignKey('users.UserPermissionGroup', on_delete=models.CASCADE)
-    environment = models.ForeignKey(Environment, on_delete=models.CASCADE, related_query_name='grouppermission')

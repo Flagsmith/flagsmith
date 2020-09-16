@@ -91,7 +91,10 @@ INSTALLED_APPS = [
     'users',
     'organisations',
     'projects',
+
     'environments',
+    'environments.permissions',
+
     'features',
     'segments',
     'e2etests',

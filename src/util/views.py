@@ -1,7 +1,7 @@
 from rest_framework.generics import GenericAPIView
 
 from environments.authentication import EnvironmentKeyAuthentication
-from environments.permissions import EnvironmentKeyPermissions
+from environments.permissions.permissions import EnvironmentKeyPermissions
 
 
 class SDKAPIView(GenericAPIView):
