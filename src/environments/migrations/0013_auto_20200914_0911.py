@@ -36,6 +36,12 @@ class Migration(migrations.Migration):
                     model_name='userpermissiongroupenvironmentpermission',
                     name='permissions',
                 ),
+                migrations.DeleteModel(
+                    name='UserEnvironmentPermission',
+                ),
+                migrations.DeleteModel(
+                    name='UserPermissionGroupEnvironmentPermission',
+                ),
             ],
             database_operations=[
                 # table names obtained by running sqlmigrate environment_permissions 0001

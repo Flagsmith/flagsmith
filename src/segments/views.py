@@ -10,7 +10,8 @@ from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
 
 from environments.exceptions import EnvironmentHeaderNotPresentError
-from environments.models import Environment, Identity
+from environments.models import Environment
+from environments.identities.models import Identity
 from segments.serializers import SegmentSerializer
 from util.views import SDKAPIView
 from . import serializers
