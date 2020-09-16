@@ -2,6 +2,8 @@ import pytest
 from django.test import TestCase, TransactionTestCase
 
 from environments.models import Environment, Identity, Trait
+from environments.tests.helpers import generate_trait_data_item, \
+    create_trait_for_identity, get_trait_from_list_by_key
 from features.models import Feature, FeatureState, FeatureSegment
 from features.utils import INTEGER, STRING, BOOLEAN
 from organisations.models import Organisation
@@ -85,9 +87,6 @@ class IdentityTestCase(TransactionTestCase):
         self.organisation = Organisation.objects.create(name="Test Org")
         self.project = Project.objects.create(name="Test Project", organisation=self.organisation)
         self.environment = Environment.objects.create(name="Test Environment", project=self.project)
-
-    def tearDown(self) -> None:
-        Helper.clean_up()
 
     def test_create_identity_should_assign_relevant_attributes(self):
         identity = Identity.objects.create(identifier="test-identity", environment=self.environment)
@@ -361,4 +360,189 @@ class IdentityTestCase(TransactionTestCase):
 
         overridden_feature_state = feature_states[0]
         assert overridden_feature_state.get_feature_state_value() == feature_segment.value
+
+    def test_get_all_feature_states_returns_correct_value_when_traits_passed_manually(
+        self
+    ):
+        """
+        Verify that when traits are passed manually, then the segments are correctly
+        analysed for the identity and the correct value is returned for the feature
+        state.
+        """
+        # Given - an identity with a trait that has an integer value of 10
+        trait_key = 'trait-key'
+        trait_value = 10
+        identity = Identity.objects.create(
+            identifier='test-identity', environment=self.environment
+        )
+        trait = Trait(
+            identity=identity,
+            trait_key=trait_key,
+            integer_value=trait_value,
+            value_type=INTEGER
+        )
+
+        # and a segment that matches all identities with a trait value greater than or equal to 5
+        segment = Segment.objects.create(name='Test segment 1', project=self.project)
+        rule = SegmentRule.objects.create(segment=segment, type=SegmentRule.ALL_RULE)
+        Condition.objects.create(
+            rule=rule, property=trait_key, value=5, operator=GREATER_THAN_INCLUSIVE
+        )
+
+        # and a feature flag
+        default_state = False
+        feature_flag = Feature.objects.create(
+            project=self.project, name='test_flag', default_enabled=default_state
+        )
+
+        # which is overridden by the segment
+        enabled_for_segment = not default_state
+        FeatureSegment.objects.create(
+            feature=feature_flag,
+            segment=segment,
+            environment=self.environment,
+            priority=1,
+            enabled=enabled_for_segment
+        )
+
+        # When - we get all feature states for an identity
+        feature_states = identity.get_all_feature_states(traits=[trait])
+
+        # Then - the flag is returned with the correct state
+        assert len(feature_states) == 1
+        assert feature_states[0].enabled == enabled_for_segment
+
+    def test_generate_traits_with_persistence(self):
+        # Given
+        identity = Identity.objects.create(
+            identifier="identifier", environment=self.environment
+        )
+        trait_data_items = [
+            generate_trait_data_item("string_trait", "string_value"),
+            generate_trait_data_item("integer_trait", 1),
+            generate_trait_data_item("boolean_value", True)
+        ]
+
+        # When
+        trait_models = identity.generate_traits(trait_data_items, persist=True)
+
+        # Then
+        # the response from the method has 3 traits
+        assert len(trait_models) == 3
+
+        # and the database matches it
+        assert Trait.objects.filter(identity=identity).count() == 3
+
+    def test_generate_traits_without_persistence(self):
+        # Given
+        identity = Identity.objects.create(
+            identifier="identifier", environment=self.environment
+        )
+        trait_data_items = [
+            generate_trait_data_item("string_trait", "string_value"),
+            generate_trait_data_item("integer_trait", 1),
+            generate_trait_data_item("boolean_value", True)
+        ]
+
+        # When
+        trait_models = identity.generate_traits(trait_data_items, persist=False)
+
+        # Then
+        # the response from the method has 3 traits
+        assert len(trait_models) == 3
+        # and they are all Trait objects
+        assert all([isinstance(trait, Trait) for trait in trait_models])
+
+        # but the database has none
+        assert Trait.objects.filter(identity=identity).count() == 0
+
+    def test_update_traits(self):
+        """
+        This is quite a long test to verify the update traits functionality correctly
+        handles updating and creating traits.
+        """
+        # Given
+        # an identity
+        identity = Identity.objects.create(
+            identifier="identifier", environment=self.environment
+        )
+
+        # that already has 2 traits
+        trait_1_key = "trait_1"
+        trait_1_value = 1
+        trait_2_key = "trait_2"
+        trait_2_value = 2
+        trait_1 = create_trait_for_identity(identity, trait_1_key, trait_1_value)
+        trait_2 = create_trait_for_identity(identity, trait_2_key, trait_2_value)
+
+        # and a list of trait data items that should end up creating 1 additional
+        # trait, updating 1 and leaving another alone but returning it as it is
+        new_trait_1_value = 5
+        trait_3_key = "trait_3"
+        trait_3_value = 3
+        trait_data_items = [
+            generate_trait_data_item(
+                trait_key=trait_1.trait_key, trait_value=new_trait_1_value
+            ),
+            generate_trait_data_item(trait_key=trait_3_key, trait_value=trait_3_value)
+        ]
+
+        # When
+        updated_traits = identity.update_traits(trait_data_items)
+
+        # Then
+        # 3 traits are returned
+        assert len(updated_traits) == 3
+
+        # and the first trait has it's value updated correctly
+        updated_trait_1 = get_trait_from_list_by_key(trait_1_key, updated_traits)
+        assert updated_trait_1.trait_value == new_trait_1_value
+
+        # and the second trait is left untouched and returned as is
+        updated_trait_2 = get_trait_from_list_by_key(trait_2_key, updated_traits)
+        assert updated_trait_2.trait_value == trait_2_value
+
+        # and the third trait is created correctly
+        updated_trait_3 = get_trait_from_list_by_key(trait_3_key, updated_traits)
+        assert updated_trait_3.trait_value == trait_3_value
+
+    def test_update_traits_deletes_when_nulled_out(self):
+        """
+        This is quite a long test to verify the update traits functionality correctly
+        handles updating and creating traits.
+        """
+        # Given
+        # an identity
+        identity = Identity.objects.create(
+            identifier="identifier", environment=self.environment
+        )
+
+        # that already has 2 traits
+        trait_1_key = "trait_1"
+        trait_1_value = 1
+        trait_2_key = "trait_2"
+        trait_2_value = 2
+        create_trait_for_identity(identity, trait_1_key, trait_1_value)
+        create_trait_for_identity(identity, trait_2_key, trait_2_value)
+
+        # and a list of trait data items that should delete 1 and leave the other
+        trait_data_items = [
+            generate_trait_data_item(trait_key=trait_1_key, trait_value=None)
+        ]
+
+        # When
+        updated_traits = identity.update_traits(trait_data_items)
+
+        # Then
+        # 1 trait is returned
+        assert len(updated_traits) == 1
+
+        # and the nulled out trait has been deleted
+        assert not Trait.objects.filter(
+            trait_key=trait_1_key, identity=identity
+        ).exists()
+
+        # and the returned trait is untouched
+        assert updated_traits[0].trait_key == trait_2_key
+        assert updated_traits[0].trait_value == trait_2_value
 

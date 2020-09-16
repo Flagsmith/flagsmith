@@ -597,35 +597,131 @@ class SDKIdentitiesTestCase(APITestCase):
         # Then
         assert not response.json().get('flags')[0].get('enabled')
 
+    def test_post_identify_with_persistence(self):
+        # Given
+        url = reverse('api-v1:sdk-identities')
+
+        # a payload for an identity with 2 traits
+        data = {
+            'identifier': self.identity.identifier,
+            'traits': [
+                {
+                    'trait_key': 'my_trait',
+                    'trait_value': 123
+                },
+                {
+                    'trait_key': 'my_other_trait',
+                    'trait_value': 'a value'
+                }
+            ]
+        }
+
+        # When
+        # we identify that user by posting the above payload
+        self.client.credentials(HTTP_X_ENVIRONMENT_KEY=self.environment.api_key)
+        response = self.client.post(url, data=json.dumps(data), content_type='application/json')
+
+        # Then
+        # we get everything we expect in the response
+        response_json = response.json()
+        assert response_json["flags"]
+        assert response_json["traits"]
+
+        # and the traits ARE persisted
+        assert self.identity.identity_traits.count() == 2
+
+    def test_post_identify_without_persistence(self):
+        # Given
+        url = reverse('api-v1:sdk-identities')
+
+        # an organisation configured to not persist traits
+        self.organisation.persist_trait_data = False
+        self.organisation.save()
+
+        # and a payload for an identity with 2 traits
+        data = {
+            'identifier': self.identity.identifier,
+            'traits': [
+                {
+                    'trait_key': 'my_trait',
+                    'trait_value': 123
+                },
+                {
+                    'trait_key': 'my_other_trait',
+                    'trait_value': 'a value'
+                }
+            ]
+        }
+
+        # When
+        # we identify that user by posting the above payload
+        self.client.credentials(HTTP_X_ENVIRONMENT_KEY=self.environment.api_key)
+        response = self.client.post(url, data=json.dumps(data), content_type='application/json')
+
+        # Then
+        # we get everything we expect in the response
+        response_json = response.json()
+        assert response_json["flags"]
+        assert response_json["traits"]
+
+        # and the traits ARE NOT persisted
+        assert self.identity.identity_traits.count() == 0
+
 
 class SDKTraitsTest(APITestCase):
     JSON = 'application/json'
 
     def setUp(self) -> None:
-        organisation = Organisation.objects.create(name='Test organisation')
-        project = Project.objects.create(name='Test project', organisation=organisation)
+        self.organisation = Organisation.objects.create(name='Test organisation')
+        project = Project.objects.create(name='Test project', organisation=self.organisation)
         self.environment = Environment.objects.create(name='Test environment', project=project)
         self.identity = Identity.objects.create(identifier='test-user', environment=self.environment)
         self.client.credentials(HTTP_X_ENVIRONMENT_KEY=self.environment.api_key)
         self.trait_key = 'trait_key'
         self.trait_value = 'trait_value'
 
-    def tearDown(self) -> None:
-        Trait.objects.all().delete()
-        Identity.objects.all().delete()
-
     def test_can_set_trait_for_an_identity(self):
         # Given
         url = reverse('api-v1:sdk-traits-list')
 
         # When
-        res = self.client.post(url, data=self._generate_json_trait_data(), content_type=self.JSON)
+        res = self.client.post(
+            url, data=self._generate_json_trait_data(), content_type=self.JSON
+        )
 
         # Then
         assert res.status_code == status.HTTP_200_OK
 
         # and
-        assert Trait.objects.filter(identity=self.identity, trait_key=self.trait_key).exists()
+        assert Trait.objects.filter(
+            identity=self.identity, trait_key=self.trait_key
+        ).exists()
+
+    def test_cannot_set_trait_for_an_identity_for_organisations_without_persistence(
+        self
+    ):
+        # Given
+        url = reverse('api-v1:sdk-traits-list')
+
+        # an organisation that is configured to not store traits
+        self.organisation.persist_trait_data = False
+        self.organisation.save()
+
+        # When
+        response = self.client.post(
+            url, data=self._generate_json_trait_data(), content_type=self.JSON
+        )
+
+        # Then
+        # the request fails
+        assert response.status_code == status.HTTP_403_FORBIDDEN
+        response_json = response.json()
+        assert response_json['detail'] == (
+            'Organisation is not authorised to store traits.'
+        )
+
+        # and no traits are stored
+        assert Trait.objects.count() == 0
 
     def test_can_set_trait_with_boolean_value_for_an_identity(self):
         # Given
@@ -780,8 +876,19 @@ class SDKTraitsTest(APITestCase):
     def test_sending_null_value_in_bulk_create_deletes_trait_for_identity(self):
         # Given
         url = reverse('api-v1:sdk-traits-bulk-create')
-        trait = Trait.objects.create(trait_key=self.trait_key, value_type=STRING, string_value=self.trait_value,
-                                     identity=self.identity)
+        trait_to_delete = Trait.objects.create(
+            trait_key=self.trait_key,
+            value_type=STRING,
+            string_value=self.trait_value,
+            identity=self.identity
+        )
+        trait_key_to_keep = "another_trait_key"
+        trait_to_keep = Trait.objects.create(
+            trait_key=trait_key_to_keep,
+            value_type=STRING,
+            string_value="value is irrelevant",
+            identity=self.identity
+        )
         data = [{
             'identity': {
                 'identifier': self.identity.identifier
@@ -794,8 +901,14 @@ class SDKTraitsTest(APITestCase):
         response = self.client.put(url, data=json.dumps(data), content_type='application/json')
 
         # Then
+        # the request is successful
         assert response.status_code == status.HTTP_200_OK
-        assert not Trait.objects.filter(id=trait.id).exists()
+
+        # and the trait is deleted
+        assert not Trait.objects.filter(id=trait_to_delete.id).exists()
+
+        # but the trait missing from the request is left untouched
+        assert Trait.objects.filter(id=trait_to_keep.id).exists()
 
     def _generate_trait_data(self, identifier=None, trait_key=None, trait_value=None):
         identifier = identifier or self.identity.identifier
