@@ -31,9 +31,6 @@ class OrganisationTestCase(TestCase):
         self.user = Helper.create_ffadminuser()
         self.client.force_authenticate(user=self.user)
 
-    def tearDown(self) -> None:
-        Helper.clean_up()
-
     def test_should_return_organisation_list_when_requested(self):
         # Given
         organisation = Organisation.objects.create(name='Test org')
@@ -45,6 +42,11 @@ class OrganisationTestCase(TestCase):
         # Then
         assert response.status_code == status.HTTP_200_OK
         assert 'count' in response.data and response.data['count'] == 1
+
+        # and certain required fields are there
+        response_json = response.json()
+        org_data = response_json['results'][0]
+        assert 'persist_trait_data' in org_data
 
     def test_should_create_new_organisation(self):
         # Given
@@ -258,7 +260,6 @@ class OrganisationTestCase(TestCase):
         assert organisation.has_subscription() and organisation.subscription.subscription_id == subscription_id and \
                organisation.subscription.customer_id == customer_id
 
-    @pytest.mark.skip("Skip for now so we can release per env segment configuration.")
     def test_delete_organisation(self):
         # GIVEN an organisation with a project, environment, feature, segment and feature segment
         organisation = Organisation.objects.create(name="Test organisation")
@@ -269,10 +270,9 @@ class OrganisationTestCase(TestCase):
         segment = Segment.objects.create(name="Test segment", project=project)
         FeatureSegment.objects.create(feature=feature, segment=segment, environment=environment)
 
-        from audit.models import AuditLog
+        delete_organisation_url = reverse("api-v1:organisations:organisation-detail", args=[organisation.id])
 
         # WHEN
-        delete_organisation_url = reverse("api-v1:organisations:organisation-detail", args=[organisation.id])
         response = self.client.delete(delete_organisation_url)
 
         # THEN
