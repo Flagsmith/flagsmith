@@ -5,7 +5,7 @@ from environments.models import Environment, Identity, Trait
 from environments.tests.helpers import generate_trait_data_item, \
     create_trait_for_identity, get_trait_from_list_by_key
 from features.models import Feature, FeatureState, FeatureSegment, CONFIG
-from features.utils import INTEGER, STRING, BOOLEAN
+from features.utils import INTEGER, STRING, BOOLEAN, FLOAT
 from organisations.models import Organisation
 from projects.models import Project
 from segments.models import Segment, SegmentRule, Condition, EQUAL, GREATER_THAN_INCLUSIVE, GREATER_THAN
@@ -226,6 +226,22 @@ class IdentityTestCase(TransactionTestCase):
         self.assertTrue(hasattr(trait, 'value_type'))
         self.assertTrue(hasattr(trait, 'created_date'))
 
+    def test_create_trait_float_value_should_assign_relevant_attributes(self):
+        identity = Identity.objects.create(identifier='test-identity', environment=self.environment)
+        float_value = 10.5
+        trait = Trait.objects.create(trait_key="test-float",
+                                     float_value=float_value,
+                                     identity=identity,
+                                     value_type=FLOAT)
+
+        self.assertIsInstance(trait.identity, Identity)
+        self.assertTrue(hasattr(trait, 'trait_key'))
+        self.assertTrue(hasattr(trait, 'float_value'))
+        self.assertTrue(float_value == trait.float_value)
+        self.assertTrue(hasattr(trait, 'value_type'))
+        self.assertTrue(trait.value_type == FLOAT)
+        self.assertTrue(hasattr(trait, 'created_date'))
+
     def test_on_update_trait_should_update_relevant_attributes(self):
         identity = Identity.objects.create(identifier='test-identifier', environment=self.environment)
         trait = Trait.objects.create(trait_key="test-key", string_value="testing trait", identity=identity)
@@ -323,7 +339,7 @@ class IdentityTestCase(TransactionTestCase):
                                                initial_value='initial-value', type='CONFIG')
 
         # Feature segment value is converted to string in the serializer so we set as a string value here to test
-        # bool value
+        # integer value
         overridden_value = '12'
         FeatureSegment.objects.create(feature=remote_config, segment=segment, environment=self.environment,
                                       value=overridden_value, value_type=INTEGER)
@@ -434,6 +450,31 @@ class IdentityTestCase(TransactionTestCase):
 
         overridden_feature_state = feature_states[0]
         assert overridden_feature_state.get_feature_state_value() == feature_segment.value
+
+    def test_get_all_feature_states_for_identity_returns_correct_values_for_matching_segment_when_value_float(self):
+        # Given
+        trait_key = 'trait-key'
+        trait_value = 10.5
+        identity = Identity.objects.create(identifier='test-identity', environment=self.environment)
+        trait = Trait.objects.create(identity=identity, trait_key=trait_key, float_value=trait_value, value_type=FLOAT)
+
+        segment = Segment.objects.create(name='Test segment', project=self.project)
+        rule = SegmentRule.objects.create(segment=segment, type=SegmentRule.ALL_RULE)
+        Condition.objects.create(rule=rule, property=trait_key, value=trait_value, operator=EQUAL)
+
+        feature_flag = Feature.objects.create(name='test-remote-config', project=self.project,
+                                              initial_value='initial-value', type='FLAG')
+
+        FeatureSegment.objects.create(feature=feature_flag, segment=segment, environment=self.environment, enabled=True)
+
+        # When
+        feature_states = identity.get_all_feature_states()
+        user_traits = identity.get_all_user_traits()
+
+        # Then
+        feature_state = next(filter(lambda fs: fs.feature == feature_flag, feature_states))
+        assert feature_state.enabled is True
+        assert user_traits[0].float_value == trait_value
 
     def test_get_all_feature_states_returns_correct_value_when_traits_passed_manually(
         self
