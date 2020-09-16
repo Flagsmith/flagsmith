@@ -235,26 +235,25 @@ class IdentifyWithTraitsSerializer(serializers.Serializer):
     flags = FeatureStateSerializerFull(read_only=True, many=True)
 
     def create(self, validated_data):
-        """ Create the identity with the associated traits (optionally store traits if flag not set on org) """
+        """
+        Create the identity with the associated traits
+        (optionally store traits if flag set on org)
+        """
         environment = self.context['environment']
         identity, created = Identity.objects.get_or_create(
             identifier=validated_data['identifier'], environment=environment
         )
 
-        if not created:
-            # if this is an update, then we need to partially update any traits and return the full list
+        if not created and environment.project.organisation.persist_trait_data:
+            # if this is an update and we're persisting traits, then we need to
+            # partially update any traits and return the full list
             return self.update(instance=identity, validated_data=validated_data)
 
-        trait_models = []
-        for trait in validated_data.get('traits', []):
-            trait_key = trait['trait_key']
-            trait_value = trait['trait_value']
-            trait_models.append(
-                Trait(trait_key=trait_key, identity=identity, **Trait.generate_trait_value_data(trait_value))
-            )
-
-        if environment.project.organisation.persist_trait_data:
-            trait_models = Trait.objects.bulk_create(trait_models)
+        # generate traits for the identity and store them if configured to do so
+        trait_models = identity.generate_traits(
+            validated_data.get('traits', []),
+            persist=environment.project.organisation.persist_trait_data
+        )
 
         return {
             "identity": identity,
@@ -264,34 +263,11 @@ class IdentifyWithTraitsSerializer(serializers.Serializer):
 
     def update(self, instance, validated_data):
         """ partially update any traits and return the full list of traits and flags """
-        environment = self.context['environment']
-
         trait_data_items = validated_data.get('traits', [])
-        trait_models = []
-
-        if environment.project.organisation.persist_trait_data:
-            for trait_data_item in trait_data_items:
-                updated_or_created_trait, _ = Trait.objects.update_or_create(
-                    trait_key=trait_data_item['trait_key'],
-                    identity=instance,
-                    defaults={**Trait.generate_trait_value_data(trait_data_item['trait_value'])}
-                )
-                trait_models.append(updated_or_created_trait)
-
-            # now we can delete any traits that don't belong to the identity anymore
-            trait_model_ids = [updated_trait.id for updated_trait in trait_models]
-            Trait.objects.filter(identity=instance).exclude(id__in=trait_model_ids).delete()
-        else:
-            trait_models.extend([
-                Trait(
-                    trait_key=trait['trait_key'],
-                    identity=instance,
-                    **Trait.generate_trait_value_data(trait['trait_value'])
-                ) for trait in trait_data_items
-            ])
+        updated_traits = instance.update_traits(trait_data_items)
 
         return {
             "identity": instance,
-            "traits": trait_models,
-            "flags": instance.get_all_feature_states(traits=trait_models)
+            "traits": updated_traits,
+            "flags": instance.get_all_feature_states(traits=updated_traits)
         }
