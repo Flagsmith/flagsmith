@@ -2,7 +2,7 @@
 
 from django.db import migrations, models
 
-from environments.permissions import ENVIRONMENT_PERMISSIONS
+from environments.permissions.constants import ENVIRONMENT_PERMISSIONS
 from permissions.models import PROJECT_PERMISSION_TYPE, ENVIRONMENT_PERMISSION_TYPE
 from projects.permissions import PROJECT_PERMISSIONS
 

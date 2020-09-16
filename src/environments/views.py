@@ -10,26 +10,23 @@ from drf_yasg import openapi
 from drf_yasg.utils import swagger_auto_schema
 from rest_framework import viewsets, status, mixins
 from rest_framework.decorators import action
-from rest_framework.exceptions import ValidationError
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.schemas import AutoSchema
 
 from environments.authentication import EnvironmentKeyAuthentication
-from environments.permissions import EnvironmentKeyPermissions, EnvironmentPermissions, \
+from environments.permissions.permissions import EnvironmentKeyPermissions, EnvironmentPermissions, \
     NestedEnvironmentPermissions, TraitPersistencePermissions
 from features.serializers import FeatureStateSerializerFull
 from permissions.serializers import PermissionModelSerializer, MyUserObjectPermissionsSerializer
 from util.logging import get_logger
 from util.views import SDKAPIView
-from .models import Environment, Identity, Trait, Webhook, EnvironmentPermissionModel, UserEnvironmentPermission, \
+from .models import Environment, Identity, Trait, Webhook
+from .permissions.models import EnvironmentPermissionModel, UserEnvironmentPermission, \
     UserPermissionGroupEnvironmentPermission
 from .serializers import EnvironmentSerializerLight, IdentitySerializer, TraitSerializerBasic, TraitSerializerFull, \
     IdentitySerializerWithTraitsAndSegments, IncrementTraitValueSerializer, \
     TraitKeysSerializer, DeleteAllTraitKeysSerializer, WebhookSerializer, \
-    CreateUpdateUserEnvironmentPermissionSerializer, ListUserEnvironmentPermissionSerializer, \
-    CreateUpdateUserPermissionGroupEnvironmentPermissionSerializer, \
-    ListUserPermissionGroupEnvironmentPermissionSerializer, \
     SDKCreateUpdateTraitSerializer, SDKBulkCreateUpdateTraitSerializer, IdentifyWithTraitsSerializer
 
 logger = get_logger(__name__)
@@ -280,58 +277,6 @@ class WebhookViewSet(mixins.ListModelMixin, mixins.CreateModelMixin, mixins.Upda
 
     def perform_update(self, serializer):
         environment = Environment.objects.get(api_key=self.kwargs.get('environment_api_key'))
-        serializer.save(environment=environment)
-
-
-class UserEnvironmentPermissionsViewSet(viewsets.ModelViewSet):
-    pagination_class = None
-    permission_classes = [IsAuthenticated, NestedEnvironmentPermissions]
-
-    def get_queryset(self):
-        if not self.kwargs.get('environment_api_key'):
-            raise ValidationError('Missing environment key.')
-
-        return UserEnvironmentPermission.objects.filter(environment__api_key=self.kwargs['environment_api_key'])
-
-    def get_serializer_class(self):
-        if self.action == 'list':
-            return ListUserEnvironmentPermissionSerializer
-
-        return CreateUpdateUserEnvironmentPermissionSerializer
-
-    def perform_create(self, serializer):
-        environment = Environment.objects.get(api_key=self.kwargs['environment_api_key'])
-        serializer.save(environment=environment)
-
-    def perform_update(self, serializer):
-        environment = Environment.objects.get(api_key=self.kwargs['environment_api_key'])
-        serializer.save(environment=environment)
-
-
-class UserPermissionGroupEnvironmentPermissionsViewSet(viewsets.ModelViewSet):
-    pagination_class = None
-    permission_classes = [IsAuthenticated, NestedEnvironmentPermissions]
-
-    def get_queryset(self):
-        if not self.kwargs.get('environment_api_key'):
-            raise ValidationError('Missing environment key.')
-
-        return UserPermissionGroupEnvironmentPermission.objects.filter(
-            environment__api_key=self.kwargs['environment_api_key']
-        )
-
-    def get_serializer_class(self):
-        if self.action == 'list':
-            return ListUserPermissionGroupEnvironmentPermissionSerializer
-
-        return CreateUpdateUserPermissionGroupEnvironmentPermissionSerializer
-
-    def perform_create(self, serializer):
-        environment = Environment.objects.get(api_key=self.kwargs['environment_api_key'])
-        serializer.save(environment=environment)
-
-    def perform_update(self, serializer):
-        environment = Environment.objects.get(api_key=self.kwargs['environment_api_key'])
         serializer.save(environment=environment)
 
 
