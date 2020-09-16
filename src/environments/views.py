@@ -226,7 +226,7 @@ class TraitViewSet(viewsets.ModelViewSet):
         trait_data = request.data
 
         # Check if trait value was provided with request data. If so, we need to figure out value_type from
-        # the given value and also use correct value field e.g. boolean_value, integer_value or
+        # the given value and also use correct value field e.g. boolean_value, float_value, integer_value or
         # string_value, and override request data
         if 'trait_value' in trait_data:
             trait_data = trait_to_update.generate_trait_value_data(trait_data['trait_value'])
@@ -456,7 +456,7 @@ class SDKTraitsDeprecated(SDKAPIView):
 
         if trait and 'trait_value' in trait_data:
             # Check if trait value was provided with request data. If so, we need to figure out value_type from
-            # the given value and also use correct value field e.g. boolean_value, integer_value or
+            # the given value and also use correct value field e.g. boolean_value, float_value, integer_value or
             # string_value, and override request data
             trait_data = trait.generate_trait_value_data(trait_data['trait_value'])
 

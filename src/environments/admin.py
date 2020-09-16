@@ -31,7 +31,7 @@ class IdentityAdmin(admin.ModelAdmin):
 
 class TraitAdmin(SimpleHistoryAdmin):
     date_hierarchy = 'created_date'
-    list_display = ('__str__', 'value_type', 'boolean_value', 'integer_value', 'string_value',
+    list_display = ('__str__', 'value_type', 'boolean_value', 'integer_value', 'string_value', 'float_value',
                     'created_date', 'identity',)
     list_filter = ('value_type', 'created_date', 'identity',)
     raw_id_fields = ('identity',)
