@@ -2,7 +2,8 @@ from unittest import TestCase, mock
 
 import pytest
 
-from environments.models import Environment, Identity
+from environments.models import Environment
+from environments.identities.models import Identity
 from environments.permissions.models import UserEnvironmentPermission
 from environments.permissions.permissions import (
     EnvironmentPermissions,

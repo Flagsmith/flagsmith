@@ -8,7 +8,8 @@ from rest_framework.test import APIClient, APITestCase
 
 from audit.models import AuditLog, RelatedObjectType, IDENTITY_FEATURE_STATE_UPDATED_MESSAGE, \
     IDENTITY_FEATURE_STATE_DELETED_MESSAGE
-from environments.models import Environment, Identity
+from environments.models import Environment
+from environments.identities.models import Identity
 from features.models import Feature, FeatureState, FeatureSegment, CONFIG, FeatureStateValue
 from features.utils import INTEGER, BOOLEAN, STRING
 from organisations.models import Organisation, OrganisationRole
