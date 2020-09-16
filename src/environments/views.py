@@ -4,6 +4,7 @@ from __future__ import unicode_literals
 from collections import namedtuple
 
 import coreapi
+from django.db.models import Q
 from django.utils.decorators import method_decorator
 from drf_yasg import openapi
 from drf_yasg.utils import swagger_auto_schema
@@ -417,7 +418,8 @@ class SDKIdentities(SDKAPIView):
         serializer.is_valid(raise_exception=True)
         instance = serializer.save()
 
-        # we need to serialize the response again to ensure that the trait values are serialized correctly
+        # we need to serialize the response again to ensure that the
+        # trait values are serialized correctly
         response_serializer = IdentifyWithTraitsSerializer(instance=instance)
         return Response(response_serializer.data)
 
@@ -557,18 +559,23 @@ class SDKTraits(mixins.CreateModelMixin, viewsets.GenericViewSet):
     @action(detail=False, methods=["PUT"], url_path='bulk')
     def bulk_create(self, request):
         try:
-            # endpoint allows users to delete existing traits by sending null values for the trait value
-            # so we need to filter those out here
+            # endpoint allows users to delete existing traits by sending null values
+            # for the trait value so we need to filter those out here
             traits = []
+            delete_filter_query = Q()
+
             for idx, trait in enumerate(request.data):
                 if trait.get('trait_value') is None:
-                    Trait.objects.filter(
+                    delete_filter_query = delete_filter_query | Q(
                         trait_key=trait.get('trait_key'),
                         identity__identifier=trait['identity']['identifier'],
                         identity__environment=request.environment
-                    ).delete()
+                    )
                 else:
                     traits.append(trait)
+
+            if delete_filter_query:
+                Trait.objects.filter(delete_filter_query).delete()
 
             serializer = self.get_serializer(data=traits, many=True)
             serializer.is_valid(raise_exception=True)
