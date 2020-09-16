@@ -5,7 +5,9 @@ from django.conf import settings
 from django.contrib import admin
 from simple_history.admin import SimpleHistoryAdmin
 
-from .models import Identity, Environment, Trait, Webhook
+from .identities.admin import IdentityAdmin
+from .models import Environment, Trait, Webhook
+from .identities.models import Identity
 
 
 class WebhookInline(admin.TabularInline):
@@ -22,13 +24,6 @@ class EnvironmentAdmin(admin.ModelAdmin):
     inlines = (WebhookInline,)
 
 
-class IdentityAdmin(admin.ModelAdmin):
-    date_hierarchy = 'created_date'
-    list_display = ('__str__', 'created_date', 'environment',)
-    list_filter = ('created_date', 'environment',)
-    search_fields = ('identifier',)
-
-
 class TraitAdmin(SimpleHistoryAdmin):
     date_hierarchy = 'created_date'
     list_display = ('__str__', 'value_type', 'boolean_value', 'integer_value', 'string_value', 'float_value',
@@ -40,5 +35,4 @@ class TraitAdmin(SimpleHistoryAdmin):
 
 if settings.ENV in ('local', 'dev'):
     # these shouldn't be displayed in production environments but are useful in development environments
-    admin.site.register(Identity, IdentityAdmin)
     admin.site.register(Trait, TraitAdmin)

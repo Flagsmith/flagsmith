@@ -1,6 +1,7 @@
 import typing
 
-from environments.models import Identity, Trait
+from environments.models import Trait
+from environments.identities.models import Identity
 
 
 def generate_trait_data_item(
