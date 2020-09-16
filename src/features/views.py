@@ -16,7 +16,7 @@ from rest_framework.schemas import AutoSchema
 from audit.models import AuditLog, RelatedObjectType, IDENTITY_FEATURE_STATE_DELETED_MESSAGE
 from environments.authentication import EnvironmentKeyAuthentication
 from environments.models import Environment, Identity
-from environments.permissions import EnvironmentKeyPermissions, NestedEnvironmentPermissions
+from environments.permissions.permissions import EnvironmentKeyPermissions, NestedEnvironmentPermissions
 from projects.models import Project
 from .models import FeatureState, FeatureSegment
 from .permissions import FeaturePermissions, FeatureStatePermissions
