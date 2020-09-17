@@ -1,20 +1,19 @@
 # -*- coding: utf-8 -*-
 from __future__ import unicode_literals
 
-import typing
-
-from app.utils import create_hash
 from django.conf import settings
 from django.core.cache import caches
 from django.core.exceptions import (ObjectDoesNotExist)
 from django.db import models
 from django.utils.encoding import python_2_unicode_compatible
 from django.utils.translation import ugettext_lazy as _
+
+from app.utils import create_hash
 from environments.exceptions import EnvironmentHeaderNotPresentError, \
     TraitPersistenceError
 from features.models import FeatureState, FLAG
 from projects.models import Project
-from simple_history.models import HistoricalRecords
+from util.history.custom_simple_history import NonWritingHistoricalRecords
 
 # User Trait Value Types
 INTEGER = "int"
@@ -117,7 +116,7 @@ class Trait(models.Model):
     float_value = models.FloatField(null=True, blank=True)
 
     created_date = models.DateTimeField('DateCreated', auto_now_add=True)
-    history = HistoricalRecords()
+    history = NonWritingHistoricalRecords()
 
     class Meta:
         verbose_name_plural = "User Traits"
