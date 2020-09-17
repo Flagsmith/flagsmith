@@ -93,20 +93,25 @@ class IdentityTestCase(TransactionTestCase):
     def test_get_all_feature_states_exclude_disabled(self):
         # Given
         # a project with hide_disabled_flags enabled
-        project_flag_disabled = Project.objects.create(name="Project Flag Disabled",
-                                                       organisation=self.organisation,
-                                                       hide_disabled_flags=True)
+        project_flag_disabled = Project.objects.create(
+            name="Project Flag Disabled",
+            organisation=self.organisation,
+            hide_disabled_flags=True,
+        )
 
         # and a set of features and environments for that project
-        feature = Feature.objects.create(name="Test Feature",
-                                         project=project_flag_disabled)
-        feature_2 = Feature.objects.create(name="Test Feature 2",
-                                           project=project_flag_disabled)
-        remote_config = Feature.objects.create(name="Test Feature 3",
-                                               project=project_flag_disabled,
-                                               type=CONFIG)
-        other_environment = Environment.objects.create(name="Test Environment 2",
-                                                       project=project_flag_disabled)
+        feature = Feature.objects.create(
+            name="Test Feature", project=project_flag_disabled
+        )
+        feature_2 = Feature.objects.create(
+            name="Test Feature 2", project=project_flag_disabled
+        )
+        remote_config = Feature.objects.create(
+            name="Test Feature 3", project=project_flag_disabled, type=CONFIG
+        )
+        other_environment = Environment.objects.create(
+            name="Test Environment 2", project=project_flag_disabled
+        )
 
         identity_1 = Identity.objects.create(
             identifier="test-identity-1",
@@ -182,21 +187,24 @@ class IdentityTestCase(TransactionTestCase):
         self.assertTrue(hasattr(trait, "created_date"))
 
     def test_create_trait_float_value_should_assign_relevant_attributes(self):
-        identity = Identity.objects.create(identifier='test-identity',
-                                           environment=self.environment)
+        identity = Identity.objects.create(
+            identifier="test-identity", environment=self.environment
+        )
         float_value = 10.5
-        trait = Trait.objects.create(trait_key="test-float",
-                                     float_value=float_value,
-                                     identity=identity,
-                                     value_type=FLOAT)
+        trait = Trait.objects.create(
+            trait_key="test-float",
+            float_value=float_value,
+            identity=identity,
+            value_type=FLOAT,
+        )
 
         self.assertIsInstance(trait.identity, Identity)
-        self.assertTrue(hasattr(trait, 'trait_key'))
-        self.assertTrue(hasattr(trait, 'float_value'))
+        self.assertTrue(hasattr(trait, "trait_key"))
+        self.assertTrue(hasattr(trait, "float_value"))
         self.assertTrue(float_value == trait.float_value)
-        self.assertTrue(hasattr(trait, 'value_type'))
+        self.assertTrue(hasattr(trait, "value_type"))
         self.assertTrue(trait.value_type == FLOAT)
-        self.assertTrue(hasattr(trait, 'created_date'))
+        self.assertTrue(hasattr(trait, "created_date"))
 
     def test_on_update_trait_should_update_relevant_attributes(self):
         identity = Identity.objects.create(
@@ -443,27 +451,40 @@ class IdentityTestCase(TransactionTestCase):
         assert not feature_state.get_feature_state_value()
 
     def test_get_all_feature_states_for_identity_returns_correct_values_for_matching_segment_when_value_float(
-            self):
+        self,
+    ):
         # Given
-        trait_key = 'trait-key'
+        trait_key = "trait-key"
         trait_value = 10.5
-        identity = Identity.objects.create(identifier='test-identity',
-                                           environment=self.environment)
-        trait = Trait.objects.create(identity=identity, trait_key=trait_key,
-                                     float_value=trait_value, value_type=FLOAT)
+        identity = Identity.objects.create(
+            identifier="test-identity", environment=self.environment
+        )
+        trait = Trait.objects.create(
+            identity=identity,
+            trait_key=trait_key,
+            float_value=trait_value,
+            value_type=FLOAT,
+        )
 
-        segment = Segment.objects.create(name='Test segment', project=self.project)
+        segment = Segment.objects.create(name="Test segment", project=self.project)
         rule = SegmentRule.objects.create(segment=segment, type=SegmentRule.ALL_RULE)
-        Condition.objects.create(rule=rule, property=trait_key, value=trait_value,
-                                 operator=EQUAL)
+        Condition.objects.create(
+            rule=rule, property=trait_key, value=trait_value, operator=EQUAL
+        )
 
-        feature_flag = Feature.objects.create(name='test-remote-config',
-                                              project=self.project,
-                                              initial_value='initial-value',
-                                              type='FLAG')
+        feature_flag = Feature.objects.create(
+            name="test-remote-config",
+            project=self.project,
+            initial_value="initial-value",
+            type="FLAG",
+        )
 
-        FeatureSegment.objects.create(feature=feature_flag, segment=segment,
-                                      environment=self.environment, enabled=True)
+        FeatureSegment.objects.create(
+            feature=feature_flag,
+            segment=segment,
+            environment=self.environment,
+            enabled=True,
+        )
 
         # When
         feature_states = identity.get_all_feature_states()
@@ -471,7 +492,8 @@ class IdentityTestCase(TransactionTestCase):
 
         # Then
         feature_state = next(
-            filter(lambda fs: fs.feature == feature_flag, feature_states))
+            filter(lambda fs: fs.feature == feature_flag, feature_states)
+        )
         assert feature_state.enabled is True
         assert user_traits[0].float_value == trait_value
 

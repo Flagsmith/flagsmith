@@ -102,7 +102,7 @@ class NestedEnvironmentPermissions(BasePermission):
 
 
 class TraitPersistencePermissions(BasePermission):
-    message = 'Organisation is not authorised to store traits.'
+    message = "Organisation is not authorised to store traits."
 
     def has_permission(self, request, view):
         # this permission class will only work when placed after
