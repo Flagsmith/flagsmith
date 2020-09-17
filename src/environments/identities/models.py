@@ -20,6 +20,9 @@ class Identity(models.Model):
         verbose_name_plural = "Identities"
         ordering = ["id"]
         unique_together = ("environment", "identifier")
+        # hard code the table name after moving from the environments app to prevent
+        # issues with production deployment due to multi server configuration.
+        db_table = "environments_identity"
 
     def get_all_feature_states(self, traits: typing.List[Trait] = None):
         """
