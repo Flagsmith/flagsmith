@@ -2,9 +2,11 @@ from django.test import TransactionTestCase
 
 from environments.identities.models import Identity
 from environments.identities.traits.models import Trait
-from environments.models import Environment, FLOAT
-from features.models import Feature, FeatureState, FeatureSegment, CONFIG
-from features.utils import STRING, INTEGER, BOOLEAN
+from environments.models import Environment
+from features.models import Feature, FeatureSegment
+from features.constants import CONFIG
+from features.feature_states.models import FeatureState
+from features.constants import STRING, INTEGER, BOOLEAN, FLOAT
 from organisations.models import Organisation
 from projects.models import Project
 from segments.models import (

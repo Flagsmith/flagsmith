@@ -3,7 +3,7 @@ from rest_framework import serializers, exceptions
 from environments.identities.traits.fields import TraitValueField
 from environments.identities.models import Identity
 from environments.identities.serializers import IdentitySerializer
-from environments.models import INTEGER
+from features.constants import INTEGER
 from environments.identities.traits.models import Trait
 
 

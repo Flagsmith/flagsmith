@@ -2,7 +2,7 @@ import pytest
 from rest_framework import serializers
 
 from features.fields import FeatureSegmentValueField
-from features.utils import STRING, BOOLEAN, INTEGER
+from features.constants import STRING, BOOLEAN, INTEGER
 
 
 @pytest.mark.parametrize("value, expected_type", [
