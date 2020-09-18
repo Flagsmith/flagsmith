@@ -8,6 +8,7 @@ class Migration(migrations.Migration):
 
     dependencies = [
         ('features', '0023_auto_20200717_1515'),
+        ('identities', '0001_initial'),
     ]
 
     operations = [

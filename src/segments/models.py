@@ -8,7 +8,8 @@ from django.db import models
 
 from django.utils.encoding import python_2_unicode_compatible
 
-from environments.models import INTEGER, BOOLEAN, FLOAT, Trait
+from environments.models import INTEGER, BOOLEAN, FLOAT
+from environments.identities.traits.models import Trait
 from environments.identities.models import Identity
 from projects.models import Project
 
