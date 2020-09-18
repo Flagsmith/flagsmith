@@ -6,7 +6,8 @@ from django.utils.encoding import python_2_unicode_compatible
 
 from environments.models import Environment
 from environments.identities.traits.models import Trait
-from features.models import FeatureState, FLAG
+from features.constants import FLAG
+from features.feature_states.models import FeatureState
 
 
 @python_2_unicode_compatible

@@ -10,15 +10,8 @@ from django.utils.translation import ugettext_lazy as _
 
 from app.utils import create_hash
 from environments.exceptions import EnvironmentHeaderNotPresentError
-from features.models import FeatureState
+from features.feature_states.models import FeatureState
 from projects.models import Project
-from util.history.custom_simple_history import NonWritingHistoricalRecords
-
-# User Trait Value Types
-INTEGER = "int"
-STRING = "unicode"
-BOOLEAN = "bool"
-FLOAT = "float"
 
 environment_cache = caches[settings.ENVIRONMENT_CACHE_LOCATION]
 
