@@ -1,12 +1,8 @@
 from django.test import TransactionTestCase
 
 from environments.identities.models import Identity
-from environments.models import Environment, Trait, FLOAT
-from environments.tests.helpers import (
-    generate_trait_data_item,
-    create_trait_for_identity,
-    get_trait_from_list_by_key,
-)
+from environments.identities.traits.models import Trait
+from environments.models import Environment, FLOAT
 from features.models import Feature, FeatureState, FeatureSegment, CONFIG
 from features.utils import STRING, INTEGER, BOOLEAN
 from organisations.models import Organisation
@@ -18,6 +14,11 @@ from segments.models import (
     EQUAL,
     GREATER_THAN_INCLUSIVE,
     GREATER_THAN,
+)
+from .helpers import (
+    generate_trait_data_item,
+    create_trait_for_identity,
+    get_trait_from_list_by_key,
 )
 
 
