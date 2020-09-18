@@ -13,6 +13,8 @@ class Project(models.Model):
     name = models.CharField(max_length=2000)
     created_date = models.DateTimeField('DateCreated', auto_now_add=True)
     organisation = models.ForeignKey(Organisation, related_name='projects', on_delete=models.CASCADE)
+    hide_disabled_flags = models.BooleanField(default=False, help_text='If true will exclude flags from SDK which are '
+                                                                       'disabled')
 
     class Meta:
         ordering = ['id']

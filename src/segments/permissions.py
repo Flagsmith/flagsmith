@@ -1,6 +1,6 @@
 from rest_framework.permissions import BasePermission
 
-from environments.models import Identity
+from environments.identities.models import Identity
 from projects.models import Project
 
 
