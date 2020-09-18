@@ -4,7 +4,8 @@ import pytest
 from django.core.exceptions import ValidationError
 from django.db.utils import IntegrityError
 from django.test import TestCase
-from environments.models import Environment, Trait, STRING
+from environments.models import Environment, STRING
+from environments.identities.traits.models import Trait
 from environments.identities.models import Identity
 from features.models import Feature, FeatureState, CONFIG, FeatureSegment, FeatureStateValue, FLAG
 from features.utils import INTEGER, BOOLEAN

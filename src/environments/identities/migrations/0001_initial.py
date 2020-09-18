@@ -9,7 +9,11 @@ class Migration(migrations.Migration):
     initial = True
 
     dependencies = [
-        ('environments', '0014_auto_20200917_1032'),
+        # this is just here to ensure that feature models correctly refer to identities
+        # models as identities. instead of environments.
+        # there is still some pain with rolling feature migrations backwards but
+        # hopefully this won't be required
+        ('features', '0023_auto_20200717_1515')
     ]
 
     operations = [
