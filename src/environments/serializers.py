@@ -1,13 +1,9 @@
 from rest_framework import serializers
-from rest_framework.exceptions import ValidationError
 
 from audit.models import ENVIRONMENT_CREATED_MESSAGE, ENVIRONMENT_UPDATED_MESSAGE, RelatedObjectType, AuditLog
-from environments.identities.models import Identity
-from environments.models import Environment, Webhook, Trait, INTEGER, STRING, BOOLEAN
-from environments.fields import TraitValueField
+from environments.models import Environment, Webhook
 from features.serializers import FeatureStateSerializerFull
 from projects.serializers import ProjectSerializer
-from segments.serializers import SegmentSerializerBasic
 
 
 class EnvironmentSerializerFull(serializers.ModelSerializer):

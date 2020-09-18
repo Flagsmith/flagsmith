@@ -2,11 +2,8 @@ import pytest
 from django.test import TestCase
 
 from environments.identities.models import Identity
-from environments.models import Environment, Trait
-from environments.tests.helpers import generate_trait_data_item, \
-    create_trait_for_identity, get_trait_from_list_by_key
-from features.models import Feature, FeatureState, FeatureSegment, CONFIG
-from features.utils import INTEGER, STRING, BOOLEAN, FLOAT
+from environments.models import Environment
+from features.models import Feature, FeatureState
 from organisations.models import Organisation
 from projects.models import Project
 

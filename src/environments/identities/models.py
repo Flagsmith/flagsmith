@@ -4,7 +4,8 @@ from django.db import models
 from django.db.models import Q
 from django.utils.encoding import python_2_unicode_compatible
 
-from environments.models import Environment, Trait
+from environments.models import Environment
+from environments.identities.traits.models import Trait
 from features.models import FeatureState, FLAG
 
 
