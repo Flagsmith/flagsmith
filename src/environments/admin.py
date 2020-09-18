@@ -3,11 +3,10 @@ from __future__ import unicode_literals
 
 from django.conf import settings
 from django.contrib import admin
-from simple_history.admin import SimpleHistoryAdmin
 
-from .identities.admin import IdentityAdmin
-from .models import Environment, Trait, Webhook
-from .identities.models import Identity
+from .identities.traits.admin import TraitAdmin
+from .models import Environment, Webhook
+from .identities.traits.models import Trait
 
 
 class WebhookInline(admin.TabularInline):
@@ -22,17 +21,3 @@ class EnvironmentAdmin(admin.ModelAdmin):
     list_filter = ('created_date', 'project',)
     search_fields = ('name', 'project__name', 'api_key',)
     inlines = (WebhookInline,)
-
-
-class TraitAdmin(SimpleHistoryAdmin):
-    date_hierarchy = 'created_date'
-    list_display = ('__str__', 'value_type', 'boolean_value', 'integer_value', 'string_value', 'float_value',
-                    'created_date', 'identity',)
-    list_filter = ('value_type', 'created_date', 'identity',)
-    raw_id_fields = ('identity',)
-    search_fields = ('string_value', 'trait_key', 'identity__identifier',)
-
-
-if settings.ENV in ('local', 'dev'):
-    # these shouldn't be displayed in production environments but are useful in development environments
-    admin.site.register(Trait, TraitAdmin)
