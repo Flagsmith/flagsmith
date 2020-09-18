@@ -4,7 +4,7 @@ from rest_framework.exceptions import ValidationError
 from audit.models import AuditLog, RelatedObjectType, FEATURE_CREATED_MESSAGE, FEATURE_UPDATED_MESSAGE, \
     FEATURE_STATE_UPDATED_MESSAGE, IDENTITY_FEATURE_STATE_UPDATED_MESSAGE
 from environments.identities.models import Identity
-from features.utils import BOOLEAN, INTEGER, STRING
+from features.utils import STRING
 from .fields import FeatureSegmentValueField
 from .models import Feature, FeatureState, FeatureStateValue, FeatureSegment
 
@@ -105,8 +105,19 @@ class FeatureSegmentChangePrioritiesSerializer(serializers.Serializer):
 class FeatureSerializer(serializers.ModelSerializer):
     class Meta:
         model = Feature
-        fields = ('id', 'name', 'created_date', 'initial_value', 'description', 'default_enabled', 'type')
-        writeonly_fields = ('initial_value', 'default_enabled')
+        fields = (
+            "id",
+            "name",
+            "created_date",
+            "initial_value",
+            "description",
+            "default_enabled",
+            "type",
+            "tags"
+        )
+        writeonly_fields = (
+            "initial_value", "default_enabled"
+        )
 
 
 class FeatureStateSerializerFull(serializers.ModelSerializer):
