@@ -15,10 +15,11 @@ from rest_framework.schemas import AutoSchema
 
 from audit.models import AuditLog, RelatedObjectType, IDENTITY_FEATURE_STATE_DELETED_MESSAGE
 from environments.authentication import EnvironmentKeyAuthentication
-from environments.models import Environment, Identity
-from environments.permissions import EnvironmentKeyPermissions, NestedEnvironmentPermissions
+from environments.models import Environment
+from environments.identities.models import Identity
+from environments.permissions.permissions import EnvironmentKeyPermissions, NestedEnvironmentPermissions
 from projects.models import Project
-from .models import FeatureState, FeatureSegment
+from .models import FeatureState, FeatureSegment, FLAG
 from .permissions import FeaturePermissions, FeatureStatePermissions
 from .serializers import FeatureStateSerializerBasic, FeatureStateSerializerFull, \
     FeatureStateSerializerCreate, CreateFeatureSerializer, FeatureSerializer, \
@@ -291,8 +292,12 @@ class SDKFeatureStates(GenericAPIView):
             data = self._get_flags_from_cache(filter_args, request.environment)
         else:
             data = self.get_serializer(
-                FeatureState.objects.filter(**filter_args).select_related("feature", "feature_state_value"),
-                many=True).data
+                # ignore disabled Flags when project hide_disabled_flags is enabled
+                FeatureState.objects.filter(**filter_args).exclude(
+                    feature__project__hide_disabled_flags=True,
+                    enabled=False,
+                    feature__type=FLAG
+                ).select_related("feature", "feature_state_value"), many=True).data
 
         return Response(data)
 
@@ -300,8 +305,12 @@ class SDKFeatureStates(GenericAPIView):
         data = flags_cache.get(environment.api_key)
         if not data:
             data = self.get_serializer(
-                FeatureState.objects.filter(**filter_args).select_related("feature", "feature_state_value"),
-                many=True).data
+                # ignore disabled Flags when project hide_disabled_flags is enabled
+                FeatureState.objects.filter(**filter_args).exclude(
+                    feature__project__hide_disabled_flags=True,
+                    enabled=False,
+                    feature__type=FLAG
+                ).select_related("feature", "feature_state_value"), many=True).data
             flags_cache.set(environment.api_key, data, settings.CACHE_FLAGS_SECONDS)
 
         return data

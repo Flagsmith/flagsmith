@@ -2,7 +2,9 @@ from unittest import TestCase, mock
 
 import pytest
 
-from environments.models import Environment, UserEnvironmentPermission, Identity
+from environments.models import Environment
+from environments.identities.models import Identity
+from environments.permissions.models import UserEnvironmentPermission
 from organisations.models import Organisation
 from projects.models import Project, UserProjectPermission
 from segments.models import Segment

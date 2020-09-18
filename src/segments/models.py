@@ -1,6 +1,5 @@
 # -*- coding: utf-8 -*-
 import re
-import sys
 import hashlib
 import typing
 
@@ -9,7 +8,8 @@ from django.db import models
 
 from django.utils.encoding import python_2_unicode_compatible
 
-from environments.models import Identity, INTEGER, BOOLEAN, Trait
+from environments.models import INTEGER, BOOLEAN, FLOAT, Trait
+from environments.identities.models import Identity
 from projects.models import Project
 
 
@@ -143,6 +143,8 @@ class Condition(models.Model):
             if trait.trait_key == self.property:
                 if trait.value_type == INTEGER:
                     return self.check_integer_value(trait.integer_value)
+                if trait.value_type == FLOAT:
+                    return self.check_float_value(trait.float_value)
                 elif trait.value_type == BOOLEAN:
                     return self.check_boolean_value(trait.boolean_value)
                 else:
@@ -178,6 +180,27 @@ class Condition(models.Model):
             return value <= int_value
         elif self.operator == NOT_EQUAL:
             return value != int_value
+
+        return False
+
+    def check_float_value(self, value: float) -> bool:
+        try:
+            float_value = float(str(self.value))
+        except ValueError:
+            return False
+
+        if self.operator == EQUAL:
+            return value == float_value
+        elif self.operator == GREATER_THAN:
+            return value > float_value
+        elif self.operator == GREATER_THAN_INCLUSIVE:
+            return value >= float_value
+        elif self.operator == LESS_THAN:
+            return value < float_value
+        elif self.operator == LESS_THAN_INCLUSIVE:
+            return value <= float_value
+        elif self.operator == NOT_EQUAL:
+            return value != float_value
 
         return False
 

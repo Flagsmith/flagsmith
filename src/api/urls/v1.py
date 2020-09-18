@@ -4,7 +4,8 @@ from drf_yasg import openapi
 from drf_yasg.views import get_schema_view
 from rest_framework import routers, permissions, authentication
 
-from environments.views import SDKIdentities, SDKTraits
+from environments.views import SDKTraits
+from environments.identities.views import SDKIdentities
 from features.views import SDKFeatureStates
 from organisations.views import chargebee_webhook
 from segments.views import SDKSegments

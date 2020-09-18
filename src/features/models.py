@@ -170,7 +170,7 @@ class FeatureState(models.Model):
     feature = models.ForeignKey(Feature, related_name='feature_states', on_delete=models.CASCADE)
     environment = models.ForeignKey('environments.Environment', related_name='feature_states', null=True,
                                     on_delete=models.CASCADE)
-    identity = models.ForeignKey('environments.Identity', related_name='identity_features',
+    identity = models.ForeignKey('identities.Identity', related_name='identity_features',
                                  null=True, default=None, blank=True, on_delete=models.CASCADE)
     feature_segment = models.ForeignKey(FeatureSegment, related_name='feature_states', null=True, blank=True,
                                         default=None, on_delete=models.CASCADE)

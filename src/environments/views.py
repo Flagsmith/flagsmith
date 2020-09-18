@@ -1,8 +1,6 @@
 # -*- coding: utf-8 -*-
 from __future__ import unicode_literals
 
-from collections import namedtuple
-
 import coreapi
 from django.db.models import Q
 from django.utils.decorators import method_decorator
@@ -10,27 +8,25 @@ from drf_yasg import openapi
 from drf_yasg.utils import swagger_auto_schema
 from rest_framework import viewsets, status, mixins
 from rest_framework.decorators import action
-from rest_framework.exceptions import ValidationError
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.schemas import AutoSchema
 
 from environments.authentication import EnvironmentKeyAuthentication
-from environments.permissions import EnvironmentKeyPermissions, EnvironmentPermissions, \
+from environments.permissions.permissions import EnvironmentKeyPermissions, EnvironmentPermissions, \
     NestedEnvironmentPermissions, TraitPersistencePermissions
-from features.serializers import FeatureStateSerializerFull
 from permissions.serializers import PermissionModelSerializer, MyUserObjectPermissionsSerializer
 from util.logging import get_logger
 from util.views import SDKAPIView
-from .models import Environment, Identity, Trait, Webhook, EnvironmentPermissionModel, UserEnvironmentPermission, \
+from .models import Environment, Trait, Webhook
+from .identities.models import Identity
+from .permissions.models import EnvironmentPermissionModel, UserEnvironmentPermission, \
     UserPermissionGroupEnvironmentPermission
-from .serializers import EnvironmentSerializerLight, IdentitySerializer, TraitSerializerBasic, TraitSerializerFull, \
-    IdentitySerializerWithTraitsAndSegments, IncrementTraitValueSerializer, \
-    TraitKeysSerializer, DeleteAllTraitKeysSerializer, WebhookSerializer, \
-    CreateUpdateUserEnvironmentPermissionSerializer, ListUserEnvironmentPermissionSerializer, \
-    CreateUpdateUserPermissionGroupEnvironmentPermissionSerializer, \
-    ListUserPermissionGroupEnvironmentPermissionSerializer, \
-    SDKCreateUpdateTraitSerializer, SDKBulkCreateUpdateTraitSerializer, IdentifyWithTraitsSerializer
+from .serializers import EnvironmentSerializerLight, WebhookSerializer
+from .identities.traits.serializers import TraitSerializerFull, TraitSerializerBasic, \
+    IncrementTraitValueSerializer, TraitKeysSerializer, DeleteAllTraitKeysSerializer
+from .sdk.serializers import SDKCreateUpdateTraitSerializer, \
+    SDKBulkCreateUpdateTraitSerializer
 
 logger = get_logger(__name__)
 
@@ -130,35 +126,6 @@ class EnvironmentViewSet(viewsets.ModelViewSet):
         return Response(serializer.data)
 
 
-class IdentityViewSet(viewsets.ModelViewSet):
-    serializer_class = IdentitySerializer
-    permission_classes = [IsAuthenticated, NestedEnvironmentPermissions]
-
-    def get_queryset(self):
-        environment = self.get_environment_from_request()
-        user_permitted_identities = self.request.user.get_permitted_identities()
-        queryset = user_permitted_identities.filter(environment__api_key=environment.api_key)
-
-        if self.request.query_params.get('q'):
-            queryset = queryset.filter(identifier__icontains=self.request.query_params.get('q'))
-
-        return queryset
-
-    def get_environment_from_request(self):
-        """
-        Get environment object from URL parameters in request.
-        """
-        return Environment.objects.get(api_key=self.kwargs['environment_api_key'])
-
-    def perform_create(self, serializer):
-        environment = self.get_environment_from_request()
-        serializer.save(environment=environment)
-
-    def perform_update(self, serializer):
-        environment = self.get_environment_from_request()
-        serializer.save(environment=environment)
-
-
 class TraitViewSet(viewsets.ModelViewSet):
     serializer_class = TraitSerializerFull
 
@@ -229,7 +196,7 @@ class TraitViewSet(viewsets.ModelViewSet):
         trait_data = request.data
 
         # Check if trait value was provided with request data. If so, we need to figure out value_type from
-        # the given value and also use correct value field e.g. boolean_value, integer_value or
+        # the given value and also use correct value field e.g. boolean_value, float_value, integer_value or
         # string_value, and override request data
         if 'trait_value' in trait_data:
             trait_data = trait_to_update.generate_trait_value_data(trait_data['trait_value'])
@@ -281,179 +248,6 @@ class WebhookViewSet(mixins.ListModelMixin, mixins.CreateModelMixin, mixins.Upda
     def perform_update(self, serializer):
         environment = Environment.objects.get(api_key=self.kwargs.get('environment_api_key'))
         serializer.save(environment=environment)
-
-
-class UserEnvironmentPermissionsViewSet(viewsets.ModelViewSet):
-    pagination_class = None
-    permission_classes = [IsAuthenticated, NestedEnvironmentPermissions]
-
-    def get_queryset(self):
-        if not self.kwargs.get('environment_api_key'):
-            raise ValidationError('Missing environment key.')
-
-        return UserEnvironmentPermission.objects.filter(environment__api_key=self.kwargs['environment_api_key'])
-
-    def get_serializer_class(self):
-        if self.action == 'list':
-            return ListUserEnvironmentPermissionSerializer
-
-        return CreateUpdateUserEnvironmentPermissionSerializer
-
-    def perform_create(self, serializer):
-        environment = Environment.objects.get(api_key=self.kwargs['environment_api_key'])
-        serializer.save(environment=environment)
-
-    def perform_update(self, serializer):
-        environment = Environment.objects.get(api_key=self.kwargs['environment_api_key'])
-        serializer.save(environment=environment)
-
-
-class UserPermissionGroupEnvironmentPermissionsViewSet(viewsets.ModelViewSet):
-    pagination_class = None
-    permission_classes = [IsAuthenticated, NestedEnvironmentPermissions]
-
-    def get_queryset(self):
-        if not self.kwargs.get('environment_api_key'):
-            raise ValidationError('Missing environment key.')
-
-        return UserPermissionGroupEnvironmentPermission.objects.filter(
-            environment__api_key=self.kwargs['environment_api_key']
-        )
-
-    def get_serializer_class(self):
-        if self.action == 'list':
-            return ListUserPermissionGroupEnvironmentPermissionSerializer
-
-        return CreateUpdateUserPermissionGroupEnvironmentPermissionSerializer
-
-    def perform_create(self, serializer):
-        environment = Environment.objects.get(api_key=self.kwargs['environment_api_key'])
-        serializer.save(environment=environment)
-
-    def perform_update(self, serializer):
-        environment = Environment.objects.get(api_key=self.kwargs['environment_api_key'])
-        serializer.save(environment=environment)
-
-
-class SDKIdentitiesDeprecated(SDKAPIView):
-    """
-    THIS ENDPOINT IS DEPRECATED. Please use `/identities/?identifier=<identifier>` instead.
-    """
-    # API to handle /api/v1/identities/ endpoint to return Flags and Traits for user Identity
-    # if Identity does not exist it will create one, otherwise will fetch existing
-
-    serializer_class = IdentifyWithTraitsSerializer
-
-    schema = AutoSchema(
-        manual_fields=[
-            coreapi.Field("X-Environment-Key", location="header",
-                          description="API Key for an Environment"),
-            coreapi.Field("identifier", location="path", required=True,
-                          description="Identity user identifier")
-        ]
-    )
-
-    # identifier is in a path parameter
-    def get(self, request, identifier, *args, **kwargs):
-        # if we have identifier fetch, or create if does not exist
-        if identifier:
-            identity, _ = Identity.objects.get_or_create(
-                identifier=identifier,
-                environment=request.environment,
-            )
-
-        else:
-            return Response(
-                {"detail": "Missing identifier"},
-                status=status.HTTP_400_BAD_REQUEST
-            )
-
-        if identity:
-            traits_data = identity.get_all_user_traits()
-            # traits_data = self.get_serializer(identity.get_all_user_traits(), many=True)
-            # return Response(traits.data, status=status.HTTP_200_OK)
-        else:
-            return Response(
-                {"detail": "Given identifier not found"},
-                status=status.HTTP_404_NOT_FOUND
-            )
-
-        # We need object type to pass into our IdentitySerializerTraitFlags
-        IdentityFlagsWithTraitsAndSegments = namedtuple('IdentityTraitFlagsSegments', ('flags', 'traits', 'segments'))
-        identity_flags_traits_segments = IdentityFlagsWithTraitsAndSegments(
-            flags=identity.get_all_feature_states(),
-            traits=traits_data,
-            segments=identity.get_segments()
-        )
-
-        serializer = IdentitySerializerWithTraitsAndSegments(identity_flags_traits_segments)
-
-        return Response(serializer.data, status=status.HTTP_200_OK)
-
-
-class SDKIdentities(SDKAPIView):
-    serializer_class = IdentifyWithTraitsSerializer
-    pagination_class = None  # set here to ensure documentation is correct
-
-    def get(self, request):
-        identifier = request.query_params.get('identifier')
-        if not identifier:
-            return Response({"detail": "Missing identifier"})  # TODO: add 400 status - will this break the clients?
-
-        identity, _ = Identity.objects.get_or_create(identifier=identifier, environment=request.environment)
-
-        feature_name = request.query_params.get('feature')
-        if feature_name:
-            return self._get_single_feature_state_response(identity, feature_name)
-        else:
-            return self._get_all_feature_states_for_user_response(identity)
-
-    def get_serializer_context(self):
-        context = super(SDKIdentities, self).get_serializer_context()
-        if hasattr(self.request, 'environment'):
-            # only set it if the request has the attribute to ensure that the
-            # documentation works correctly still
-            context['environment'] = self.request.environment
-        return context
-
-    def post(self, request):
-        serializer = self.get_serializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
-        instance = serializer.save()
-
-        # we need to serialize the response again to ensure that the
-        # trait values are serialized correctly
-        response_serializer = IdentifyWithTraitsSerializer(instance=instance)
-        return Response(response_serializer.data)
-
-    def _get_single_feature_state_response(self, identity, feature_name):
-        for feature_state in identity.get_all_feature_states():
-            if feature_state.feature.name == feature_name:
-                serializer = FeatureStateSerializerFull(feature_state)
-                return Response(data=serializer.data, status=status.HTTP_200_OK)
-
-        return Response(
-            {"detail": "Given feature not found"},
-            status=status.HTTP_404_NOT_FOUND
-        )
-
-    def _get_all_feature_states_for_user_response(self, identity, trait_models=None):
-        """
-        Get all feature states for an identity
-
-        :param identity: Identity model to return feature states for
-        :param trait_models: optional list of trait_models to pass in for organisations that don't persist them
-        :return: Response containing lists of both serialized flags and traits
-        """
-        serialized_flags = FeatureStateSerializerFull(identity.get_all_feature_states(), many=True)
-        serialized_traits = TraitSerializerBasic(identity.get_all_user_traits(), many=True)
-
-        response = {
-            "flags": serialized_flags.data,
-            "traits": serialized_traits.data
-        }
-
-        return Response(data=response, status=status.HTTP_200_OK)
 
 
 class SDKTraitsDeprecated(SDKAPIView):
@@ -511,7 +305,7 @@ class SDKTraitsDeprecated(SDKAPIView):
 
         if trait and 'trait_value' in trait_data:
             # Check if trait value was provided with request data. If so, we need to figure out value_type from
-            # the given value and also use correct value field e.g. boolean_value, integer_value or
+            # the given value and also use correct value field e.g. boolean_value, float_value, integer_value or
             # string_value, and override request data
             trait_data = trait.generate_trait_value_data(trait_data['trait_value'])
 
