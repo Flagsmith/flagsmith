@@ -1,0 +1,2 @@
+class TraitPersistenceError(Exception):
+    pass
