@@ -2,7 +2,8 @@ from django.conf.urls import url, include
 from rest_framework_nested import routers
 
 from features.views import FeatureStateViewSet
-from .views import EnvironmentViewSet, TraitViewSet, WebhookViewSet
+from .views import EnvironmentViewSet, WebhookViewSet
+from .identities.traits.views import TraitViewSet
 from .identities.views import IdentityViewSet
 from .permissions.views import UserEnvironmentPermissionsViewSet, UserPermissionGroupEnvironmentPermissionsViewSet
 

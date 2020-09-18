@@ -1,6 +1,6 @@
 from django.conf.urls import url
 
-from environments.views import SDKTraitsDeprecated
+from environments.identities.traits.views import SDKTraitsDeprecated
 from environments.identities.views import SDKIdentitiesDeprecated
 from features.views import SDKFeatureStates
 

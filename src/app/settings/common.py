@@ -95,6 +95,7 @@ INSTALLED_APPS = [
     'environments',
     'environments.permissions',
     'environments.identities',
+    'environments.identities.traits',
 
     'features',
     'segments',
