@@ -8,10 +8,11 @@ from rest_framework.test import APITestCase, APIClient
 
 from environments.identities.models import Identity
 from environments.identities.traits.models import Trait
-from environments.models import Environment, STRING, INTEGER
+from environments.models import Environment
 from organisations.models import Organisation, OrganisationRole
 from projects.models import Project
 from util.tests import Helper
+from features.constants import STRING, INTEGER
 
 
 class SDKTraitsTest(APITestCase):
