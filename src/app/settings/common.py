@@ -369,11 +369,17 @@ TRENCH_AUTH = {
 
 DJOSER = {
     'PASSWORD_RESET_CONFIRM_URL': 'password-reset/confirm/{uid}/{token}',
-    'SEND_ACTIVATION_EMAIL': False,
+    'SEND_ACTIVATION_EMAIL': True,  # if True user required to click activation link in email to activate account
+    'ACTIVATION_URL': '#/activate/{uid}/{token}',  # FE uri to redirect user to from activation email
+    'SEND_CONFIRMATION_EMAIL': True,  # register or activation endpoint will send confirmation email to user
     'SERIALIZERS': {
         'token': 'custom_auth.serializers.CustomTokenSerializer',
         'user_create': 'custom_auth.serializers.CustomUserCreateSerializer',
         'current_user': 'users.serializers.CustomCurrentUserSerializer',
+    },
+    'EMAIL': {
+                'activation': 'users.emails.ActivationEmail',
+                'confirmation': 'users.emails.ConfirmationEmail'
     },
     'SET_PASSWORD_RETYPE': True,
     'PASSWORD_RESET_CONFIRM_RETYPE': True,
