@@ -33,9 +33,6 @@ class IdentityTestCase(TransactionTestCase):
         self.environment = Environment.objects.create(
             name="Test Environment", project=self.project
         )
-        self.feature_flag = Feature.objects.create(
-            name="feature_flag", project=self.project
-        )
 
     def test_create_identity_should_assign_relevant_attributes(self):
         identity = Identity.objects.create(
@@ -677,7 +674,10 @@ class IdentityTestCase(TransactionTestCase):
     def test_get_all_feature_flags_with_user_override_and_redundant_segment(self):
         """ specific test for bug reported """
         # Given
-        # an identity
+        # a feature flag
+        feature_flag = Feature.objects.create(name="feature_flag", project=self.project)
+
+        # and an identity
         identity = Identity.objects.create(
             identifier="identity", environment=self.environment
         )
@@ -687,9 +687,9 @@ class IdentityTestCase(TransactionTestCase):
 
         # for which we override a feature flag
         identity_feature_state = FeatureState.objects.create(
-            feature=self.feature_flag,
+            feature=feature_flag,
             identity=identity,
-            enabled=not self.feature_flag.default_enabled,
+            enabled=not feature_flag.default_enabled,
             environment=self.environment
         )
 
@@ -700,7 +700,7 @@ class IdentityTestCase(TransactionTestCase):
         )
         FeatureSegment.objects.create(
             segment=not_matching_segment,
-            feature=self.feature_flag,
+            feature=feature_flag,
             environment=self.environment
         )
 
