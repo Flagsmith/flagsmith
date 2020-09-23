@@ -29,6 +29,8 @@ class Organisation(models.Model):
                                                                       'organisation.')
     persist_trait_data = models.BooleanField(default=True, help_text='Disable this if you don\'t want Bullet Train '
                                                                      'to store trait data for this org\'s identities.')
+    access_blocked = models.BooleanField(default=False, help_text='Enable this to block all the access to this '
+                                                                  'organisation')
 
     class Meta:
         ordering = ['id']
