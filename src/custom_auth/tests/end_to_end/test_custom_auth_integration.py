@@ -1,18 +1,21 @@
 import re
 
 import time
+from collections import ChainMap
+
 import pyotp
+from django.conf import settings
 from django.core import mail
 from django.urls import reverse
 from rest_framework import status
-from rest_framework.test import APITestCase
-
+from rest_framework.test import APITestCase, override_settings
 from users.models import FFAdminUser
 
 
 class AuthIntegrationTestCase(APITestCase):
     login_url = "/api/v1/auth/login/"
     register_url = "/api/v1/auth/users/"
+    activate_url = "/api/v1/auth/users/activation/"
     reset_password_url = "/api/v1/auth/users/reset_password/"
     reset_password_confirm_url = "/api/v1/auth/users/reset_password_confirm/"
     current_user_url = f"{register_url}me/"
@@ -91,6 +94,70 @@ class AuthIntegrationTestCase(APITestCase):
         new_login_response = self.client.post(self.login_url, data=new_login_data)
         assert new_login_response.status_code == status.HTTP_200_OK
         assert new_login_response.json()["key"]
+
+    @override_settings(
+        DJOSER=ChainMap(
+            {
+                'SEND_ACTIVATION_EMAIL': True,
+                'SEND_CONFIRMATION_EMAIL': True
+            },
+            settings.DJOSER
+        )
+    )
+    def test_registration_and_login_with_user_activation_flow(self):
+        """
+        Test user registration and login flow via email activation.
+        By default activation flow is disabled
+        """
+
+        # Given user registration data
+        register_data = {
+            "email": self.test_email,
+            "password": self.password,
+            "first_name": "test",
+            "last_name": "register",
+        }
+
+        # When register
+        result = self.client.post(self.register_url, data=register_data, status_code=status.HTTP_201_CREATED)
+
+        # Then success and account inactive
+        self.assertIn('key', result.data)
+        new_user = FFAdminUser.objects.latest('id')
+        self.assertEqual(new_user.email, register_data['email'])
+        self.assertFalse(new_user.is_active)
+
+        # And login should fail as we have not activated account yet
+        # add delay to avoid HTTP_429 as we have throttle in place for login
+        time.sleep(1)
+        # now verify we can login with the same credentials
+        login_data = {
+            "email": self.test_email,
+            "password": self.password,
+        }
+        self.client.post(self.login_url, data=login_data, status_code=status.HTTP_400_BAD_REQUEST)
+
+        # verify that the user has been emailed activation email
+        # and extract uid and token for account activation
+        assert len(mail.outbox) == 1
+        # get the url and grab the uid and token
+        url = re.findall("http\:\/\/.*", mail.outbox[0].body)[0]
+        split_url = url.split("/")
+        uid = split_url[-2]
+        token = split_url[-1]
+
+        activate_data = {
+            "uid": uid,
+            "token": token
+        }
+
+        # And activate account
+        self.client.post(self.activate_url, data=activate_data, status_code=status.HTTP_204_NO_CONTENT)
+
+        time.sleep(1)
+        # And login success
+        login_result = self.client.post(self.login_url, data=login_data, status_code=status.HTTP_200_OK)
+        self.assertIn('key', login_result.data)
 
     def test_login_workflow_with_mfa_enabled(self):
         # register the user
