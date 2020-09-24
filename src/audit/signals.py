@@ -1,8 +1,7 @@
+from audit.models import AuditLog, RelatedObjectType
+from audit.serializers import AuditLogSerializer
 from django.db.models.signals import post_save
 from django.dispatch import receiver
-
-from audit.models import AuditLog
-from audit.serializers import AuditLogSerializer
 from integrations.datadog.datadog import DataDogWrapper
 from util.logging import get_logger
 from webhooks.webhooks import call_organisation_webhooks, WebhookEventType
@@ -32,7 +31,20 @@ def send_audit_log_event_to_datadog(sender, instance, **kwargs):
         logger.debug("No datadog integration configured for project %s" % instance.project.id)
         return
 
+    if instance.related_object_type == RelatedObjectType.FEATURE.name:
+        logger.debug("All good keep going")
+
+    # Only handle Feature related changes
+    if instance.related_object_type not in [RelatedObjectType.FEATURE.name, RelatedObjectType.FEATURE_STATE.name,
+                                            RelatedObjectType.SEGMENT.name]:
+        logger.debug("Ignoring none Flag audit event %s for datadog" % instance.related_object_type)
+        return
+
     data_dog_config = instance.project.data_dog_config
     data_dog = DataDogWrapper(base_url=data_dog_config.base_url, api_key=data_dog_config.api_key)
-    event_data = data_dog.generate_event_data(log=instance.log, email=instance.author.email, environment_name=instance.environment.name.lower())
+    event_data = data_dog.generate_event_data(log=instance.log,
+                                              email=instance.author.email if instance.author else '',
+                                              environment_name=instance.environment.name.lower()
+                                              if instance.environment else '')
+
     data_dog.track_event_async(event=event_data)
