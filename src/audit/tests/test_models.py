@@ -57,7 +57,7 @@ class AuditLogTestCase(TestCase):
         audit_log2 = AuditLog(project=self.project, log='Some audit log',
                               related_object_type=RelatedObjectType.ENVIRONMENT.name)
 
-        # When Audit log saved
+        # When Audit log saved with wrong types
         audit_log.save()
         audit_log2.save()
 
@@ -71,7 +71,7 @@ class AuditLogTestCase(TestCase):
                                             base_url='http"//test.com',
                                             api_key='123key')
 
-        # When Audit logs created
+        # When Audit logs created with correct type
         AuditLog.objects.create(project=self.project, log='Some audit log',
                                 related_object_type=RelatedObjectType.FEATURE.name)
         AuditLog.objects.create(project=self.project, log='Some audit log',
