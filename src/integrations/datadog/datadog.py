@@ -1,6 +1,6 @@
-import requests
 import json
 
+import requests
 from util.logging import get_logger
 from util.util import postpone
 
@@ -25,8 +25,8 @@ class DataDogWrapper:
     def generate_event_data(log: str, email: str, environment_name: str):
         event_data = {
             "text": f"{log} by user {email}",
-            "title": "Bullet Train Feature Flag Event"
+            "title": "Bullet Train Feature Flag Event",
+            "tags": ["env:" + environment_name]
         }
 
-        event_data["tags"] = ["env:" + environment_name]
         return event_data
