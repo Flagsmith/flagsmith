@@ -26,7 +26,7 @@ class DataDogWrapper:
         event_data = {
             "text": f"{log} by user {email}",
             "title": "Bullet Train Feature Flag Event",
-            "tags": ["env:" + environment_name]
+            "tags": [f"env:{environment_name}"]
         }
 
         return event_data
