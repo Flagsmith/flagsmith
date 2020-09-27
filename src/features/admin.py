@@ -5,8 +5,7 @@ from django.conf import settings
 from django.contrib import admin
 from simple_history.admin import SimpleHistoryAdmin
 
-from .models import Feature, FeatureSegment
-from .feature_states.models import FeatureState, FeatureStateValue
+from .models import Feature, FeatureState, FeatureStateValue, FeatureSegment
 
 
 class FeatureStateValueInline(admin.StackedInline):
