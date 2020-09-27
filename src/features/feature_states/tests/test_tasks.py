@@ -4,24 +4,27 @@ from unittest import mock
 import pytest
 
 from environments.models import Environment
-from features.models import Feature, FeatureState, CONFIG, FeatureStateValue
-from features.tasks import trigger_feature_state_change_webhooks
+from features.models import Feature
+from features.constants import CONFIG
+from features.feature_states.models import FeatureState
+from features.feature_states.tasks import trigger_feature_state_change_webhooks
 from organisations.models import Organisation
 from projects.models import Project
-from webhooks.webhooks import WebhookEventType
 
 
 @pytest.mark.django_db
-@mock.patch("features.tasks.Thread")
+@mock.patch("features.feature_states.tasks.Thread")
 def test_trigger_feature_state_change_webhooks(MockThread):
     # Given
     initial_value = "initial"
     new_value = "new"
 
-    organisation = Organisation.objects.create(name='Test organisation')
-    project = Project.objects.create(name='Test project', organisation=organisation)
-    environment = Environment.objects.create(name='Test environment', project=project)
-    feature = Feature.objects.create(name='Test feature', project=project, initial_value=initial_value, type=CONFIG)
+    organisation = Organisation.objects.create(name="Test organisation")
+    project = Project.objects.create(name="Test project", organisation=organisation)
+    environment = Environment.objects.create(name="Test environment", project=project)
+    feature = Feature.objects.create(
+        name="Test feature", project=project, initial_value=initial_value, type=CONFIG
+    )
     feature_state = FeatureState.objects.get(feature=feature, environment=environment)
 
     # update the feature state value and save both objects to ensure that the history is updated
@@ -41,7 +44,10 @@ def test_trigger_feature_state_change_webhooks(MockThread):
     organisation_webhook_call_args = call_list[1]
 
     # verify that the data for both calls is the same
-    assert environment_webhook_call_args[1]["args"][1] == organisation_webhook_call_args[1]["args"][1]
+    assert (
+        environment_webhook_call_args[1]["args"][1]
+        == organisation_webhook_call_args[1]["args"][1]
+    )
 
     data = environment_webhook_call_args[1]["args"][1]
     assert data["new_state"]["feature_state_value"] == new_value
