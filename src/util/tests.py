@@ -1,6 +1,7 @@
 from environments.models import Environment
 from environments.identities.models import Identity
-from features.models import Feature, FeatureState
+from features.models import Feature
+from features.feature_states.models import FeatureState
 from organisations.models import Organisation
 from projects.models import Project
 from users.models import FFAdminUser

@@ -6,7 +6,8 @@ from django.utils.encoding import python_2_unicode_compatible
 
 from environments.models import Environment
 from environments.identities.traits.models import Trait
-from features.models import FeatureState, FLAG
+from features.constants import FLAG
+from features.feature_states.models import FeatureState
 
 
 @python_2_unicode_compatible
@@ -94,9 +95,8 @@ class Identity(models.Model):
         return segments
 
     def get_all_user_traits(self):
-        # get all all user traits for an identity
-        traits = Trait.objects.filter(identity=self)
-        return traits
+        # this is pointless, we should probably replace all uses with the below code
+        return self.identity_traits.all()
 
     def __str__(self):
         return "Account %s" % self.identifier
