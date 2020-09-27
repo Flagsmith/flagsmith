@@ -95,9 +95,8 @@ class Identity(models.Model):
         return segments
 
     def get_all_user_traits(self):
-        # get all all user traits for an identity
-        traits = Trait.objects.filter(identity=self)
-        return traits
+        # this is pointless, we should probably replace all uses with the below code
+        return self.identity_traits.all()
 
     def __str__(self):
         return "Account %s" % self.identifier

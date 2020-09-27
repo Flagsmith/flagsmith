@@ -11,7 +11,7 @@ from rest_framework.response import Response
 from projects.models import Project
 from .models import FeatureSegment
 from .permissions import FeaturePermissions
-from .serializers import CreateFeatureSerializer, FeatureSerializer, \
+from .serializers import CreateFeatureSerializer, FeatureWithTagsSerializer, \
     FeatureSegmentCreateSerializer, FeatureSegmentListSerializer, FeatureSegmentQuerySerializer, FeatureSegmentChangePrioritiesSerializer
 
 logger = logging.getLogger()
@@ -25,7 +25,7 @@ class FeatureViewSet(viewsets.ModelViewSet):
         if self.action in ['create', 'update']:
             return CreateFeatureSerializer
         else:
-            return FeatureSerializer
+            return FeatureWithTagsSerializer
 
     def get_queryset(self):
         user_projects = self.request.user.get_permitted_projects(["VIEW_PROJECT"])
