@@ -22,9 +22,11 @@ from projects.models import Project
 from .models import FeatureState, FeatureSegment, FLAG
 from .permissions import FeaturePermissions, FeatureStatePermissions
 from .serializers import FeatureStateSerializerBasic, FeatureStateSerializerFull, \
-    FeatureStateSerializerCreate, CreateFeatureSerializer, FeatureSerializer, \
-    FeatureStateValueSerializer, FeatureSegmentCreateSerializer, FeatureStateSerializerWithIdentity, \
-    FeatureSegmentListSerializer, FeatureSegmentQuerySerializer, FeatureSegmentChangePrioritiesSerializer
+    FeatureStateSerializerCreate, CreateFeatureSerializer, \
+    FeatureStateValueSerializer, FeatureSegmentCreateSerializer, \
+    FeatureStateSerializerWithIdentity, \
+    FeatureSegmentListSerializer, FeatureSegmentQuerySerializer, \
+    FeatureSegmentChangePrioritiesSerializer, FeatureSerializer
 
 logger = logging.getLogger()
 logger.setLevel(logging.INFO)
