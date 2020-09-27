@@ -1,6 +1,6 @@
 from rest_framework import serializers
 
-from features.utils import INTEGER, BOOLEAN, STRING
+from features.constants import INTEGER, BOOLEAN, STRING
 
 
 class FeatureSegmentValueField(serializers.Field):
