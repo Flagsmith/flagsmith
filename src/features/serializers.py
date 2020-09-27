@@ -110,6 +110,20 @@ class FeatureSerializer(serializers.ModelSerializer):
             "id",
             "name",
             "created_date",
+            "description",
+            "initial_value",
+            "default_enabled",
+            "type"
+        )
+
+
+class FeatureWithTagsSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Feature
+        fields = (
+            "id",
+            "name",
+            "created_date",
             "initial_value",
             "description",
             "default_enabled",
@@ -122,7 +136,7 @@ class FeatureSerializer(serializers.ModelSerializer):
 
 
 class FeatureStateSerializerFull(serializers.ModelSerializer):
-    feature = CreateFeatureSerializer()
+    feature = FeatureSerializer()
     feature_state_value = serializers.SerializerMethodField()
 
     class Meta:
