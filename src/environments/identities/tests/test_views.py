@@ -9,7 +9,8 @@ from rest_framework.test import APIClient, APITestCase
 from environments.identities.models import Identity
 from environments.models import Environment
 from environments.identities.traits.models import Trait
-from features.models import Feature, FeatureState, FeatureSegment
+from features.models import Feature, FeatureSegment
+from features.feature_states.models import FeatureState
 from organisations.models import Organisation, OrganisationRole
 from projects.models import Project
 from segments import models
