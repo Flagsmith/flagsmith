@@ -25,7 +25,6 @@ class UserInline(admin.TabularInline):
     model = FFAdminUser.organisations.through
     extra = 0
     show_change_link = True
-    autocomplete_fields = ('user',)
 
 
 @admin.register(Organisation)

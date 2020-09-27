@@ -3,8 +3,7 @@ from django.test import TestCase
 
 from environments.identities.models import Identity
 from environments.models import Environment
-from features.models import Feature
-from features.feature_states.models import FeatureState
+from features.models import Feature, FeatureState
 from organisations.models import Organisation
 from projects.models import Project
 

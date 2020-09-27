@@ -3,7 +3,7 @@ from rest_framework import serializers
 from environments.identities.traits.fields import TraitValueField
 from environments.identities.models import Identity
 from environments.identities.serializers import IdentifierOnlyIdentitySerializer
-from features.constants import INTEGER, BOOLEAN, STRING
+from environments.models import INTEGER, BOOLEAN, STRING
 from environments.identities.traits.models import Trait
 from environments.identities.traits.serializers import TraitSerializerBasic
 from features.serializers import FeatureStateSerializerFull

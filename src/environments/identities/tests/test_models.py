@@ -2,11 +2,9 @@ from django.test import TransactionTestCase
 
 from environments.identities.models import Identity
 from environments.identities.traits.models import Trait
-from environments.models import Environment
-from features.models import Feature, FeatureSegment
-from features.constants import CONFIG
-from features.feature_states.models import FeatureState
-from features.constants import STRING, INTEGER, BOOLEAN, FLOAT
+from environments.models import Environment, FLOAT
+from features.models import Feature, FeatureState, FeatureSegment, CONFIG
+from features.utils import STRING, INTEGER, BOOLEAN
 from organisations.models import Organisation
 from projects.models import Project
 from segments.models import (
@@ -670,63 +668,6 @@ class IdentityTestCase(TransactionTestCase):
         # Then - the flag is returned with the correct state
         assert len(feature_states) == 1
         assert feature_states[0].enabled == enabled_for_segment
-
-    def test_get_all_feature_flags_with_user_override_and_redundant_segment(self):
-        """ specific test for bug reported """
-        # Given
-        # a feature flag
-        feature_flag = Feature.objects.create(name="feature_flag", project=self.project)
-
-        # and an identity
-        identity = Identity.objects.create(
-            identifier="identity", environment=self.environment
-        )
-        trait = Trait.objects.create(
-            identity=identity, trait_key="trait_key", string_value="trait_value"
-        )
-
-        # for which we override a feature flag
-        identity_feature_state = FeatureState.objects.create(
-            feature=feature_flag,
-            identity=identity,
-            enabled=not feature_flag.default_enabled,
-            environment=self.environment
-        )
-
-        # and a redundant segment that the identity DOESN'T match and IS attached to
-        # the feature
-        not_matching_segment = Segment.objects.create(
-            name="not matching segment", project=self.project
-        )
-        FeatureSegment.objects.create(
-            segment=not_matching_segment,
-            feature=feature_flag,
-            environment=self.environment
-        )
-
-        # and a redundant segment that the identity DOES match but ISN'T attached to
-        # the feature
-        matching_segment = Segment.objects.create(
-            name="matching segment", project=self.project
-        )
-        segment_rule = SegmentRule.objects.create(
-            segment=matching_segment, type=SegmentRule.ALL_RULE
-        )
-        Condition.objects.create(
-            rule=segment_rule,
-            operator=EQUAL,
-            property=trait.trait_key,
-            value=trait.trait_value
-        )
-
-        # When
-        # we get all feature states for the identity
-        feature_states = identity.get_all_feature_states()
-
-        # Then
-        # there is one returned feature state, the one overridden for the identity
-        assert len(feature_states) == 1
-        assert feature_states[0] == identity_feature_state
 
     def test_generate_traits_with_persistence(self):
         # Given

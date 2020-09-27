@@ -6,7 +6,7 @@ from rest_framework import routers, permissions, authentication
 
 from environments.identities.traits.views import SDKTraits
 from environments.identities.views import SDKIdentities
-from features.feature_states.views import SDKFeatureStates
+from features.views import SDKFeatureStates
 from organisations.views import chargebee_webhook
 from segments.views import SDKSegments
 
