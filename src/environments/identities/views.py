@@ -83,7 +83,8 @@ class SDKIdentitiesDeprecated(SDKAPIView):
         # if we have identifier fetch, or create if does not exist
         if identifier:
             identity, _ = Identity.objects.get_or_create(
-                identifier=identifier, environment=request.environment,
+                identifier=identifier,
+                environment=request.environment,
             )
 
         else:
@@ -129,10 +130,8 @@ class SDKIdentities(SDKAPIView):
                 {"detail": "Missing identifier"}
             )  # TODO: add 400 status - will this break the clients?
 
-        identity, _ = (
-            Identity.objects.select_related("environment", "environment__project")
-            .prefetch_related("identity_traits", "environment__project__segments")
-            .get_or_create(identifier=identifier, environment=request.environment)
+        identity, _ = Identity.objects.get_or_create(
+            identifier=identifier, environment=request.environment
         )
 
         feature_name = request.query_params.get("feature")
@@ -181,7 +180,7 @@ class SDKIdentities(SDKAPIView):
             identity.get_all_feature_states(), many=True
         )
         serialized_traits = TraitSerializerBasic(
-            identity.identity_traits.all(), many=True
+            identity.get_all_user_traits(), many=True
         )
 
         response = {"flags": serialized_flags.data, "traits": serialized_traits.data}

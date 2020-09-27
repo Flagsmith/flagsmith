@@ -1,9 +1,10 @@
 from django.core.exceptions import ObjectDoesNotExist
 from django.db import models
 from django.utils.encoding import python_2_unicode_compatible
+from simple_history.models import HistoricalRecords
 
 from environments.identities.traits.exceptions import TraitPersistenceError
-from features.constants import INTEGER, STRING, BOOLEAN, FLOAT
+from environments.models import INTEGER, STRING, BOOLEAN, FLOAT
 
 
 @python_2_unicode_compatible
