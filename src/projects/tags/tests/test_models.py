@@ -14,19 +14,9 @@ class TagsTestCase(TestCase):
     def test_create_tag(self):
         # When
         tag = Tag.objects.create(label='Test Tag',
-                                 color='#ffffff',
+                                 color='#fffff',
                                  description='Test Tag description',
                                  project=self.project)
 
         # Then
         assert tag.project.id == self.project.id
-
-    def test_tag_description_is_optional(self):
-        # Given
-        tag = Tag(label='Test tag', color='#ffffff', project=self.project)
-
-        # When
-        tag.save()
-
-        # Then
-        assert tag.description is None

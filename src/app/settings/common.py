@@ -90,21 +90,14 @@ INSTALLED_APPS = [
     'corsheaders',
     'users',
     'organisations',
-
-    # Projects
     'projects',
-    'projects.tags',
 
-    # Environments
     'environments',
     'environments.permissions',
     'environments.identities',
     'environments.identities.traits',
 
-    # Features
     'features',
-    'features.feature_states',
-
     'segments',
     'e2etests',
     'simple_history',
@@ -112,6 +105,7 @@ INSTALLED_APPS = [
     'drf_yasg',
     'audit',
     'permissions',
+    'projects.tags',
 
     # 2FA
     'trench',

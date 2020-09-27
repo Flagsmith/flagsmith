@@ -7,13 +7,11 @@ from rest_framework import status
 from rest_framework.test import APIClient
 
 from audit.models import AuditLog, RelatedObjectType
-from environments.models import Environment, Webhook
+from environments.models import Environment, STRING, Webhook
 from environments.identities.traits.models import Trait
 from environments.identities.models import Identity
 from environments.permissions.models import UserEnvironmentPermission
-from features.models import Feature
-from features.constants import STRING
-from features.feature_states.models import FeatureState
+from features.models import Feature, FeatureState
 from organisations.models import Organisation, OrganisationRole
 from projects.models import Project, UserProjectPermission, ProjectPermissionModel
 from users.models import FFAdminUser
