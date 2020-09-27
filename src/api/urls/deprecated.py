@@ -2,7 +2,7 @@ from django.conf.urls import url
 
 from environments.identities.traits.views import SDKTraitsDeprecated
 from environments.identities.views import SDKIdentitiesDeprecated
-from features.views import SDKFeatureStates
+from features.feature_states.views import SDKFeatureStates
 
 app_name = 'deprecated'
 
