@@ -127,6 +127,7 @@ The application relies on the following environment variables to run:
 * `AWS_STORAGE_BUCKET_NAME`: bucket name to store static files. Required if `USE_S3_STORAGE' is true.
 * `AWS_S3_REGION_NAME`: region name of the static files bucket. Defaults to eu-west-2.
 * `ALLOWED_ADMIN_IP_ADDRESSES`: restrict access to the django admin console to a comma separated list of IP addresses (e.g. `127.0.0.1,127.0.0.2`) 
+* `USER_CREATE_PERMISSIONS`: set the permissions for creating new users, using a comma separated list of djoser or rest_framework permissions. Use this to turn off public user creation for self hosting. e.g. `'djoser.permissions.CurrentUserOrAdmin'` Defaults to `'rest_framework.permissions.AllowAny'`.
 
 ### Creating a secret key
 It is important to also set an environment variable on whatever platform you are using for 
