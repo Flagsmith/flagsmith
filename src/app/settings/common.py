@@ -112,7 +112,8 @@ INSTALLED_APPS = [
     'ordered_model',
 
     # Third party integrations
-    'integrations.datadog'
+    'integrations.datadog',
+    'integrations.amplitude'
 ]
 
 if GOOGLE_ANALYTICS_KEY or INFLUXDB_TOKEN:
