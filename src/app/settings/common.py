@@ -355,6 +355,8 @@ TRENCH_AUTH = {
     },
 }
 
+USER_CREATE_PERMISSIONS = env.list('USER_CREATE_PERMISSIONS', default=['rest_framework.permissions.AllowAny'])
+
 DJOSER = {
     'PASSWORD_RESET_CONFIRM_URL': 'password-reset/confirm/{uid}/{token}',
     'SEND_ACTIVATION_EMAIL': False,
@@ -369,6 +371,7 @@ DJOSER = {
     'PERMISSIONS': {
         'user': ['custom_auth.permissions.CurrentUser'],
         'user_list': ['custom_auth.permissions.CurrentUser'],
+        'user_create': USER_CREATE_PERMISSIONS,
     }
 }
 
