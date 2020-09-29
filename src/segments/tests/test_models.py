@@ -3,7 +3,8 @@ from unittest import TestCase, mock
 import pytest
 
 import segments
-from environments.models import Identity, Environment
+from environments.models import Environment
+from environments.identities.models import Identity
 from organisations.models import Organisation
 from projects.models import Project
 from segments.models import Segment, SegmentRule, PERCENTAGE_SPLIT, Condition

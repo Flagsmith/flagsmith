@@ -9,7 +9,7 @@ venv
 *.log
 checkstyle.txt
 .python-version
-.env
+.env*
 .direnv
 .envrc
 .elasticbeanstalk/

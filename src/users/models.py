@@ -11,8 +11,9 @@ from django.utils.encoding import python_2_unicode_compatible
 from django.utils.translation import gettext_lazy as _
 
 from app.utils import create_hash
-from environments.models import UserEnvironmentPermission, UserPermissionGroupEnvironmentPermission, Environment, \
-    Identity
+from environments.models import Environment
+from environments.identities.models import Identity
+from environments.permissions.models import UserEnvironmentPermission, UserPermissionGroupEnvironmentPermission
 from organisations.models import Organisation, UserOrganisation, OrganisationRole, organisation_roles
 from projects.models import UserProjectPermission, UserPermissionGroupProjectPermission, Project
 from users.auth_type import AuthType

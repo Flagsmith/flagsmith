@@ -1,4 +1,4 @@
-<img width="100%" src="./hero.png"/>
+[<img alt="Feature Flag, Remote Config and A/B Testing platform, Bullet Train" width="100%" src="./hero.png"/>](https://bullet-train.io/)
 
 [![Donate](https://liberapay.com/assets/widgets/donate.svg)](https://liberapay.com/Bullet-Train/donate)
 
@@ -23,6 +23,18 @@ simply run the following command from the project root:
 ```
 docker-compose up
 ```
+
+## Code Style
+
+We are slowly migrating the code style to use [black](https://github.com/psf/black) as 
+a formatter. Black automatically formats the code for you, you can run the formatter
+by running: 
+
+```
+python -m black path/to/directory/or/file.py
+```
+
+All new code should adhere to black formatting standards. 
 
 ## Databases
 Databases are configured in app/settings/\<env\>.py
@@ -108,10 +120,14 @@ the project. These should be changed before using in any production environments
 ### Environment Variables
 The application relies on the following environment variables to run: 
 
-* `ENV`: string representing the current running environment, e.g. 'local', 'dev', 'prod'. Defaults to 'local'.
+* `ENV`: string representing the current running environment, e.g. 'local', 'dev', 'prod'. Defaults to 'local'
 * `DJANGO_ALLOWED_HOSTS`: comma separated list of hosts the application will run on in the given environment
 * `DJANGO_SETTINGS_MODULE`: python path to settings file for the given environment, e.g. "app.settings.develop"
-* `SENDGRID_API_KEY`: API key from sendgrid account which will need to be set up for emails to be sent from platform successfully
+* `EMAIL_BACKEND`: email provider. Allowed values are `sgbackend.SendGridBackend` for Sendgrid or `django_ses.SESBackend` for Amazon SES. Defaults to `sgbackend.SendGridBackend`.
+* `SENDGRID_API_KEY`: API key for the Sendgrid account
+* `SENDER_EMAIL`: Email address from which emails are sent
+* `AWS_SES_REGION_NAME`: If using Amazon SES as the email provider, specify the region (e.g. eu-central-1) that contains your verified sender e-mail address. Defaults to us-east-1 
+* `AWS_SES_REGION_ENDPOINT`: ses region endpoint, e.g. email.eu-central-1.amazonaws.com. Required when using ses in a region other than us-east-1
 * `DATABASE_URL`: required by develop and master environments, should be a standard format database url e.g. postgres://user:password@host:port/db_name
 * `DJANGO_SECRET_KEY`: see 'Creating a secret key' section below
 * `GOOGLE_ANALYTICS_KEY`: if google analytics is required, add your tracking code
@@ -190,6 +206,8 @@ If you have any questions about our projects you can email
 ## Useful links
 
 [Website](https://bullet-train.io)
+
+[Product Roadmap](https://product-hub.io/roadmap/5d81f2406180537538d99f28)
 
 [Documentation](https://docs.bullet-train.io/)
 
