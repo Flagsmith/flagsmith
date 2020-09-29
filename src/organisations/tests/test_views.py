@@ -10,7 +10,11 @@ from pytz import UTC
 from rest_framework import status
 from rest_framework.test import APIClient
 
+from environments.models import Environment
+from features.models import Feature, FeatureSegment
 from organisations.models import Organisation, OrganisationRole, Subscription
+from projects.models import Project
+from segments.models import Segment
 from users.models import Invite, FFAdminUser
 from util.tests import Helper
 
@@ -27,9 +31,6 @@ class OrganisationTestCase(TestCase):
         self.user = Helper.create_ffadminuser()
         self.client.force_authenticate(user=self.user)
 
-    def tearDown(self) -> None:
-        Helper.clean_up()
-
     def test_should_return_organisation_list_when_requested(self):
         # Given
         organisation = Organisation.objects.create(name='Test org')
@@ -41,6 +42,11 @@ class OrganisationTestCase(TestCase):
         # Then
         assert response.status_code == status.HTTP_200_OK
         assert 'count' in response.data and response.data['count'] == 1
+
+        # and certain required fields are there
+        response_json = response.json()
+        org_data = response_json['results'][0]
+        assert 'persist_trait_data' in org_data
 
     def test_should_create_new_organisation(self):
         # Given
@@ -253,6 +259,24 @@ class OrganisationTestCase(TestCase):
         # and
         assert organisation.has_subscription() and organisation.subscription.subscription_id == subscription_id and \
                organisation.subscription.customer_id == customer_id
+
+    def test_delete_organisation(self):
+        # GIVEN an organisation with a project, environment, feature, segment and feature segment
+        organisation = Organisation.objects.create(name="Test organisation")
+        self.user.add_organisation(organisation, OrganisationRole.ADMIN)
+        project = Project.objects.create(name="Test project", organisation=organisation)
+        environment = Environment.objects.create(name="Test environment", project=project)
+        feature = Feature.objects.create(name="Test feature", project=project)
+        segment = Segment.objects.create(name="Test segment", project=project)
+        FeatureSegment.objects.create(feature=feature, segment=segment, environment=environment)
+
+        delete_organisation_url = reverse("api-v1:organisations:organisation-detail", args=[organisation.id])
+
+        # WHEN
+        response = self.client.delete(delete_organisation_url)
+
+        # THEN
+        assert response.status_code == status.HTTP_204_NO_CONTENT
 
 
 @pytest.mark.django_db

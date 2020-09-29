@@ -27,6 +27,9 @@ class Organisation(models.Model):
     alerted_over_plan_limit = models.BooleanField(default=False)
     stop_serving_flags = models.BooleanField(default=False, help_text='Enable this to cease serving flags for this '
                                                                       'organisation.')
+    persist_trait_data = models.BooleanField(default=True, help_text='Disable this if you don\'t want Bullet Train '
+                                                                     'to store trait data for this org\'s identities.')
+
     class Meta:
         ordering = ['id']
 
