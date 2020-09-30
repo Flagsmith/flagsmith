@@ -36,7 +36,6 @@ urlpatterns = [
     url(r'^users/', include('users.urls')),
     url(r'^e2etests/', include('e2etests.urls')),
     url(r'^audit/', include('audit.urls')),
-    url(r'^integrations/', include('integrations.datadog.urls')),
 
     url(r'^auth/', include('custom_auth.urls')),
 
