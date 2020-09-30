@@ -12,13 +12,13 @@ class EnvironmentSerializerFull(serializers.ModelSerializer):
 
     class Meta:
         model = Environment
-        fields = ('id', 'name', 'feature_states', 'project', 'api_key', 'amplitude_api_key')
+        fields = ('id', 'name', 'feature_states', 'project', 'api_key')
 
 
 class EnvironmentSerializerLight(serializers.ModelSerializer):
     class Meta:
         model = Environment
-        fields = ('id', 'name', 'api_key', 'project', 'amplitude_api_key')
+        fields = ('id', 'name', 'api_key', 'project')
         read_only_fields = ('api_key',)
 
     def create(self, validated_data):
