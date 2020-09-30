@@ -1,32 +1,26 @@
-from django.db.models import Q
-from django.utils.decorators import method_decorator
-from drf_yasg import openapi
-from drf_yasg.utils import swagger_auto_schema
-from rest_framework import viewsets, mixins
+from rest_framework import viewsets
+from rest_framework.generics import get_object_or_404
 
-from integrations.amplitude.models import AmplitudeConfiguration
+from environments.models import Environment
 from integrations.amplitude.serializers import AmplitudeConfigurationSerializer
-
-project_query_param = openapi.Parameter('project', openapi.IN_QUERY, description='ID of the project to filter on',
-                                        type=openapi.TYPE_INTEGER)
+from .models import AmplitudeConfiguration
 
 
-# @method_decorator(name='list', decorator=swagger_auto_schema(manual_parameters=[project_query_param]))
 class AmplitudeConfigurationViewSet(viewsets.ModelViewSet):
     serializer_class = AmplitudeConfigurationSerializer
 
     def get_queryset(self):
-        q = Q(project__organisation__in=self.request.user.organisations.all())
-        if 'project' in self.request.query_params:
-            project_id = self._get_value_as_int(self.request.query_params.get('project'))
-            q = q & Q(project__id=project_id)
-            return AmplitudeConfiguration.objects.filter(q)
+        environment_api_key = self.kwargs['environment_api_key']
+        environment = get_object_or_404(self.request.user.get_permitted_environments(['VIEW_ENVIRONMENT']),
+                                        api_key=environment_api_key)
+
+        return AmplitudeConfiguration.objects.filter(environment)
 
     def perform_create(self, serializer):
-        project_id = self.kwargs["project_pk"]
-        serializer.save(project_id=project_id)
+        environment = self.get_environment_from_request()
+        serializer.save(environment=environment)
 
     def perform_update(self, serializer):
-        project_id = self.kwargs["project_pk"]
-        serializer.save(project_id=project_id)
+        environment = self.get_environment_from_request()
+        serializer.save(environment=environment)
 
