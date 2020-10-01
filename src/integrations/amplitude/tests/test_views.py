@@ -55,7 +55,7 @@ class AmplitudeConfigurationTestCase(TestCase):
 
         # When
         response = self.client.post(
-            self.amplitude_config_url % self.identity.environment.api_key,
+            self.amplitude_config_url % self.environment.api_key,
             data=self.post_put_template % config.api_key,
             content_type="application/json",
         )
