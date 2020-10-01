@@ -1,4 +1,5 @@
 from rest_framework import viewsets
+from rest_framework.exceptions import ValidationError
 from rest_framework.generics import get_object_or_404
 
 from integrations.datadog.models import DataDogConfiguration
@@ -16,6 +17,9 @@ class DataDogConfigurationViewSet(viewsets.ModelViewSet):
 
     def perform_create(self, serializer):
         project_id = self.kwargs["project_pk"]
+        if DataDogConfiguration.objects.filter(project_id=project_id).exists():
+            raise ValidationError("DataDogConfiguration for this project already exist.")
+
         serializer.save(project_id=project_id)
 
     def perform_update(self, serializer):
