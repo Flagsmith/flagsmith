@@ -1,7 +1,6 @@
 from rest_framework import viewsets
 from rest_framework.generics import get_object_or_404
 
-from environments.models import Environment
 from integrations.amplitude.serializers import AmplitudeConfigurationSerializer
 from .models import AmplitudeConfiguration
 
@@ -24,4 +23,3 @@ class AmplitudeConfigurationViewSet(viewsets.ModelViewSet):
     def perform_update(self, serializer):
         environment = self.get_environment_from_request()
         serializer.save(environment=environment)
-
