@@ -31,7 +31,7 @@ class OrganisationSerializerFull(serializers.ModelSerializer):
             'subscription',
             'role',
             'persist_trait_data',
-            'access_blocked'
+            'block_access_to_admin'
         )
         read_only_fields = (
             'id', 'created_date', 'num_seats', 'role', 'persist_trait_data', 'access_blocked'
