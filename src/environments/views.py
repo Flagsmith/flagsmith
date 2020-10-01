@@ -9,10 +9,6 @@ from rest_framework.decorators import action
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 
-from environments.authentication import EnvironmentKeyAuthentication
-from environments.permissions import EnvironmentKeyPermissions, EnvironmentPermissions, NestedEnvironmentPermissions
-from features.serializers import FeatureStateSerializerFull
-from integrations.amplitude.amplitude import AmplitudeWrapper
 from environments.permissions.permissions import EnvironmentPermissions, \
     NestedEnvironmentPermissions
 from permissions.serializers import PermissionModelSerializer, MyUserObjectPermissionsSerializer
