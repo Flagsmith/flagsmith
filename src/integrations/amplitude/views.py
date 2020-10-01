@@ -8,6 +8,7 @@ from .models import AmplitudeConfiguration
 
 class AmplitudeConfigurationViewSet(viewsets.ModelViewSet):
     serializer_class = AmplitudeConfigurationSerializer
+    pagination_class = None  # set here to ensure documentation is correct
 
     def get_queryset(self):
         environment_api_key = self.kwargs['environment_api_key']
