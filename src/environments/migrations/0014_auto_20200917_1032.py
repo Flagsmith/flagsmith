@@ -9,6 +9,10 @@ class Migration(migrations.Migration):
     dependencies = [
         ('identities', '0001_initial'),
         ('environments', '0013_auto_20200619_1321'),
+        # the following 2 migration dependencies were added manually to avoid
+        # errors with lazy references to environments.Identity
+        ('api', '0021_auto_20180525_1651'),
+        ('auth', '0011_update_proxy_permissions'),
     ]
 
     operations = [
