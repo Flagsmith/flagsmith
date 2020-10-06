@@ -1,6 +1,7 @@
 from unittest import mock
 
 import analytics
+from analytics.influxdb_wrapper import InfluxDBWrapper
 from analytics.influxdb_wrapper import get_events_for_organisation
 
 
@@ -21,7 +22,7 @@ def test_write(monkeypatch):
     mock_write_api.write.assert_called()
 
 
-def test_query(monkeypatch):
+def test_influx_db_query(monkeypatch):
     # Given
     org_id = 123
     read_bucket = "_downsampled_15m"
