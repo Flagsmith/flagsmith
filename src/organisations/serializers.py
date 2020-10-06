@@ -34,7 +34,7 @@ class OrganisationSerializerFull(serializers.ModelSerializer):
             'block_access_to_admin'
         )
         read_only_fields = (
-            'id', 'created_date', 'num_seats', 'role', 'persist_trait_data', 'access_blocked'
+            'id', 'created_date', 'num_seats', 'role', 'persist_trait_data', 'block_access_to_admin'
         )
 
     def get_role(self, instance):
