@@ -33,9 +33,16 @@ class InfluxDBWrapper:
     def write(self):
         self.write_api.write(bucket=settings.INFLUXDB_BUCKET, record=self.record)
 
-    def get_events_for_organisation(self, organisation_id):
-        query_api = influxdb_client.query_api()
-        query = ' from(bucket:"%s") \
+
+def get_events_for_organisation(organisation_id):
+    """
+    Query influx db for usage for given organisation id
+
+    :param organisation_id: an id of the organisation to get usage for
+    :return: a number of request counts for organisation
+    """
+    query_api = influxdb_client.query_api()
+    query = ' from(bucket:"%s") \
                 |> range(start: -30d, stop: now()) \
                 |> filter(fn:(r) => r._measurement == "api_call") \
                 |> filter(fn: (r) => r["_field"] == "request_count") \
@@ -43,12 +50,12 @@ class InfluxDBWrapper:
                 |> drop(columns: ["organisation", "resource",  "project", "project_id"]) \
                 |> sum()' % (read_bucket, organisation_id)
 
-        # we should get only one record back
-        # just in case iterate over and sum them up
-        result = query_api.query(org=org, query=query)
-        total = 0
-        for table in result:
-            for record in table.records:
-                total += record.get_value()
+    # we should get only one record back
+    # just in case iterate over and sum them up
+    result = query_api.query(org=org, query=query)
+    total = 0
+    for table in result:
+        for record in table.records:
+            total += record.get_value()
 
-        return total
+    return total
