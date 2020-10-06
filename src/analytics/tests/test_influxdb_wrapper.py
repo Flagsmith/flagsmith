@@ -1,8 +1,8 @@
 from unittest import mock
 
 import analytics
-from analytics.influxdb_wrapper import InfluxDBWrapper
-from influxdb_client import InfluxDBClient
+from analytics.influxdb_wrapper import get_events_for_organisation
+
 
 def test_write(monkeypatch):
     # Given
@@ -23,18 +23,24 @@ def test_write(monkeypatch):
 
 def test_query(monkeypatch):
     # Given
+    org_id = 123
+    read_bucket = "_downsampled_15m"
+    query = ' from(bucket:"%s") \
+                |> range(start: -30d, stop: now()) \
+                |> filter(fn:(r) => r._measurement == "api_call") \
+                |> filter(fn: (r) => r["_field"] == "request_count") \
+                |> filter(fn: (r) => r["organisation_id"] == "%s") \
+                |> drop(columns: ["organisation", "resource",  "project", "project_id"]) \
+                |> sum()' % (read_bucket, org_id)
+
     mock_influxdb_client = mock.MagicMock()
     monkeypatch.setattr(analytics.influxdb_wrapper, "influxdb_client", mock_influxdb_client)
-    monkeypatch.setattr(analytics.influxdb_wrapper, "read_bucket", "test_downsampled_15m")
 
     mock_query_api = mock.MagicMock()
     mock_influxdb_client.query_api.return_value = mock_query_api
 
-    influxdb = InfluxDBWrapper("name", "field_name", "field_value")
-
     # When
-    influxdb.get_events_for_organisation(123)
+    get_events_for_organisation(org_id)
 
     # Then
-    mock_query_api.query.assert_called()
-
+    mock_query_api.query.assert_called_once_with(org='', query=query)
