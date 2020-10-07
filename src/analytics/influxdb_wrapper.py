@@ -5,13 +5,13 @@ from influxdb_client.client.write_api import SYNCHRONOUS
 
 url = settings.INFLUXDB_URL
 token = settings.INFLUXDB_TOKEN
-org = settings.INFLUXDB_ORG
+influx_org = settings.INFLUXDB_ORG
 read_bucket = settings.INFLUXDB_BUCKET + "_downsampled_15m"
 
 influxdb_client = InfluxDBClient(
     url=url,
     token=token,
-    org=org
+    org=influx_org
 )
 
 
@@ -52,7 +52,7 @@ def get_events_for_organisation(organisation_id):
 
     # we should get only one record back
     # just in case iterate over and sum them up
-    result = query_api.query(org=org, query=query)
+    result = query_api.query(org=influx_org, query=query)
     total = 0
     for table in result:
         for record in table.records:
