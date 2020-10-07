@@ -267,6 +267,16 @@ class SDKTraitsTest(APITestCase):
             self._generate_trait_data(trait_key=f"trait_{i}") for i in range(num_traits)
         ]
 
+        # add some bad data to test
+        # TODO: move this to it's own test to check that the value gets stringified
+        traits.append(
+            {
+                "trait_value": {"foo": "bar"},
+                "trait_key": "trait_999",
+                "identity": {"identifier": self.identity.identifier}
+            }
+        )
+
         # When
         response = self.client.put(
             url, data=json.dumps(traits), content_type="application/json"
