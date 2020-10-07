@@ -307,7 +307,6 @@ class SDKTraitsTest(APITestCase):
         ]
 
         # add some bad data to test
-        # TODO: move this to it's own test to check that the value gets stringified
         bad_trait_key = "trait_999"
         bad_trait_value = {"foo": "bar"}
         traits.append(
