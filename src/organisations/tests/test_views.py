@@ -1,9 +1,9 @@
 import json
-from analytics import influxdb_wrapper
 from datetime import datetime, timedelta
 from unittest import TestCase, mock
 
 import pytest
+from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.core import mail
 from django.urls import reverse
@@ -233,7 +233,8 @@ class OrganisationTestCase(TestCase):
         self.user.add_organisation(organisation, OrganisationRole.ADMIN)
         url = reverse('api-v1:organisations:organisation-usage', args=[organisation.pk])
 
-        read_bucket = "_downsampled_15m"
+        influx_org = settings.INFLUXDB_ORG
+        read_bucket = settings.INFLUXDB_BUCKET + "_downsampled_15m"
         query = ' from(bucket:"%s") \
                 |> range(start: -30d, stop: now()) \
                 |> filter(fn:(r) => r._measurement == "api_call") \
@@ -247,7 +248,7 @@ class OrganisationTestCase(TestCase):
 
         # Then
         assert response.status_code == status.HTTP_200_OK
-        mock_influxdb_client.query_api.return_value.query.assert_called_once_with(org='', query=query)
+        mock_influxdb_client.query_api.return_value.query.assert_called_once_with(org=influx_org, query=query)
 
     @mock.patch('organisations.serializers.get_subscription_data_from_hosted_page')
     def test_update_subscription_gets_subscription_data_from_chargebee(self, mock_get_subscription_data):
