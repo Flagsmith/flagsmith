@@ -121,6 +121,28 @@ class SDKTraitsTest(APITestCase):
             == trait_value
         )
 
+    def test_can_set_trait_with_float_value_for_an_identity(self):
+        # Given
+        url = reverse("api-v1:sdk-traits-list")
+        float_trait_value = 10.5
+
+        # When
+        res = self.client.post(
+            url,
+            data=self._generate_json_trait_data(trait_value=float_trait_value),
+            content_type=self.JSON,
+        )
+
+        # Then
+        assert res.status_code == status.HTTP_200_OK
+
+        # and
+        assert (
+                Trait.objects.get(
+                    identity=self.identity, trait_key=self.trait_key
+                ).get_trait_value() == float_trait_value
+        )
+
     def test_add_trait_creates_identity_if_it_doesnt_exist(self):
         # Given
         url = reverse("api-v1:sdk-traits-list")
@@ -314,6 +336,41 @@ class SDKTraitsTest(APITestCase):
 
         # but the trait missing from the request is left untouched
         assert Trait.objects.filter(id=trait_to_keep.id).exists()
+
+    def test_bulk_create_traits_when_float_value_sent_then_trait_value_scorrect(self):
+        # Given
+        num_traits = 5
+        url = reverse("api-v1:sdk-traits-bulk-create")
+        traits = [
+            self._generate_trait_data(trait_key=f"trait_{i}") for i in range(num_traits)
+        ]
+
+        # add some bad data to test
+        float_trait_key = "float_key_999"
+        float_trait_value = 45.88
+        traits.append(
+            {
+                "trait_value": float_trait_value,
+                "trait_key": float_trait_key,
+                "identity": {"identifier": self.identity.identifier}
+            }
+        )
+
+        # When
+        response = self.client.put(
+            url, data=json.dumps(traits), content_type="application/json"
+        )
+
+        # Then
+        assert response.status_code == status.HTTP_200_OK
+        assert Trait.objects.filter(identity=self.identity).count() == num_traits + 1
+
+        # and
+        assert (
+                Trait.objects.get(
+                    identity=self.identity, trait_key=float_trait_key
+                ).get_trait_value() == float_trait_value
+        )
 
     def _generate_trait_data(self, identifier=None, trait_key=None, trait_value=None):
         identifier = identifier or self.identity.identifier
