@@ -1,5 +1,7 @@
 from unittest import mock
 
+from django.conf import settings
+
 import analytics
 from analytics.influxdb_wrapper import InfluxDBWrapper
 from analytics.influxdb_wrapper import get_events_for_organisation
@@ -22,10 +24,11 @@ def test_write(monkeypatch):
     mock_write_api.write.assert_called()
 
 
-def test_influx_db_query_when_get_events_then_query_api_(monkeypatch):
+def test_influx_db_query_when_get_events_then_query_api_called(monkeypatch):
     # Given
     org_id = 123
-    read_bucket = "_downsampled_15m"
+    influx_org = settings.INFLUXDB_ORG
+    read_bucket = settings.INFLUXDB_BUCKET + "_downsampled_15m"
     query = ' from(bucket:"%s") \
                 |> range(start: -30d, stop: now()) \
                 |> filter(fn:(r) => r._measurement == "api_call") \
@@ -44,4 +47,4 @@ def test_influx_db_query_when_get_events_then_query_api_(monkeypatch):
     get_events_for_organisation(org_id)
 
     # Then
-    mock_query_api.query.assert_called_once_with(org='', query=query)
+    mock_query_api.query.assert_called_once_with(org=influx_org, query=query)
