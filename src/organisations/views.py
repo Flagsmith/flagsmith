@@ -13,7 +13,7 @@ from rest_framework.exceptions import ValidationError
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 
-from analytics.query import get_events_for_organisation
+from analytics.influxdb_wrapper import get_events_for_organisation
 from organisations.models import OrganisationRole, Subscription, OrganisationWebhook
 from organisations.permissions import OrganisationPermission, NestedOrganisationEntityPermission
 from organisations.serializers import OrganisationSerializerFull, MultiInvitesSerializer, UpdateSubscriptionSerializer, \
@@ -92,7 +92,7 @@ class OrganisationViewSet(viewsets.ModelViewSet):
         organisation = self.get_object()
 
         try:
-            events = get_events_for_organisation(organisation)
+            events = get_events_for_organisation(organisation.id)
         except (TypeError, ValueError):
             # TypeError can be thrown when getting service account if not configured
             # ValueError can be thrown if GA returns a value that cannot be converted to integer
