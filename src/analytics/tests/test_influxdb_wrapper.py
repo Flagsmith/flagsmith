@@ -22,7 +22,7 @@ def test_write(monkeypatch):
     mock_write_api.write.assert_called()
 
 
-def test_influx_db_query(monkeypatch):
+def test_influx_db_query_when_get_events_then_query_api_(monkeypatch):
     # Given
     org_id = 123
     read_bucket = "_downsampled_15m"
