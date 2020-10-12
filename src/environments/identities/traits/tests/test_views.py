@@ -92,10 +92,10 @@ class SDKTraitsTest(APITestCase):
 
         # and
         assert (
-            Trait.objects.get(
-                identity=self.identity, trait_key=self.trait_key
-            ).get_trait_value()
-            == trait_value
+                Trait.objects.get(
+                    identity=self.identity, trait_key=self.trait_key
+                ).get_trait_value()
+                == trait_value
         )
 
     def test_can_set_trait_with_identity_value_for_an_identity(self):
@@ -259,6 +259,28 @@ class SDKTraitsTest(APITestCase):
         # Then
         assert res.status_code == status.HTTP_400_BAD_REQUEST
 
+    def test_can_set_trait_with_bad_value_for_an_identity(self):
+        # Given
+        url = reverse("api-v1:sdk-traits-list")
+        bad_trait_value = {"foo": "bar"}
+
+        # When
+        res = self.client.post(
+            url,
+            data=self._generate_json_trait_data(trait_value=bad_trait_value),
+            content_type=self.JSON,
+        )
+
+        # Then
+        assert res.status_code == status.HTTP_200_OK
+
+        # and
+        assert (
+                Trait.objects.get(
+                    identity=self.identity, trait_key=self.trait_key
+                ).get_trait_value() == str(bad_trait_value)
+        )
+
     def test_bulk_create_traits(self):
         # Given
         num_traits = 20
@@ -275,6 +297,41 @@ class SDKTraitsTest(APITestCase):
         # Then
         assert response.status_code == status.HTTP_200_OK
         assert Trait.objects.filter(identity=self.identity).count() == num_traits
+
+    def test_bulk_create_traits_when_bad_trait_value_sent_then_trait_value_stringified(self):
+        # Given
+        num_traits = 5
+        url = reverse("api-v1:sdk-traits-bulk-create")
+        traits = [
+            self._generate_trait_data(trait_key=f"trait_{i}") for i in range(num_traits)
+        ]
+
+        # add some bad data to test
+        bad_trait_key = "trait_999"
+        bad_trait_value = {"foo": "bar"}
+        traits.append(
+            {
+                "trait_value": bad_trait_value,
+                "trait_key": bad_trait_key,
+                "identity": {"identifier": self.identity.identifier}
+            }
+        )
+
+        # When
+        response = self.client.put(
+            url, data=json.dumps(traits), content_type="application/json"
+        )
+
+        # Then
+        assert response.status_code == status.HTTP_200_OK
+        assert Trait.objects.filter(identity=self.identity).count() == num_traits + 1
+
+        # and
+        assert (
+                Trait.objects.get(
+                    identity=self.identity, trait_key=bad_trait_key
+                ).get_trait_value() == str(bad_trait_value)
+        )
 
     def test_sending_null_value_in_bulk_create_deletes_trait_for_identity(self):
         # Given
