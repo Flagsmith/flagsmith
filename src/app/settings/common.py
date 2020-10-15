@@ -116,6 +116,8 @@ INSTALLED_APPS = [
 
     # Used for ordering models (e.g. FeatureSegment)
     'ordered_model',
+
+    'axes',
 ]
 
 if GOOGLE_ANALYTICS_KEY or INFLUXDB_TOKEN:
@@ -141,6 +143,11 @@ REST_FRAMEWORK = {
     }
 }
 
+AUTHENTICATION_BACKENDS = [
+    'axes.backends.AxesBackend',
+    'django.contrib.auth.backends.ModelBackend',
+]
+
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
@@ -152,6 +159,7 @@ MIDDLEWARE = [
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
     'simple_history.middleware.HistoryRequestMiddleware',
     'debug_toolbar.middleware.DebugToolbarMiddleware',
+    'axes.middleware.AxesMiddleware',
 ]
 
 if GOOGLE_ANALYTICS_KEY:

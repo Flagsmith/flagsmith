@@ -22,7 +22,7 @@ black = "*"
 [packages]
 appdirs = "*"
 django-cors-headers = "*"
-djangorestframework = "*"
+djangorestframework = "<3.11.0"
 gunicorn = "*"
 pyparsing = "*"
 requests = "*"
@@ -52,3 +52,7 @@ djoser = "*"
 influxdb-client = "*"
 django-ordered-model = "*"
 django-ses = "*"
+django-axes = "*"
+
+[pipenv]
+allow_prereleases = true
