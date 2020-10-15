@@ -73,11 +73,12 @@ class DatadogConfigurationTestCase(TestCase):
                                                      api_key="api_123",
                                                      project=self.project)
         api_key_updated = "new api"
+        data = self.post_put_template % (config.base_url, api_key_updated)
 
         # When
         response = self.client.put(
             self.datadog_config_detail_url % (self.project.id, config.id),
-            data=self.post_put_template % (api_key_updated, "http://test.com"),
+            data=data,
             content_type="application/json",
         )
         config.refresh_from_db()
