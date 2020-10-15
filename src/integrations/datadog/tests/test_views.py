@@ -14,7 +14,7 @@ from util.tests import Helper
 @pytest.mark.django_db
 class DatadogConfigurationTestCase(TestCase):
     post_put_template = '{ "base_url" : "%s", "api_key" : "%s" }'
-    datadog_config_url = "/projects/%d/integrations/datadog/"
+    datadog_config_url = "/api/v1/projects/%d/integrations/datadog/"
     datadog_config_detail_url = datadog_config_url + "%d/"
 
     def setUp(self):
@@ -86,7 +86,7 @@ class DatadogConfigurationTestCase(TestCase):
         assert response.status_code == status.HTTP_200_OK
         assert config.api_key == api_key_updated
 
-    def test_should_return_amplitude_config_list_when_requested(self):
+    def test_should_return_datadog_config_list_when_requested(self):
         # Given - set up data
 
         # When
