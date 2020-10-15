@@ -213,7 +213,7 @@ class IdentityTestCase(TestCase):
             "api-v1:environments:environment-identities-list",
             args=[self.environment.api_key],
         )
-        url = "%s?q=%s" % (base_url, "user")
+        url = "%s?q=%s&page_size=%s" % (base_url, "user", "10")
 
         res1 = self.client.get(url)
         second_page = res1.json().get("next")
