@@ -18,9 +18,12 @@ services:
       DJANGO_DB_PASSWORD: password
       DJANGO_DB_PORT: 5432
       DJANGO_ALLOWED_HOSTS: localhost
+      DJANGO_DB_HOST: db
     ports:
      - "8000:8000"
     depends_on:
       - db
     links:
       - db:db
+    volumes:
+      - ./src:/user/src
