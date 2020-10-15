@@ -25,5 +25,3 @@ services:
       - db
     links:
       - db:db
-    volumes:
-      - ./src:/user/src
