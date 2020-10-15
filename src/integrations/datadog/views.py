@@ -13,7 +13,7 @@ class DataDogConfigurationViewSet(viewsets.ModelViewSet):
     def get_queryset(self):
         project = get_object_or_404(self.request.user.get_permitted_projects(['VIEW_PROJECT']),
                                     pk=self.kwargs['project_pk'])
-        return DataDogConfiguration.objects.filter(project)
+        return DataDogConfiguration.objects.filter(project=project)
 
     def perform_create(self, serializer):
         project_id = self.kwargs["project_pk"]
