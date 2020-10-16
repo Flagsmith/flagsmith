@@ -16,7 +16,6 @@ from environments.sdk.serializers import (
     IdentifyWithTraitsSerializer,
 )
 from features.serializers import FeatureStateSerializerFull
-from integrations.amplitude.models import AmplitudeConfiguration
 from integrations.amplitude.amplitude import AmplitudeWrapper
 from util.views import SDKAPIView
 
@@ -187,17 +186,16 @@ class SDKIdentities(SDKAPIView):
             identity.identity_traits.all(), many=True
         )
 
-        # If we have an amplitude API key, send the flags viewed by the user to their API
-        amplitude_config = AmplitudeConfiguration.objects.get(environment=identity.environment)
-        if amplitude_config and amplitude_config.api_key is not None:
-            amplitude = AmplitudeWrapper(amplitude_config.api_key)
-            user_properties = {
-                feature_state.feature.name: feature_state.get_feature_state_value()
-                for feature_state
-                in all_feature_states
-            }
-            amplitude.identify_user_async(identity.identifier, **user_properties)
-
+        # If we have an amplitude configured, send the flags viewed by the user to their API
+        if hasattr(identity.environment, 'amplitude_config'):
+            if identity.environment.amplitude_config.api_key is not None:
+                amplitude = AmplitudeWrapper(identity.environment.amplitude_config.api_key)
+                user_properties = {
+                    feature_state.feature.name: feature_state.get_feature_state_value()
+                    for feature_state
+                    in all_feature_states
+                }
+                amplitude.identify_user_async(identity.identifier, **user_properties)
 
         response = {"flags": serialized_flags.data, "traits": serialized_traits.data}
 
