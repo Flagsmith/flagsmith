@@ -18,6 +18,7 @@ import requests
 import sys
 
 from corsheaders.defaults import default_headers
+from datetime import timedelta
 
 from app.utils import secret_key_gen
 
@@ -390,3 +391,6 @@ DJOSER = {
 # Github OAuth credentials
 GITHUB_CLIENT_ID = env.str('GITHUB_CLIENT_ID', '')
 GITHUB_CLIENT_SECRET = env.str('GITHUB_CLIENT_SECRET', '')
+
+# Django Axes settings
+AXES_COOLOFF_TIME = timedelta(minutes=int(os.environ.get('AXES_COOLOFF_TIME', 15)))
