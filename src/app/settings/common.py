@@ -369,7 +369,8 @@ TRENCH_AUTH = {
 
 DJOSER = {
     'PASSWORD_RESET_CONFIRM_URL': 'password-reset/confirm/{uid}/{token}',
-    'SEND_ACTIVATION_EMAIL': False,  # if True user required to click activation link in email to activate account
+    # if True user required to click activation link in email to activate account
+    'SEND_ACTIVATION_EMAIL': env('ENABLE_EMAIL_ACTIVATION', default=False),
     'ACTIVATION_URL': 'activate/{uid}/{token}',  # FE uri to redirect user to from activation email
     'SEND_CONFIRMATION_EMAIL': False,  # register or activation endpoint will send confirmation email to user
     'SERIALIZERS': {
@@ -389,15 +390,6 @@ DJOSER = {
         'user_list': ['custom_auth.permissions.CurrentUser'],
     }
 }
-
-# User Registration via email activation flow enabled, default False
-ENABLE_EMAIL_ACTIVATION = env('ENABLE_EMAIL_ACTIVATION', default=False)
-if ENABLE_EMAIL_ACTIVATION:
-    DJOSER['SEND_ACTIVATION_EMAIL'] = True
-    DJOSER['SEND_CONFIRMATION_EMAIL'] = True
-    warnings.warn(
-        "User registration enabled via email activation, please make "
-        "sure you have `SENDGRID_API_KEY` configured. ")
 
 # Github OAuth credentials
 GITHUB_CLIENT_ID = env.str('GITHUB_CLIENT_ID', '')
