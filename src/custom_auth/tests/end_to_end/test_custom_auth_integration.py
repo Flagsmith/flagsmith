@@ -127,8 +127,9 @@ class AuthIntegrationTestCase(APITestCase):
         self.assertEqual(new_user.email, register_data['email'])
         self.assertFalse(new_user.is_active)
 
-        # now verify we can login yet with the same credentials
-        # as account has not been activated yet
+        # And login should fail as we have not activated account yet
+        # add delay to avoid HTTP_429 as we have throttle in place for login
+        time.sleep(1)
         login_data = {
             "email": self.test_email,
             "password": self.password,
