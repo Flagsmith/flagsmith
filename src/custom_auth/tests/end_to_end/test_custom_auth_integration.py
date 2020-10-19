@@ -127,15 +127,15 @@ class AuthIntegrationTestCase(APITestCase):
         self.assertEqual(new_user.email, register_data['email'])
         self.assertFalse(new_user.is_active)
 
-        # And login should fail as we have not activated account yet
-        # add delay to avoid HTTP_429 as we have throttle in place for login
-        time.sleep(1)
-        # now verify we can login with the same credentials
+        # now verify we can login yet with the same credentials
+        # as account has not been activated yet
         login_data = {
             "email": self.test_email,
             "password": self.password,
         }
-        self.client.post(self.login_url, data=login_data, status_code=status.HTTP_400_BAD_REQUEST)
+        failed_login_res = self.client.post(self.login_url, data=login_data)
+        # should return 400
+        assert failed_login_res.status_code == status.HTTP_400_BAD_REQUEST
 
         # verify that the user has been emailed activation email
         # and extract uid and token for account activation
@@ -156,7 +156,8 @@ class AuthIntegrationTestCase(APITestCase):
 
         time.sleep(1)
         # And login success
-        login_result = self.client.post(self.login_url, data=login_data, status_code=status.HTTP_200_OK)
+        login_result = self.client.post(self.login_url, data=login_data)
+        assert login_result.status_code == status.HTTP_200_OK
         self.assertIn('key', login_result.data)
 
     def test_login_workflow_with_mfa_enabled(self):
