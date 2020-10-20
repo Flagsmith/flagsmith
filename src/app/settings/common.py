@@ -393,4 +393,4 @@ GITHUB_CLIENT_ID = env.str('GITHUB_CLIENT_ID', '')
 GITHUB_CLIENT_SECRET = env.str('GITHUB_CLIENT_SECRET', '')
 
 # Django Axes settings
-AXES_COOLOFF_TIME = timedelta(minutes=int(os.environ.get('AXES_COOLOFF_TIME', 15)))
+AXES_COOLOFF_TIME = timedelta(minutes=env.int('AXES_COOLOFF_TIME', 15))
