@@ -26,7 +26,7 @@ from .serializers import FeatureStateSerializerBasic, FeatureStateSerializerFull
     FeatureStateValueSerializer, FeatureSegmentCreateSerializer, \
     FeatureStateSerializerWithIdentity, \
     FeatureSegmentListSerializer, FeatureSegmentQuerySerializer, \
-    FeatureSegmentChangePrioritiesSerializer, FeatureSerializer
+    FeatureSegmentChangePrioritiesSerializer, FeatureSerializer, FeatureWithTagsSerializer
 
 logger = logging.getLogger()
 logger.setLevel(logging.INFO)
@@ -38,7 +38,9 @@ class FeatureViewSet(viewsets.ModelViewSet):
     permission_classes = [IsAuthenticated, FeaturePermissions]
 
     def get_serializer_class(self):
-        if self.action in ['create', 'update']:
+        if self.action == 'list':
+            return FeatureWithTagsSerializer
+        elif self.action in ['create', 'update']:
             return CreateFeatureSerializer
         else:
             return FeatureSerializer
