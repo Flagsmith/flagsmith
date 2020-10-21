@@ -10,7 +10,7 @@ class ActivationEmail(email.ActivationEmail):
     template_name = 'users/activation.html'
 
     def get_context_data(self):
-        # ActivationEmail can be deleted
+
         context = super().get_context_data()
 
         user = context.get("user")
