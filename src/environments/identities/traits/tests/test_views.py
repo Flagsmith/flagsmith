@@ -337,15 +337,12 @@ class SDKTraitsTest(APITestCase):
         # but the trait missing from the request is left untouched
         assert Trait.objects.filter(id=trait_to_keep.id).exists()
 
-    def test_bulk_create_traits_when_float_value_sent_then_trait_value_scorrect(self):
+    def test_bulk_create_traits_when_float_value_sent_then_trait_value_correct(self):
         # Given
-        num_traits = 5
         url = reverse("api-v1:sdk-traits-bulk-create")
-        traits = [
-            self._generate_trait_data(trait_key=f"trait_{i}") for i in range(num_traits)
-        ]
+        traits = []
 
-        # add some bad data to test
+        # add float value trait
         float_trait_key = "float_key_999"
         float_trait_value = 45.88
         traits.append(
@@ -363,7 +360,7 @@ class SDKTraitsTest(APITestCase):
 
         # Then
         assert response.status_code == status.HTTP_200_OK
-        assert Trait.objects.filter(identity=self.identity).count() == num_traits + 1
+        assert Trait.objects.filter(identity=self.identity).count() == 1
 
         # and
         assert (
