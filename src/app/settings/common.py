@@ -370,7 +370,7 @@ TRENCH_AUTH = {
 DJOSER = {
     'PASSWORD_RESET_CONFIRM_URL': 'password-reset/confirm/{uid}/{token}',
     # if True user required to click activation link in email to activate account
-    'SEND_ACTIVATION_EMAIL': env('ENABLE_EMAIL_ACTIVATION', default=False),
+    'SEND_ACTIVATION_EMAIL': env.bool('ENABLE_EMAIL_ACTIVATION', default=False),
     'ACTIVATION_URL': 'activate/{uid}/{token}',  # FE uri to redirect user to from activation email
     'SEND_CONFIRMATION_EMAIL': False,  # register or activation endpoint will send confirmation email to user
     'SERIALIZERS': {
