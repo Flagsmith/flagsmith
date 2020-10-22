@@ -5,7 +5,6 @@ from app.utils import create_hash
 from django.conf import settings
 from django.core.cache import caches
 from django.db import models
-from django.utils.encoding import python_2_unicode_compatible
 from django.utils.translation import ugettext_lazy as _
 
 from app.utils import create_hash
@@ -23,7 +22,6 @@ FLOAT = "float"
 environment_cache = caches[settings.ENVIRONMENT_CACHE_LOCATION]
 
 
-@python_2_unicode_compatible
 class Environment(models.Model):
     name = models.CharField(max_length=2000)
     created_date = models.DateTimeField('DateCreated', auto_now_add=True)

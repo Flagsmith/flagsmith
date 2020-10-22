@@ -2,6 +2,9 @@ from unittest import TestCase, mock
 from unittest.mock import MagicMock
 
 import pytest
+from django.contrib.auth import authenticate
+from django.conf import settings
+from django.http import HttpRequest
 from rest_framework.exceptions import AuthenticationFailed
 
 from environments.authentication import EnvironmentKeyAuthentication
@@ -58,3 +61,14 @@ class EnvironmentKeyAuthenticationTestCase(TestCase):
         # When / Then
         with pytest.raises(AuthenticationFailed):
             self.authenticator.authenticate(request)
+
+
+class TestBruteForceAttempts(TestCase):
+    def test_brute_force_attempts(self):
+        login_attempts_to_make = settings.AXES_FAILURE_LIMIT + 1
+
+        for _ in range(login_attempts_to_make):
+            request = HttpRequest()
+            authenticate(request, username="invalid_user", password="invalid_password")
+
+        # TODO
