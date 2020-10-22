@@ -64,7 +64,6 @@ class AmplitudeConfigurationTestCase(TestCase):
         assert response.status_code == status.HTTP_400_BAD_REQUEST
         assert AmplitudeConfiguration.objects.filter(environment=self.environment).count() == 1
 
-    #
     def test_should_update_configuration_when_put(self):
         # Given
         config = AmplitudeConfiguration.objects.create(api_key="api_123", environment=self.environment)
