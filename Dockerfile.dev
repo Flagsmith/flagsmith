@@ -1,4 +1,4 @@
-FROM python:3.8
+FROM python:3.7
 ENV PYTHONUNBUFFERED 1
 
 RUN rm /var/lib/dpkg/info/format
@@ -7,8 +7,7 @@ RUN dpkg --configure -a
 RUN  apt-get clean && apt-get update \
     && apt-get install -y --no-install-recommends \
         postgresql-client \
-    && rm -rf /var/lib/apt/lists/* \
-    && apk add --no-cache --virtual .build-deps gcc musl-dev
+    && rm -rf /var/lib/apt/lists/*
 
 RUN pip install pipenv
 RUN mkdir /app
@@ -21,5 +20,3 @@ COPY Pipfile* /app/
 RUN pipenv install
 ENV DJANGO_SETTINGS_MODULE=app.settings.master-docker
 EXPOSE 8000
-
-CMD ["./bin/docker-dev"]
