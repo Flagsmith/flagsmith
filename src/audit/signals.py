@@ -21,7 +21,6 @@ def call_webhooks(sender, instance, **kwargs):
     call_organisation_webhooks(organisation, data, WebhookEventType.AUDIT_LOG_CREATED)
 
 
-# pretty sure you can do this and just define multiple receivers but will need to be tested
 @receiver(post_save, sender=AuditLog)
 def send_audit_log_event_to_datadog(sender, instance, **kwargs):
     if not instance.project:
