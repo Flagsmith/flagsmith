@@ -36,17 +36,6 @@ class AuditLogTestCase(TestCase):
         datadog_mock.track_event_async.assert_not_called()
 
     @mock.patch('integrations.datadog.datadog.DataDogWrapper.track_event_async')
-    def test_data_dog_track_event_not_called_on_audit_log_saved_when_not_configured(self, datadog_mock):
-        # Given Audit log and project not configured for Datadog
-        audit_log = AuditLog(project=self.project, log='Some audit log')
-
-        # When Audit log saved
-        audit_log.save()
-
-        # Then datadog track even should not be triggered
-        datadog_mock.track_event_async.assert_not_called()
-
-    @mock.patch('integrations.datadog.datadog.DataDogWrapper.track_event_async')
     def test_data_dog_track_event_not_called_on_audit_log_saved_when_wrong(self, datadog_mock):
         # Given Audit log and project configured for Datadog integration
         DataDogConfiguration.objects.create(project=self.project,
