@@ -31,9 +31,6 @@ def send_audit_log_event_to_datadog(sender, instance, **kwargs):
         logger.debug("No datadog integration configured for project %s" % instance.project.id)
         return
 
-    if instance.related_object_type == RelatedObjectType.FEATURE.name:
-        logger.debug("All good keep going")
-
     # Only handle Feature related changes
     if instance.related_object_type not in [RelatedObjectType.FEATURE.name, RelatedObjectType.FEATURE_STATE.name,
                                             RelatedObjectType.SEGMENT.name]:
