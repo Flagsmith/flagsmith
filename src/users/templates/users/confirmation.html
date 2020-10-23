@@ -1,0 +1,21 @@
+{% load i18n %}
+
+{% block subject %}
+{% blocktrans %}Bullet Train - Your account has been successfully created and activated!{% endblocktrans %}
+{% endblock %}
+
+{% block text_body %}
+{% trans "Your account has been created and is ready to use!" %}
+
+{% trans "Thanks for using our site!" %}
+
+{% blocktrans %}The Bullet Train team{% endblocktrans %}
+{% endblock text_body %}
+
+{% block html_body %}
+<p>{% trans "Your account has been created and is ready to use!" %}</p>
+
+<p>{% trans "Thanks for using our site!" %}</p>
+
+<p>{% blocktrans %}The Bullet Train team{% endblocktrans %}</p>
+{% endblock html_body %}

@@ -362,11 +362,18 @@ TRENCH_AUTH = {
 
 DJOSER = {
     'PASSWORD_RESET_CONFIRM_URL': 'password-reset/confirm/{uid}/{token}',
-    'SEND_ACTIVATION_EMAIL': False,
+    # if True user required to click activation link in email to activate account
+    'SEND_ACTIVATION_EMAIL': env.bool('ENABLE_EMAIL_ACTIVATION', default=False),
+    'ACTIVATION_URL': 'activate/{uid}/{token}',  # FE uri to redirect user to from activation email
+    'SEND_CONFIRMATION_EMAIL': False,  # register or activation endpoint will send confirmation email to user
     'SERIALIZERS': {
         'token': 'custom_auth.serializers.CustomTokenSerializer',
         'user_create': 'custom_auth.serializers.CustomUserCreateSerializer',
         'current_user': 'users.serializers.CustomCurrentUserSerializer',
+    },
+    'EMAIL': {
+                'activation': 'users.emails.ActivationEmail',
+                'confirmation': 'users.emails.ConfirmationEmail'
     },
     'SET_PASSWORD_RETYPE': True,
     'PASSWORD_RESET_CONFIRM_RETYPE': True,
@@ -376,7 +383,6 @@ DJOSER = {
         'user_list': ['custom_auth.permissions.CurrentUser'],
     }
 }
-
 
 # Github OAuth credentials
 GITHUB_CLIENT_ID = env.str('GITHUB_CLIENT_ID', '')
