@@ -115,10 +115,7 @@ class DatadogConfigurationTestCase(TestCase):
                                                      project=self.project)
         # When
         url = reverse('api-v1:projects:integrations-datadog-detail', args=[self.project.id, config.id])
-        res = self.client.delete(
-            url,
-            content_type="application/json",
-        )
+        res = self.client.delete(url)
 
         # Then
         assert res.status_code == status.HTTP_204_NO_CONTENT
