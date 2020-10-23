@@ -1,6 +1,8 @@
+import json
 from unittest.case import TestCase
 
 import pytest
+from django.urls import reverse
 from rest_framework import status
 from rest_framework.test import APIClient
 
@@ -33,15 +35,18 @@ class AmplitudeConfigurationTestCase(TestCase):
         self.environment = Environment.objects.create(
             name="Test Environment", project=self.project
         )
+        self.list_url = reverse('api-v1:environments:integrations-amplitude-list', args=[self.environment.api_key])
 
     def test_should_create_amplitude_config_when_post(self):
         # Given
-        api_key = "abc-123"
+        data = {
+            'api_key': 'abc-123'
+        }
 
         # When
         response = self.client.post(
-            self.amplitude_config_url % self.environment.api_key,
-            data=self.post_put_template % api_key,
+            self.list_url,
+            data=json.dumps(data),
             content_type="application/json",
         )
 
@@ -54,9 +59,12 @@ class AmplitudeConfigurationTestCase(TestCase):
         config = AmplitudeConfiguration.objects.create(api_key="api_123", environment=self.environment)
 
         # When
+        data = {
+            'api_key': config.api_key
+        }
         response = self.client.post(
-            self.amplitude_config_url % self.environment.api_key,
-            data=self.post_put_template % config.api_key,
+            self.list_url,
+            data=json.dumps(data),
             content_type="application/json",
         )
 
@@ -69,11 +77,16 @@ class AmplitudeConfigurationTestCase(TestCase):
         config = AmplitudeConfiguration.objects.create(api_key="api_123", environment=self.environment)
 
         api_key_updated = "new api"
+        data = {
+            'api_key': api_key_updated
+        }
 
         # When
+        url = reverse('api-v1:environments:integrations-amplitude-detail',
+                      args=[self.environment.api_key, config.id])
         response = self.client.put(
-            self.amplitude_config_detail_url % (self.environment.api_key, config.id),
-            data=self.post_put_template % api_key_updated,
+            url,
+            data=json.dumps(data),
             content_type="application/json",
         )
         config.refresh_from_db()
@@ -86,9 +99,7 @@ class AmplitudeConfigurationTestCase(TestCase):
         # Given - set up data
 
         # When
-        response = self.client.get(
-            self.amplitude_config_url % self.environment.api_key
-        )
+        response = self.client.get(self.list_url)
 
         # Then
         assert response.status_code == status.HTTP_200_OK
@@ -98,10 +109,9 @@ class AmplitudeConfigurationTestCase(TestCase):
         config = AmplitudeConfiguration.objects.create(api_key="api_123", environment=self.environment)
 
         # When
-        res = self.client.delete(
-            self.amplitude_config_detail_url % (self.environment.api_key, config.id),
-            content_type="application/json",
-        )
+        url = reverse('api-v1:environments:integrations-amplitude-detail',
+                      args=[self.environment.api_key, config.id])
+        res = self.client.delete(url)
 
         # Then
         assert res.status_code == status.HTTP_204_NO_CONTENT
