@@ -2,6 +2,7 @@ from unittest import TestCase, mock
 from unittest.mock import MagicMock
 
 import pytest
+from axes.models import AccessAttempt
 from django.contrib.auth import authenticate
 from django.conf import settings
 from django.http import HttpRequest
@@ -63,12 +64,16 @@ class EnvironmentKeyAuthenticationTestCase(TestCase):
             self.authenticator.authenticate(request)
 
 
+@pytest.mark.django_db
 class TestBruteForceAttempts(TestCase):
     def test_brute_force_attempts(self):
+        invalid_user_name = "invalid_user"
         login_attempts_to_make = settings.AXES_FAILURE_LIMIT + 1
+
+        assert AccessAttempt.objects.all().count() == 0
 
         for _ in range(login_attempts_to_make):
             request = HttpRequest()
-            authenticate(request, username="invalid_user", password="invalid_password")
+            authenticate(request, username=invalid_user_name, password="invalid_password")
 
-        # TODO
+        assert AccessAttempt.objects.filter(username=invalid_user_name).count() == 1
