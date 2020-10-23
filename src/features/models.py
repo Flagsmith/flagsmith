@@ -3,6 +3,7 @@ from __future__ import unicode_literals
 from django.core.exceptions import (NON_FIELD_ERRORS, ObjectDoesNotExist,
                                     ValidationError)
 from django.db import models
+from django.utils.encoding import python_2_unicode_compatible
 from django.utils.translation import ugettext_lazy as _
 from ordered_model.models import OrderedModelBase
 from simple_history.models import HistoricalRecords
@@ -27,6 +28,7 @@ FEATURE_STATE_VALUE_TYPES = (
 )
 
 
+@python_2_unicode_compatible
 class Feature(models.Model):
     FEATURE_TYPES = (
         (FLAG, 'Feature Flag'),
@@ -116,6 +118,7 @@ def get_next_segment_priority(feature):
         return feature_segments.first().priority + 1
 
 
+@python_2_unicode_compatible
 class FeatureSegment(OrderedModelBase):
     feature = models.ForeignKey(Feature, on_delete=models.CASCADE, related_name='feature_segments')
     segment = models.ForeignKey('segments.Segment', related_name='feature_segments', on_delete=models.CASCADE)
@@ -162,6 +165,7 @@ class FeatureSegment(OrderedModelBase):
         return other and self.priority > other.priority
 
 
+@python_2_unicode_compatible
 class FeatureState(models.Model):
     feature = models.ForeignKey(Feature, related_name='feature_states', on_delete=models.CASCADE)
     environment = models.ForeignKey('environments.Environment', related_name='feature_states', null=True,

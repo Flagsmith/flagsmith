@@ -7,6 +7,7 @@ from django.core.mail import EmailMultiAlternatives, send_mail
 from django.db import models
 from django.db.models import Q
 from django.template.loader import get_template
+from django.utils.encoding import python_2_unicode_compatible
 from django.utils.translation import gettext_lazy as _
 
 from app.utils import create_hash
@@ -55,6 +56,7 @@ class UserManager(BaseUserManager):
         return self._create_user(email, password, **extra_fields)
 
 
+@python_2_unicode_compatible
 class FFAdminUser(AbstractUser):
     organisations = models.ManyToManyField(Organisation, related_name="users", blank=True, through=UserOrganisation)
     email = models.EmailField(unique=True, null=False)
@@ -236,6 +238,7 @@ class FFAdminUser(AbstractUser):
                                                                        environment=environment).exists()
 
 
+@python_2_unicode_compatible
 class Invite(models.Model):
     email = models.EmailField()
     hash = models.CharField(max_length=100, default=create_hash, unique=True)
