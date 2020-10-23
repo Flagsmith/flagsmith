@@ -1,6 +1,8 @@
+import json
 from unittest.case import TestCase
 
 import pytest
+from django.urls import reverse
 from rest_framework import status
 from rest_framework.test import APIClient
 
@@ -13,9 +15,6 @@ from util.tests import Helper
 
 @pytest.mark.django_db
 class DatadogConfigurationTestCase(TestCase):
-    post_put_template = '{ "base_url" : "%s", "api_key" : "%s" }'
-    datadog_config_url = "/api/v1/projects/%d/integrations/datadog/"
-    datadog_config_detail_url = datadog_config_url + "%d/"
 
     def setUp(self):
         self.client = APIClient()
@@ -33,14 +32,19 @@ class DatadogConfigurationTestCase(TestCase):
         self.environment = Environment.objects.create(
             name="Test Environment", project=self.project
         )
+        self.list_url = reverse('api-v1:projects:integrations-datadog-list', args=[self.project.id])
 
     def test_should_create_datadog_config_when_post(self):
         # Given setup data
+        data = {
+            'base_url': 'http://test.com',
+            'api_key': 'abc-123'
+        }
 
         # When
         response = self.client.post(
-            self.datadog_config_url % self.project.id,
-            data=self.post_put_template % ("http://test.com", "abc-123"),
+            self.list_url,
+            data=json.dumps(data),
             content_type="application/json",
         )
 
@@ -54,11 +58,15 @@ class DatadogConfigurationTestCase(TestCase):
         config = DataDogConfiguration.objects.create(base_url="http://test.com",
                                                      api_key="api_123",
                                                      project=self.project)
+        data = {
+            'base_url': 'http://test.com',
+            'api_key': 'abc-123'
+        }
 
         # When
         response = self.client.post(
-            self.datadog_config_url % self.project.id,
-            data=self.post_put_template % ("http://test.com", "abc-123"),
+            self.list_url,
+            data=json.dumps(data),
             content_type="application/json",
         )
 
@@ -73,12 +81,16 @@ class DatadogConfigurationTestCase(TestCase):
                                                      api_key="api_123",
                                                      project=self.project)
         api_key_updated = "new api"
-        data = self.post_put_template % (config.base_url, api_key_updated)
+        data = {
+            'base_url': config.base_url,
+            'api_key': api_key_updated
+        }
 
         # When
+        url = reverse('api-v1:projects:integrations-datadog-detail', args=[self.project.id, config.id])
         response = self.client.put(
-            self.datadog_config_detail_url % (self.project.id, config.id),
-            data=data,
+            url,
+            data=json.dumps(data),
             content_type="application/json",
         )
         config.refresh_from_db()
@@ -91,9 +103,7 @@ class DatadogConfigurationTestCase(TestCase):
         # Given - set up data
 
         # When
-        response = self.client.get(
-            self.datadog_config_url % self.project.id
-        )
+        response = self.client.get(self.list_url)
 
         # Then
         assert response.status_code == status.HTTP_200_OK
@@ -104,8 +114,9 @@ class DatadogConfigurationTestCase(TestCase):
                                                      api_key="api_123",
                                                      project=self.project)
         # When
+        url = reverse('api-v1:projects:integrations-datadog-detail', args=[self.project.id, config.id])
         res = self.client.delete(
-            self.datadog_config_detail_url % (self.project.id, config.id),
+            url,
             content_type="application/json",
         )
 
