@@ -6,6 +6,7 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.schemas import AutoSchema
 
+from app.pagination import CustomPagination
 from environments.identities.models import Identity
 from environments.identities.serializers import IdentitySerializer
 from environments.models import Environment
@@ -23,6 +24,7 @@ from util.views import SDKAPIView
 class IdentityViewSet(viewsets.ModelViewSet):
     serializer_class = IdentitySerializer
     permission_classes = [IsAuthenticated, NestedEnvironmentPermissions]
+    pagination_class = CustomPagination
 
     def get_queryset(self):
         environment = self.get_environment_from_request()
