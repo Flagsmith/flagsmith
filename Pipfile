@@ -40,7 +40,6 @@ django-debug-toolbar = "*"
 google-api-python-client = "*"
 "oauth2client" = "*"
 djangorestframework-recursive = "*"
-drf-yasg = "*"
 packaging = "*"
 chargebee = "*"
 python-http-client = "<3.2.0" # 3.2.0 is the latest but throws an error on installation saying that it's not found
@@ -52,3 +51,8 @@ djoser = "*"
 influxdb-client = "*"
 django-ordered-model = "*"
 django-ses = "*"
+django-axes = "*"
+drf-yasg2 = "*"
+
+[pipenv]
+allow_prereleases = true
