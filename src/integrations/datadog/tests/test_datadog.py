@@ -18,6 +18,19 @@ def test_datadog_generate_event_data():
     fail()
 
 
+def test_datadog_initialized_correctly():
+    # Given
+    api_key = '123key'
+    base_url = "http://test.com"
+
+    # When initialized
+    data_dog = DataDogWrapper(base_url="http://test.com", api_key='123key')
+
+    # Then
+    expected_url = f"{base_url}api/v1/events?api_key={api_key}"
+    assert data_dog.url == expected_url
+
+
 def test_datatog_when_generate_event_data_with_correct_values_then_success():
     # Given
     log = "some log data"
