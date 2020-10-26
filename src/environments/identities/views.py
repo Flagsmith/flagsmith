@@ -192,12 +192,9 @@ class SDKIdentities(SDKAPIView):
         if hasattr(identity.environment, 'amplitude_config'):
             if identity.environment.amplitude_config.api_key is not None:
                 amplitude = AmplitudeWrapper(identity.environment.amplitude_config.api_key)
-                user_properties = {
-                    feature_state.feature.name: feature_state.get_feature_state_value()
-                    for feature_state
-                    in all_feature_states
-                }
-                amplitude.identify_user_async(identity.identifier, **user_properties)
+                user_data = amplitude.generate_user_data(user_id=identity.identifier,
+                                                         feature_states=all_feature_states)
+                amplitude.identify_user_async(user_data=user_data)
 
         response = {"flags": serialized_flags.data, "traits": serialized_traits.data}
 
