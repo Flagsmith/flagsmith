@@ -6,12 +6,14 @@ from util.util import postpone
 
 logger = get_logger(__name__)
 
+EVENTS_API_URI = "api/v1/events"
+
 
 class DataDogWrapper:
     def __init__(self, base_url: str, api_key: str):
         self.base_url = base_url
         self.api_key = api_key
-        self.url = f"{self.base_url}api/v1/events?api_key={self.api_key}"
+        self.url = f"{self.base_url}{EVENTS_API_URI}?api_key={self.api_key}"
 
     def _track_event(self, event: dict) -> None:
         response = requests.post(self.url, data=json.dumps(event))
