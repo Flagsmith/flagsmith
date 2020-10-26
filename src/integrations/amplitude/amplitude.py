@@ -13,6 +13,7 @@ AMPLITUDE_API_URL = "https://api.amplitude.com"
 class AmplitudeWrapper:
     def __init__(self, api_key: str):
         self.api_key = api_key
+        self.url = f"{AMPLITUDE_API_URL}/identify"
 
     def _identify_user(self, user_id: str, **user_properties) -> None:
         data = {
@@ -22,7 +23,7 @@ class AmplitudeWrapper:
                 "user_properties": json.dumps({**user_properties})
             }
         }
-        response = requests.post(f"{AMPLITUDE_API_URL}/identify", data=data)
+        response = requests.post(self.url, data=data)
         logger.debug("Sent event to Amplitude. Response code was: %s" % response.status_code)
 
     @postpone
