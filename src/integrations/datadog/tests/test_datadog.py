@@ -1,21 +1,4 @@
-from unittest import mock, SkipTest
-
-from integrations.datadog.datadog import DataDogWrapper
-from pytest import fail
-
-
-# TODO: look into using https://github.com/betamaxpy/betamax or https://github.com/getsentry/responses
-@SkipTest
-@mock.patch("integrations.datadog.datadog.requests")
-def test_datadog_track_event(mock_requests):
-    # TODO: implement me
-    fail()
-
-
-@SkipTest
-def test_datadog_generate_event_data():
-    # TODO: implement me
-    fail()
+from integrations.datadog.datadog import DataDogWrapper, EVENTS_API_URI
 
 
 def test_datadog_initialized_correctly():
@@ -24,10 +7,10 @@ def test_datadog_initialized_correctly():
     base_url = "http://test.com"
 
     # When initialized
-    data_dog = DataDogWrapper(base_url="http://test.com", api_key='123key')
+    data_dog = DataDogWrapper(base_url=base_url, api_key=api_key)
 
     # Then
-    expected_url = f"{base_url}api/v1/events?api_key={api_key}"
+    expected_url = f"{base_url}{EVENTS_API_URI}?api_key={api_key}"
     assert data_dog.url == expected_url
 
 
