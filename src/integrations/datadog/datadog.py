@@ -11,10 +11,10 @@ class DataDogWrapper:
     def __init__(self, base_url: str, api_key: str):
         self.base_url = base_url
         self.api_key = api_key
+        self.url = f"{self.base_url}api/v1/events?api_key={self.api_key}"
 
     def _track_event(self, event: dict) -> None:
-        url = f"{self.base_url}api/v1/events?api_key={self.api_key}"
-        response = requests.post(url, data=json.dumps(event))
+        response = requests.post(self.url, data=json.dumps(event))
         logger.debug("Sent event to DataDog. Response code was %s" % response.status_code)
 
     @postpone
