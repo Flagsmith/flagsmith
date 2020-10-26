@@ -1,10 +1,13 @@
-from unittest import mock, SkipTest
-
-from pytest import fail
+from integrations.amplitude.amplitude import AmplitudeWrapper, AMPLITUDE_API_URL
 
 
-@SkipTest
-@mock.patch("integrations.amplitude.amplitude.requests")
-def test_identify_user(mock_requests):
-    # TODO: implement me
-    fail()
+def test_amplitude_initialized_correctly():
+    # Given
+    api_key = '123key'
+
+    # When initialized
+    amplitude_wrapper = AmplitudeWrapper(api_key=api_key)
+
+    # Then
+    expected_url = f"{AMPLITUDE_API_URL}/identify"
+    assert amplitude_wrapper.url == expected_url
