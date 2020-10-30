@@ -15,9 +15,6 @@ from util.tests import Helper
 
 @pytest.mark.django_db
 class AmplitudeConfigurationTestCase(TestCase):
-    post_put_template = '{ "api_key" : "%s" }'
-    amplitude_config_url = "/api/v1/environments/%s/integrations/amplitude/"
-    amplitude_config_detail_url = amplitude_config_url + "%d/"
 
     def setUp(self):
         self.client = APIClient()
