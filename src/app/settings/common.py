@@ -224,7 +224,7 @@ CORS_ALLOW_HEADERS = default_headers + (
     'X-E2E-Test-Auth-Token'
 )
 
-DEFAULT_FROM_EMAIL = "noreply@bullet-train.io"
+DEFAULT_FROM_EMAIL = os.environ.get('DEFAULT_FROM_EMAIL', 'noreply@bullet-train.io')
 SENDER_EMAIL = os.environ.get('SENDER_EMAIL', 'noreply@bullet-train.io')
 EMAIL_CONFIGURATION = {
     # Invitations with name is anticipated to take two arguments. The persons name and the
