@@ -160,7 +160,7 @@ MIDDLEWARE = [
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
     'simple_history.middleware.HistoryRequestMiddleware',
     'debug_toolbar.middleware.DebugToolbarMiddleware',
-    'axes.middleware.AxesMiddleware',
+    'app.middleware.AxesMiddleware',
 ]
 
 if GOOGLE_ANALYTICS_KEY:
@@ -399,3 +399,7 @@ GITHUB_CLIENT_SECRET = env.str('GITHUB_CLIENT_SECRET', '')
 
 # Django Axes settings
 AXES_COOLOFF_TIME = timedelta(minutes=env.int('AXES_COOLOFF_TIME', 15))
+AXES_BLACKLISTED_URLS = [
+    '/admin/login/?next=/admin',
+    '/admin/',
+]
