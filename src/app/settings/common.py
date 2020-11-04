@@ -120,7 +120,7 @@ INSTALLED_APPS = [
 
     # Third party integrations
     'integrations.datadog',
-    'integrations.amplitude'
+    'integrations.amplitude',
 
     # Rate limiting admin endpoints
     'axes'
