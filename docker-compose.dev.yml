@@ -14,6 +14,7 @@ services:
       context: .
       dockerfile: Dockerfile.dev
     command: ./bin/docker-dev
+    # command: sleep 9999
     volumes:
       - .:/app
     environment:
@@ -22,6 +23,7 @@ services:
       DJANGO_DB_PASSWORD: password
       DJANGO_DB_PORT: 5432
       DJANGO_ALLOWED_HOSTS: localhost
+      DJANGO_DB_HOST: db
     ports:
      - "8000:8000"
     depends_on:
