@@ -58,7 +58,7 @@ else:
     ALLOWED_HOSTS = []
     
 if 'DJANGO_CSRF_TRUSTED_ORIGINS' in os.environ:
-    CSRF_TRUSTED_ORIGINS = os.environ['CSRF_TRUSTED_ORIGINS'].split(',')
+    CSRF_TRUSTED_ORIGINS = os.environ['DJANGO_CSRF_TRUSTED_ORIGINS'].split(',')
 else:
     CSRF_TRUSTED_ORIGINS = []
 
