@@ -5,7 +5,7 @@ import logging
 from datetime import datetime
 
 from django.contrib.sites.shortcuts import get_current_site
-from drf_yasg.utils import swagger_auto_schema
+from drf_yasg2.utils import swagger_auto_schema
 from rest_framework import viewsets, status
 from rest_framework.authentication import BasicAuthentication
 from rest_framework.decorators import action, api_view, authentication_classes

@@ -18,6 +18,7 @@ import requests
 import sys
 
 from corsheaders.defaults import default_headers
+from datetime import timedelta
 
 from app.utils import secret_key_gen
 
@@ -102,7 +103,7 @@ INSTALLED_APPS = [
     'e2etests',
     'simple_history',
     'debug_toolbar',
-    'drf_yasg',
+    'drf_yasg2',
     'audit',
     'permissions',
     'projects.tags',
@@ -120,6 +121,9 @@ INSTALLED_APPS = [
     # Third party integrations
     'integrations.datadog',
     'integrations.amplitude'
+
+    # Rate limiting admin endpoints
+    'axes'
 ]
 
 if GOOGLE_ANALYTICS_KEY or INFLUXDB_TOKEN:
@@ -145,6 +149,11 @@ REST_FRAMEWORK = {
     }
 }
 
+AUTHENTICATION_BACKENDS = [
+    'axes.backends.AxesBackend',
+    'django.contrib.auth.backends.ModelBackend',
+]
+
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
@@ -156,6 +165,7 @@ MIDDLEWARE = [
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
     'simple_history.middleware.HistoryRequestMiddleware',
     'debug_toolbar.middleware.DebugToolbarMiddleware',
+    'axes.middleware.AxesMiddleware',
 ]
 
 if GOOGLE_ANALYTICS_KEY:
@@ -391,3 +401,6 @@ DJOSER = {
 # Github OAuth credentials
 GITHUB_CLIENT_ID = env.str('GITHUB_CLIENT_ID', '')
 GITHUB_CLIENT_SECRET = env.str('GITHUB_CLIENT_SECRET', '')
+
+# Django Axes settings
+AXES_COOLOFF_TIME = timedelta(minutes=env.int('AXES_COOLOFF_TIME', 15))
