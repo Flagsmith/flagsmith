@@ -202,7 +202,7 @@ issue please search existing issues in order to prevent duplicates.
 ## Get in touch
 
 If you have any questions about our projects you can email
-<a href="mailto:projects@solidstategroup.com">projects@solidstategroup.com</a>.
+<a href="mailto:support@bullet-train.io">support@bullet-train.io</a>.
 
 ## Useful links
 

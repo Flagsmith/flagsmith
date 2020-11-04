@@ -118,7 +118,12 @@ INSTALLED_APPS = [
     # Used for ordering models (e.g. FeatureSegment)
     'ordered_model',
 
-    'axes',
+    # Third party integrations
+    'integrations.datadog',
+    'integrations.amplitude',
+
+    # Rate limiting admin endpoints
+    'axes'
 ]
 
 if GOOGLE_ANALYTICS_KEY or INFLUXDB_TOKEN:
