@@ -36,7 +36,8 @@ class Segment(models.Model):
         return "Segment - %s" % self.name
 
     def does_identity_match(self, identity: Identity, traits: typing.List[Trait] = None) -> bool:
-        return self.rules.count() > 0 and all(rule.does_identity_match(identity, traits) for rule in self.rules.all())
+        rules = self.rules.all()
+        return rules.count() > 0 and all(rule.does_identity_match(identity, traits) for rule in rules)
 
     def get_identity_percentage_value(self, identity: Identity) -> float:
         """
@@ -78,20 +79,21 @@ class SegmentRule(models.Model):
 
     def does_identity_match(self, identity: Identity, traits: typing.List[Trait] = None) -> bool:
         matches_conditions = False
+        conditions = self.conditions.all()
 
-        if self.conditions.count() == 0:
+        if conditions.count() == 0:
             matches_conditions = True
         elif self.type == self.ALL_RULE:
             matches_conditions = all(
-                condition.does_identity_match(identity, traits) for condition in self.conditions.all()
+                condition.does_identity_match(identity, traits) for condition in conditions
             )
         elif self.type == self.ANY_RULE:
             matches_conditions = any(
-                condition.does_identity_match(identity, traits) for condition in self.conditions.all()
+                condition.does_identity_match(identity, traits) for condition in conditions
             )
         elif self.type == self.NONE_RULE:
             matches_conditions = not any(
-                condition.does_identity_match(identity, traits) for condition in self.conditions.all()
+                condition.does_identity_match(identity, traits) for condition in conditions
             )
 
         return matches_conditions and all(rule.does_identity_match(identity, traits) for rule in self.rules.all())
@@ -100,6 +102,8 @@ class SegmentRule(models.Model):
         """
         rules can be a child of a parent rule instead of a segment, this method iterates back up the tree to find the
         segment
+
+        TODO: denormalise the segment information so that we don't have to make multiple queries here in complex cases
         """
         rule = self
         while not rule.segment:
@@ -137,7 +141,7 @@ class Condition(models.Model):
 
         # we allow passing in traits to handle when they aren't
         # persisted for certain organisations
-        traits = traits or identity.identity_traits.all()
+        traits = identity.identity_traits.all() if traits is None else traits
 
         for trait in traits:
             if trait.trait_key == self.property:
@@ -157,10 +161,7 @@ class Condition(models.Model):
             return False
 
         segment = self.rule.get_segment()
-        if segment.get_identity_percentage_value(identity) <= float_value:
-            return True
-
-        return False
+        return segment.get_identity_percentage_value(identity) <= float_value
 
     def check_integer_value(self, value: int) -> bool:
         try:
