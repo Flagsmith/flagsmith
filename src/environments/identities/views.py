@@ -17,6 +17,7 @@ from environments.sdk.serializers import (
     IdentifyWithTraitsSerializer,
 )
 from features.serializers import FeatureStateSerializerFull
+from integrations.amplitude.amplitude import AmplitudeWrapper
 from util.views import SDKAPIView
 
 
@@ -179,12 +180,21 @@ class SDKIdentities(SDKAPIView):
         :param trait_models: optional list of trait_models to pass in for organisations that don't persist them
         :return: Response containing lists of both serialized flags and traits
         """
+        all_feature_states = identity.get_all_feature_states()
         serialized_flags = FeatureStateSerializerFull(
-            identity.get_all_feature_states(), many=True
+            all_feature_states, many=True
         )
         serialized_traits = TraitSerializerBasic(
             identity.identity_traits.all(), many=True
         )
+
+        # If we have an amplitude configured, send the flags viewed by the user to their API
+        if hasattr(identity.environment, 'amplitude_config'):
+            if identity.environment.amplitude_config.api_key is not None:
+                amplitude = AmplitudeWrapper(identity.environment.amplitude_config.api_key)
+                user_data = amplitude.generate_user_data(user_id=identity.identifier,
+                                                         feature_states=all_feature_states)
+                amplitude.identify_user_async(user_data=user_data)
 
         response = {"flags": serialized_flags.data, "traits": serialized_traits.data}
 

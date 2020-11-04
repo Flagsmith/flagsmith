@@ -1,4 +1,5 @@
 import json
+from unittest import mock
 from unittest.case import TestCase
 
 import pytest
@@ -7,9 +8,10 @@ from rest_framework import status
 from rest_framework.test import APIClient, APITestCase
 
 from environments.identities.models import Identity
-from environments.models import Environment
 from environments.identities.traits.models import Trait
+from environments.models import Environment
 from features.models import Feature, FeatureState, FeatureSegment
+from integrations.amplitude.models import AmplitudeConfiguration
 from organisations.models import Organisation, OrganisationRole
 from projects.models import Project
 from segments import models
@@ -289,7 +291,30 @@ class SDKIdentitiesTestCase(APITestCase):
         # and
         assert len(response.json().get("flags")) == 2
 
-    def test_identities_endpoint_returns_traits(self):
+    @mock.patch('integrations.amplitude.amplitude.AmplitudeWrapper.identify_user_async')
+    def test_identities_endpoint_get_all_feature_amplitude_called(
+            self, mock_amplitude_wrapper
+    ):
+        # Given
+        # amplitude configuration for environment
+        AmplitudeConfiguration.objects.create(api_key="abc-123", environment=self.environment)
+        base_url = reverse("api-v1:sdk-identities")
+        url = base_url + "?identifier=" + self.identity.identifier
+
+        # When
+        response = self.client.get(url)
+
+        # Then
+        assert response.status_code == status.HTTP_200_OK
+
+        # and
+        assert len(response.json().get("flags")) == 2
+
+        # and amplitude identify users should be called
+        mock_amplitude_wrapper.assert_called()
+
+    @mock.patch('integrations.amplitude.amplitude.AmplitudeWrapper.identify_user_async')
+    def test_identities_endpoint_returns_traits(self, mock_amplitude_wrapper):
         # Given
         base_url = reverse("api-v1:sdk-identities")
         url = base_url + "?identifier=" + self.identity.identifier
@@ -312,6 +337,9 @@ class SDKIdentitiesTestCase(APITestCase):
             == trait.get_trait_value()
         )
 
+        # and amplitude identify users should not be called
+        mock_amplitude_wrapper.assert_not_called()
+
     def test_identities_endpoint_returns_single_feature_state_if_feature_provided(self):
         # Given
         base_url = reverse("api-v1:sdk-identities")
@@ -332,7 +360,8 @@ class SDKIdentitiesTestCase(APITestCase):
         # and
         assert response.json().get("feature").get("name") == self.feature_1.name
 
-    def test_identities_endpoint_returns_value_for_segment_if_identity_in_segment(self):
+    @mock.patch('integrations.amplitude.amplitude.AmplitudeWrapper.identify_user_async')
+    def test_identities_endpoint_returns_value_for_segment_if_identity_in_segment(self, mock_amplitude_wrapper):
         # Given
         base_url = reverse("api-v1:sdk-identities")
         url = base_url + "?identifier=" + self.identity.identifier
@@ -369,8 +398,12 @@ class SDKIdentitiesTestCase(APITestCase):
         # and
         assert response.json().get("flags")[1].get("enabled")
 
+        # and amplitude identify users should not be called
+        mock_amplitude_wrapper.assert_not_called()
+
+    @mock.patch('integrations.amplitude.amplitude.AmplitudeWrapper.identify_user_async')
     def test_identities_endpoint_returns_value_for_segment_if_identity_in_segment_and_feature_specified(
-        self,
+            self, mock_amplitude_wrapper
     ):
         # Given
         base_url = reverse("api-v1:sdk-identities")
@@ -414,8 +447,12 @@ class SDKIdentitiesTestCase(APITestCase):
         # and
         assert response.json().get("enabled")
 
+        # and amplitude identify users should not be called
+        mock_amplitude_wrapper.assert_not_called()
+
+    @mock.patch('integrations.amplitude.amplitude.AmplitudeWrapper.identify_user_async')
     def test_identities_endpoint_returns_value_for_segment_if_rule_type_percentage_split_and_identity_in_segment(
-        self,
+            self, mock_amplitude_wrapper
     ):
         # Given
         base_url = reverse("api-v1:sdk-identities")
@@ -450,8 +487,12 @@ class SDKIdentitiesTestCase(APITestCase):
             if flag["feature"]["name"] == self.feature_1.name:
                 assert flag["enabled"]
 
+        # and amplitude identify users should not be called
+        mock_amplitude_wrapper.assert_not_called()
+
+    @mock.patch('integrations.amplitude.amplitude.AmplitudeWrapper.identify_user_async')
     def test_identities_endpoint_returns_default_value_if_rule_type_percentage_split_and_identity_not_in_segment(
-        self,
+            self, mock_amplitude_wrapper
     ):
         # Given
         base_url = reverse("api-v1:sdk-identities")
@@ -482,6 +523,9 @@ class SDKIdentitiesTestCase(APITestCase):
 
         # Then
         assert not response.json().get("flags")[0].get("enabled")
+
+        # and amplitude identify users should not be called
+        mock_amplitude_wrapper.assert_not_called()
 
     def test_post_identify_with_persistence(self):
         # Given
