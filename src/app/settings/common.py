@@ -324,6 +324,10 @@ LOGGING = {
 CACHE_FLAGS_SECONDS = int(os.environ.get('CACHE_FLAGS_SECONDS', 0))
 FLAGS_CACHE_LOCATION = 'environment-flags'
 ENVIRONMENT_CACHE_LOCATION = 'environment-objects'
+
+CACHE_PROJECT_SEGMENTS_SECONDS = env.int('CACHE_PROJECT_SEGMENTS_SECONDS', 0)
+PROJECT_SEGMENTS_CACHE_LOCATION = 'project-segments'
+
 CACHES = {
     'default': {
         'BACKEND': 'django.core.cache.backends.locmem.LocMemCache',
@@ -336,6 +340,10 @@ CACHES = {
     FLAGS_CACHE_LOCATION: {
         'BACKEND': 'django.core.cache.backends.locmem.LocMemCache',
         'LOCATION': FLAGS_CACHE_LOCATION,
+    },
+    PROJECT_SEGMENTS_CACHE_LOCATION: {
+        'BACKEND': 'django.core.cache.backends.locmem.LocMemCache',
+        'LOCATION': PROJECT_SEGMENTS_CACHE_LOCATION,
     }
 }
 
