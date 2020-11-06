@@ -169,6 +169,9 @@ on all endpoints that use the X-Environment-Key header.
 2. Environment flags - the application utilises an in memory cache for the flags returned when calling 
 /flags. The number of seconds this is cached for is configurable using the environment variable 
 `"CACHE_FLAGS_SECONDS"` 
+3. Project Segments - the application utilises an in memory cache for returning the segments for a 
+given project. The number of seconds this is cached for is configurable using the environment variable
+`"CACHE_PROJECT_SEGMENTS_SECONDS"`.
 
 ## Stack
 
