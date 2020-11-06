@@ -13,6 +13,7 @@ class Migration(migrations.Migration):
 
     dependencies = [
         ('projects', '0005_auto_20200221_2317'),
+        ('permissions', '0002_auto_20200221_2126'),
     ]
 
     operations = [

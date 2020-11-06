@@ -118,7 +118,12 @@ INSTALLED_APPS = [
     # Used for ordering models (e.g. FeatureSegment)
     'ordered_model',
 
-    'axes',
+    # Third party integrations
+    'integrations.datadog',
+    'integrations.amplitude',
+
+    # Rate limiting admin endpoints
+    'axes'
 ]
 
 if GOOGLE_ANALYTICS_KEY or INFLUXDB_TOKEN:
@@ -160,7 +165,7 @@ MIDDLEWARE = [
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
     'simple_history.middleware.HistoryRequestMiddleware',
     'debug_toolbar.middleware.DebugToolbarMiddleware',
-    'axes.middleware.AxesMiddleware',
+    'app.middleware.AxesMiddleware',
 ]
 
 if GOOGLE_ANALYTICS_KEY:
@@ -332,6 +337,10 @@ LOGGING = {
 CACHE_FLAGS_SECONDS = int(os.environ.get('CACHE_FLAGS_SECONDS', 0))
 FLAGS_CACHE_LOCATION = 'environment-flags'
 ENVIRONMENT_CACHE_LOCATION = 'environment-objects'
+
+CACHE_PROJECT_SEGMENTS_SECONDS = env.int('CACHE_PROJECT_SEGMENTS_SECONDS', 0)
+PROJECT_SEGMENTS_CACHE_LOCATION = 'project-segments'
+
 CACHES = {
     'default': {
         'BACKEND': 'django.core.cache.backends.locmem.LocMemCache',
@@ -344,6 +353,10 @@ CACHES = {
     FLAGS_CACHE_LOCATION: {
         'BACKEND': 'django.core.cache.backends.locmem.LocMemCache',
         'LOCATION': FLAGS_CACHE_LOCATION,
+    },
+    PROJECT_SEGMENTS_CACHE_LOCATION: {
+        'BACKEND': 'django.core.cache.backends.locmem.LocMemCache',
+        'LOCATION': PROJECT_SEGMENTS_CACHE_LOCATION,
     }
 }
 
@@ -399,3 +412,7 @@ GITHUB_CLIENT_SECRET = env.str('GITHUB_CLIENT_SECRET', '')
 
 # Django Axes settings
 AXES_COOLOFF_TIME = timedelta(minutes=env.int('AXES_COOLOFF_TIME', 15))
+AXES_BLACKLISTED_URLS = [
+    '/admin/login/?next=/admin',
+    '/admin/',
+]
