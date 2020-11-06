@@ -16,7 +16,7 @@ schema_view = get_schema_view(
         default_version='v1',
         description="",
         license=openapi.License(name="BSD License"),
-        contact=openapi.Contact(email="supprt@bullet-train.io"),
+        contact=openapi.Contact(email="support@bullet-train.io"),
     ),
     public=True,
     permission_classes=(permissions.AllowAny,),

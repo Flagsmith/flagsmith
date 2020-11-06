@@ -1,6 +1,5 @@
 import logging
 import uuid
-from threading import Thread
 
 import requests
 from django.conf import settings
@@ -31,7 +30,6 @@ TRACKED_RESOURCE_ACTIONS = {
 @postpone
 def track_request_googleanalytics_async(request):
     return track_request_googleanalytics(request)
-
 
 @postpone
 def track_request_influxdb_async(request):
