@@ -1,4 +1,4 @@
-import json
+import urllib.parse
 
 import requests
 
@@ -13,10 +13,12 @@ AMPLITUDE_API_URL = "https://api.amplitude.com"
 class AmplitudeWrapper:
     def __init__(self, api_key: str):
         self.api_key = api_key
-        self.url = f"{AMPLITUDE_API_URL}/identify"
+        self.url = f"{AMPLITUDE_API_URL}/identify?api_key={self.api_key}"
 
     def _identify_user(self, user_data: dict) -> None:
-        response = requests.post(self.url, data=user_data)
+        self.url = self.url + "&" + urllib.parse.urlencode(user_data)
+
+        response = requests.post(self.url)
         logger.debug("Sent event to Amplitude. Response code was: %s" % response.status_code)
 
     @postpone
@@ -24,15 +26,14 @@ class AmplitudeWrapper:
         self._identify_user(user_data)
 
     def generate_user_data(self, user_id, feature_states):
-
         user_data = {
-            "api_key": self.api_key,
             "identification": {
                 "user_id": user_id,
-                "user_properties": json.dumps({
+                "user_properties": {
                     feature_state.feature.name: feature_state.get_feature_state_value()
+                    if feature_state.get_feature_state_value() is not None else "None"
                     for feature_state in feature_states
-                })
+                }
             }
         }
 
