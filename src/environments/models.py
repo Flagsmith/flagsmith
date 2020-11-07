@@ -89,7 +89,8 @@ class Environment(models.Model):
     def get_from_cache(cls, api_key):
         environment = environment_cache.get(api_key)
         if not environment:
-            environment = Environment.objects.select_related('project', 'project__organisation').get(api_key=api_key)
+            select_related_args = ('project', 'project__organisation', 'amplitude_config')
+            environment = Environment.objects.select_related(*select_related_args).get(api_key=api_key)
             # TODO: replace the hard coded cache timeout with an environment variable
             #  until we merge in the pulumi stuff, however, we'll have too many conflicts
             environment_cache.set(environment.api_key, environment, timeout=60)

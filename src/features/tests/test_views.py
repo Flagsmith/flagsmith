@@ -345,6 +345,23 @@ class ProjectFeatureTestCase(TestCase):
         # check tags not added
         assert check_feature.tags.count() == 0
 
+    def test_list_features_return_tags(self):
+        # Given
+        Feature.objects.create(name="test_feature", project=self.project)
+        url = reverse("api-v1:projects:project-features-list", args=[self.project.id])
+
+        # When
+        response = self.client.get(url)
+
+        # Then
+        assert response.status_code == status.HTTP_200_OK
+
+        response_json = response.json()
+        assert response_json["count"] == 1
+
+        feature = response_json["results"][0]
+        assert "tags" in feature
+
 
 @pytest.mark.django_db
 class FeatureSegmentViewTest(TestCase):

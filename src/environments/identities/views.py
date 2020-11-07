@@ -6,6 +6,7 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.schemas import AutoSchema
 
+from app.pagination import CustomPagination
 from environments.identities.models import Identity
 from environments.identities.serializers import IdentitySerializer
 from environments.models import Environment
@@ -16,12 +17,14 @@ from environments.sdk.serializers import (
     IdentifyWithTraitsSerializer,
 )
 from features.serializers import FeatureStateSerializerFull
+from integrations.amplitude.amplitude import AmplitudeWrapper
 from util.views import SDKAPIView
 
 
 class IdentityViewSet(viewsets.ModelViewSet):
     serializer_class = IdentitySerializer
     permission_classes = [IsAuthenticated, NestedEnvironmentPermissions]
+    pagination_class = CustomPagination
 
     def get_queryset(self):
         environment = self.get_environment_from_request()
@@ -177,12 +180,20 @@ class SDKIdentities(SDKAPIView):
         :param trait_models: optional list of trait_models to pass in for organisations that don't persist them
         :return: Response containing lists of both serialized flags and traits
         """
+        all_feature_states = identity.get_all_feature_states()
         serialized_flags = FeatureStateSerializerFull(
-            identity.get_all_feature_states(), many=True
+            all_feature_states, many=True
         )
         serialized_traits = TraitSerializerBasic(
             identity.identity_traits.all(), many=True
         )
+
+        # If we have an amplitude configured, send the flags viewed by the user to their API
+        if hasattr(identity.environment, 'amplitude_config') and identity.environment.amplitude_config.api_key:
+            amplitude = AmplitudeWrapper(identity.environment.amplitude_config.api_key)
+            user_data = amplitude.generate_user_data(user_id=identity.identifier,
+                                                     feature_states=all_feature_states)
+            amplitude.identify_user_async(user_data=user_data)
 
         response = {"flags": serialized_flags.data, "traits": serialized_traits.data}
 
