@@ -139,6 +139,7 @@ The application relies on the following environment variables to run:
 * `AWS_STORAGE_BUCKET_NAME`: bucket name to store static files. Required if `USE_S3_STORAGE' is true.
 * `AWS_S3_REGION_NAME`: region name of the static files bucket. Defaults to eu-west-2.
 * `ALLOWED_ADMIN_IP_ADDRESSES`: restrict access to the django admin console to a comma separated list of IP addresses (e.g. `127.0.0.1,127.0.0.2`) 
+* `ENABLE_EMAIL_ACTIVATION`: new user registration will go via email activation flow, default False
 
 ### Creating a secret key
 It is important to also set an environment variable on whatever platform you are using for 
@@ -204,7 +205,7 @@ issue please search existing issues in order to prevent duplicates.
 ## Get in touch
 
 If you have any questions about our projects you can email
-<a href="mailto:projects@solidstategroup.com">projects@solidstategroup.com</a>.
+<a href="mailto:support@bullet-train.io">support@bullet-train.io</a>.
 
 ## Useful links
 

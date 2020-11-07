@@ -29,7 +29,7 @@ class UserInline(admin.TabularInline):
 
 @admin.register(Organisation)
 class OrganisationAdmin(admin.ModelAdmin):
-    inlines = [ProjectInline, SubscriptionInline, UserInline]
+    inlines = [ProjectInline, SubscriptionInline,]
     list_display = ('__str__', )
     list_filter = ('projects', 'subscription__plan')
     search_fields = ('name', 'subscription__subscription_id')

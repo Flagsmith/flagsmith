@@ -1,5 +1,11 @@
 from rest_framework import serializers
 
+from environments.identities.traits.constants import ACCEPTED_TRAIT_VALUE_TYPES
+from features.utils import STRING
+from util.logging import get_logger
+
+logger = get_logger(__name__)
+
 
 class TraitValueField(serializers.Field):
     """
@@ -7,7 +13,18 @@ class TraitValueField(serializers.Field):
     """
 
     def to_internal_value(self, data):
-        return {"type": type(data).__name__, "value": data}
+        data_type = type(data).__name__
+
+        if data_type not in ACCEPTED_TRAIT_VALUE_TYPES:
+            data = str(data)
+            data_type = STRING
+
+        return {"type": data_type, "value": data}
 
     def to_representation(self, value):
-        return value["value"] if isinstance(value, dict) else value
+        return_value = value.get("value") if isinstance(value, dict) else value
+
+        if return_value is None:
+            logger.warning("Trait value is not an accepted type. Value was %s" % value)
+
+        return return_value
