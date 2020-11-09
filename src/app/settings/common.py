@@ -57,6 +57,11 @@ if 'DJANGO_ALLOWED_HOSTS' in os.environ:
     ALLOWED_HOSTS = os.environ['DJANGO_ALLOWED_HOSTS'].split(',')
 else:
     ALLOWED_HOSTS = []
+    
+if 'DJANGO_CSRF_TRUSTED_ORIGINS' in os.environ:
+    CSRF_TRUSTED_ORIGINS = os.environ['DJANGO_CSRF_TRUSTED_ORIGINS'].split(',')
+else:
+    CSRF_TRUSTED_ORIGINS = []
 
 INTERNAL_IPS = ['127.0.0.1',]
 
@@ -382,6 +387,8 @@ TRENCH_AUTH = {
     },
 }
 
+USER_CREATE_PERMISSIONS = env.list('USER_CREATE_PERMISSIONS', default=['rest_framework.permissions.AllowAny'])
+
 DJOSER = {
     'PASSWORD_RESET_CONFIRM_URL': 'password-reset/confirm/{uid}/{token}',
     # if True user required to click activation link in email to activate account
@@ -403,6 +410,7 @@ DJOSER = {
     'PERMISSIONS': {
         'user': ['custom_auth.permissions.CurrentUser'],
         'user_list': ['custom_auth.permissions.CurrentUser'],
+        'user_create': USER_CREATE_PERMISSIONS,
     }
 }
 
