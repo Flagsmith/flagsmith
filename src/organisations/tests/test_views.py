@@ -3,6 +3,7 @@ from datetime import datetime, timedelta
 from unittest import TestCase, mock
 
 import pytest
+from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.core import mail
 from django.urls import reverse
@@ -31,9 +32,6 @@ class OrganisationTestCase(TestCase):
         self.user = Helper.create_ffadminuser()
         self.client.force_authenticate(user=self.user)
 
-    def tearDown(self) -> None:
-        Helper.clean_up()
-
     def test_should_return_organisation_list_when_requested(self):
         # Given
         organisation = Organisation.objects.create(name='Test org')
@@ -45,6 +43,11 @@ class OrganisationTestCase(TestCase):
         # Then
         assert response.status_code == status.HTTP_200_OK
         assert 'count' in response.data and response.data['count'] == 1
+
+        # and certain required fields are there
+        response_json = response.json()
+        org_data = response_json['results'][0]
+        assert 'persist_trait_data' in org_data
 
     def test_should_create_new_organisation(self):
         # Given
@@ -222,6 +225,31 @@ class OrganisationTestCase(TestCase):
         # Then
         assert res.status_code == status.HTTP_200_OK
 
+    @mock.patch("analytics.influxdb_wrapper.influxdb_client")
+    def test_should_get_usage_for_organisation(self, mock_influxdb_client):
+        # Given
+        org_name = "test_org"
+        organisation = Organisation.objects.create(name=org_name)
+        self.user.add_organisation(organisation, OrganisationRole.ADMIN)
+        url = reverse('api-v1:organisations:organisation-usage', args=[organisation.pk])
+
+        influx_org = settings.INFLUXDB_ORG
+        read_bucket = settings.INFLUXDB_BUCKET + "_downsampled_15m"
+        query = ' from(bucket:"%s") \
+                |> range(start: -30d, stop: now()) \
+                |> filter(fn:(r) => r._measurement == "api_call") \
+                |> filter(fn: (r) => r["_field"] == "request_count") \
+                |> filter(fn: (r) => r["organisation_id"] == "%s") \
+                |> drop(columns: ["organisation", "resource",  "project", "project_id"]) \
+                |> sum()' % (read_bucket, organisation.pk)
+
+        # When
+        response = self.client.get(url, content_type='application/json')
+
+        # Then
+        assert response.status_code == status.HTTP_200_OK
+        mock_influxdb_client.query_api.return_value.query.assert_called_once_with(org=influx_org, query=query)
+
     @mock.patch('organisations.serializers.get_subscription_data_from_hosted_page')
     def test_update_subscription_gets_subscription_data_from_chargebee(self, mock_get_subscription_data):
         # Given
@@ -258,7 +286,6 @@ class OrganisationTestCase(TestCase):
         assert organisation.has_subscription() and organisation.subscription.subscription_id == subscription_id and \
                organisation.subscription.customer_id == customer_id
 
-    @pytest.mark.skip("Skip for now so we can release per env segment configuration.")
     def test_delete_organisation(self):
         # GIVEN an organisation with a project, environment, feature, segment and feature segment
         organisation = Organisation.objects.create(name="Test organisation")
@@ -269,10 +296,9 @@ class OrganisationTestCase(TestCase):
         segment = Segment.objects.create(name="Test segment", project=project)
         FeatureSegment.objects.create(feature=feature, segment=segment, environment=environment)
 
-        from audit.models import AuditLog
+        delete_organisation_url = reverse("api-v1:organisations:organisation-detail", args=[organisation.id])
 
         # WHEN
-        delete_organisation_url = reverse("api-v1:organisations:organisation-detail", args=[organisation.id])
         response = self.client.delete(delete_organisation_url)
 
         # THEN

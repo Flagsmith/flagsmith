@@ -24,6 +24,18 @@ simply run the following command from the project root:
 docker-compose up
 ```
 
+## Code Style
+
+We are slowly migrating the code style to use [black](https://github.com/psf/black) as 
+a formatter. Black automatically formats the code for you, you can run the formatter
+by running: 
+
+```
+python -m black path/to/directory/or/file.py
+```
+
+All new code should adhere to black formatting standards. 
+
 ## Databases
 Databases are configured in app/settings/\<env\>.py
 

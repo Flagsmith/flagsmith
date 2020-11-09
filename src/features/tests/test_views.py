@@ -8,7 +8,8 @@ from rest_framework.test import APIClient, APITestCase
 
 from audit.models import AuditLog, RelatedObjectType, IDENTITY_FEATURE_STATE_UPDATED_MESSAGE, \
     IDENTITY_FEATURE_STATE_DELETED_MESSAGE
-from environments.models import Environment, Identity
+from environments.models import Environment
+from environments.identities.models import Identity
 from features.models import Feature, FeatureState, FeatureSegment, CONFIG, FeatureStateValue
 from features.utils import INTEGER, BOOLEAN, STRING
 from organisations.models import Organisation, OrganisationRole
@@ -16,6 +17,7 @@ from projects.models import Project
 from segments.models import Segment
 from users.models import FFAdminUser
 from util.tests import Helper
+from projects.tags.models import Tag
 
 # patch this function as it's triggering extra threads and causing errors
 mock.patch("features.models.trigger_feature_state_change_webhooks").start()
@@ -37,18 +39,36 @@ class ProjectFeatureTestCase(TestCase):
         user.add_organisation(self.organisation, OrganisationRole.ADMIN)
 
         self.project = Project.objects.create(name='Test project', organisation=self.organisation)
+        self.project2 = Project.objects.create(name='Test project2', organisation=self.organisation)
         self.environment_1 = Environment.objects.create(name='Test environment 1', project=self.project)
         self.environment_2 = Environment.objects.create(name='Test environment 2', project=self.project)
+
+        self.tag_one = Tag.objects.create(label='Test Tag',
+                                         color='#fffff',
+                                         description='Test Tag description',
+                                         project=self.project)
+        self.tag_two = Tag.objects.create(label='Test Tag2',
+                                         color='#fffff',
+                                         description='Test Tag2 description',
+                                         project=self.project)
+        self.tag_other_project = Tag.objects.create(label='Wrong Tag',
+                                                  color='#fffff',
+                                                  description='Test Tag description',
+                                                  project=self.project2)
 
     def test_should_create_feature_states_when_feature_created(self):
         # Given - set up data
         default_value = 'This is a value'
+        data = {
+            "name": "test feature",
+            "initial_value": default_value,
+            "type": CONFIG,
+            "project": self.project.id,
+        }
+        url = reverse('api-v1:projects:project-features-list', args=[self.project.id])
 
         # When
-        response = self.client.post(self.project_features_url % self.project.id,
-                                    data=self.post_template % ("test feature", self.project.id,
-                                                               default_value),
-                                    content_type='application/json')
+        response = self.client.post(url, data=json.dumps(data), content_type='application/json')
 
         # Then
         assert response.status_code == status.HTTP_201_CREATED
@@ -66,12 +86,16 @@ class ProjectFeatureTestCase(TestCase):
     def test_should_create_feature_states_with_integer_value_when_feature_created(self):
         # Given - set up data
         default_value = 12
+        url = reverse('api-v1:projects:project-features-list', args=[self.project.id])
+        data = {
+            "name": "test feature",
+            "type": CONFIG,
+            "initial_value": default_value,
+            "project": self.project.id,
+        }
 
         # When
-        response = self.client.post(self.project_features_url % self.project.id,
-                                    data=self.post_template % ("test feature", self.project.id,
-                                                               default_value),
-                                    content_type='application/json')
+        response = self.client.post(url, data=json.dumps(data), content_type='application/json')
 
         # Then
         assert response.status_code == status.HTTP_201_CREATED
@@ -92,14 +116,14 @@ class ProjectFeatureTestCase(TestCase):
         feature_name = 'Test feature'
         data = {
             'name': 'Test feature',
+            'initial_value': default_value,
+            'type': CONFIG,
             'project': self.project.id,
-            'initial_value': default_value
         }
+        url = reverse('api-v1:projects:project-features-list', args=[self.project.id])
 
         # When
-        response = self.client.post(self.project_features_url % self.project.id,
-                                    data=json.dumps(data),
-                                    content_type='application/json')
+        response = self.client.post(url, data=json.dumps(data), content_type='application/json')
 
         # Then
         assert response.status_code == status.HTTP_201_CREATED
@@ -124,7 +148,7 @@ class ProjectFeatureTestCase(TestCase):
 
         # Then
         assert response.status_code == status.HTTP_204_NO_CONTENT
-        # check feature was deleted succesfully
+        # check feature was deleted successfully
         assert Feature.objects.filter(name="test feature", project=self.project.id).count() == 0
 
         # check feature was removed from all environments
@@ -227,6 +251,99 @@ class ProjectFeatureTestCase(TestCase):
         expected_log_message = IDENTITY_FEATURE_STATE_DELETED_MESSAGE % (feature.name, identity.identifier)
         audit_log = AuditLog.objects.get(related_object_type=RelatedObjectType.FEATURE_STATE.name)
         assert audit_log.log == expected_log_message
+
+    def test_should_create_tags_when_feature_created(self):
+        # Given - set up data
+        default_value = "Test"
+        feature_name = 'Test feature'
+        data = {
+            'name': feature_name,
+            'project': self.project.id,
+            'initial_value': default_value,
+            'tags': [self.tag_one.id, self.tag_two.id]
+        }
+
+        # When
+        response = self.client.post(self.project_features_url % self.project.id,
+                                    data=json.dumps(data),
+                                    content_type='application/json')
+
+        # Then
+        assert response.status_code == status.HTTP_201_CREATED
+
+        # check feature was created successfully
+        feature = Feature.objects.filter(name=feature_name, project=self.project.id).first()
+
+        # check tags where added
+        assert feature.tags.count() == 2
+        self.assertEqual(list(feature.tags.all()), [self.tag_one, self.tag_two])
+
+    def test_when_add_tags_from_different_project_on_feature_create_then_failed(self):
+        # Given - set up data
+        feature_name = "test feature"
+        data = {
+            'name': feature_name,
+            'project': self.project.id,
+            'initial_value': 'test',
+            'tags': [self.tag_other_project.id]
+        }
+
+        # When
+        response = self.client.post(self.project_features_url % self.project.id,
+                                   data=json.dumps(data),
+                                   content_type='application/json')
+
+        # Then
+        assert response.status_code == status.HTTP_400_BAD_REQUEST
+
+        # check no feature was created successfully
+        assert Feature.objects.filter(name=feature_name, project=self.project.id).count() == 0
+
+    def test_when_add_tags_on_feature_update_then_success(self):
+        # Given - set up data
+        feature = Feature.objects.create(project=self.project, name="test feature")
+        data = {
+            'name': feature.name,
+            'project': self.project.id,
+            'tags': [self.tag_one.id]
+        }
+
+        # When
+        response = self.client.put(self.project_feature_detail_url % (self.project.id, feature.id),
+                                   data=json.dumps(data),
+                                   content_type='application/json')
+
+        # Then
+        assert response.status_code == status.HTTP_200_OK
+
+        # check feature was created successfully
+        check_feature = Feature.objects.filter(name=feature.name, project=self.project.id).first()
+
+        # check tags added
+        assert check_feature.tags.count() == 1
+
+    def test_when_add_tags_from_different_project_on_feature_update_then_failed(self):
+        # Given - set up data
+        feature = Feature.objects.create(project=self.project, name="test feature")
+        data = {
+            'name': feature.name,
+            'project': self.project.id,
+            'tags': [self.tag_other_project.id]
+        }
+
+        # When
+        response = self.client.put(self.project_feature_detail_url % (self.project.id, feature.id),
+                                   data=json.dumps(data),
+                                   content_type='application/json')
+
+        # Then
+        assert response.status_code == status.HTTP_400_BAD_REQUEST
+
+        # check feature was created successfully
+        check_feature = Feature.objects.filter(name=feature.name, project=self.project.id).first()
+
+        # check tags not added
+        assert check_feature.tags.count() == 0
 
 
 @pytest.mark.django_db
@@ -531,3 +648,38 @@ class SDKFeatureStatesTestCase(APITestCase):
         assert len(response_json) == 1
         assert response_json[0]["feature"]["id"] == self.feature.id
         assert response_json[0]["feature_state_value"] == self.environment_fs_value
+
+    def test_get_flags_exclude_disabled(self):
+
+        # Given
+        # a project with hide_disabled_flags enabled
+        project_flag_disabled = Project.objects.create(name="Project Flag Disabled",
+                                                       organisation=self.organisation,
+                                                       hide_disabled_flags=True)
+
+        # and a set of features and environments for that project
+        other_environment = Environment.objects.create(name="Test Environment 2", project=project_flag_disabled)
+        disabled_flag = Feature.objects.create(name="Flag 1", project=project_flag_disabled)
+        config_flag = Feature.objects.create(name="Config", project=project_flag_disabled, type=CONFIG)
+        enabled_flag = Feature.objects.create(name="Flag 2", project=project_flag_disabled, default_enabled=True)
+
+        # When
+        # we get all flags for an environment
+        self.client.credentials(HTTP_X_ENVIRONMENT_KEY=other_environment.api_key)
+        response = self.client.get(self.url)
+
+        # Then
+        assert response.status_code == status.HTTP_200_OK
+        response_json = response.json()
+        assert len(response_json) == 2
+
+        # disabled flags are not returned
+        for flag in response_json:
+            assert flag["feature"]["id"] != disabled_flag.id
+
+        # And
+        # but enabled ones and remote configs are
+        assert response_json[0]["feature"]["id"] == config_flag.id
+        assert response_json[1]["feature"]["id"] == enabled_flag.id
+
+

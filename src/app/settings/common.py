@@ -96,7 +96,12 @@ INSTALLED_APPS = [
     'users',
     'organisations',
     'projects',
+
     'environments',
+    'environments.permissions',
+    'environments.identities',
+    'environments.identities.traits',
+
     'features',
     'segments',
     'e2etests',
@@ -105,6 +110,7 @@ INSTALLED_APPS = [
     'drf_yasg',
     'audit',
     'permissions',
+    'projects.tags',
 
     # 2FA
     'trench',
