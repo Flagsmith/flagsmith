@@ -132,8 +132,10 @@ The application relies on the following environment variables to run:
 * `EMAIL_BACKEND`: email provider. Allowed values are `sgbackend.SendGridBackend` for Sendgrid or `django_ses.SESBackend` for Amazon SES. Defaults to `sgbackend.SendGridBackend`.
 * `SENDGRID_API_KEY`: API key for the Sendgrid account
 * `SENDER_EMAIL`: Email address from which emails are sent
-* `AWS_SES_REGION_NAME`: If using Amazon SES as the email provider, specify the region (e.g. eu-central-1) that contains your verified sender e-mail address. Defaults to us-east-1 
+* `AWS_SES_REGION_NAME`: If using Amazon SES as the email provider, specify the region (e.g. eu-central-1) that contains your verified sender e-mail address. Defaults to us-east-1
 * `AWS_SES_REGION_ENDPOINT`: ses region endpoint, e.g. email.eu-central-1.amazonaws.com. Required when using ses in a region other than us-east-1
+* `AWS_ACCESS_KEY_ID`: If using Amazon SES, these form part of your SES credentials.
+* `AWS_SECRET_ACCESS_KEY`: If using Amazon SES, these form part of your SES credentials.
 * `DATABASE_URL`: required by develop and master environments, should be a standard format database url e.g. postgres://user:password@host:port/db_name
 * `DJANGO_SECRET_KEY`: see 'Creating a secret key' section below
 * `GOOGLE_ANALYTICS_KEY`: if google analytics is required, add your tracking code
