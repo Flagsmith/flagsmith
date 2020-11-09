@@ -95,8 +95,8 @@ required git repo and pushing the code. The code for running the app is containe
 
 To get it running, you'll need to add the necessary config variables as outlined below.
 
-
 ### Using ElasticBeanstalk
+
 The application will run within ElasticBeanstalk using the default Python setup.
 We've included the .ebextensions/ and .elasticbeanstalk/ directories which will run on ElasticBeanstalk.
 
@@ -106,19 +106,20 @@ The changes required to run in your environment will be as follows
 
 `.ebextensions/options.config` - within the root of the project `generate.sh` will add in all environment variables that are required using your chosen CI/CD. Alternatively, you can add your own `options.config`.
 
-
 ### Using Docker
+
 The application can be configured to run using docker with simply by running the following command:
 
-```
+```bash
 docker-compose up
-``` 
+```
 
 This will use some default settings created in the `docker-compose.yml` file located in the root of 
 the project. These should be changed before using in any production environments.
 
 ### Environment Variables
-The application relies on the following environment variables to run: 
+
+The application relies on the following environment variables to run:
 
 * `ENV`: string representing the current running environment, e.g. 'local', 'dev', 'prod'. Defaults to 'local'
 * `DJANGO_ALLOWED_HOSTS`: comma separated list of hosts the application will run on in the given environment
@@ -127,8 +128,10 @@ The application relies on the following environment variables to run:
 * `EMAIL_BACKEND`: email provider. Allowed values are `sgbackend.SendGridBackend` for Sendgrid or `django_ses.SESBackend` for Amazon SES. Defaults to `sgbackend.SendGridBackend`.
 * `SENDGRID_API_KEY`: API key for the Sendgrid account
 * `SENDER_EMAIL`: Email address from which emails are sent
-* `AWS_SES_REGION_NAME`: If using Amazon SES as the email provider, specify the region (e.g. eu-central-1) that contains your verified sender e-mail address. Defaults to us-east-1 
+* `AWS_SES_REGION_NAME`: If using Amazon SES as the email provider, specify the region (e.g. eu-central-1) that contains your verified sender e-mail address. Defaults to us-east-1
 * `AWS_SES_REGION_ENDPOINT`: ses region endpoint, e.g. email.eu-central-1.amazonaws.com. Required when using ses in a region other than us-east-1
+* `AWS_ACCESS_KEY_ID`: If using Amazon SES, these form part of your SES credentials.
+* `AWS_SECRET_ACCESS_KEY`: If using Amazon SES, these form part of your SES credentials.
 * `DATABASE_URL`: required by develop and master environments, should be a standard format database url e.g. postgres://user:password@host:port/db_name
 * `DJANGO_SECRET_KEY`: see 'Creating a secret key' section below
 * `GOOGLE_ANALYTICS_KEY`: if google analytics is required, add your tracking code
