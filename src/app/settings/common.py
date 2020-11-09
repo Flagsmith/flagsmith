@@ -53,15 +53,8 @@ INFLUXDB_BUCKET = env.str('INFLUXDB_BUCKET', default='')
 INFLUXDB_URL = env.str('INFLUXDB_URL', default='')
 INFLUXDB_ORG = env.str('INFLUXDB_ORG', default='')
 
-if 'DJANGO_ALLOWED_HOSTS' in os.environ:
-    ALLOWED_HOSTS = os.environ['DJANGO_ALLOWED_HOSTS'].split(',')
-else:
-    ALLOWED_HOSTS = []
-    
-if 'DJANGO_CSRF_TRUSTED_ORIGINS' in os.environ:
-    CSRF_TRUSTED_ORIGINS = os.environ['DJANGO_CSRF_TRUSTED_ORIGINS'].split(',')
-else:
-    CSRF_TRUSTED_ORIGINS = []
+ALLOWED_HOSTS = env.list('DJANGO_ALLOWED_HOSTS', default=[])
+CSRF_TRUSTED_ORIGINS = env.list('DJANGO_CSRF_TRUSTED_ORIGINS', default=[])
 
 INTERNAL_IPS = ['127.0.0.1',]
 
