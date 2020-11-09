@@ -88,9 +88,12 @@ class Identity(models.Model):
 
     def get_segments(self, traits: typing.List[Trait] = None):
         segments = []
-        for segment in self.environment.project.segments.all():
+        traits = self.identity_traits.all() if traits is None else traits
+
+        for segment in self.environment.project.get_segments_from_cache():
             if segment.does_identity_match(self, traits=traits):
                 segments.append(segment)
+
         return segments
 
     def get_all_user_traits(self):

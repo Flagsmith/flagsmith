@@ -2,8 +2,9 @@ from django.conf.urls import url, include
 from rest_framework_nested import routers
 
 from features.views import FeatureViewSet
-from segments.views import SegmentViewSet
+from integrations.datadog.views import DataDogConfigurationViewSet
 from projects.tags.views import TagViewSet
+from segments.views import SegmentViewSet
 from . import views
 from .views import UserProjectPermissionsViewSet, UserPermissionGroupProjectPermissionsViewSet
 
@@ -17,6 +18,7 @@ projects_router.register(r'user-permissions', UserProjectPermissionsViewSet, bas
 projects_router.register(r'user-group-permissions', UserPermissionGroupProjectPermissionsViewSet,
                          basename='project-user-group-permissions')
 projects_router.register(r'tags', TagViewSet, basename="tags")
+projects_router.register(r'integrations/datadog', DataDogConfigurationViewSet, basename="integrations-datadog")
 
 app_name = "projects"
 

@@ -1,7 +1,7 @@
 from django.conf.urls import url
 from django.urls import include
-from drf_yasg import openapi
-from drf_yasg.views import get_schema_view
+from drf_yasg2 import openapi
+from drf_yasg2.views import get_schema_view
 from rest_framework import routers, permissions, authentication
 
 from environments.identities.traits.views import SDKTraits
@@ -16,7 +16,7 @@ schema_view = get_schema_view(
         default_version='v1',
         description="",
         license=openapi.License(name="BSD License"),
-        contact=openapi.Contact(email="supprt@bullet-train.io"),
+        contact=openapi.Contact(email="support@bullet-train.io"),
     ),
     public=True,
     permission_classes=(permissions.AllowAny,),
