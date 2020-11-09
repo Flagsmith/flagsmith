@@ -1,14 +1,16 @@
 # -*- coding: utf-8 -*-
 import re
-import sys
 import hashlib
+import typing
 
 from django.core.exceptions import ValidationError
 from django.db import models
 
 from django.utils.encoding import python_2_unicode_compatible
 
-from environments.models import Identity, INTEGER, BOOLEAN
+from environments.models import INTEGER, BOOLEAN, FLOAT
+from environments.identities.traits.models import Trait
+from environments.identities.models import Identity
 from projects.models import Project
 
 
@@ -34,8 +36,8 @@ class Segment(models.Model):
     def __str__(self):
         return "Segment - %s" % self.name
 
-    def does_identity_match(self, identity: Identity) -> bool:
-        return self.rules.count() > 0 and all(rule.does_identity_match(identity) for rule in self.rules.all())
+    def does_identity_match(self, identity: Identity, traits: typing.List[Trait] = None) -> bool:
+        return self.rules.count() > 0 and all(rule.does_identity_match(identity, traits) for rule in self.rules.all())
 
     def get_identity_percentage_value(self, identity: Identity) -> float:
         """
@@ -75,19 +77,25 @@ class SegmentRule(models.Model):
     def __str__(self):
         return "%s rule for %s" % (self.type, str(self.segment) if self.segment else str(self.rule))
 
-    def does_identity_match(self, identity: Identity) -> bool:
+    def does_identity_match(self, identity: Identity, traits: typing.List[Trait] = None) -> bool:
         matches_conditions = False
 
         if self.conditions.count() == 0:
             matches_conditions = True
         elif self.type == self.ALL_RULE:
-            matches_conditions = all(condition.does_identity_match(identity) for condition in self.conditions.all())
+            matches_conditions = all(
+                condition.does_identity_match(identity, traits) for condition in self.conditions.all()
+            )
         elif self.type == self.ANY_RULE:
-            matches_conditions = any(condition.does_identity_match(identity) for condition in self.conditions.all())
+            matches_conditions = any(
+                condition.does_identity_match(identity, traits) for condition in self.conditions.all()
+            )
         elif self.type == self.NONE_RULE:
-            matches_conditions = not any(condition.does_identity_match(identity) for condition in self.conditions.all())
+            matches_conditions = not any(
+                condition.does_identity_match(identity, traits) for condition in self.conditions.all()
+            )
 
-        return matches_conditions and all(rule.does_identity_match(identity) for rule in self.rules.all())
+        return matches_conditions and all(rule.does_identity_match(identity, traits) for rule in self.rules.all())
 
     def get_segment(self):
         """
@@ -124,14 +132,20 @@ class Condition(models.Model):
     def __str__(self):
         return "Condition for %s: %s %s %s" % (str(self.rule), self.property, self.operator, self.value)
 
-    def does_identity_match(self, identity: Identity) -> bool:
+    def does_identity_match(self, identity: Identity, traits: typing.List[Trait] = None) -> bool:
         if self.operator == PERCENTAGE_SPLIT:
             return self._check_percentage_split_operator(identity)
 
-        for trait in identity.identity_traits.all():
+        # we allow passing in traits to handle when they aren't
+        # persisted for certain organisations
+        traits = traits or identity.identity_traits.all()
+
+        for trait in traits:
             if trait.trait_key == self.property:
                 if trait.value_type == INTEGER:
                     return self.check_integer_value(trait.integer_value)
+                if trait.value_type == FLOAT:
+                    return self.check_float_value(trait.float_value)
                 elif trait.value_type == BOOLEAN:
                     return self.check_boolean_value(trait.boolean_value)
                 else:
@@ -167,6 +181,27 @@ class Condition(models.Model):
             return value <= int_value
         elif self.operator == NOT_EQUAL:
             return value != int_value
+
+        return False
+
+    def check_float_value(self, value: float) -> bool:
+        try:
+            float_value = float(str(self.value))
+        except ValueError:
+            return False
+
+        if self.operator == EQUAL:
+            return value == float_value
+        elif self.operator == GREATER_THAN:
+            return value > float_value
+        elif self.operator == GREATER_THAN_INCLUSIVE:
+            return value >= float_value
+        elif self.operator == LESS_THAN:
+            return value < float_value
+        elif self.operator == LESS_THAN_INCLUSIVE:
+            return value <= float_value
+        elif self.operator == NOT_EQUAL:
+            return value != float_value
 
         return False
 

@@ -6,7 +6,9 @@ from rest_framework import status
 from rest_framework.test import APITestCase
 
 from audit.models import RelatedObjectType, AuditLog
-from environments.models import Identity, Environment, Trait, STRING
+from environments.models import Environment, STRING
+from environments.identities.traits.models import Trait
+from environments.identities.models import Identity
 from organisations.models import Organisation, OrganisationRole
 from projects.models import Project
 from segments.models import Segment, SegmentRule, Condition, EQUAL

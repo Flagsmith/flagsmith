@@ -1,4 +1,5 @@
-from environments.models import Environment, Identity
+from environments.models import Environment
+from environments.identities.models import Identity
 from features.models import Feature, FeatureState
 from organisations.models import Organisation
 from projects.models import Project
