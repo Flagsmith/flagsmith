@@ -117,6 +117,24 @@ class FeatureSerializer(serializers.ModelSerializer):
         writeonly_fields = ("initial_value", "default_enabled")
 
 
+class FeatureWithTagsSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Feature
+        fields = (
+            "id",
+            "name",
+            "created_date",
+            "initial_value",
+            "description",
+            "default_enabled",
+            "type",
+            "tags"
+        )
+        writeonly_fields = (
+            "initial_value", "default_enabled"
+        )
+
+
 class FeatureStateSerializerFull(serializers.ModelSerializer):
     feature = FeatureSerializer()
     feature_state_value = serializers.SerializerMethodField()

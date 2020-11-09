@@ -14,6 +14,7 @@ from segments.models import (
     EQUAL,
     GREATER_THAN_INCLUSIVE,
     GREATER_THAN,
+    LESS_THAN_INCLUSIVE,
 )
 from .helpers import (
     generate_trait_data_item,
@@ -802,3 +803,31 @@ class IdentityTestCase(TransactionTestCase):
         # and the returned trait is untouched
         assert updated_traits[0].trait_key == trait_2_key
         assert updated_traits[0].trait_value == trait_2_value
+
+    def test_get_segments(self):
+        # Given
+        # a segment with multiple rules and conditions
+        segment = Segment.objects.create(name='Test Segment', project=self.project)
+
+        rule_one = SegmentRule.objects.create(segment=segment, type=SegmentRule.ANY_RULE)
+        Condition.objects.create(rule=rule_one, operator=EQUAL, property='foo', value='bar')
+        Condition.objects.create(rule=rule_one, operator=EQUAL, property='foo', value='baz')
+
+        rule_two = SegmentRule.objects.create(segment=segment, type=SegmentRule.ALL_RULE)
+        Condition.objects.create(rule=rule_two, operator=GREATER_THAN_INCLUSIVE, property='bar', value=10)
+        Condition.objects.create(rule=rule_two, operator=LESS_THAN_INCLUSIVE, property='bar', value=20)
+
+        # and an identity with traits that match the segment
+        identity = Identity.objects.create(identifier='identity-1', environment=self.environment)
+        Trait.objects.create(identity=identity, trait_key='bar', value_type=INTEGER, integer_value=15)
+        Trait.objects.create(identity=identity, trait_key='foo', value_type=STRING, string_value='bar')
+
+        # When
+        # we get the matching segments for an identity
+        with self.assertNumQueries(5):
+            segments = identity.get_segments()
+
+        # Then
+        # the number of queries are what we expect (see above context manager) and the segment is returned
+        assert len(segments) == 1 and segments[0] == segment
+

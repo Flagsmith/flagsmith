@@ -3,7 +3,7 @@ from rest_framework import serializers
 from environments.identities.traits.fields import TraitValueField
 from environments.identities.models import Identity
 from environments.identities.serializers import IdentifierOnlyIdentitySerializer
-from environments.models import INTEGER, BOOLEAN, STRING
+from environments.models import INTEGER, FLOAT, BOOLEAN, STRING
 from environments.identities.traits.models import Trait
 from environments.identities.traits.serializers import TraitSerializerBasic
 from features.serializers import FeatureStateSerializerFull
@@ -30,7 +30,7 @@ class SDKCreateUpdateTraitSerializer(serializers.ModelSerializer):
 
         defaults = {
             value_key: trait_value,
-            'value_type': trait_value_type if trait_value_type in [INTEGER, BOOLEAN] else STRING
+            'value_type': trait_value_type if trait_value_type in [FLOAT, INTEGER, BOOLEAN] else STRING
         }
 
         return Trait.objects.update_or_create(identity=identity, trait_key=trait_key, defaults=defaults)[0]

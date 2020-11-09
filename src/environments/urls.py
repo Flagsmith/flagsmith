@@ -2,10 +2,11 @@ from django.conf.urls import url, include
 from rest_framework_nested import routers
 
 from features.views import FeatureStateViewSet
-from .views import EnvironmentViewSet, WebhookViewSet
+from integrations.amplitude.views import AmplitudeConfigurationViewSet
 from .identities.traits.views import TraitViewSet
 from .identities.views import IdentityViewSet
 from .permissions.views import UserEnvironmentPermissionsViewSet, UserPermissionGroupEnvironmentPermissionsViewSet
+from .views import EnvironmentViewSet, WebhookViewSet
 
 router = routers.DefaultRouter()
 router.register(r'', EnvironmentViewSet, basename="environment")
@@ -18,6 +19,8 @@ environments_router.register(r'user-permissions', UserEnvironmentPermissionsView
                              basename='environment-user-permissions')
 environments_router.register(r'user-group-permissions', UserPermissionGroupEnvironmentPermissionsViewSet,
                              basename='environment-user-group-permissions')
+environments_router.register(r'integrations/amplitude', AmplitudeConfigurationViewSet,
+                             basename="integrations-amplitude")
 
 identity_router = routers.NestedSimpleRouter(environments_router, r'identities', lookup="identity")
 identity_router.register(r'featurestates', FeatureStateViewSet, basename="identity-featurestates")

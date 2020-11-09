@@ -4,8 +4,8 @@ import coreapi
 from django.conf import settings
 from django.core.cache import caches
 from django.utils.decorators import method_decorator
-from drf_yasg import openapi
-from drf_yasg.utils import swagger_auto_schema
+from drf_yasg2 import openapi
+from drf_yasg2.utils import swagger_auto_schema
 from rest_framework import status, viewsets, mixins
 from rest_framework.decorators import action
 from rest_framework.generics import GenericAPIView, get_object_or_404
@@ -26,7 +26,7 @@ from .serializers import FeatureStateSerializerBasic, FeatureStateSerializerFull
     FeatureStateValueSerializer, FeatureSegmentCreateSerializer, \
     FeatureStateSerializerWithIdentity, \
     FeatureSegmentListSerializer, FeatureSegmentQuerySerializer, \
-    FeatureSegmentChangePrioritiesSerializer, FeatureSerializer
+    FeatureSegmentChangePrioritiesSerializer, FeatureSerializer, FeatureWithTagsSerializer
 
 logger = logging.getLogger()
 logger.setLevel(logging.INFO)
@@ -38,7 +38,9 @@ class FeatureViewSet(viewsets.ModelViewSet):
     permission_classes = [IsAuthenticated, FeaturePermissions]
 
     def get_serializer_class(self):
-        if self.action in ['create', 'update']:
+        if self.action == 'list':
+            return FeatureWithTagsSerializer
+        elif self.action in ['create', 'update']:
             return CreateFeatureSerializer
         else:
             return FeatureSerializer
