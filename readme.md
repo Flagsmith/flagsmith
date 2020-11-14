@@ -1,8 +1,10 @@
-[<img alt="Feature Flag, Remote Config and A/B Testing platform, Bullet Train" width="100%" src="./hero.png"/>](https://bullet-train.io/)
+[<img alt="Feature Flag, Remote Config and A/B Testing platform, Flagsmith" width="100%" src="./hero.png"/>](https://flagsmith.com/)
 
 [![Donate](https://liberapay.com/assets/widgets/donate.svg)](https://liberapay.com/Bullet-Train/donate)
 
-# Bullet Train REST API
+Bullet Train is now Flagsmith read about it [here](https://flagsmith.com/blog/rebrand). 
+
+# Flagsmityh REST API
 
 ## Development Environment
 
@@ -195,7 +197,7 @@ that the static files are hosted in.
 
 ## Documentation
 
-Further documentation can be found [here](https://docs.bullet-train.io). 
+Further documentation can be found [here](https://docs.flagsmith.com). 
 
 ## Contributing
 
@@ -210,16 +212,16 @@ issue please search existing issues in order to prevent duplicates.
 ## Get in touch
 
 If you have any questions about our projects you can email
-<a href="mailto:support@bullet-train.io">support@bullet-train.io</a>.
+<a href="mailto:support@flagsmith.com">support@flagsmith.com</a>.
 
 ## Useful links
 
-[Website](https://bullet-train.io)
+[Website](https://www.flagsmith.com)
 
 [Product Roadmap](https://product-hub.io/roadmap/5d81f2406180537538d99f28)
 
-[Documentation](https://docs.bullet-train.io/)
+[Documentation](https://docs.flagsmith.com/)
 
-[Code Examples](https://github.com/BulletTrainHQ/bullet-train-examples)
+[Code Examples](https://github.com/Flagsmith/flagsmith-train-examples)
 
 [Youtube Tutorials](https://www.youtube.com/channel/UCki7GZrOdZZcsV9rAIRchCw)
