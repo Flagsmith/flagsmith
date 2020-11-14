@@ -4,7 +4,7 @@
 
 Bullet Train is now Flagsmith read about it [here](https://flagsmith.com/blog/rebrand). 
 
-# Flagsmityh REST API
+# Flagsmith REST API
 
 ## Development Environment
 
