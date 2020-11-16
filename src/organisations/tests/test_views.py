@@ -436,7 +436,7 @@ class ChargeBeeWebhookTestCase(TestCase):
         res = self.client.post(self.url, data=json.dumps(data), content_type='application/json')
 
         # Then
-        assert res.status_code == status.HTTP_400_BAD_REQUEST
+        assert res.status_code == status.HTTP_200_OK
 
 
 @pytest.mark.django_db

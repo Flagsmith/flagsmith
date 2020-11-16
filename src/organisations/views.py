@@ -158,7 +158,7 @@ def chargebee_webhook(request):
         except (Subscription.DoesNotExist, Subscription.MultipleObjectsReturned):
             error_message = 'Couldn\'t get unique subscription for ChargeBee id %s' % subscription_data.get('id')
             logger.error(error_message)
-            return Response(data=error_message, status=status.HTTP_400_BAD_REQUEST)
+            return Response(status=status.HTTP_200_OK)
 
         subscription_status = subscription_data.get('status')
         if subscription_status == 'active':
