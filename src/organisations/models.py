@@ -31,6 +31,7 @@ class Organisation(models.Model):
                                                                      'to store trait data for this org\'s identities.')
     block_access_to_admin = models.BooleanField(default=False, help_text='Enable this to block all the access to admin '
                                                                          'interface for the organisation')
+    feature_analytics = models.BooleanField(default=False, help_text='Record feature analytics in InfluxDB')
 
     class Meta:
         ordering = ['id']
