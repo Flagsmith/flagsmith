@@ -1,0 +1,77 @@
+{% extends "sales_dashboard/base.html" %}
+
+{% block content %}
+<div class="container-fluid">
+  <div class="row">
+    <nav id="sidebarMenu" class="col-md-3 col-lg-2 d-md-block bg-light sidebar collapse">
+      <div class="sidebar-sticky pt-3">
+        <ul class="nav flex-column">
+          <li class="nav-item">
+            <a class="nav-link active" href="/sales-dashboard/">
+              <span data-feather="home"></span>
+              Organisations <span class="sr-only">(current)</span>
+            </a>
+          </li>
+        </ul>
+
+      </div>
+    </nav>
+
+    <main role="main" class="col-md-9 ml-sm-auto col-lg-10 px-md-4">
+      <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+        <h1 class="h2">Organisations</h1>
+      </div>
+
+      <div class="table-responsive">
+        <table class="table table-striped table-sm">
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>Name</th>
+              <th>Date Registered</th>
+              <th>Seats</th>
+              <th>Projects</th>
+              <th>Flags</th>
+              <th>Segments</th>
+              <th>Users</th>
+            </tr>
+          </thead>
+          <tbody>
+          {% for org in object_list %}
+            <tr>
+              <td>{{org.id}}</td>
+              <td><a href="/sales-dashboard/organisations/{{org.id}}">{{org.name}}</a></td>
+              <td>{{org.date_registered}}</td>
+              <td>{{org.users}}</td>
+              <td>{{org.projects}}</td>
+              <td>{{org.flags}}</td>
+              <td>{{org.segments}}</td>
+              <td>{{org.users}}</td>
+            </tr>
+          {% endfor %}
+          </tbody>
+        </table>
+          <div class="pagination">
+    <span class="step-links">
+        {% if page_obj.has_previous %}
+            <a href="?page=1">&laquo; first</a>
+            <a href="?page={{ page_obj.previous_page_number }}">previous</a>
+        {% endif %}
+
+        <span class="current">
+            Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}.
+        </span>
+
+        {% if page_obj.has_next %}
+            <a href="?page={{ page_obj.next_page_number }}">next</a>
+            <a href="?page={{ page_obj.paginator.num_pages }}">last &raquo;</a>
+        {% endif %}
+    </span>
+</div>
+      </div>
+    </main>
+  </div>
+
+</div>
+{% endblock %}
+

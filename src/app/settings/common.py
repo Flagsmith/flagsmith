@@ -93,6 +93,7 @@ INSTALLED_APPS = [
     'users',
     'organisations',
     'projects',
+    'sales_dashboard',
 
     'environments',
     'environments.permissions',
