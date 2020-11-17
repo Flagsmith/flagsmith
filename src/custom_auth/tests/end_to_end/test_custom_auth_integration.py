@@ -13,7 +13,6 @@ from users.models import FFAdminUser
 
 
 class AuthIntegrationTestCase(APITestCase):
-
     test_email = "test@example.com"
     password = FFAdminUser.objects.make_random_password()
 
@@ -118,13 +117,14 @@ class AuthIntegrationTestCase(APITestCase):
         }
 
         # When register
-        # url = reverse("api-v1:user-activation")
-        # reverse("api-v1:custom_auth:ffadminuser-activation")
         register_url = reverse("api-v1:custom_auth:ffadminuser-list")
         result = self.client.post(register_url, data=register_data, status_code=status.HTTP_201_CREATED)
 
         # Then success and account inactive
         self.assertIn('key', result.data)
+        self.assertIn('is_active', result.data)
+        assert result.data['is_active'] == False
+
         new_user = FFAdminUser.objects.latest('id')
         self.assertEqual(new_user.email, register_data['email'])
         self.assertFalse(new_user.is_active)
