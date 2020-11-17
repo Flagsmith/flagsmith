@@ -52,6 +52,8 @@ influxdb-client = "*"
 django-ordered-model = "*"
 django-ses = "*"
 django-axes = "*"
+django-admin-sso = "*"
+
 drf-yasg2 = "*"
 
 [pipenv]
