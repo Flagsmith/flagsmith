@@ -16,22 +16,23 @@ influxdb_client = InfluxDBClient(
 
 
 class InfluxDBWrapper:
-    def __init__(self, name, field_name, field_value, tags=None):
+    def __init__(self, name):
         self.name = name
-        self.point = Point(name)
-
-        tags = tags or {}
-        self.record = self._record(field_name, field_value, tags)
-
+        self.records = []
         self.write_api = influxdb_client.write_api(write_options=SYNCHRONOUS)
+        
+    def add_data_point(self, field_name, field_value, tags=None):
+        point = Point(self.name)
+        point.field(field_name, field_value)
+        
+        if tags is not None:
+            for tag_key, tag_value in tags.items():
+                point = point.tag(tag_key, tag_value)
 
-    def _record(self, field_name, field_value, tags):
-        for tag_key, tag_value in tags.items():
-            self.point = self.point.tag(tag_key, tag_value)
-        return self.point.field(field_name, field_value)
+        self.records.append(point)
 
     def write(self):
-        self.write_api.write(bucket=settings.INFLUXDB_BUCKET, record=self.record)
+        self.write_api.write(bucket=settings.INFLUXDB_BUCKET, record=self.records)
 
 
 def get_events_for_organisation(organisation_id):
