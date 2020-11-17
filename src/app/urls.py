@@ -10,6 +10,8 @@ urlpatterns = [
     url(r'^api/v1/', include('api.urls.v1', namespace='api-v1')),
     url(r'^admin/', admin.site.urls),
     url(r'^health', include('health_check.urls', namespace='health')),
+    url(r'^sales-dashboard/', include('sales_dashboard.urls')),
+
     url(r'', lambda r: HttpResponse("Bullet Train API")),
     
     # this url is used to generate email content for the password reset workflow
