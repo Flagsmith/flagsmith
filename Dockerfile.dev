@@ -1,4 +1,4 @@
-FROM python:3.7
+FROM python:3.8
 ENV PYTHONUNBUFFERED 1
 
 RUN rm /var/lib/dpkg/info/format
@@ -9,14 +9,13 @@ RUN  apt-get clean && apt-get update \
         postgresql-client \
     && rm -rf /var/lib/apt/lists/*
 
-RUN pip install pipenv
 RUN mkdir /app
 WORKDIR /app
+COPY requirements.txt /app/
+COPY src/ /app/src/
+COPY bin/ /app/bin/
 
-COPY src/ /app/
-COPY bin/ ./bin/
-COPY Pipfile* /app/
+RUN pip install -r requirements.txt
 
-RUN pipenv install
 ENV DJANGO_SETTINGS_MODULE=app.settings.master-docker
 EXPOSE 8000
