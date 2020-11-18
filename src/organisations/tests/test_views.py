@@ -235,13 +235,13 @@ class OrganisationTestCase(TestCase):
 
         influx_org = settings.INFLUXDB_ORG
         read_bucket = settings.INFLUXDB_BUCKET + "_downsampled_15m"
-        query = ' from(bucket:"%s") \
-                |> range(start: -30d, stop: now()) \
-                |> filter(fn:(r) => r._measurement == "api_call") \
-                |> filter(fn: (r) => r["_field"] == "request_count") \
-                |> filter(fn: (r) => r["organisation_id"] == "%s") \
-                |> drop(columns: ["organisation", "resource",  "project", "project_id"]) \
-                |> sum()' % (read_bucket, organisation.pk)
+        query = f'from(bucket:"{read_bucket}") ' \
+                f'|> range(start: -30d, stop: now()) ' \
+                f'|> filter(fn:(r) => r._measurement == "api_call")         ' \
+                f'|> filter(fn: (r) => r["_field"] == "request_count")         ' \
+                f'|> filter(fn: (r) => r["organisation_id"] == "{organisation.id}") ' \
+                f'|> drop(columns: ["organisation", "project", "project_id"])' \
+                f'|> sum()'
 
         # When
         response = self.client.get(url, content_type='application/json')
