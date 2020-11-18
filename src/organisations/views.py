@@ -21,6 +21,7 @@ from organisations.serializers import OrganisationSerializerFull, MultiInvitesSe
 from projects.serializers import ProjectSerializer
 from users.models import Invite
 from users.serializers import InviteListSerializer, UserIdSerializer
+from analytics.influxdb_wrapper import get_multiple_event_list_for_organisation
 
 logger = logging.getLogger(__name__)
 
@@ -119,6 +120,12 @@ class OrganisationViewSet(viewsets.ModelViewSet):
         serializer.is_valid(raise_exception=True)
         return Response(serializer.data)
 
+    @action(detail=True, methods=['GET'], url_path='influx-data')
+    def get_influx_data(self, request, pk):
+        event_list = get_multiple_event_list_for_organisation(pk)
+
+        return Response(event_list)
+
 
 class InviteViewSet(viewsets.ModelViewSet):
     serializer_class = InviteListSerializer
@@ -168,7 +175,6 @@ def chargebee_webhook(request):
             existing_subscription.cancel(datetime.fromtimestamp(subscription_data.get('current_term_end')))
 
     return Response(status=status.HTTP_200_OK)
-
 
 class OrganisationWebhookViewSet(viewsets.ModelViewSet):
     serializer_class = OrganisationWebhookSerializer

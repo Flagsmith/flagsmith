@@ -65,7 +65,7 @@ def test_track_request_sends_data_to_influxdb_for_tracked_uris(
     # Then
     call_list = MockInfluxDBWrapper.call_args_list
     assert len(call_list) == 1
-    assert call_list[0][1]["tags"]["resource"] == expected_resource
+    assert mock_influxdb.add_data_point.call_args_list[0][1]["tags"]["resource"] == expected_resource
 
 
 @mock.patch("analytics.track.InfluxDBWrapper")

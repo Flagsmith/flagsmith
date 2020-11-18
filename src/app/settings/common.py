@@ -85,11 +85,13 @@ INSTALLED_APPS = [
     'djoser',
     'django.contrib.sites',
     'custom_auth',
+    'admin_sso',
     'api',
     'corsheaders',
     'users',
     'organisations',
     'projects',
+    'sales_dashboard',
 
     'environments',
     'environments.permissions',
@@ -214,6 +216,14 @@ AUTH_PASSWORD_VALIDATORS = [
         'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator',
     },
 ]
+
+AUTHENTICATION_BACKENDS = (
+    'admin_sso.auth.DjangoSSOAuthBackend',
+    'django.contrib.auth.backends.ModelBackend',
+)
+
+DJANGO_ADMIN_SSO_OAUTH_CLIENT_ID = env.str('OAUTH_CLIENT_ID', default='')
+DJANGO_ADMIN_SSO_OAUTH_CLIENT_SECRET = env.str('OAUTH_CLIENT_SECRET', default='')
 
 # Internationalization
 # https://docs.djangoproject.com/en/1.9/topics/i18n/
