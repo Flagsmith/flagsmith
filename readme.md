@@ -11,19 +11,19 @@ Bullet Train is now Flagsmith read about it [here](https://flagsmith.com/blog/re
 Before running the application, you'll need to configure a database for the application. The steps 
 to do this can be found in the following section entitled 'Databases'.  
 
-```
+```bash
 virtualenv .venv
 source .venv/bin/activate
 pip install -r requirements-dev.txt
-python src/manage.py migrate 
+python src/manage.py migrate
 python src/manage.py runserver
 ```
 
 The application can also be run locally using Docker Compose if required, however, it's beneficial 
 to run locally using the above steps as it gives you hot reloading. To run using docker compose, 
-simply run the following command from the project root: 
+simply run the following command from the project root:
 
-```
+```bash
 docker-compose up
 ```
 
@@ -31,21 +31,22 @@ docker-compose up
 
 We are slowly migrating the code style to use [black](https://github.com/psf/black) as 
 a formatter. Black automatically formats the code for you, you can run the formatter
-by running: 
+by running:
 
-```
+```bash
 python -m black path/to/directory/or/file.py
 ```
 
-All new code should adhere to black formatting standards. 
+All new code should adhere to black formatting standards.
 
 ## Databases
+
 Databases are configured in app/settings/\<env\>.py
 
-The app is configured to use PostgreSQL for all environments. 
+The app is configured to use PostgreSQL for all environments.
 
 When running locally, you'll need a local instance of postgres running. The easiest way to do this 
-is to use docker which is achievable with the following command: 
+is to use docker which is achievable with the following command:
 
 ```docker run --name local_postgres -d -P postgres```
 
@@ -65,9 +66,9 @@ located in `app.settings.master-docker`
 
 The application is built using django which comes with a handy set of admin pages available at 
 `/admin/`. To access these, you'll need to create a super user. This can be done with the following
-command: 
+command:
 
-```
+```bash
 python src/manage.py createsuperuser
 ```
 
@@ -93,6 +94,7 @@ Note that this functionality can be turned off in the settings if required by se
 ## Deploying
 
 ### Using Heroku-ish Platform (e.g. Heroku, Dokku, Flynn)
+
 The application should run on any Heroku-ish platform (e.g. Dokku, Flynn) by simply adding the 
 required git repo and pushing the code. The code for running the app is contained in the Procfile.
 
@@ -150,29 +152,30 @@ The application relies on the following environment variables to run:
 * `ENABLE_EMAIL_ACTIVATION`: new user registration will go via email activation flow, default False
 
 ### Creating a secret key
+
 It is important to also set an environment variable on whatever platform you are using for 
 `DJANGO_SECRET_KEY`. There is a function to create one in `app.settings.common` if none exists in 
 the environment variables, however, this is not suitable for use in production. To generate a new 
 secret key, you can use the function defined in `src/secret-key-gen.py` by simply running it from a 
-command prompt: 
+command prompt:
 
+```bash
+python secret-key-gen.py
 ```
-python secret-key-gen.py 
-``` 
 
 ## Adding dependencies
-To add a python dependency, add it to requirements.txt / requirements-dev.txt with it's current version number. 
 
+To add a python dependency, add it to requirements.txt / requirements-dev.txt with it's current version number. 
 
 ## Caching
 
-The application makes use of caching in a couple of locations: 
+The application makes use of caching in a couple of locations:
 
 1. Environment authentication - the application utilises an in memory cache for the environment object 
 on all endpoints that use the X-Environment-Key header. 
 2. Environment flags - the application utilises an in memory cache for the flags returned when calling 
 /flags. The number of seconds this is cached for is configurable using the environment variable 
-`"CACHE_FLAGS_SECONDS"` 
+`"CACHE_FLAGS_SECONDS"`
 3. Project Segments - the application utilises an in memory cache for returning the segments for a 
 given project. The number of seconds this is cached for is configurable using the environment variable
 `"CACHE_PROJECT_SEGMENTS_SECONDS"`.
@@ -181,9 +184,10 @@ given project. The number of seconds this is cached for is configurable using th
 
 - Python 2.7.14
 - Django 1.11.13
-- DjangoRestFramework 3.8.2 
+- DjangoRestFramework 3.8.2
 
 ## Static Files
+
 Although the application relies on very few static files, it is possible to optimise their configuration to 
 host these static files in S3. This is done using the relevant environment variables provided above. Note, however, 
 that in order to use the configuration, the environment that you are hosting on must have the correct AWS credentials
