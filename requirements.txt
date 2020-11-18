@@ -31,3 +31,4 @@ django-ses==1.0.3
 django-axes==5.8.0
 django-admin-sso==3.0.0
 drf-yasg2==1.19.3
+django-debug-toolbar==3.1.1
