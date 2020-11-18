@@ -14,7 +14,7 @@ test:
     POSTGRES_USER: testuser
     POSTGRES_PASSWORD: testpass
   script:
-    - pipenv install --dev
+    - pipenv install --dev --pre
     - pipenv run test
 
 deploydevelop:
