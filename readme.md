@@ -12,10 +12,11 @@ Before running the application, you'll need to configure a database for the appl
 to do this can be found in the following section entitled 'Databases'.  
 
 ```
-pip install pipenv
-pipenv install
-pipenv run python src/manage.py migrate 
-pipenv run python src/manage.py runserver
+virtualenv .venv
+source .venv/bin/activate
+pip install -r requirements-dev.txt
+python src/manage.py migrate 
+python src/manage.py runserver
 ```
 
 The application can also be run locally using Docker Compose if required, however, it's beneficial 
@@ -67,7 +68,7 @@ The application is built using django which comes with a handy set of admin page
 command: 
 
 ```
-pipenv run python src/manage.py createsuperuser
+python src/manage.py createsuperuser
 ```
 
 Once you've created the super user, you can use the details to log in at `/admin/`. From here, you 
@@ -160,13 +161,8 @@ python secret-key-gen.py
 ``` 
 
 ## Adding dependencies
-To add a python dependency, run the following commands:
+To add a python dependency, add it to requirements.txt / requirements-dev.txt with it's current version number. 
 
-```
-pipenv install <package name>
-```
-
-The dependency then needs to be added to the relevant requirements*.txt files as necessary. 
 
 ## Caching
 
