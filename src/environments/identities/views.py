@@ -189,12 +189,11 @@ class SDKIdentities(SDKAPIView):
         )
 
         # If we have an amplitude configured, send the flags viewed by the user to their API
-        if hasattr(identity.environment, 'amplitude_config'):
-            if identity.environment.amplitude_config.api_key is not None:
-                amplitude = AmplitudeWrapper(identity.environment.amplitude_config.api_key)
-                user_data = amplitude.generate_user_data(user_id=identity.identifier,
-                                                         feature_states=all_feature_states)
-                amplitude.identify_user_async(user_data=user_data)
+        if hasattr(identity.environment, 'amplitude_config') and identity.environment.amplitude_config.api_key:
+            amplitude = AmplitudeWrapper(identity.environment.amplitude_config.api_key)
+            user_data = amplitude.generate_user_data(user_id=identity.identifier,
+                                                     feature_states=all_feature_states)
+            amplitude.identify_user_async(user_data=user_data)
 
         response = {"flags": serialized_flags.data, "traits": serialized_traits.data}
 
