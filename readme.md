@@ -152,6 +152,18 @@ The application relies on the following environment variables to run:
 * `USER_CREATE_PERMISSIONS`: set the permissions for creating new users, using a comma separated list of djoser or rest_framework permissions. Use this to turn off public user creation for self hosting. e.g. `'djoser.permissions.CurrentUserOrAdmin'` Defaults to `'rest_framework.permissions.AllowAny'`.
 * `ENABLE_EMAIL_ACTIVATION`: new user registration will go via email activation flow, default False
 
+### Creating a secret key
+
+It is important to also set an environment variable on whatever platform you are using for 
+`DJANGO_SECRET_KEY`. There is a function to create one in `app.settings.common` if none exists in 
+the environment variables, however, this is not suitable for use in production. To generate a new 
+secret key, you can use the function defined in `src/secret-key-gen.py` by simply running it from a 
+command prompt:
+
+```bash
+python secret-key-gen.py
+```
+
 ## Adding dependencies
 
 To add a python dependency, add it to requirements.txt / requirements-dev.txt with it's current version number. 
