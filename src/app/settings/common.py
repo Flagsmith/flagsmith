@@ -53,10 +53,8 @@ INFLUXDB_BUCKET = env.str('INFLUXDB_BUCKET', default='')
 INFLUXDB_URL = env.str('INFLUXDB_URL', default='')
 INFLUXDB_ORG = env.str('INFLUXDB_ORG', default='')
 
-if 'DJANGO_ALLOWED_HOSTS' in os.environ:
-    ALLOWED_HOSTS = os.environ['DJANGO_ALLOWED_HOSTS'].split(',')
-else:
-    ALLOWED_HOSTS = []
+ALLOWED_HOSTS = env.list('DJANGO_ALLOWED_HOSTS', default=[])
+CSRF_TRUSTED_ORIGINS = env.list('DJANGO_CSRF_TRUSTED_ORIGINS', default=[])
 
 INTERNAL_IPS = ['127.0.0.1',]
 
@@ -390,6 +388,8 @@ TRENCH_AUTH = {
     },
 }
 
+USER_CREATE_PERMISSIONS = env.list('USER_CREATE_PERMISSIONS', default=['rest_framework.permissions.AllowAny'])
+
 DJOSER = {
     'PASSWORD_RESET_CONFIRM_URL': 'password-reset/confirm/{uid}/{token}',
     # if True user required to click activation link in email to activate account
@@ -411,6 +411,7 @@ DJOSER = {
     'PERMISSIONS': {
         'user': ['custom_auth.permissions.CurrentUser'],
         'user_list': ['custom_auth.permissions.CurrentUser'],
+        'user_create': USER_CREATE_PERMISSIONS,
     }
 }
 
