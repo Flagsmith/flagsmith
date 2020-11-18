@@ -1,6 +1,7 @@
 import json
 from datetime import datetime, timedelta
 from unittest import TestCase, mock
+from django.test.utils import override_settings
 
 import pytest
 from django.conf import settings
@@ -9,7 +10,7 @@ from django.core import mail
 from django.urls import reverse
 from pytz import UTC
 from rest_framework import status
-from rest_framework.test import APIClient
+from rest_framework.test import APIClient, override_settings
 
 from environments.models import Environment
 from features.models import Feature, FeatureSegment
@@ -250,6 +251,7 @@ class OrganisationTestCase(TestCase):
         assert response.status_code == status.HTTP_200_OK
         mock_influxdb_client.query_api.return_value.query.assert_called_once_with(org=influx_org, query=query)
 
+    @override_settings(ENABLE_CHARGEBEE=True)
     @mock.patch('organisations.serializers.get_subscription_data_from_hosted_page')
     def test_update_subscription_gets_subscription_data_from_chargebee(self, mock_get_subscription_data):
         # Given
