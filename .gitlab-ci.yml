@@ -4,7 +4,7 @@ stages:
     - deploy-aws
 
 test:
-  image: kennethreitz/pipenv
+  image: python:3.7
   stage: test
   services:
     - postgres:10.9
@@ -14,8 +14,8 @@ test:
     POSTGRES_USER: testuser
     POSTGRES_PASSWORD: testpass
   script:
-    - pipenv install --dev
-    - pipenv run test
+    - pip install -r requirements-dev.txt
+    - pytest src -p no:warnings
 
 deploydevelop:
     image: ilyasemenov/gitlab-ci-git-push
@@ -25,7 +25,7 @@ deploydevelop:
         - develop
 
 deployawsstaging:
-    image: bullettrain/elasticbeanstalk-pipenv
+    image: bullettrain/elasticbeanstalk-pipenv  # TODO: remove pipenv from this docker image
     stage: deploy-aws
     script:
         - export AWS_ACCESS_KEY_ID=$AWS_STAGING_ACCESS_KEY_ID
@@ -34,7 +34,7 @@ deployawsstaging:
         - export GOOGLE_ANALYTICS_CLIENT_ID=$GOOGLE_ANALYTICS_CLIENT_ID_STAGING
         - export GOOGLE_ANALYTICS_KEY=$GOOGLE_ANALYTICS_KEY_STAGING
         - export DJANGO_SETTINGS_MODULE=$DJANGO_SETTINGS_MODULE_STAGING
-        - pipenv lock --requirements > ./src/requirements.txt
+        - cp requirements.txt ./src/requirements.txt
         - sh generate.sh
         - git config --global user.email "build@gitlab.com" 
         - git config --global user.name "Gitlab"
@@ -52,7 +52,7 @@ deployawsmaster:
         - export GOOGLE_ANALYTICS_CLIENT_ID=$GOOGLE_ANALYTICS_CLIENT_ID_PRODUCTION
         - export GOOGLE_ANALYTICS_KEY=$GOOGLE_ANALYTICS_KEY_PRODUCTION
         - export DJANGO_SETTINGS_MODULE=$DJANGO_SETTINGS_MODULE_PRODUCTION
-        - pipenv lock --requirements > ./src/requirements.txt
+        - cp requirements.txt ./src/requirements.txt
         - sh generate.sh
         - git config --global user.email "build@gitlab.com" 
         - git config --global user.name "Gitlab"

@@ -9,18 +9,19 @@
 Before running the application, you'll need to configure a database for the application. The steps 
 to do this can be found in the following section entitled 'Databases'.  
 
-```
-pip install pipenv
-pipenv install
-pipenv run python src/manage.py migrate 
-pipenv run python src/manage.py runserver
+```bash
+virtualenv .venv
+source .venv/bin/activate
+pip install -r requirements-dev.txt
+python src/manage.py migrate
+python src/manage.py runserver
 ```
 
 The application can also be run locally using Docker Compose if required, however, it's beneficial 
 to run locally using the above steps as it gives you hot reloading. To run using docker compose, 
-simply run the following command from the project root: 
+simply run the following command from the project root:
 
-```
+```bash
 docker-compose up
 ```
 
@@ -28,21 +29,22 @@ docker-compose up
 
 We are slowly migrating the code style to use [black](https://github.com/psf/black) as 
 a formatter. Black automatically formats the code for you, you can run the formatter
-by running: 
+by running:
 
-```
+```bash
 python -m black path/to/directory/or/file.py
 ```
 
-All new code should adhere to black formatting standards. 
+All new code should adhere to black formatting standards.
 
 ## Databases
+
 Databases are configured in app/settings/\<env\>.py
 
-The app is configured to use PostgreSQL for all environments. 
+The app is configured to use PostgreSQL for all environments.
 
 When running locally, you'll need a local instance of postgres running. The easiest way to do this 
-is to use docker which is achievable with the following command: 
+is to use docker which is achievable with the following command:
 
 ```docker run --name local_postgres -d -P postgres```
 
@@ -62,10 +64,10 @@ located in `app.settings.master-docker`
 
 The application is built using django which comes with a handy set of admin pages available at 
 `/admin/`. To access these, you'll need to create a super user. This can be done with the following
-command: 
+command:
 
-```
-pipenv run python src/manage.py createsuperuser
+```bash
+python src/manage.py createsuperuser
 ```
 
 Once you've created the super user, you can use the details to log in at `/admin/`. From here, you 
@@ -90,13 +92,14 @@ Note that this functionality can be turned off in the settings if required by se
 ## Deploying
 
 ### Using Heroku-ish Platform (e.g. Heroku, Dokku, Flynn)
+
 The application should run on any Heroku-ish platform (e.g. Dokku, Flynn) by simply adding the 
 required git repo and pushing the code. The code for running the app is contained in the Procfile.
 
 To get it running, you'll need to add the necessary config variables as outlined below.
 
-
 ### Using ElasticBeanstalk
+
 The application will run within ElasticBeanstalk using the default Python setup.
 We've included the .ebextensions/ and .elasticbeanstalk/ directories which will run on ElasticBeanstalk.
 
@@ -106,22 +109,24 @@ The changes required to run in your environment will be as follows
 
 `.ebextensions/options.config` - within the root of the project `generate.sh` will add in all environment variables that are required using your chosen CI/CD. Alternatively, you can add your own `options.config`.
 
-
 ### Using Docker
+
 The application can be configured to run using docker with simply by running the following command:
 
-```
+```bash
 docker-compose up
-``` 
+```
 
 This will use some default settings created in the `docker-compose.yml` file located in the root of 
 the project. These should be changed before using in any production environments.
 
 ### Environment Variables
-The application relies on the following environment variables to run: 
+
+The application relies on the following environment variables to run:
 
 * `ENV`: string representing the current running environment, e.g. 'local', 'dev', 'prod'. Defaults to 'local'
 * `DJANGO_ALLOWED_HOSTS`: comma separated list of hosts the application will run on in the given environment
+* `DJANGO_CSRF_TRUSTED_ORIGINS`: comma separated list of hosts to allow unsafe (POST, PUT) requests from. Useful for allowing localhost to set traits in development.
 * `DJANGO_SETTINGS_MODULE`: python path to settings file for the given environment, e.g. "app.settings.develop"
 * `EMAIL_BACKEND`: email provider. Allowed values are `sgbackend.SendGridBackend` for Sendgrid or `django_ses.SESBackend` for Amazon SES. Defaults to `sgbackend.SendGridBackend`.
 * `SENDGRID_API_KEY`: API key for the Sendgrid account
@@ -139,37 +144,34 @@ The application relies on the following environment variables to run:
 * `AWS_STORAGE_BUCKET_NAME`: bucket name to store static files. Required if `USE_S3_STORAGE' is true.
 * `AWS_S3_REGION_NAME`: region name of the static files bucket. Defaults to eu-west-2.
 * `ALLOWED_ADMIN_IP_ADDRESSES`: restrict access to the django admin console to a comma separated list of IP addresses (e.g. `127.0.0.1,127.0.0.2`) 
+* `USER_CREATE_PERMISSIONS`: set the permissions for creating new users, using a comma separated list of djoser or rest_framework permissions. Use this to turn off public user creation for self hosting. e.g. `'djoser.permissions.CurrentUserOrAdmin'` Defaults to `'rest_framework.permissions.AllowAny'`.
 * `ENABLE_EMAIL_ACTIVATION`: new user registration will go via email activation flow, default False
 
 ### Creating a secret key
+
 It is important to also set an environment variable on whatever platform you are using for 
 `DJANGO_SECRET_KEY`. There is a function to create one in `app.settings.common` if none exists in 
 the environment variables, however, this is not suitable for use in production. To generate a new 
 secret key, you can use the function defined in `src/secret-key-gen.py` by simply running it from a 
-command prompt: 
+command prompt:
 
+```bash
+python secret-key-gen.py
 ```
-python secret-key-gen.py 
-``` 
 
 ## Adding dependencies
-To add a python dependency, run the following commands:
 
-```
-pipenv install <package name>
-```
-
-The dependency then needs to be added to the relevant requirements*.txt files as necessary. 
+To add a python dependency, add it to requirements.txt / requirements-dev.txt with it's current version number. 
 
 ## Caching
 
-The application makes use of caching in a couple of locations: 
+The application makes use of caching in a couple of locations:
 
 1. Environment authentication - the application utilises an in memory cache for the environment object 
 on all endpoints that use the X-Environment-Key header. 
 2. Environment flags - the application utilises an in memory cache for the flags returned when calling 
 /flags. The number of seconds this is cached for is configurable using the environment variable 
-`"CACHE_FLAGS_SECONDS"` 
+`"CACHE_FLAGS_SECONDS"`
 3. Project Segments - the application utilises an in memory cache for returning the segments for a 
 given project. The number of seconds this is cached for is configurable using the environment variable
 `"CACHE_PROJECT_SEGMENTS_SECONDS"`.
@@ -178,9 +180,10 @@ given project. The number of seconds this is cached for is configurable using th
 
 - Python 2.7.14
 - Django 1.11.13
-- DjangoRestFramework 3.8.2 
+- DjangoRestFramework 3.8.2
 
 ## Static Files
+
 Although the application relies on very few static files, it is possible to optimise their configuration to 
 host these static files in S3. This is done using the relevant environment variables provided above. Note, however, 
 that in order to use the configuration, the environment that you are hosting on must have the correct AWS credentials
@@ -190,7 +193,7 @@ that the static files are hosted in.
 
 ## Documentation
 
-Further documentation can be found [here](https://docs.bullet-train.io). 
+Further documentation can be found [here](https://docs.bullet-train.io).
 
 ## Contributing
 

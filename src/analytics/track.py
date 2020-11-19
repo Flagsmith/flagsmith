@@ -98,5 +98,26 @@ def track_request_influxdb(request):
             "project_id": environment.project_id
         }
 
-        influxdb = InfluxDBWrapper("api_call", "request_count", 1, tags=tags)
+        influxdb = InfluxDBWrapper("api_call")
+        influxdb.add_data_point("request_count", 1, tags=tags)
         influxdb.write()
+
+
+def track_feature_evaluation_influxdb(environment_id, feature_evaluations):
+    """
+    Sends Feature analytics event data to InfluxDB
+
+    :param environment_id: (int) the id of the environment the feature is being evaluated within
+    :param feature_evaluations: (dict) A collection of key id / evaluation counts
+    """
+    influxdb = InfluxDBWrapper("feature_evaluation")
+    
+    for feature_id, evaluation_count in feature_evaluations.items():
+        tags = {
+            "feature_id": feature_id,
+            "environment_id": environment_id
+        }
+        influxdb.add_data_point("request_count", evaluation_count, tags=tags)
+    
+    influxdb.write()
+    

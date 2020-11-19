@@ -14,6 +14,11 @@ class CustomUserCreateSerializer(UserCreateSerializer):
         super().__init__(*args, **kwargs)
         self.fields["key"] = serializers.SerializerMethodField()
 
-    def get_key(self, instance):
+    class Meta(UserCreateSerializer.Meta):
+        fields = UserCreateSerializer.Meta.fields + ('is_active',)
+        read_only_fields = ('is_active',)
+
+    @staticmethod
+    def get_key(instance):
         token, _ = Token.objects.get_or_create(user=instance)
         return token.key

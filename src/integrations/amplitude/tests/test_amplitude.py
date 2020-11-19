@@ -1,5 +1,3 @@
-import json
-
 import pytest
 
 from environments.models import Environment
@@ -17,7 +15,7 @@ def test_amplitude_initialized_correctly():
     amplitude_wrapper = AmplitudeWrapper(api_key=api_key)
 
     # Then
-    expected_url = f"{AMPLITUDE_API_URL}/identify"
+    expected_url = f"{AMPLITUDE_API_URL}/identify?api_key={api_key}"
     assert amplitude_wrapper.url == expected_url
 
 
@@ -40,13 +38,13 @@ def test_amplitude_when_generate_user_data_with_correct_values_then_success():
 
     # Then
     expected_user_data = {
-        "api_key": api_key,
         "identification": {
             "user_id": user_id,
-            "user_properties": json.dumps({
+            "user_properties": {
                 feature_state.feature.name: feature_state.get_feature_state_value()
+                if feature_state.get_feature_state_value() is not None else "None"
                 for feature_state in feature_states
-            })
+            }
         }
     }
     assert expected_user_data == user_data

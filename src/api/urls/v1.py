@@ -9,6 +9,7 @@ from environments.identities.views import SDKIdentities
 from features.views import SDKFeatureStates
 from organisations.views import chargebee_webhook
 from segments.views import SDKSegments
+from analytics.views import SDKAnalyticsFlags
 
 schema_view = get_schema_view(
     openapi.Info(
@@ -47,6 +48,7 @@ urlpatterns = [
     url(r'^identities/$', SDKIdentities.as_view(), name='sdk-identities'),
     url(r'^traits/', include(traits_router.urls), name='traits'),
     url(r'^segments/$', SDKSegments.as_view()),
+    url(r'^analytics/flags/$', SDKAnalyticsFlags.as_view()),
 
     # API documentation
     url(r'^swagger(?P<format>\.json|\.yaml)$', schema_view.without_ui(cache_timeout=0), name='schema-json'),
