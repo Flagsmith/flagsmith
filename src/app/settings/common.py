@@ -53,10 +53,8 @@ INFLUXDB_BUCKET = env.str('INFLUXDB_BUCKET', default='')
 INFLUXDB_URL = env.str('INFLUXDB_URL', default='')
 INFLUXDB_ORG = env.str('INFLUXDB_ORG', default='')
 
-if 'DJANGO_ALLOWED_HOSTS' in os.environ:
-    ALLOWED_HOSTS = os.environ['DJANGO_ALLOWED_HOSTS'].split(',')
-else:
-    ALLOWED_HOSTS = []
+ALLOWED_HOSTS = env.list('DJANGO_ALLOWED_HOSTS', default=[])
+CSRF_TRUSTED_ORIGINS = env.list('DJANGO_CSRF_TRUSTED_ORIGINS', default=[])
 
 INTERNAL_IPS = ['127.0.0.1',]
 
@@ -87,11 +85,13 @@ INSTALLED_APPS = [
     'djoser',
     'django.contrib.sites',
     'custom_auth',
+    'admin_sso',
     'api',
     'corsheaders',
     'users',
     'organisations',
     'projects',
+    'sales_dashboard',
 
     'environments',
     'environments.permissions',
@@ -102,7 +102,6 @@ INSTALLED_APPS = [
     'segments',
     'e2etests',
     'simple_history',
-    'debug_toolbar',
     'drf_yasg2',
     'audit',
     'permissions',
@@ -164,7 +163,6 @@ MIDDLEWARE = [
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
     'simple_history.middleware.HistoryRequestMiddleware',
-    'debug_toolbar.middleware.DebugToolbarMiddleware',
     'app.middleware.AxesMiddleware',
 ]
 
@@ -216,6 +214,14 @@ AUTH_PASSWORD_VALIDATORS = [
         'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator',
     },
 ]
+
+AUTHENTICATION_BACKENDS = (
+    'admin_sso.auth.DjangoSSOAuthBackend',
+    'django.contrib.auth.backends.ModelBackend',
+)
+
+DJANGO_ADMIN_SSO_OAUTH_CLIENT_ID = env.str('OAUTH_CLIENT_ID', default='')
+DJANGO_ADMIN_SSO_OAUTH_CLIENT_SECRET = env.str('OAUTH_CLIENT_SECRET', default='')
 
 # Internationalization
 # https://docs.djangoproject.com/en/1.9/topics/i18n/
@@ -382,6 +388,8 @@ TRENCH_AUTH = {
     },
 }
 
+USER_CREATE_PERMISSIONS = env.list('USER_CREATE_PERMISSIONS', default=['rest_framework.permissions.AllowAny'])
+
 DJOSER = {
     'PASSWORD_RESET_CONFIRM_URL': 'password-reset/confirm/{uid}/{token}',
     # if True user required to click activation link in email to activate account
@@ -403,6 +411,7 @@ DJOSER = {
     'PERMISSIONS': {
         'user': ['custom_auth.permissions.CurrentUser'],
         'user_list': ['custom_auth.permissions.CurrentUser'],
+        'user_create': USER_CREATE_PERMISSIONS,
     }
 }
 
