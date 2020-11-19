@@ -1,6 +1,6 @@
 #!/bin/bash
 set -e
 
-.venv/bin/python src/manage.py migrate
-.venv/bin/python src/manage.py collectstatic --no-input
-.venv/bin/gunicorn --bind 0.0.0.0:8000 -w ${GUNICORN_WORKERS:-3} -w ${GUNICORN_THREADS:-2} --pythonpath src app.wsgi
+python src/manage.py migrate
+python src/manage.py collectstatic --no-input
+gunicorn --bind 0.0.0.0:8000 -w ${GUNICORN_WORKERS:-3} -w ${GUNICORN_THREADS:-2} --pythonpath src app.wsgi
