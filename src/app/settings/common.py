@@ -102,7 +102,6 @@ INSTALLED_APPS = [
     'segments',
     'e2etests',
     'simple_history',
-    'debug_toolbar',
     'drf_yasg2',
     'audit',
     'permissions',
@@ -164,7 +163,6 @@ MIDDLEWARE = [
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
     'simple_history.middleware.HistoryRequestMiddleware',
-    'debug_toolbar.middleware.DebugToolbarMiddleware',
     'app.middleware.AxesMiddleware',
 ]
 
