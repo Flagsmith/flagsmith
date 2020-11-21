@@ -5,7 +5,7 @@ from django.apps import AppConfig
 
 
 class OrganisationsConfig(AppConfig):
-    name = 'organisations'
+    name = "organisations"
 
     def ready(self):
         # noinspection PyUnresolvedReferences

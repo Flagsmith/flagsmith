@@ -15,6 +15,7 @@ test:
     POSTGRES_PASSWORD: testpass
   script:
     - pip install -r requirements-dev.txt
+    - black --check .
     - pytest src -p no:warnings
 
 deploydevelop:

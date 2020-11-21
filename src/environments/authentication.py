@@ -12,15 +12,16 @@ class EnvironmentKeyAuthentication(BaseAuthentication):
     """
     Custom authentication class to add the environment to the request for endpoints used by the clients.
     """
+
     def authenticate(self, request):
         try:
-            api_key = request.META.get('HTTP_X_ENVIRONMENT_KEY')
+            api_key = request.META.get("HTTP_X_ENVIRONMENT_KEY")
             environment = Environment.get_from_cache(api_key)
         except Environment.DoesNotExist:
-            raise AuthenticationFailed('Invalid or missing Environment Key')
+            raise AuthenticationFailed("Invalid or missing Environment Key")
 
         if not self._can_serve_flags(environment):
-            raise AuthenticationFailed('Organisation is disabled from serving flags.')
+            raise AuthenticationFailed("Organisation is disabled from serving flags.")
 
         request.environment = environment
 

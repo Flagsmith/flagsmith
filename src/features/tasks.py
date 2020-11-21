@@ -1,8 +1,8 @@
 from threading import Thread
 
 from webhooks.webhooks import (
-    call_environment_webhooks,
     WebhookEventType,
+    call_environment_webhooks,
     call_organisation_webhooks,
 )
 

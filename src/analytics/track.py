@@ -23,13 +23,14 @@ DEFAULT_DATA = "v=1&tid=" + settings.GOOGLE_ANALYTICS_KEY
 TRACKED_RESOURCE_ACTIONS = {
     "flags": "flags",
     "identities": "identity_flags",
-    "traits": "traits"
+    "traits": "traits",
 }
 
 
 @postpone
 def track_request_googleanalytics_async(request):
     return track_request_googleanalytics(request)
+
 
 @postpone
 def track_request_influxdb_async(request):
@@ -43,9 +44,9 @@ def get_resource_from_uri(request_uri):
 
     :param request: (HttpRequest) the request being made
     """
-    split_uri = request_uri.split('/')[1:]
-    if not (len(split_uri) >= 3 and split_uri[0] == 'api'):
-        logger.debug('not tracking event for uri %s' % request_uri)
+    split_uri = request_uri.split("/")[1:]
+    if not (len(split_uri) >= 3 and split_uri[0] == "api"):
+        logger.debug("not tracking event for uri %s" % request_uri)
         # this isn't an API request so we don't need to track an event for it
         return None
 
@@ -59,21 +60,30 @@ def track_request_googleanalytics(request):
 
     :param request: (HttpRequest) the request being made
     """
-    pageview_data = DEFAULT_DATA + "t=pageview&dp=" + quote(request.path, safe='')
+    pageview_data = DEFAULT_DATA + "t=pageview&dp=" + quote(request.path, safe="")
     # send pageview request
     requests.post(GOOGLE_ANALYTICS_COLLECT_URL, data=pageview_data)
 
     resource = get_resource_from_uri(request.path)
 
     if resource in TRACKED_RESOURCE_ACTIONS:
-        environment = Environment.get_from_cache(request.headers.get('X-Environment-Key'))
+        environment = Environment.get_from_cache(
+            request.headers.get("X-Environment-Key")
+        )
         track_event(environment.project.organisation.get_unique_slug(), resource)
 
 
-def track_event(category, action, label='', value=''):
-    data = DEFAULT_DATA + "&t=event" + \
-           "&ec=" + category + \
-           "&ea=" + action + "&cid=" + str(uuid.uuid4())
+def track_event(category, action, label="", value=""):
+    data = (
+        DEFAULT_DATA
+        + "&t=event"
+        + "&ec="
+        + category
+        + "&ea="
+        + action
+        + "&cid="
+        + str(uuid.uuid4())
+    )
     data = data + "&el=" + label if label else data
     data = data + "&ev=" + value if value else data
     requests.post(GOOGLE_ANALYTICS_COLLECT_URL, data=data)
@@ -88,14 +98,16 @@ def track_request_influxdb(request):
     resource = get_resource_from_uri(request.path)
 
     if resource and resource in TRACKED_RESOURCE_ACTIONS:
-        environment = Environment.get_from_cache(request.headers.get('X-Environment-Key'))
+        environment = Environment.get_from_cache(
+            request.headers.get("X-Environment-Key")
+        )
 
         tags = {
             "resource": resource,
             "organisation": environment.project.organisation.get_unique_slug(),
             "organisation_id": environment.project.organisation_id,
             "project": environment.project.name,
-            "project_id": environment.project_id
+            "project_id": environment.project_id,
         }
 
         influxdb = InfluxDBWrapper("api_call")
@@ -111,13 +123,9 @@ def track_feature_evaluation_influxdb(environment_id, feature_evaluations):
     :param feature_evaluations: (dict) A collection of key id / evaluation counts
     """
     influxdb = InfluxDBWrapper("feature_evaluation")
-    
+
     for feature_id, evaluation_count in feature_evaluations.items():
-        tags = {
-            "feature_id": feature_id,
-            "environment_id": environment_id
-        }
+        tags = {"feature_id": feature_id, "environment_id": environment_id}
         influxdb.add_data_point("request_count", evaluation_count, tags=tags)
-    
+
     influxdb.write()
-    

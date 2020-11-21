@@ -15,8 +15,13 @@ class Command(BaseCommand):
 
 def send_alert(organisation):
     FFAdminUser.send_alert_to_admin_users(
-        subject='Organisation over number of seats',
-        message='Organisation %s has used %d seats which is over their plan limit of %d '
-                '(plan: %s)' % (str(organisation.name), organisation.num_seats, organisation.subscription.max_seats,
-                                organisation.subscription.plan)
+        subject="Organisation over number of seats",
+        message="Organisation %s has used %d seats which is over their plan limit of %d "
+        "(plan: %s)"
+        % (
+            str(organisation.name),
+            organisation.num_seats,
+            organisation.subscription.max_seats,
+            organisation.subscription.plan,
+        ),
     )
