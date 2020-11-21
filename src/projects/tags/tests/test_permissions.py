@@ -18,18 +18,26 @@ permissions = TagPermissions()
 class TagPermissionsTestCase(TestCase):
     def setUp(self):
         organisation = Organisation.objects.create(name="Test org")
-        self.project = Project.objects.create(name="Test project", organisation=organisation)
+        self.project = Project.objects.create(
+            name="Test project", organisation=organisation
+        )
         self.tag = Tag.objects.create(label="test", project=self.project)
-        mock_view.kwargs = {'project_pk': self.project.id}
+        mock_view.kwargs = {"project_pk": self.project.id}
 
-        self.project_admin = FFAdminUser.objects.create(email="project_admin@example.com")
+        self.project_admin = FFAdminUser.objects.create(
+            email="project_admin@example.com"
+        )
         self.project_admin.add_organisation(organisation)
-        UserProjectPermission.objects.create(user=self.project_admin, admin=True, project=self.project)
+        UserProjectPermission.objects.create(
+            user=self.project_admin, admin=True, project=self.project
+        )
 
         self.project_user = FFAdminUser.objects.create(email="project_user@example.com")
         self.project_user.add_organisation(organisation)
-        user_project_permission = UserProjectPermission.objects.create(user=self.project_user, project=self.project)
-        user_project_permission.add_permission('VIEW_PROJECT')
+        user_project_permission = UserProjectPermission.objects.create(
+            user=self.project_user, project=self.project
+        )
+        user_project_permission.add_permission("VIEW_PROJECT")
 
     def test_project_admin_has_permission(self):
         # Given
@@ -37,7 +45,7 @@ class TagPermissionsTestCase(TestCase):
 
         # When
         results = []
-        for action in ['list', 'create']:
+        for action in ["list", "create"]:
             mock_view.action = action
             results.append(permissions.has_permission(mock_request, mock_view))
 
@@ -50,9 +58,11 @@ class TagPermissionsTestCase(TestCase):
 
         # When
         results = []
-        for action in ['update', 'delete', 'detail']:
+        for action in ["update", "delete", "detail"]:
             mock_view.action = action
-            results.append(permissions.has_object_permission(mock_request, mock_view, self.tag))
+            results.append(
+                permissions.has_object_permission(mock_request, mock_view, self.tag)
+            )
 
         # Then
         assert all(results)
@@ -63,7 +73,7 @@ class TagPermissionsTestCase(TestCase):
         mock_view.detail = False
 
         # When
-        mock_view.action = 'list'
+        mock_view.action = "list"
         result = permissions.has_permission(mock_request, mock_view)
 
         # Then
@@ -75,7 +85,7 @@ class TagPermissionsTestCase(TestCase):
         mock_view.detail = False
 
         # When
-        mock_view.action = 'create'
+        mock_view.action = "create"
         result = permissions.has_permission(mock_request, mock_view)
 
         # Then
@@ -87,9 +97,11 @@ class TagPermissionsTestCase(TestCase):
 
         # When
         results = []
-        for action in ['update', 'delete']:
+        for action in ["update", "delete"]:
             mock_view.action = action
-            results.append(permissions.has_object_permission(mock_request, mock_view, self.tag))
+            results.append(
+                permissions.has_object_permission(mock_request, mock_view, self.tag)
+            )
 
         # Then
         assert all(result is False for result in results)
@@ -99,7 +111,7 @@ class TagPermissionsTestCase(TestCase):
         mock_request.user = self.project_user
 
         # When
-        mock_view.action = 'detail'
+        mock_view.action = "detail"
         result = permissions.has_object_permission(mock_request, mock_view, self.tag)
 
         # Then

@@ -1,7 +1,10 @@
 import pytest
 
 from custom_auth.oauth.exceptions import GithubError
-from custom_auth.oauth.helpers.github_helpers import convert_response_data_to_dictionary, get_first_and_last_name
+from custom_auth.oauth.helpers.github_helpers import (
+    convert_response_data_to_dictionary,
+    get_first_and_last_name,
+)
 
 
 def test_convert_response_data_to_dictionary_success():

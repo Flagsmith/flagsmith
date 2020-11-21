@@ -6,7 +6,7 @@ from datetime import datetime
 
 from django.contrib.sites.shortcuts import get_current_site
 from drf_yasg2.utils import swagger_auto_schema
-from rest_framework import viewsets, status
+from rest_framework import status, viewsets
 from rest_framework.authentication import BasicAuthentication
 from rest_framework.decorators import action, api_view, authentication_classes
 from rest_framework.exceptions import ValidationError
@@ -14,10 +14,22 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 
 from analytics.influxdb_wrapper import get_events_for_organisation
-from organisations.models import OrganisationRole, Subscription, OrganisationWebhook
-from organisations.permissions import OrganisationPermission, NestedOrganisationEntityPermission
-from organisations.serializers import OrganisationSerializerFull, MultiInvitesSerializer, UpdateSubscriptionSerializer, \
-    PortalUrlSerializer, OrganisationWebhookSerializer
+from organisations.models import (
+    OrganisationRole,
+    OrganisationWebhook,
+    Subscription,
+)
+from organisations.permissions import (
+    NestedOrganisationEntityPermission,
+    OrganisationPermission,
+)
+from organisations.serializers import (
+    MultiInvitesSerializer,
+    OrganisationSerializerFull,
+    OrganisationWebhookSerializer,
+    PortalUrlSerializer,
+    UpdateSubscriptionSerializer,
+)
 from projects.serializers import ProjectSerializer
 from users.models import Invite
 from users.serializers import InviteListSerializer, UserIdSerializer
@@ -30,20 +42,20 @@ class OrganisationViewSet(viewsets.ModelViewSet):
     permission_classes = (IsAuthenticated, OrganisationPermission)
 
     def get_serializer_class(self):
-        if self.action == 'remove_users':
+        if self.action == "remove_users":
             return UserIdSerializer
-        elif self.action == 'invite':
+        elif self.action == "invite":
             return MultiInvitesSerializer
-        elif self.action == 'update_subscription':
+        elif self.action == "update_subscription":
             return UpdateSubscriptionSerializer
-        elif self.action == 'get_portal_url':
+        elif self.action == "get_portal_url":
             return PortalUrlSerializer
         return OrganisationSerializerFull
 
     def get_serializer_context(self):
         context = super(OrganisationViewSet, self).get_serializer_context()
-        if self.action in ('remove_users', 'invite', 'update_subscription'):
-            context['organisation'] = self.kwargs.get('pk')
+        if self.action in ("remove_users", "invite", "update_subscription"):
+            context["organisation"] = self.kwargs.get("pk")
         return context
 
     def get_queryset(self):
@@ -76,9 +88,9 @@ class OrganisationViewSet(viewsets.ModelViewSet):
         serializer.save()
         # serializer returns a dictionary containing the list of serialized invite objects since it's a single
         # serializer generating multiple instances.
-        return Response(serializer.data.get('invites'), status=status.HTTP_201_CREATED)
+        return Response(serializer.data.get("invites"), status=status.HTTP_201_CREATED)
 
-    @action(detail=True, methods=['POST'], url_path='remove-users')
+    @action(detail=True, methods=["POST"], url_path="remove-users")
     def remove_users(self, request, pk):
         """
         Takes a list of users and removes them from the organisation provided in the url
@@ -97,30 +109,40 @@ class OrganisationViewSet(viewsets.ModelViewSet):
         except (TypeError, ValueError):
             # TypeError can be thrown when getting service account if not configured
             # ValueError can be thrown if GA returns a value that cannot be converted to integer
-            return Response({"error": "Couldn't get number of events for organisation."},
-                            status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+            return Response(
+                {"error": "Couldn't get number of events for organisation."},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            )
 
         return Response({"events": events}, status=status.HTTP_200_OK)
 
-    @action(detail=True, methods=['POST'], url_path='update-subscription')
+    @action(detail=True, methods=["POST"], url_path="update-subscription")
     @swagger_auto_schema(responses={200: OrganisationSerializerFull})
     def update_subscription(self, request, pk):
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         serializer.save()
-        return Response(OrganisationSerializerFull(instance=self.get_object()).data, status=status.HTTP_200_OK)
+        return Response(
+            OrganisationSerializerFull(instance=self.get_object()).data,
+            status=status.HTTP_200_OK,
+        )
 
-    @action(detail=True, methods=['GET'], url_path='portal-url')
+    @action(detail=True, methods=["GET"], url_path="portal-url")
     def get_portal_url(self, request, pk):
         organisation = self.get_object()
         if not organisation.has_subscription():
-            return Response({'detail': 'Organisation has no subscription'}, status=status.HTTP_400_BAD_REQUEST)
+            return Response(
+                {"detail": "Organisation has no subscription"},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
         redirect_url = get_current_site(request)
-        serializer = self.get_serializer(data={'url': organisation.subscription.get_portal_url(redirect_url)})
+        serializer = self.get_serializer(
+            data={"url": organisation.subscription.get_portal_url(redirect_url)}
+        )
         serializer.is_valid(raise_exception=True)
         return Response(serializer.data)
 
-    @action(detail=True, methods=['GET'], url_path='influx-data')
+    @action(detail=True, methods=["GET"], url_path="influx-data")
     def get_influx_data(self, request, pk):
         event_list = get_multiple_event_list_for_organisation(pk)
 
@@ -132,8 +154,10 @@ class InviteViewSet(viewsets.ModelViewSet):
     permission_classes = (IsAuthenticated, NestedOrganisationEntityPermission)
 
     def get_queryset(self):
-        organisation_pk = self.kwargs.get('organisation_pk')
-        if int(organisation_pk) not in [org.id for org in self.request.user.organisations.all()]:
+        organisation_pk = self.kwargs.get("organisation_pk")
+        if int(organisation_pk) not in [
+            org.id for org in self.request.user.organisations.all()
+        ]:
             return []
         return Invite.objects.filter(organisation__id=organisation_pk)
 
@@ -144,7 +168,7 @@ class InviteViewSet(viewsets.ModelViewSet):
         return Response(status=status.HTTP_200_OK)
 
 
-@api_view(['POST'])
+@api_view(["POST"])
 @authentication_classes([BasicAuthentication])
 def chargebee_webhook(request):
     """
@@ -157,39 +181,49 @@ def chargebee_webhook(request):
        send alert to admin users.
     """
 
-    if request.data.get('content') and 'subscription' in request.data.get('content'):
-        subscription_data = request.data['content']['subscription']
+    if request.data.get("content") and "subscription" in request.data.get("content"):
+        subscription_data = request.data["content"]["subscription"]
 
         try:
-            existing_subscription = Subscription.objects.get(subscription_id=subscription_data.get('id'))
+            existing_subscription = Subscription.objects.get(
+                subscription_id=subscription_data.get("id")
+            )
         except (Subscription.DoesNotExist, Subscription.MultipleObjectsReturned):
-            error_message = 'Couldn\'t get unique subscription for ChargeBee id %s' % subscription_data.get('id')
+            error_message = (
+                "Couldn't get unique subscription for ChargeBee id %s"
+                % subscription_data.get("id")
+            )
             logger.error(error_message)
             return Response(data=error_message, status=status.HTTP_400_BAD_REQUEST)
 
-        subscription_status = subscription_data.get('status')
-        if subscription_status == 'active':
-            if subscription_data.get('plan_id') != existing_subscription.plan:
-                existing_subscription.update_plan(subscription_data.get('plan_id'))
-        elif subscription_status in ('non_renewing', 'cancelled'):
-            existing_subscription.cancel(datetime.fromtimestamp(subscription_data.get('current_term_end')))
+        subscription_status = subscription_data.get("status")
+        if subscription_status == "active":
+            if subscription_data.get("plan_id") != existing_subscription.plan:
+                existing_subscription.update_plan(subscription_data.get("plan_id"))
+        elif subscription_status in ("non_renewing", "cancelled"):
+            existing_subscription.cancel(
+                datetime.fromtimestamp(subscription_data.get("current_term_end"))
+            )
 
     return Response(status=status.HTTP_200_OK)
+
 
 class OrganisationWebhookViewSet(viewsets.ModelViewSet):
     serializer_class = OrganisationWebhookSerializer
     permission_classes = [IsAuthenticated, NestedOrganisationEntityPermission]
 
     def get_queryset(self):
-        if 'organisation_pk' not in self.kwargs:
+        if "organisation_pk" not in self.kwargs:
             raise ValidationError("Missing required path parameter 'organisation_pk'")
 
-        return OrganisationWebhook.objects.filter(organisation_id=self.kwargs['organisation_pk'])
+        return OrganisationWebhook.objects.filter(
+            organisation_id=self.kwargs["organisation_pk"]
+        )
 
     def perform_update(self, serializer):
-        organisation_id = self.kwargs['organisation_pk']
+        organisation_id = self.kwargs["organisation_pk"]
         serializer.save(organisation_id=organisation_id)
 
     def perform_create(self, serializer):
-        organisation_id = self.kwargs['organisation_pk']
+        organisation_id = self.kwargs["organisation_pk"]
         serializer.save(organisation_id=organisation_id)
