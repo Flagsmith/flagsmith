@@ -8,6 +8,7 @@ class NonWritingHistoricalRecords(HistoricalRecords):
     being connected to the model. This allows us to stop the writing of records
     and then in a subsequent release, remove the database table.
     """
+
     def finalize(self, sender, **kwargs):
         # this should prevent the signals being added
         super(NonWritingHistoricalRecords, self).finalize(sender, **kwargs)

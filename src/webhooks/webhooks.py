@@ -21,11 +21,21 @@ class WebhookType(enum.Enum):
 
 
 def call_environment_webhooks(environment, data, event_type):
-    _call_webhooks(environment.webhooks.filter(enabled=True), data, event_type, WebhookType.ENVIRONMENT)
+    _call_webhooks(
+        environment.webhooks.filter(enabled=True),
+        data,
+        event_type,
+        WebhookType.ENVIRONMENT,
+    )
 
 
 def call_organisation_webhooks(organisation, data, event_type):
-    _call_webhooks(organisation.webhooks.filter(enabled=True), data, event_type, WebhookType.ORGANISATION)
+    _call_webhooks(
+        organisation.webhooks.filter(enabled=True),
+        data,
+        event_type,
+        WebhookType.ORGANISATION,
+    )
 
 
 def _call_webhooks(webhooks, data, event_type, webhook_type):
@@ -34,8 +44,10 @@ def _call_webhooks(webhooks, data, event_type, webhook_type):
     serializer.is_valid(raise_exception=False)
     for webhook in webhooks:
         try:
-            headers = {'content-type': 'application/json'}
-            json_data = json.dumps(serializer.data, sort_keys=True, cls=DjangoJSONEncoder)
+            headers = {"content-type": "application/json"}
+            json_data = json.dumps(
+                serializer.data, sort_keys=True, cls=DjangoJSONEncoder
+            )
             res = requests.post(str(webhook.url), data=json_data, headers=headers)
         except requests.exceptions.ConnectionError:
             send_failure_email(webhook, serializer.data, webhook_type)
@@ -46,17 +58,23 @@ def _call_webhooks(webhooks, data, event_type, webhook_type):
 
 
 def send_failure_email(webhook, data, webhook_type, status_code=None):
-    template_data = _get_failure_email_template_data(webhook, data, webhook_type, status_code)
-    organisation = webhook.organisation if webhook_type == WebhookType.ORGANISATION else webhook.environment.project.organisation
+    template_data = _get_failure_email_template_data(
+        webhook, data, webhook_type, status_code
+    )
+    organisation = (
+        webhook.organisation
+        if webhook_type == WebhookType.ORGANISATION
+        else webhook.environment.project.organisation
+    )
 
-    text_template = get_template('features/webhook_failure.txt')
+    text_template = get_template("features/webhook_failure.txt")
     text_content = text_template.render(template_data)
     subject = "Bullet Train Webhook Failure"
     msg = EmailMultiAlternatives(
         subject,
         text_content,
-        settings.EMAIL_CONFIGURATION.get('INVITE_FROM_EMAIL'),
-        [organisation.webhook_notification_email]
+        settings.EMAIL_CONFIGURATION.get("INVITE_FROM_EMAIL"),
+        [organisation.webhook_notification_email],
     )
     msg.content_subtype = "plain"
     msg.send()
@@ -65,12 +83,8 @@ def send_failure_email(webhook, data, webhook_type, status_code=None):
 def _get_failure_email_template_data(webhook, data, webhook_type, status_code=None):
     data = {
         "status_code": status_code,
-        "data": json.dumps(
-            data,
-            sort_keys=True,
-            indent=2, cls=DjangoJSONEncoder
-        ),
-        "webhook_url": webhook.url
+        "data": json.dumps(data, sort_keys=True, indent=2, cls=DjangoJSONEncoder),
+        "webhook_url": webhook.url,
     }
 
     if webhook_type == WebhookType.ENVIRONMENT:

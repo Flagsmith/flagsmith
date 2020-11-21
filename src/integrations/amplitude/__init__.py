@@ -1,1 +1,1 @@
-default_app_config = 'integrations.amplitude.apps.AmplitudeIntegrationConfig'
+default_app_config = "integrations.amplitude.apps.AmplitudeIntegrationConfig"

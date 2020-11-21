@@ -10,16 +10,18 @@ from environments.permissions.permissions import EnvironmentKeyPermissions
 
 from analytics.track import track_feature_evaluation_influxdb
 
+
 class SDKAnalyticsFlags(GenericAPIView):
     """
     Class to handle flag analytics events
     """
+
     permission_classes = (EnvironmentKeyPermissions,)
     authentication_classes = (EnvironmentKeyAuthentication,)
 
     def post(self, request, *args, **kwargs):
         """
-        Send flag evaluation events from the SDK back to the API for reporting. 
+        Send flag evaluation events from the SDK back to the API for reporting.
         """
         track_feature_evaluation_influxdb(request.environment.id, request.data)
         return Response(status=status.HTTP_200_OK)

@@ -1,1 +1,1 @@
-default_app_config = 'features.apps.FeaturesConfig'
+default_app_config = "features.apps.FeaturesConfig"

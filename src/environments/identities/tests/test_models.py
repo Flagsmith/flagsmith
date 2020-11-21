@@ -2,23 +2,24 @@ from django.test import TransactionTestCase
 
 from environments.identities.models import Identity
 from environments.identities.traits.models import Trait
-from environments.models import Environment, FLOAT
-from features.models import Feature, FeatureState, FeatureSegment, CONFIG
-from features.utils import STRING, INTEGER, BOOLEAN
+from environments.models import FLOAT, Environment
+from features.models import CONFIG, Feature, FeatureSegment, FeatureState
+from features.utils import BOOLEAN, INTEGER, STRING
 from organisations.models import Organisation
 from projects.models import Project
 from segments.models import (
+    EQUAL,
+    GREATER_THAN,
+    GREATER_THAN_INCLUSIVE,
+    LESS_THAN_INCLUSIVE,
+    Condition,
     Segment,
     SegmentRule,
-    Condition,
-    EQUAL,
-    GREATER_THAN_INCLUSIVE,
-    GREATER_THAN,
-    LESS_THAN_INCLUSIVE,
 )
+
 from .helpers import (
-    generate_trait_data_item,
     create_trait_for_identity,
+    generate_trait_data_item,
     get_trait_from_list_by_key,
 )
 
@@ -807,20 +808,38 @@ class IdentityTestCase(TransactionTestCase):
     def test_get_segments(self):
         # Given
         # a segment with multiple rules and conditions
-        segment = Segment.objects.create(name='Test Segment', project=self.project)
+        segment = Segment.objects.create(name="Test Segment", project=self.project)
 
-        rule_one = SegmentRule.objects.create(segment=segment, type=SegmentRule.ANY_RULE)
-        Condition.objects.create(rule=rule_one, operator=EQUAL, property='foo', value='bar')
-        Condition.objects.create(rule=rule_one, operator=EQUAL, property='foo', value='baz')
+        rule_one = SegmentRule.objects.create(
+            segment=segment, type=SegmentRule.ANY_RULE
+        )
+        Condition.objects.create(
+            rule=rule_one, operator=EQUAL, property="foo", value="bar"
+        )
+        Condition.objects.create(
+            rule=rule_one, operator=EQUAL, property="foo", value="baz"
+        )
 
-        rule_two = SegmentRule.objects.create(segment=segment, type=SegmentRule.ALL_RULE)
-        Condition.objects.create(rule=rule_two, operator=GREATER_THAN_INCLUSIVE, property='bar', value=10)
-        Condition.objects.create(rule=rule_two, operator=LESS_THAN_INCLUSIVE, property='bar', value=20)
+        rule_two = SegmentRule.objects.create(
+            segment=segment, type=SegmentRule.ALL_RULE
+        )
+        Condition.objects.create(
+            rule=rule_two, operator=GREATER_THAN_INCLUSIVE, property="bar", value=10
+        )
+        Condition.objects.create(
+            rule=rule_two, operator=LESS_THAN_INCLUSIVE, property="bar", value=20
+        )
 
         # and an identity with traits that match the segment
-        identity = Identity.objects.create(identifier='identity-1', environment=self.environment)
-        Trait.objects.create(identity=identity, trait_key='bar', value_type=INTEGER, integer_value=15)
-        Trait.objects.create(identity=identity, trait_key='foo', value_type=STRING, string_value='bar')
+        identity = Identity.objects.create(
+            identifier="identity-1", environment=self.environment
+        )
+        Trait.objects.create(
+            identity=identity, trait_key="bar", value_type=INTEGER, integer_value=15
+        )
+        Trait.objects.create(
+            identity=identity, trait_key="foo", value_type=STRING, string_value="bar"
+        )
 
         # When
         # we get the matching segments for an identity
@@ -830,4 +849,3 @@ class IdentityTestCase(TransactionTestCase):
         # Then
         # the number of queries are what we expect (see above context manager) and the segment is returned
         assert len(segments) == 1 and segments[0] == segment
-

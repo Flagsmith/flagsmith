@@ -14,43 +14,47 @@ from analytics.views import SDKAnalyticsFlags
 schema_view = get_schema_view(
     openapi.Info(
         title="Bullet Train API",
-        default_version='v1',
+        default_version="v1",
         description="",
         license=openapi.License(name="BSD License"),
         contact=openapi.Contact(email="support@bullet-train.io"),
     ),
     public=True,
     permission_classes=(permissions.AllowAny,),
-    authentication_classes=(authentication.SessionAuthentication,)
+    authentication_classes=(authentication.SessionAuthentication,),
 )
 
 traits_router = routers.DefaultRouter()
-traits_router.register(r'', SDKTraits, basename='sdk-traits')
+traits_router.register(r"", SDKTraits, basename="sdk-traits")
 
-app_name = 'v1'
+app_name = "v1"
 
 urlpatterns = [
-    url(r'^organisations/', include('organisations.urls'), name='organisations'),
-    url(r'^projects/', include('projects.urls'), name='projects'),
-    url(r'^environments/', include('environments.urls'), name='environments'),
-    url(r'^features/', include('features.urls'), name='features'),
-    url(r'^users/', include('users.urls')),
-    url(r'^e2etests/', include('e2etests.urls')),
-    url(r'^audit/', include('audit.urls')),
-
-    url(r'^auth/', include('custom_auth.urls')),
-
+    url(r"^organisations/", include("organisations.urls"), name="organisations"),
+    url(r"^projects/", include("projects.urls"), name="projects"),
+    url(r"^environments/", include("environments.urls"), name="environments"),
+    url(r"^features/", include("features.urls"), name="features"),
+    url(r"^users/", include("users.urls")),
+    url(r"^e2etests/", include("e2etests.urls")),
+    url(r"^audit/", include("audit.urls")),
+    url(r"^auth/", include("custom_auth.urls")),
     # Chargebee webhooks
-    url(r'cb-webhook/', chargebee_webhook, name='chargebee-webhook'),
-
+    url(r"cb-webhook/", chargebee_webhook, name="chargebee-webhook"),
     # Client SDK urls
-    url(r'^flags/$', SDKFeatureStates.as_view(), name='flags'),
-    url(r'^identities/$', SDKIdentities.as_view(), name='sdk-identities'),
-    url(r'^traits/', include(traits_router.urls), name='traits'),
-    url(r'^segments/$', SDKSegments.as_view()),
-    url(r'^analytics/flags/$', SDKAnalyticsFlags.as_view()),
-
+    url(r"^flags/$", SDKFeatureStates.as_view(), name="flags"),
+    url(r"^identities/$", SDKIdentities.as_view(), name="sdk-identities"),
+    url(r"^traits/", include(traits_router.urls), name="traits"),
+    url(r"^segments/$", SDKSegments.as_view()),
+    url(r"^analytics/flags/$", SDKAnalyticsFlags.as_view()),
     # API documentation
-    url(r'^swagger(?P<format>\.json|\.yaml)$', schema_view.without_ui(cache_timeout=0), name='schema-json'),
-    url(r'^docs/$', schema_view.with_ui('swagger', cache_timeout=0), name='schema-swagger-ui')
+    url(
+        r"^swagger(?P<format>\.json|\.yaml)$",
+        schema_view.without_ui(cache_timeout=0),
+        name="schema-json",
+    ),
+    url(
+        r"^docs/$",
+        schema_view.with_ui("swagger", cache_timeout=0),
+        name="schema-swagger-ui",
+    ),
 ]
