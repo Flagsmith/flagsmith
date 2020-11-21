@@ -4,11 +4,11 @@ from unittest.case import TestCase
 import pytest
 from django.urls import reverse
 from rest_framework import status
-from rest_framework.test import APITestCase, APIClient
+from rest_framework.test import APIClient, APITestCase
 
 from environments.identities.models import Identity
 from environments.identities.traits.models import Trait
-from environments.models import Environment, STRING, INTEGER
+from environments.models import INTEGER, STRING, Environment
 from organisations.models import Organisation, OrganisationRole
 from projects.models import Project
 from util.tests import Helper
@@ -92,10 +92,10 @@ class SDKTraitsTest(APITestCase):
 
         # and
         assert (
-                Trait.objects.get(
-                    identity=self.identity, trait_key=self.trait_key
-                ).get_trait_value()
-                == trait_value
+            Trait.objects.get(
+                identity=self.identity, trait_key=self.trait_key
+            ).get_trait_value()
+            == trait_value
         )
 
     def test_can_set_trait_with_identity_value_for_an_identity(self):
@@ -138,9 +138,10 @@ class SDKTraitsTest(APITestCase):
 
         # and
         assert (
-                Trait.objects.get(
-                    identity=self.identity, trait_key=self.trait_key
-                ).get_trait_value() == float_trait_value
+            Trait.objects.get(
+                identity=self.identity, trait_key=self.trait_key
+            ).get_trait_value()
+            == float_trait_value
         )
 
     def test_add_trait_creates_identity_if_it_doesnt_exist(self):
@@ -297,11 +298,9 @@ class SDKTraitsTest(APITestCase):
         assert res.status_code == status.HTTP_200_OK
 
         # and
-        assert (
-                Trait.objects.get(
-                    identity=self.identity, trait_key=self.trait_key
-                ).get_trait_value() == str(bad_trait_value)
-        )
+        assert Trait.objects.get(
+            identity=self.identity, trait_key=self.trait_key
+        ).get_trait_value() == str(bad_trait_value)
 
     def test_bulk_create_traits(self):
         # Given
@@ -320,7 +319,9 @@ class SDKTraitsTest(APITestCase):
         assert response.status_code == status.HTTP_200_OK
         assert Trait.objects.filter(identity=self.identity).count() == num_traits
 
-    def test_bulk_create_traits_when_bad_trait_value_sent_then_trait_value_stringified(self):
+    def test_bulk_create_traits_when_bad_trait_value_sent_then_trait_value_stringified(
+        self,
+    ):
         # Given
         num_traits = 5
         url = reverse("api-v1:sdk-traits-bulk-create")
@@ -335,7 +336,7 @@ class SDKTraitsTest(APITestCase):
             {
                 "trait_value": bad_trait_value,
                 "trait_key": bad_trait_key,
-                "identity": {"identifier": self.identity.identifier}
+                "identity": {"identifier": self.identity.identifier},
             }
         )
 
@@ -349,11 +350,9 @@ class SDKTraitsTest(APITestCase):
         assert Trait.objects.filter(identity=self.identity).count() == num_traits + 1
 
         # and
-        assert (
-                Trait.objects.get(
-                    identity=self.identity, trait_key=bad_trait_key
-                ).get_trait_value() == str(bad_trait_value)
-        )
+        assert Trait.objects.get(
+            identity=self.identity, trait_key=bad_trait_key
+        ).get_trait_value() == str(bad_trait_value)
 
     def test_sending_null_value_in_bulk_create_deletes_trait_for_identity(self):
         # Given
@@ -406,7 +405,7 @@ class SDKTraitsTest(APITestCase):
             {
                 "trait_value": float_trait_value,
                 "trait_key": float_trait_key,
-                "identity": {"identifier": self.identity.identifier}
+                "identity": {"identifier": self.identity.identifier},
             }
         )
 
@@ -421,9 +420,10 @@ class SDKTraitsTest(APITestCase):
 
         # and
         assert (
-                Trait.objects.get(
-                    identity=self.identity, trait_key=float_trait_key
-                ).get_trait_value() == float_trait_value
+            Trait.objects.get(
+                identity=self.identity, trait_key=float_trait_key
+            ).get_trait_value()
+            == float_trait_value
         )
 
     def _generate_trait_data(self, identifier=None, trait_key=None, trait_value=None):

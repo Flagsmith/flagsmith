@@ -4,8 +4,15 @@ from django.conf import settings
 from rest_framework import serializers
 
 from organisations.chargebee import get_subscription_data_from_hosted_page
-from users.models import Invite, FFAdminUser
-from .models import Organisation, Subscription, UserOrganisation, OrganisationRole, OrganisationWebhook
+from users.models import FFAdminUser, Invite
+
+from .models import (
+    Organisation,
+    OrganisationRole,
+    OrganisationWebhook,
+    Subscription,
+    UserOrganisation,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -13,7 +20,7 @@ logger = logging.getLogger(__name__)
 class SubscriptionSerializer(serializers.ModelSerializer):
     class Meta:
         model = Subscription
-        exclude = ('organisation',)
+        exclude = ("organisation",)
 
 
 class OrganisationSerializerFull(serializers.ModelSerializer):
@@ -23,30 +30,35 @@ class OrganisationSerializerFull(serializers.ModelSerializer):
     class Meta:
         model = Organisation
         fields = (
-            'id',
-            'name',
-            'created_date',
-            'webhook_notification_email',
-            'num_seats',
-            'subscription',
-            'role',
-            'persist_trait_data',
-            'block_access_to_admin'
+            "id",
+            "name",
+            "created_date",
+            "webhook_notification_email",
+            "num_seats",
+            "subscription",
+            "role",
+            "persist_trait_data",
+            "block_access_to_admin",
         )
         read_only_fields = (
-            'id', 'created_date', 'num_seats', 'role', 'persist_trait_data', 'block_access_to_admin'
+            "id",
+            "created_date",
+            "num_seats",
+            "role",
+            "persist_trait_data",
+            "block_access_to_admin",
         )
 
     def get_role(self, instance):
-        if self.context.get('request'):
-            user = self.context['request'].user
+        if self.context.get("request"):
+            user = self.context["request"].user
             return user.get_organisation_role(instance)
 
 
 class OrganisationSerializerBasic(serializers.ModelSerializer):
     class Meta:
         model = Organisation
-        fields = ('id', 'name')
+        fields = ("id", "name")
 
 
 class UserOrganisationSerializer(serializers.ModelSerializer):
@@ -54,31 +66,35 @@ class UserOrganisationSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = UserOrganisation
-        fields = ('role', 'organisation')
+        fields = ("role", "organisation")
 
 
 class InviteSerializerFull(serializers.ModelSerializer):
     class InvitedBySerializer(serializers.ModelSerializer):
         class Meta:
             model = FFAdminUser
-            fields = ('id', 'email', 'first_name', 'last_name')
+            fields = ("id", "email", "first_name", "last_name")
 
     invited_by = InvitedBySerializer()
 
     class Meta:
         model = Invite
-        fields = ('id', 'email', 'role', 'date_created', 'invited_by')
+        fields = ("id", "email", "role", "date_created", "invited_by")
 
 
 class InviteSerializer(serializers.ModelSerializer):
     class Meta:
         model = Invite
-        fields = ('id', 'email', 'role', 'date_created')
-        read_only_fields = ('id', 'date_created')
+        fields = ("id", "email", "role", "date_created")
+        read_only_fields = ("id", "date_created")
 
     def validate(self, attrs):
-        if Invite.objects.filter(email=attrs['email'], organisation__id=self.context.get('organisation')).exists():
-            raise serializers.ValidationError({'email': 'Invite for email %s already exists' % attrs['email']})
+        if Invite.objects.filter(
+            email=attrs["email"], organisation__id=self.context.get("organisation")
+        ).exists():
+            raise serializers.ValidationError(
+                {"email": "Invite for email %s already exists" % attrs["email"]}
+            )
         return super(InviteSerializer, self).validate(attrs)
 
 
@@ -91,22 +107,19 @@ class MultiInvitesSerializer(serializers.Serializer):
         organisation = self._get_organisation()
         user = self._get_invited_by()
 
-        invites = validated_data.get('invites', [])
+        invites = validated_data.get("invites", [])
 
         # for backwards compatibility, allow emails to be sent as a list of strings still
-        for email in validated_data.get('emails', []):
-            invites.append({
-                'email': email,
-                'role': OrganisationRole.USER.name
-            })
+        for email in validated_data.get("emails", []):
+            invites.append({"email": email, "role": OrganisationRole.USER.name})
 
         created_invites = []
         for invite in invites:
             data = {
                 **invite,
-                'invited_by': user,
-                'organisation': organisation,
-                'frontend_base_url': validated_data['frontend_base_url']
+                "invited_by": user,
+                "organisation": organisation,
+                "frontend_base_url": validated_data["frontend_base_url"],
             }
             created_invites.append(Invite.objects.create(**data))
 
@@ -115,24 +128,26 @@ class MultiInvitesSerializer(serializers.Serializer):
 
     def to_representation(self, instance):
         # Return the invites in a dictionary since the serializer expects a single instance to be returned, not a list
-        return {
-            'invites': [InviteSerializerFull(invite).data for invite in instance]
-        }
+        return {"invites": [InviteSerializerFull(invite).data for invite in instance]}
 
     def validate(self, attrs):
-        for email in attrs.get('emails', []):
-            if Invite.objects.filter(email=email, organisation__id=self.context.get('organisation')).exists():
-                raise serializers.ValidationError({'emails': 'Invite for email %s already exists' % email})
+        for email in attrs.get("emails", []):
+            if Invite.objects.filter(
+                email=email, organisation__id=self.context.get("organisation")
+            ).exists():
+                raise serializers.ValidationError(
+                    {"emails": "Invite for email %s already exists" % email}
+                )
         return super(MultiInvitesSerializer, self).validate(attrs)
 
     def _get_invited_by(self):
-        return self.context.get('request').user if self.context.get('request') else None
+        return self.context.get("request").user if self.context.get("request") else None
 
     def _get_organisation(self):
         try:
-            return Organisation.objects.get(pk=self.context.get('organisation'))
+            return Organisation.objects.get(pk=self.context.get("organisation"))
         except Organisation.DoesNotExist:
-            raise serializers.ValidationError({'emails': 'Invalid organisation.'})
+            raise serializers.ValidationError({"emails": "Invalid organisation."})
 
 
 class UpdateSubscriptionSerializer(serializers.Serializer):
@@ -145,15 +160,22 @@ class UpdateSubscriptionSerializer(serializers.Serializer):
         organisation = self._get_organisation()
 
         if settings.ENABLE_CHARGEBEE:
-            subscription_data = get_subscription_data_from_hosted_page(hosted_page_id=validated_data['hosted_page_id'])
+            subscription_data = get_subscription_data_from_hosted_page(
+                hosted_page_id=validated_data["hosted_page_id"]
+            )
 
             if subscription_data:
-                Subscription.objects.update_or_create(organisation=organisation, defaults=subscription_data)
+                Subscription.objects.update_or_create(
+                    organisation=organisation, defaults=subscription_data
+                )
             else:
                 raise serializers.ValidationError(
-                    {'detail': 'Couldn\'t get subscription information from hosted page.'})
+                    {
+                        "detail": "Couldn't get subscription information from hosted page."
+                    }
+                )
         else:
-            logger.warning('Chargebee not configured. Not verifying hosted page.')
+            logger.warning("Chargebee not configured. Not verifying hosted page.")
 
         return organisation
 
@@ -162,9 +184,9 @@ class UpdateSubscriptionSerializer(serializers.Serializer):
 
     def _get_organisation(self):
         try:
-            return Organisation.objects.get(pk=self.context.get('organisation'))
+            return Organisation.objects.get(pk=self.context.get("organisation"))
         except Organisation.DoesNotExist:
-            raise serializers.ValidationError('Invalid organisation.')
+            raise serializers.ValidationError("Invalid organisation.")
 
 
 class PortalUrlSerializer(serializers.Serializer):
@@ -174,5 +196,5 @@ class PortalUrlSerializer(serializers.Serializer):
 class OrganisationWebhookSerializer(serializers.ModelSerializer):
     class Meta:
         model = OrganisationWebhook
-        fields = ('id', 'url', 'enabled')
-        read_only_fields = ('id',)
+        fields = ("id", "url", "enabled")
+        read_only_fields = ("id",)

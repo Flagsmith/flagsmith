@@ -1,1 +1,1 @@
-default_app_config = 'environments.apps.EnvironmentsConfig'
+default_app_config = "environments.apps.EnvironmentsConfig"

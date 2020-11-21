@@ -6,4 +6,4 @@ from .models import DataDogConfiguration
 class DataDogConfigurationSerializer(serializers.ModelSerializer):
     class Meta:
         model = DataDogConfiguration
-        fields = ('id', 'base_url', 'api_key')
+        fields = ("id", "base_url", "api_key")

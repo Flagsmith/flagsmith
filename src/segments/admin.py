@@ -1,7 +1,7 @@
 from django.conf import settings
 from django.contrib import admin
 
-from segments.models import SegmentRule, Condition, Segment
+from segments.models import Condition, Segment, SegmentRule
 
 
 class RulesInline(admin.StackedInline):
@@ -17,17 +17,13 @@ class ConditionsInline(admin.StackedInline):
 
 
 class SegmentAdmin(admin.ModelAdmin):
-    inlines = [
-        RulesInline
-    ]
+    inlines = [RulesInline]
 
 
 class SegmentRuleAdmin(admin.ModelAdmin):
-    inlines = [
-        ConditionsInline
-    ]
+    inlines = [ConditionsInline]
 
 
-if settings.ENV == ('local', 'dev'):
+if settings.ENV == ("local", "dev"):
     admin.site.register(Segment, SegmentAdmin)
     admin.site.register(SegmentRule, SegmentRuleAdmin)

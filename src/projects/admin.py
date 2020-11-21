@@ -2,11 +2,12 @@
 from __future__ import unicode_literals
 
 from django.contrib import admin
+
 from environments.models import Environment
 from features.models import Feature
 from projects.models import Project
-from segments.models import Segment
 from projects.tags.models import Tag
+from segments.models import Segment
 
 
 class EnvironmentInline(admin.StackedInline):
@@ -35,14 +36,17 @@ class TagInline(admin.StackedInline):
 
 @admin.register(Project)
 class ProjectAdmin(admin.ModelAdmin):
-    date_hierarchy = 'created_date'
-    inlines = [
-        EnvironmentInline,
-        FeatureInline,
-        SegmentInline,
-        TagInline
-    ]
-    list_display = ('name', 'organisation', 'created_date',)
-    list_filter = ('created_date', 'organisation', 'environments',)
-    list_select_related = ('organisation',)
-    search_fields = ('organisation__name',)
+    date_hierarchy = "created_date"
+    inlines = [EnvironmentInline, FeatureInline, SegmentInline, TagInline]
+    list_display = (
+        "name",
+        "organisation",
+        "created_date",
+    )
+    list_filter = (
+        "created_date",
+        "organisation",
+        "environments",
+    )
+    list_select_related = ("organisation",)
+    search_fields = ("organisation__name",)

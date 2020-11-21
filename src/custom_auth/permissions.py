@@ -5,6 +5,7 @@ class CurrentUser(IsAuthenticated):
     """
     Class to ensure that users of the platform can only retrieve details of themselves.
     """
+
     def has_permission(self, request, view):
         return view.action == "me"
 

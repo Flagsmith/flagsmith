@@ -3,4 +3,4 @@ from django.apps import AppConfig
 
 
 class AmplitudeIntegrationConfig(AppConfig):
-    name = 'integrations.amplitude'
+    name = "integrations.amplitude"
