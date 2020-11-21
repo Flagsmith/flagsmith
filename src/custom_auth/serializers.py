@@ -15,8 +15,8 @@ class CustomUserCreateSerializer(UserCreateSerializer):
         self.fields["key"] = serializers.SerializerMethodField()
 
     class Meta(UserCreateSerializer.Meta):
-        fields = UserCreateSerializer.Meta.fields + ('is_active',)
-        read_only_fields = ('is_active',)
+        fields = UserCreateSerializer.Meta.fields + ("is_active",)
+        read_only_fields = ("is_active",)
 
     @staticmethod
     def get_key(instance):

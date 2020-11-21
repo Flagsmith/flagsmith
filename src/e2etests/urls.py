@@ -5,6 +5,4 @@ from .views import Teardown
 app_name = "e2etests"
 
 
-urlpatterns = [
-    url(r'teardown/', Teardown.as_view(), name='teardown')
-]
+urlpatterns = [url(r"teardown/", Teardown.as_view(), name="teardown")]

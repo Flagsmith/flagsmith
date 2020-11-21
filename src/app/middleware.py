@@ -12,12 +12,19 @@ class AdminWhitelistMiddleware:
         self.get_response = get_response
 
     def __call__(self, request):
-        if request.path.startswith('/admin'):
-            x_forwarded_for = request.META.get('HTTP_X_FORWARDED_FOR')
-            ip = x_forwarded_for.split(',')[0] if x_forwarded_for else request.META.get('REMOTE_ADDR')
-            if settings.ALLOWED_ADMIN_IP_ADDRESSES and ip not in settings.ALLOWED_ADMIN_IP_ADDRESSES:
+        if request.path.startswith("/admin"):
+            x_forwarded_for = request.META.get("HTTP_X_FORWARDED_FOR")
+            ip = (
+                x_forwarded_for.split(",")[0]
+                if x_forwarded_for
+                else request.META.get("REMOTE_ADDR")
+            )
+            if (
+                settings.ALLOWED_ADMIN_IP_ADDRESSES
+                and ip not in settings.ALLOWED_ADMIN_IP_ADDRESSES
+            ):
                 # IP address not allowed!
-                logger.info('Denying access to admin for ip address %s' % ip)
+                logger.info("Denying access to admin for ip address %s" % ip)
                 raise PermissionDenied()
 
         return self.get_response(request)
@@ -25,7 +32,9 @@ class AdminWhitelistMiddleware:
 
 class AxesMiddleware(DefaultAxesMiddleware):
     def __call__(self, request):
-        if hasattr(request, "path") and any(url in request.path for url in settings.AXES_BLACKLISTED_URLS):
+        if hasattr(request, "path") and any(
+            url in request.path for url in settings.AXES_BLACKLISTED_URLS
+        ):
             return super().__call__(request)
 
         response = self.get_response(request)

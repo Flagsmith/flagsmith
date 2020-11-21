@@ -1,1 +1,1 @@
-default_app_config = 'audit.apps.AuditConfig'
+default_app_config = "audit.apps.AuditConfig"

@@ -3,4 +3,4 @@ from django.apps import AppConfig
 
 
 class DataDogConfigurationConfig(AppConfig):
-    name = 'integrations.datadog'
+    name = "integrations.datadog"

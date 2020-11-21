@@ -4,6 +4,7 @@ from rest_framework.exceptions import ValidationError
 
 from organisations.models import Organisation
 from organisations.serializers import UserOrganisationSerializer
+
 from .models import FFAdminUser, Invite, UserPermissionGroup
 
 
@@ -14,7 +15,7 @@ class UserIdSerializer(serializers.Serializer):
         pass
 
     def create(self, validated_data):
-        organisation = Organisation.objects.get(pk=self.context.get('organisation'))
+        organisation = Organisation.objects.get(pk=self.context.get("organisation"))
         user = self._get_user(validated_data)
 
         if user and organisation in user.organisations.all():
@@ -23,59 +24,65 @@ class UserIdSerializer(serializers.Serializer):
         return user
 
     def validate(self, attrs):
-        if not FFAdminUser.objects.filter(pk=attrs.get('id')).exists():
-            message = 'User with id %d does not exist' % attrs.get('id')
-            raise ValidationError({'id': message})
+        if not FFAdminUser.objects.filter(pk=attrs.get("id")).exists():
+            message = "User with id %d does not exist" % attrs.get("id")
+            raise ValidationError({"id": message})
         return attrs
 
     def _get_user(self, validated_data):
         try:
-            return FFAdminUser.objects.get(pk=validated_data.get('id'))
+            return FFAdminUser.objects.get(pk=validated_data.get("id"))
         except FFAdminUser.DoesNotExist:
             return None
 
 
 class UserFullSerializer(serializers.ModelSerializer):
-    organisations = UserOrganisationSerializer(source='userorganisation_set', many=True)
+    organisations = UserOrganisationSerializer(source="userorganisation_set", many=True)
 
     class Meta:
         model = FFAdminUser
-        fields = ('id', 'email', 'first_name', 'last_name', 'organisations')
+        fields = ("id", "email", "first_name", "last_name", "organisations")
 
 
 class UserLoginSerializer(serializers.ModelSerializer):
     class Meta:
         model = FFAdminUser
-        fields = ('email', 'password')
+        fields = ("email", "password")
 
 
 class UserListSerializer(serializers.ModelSerializer):
     role = serializers.SerializerMethodField(read_only=True)
     join_date = serializers.SerializerMethodField(read_only=True)
 
-    default_fields = ('id', 'email', 'first_name', 'last_name')
-    organisation_users_fields = ('role', 'date_joined')
+    default_fields = ("id", "email", "first_name", "last_name")
+    organisation_users_fields = ("role", "date_joined")
 
     class Meta:
         model = FFAdminUser
 
     def get_field_names(self, declared_fields, info):
         fields = self.default_fields
-        if self.context.get('organisation'):
+        if self.context.get("organisation"):
             fields += self.organisation_users_fields
         return fields
 
     def get_role(self, instance):
-        return instance.get_organisation_role(self.context.get('organisation'))
+        return instance.get_organisation_role(self.context.get("organisation"))
 
     def get_join_date(self, instance):
-        return instance.get_organisation_join_date(self.context.get('organisation'))
+        return instance.get_organisation_join_date(self.context.get("organisation"))
 
 
 class InviteSerializer(serializers.ModelSerializer):
     class Meta:
         model = Invite
-        fields = ('email', 'organisation', 'frontend_base_url', 'invited_by', 'date_created')
+        fields = (
+            "email",
+            "organisation",
+            "frontend_base_url",
+            "invited_by",
+            "date_created",
+        )
 
 
 class InviteListSerializer(serializers.ModelSerializer):
@@ -83,7 +90,7 @@ class InviteListSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Invite
-        fields = ('id', 'email', 'date_created', 'invited_by')
+        fields = ("id", "email", "date_created", "invited_by")
 
 
 class UserIdsSerializer(serializers.Serializer):
@@ -93,8 +100,8 @@ class UserIdsSerializer(serializers.Serializer):
 class UserPermissionGroupSerializerList(serializers.ModelSerializer):
     class Meta:
         model = UserPermissionGroup
-        fields = ('id', 'name', 'users')
-        read_only_fields = ('id',)
+        fields = ("id", "name", "users")
+        read_only_fields = ("id",)
 
 
 class UserPermissionGroupSerializerDetail(UserPermissionGroupSerializerList):
@@ -106,5 +113,4 @@ class CustomCurrentUserSerializer(DjoserUserSerializer):
     auth_type = serializers.CharField(read_only=True)
 
     class Meta(DjoserUserSerializer.Meta):
-        fields = DjoserUserSerializer.Meta.fields + ('auth_type',)
-
+        fields = DjoserUserSerializer.Meta.fields + ("auth_type",)
