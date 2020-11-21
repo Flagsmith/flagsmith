@@ -10,7 +10,7 @@ from django.utils.safestring import mark_safe
 from organisations.models import Organisation
 from django.shortcuts import get_object_or_404
 from django.views.generic import ListView
-OBJECTS_PER_PAGE = 200
+OBJECTS_PER_PAGE = 50
 
 
 class OrganisationList(ListView):
