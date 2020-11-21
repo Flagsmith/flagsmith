@@ -20,7 +20,8 @@ import sys
 from corsheaders.defaults import default_headers
 from datetime import timedelta
 
-from app.utils import secret_key_gen
+from django.core.management.utils import get_random_secret_key
+
 
 env = environ.Env()
 
@@ -32,10 +33,7 @@ ENV = env('ENVIRONMENT', default='local')
 if ENV not in ('local', 'dev', 'staging', 'production'):
     warnings.warn('ENVIRONMENT env variable must be one of local, dev, staging or production')
 
-if 'DJANGO_SECRET_KEY' not in os.environ:
-    secret_key_gen()
-
-SECRET_KEY = os.environ['DJANGO_SECRET_KEY']
+SECRET_KEY = env('DJANGO_SECRET_KEY', default=get_random_secret_key())
 
 HOSTED_SEATS_LIMIT = int(os.environ.get('HOSTED_SEATS_LIMIT', 0))
 
