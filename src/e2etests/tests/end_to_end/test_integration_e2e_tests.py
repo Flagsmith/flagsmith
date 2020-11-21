@@ -28,7 +28,7 @@ class E2eTestsIntegrationTestCase(TestCase):
             "first_name": "test",
             "last_name": "test",
             "password": test_password,
-            "re_password": test_password
+            "re_password": test_password,
         }
         register_response = self.client.post(self.register_url, data=register_data)
         assert register_response.status_code == status.HTTP_201_CREATED

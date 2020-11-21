@@ -34,9 +34,7 @@ class AuthIntegrationTestCase(APITestCase):
         # now register with full data
         register_data["first_name"] = "test"
         register_data["last_name"] = "user"
-        register_response_success = self.client.post(
-            register_url, data=register_data
-        )
+        register_response_success = self.client.post(register_url, data=register_data)
         assert register_response_success.status_code == status.HTTP_201_CREATED
         assert register_response_success.json()["key"]
 
@@ -76,7 +74,9 @@ class AuthIntegrationTestCase(APITestCase):
             "new_password": new_password,
             "re_new_password": new_password,
         }
-        reset_password_confirm_url = reverse("api-v1:custom_auth:ffadminuser-reset-password-confirm")
+        reset_password_confirm_url = reverse(
+            "api-v1:custom_auth:ffadminuser-reset-password-confirm"
+        )
         reset_password_confirm_response = self.client.post(
             reset_password_confirm_url, data=reset_password_confirm_data
         )
@@ -95,11 +95,8 @@ class AuthIntegrationTestCase(APITestCase):
 
     @override_settings(
         DJOSER=ChainMap(
-            {
-                'SEND_ACTIVATION_EMAIL': True,
-                'SEND_CONFIRMATION_EMAIL': False
-            },
-            settings.DJOSER
+            {"SEND_ACTIVATION_EMAIL": True, "SEND_CONFIRMATION_EMAIL": False},
+            settings.DJOSER,
         )
     )
     def test_registration_and_login_with_user_activation_flow(self):
@@ -118,15 +115,17 @@ class AuthIntegrationTestCase(APITestCase):
 
         # When register
         register_url = reverse("api-v1:custom_auth:ffadminuser-list")
-        result = self.client.post(register_url, data=register_data, status_code=status.HTTP_201_CREATED)
+        result = self.client.post(
+            register_url, data=register_data, status_code=status.HTTP_201_CREATED
+        )
 
         # Then success and account inactive
-        self.assertIn('key', result.data)
-        self.assertIn('is_active', result.data)
-        assert result.data['is_active'] == False
+        self.assertIn("key", result.data)
+        self.assertIn("is_active", result.data)
+        assert result.data["is_active"] == False
 
-        new_user = FFAdminUser.objects.latest('id')
-        self.assertEqual(new_user.email, register_data['email'])
+        new_user = FFAdminUser.objects.latest("id")
+        self.assertEqual(new_user.email, register_data["email"])
         self.assertFalse(new_user.is_active)
 
         # And login should fail as we have not activated account yet
@@ -150,20 +149,19 @@ class AuthIntegrationTestCase(APITestCase):
         uid = split_url[-2]
         token = split_url[-1]
 
-        activate_data = {
-            "uid": uid,
-            "token": token
-        }
+        activate_data = {"uid": uid, "token": token}
 
         activate_url = reverse("api-v1:custom_auth:ffadminuser-activation")
         # And activate account
-        self.client.post(activate_url, data=activate_data, status_code=status.HTTP_204_NO_CONTENT)
+        self.client.post(
+            activate_url, data=activate_data, status_code=status.HTTP_204_NO_CONTENT
+        )
 
         time.sleep(1)
         # And login success
         login_result = self.client.post(login_url, data=login_data)
         assert login_result.status_code == status.HTTP_200_OK
-        self.assertIn('key', login_result.data)
+        self.assertIn("key", login_result.data)
 
     def test_login_workflow_with_mfa_enabled(self):
         # register the user
@@ -175,9 +173,7 @@ class AuthIntegrationTestCase(APITestCase):
             "last_name": "user",
         }
         register_url = reverse("api-v1:custom_auth:ffadminuser-list")
-        register_response = self.client.post(
-            register_url, data=register_data
-        )
+        register_response = self.client.post(register_url, data=register_data)
         assert register_response.status_code == status.HTTP_201_CREATED
         key = register_response.json()["key"]
 
@@ -185,25 +181,26 @@ class AuthIntegrationTestCase(APITestCase):
         self.client.credentials(HTTP_AUTHORIZATION=f"Token {key}")
 
         # create an MFA method
-        create_mfa_method_url = reverse("api-v1:custom_auth:mfa-activate", kwargs={"method": "app"})
+        create_mfa_method_url = reverse(
+            "api-v1:custom_auth:mfa-activate", kwargs={"method": "app"}
+        )
         create_mfa_response = self.client.post(create_mfa_method_url)
         assert create_mfa_response.status_code == status.HTTP_200_OK
         secret = create_mfa_response.json()["secret"]
 
         # confirm the MFA method
         totp = pyotp.TOTP(secret)
-        confirm_mfa_data = {
-            "code": totp.now()
-        }
-        confirm_mfa_method_url = reverse("api-v1:custom_auth:mfa-activate-confirm", kwargs={"method": "app"})
-        confirm_mfa_method_response = self.client.post(confirm_mfa_method_url, data=confirm_mfa_data)
+        confirm_mfa_data = {"code": totp.now()}
+        confirm_mfa_method_url = reverse(
+            "api-v1:custom_auth:mfa-activate-confirm", kwargs={"method": "app"}
+        )
+        confirm_mfa_method_response = self.client.post(
+            confirm_mfa_method_url, data=confirm_mfa_data
+        )
         assert confirm_mfa_method_response
 
         # now login should return an ephemeral token rather than a token
-        login_data = {
-            "email": self.test_email,
-            "password": self.password
-        }
+        login_data = {"email": self.test_email, "password": self.password}
         self.client.logout()
         login_url = reverse("api-v1:custom_auth:custom-mfa-authtoken-login")
         login_response = self.client.post(login_url, data=login_data)
@@ -211,12 +208,11 @@ class AuthIntegrationTestCase(APITestCase):
         ephemeral_token = login_response.json()["ephemeral_token"]
 
         # now we can confirm the login
-        confirm_login_data = {
-            "ephemeral_token": ephemeral_token,
-            "code": totp.now()
-        }
+        confirm_login_data = {"ephemeral_token": ephemeral_token, "code": totp.now()}
         login_confirm_url = reverse("api-v1:custom_auth:mfa-authtoken-login-code")
-        login_confirm_response = self.client.post(login_confirm_url, data=confirm_login_data)
+        login_confirm_response = self.client.post(
+            login_confirm_url, data=confirm_login_data
+        )
         assert login_confirm_response.status_code == status.HTTP_200_OK
         key = login_confirm_response.json()["key"]
 
@@ -237,9 +233,7 @@ class AuthIntegrationTestCase(APITestCase):
             "last_name": "user",
         }
         register_url = reverse("api-v1:custom_auth:ffadminuser-list")
-        register_response = self.client.post(
-            register_url, data=register_data
-        )
+        register_response = self.client.post(register_url, data=register_data)
         assert register_response.status_code == status.HTTP_201_CREATED
         assert register_response.json()["key"]
 

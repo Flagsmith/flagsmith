@@ -26,7 +26,7 @@ environment_cache = caches[settings.ENVIRONMENT_CACHE_LOCATION]
 @python_2_unicode_compatible
 class Environment(models.Model):
     name = models.CharField(max_length=2000)
-    created_date = models.DateTimeField('DateCreated', auto_now_add=True)
+    created_date = models.DateTimeField("DateCreated", auto_now_add=True)
     project = models.ForeignKey(
         Project,
         related_name="environments",
@@ -36,14 +36,14 @@ class Environment(models.Model):
             "default Feature States will be created for the new selected projects Features for "
             "this Environment."
         ),
-        on_delete=models.CASCADE
+        on_delete=models.CASCADE,
     )
     api_key = models.CharField(default=create_hash, unique=True, max_length=100)
-    webhooks_enabled = models.BooleanField(default=False, help_text='DEPRECATED FIELD.')
-    webhook_url = models.URLField(null=True, blank=True, help_text='DEPRECATED FIELD.')
+    webhooks_enabled = models.BooleanField(default=False, help_text="DEPRECATED FIELD.")
+    webhook_url = models.URLField(null=True, blank=True, help_text="DEPRECATED FIELD.")
 
     class Meta:
-        ordering = ['id']
+        ordering = ["id"]
 
     def save(self, *args, **kwargs):
         """
@@ -54,7 +54,9 @@ class Environment(models.Model):
             old_environment = Environment.objects.get(pk=self.pk)
             if old_environment.project != self.project:
                 FeatureState.objects.filter(
-                    feature__in=old_environment.project.features.values_list('pk', flat=True),
+                    feature__in=old_environment.project.features.values_list(
+                        "pk", flat=True
+                    ),
                     environment=self,
                 ).all().delete()
                 requires_feature_state_creation = True
@@ -69,7 +71,7 @@ class Environment(models.Model):
                     feature=feature,
                     environment=self,
                     identity=None,
-                    enabled=feature.default_enabled
+                    enabled=feature.default_enabled,
                 )
 
     def __str__(self):
@@ -78,19 +80,26 @@ class Environment(models.Model):
     @staticmethod
     def get_environment_from_request(request):
         try:
-            environment_key = request.META['HTTP_X_ENVIRONMENT_KEY']
+            environment_key = request.META["HTTP_X_ENVIRONMENT_KEY"]
         except KeyError:
             raise EnvironmentHeaderNotPresentError
 
-        return Environment.objects.select_related('project', 'project__organisation').get(
-            api_key=environment_key)
+        return Environment.objects.select_related(
+            "project", "project__organisation"
+        ).get(api_key=environment_key)
 
     @classmethod
     def get_from_cache(cls, api_key):
         environment = environment_cache.get(api_key)
         if not environment:
-            select_related_args = ('project', 'project__organisation', 'amplitude_config')
-            environment = Environment.objects.select_related(*select_related_args).get(api_key=api_key)
+            select_related_args = (
+                "project",
+                "project__organisation",
+                "amplitude_config",
+            )
+            environment = Environment.objects.select_related(*select_related_args).get(
+                api_key=api_key
+            )
             # TODO: replace the hard coded cache timeout with an environment variable
             #  until we merge in the pulumi stuff, however, we'll have too many conflicts
             environment_cache.set(environment.api_key, environment, timeout=60)
@@ -98,7 +107,9 @@ class Environment(models.Model):
 
 
 class Webhook(models.Model):
-    environment = models.ForeignKey(Environment, on_delete=models.CASCADE, related_name='webhooks')
+    environment = models.ForeignKey(
+        Environment, on_delete=models.CASCADE, related_name="webhooks"
+    )
     url = models.URLField()
     enabled = models.BooleanField(default=True)
     created_at = models.DateTimeField(auto_now_add=True)
