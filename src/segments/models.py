@@ -1,17 +1,16 @@
 # -*- coding: utf-8 -*-
-import re
 import hashlib
+import re
 import typing
 
 from django.core.exceptions import ValidationError
 from django.db import models
 from django.utils.encoding import python_2_unicode_compatible
 
-from environments.models import INTEGER, BOOLEAN, FLOAT
-from environments.identities.traits.models import Trait
 from environments.identities.models import Identity
+from environments.identities.traits.models import Trait
+from environments.models import BOOLEAN, FLOAT, INTEGER
 from projects.models import Project
-
 
 # Condition Types
 EQUAL = "EQUAL"
@@ -30,22 +29,28 @@ PERCENTAGE_SPLIT = "PERCENTAGE_SPLIT"
 class Segment(models.Model):
     name = models.CharField(max_length=2000)
     description = models.TextField(null=True, blank=True)
-    project = models.ForeignKey(Project, on_delete=models.CASCADE, related_name="segments")
+    project = models.ForeignKey(
+        Project, on_delete=models.CASCADE, related_name="segments"
+    )
 
     def __str__(self):
         return "Segment - %s" % self.name
 
-    def does_identity_match(self, identity: Identity, traits: typing.List[Trait] = None) -> bool:
+    def does_identity_match(
+        self, identity: Identity, traits: typing.List[Trait] = None
+    ) -> bool:
         rules = self.rules.all()
-        return rules.count() > 0 and all(rule.does_identity_match(identity, traits) for rule in rules)
+        return rules.count() > 0 and all(
+            rule.does_identity_match(identity, traits) for rule in rules
+        )
 
     def get_identity_percentage_value(self, identity: Identity) -> float:
         """
         Given a segment and an identity, generate a number between 0 and 1 to determine whether the identity falls
         within a given percentile when using percentage split rules.
         """
-        to_hash = f'{self.id},{identity.id}'
-        hashed_value = hashlib.md5(to_hash.encode('utf-8'))
+        to_hash = f"{self.id},{identity.id}"
+        hashed_value = hashlib.md5(to_hash.encode("utf-8"))
         hashed_value_as_int = int(hashed_value.hexdigest(), base=16)
         return (hashed_value_as_int % 9999) / 9998
 
@@ -56,14 +61,14 @@ class SegmentRule(models.Model):
     ANY_RULE = "ANY"
     NONE_RULE = "NONE"
 
-    RULE_TYPES = (
-        (ALL_RULE, "all"),
-        (ANY_RULE, "any"),
-        (NONE_RULE, "none")
-    )
+    RULE_TYPES = ((ALL_RULE, "all"), (ANY_RULE, "any"), (NONE_RULE, "none"))
 
-    segment = models.ForeignKey(Segment, on_delete=models.CASCADE, related_name="rules", null=True, blank=True)
-    rule = models.ForeignKey('self', on_delete=models.CASCADE, related_name="rules", null=True, blank=True)
+    segment = models.ForeignKey(
+        Segment, on_delete=models.CASCADE, related_name="rules", null=True, blank=True
+    )
+    rule = models.ForeignKey(
+        "self", on_delete=models.CASCADE, related_name="rules", null=True, blank=True
+    )
 
     type = models.CharField(max_length=50, choices=RULE_TYPES)
 
@@ -72,12 +77,19 @@ class SegmentRule(models.Model):
         parents = [self.segment, self.rule]
         num_parents = sum(parent is not None for parent in parents)
         if num_parents != 1:
-            raise ValidationError("Segment rule must have exactly one parent, %d found", num_parents)
+            raise ValidationError(
+                "Segment rule must have exactly one parent, %d found", num_parents
+            )
 
     def __str__(self):
-        return "%s rule for %s" % (self.type, str(self.segment) if self.segment else str(self.rule))
+        return "%s rule for %s" % (
+            self.type,
+            str(self.segment) if self.segment else str(self.rule),
+        )
 
-    def does_identity_match(self, identity: Identity, traits: typing.List[Trait] = None) -> bool:
+    def does_identity_match(
+        self, identity: Identity, traits: typing.List[Trait] = None
+    ) -> bool:
         matches_conditions = False
         conditions = self.conditions.all()
 
@@ -85,18 +97,23 @@ class SegmentRule(models.Model):
             matches_conditions = True
         elif self.type == self.ALL_RULE:
             matches_conditions = all(
-                condition.does_identity_match(identity, traits) for condition in conditions
+                condition.does_identity_match(identity, traits)
+                for condition in conditions
             )
         elif self.type == self.ANY_RULE:
             matches_conditions = any(
-                condition.does_identity_match(identity, traits) for condition in conditions
+                condition.does_identity_match(identity, traits)
+                for condition in conditions
             )
         elif self.type == self.NONE_RULE:
             matches_conditions = not any(
-                condition.does_identity_match(identity, traits) for condition in conditions
+                condition.does_identity_match(identity, traits)
+                for condition in conditions
             )
 
-        return matches_conditions and all(rule.does_identity_match(identity, traits) for rule in self.rules.all())
+        return matches_conditions and all(
+            rule.does_identity_match(identity, traits) for rule in self.rules.all()
+        )
 
     def get_segment(self):
         """
@@ -123,19 +140,28 @@ class Condition(models.Model):
         (NOT_CONTAINS, "Does not contain"),
         (NOT_EQUAL, "Does not match"),
         (REGEX, "Matches regex"),
-        (PERCENTAGE_SPLIT, "Percentage split")
+        (PERCENTAGE_SPLIT, "Percentage split"),
     )
 
     operator = models.CharField(choices=CONDITION_TYPES, max_length=500)
     property = models.CharField(blank=True, null=True, max_length=1000)
     value = models.CharField(max_length=1000)
 
-    rule = models.ForeignKey(SegmentRule, on_delete=models.CASCADE, related_name="conditions")
+    rule = models.ForeignKey(
+        SegmentRule, on_delete=models.CASCADE, related_name="conditions"
+    )
 
     def __str__(self):
-        return "Condition for %s: %s %s %s" % (str(self.rule), self.property, self.operator, self.value)
+        return "Condition for %s: %s %s %s" % (
+            str(self.rule),
+            self.property,
+            self.operator,
+            self.value,
+        )
 
-    def does_identity_match(self, identity: Identity, traits: typing.List[Trait] = None) -> bool:
+    def does_identity_match(
+        self, identity: Identity, traits: typing.List[Trait] = None
+    ) -> bool:
         if self.operator == PERCENTAGE_SPLIT:
             return self._check_percentage_split_operator(identity)
 
@@ -206,9 +232,9 @@ class Condition(models.Model):
         return False
 
     def check_boolean_value(self, value: bool) -> bool:
-        if self.value in ('False', 'false', '0'):
+        if self.value in ("False", "false", "0"):
             bool_value = False
-        elif self.value in ('True', 'true', '1'):
+        elif self.value in ("True", "true", "1"):
             bool_value = True
         else:
             return False

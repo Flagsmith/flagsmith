@@ -4,19 +4,27 @@ import pytest
 from django.conf import settings
 
 import analytics
-from analytics.track import track_request_googleanalytics, track_request_influxdb
+from analytics.track import (
+    track_request_googleanalytics,
+    track_request_influxdb,
+)
 
 
-@pytest.mark.parametrize("request_uri, expected_ga_requests", (
+@pytest.mark.parametrize(
+    "request_uri, expected_ga_requests",
+    (
         ("/api/v1/flags/", 2),
         ("/api/v1/identities/", 2),
         ("/api/v1/traits/", 2),
         ("/api/v1/features/", 1),
-        ("/health", 1)
-))
+        ("/health", 1),
+    ),
+)
 @mock.patch("analytics.track.requests")
 @mock.patch("analytics.track.Environment")
-def test_track_request_googleanalytics(MockEnvironment, mock_requests, request_uri, expected_ga_requests):
+def test_track_request_googleanalytics(
+    MockEnvironment, mock_requests, request_uri, expected_ga_requests
+):
     """
     Verify that the correct number of calls are made to GA for the various uris.
 
@@ -37,11 +45,14 @@ def test_track_request_googleanalytics(MockEnvironment, mock_requests, request_u
     assert mock_requests.post.call_count == expected_ga_requests
 
 
-@pytest.mark.parametrize("request_uri, expected_resource", (
+@pytest.mark.parametrize(
+    "request_uri, expected_resource",
+    (
         ("/api/v1/flags/", "flags"),
         ("/api/v1/identities/", "identities"),
         ("/api/v1/traits/", "traits"),
-))
+    ),
+)
 @mock.patch("analytics.track.InfluxDBWrapper")
 @mock.patch("analytics.track.Environment")
 def test_track_request_sends_data_to_influxdb_for_tracked_uris(
@@ -65,7 +76,10 @@ def test_track_request_sends_data_to_influxdb_for_tracked_uris(
     # Then
     call_list = MockInfluxDBWrapper.call_args_list
     assert len(call_list) == 1
-    assert mock_influxdb.add_data_point.call_args_list[0][1]["tags"]["resource"] == expected_resource
+    assert (
+        mock_influxdb.add_data_point.call_args_list[0][1]["tags"]["resource"]
+        == expected_resource
+    )
 
 
 @mock.patch("analytics.track.InfluxDBWrapper")
@@ -90,4 +104,3 @@ def test_track_request_does_not_send_data_to_influxdb_for_not_tracked_uris(
 
     # Then
     MockInfluxDBWrapper.assert_not_called()
-

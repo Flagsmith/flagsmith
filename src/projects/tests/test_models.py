@@ -7,7 +7,7 @@ from django.test import TransactionTestCase
 
 from organisations.models import Organisation
 from projects.models import Project
-from segments.models import Segment, SegmentRule, Condition, EQUAL
+from segments.models import EQUAL, Condition, Segment, SegmentRule
 
 
 @pytest.mark.django_db()
@@ -16,7 +16,9 @@ def test_get_segments_from_cache(project, monkeypatch):
     mock_project_segments_cache = mock.MagicMock()
     mock_project_segments_cache.get.return_value = None
 
-    monkeypatch.setattr('projects.models.project_segments_cache', mock_project_segments_cache)
+    monkeypatch.setattr(
+        "projects.models.project_segments_cache", mock_project_segments_cache
+    )
 
     # When
     segments = project.get_segments_from_cache()
@@ -34,7 +36,9 @@ def test_get_segments_from_cache_set_not_called(project, segments, monkeypatch):
     mock_project_segments_cache = mock.MagicMock()
     mock_project_segments_cache.get.return_value = project.segments.all()
 
-    monkeypatch.setattr('projects.models.project_segments_cache', mock_project_segments_cache)
+    monkeypatch.setattr(
+        "projects.models.project_segments_cache", mock_project_segments_cache
+    )
 
     # When
     segments = project.get_segments_from_cache()
