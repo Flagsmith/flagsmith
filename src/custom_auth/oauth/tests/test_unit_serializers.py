@@ -4,7 +4,11 @@ import pytest
 from django.contrib.auth import get_user_model
 from rest_framework.authtoken.models import Token
 
-from custom_auth.oauth.serializers import GoogleLoginSerializer, OAuthLoginSerializer, GithubLoginSerializer
+from custom_auth.oauth.serializers import (
+    GithubLoginSerializer,
+    GoogleLoginSerializer,
+    OAuthLoginSerializer,
+)
 
 UserModel = get_user_model()
 
@@ -20,16 +24,14 @@ class OAuthLoginSerializerTestCase(TestCase):
             "email": self.test_email,
             "first_name": self.test_first_name,
             "last_name": self.test_last_name,
-            "google_user_id": self.test_id
+            "google_user_id": self.test_id,
         }
 
     @mock.patch("custom_auth.oauth.serializers.get_user_info")
     def test_create(self, mock_get_user_info):
         # Given
         access_token = "access-token"
-        data = {
-            "access_token": access_token
-        }
+        data = {"access_token": access_token}
         serializer = OAuthLoginSerializer(data=data)
 
         # monkey patch the get_user_info method to return the mock user data

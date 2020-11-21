@@ -1,12 +1,23 @@
 from unittest import TestCase
 
 import pytest
-
 from django.db.utils import IntegrityError
+
 from environments.models import Environment
-from environments.permissions.models import EnvironmentPermissionModel, UserEnvironmentPermission
-from organisations.models import Organisation, OrganisationRole, UserOrganisation
-from projects.models import Project, UserProjectPermission, ProjectPermissionModel
+from environments.permissions.models import (
+    EnvironmentPermissionModel,
+    UserEnvironmentPermission,
+)
+from organisations.models import (
+    Organisation,
+    OrganisationRole,
+    UserOrganisation,
+)
+from projects.models import (
+    Project,
+    ProjectPermissionModel,
+    UserProjectPermission,
+)
 from users.models import FFAdminUser
 
 
@@ -16,11 +27,19 @@ class FFAdminUserTestCase(TestCase):
         self.user = FFAdminUser.objects.create(email="test@example.com")
         self.organisation = Organisation.objects.create(name="Test Organisation")
 
-        self.project_1 = Project.objects.create(name='Test project 1', organisation=self.organisation)
-        self.project_2 = Project.objects.create(name='Test project 2', organisation=self.organisation)
+        self.project_1 = Project.objects.create(
+            name="Test project 1", organisation=self.organisation
+        )
+        self.project_2 = Project.objects.create(
+            name="Test project 2", organisation=self.organisation
+        )
 
-        self.environment_1 = Environment.objects.create(name='Test Environment 1', project=self.project_1)
-        self.environment_2 = Environment.objects.create(name='Test Environment 2', project=self.project_2)
+        self.environment_1 = Environment.objects.create(
+            name="Test Environment 1", project=self.project_1
+        )
+        self.environment_2 = Environment.objects.create(
+            name="Test Environment 2", project=self.project_2
+        )
 
     def test_user_belongs_to_success(self):
         self.user.add_organisation(self.organisation, OrganisationRole.USER)
@@ -34,20 +53,26 @@ class FFAdminUserTestCase(TestCase):
         self.user.add_organisation(self.organisation, OrganisationRole.ADMIN)
 
         # When
-        projects = self.user.get_permitted_projects(['VIEW_PROJECT', 'CREATE_ENVIRONMENT'])
+        projects = self.user.get_permitted_projects(
+            ["VIEW_PROJECT", "CREATE_ENVIRONMENT"]
+        )
 
         # Then
         assert projects.count() == 2
 
-    def test_get_permitted_projects_for_user_returns_only_projects_matching_permission(self):
+    def test_get_permitted_projects_for_user_returns_only_projects_matching_permission(
+        self,
+    ):
         # Given
         self.user.add_organisation(self.organisation, OrganisationRole.USER)
-        user_project_permission = UserProjectPermission.objects.create(user=self.user, project=self.project_1)
-        read_permission = ProjectPermissionModel.objects.get(key='VIEW_PROJECT')
+        user_project_permission = UserProjectPermission.objects.create(
+            user=self.user, project=self.project_1
+        )
+        read_permission = ProjectPermissionModel.objects.get(key="VIEW_PROJECT")
         user_project_permission.permissions.set([read_permission])
 
         # When
-        projects = self.user.get_permitted_projects(permissions=['VIEW_PROJECT'])
+        projects = self.user.get_permitted_projects(permissions=["VIEW_PROJECT"])
 
         # Then
         assert projects.count() == 1
@@ -67,20 +92,26 @@ class FFAdminUserTestCase(TestCase):
         self.user.add_organisation(self.organisation, OrganisationRole.ADMIN)
 
         # When
-        environments = self.user.get_permitted_environments(['VIEW_ENVIRONMENT'])
+        environments = self.user.get_permitted_environments(["VIEW_ENVIRONMENT"])
 
         # Then
         assert environments.count() == 2
 
-    def test_get_permitted_environments_for_user_returns_only_environments_matching_permission(self):
+    def test_get_permitted_environments_for_user_returns_only_environments_matching_permission(
+        self,
+    ):
         # Given
         self.user.add_organisation(self.organisation, OrganisationRole.USER)
-        user_environment_permission = UserEnvironmentPermission.objects.create(user=self.user, environment=self.environment_1)
-        read_permission = EnvironmentPermissionModel.objects.get(key='VIEW_ENVIRONMENT')
+        user_environment_permission = UserEnvironmentPermission.objects.create(
+            user=self.user, environment=self.environment_1
+        )
+        read_permission = EnvironmentPermissionModel.objects.get(key="VIEW_ENVIRONMENT")
         user_environment_permission.permissions.set([read_permission])
 
         # When
-        environments = self.user.get_permitted_environments(permissions=['VIEW_ENVIRONMENT'])
+        environments = self.user.get_permitted_environments(
+            permissions=["VIEW_ENVIRONMENT"]
+        )
 
         # Then
         assert environments.count() == 1

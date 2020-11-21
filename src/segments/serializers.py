@@ -1,28 +1,35 @@
 from rest_framework import serializers
 from rest_framework.exceptions import ValidationError
 from rest_framework.serializers import ListSerializer
-
 from rest_framework_recursive.fields import RecursiveField
 
-from audit.models import AuditLog, RelatedObjectType, SEGMENT_CREATED_MESSAGE, SEGMENT_UPDATED_MESSAGE
-from segments.models import Segment, SegmentRule, Condition
+from audit.models import (
+    SEGMENT_CREATED_MESSAGE,
+    SEGMENT_UPDATED_MESSAGE,
+    AuditLog,
+    RelatedObjectType,
+)
+from segments.models import Condition, Segment, SegmentRule
+
 from . import models
 
 
 class ConditionSerializer(serializers.ModelSerializer):
     class Meta:
         model = models.Condition
-        fields = ('operator', 'property', 'value')
+        fields = ("operator", "property", "value")
 
     def validate(self, attrs):
         super(ConditionSerializer, self).validate(attrs)
-        if attrs.get('operator') != models.PERCENTAGE_SPLIT and not attrs.get('property'):
-            raise ValidationError({'property': ['This field may not be blank.']})
+        if attrs.get("operator") != models.PERCENTAGE_SPLIT and not attrs.get(
+            "property"
+        ):
+            raise ValidationError({"property": ["This field may not be blank."]})
         return attrs
 
     def to_internal_value(self, data):
         # convert value to a string - conversion to correct value type is handled elsewhere
-        data['value'] = str(data['value'])
+        data["value"] = str(data["value"])
         return super(ConditionSerializer, self).to_internal_value(data)
 
 
@@ -32,7 +39,7 @@ class RuleSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = models.SegmentRule
-        fields = ('type', 'rules', 'conditions')
+        fields = ("type", "rules", "conditions")
 
 
 class SegmentSerializer(serializers.ModelSerializer):
@@ -40,11 +47,13 @@ class SegmentSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = models.Segment
-        fields = '__all__'
+        fields = "__all__"
 
     def validate(self, attrs):
-        if not attrs.get('rules'):
-            raise ValidationError({'rules': 'Segment cannot be created without any rules.'})
+        if not attrs.get("rules"):
+            raise ValidationError(
+                {"rules": "Segment cannot be created without any rules."}
+            )
         return attrs
 
     def create(self, validated_data):
@@ -54,14 +63,14 @@ class SegmentSerializer(serializers.ModelSerializer):
         :param validated_data: validated json data
         :return: created Segment object
         """
-        rules_data = validated_data.pop('rules', [])
+        rules_data = validated_data.pop("rules", [])
         segment = Segment.objects.create(**validated_data)
         self._create_segment_rules(rules_data, segment=segment)
         self._create_audit_log(segment, True)
         return segment
 
     def update(self, instance, validated_data):
-        rules_data = validated_data.pop('rules', [])
+        rules_data = validated_data.pop("rules", [])
         self._update_segment_rules(rules_data, segment=instance)
         self._create_audit_log(instance, False)
         return super().update(instance, validated_data)
@@ -80,8 +89,8 @@ class SegmentSerializer(serializers.ModelSerializer):
             raise RuntimeError("Can't create rule without parent segment or rule")
 
         for rule_data in rules_data:
-            child_rules = rule_data.pop('rules', [])
-            conditions = rule_data.pop('conditions', [])
+            child_rules = rule_data.pop("rules", [])
+            conditions = rule_data.pop("conditions", [])
 
             child_rule = self._create_segment_rule(rule_data, segment, rule)
 
@@ -104,15 +113,22 @@ class SegmentSerializer(serializers.ModelSerializer):
             Condition.objects.create(rule=rule, **condition)
 
     def _create_audit_log(self, instance, created):
-        message = SEGMENT_CREATED_MESSAGE % instance.name if created else SEGMENT_UPDATED_MESSAGE % instance.name
-        request = self.context.get('request')
-        AuditLog.objects.create(author=request.user if request else None, related_object_id=instance.id,
-                                related_object_type=RelatedObjectType.SEGMENT.name,
-                                project=instance.project,
-                                log=message)
+        message = (
+            SEGMENT_CREATED_MESSAGE % instance.name
+            if created
+            else SEGMENT_UPDATED_MESSAGE % instance.name
+        )
+        request = self.context.get("request")
+        AuditLog.objects.create(
+            author=request.user if request else None,
+            related_object_id=instance.id,
+            related_object_type=RelatedObjectType.SEGMENT.name,
+            project=instance.project,
+            log=message,
+        )
 
 
 class SegmentSerializerBasic(serializers.ModelSerializer):
     class Meta:
         model = Segment
-        fields = ('id', 'name', 'description')
+        fields = ("id", "name", "description")

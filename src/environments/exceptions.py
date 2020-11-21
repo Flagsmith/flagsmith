@@ -1,4 +1,2 @@
 class EnvironmentHeaderNotPresentError(Exception):
     pass
-
-

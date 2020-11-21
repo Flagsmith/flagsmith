@@ -5,8 +5,8 @@ from django.conf import settings
 from django.contrib import admin
 
 from .identities.traits.admin import TraitAdmin
-from .models import Environment, Webhook
 from .identities.traits.models import Trait
+from .models import Environment, Webhook
 
 
 class WebhookInline(admin.TabularInline):
@@ -16,8 +16,19 @@ class WebhookInline(admin.TabularInline):
 
 @admin.register(Environment)
 class EnvironmentAdmin(admin.ModelAdmin):
-    date_hierarchy = 'created_date'
-    list_display = ('name', '__str__', 'created_date',)
-    list_filter = ('created_date', 'project',)
-    search_fields = ('name', 'project__name', 'api_key',)
+    date_hierarchy = "created_date"
+    list_display = (
+        "name",
+        "__str__",
+        "created_date",
+    )
+    list_filter = (
+        "created_date",
+        "project",
+    )
+    search_fields = (
+        "name",
+        "project__name",
+        "api_key",
+    )
     inlines = (WebhookInline,)
