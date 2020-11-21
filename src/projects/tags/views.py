@@ -11,8 +11,10 @@ class TagViewSet(viewsets.ModelViewSet):
     permission_classes = [IsAuthenticated, TagPermissions]
 
     def get_queryset(self):
-        project = get_object_or_404(self.request.user.get_permitted_projects(['VIEW_PROJECT']),
-                                    pk=self.kwargs['project_pk'])
+        project = get_object_or_404(
+            self.request.user.get_permitted_projects(["VIEW_PROJECT"]),
+            pk=self.kwargs["project_pk"],
+        )
         queryset = project.tags.all()
 
         return queryset

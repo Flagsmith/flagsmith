@@ -11,14 +11,18 @@ class DataDogConfigurationViewSet(viewsets.ModelViewSet):
     pagination_class = None  # set here to ensure documentation is correct
 
     def get_queryset(self):
-        project = get_object_or_404(self.request.user.get_permitted_projects(['VIEW_PROJECT']),
-                                    pk=self.kwargs['project_pk'])
+        project = get_object_or_404(
+            self.request.user.get_permitted_projects(["VIEW_PROJECT"]),
+            pk=self.kwargs["project_pk"],
+        )
         return DataDogConfiguration.objects.filter(project=project)
 
     def perform_create(self, serializer):
         project_id = self.kwargs["project_pk"]
         if DataDogConfiguration.objects.filter(project_id=project_id).exists():
-            raise ValidationError("DataDogConfiguration for this project already exist.")
+            raise ValidationError(
+                "DataDogConfiguration for this project already exist."
+            )
 
         serializer.save(project_id=project_id)
 

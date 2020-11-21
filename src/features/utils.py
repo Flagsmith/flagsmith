@@ -28,7 +28,7 @@ def is_integer(value):
 
 
 def is_boolean(value):
-    return value in ('true', 'True', 'false', 'False')
+    return value in ("true", "True", "false", "False")
 
 
 def get_integer_from_string(value):
@@ -39,7 +39,7 @@ def get_integer_from_string(value):
 
 
 def get_boolean_from_string(value):
-    if value in ('false', 'False'):
+    if value in ("false", "False"):
         return False
     else:
         return True

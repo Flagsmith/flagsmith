@@ -9,41 +9,69 @@ class CustomUserAdmin(UserAdmin):
     model = FFAdminUser
 
     add_fieldsets = (
-        (None, {
-            'classes': ('wide',),
-            'fields': ('email', 'password1', 'password2',),
-        }),
+        (
+            None,
+            {
+                "classes": ("wide",),
+                "fields": (
+                    "email",
+                    "password1",
+                    "password2",
+                ),
+            },
+        ),
     )
 
-    date_hierarchy = 'date_joined'
+    date_hierarchy = "date_joined"
 
     list_display = (
-        'email',
-        'username',
-        'first_name',
-        'last_name',
-        'is_staff',
-        'is_active',
-        'date_joined',
+        "email",
+        "username",
+        "first_name",
+        "last_name",
+        "is_staff",
+        "is_active",
+        "date_joined",
     )
 
-    list_filter = ('is_staff', 'is_active', 'date_joined', 'organisations', )
+    list_filter = (
+        "is_staff",
+        "is_active",
+        "date_joined",
+        "organisations",
+    )
 
-    search_fields = ('email', 'username', 'first_name', 'last_name', )
+    search_fields = (
+        "email",
+        "username",
+        "first_name",
+        "last_name",
+    )
 
 
 @admin.register(Invite)
 class InviteAdmin(admin.ModelAdmin):
-    date_hierarchy = 'date_created'
-    list_display = ('email', 'invited_by', 'organisation', 'date_created', )
-    list_filter = ('date_created', 'organisation', )
-    list_select_related = ('organisation', 'invited_by', )
-    raw_id_fields = ('invited_by', )
+    date_hierarchy = "date_created"
+    list_display = (
+        "email",
+        "invited_by",
+        "organisation",
+        "date_created",
+    )
+    list_filter = (
+        "date_created",
+        "organisation",
+    )
+    list_select_related = (
+        "organisation",
+        "invited_by",
+    )
+    raw_id_fields = ("invited_by",)
     search_fields = (
-        'email',
-        'invited_by__email',
-        'invited_by__username',
-        'invited_by__first_name',
-        'invited_by__last_name',
-        'organisation__name',
+        "email",
+        "invited_by__email",
+        "invited_by__username",
+        "invited_by__first_name",
+        "invited_by__last_name",
+        "organisation__name",
     )
