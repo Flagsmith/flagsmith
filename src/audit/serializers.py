@@ -13,4 +13,12 @@ class AuditLogSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = AuditLog
-        fields = ('created_date', 'log', 'author', 'environment', 'project', 'related_object_id', 'related_object_type')
+        fields = (
+            "created_date",
+            "log",
+            "author",
+            "environment",
+            "project",
+            "related_object_id",
+            "related_object_type",
+        )

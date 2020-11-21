@@ -12,7 +12,9 @@ from projects.models import Project
 class EnvironmentSaveTestCase(TestCase):
     def setUp(self):
         self.organisation = Organisation.objects.create(name="Test Org")
-        self.project = Project.objects.create(name="Test Project", organisation=self.organisation)
+        self.project = Project.objects.create(
+            name="Test Project", organisation=self.organisation
+        )
         self.feature = Feature.objects.create(name="Test Feature", project=self.project)
         # The environment is initialised in a non-saved state as we want to test the save
         # functionality.
@@ -26,7 +28,7 @@ class EnvironmentSaveTestCase(TestCase):
 
         # Then
         feature_states = FeatureState.objects.filter(environment=self.environment)
-        assert hasattr(self.environment, 'api_key')
+        assert hasattr(self.environment, "api_key")
         assert feature_states.count() == 1
 
     def test_on_creation_save_feature_states_get_created(self):
@@ -62,7 +64,9 @@ class EnvironmentSaveTestCase(TestCase):
 
     def test_on_update_save_feature_states_dont_get_updated_if_identity_present(self):
         self.environment.save()
-        identity = Identity.objects.create(identifier="test-identity", environment=self.environment)
+        identity = Identity.objects.create(
+            identifier="test-identity", environment=self.environment
+        )
 
         fs = FeatureState.objects.get()
         fs.id = None
@@ -75,4 +79,6 @@ class EnvironmentSaveTestCase(TestCase):
         self.environment.save()
         fs.refresh_from_db()
 
-        self.assertNotEqual(fs.enabled, FeatureState.objects.exclude(id=fs.id).get().enabled)
+        self.assertNotEqual(
+            fs.enabled, FeatureState.objects.exclude(id=fs.id).get().enabled
+        )

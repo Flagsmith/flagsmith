@@ -3,7 +3,7 @@ from unittest import mock
 import pytest
 
 from custom_auth.oauth.exceptions import GoogleError
-from custom_auth.oauth.google import get_user_info, USER_INFO_URL
+from custom_auth.oauth.google import USER_INFO_URL, get_user_info
 
 
 @mock.patch("custom_auth.oauth.google.requests")
@@ -14,7 +14,7 @@ def test_get_user_info(mock_requests):
         "id": "test-id",
         "given_name": "testy",
         "family_name": "tester",
-        "email": "testytester@example.com"
+        "email": "testytester@example.com",
     }
     expected_headers = {"Authorization": f"Bearer {access_token}"}
     mock_response = mock.MagicMock(status_code=200)
@@ -30,7 +30,7 @@ def test_get_user_info(mock_requests):
         "email": mock_google_response_data["email"],
         "first_name": mock_google_response_data["given_name"],
         "last_name": mock_google_response_data["family_name"],
-        "google_user_id": mock_google_response_data["id"]
+        "google_user_id": mock_google_response_data["id"],
     }
 
 

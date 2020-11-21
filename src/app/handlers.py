@@ -1,6 +1,6 @@
+import errno
 import logging
 import os
-import errno
 
 
 def mkdir_p(path):
@@ -18,6 +18,6 @@ def mkdir_p(path):
 
 
 class MakeFileHandler(logging.FileHandler):
-    def __init__(self, filename, mode='a', encoding=None, delay=0):
+    def __init__(self, filename, mode="a", encoding=None, delay=0):
         mkdir_p(os.path.dirname(filename))
         logging.FileHandler.__init__(self, filename, mode, encoding, delay)

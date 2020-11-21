@@ -3,21 +3,30 @@ from threading import Thread
 from django.conf import settings
 from django.contrib.sites.shortcuts import get_current_site
 from django.http import HttpResponse
-from django.shortcuts import redirect, get_object_or_404
+from django.shortcuts import get_object_or_404, redirect
 from django.views import View
 from drf_yasg2.utils import swagger_auto_schema
-from rest_framework import viewsets, status, mixins
-from rest_framework.decorators import api_view, action
+from rest_framework import mixins, status, viewsets
+from rest_framework.decorators import action, api_view
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 
 from organisations.models import Organisation
-from organisations.permissions import OrganisationUsersPermission, \
-    UserPermissionGroupPermission
-from organisations.serializers import OrganisationSerializerFull, UserOrganisationSerializer
+from organisations.permissions import (
+    OrganisationUsersPermission,
+    UserPermissionGroupPermission,
+)
+from organisations.serializers import (
+    OrganisationSerializerFull,
+    UserOrganisationSerializer,
+)
 from users.exceptions import InvalidInviteError
 from users.models import FFAdminUser, Invite, UserPermissionGroup
-from users.serializers import UserListSerializer, UserPermissionGroupSerializerDetail, UserIdsSerializer
+from users.serializers import (
+    UserIdsSerializer,
+    UserListSerializer,
+    UserPermissionGroupSerializerDetail,
+)
 
 
 class AdminInitView(View):
@@ -31,7 +40,9 @@ class AdminInitView(View):
             admin.save()
             return HttpResponse("ADMIN USER CREATED")
         else:
-            return HttpResponse("FAILED TO INIT ADMIN USER. USER(S) ALREADY EXIST IN SYSTEM.")
+            return HttpResponse(
+                "FAILED TO INIT ADMIN USER. USER(S) ALREADY EXIST IN SYSTEM."
+            )
 
 
 class FFAdminUserViewSet(mixins.ListModelMixin, viewsets.GenericViewSet):
@@ -39,58 +50,75 @@ class FFAdminUserViewSet(mixins.ListModelMixin, viewsets.GenericViewSet):
     pagination_class = None
 
     def get_queryset(self):
-        if self.kwargs.get('organisation_pk'):
-            return FFAdminUser.objects.filter(organisations__id=self.kwargs.get('organisation_pk'))
+        if self.kwargs.get("organisation_pk"):
+            return FFAdminUser.objects.filter(
+                organisations__id=self.kwargs.get("organisation_pk")
+            )
         else:
             return FFAdminUser.objects.none()
 
     def get_serializer_class(self, *args, **kwargs):
-        if self.action == 'update_role':
+        if self.action == "update_role":
             return UserOrganisationSerializer
 
         return UserListSerializer
 
     def get_serializer_context(self):
         context = super(FFAdminUserViewSet, self).get_serializer_context()
-        if self.kwargs.get('organisation_pk'):
-            context['organisation'] = Organisation.objects.get(pk=self.kwargs.get('organisation_pk'))
+        if self.kwargs.get("organisation_pk"):
+            context["organisation"] = Organisation.objects.get(
+                pk=self.kwargs.get("organisation_pk")
+            )
         return context
 
-    @action(detail=True, methods=['POST'], url_path='update-role')
+    @action(detail=True, methods=["POST"], url_path="update-role")
     def update_role(self, request, organisation_pk, pk):
         user = self.get_object()
         organisation = Organisation.objects.get(pk=organisation_pk)
         user_organisation = user.get_user_organisation(organisation)
 
-        serializer = self.get_serializer(instance=user_organisation, data=request.data, partial=True)
+        serializer = self.get_serializer(
+            instance=user_organisation, data=request.data, partial=True
+        )
         serializer.is_valid(raise_exception=True)
         serializer.save()
 
-        return Response(UserListSerializer(user, context={'organisation': organisation}).data)
+        return Response(
+            UserListSerializer(user, context={"organisation": organisation}).data
+        )
 
 
 def password_reset_redirect(request, uidb64, token):
     protocol = "https" if request.is_secure() else "https"
     current_site = get_current_site(request)
     domain = current_site.domain
-    return redirect(protocol + "://" + domain + "/password-reset/" + uidb64 + "/" + token)
+    return redirect(
+        protocol + "://" + domain + "/password-reset/" + uidb64 + "/" + token
+    )
 
 
-@api_view(['POST'])
+@api_view(["POST"])
 def join_organisation(request, invite_hash):
     invite = get_object_or_404(Invite, hash=invite_hash)
 
     try:
         request.user.join_organisation(invite)
     except InvalidInviteError as e:
-        error_data = {'detail': str(e)}
+        error_data = {"detail": str(e)}
         return Response(data=error_data, status=status.HTTP_400_BAD_REQUEST)
 
     if invite.organisation.over_plan_seats_limit():
-        Thread(target=FFAdminUser.send_organisation_over_limit_alert, args=[invite.organisation]).start()
+        Thread(
+            target=FFAdminUser.send_organisation_over_limit_alert,
+            args=[invite.organisation],
+        ).start()
 
-    return Response(OrganisationSerializerFull(invite.organisation, context={'request': request}).data,
-                    status=status.HTTP_200_OK)
+    return Response(
+        OrganisationSerializerFull(
+            invite.organisation, context={"request": request}
+        ).data,
+        status=status.HTTP_200_OK,
+    )
 
 
 class UserPermissionGroupViewSet(viewsets.ModelViewSet):
@@ -98,29 +126,35 @@ class UserPermissionGroupViewSet(viewsets.ModelViewSet):
     serializer_class = UserPermissionGroupSerializerDetail
 
     def get_queryset(self):
-        organisation_pk = self.kwargs.get('organisation_pk')
+        organisation_pk = self.kwargs.get("organisation_pk")
         return UserPermissionGroup.objects.filter(organisation__pk=organisation_pk)
 
     def perform_create(self, serializer):
-        serializer.save(organisation_id=self.kwargs['organisation_pk'])
+        serializer.save(organisation_id=self.kwargs["organisation_pk"])
 
     def perform_update(self, serializer):
-        serializer.save(organisation_id=self.kwargs['organisation_pk'])
+        serializer.save(organisation_id=self.kwargs["organisation_pk"])
 
-    @swagger_auto_schema(request_body=UserIdsSerializer, responses={200: UserPermissionGroupSerializerDetail})
-    @action(detail=True, methods=['POST'], url_path='add-users')
+    @swagger_auto_schema(
+        request_body=UserIdsSerializer,
+        responses={200: UserPermissionGroupSerializerDetail},
+    )
+    @action(detail=True, methods=["POST"], url_path="add-users")
     def add_users(self, request, organisation_pk, pk):
         group = self.get_object()
         try:
-            group.add_users_by_id(request.data['user_ids'])
+            group.add_users_by_id(request.data["user_ids"])
         except FFAdminUser.DoesNotExist as e:
-            return Response({'detail': str(e)}, status=status.HTTP_400_BAD_REQUEST)
+            return Response({"detail": str(e)}, status=status.HTTP_400_BAD_REQUEST)
 
         return Response(UserPermissionGroupSerializerDetail(instance=group).data)
 
-    @swagger_auto_schema(request_body=UserIdsSerializer, responses={200: UserPermissionGroupSerializerDetail})
-    @action(detail=True, methods=['POST'], url_path='remove-users')
+    @swagger_auto_schema(
+        request_body=UserIdsSerializer,
+        responses={200: UserPermissionGroupSerializerDetail},
+    )
+    @action(detail=True, methods=["POST"], url_path="remove-users")
     def remove_users(self, request, organisation_pk, pk):
         group = self.get_object()
-        group.remove_users_by_id(request.data['user_ids'])
+        group.remove_users_by_id(request.data["user_ids"])
         return Response(UserPermissionGroupSerializerDetail(instance=group).data)

@@ -12,7 +12,7 @@ UserModel = get_user_model()
 class OAuthLoginSerializer(serializers.Serializer):
     access_token = serializers.CharField(
         required=True,
-        help_text="Code or access token returned from the FE interaction with the third party login provider."
+        help_text="Code or access token returned from the FE interaction with the third party login provider.",
     )
 
     class Meta:

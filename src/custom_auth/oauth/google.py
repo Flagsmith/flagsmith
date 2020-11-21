@@ -21,7 +21,7 @@ def get_user_info(access_token):
             "email": response_json["email"],
             "first_name": response_json.get("given_name", ""),
             "last_name": response_json.get("family_name", ""),
-            "google_user_id": response_json["id"]
+            "google_user_id": response_json["id"],
         }
     except RequestException:
         raise GoogleError("Failed to communicate with the Google API.")

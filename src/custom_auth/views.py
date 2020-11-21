@@ -6,5 +6,6 @@ class CustomAuthTokenLoginOrRequestMFACode(AuthTokenLoginOrRequestMFACode):
     """
     Class to handle throttling for login requests
     """
+
     throttle_classes = [ScopedRateThrottle]
-    throttle_scope = 'login'
+    throttle_scope = "login"

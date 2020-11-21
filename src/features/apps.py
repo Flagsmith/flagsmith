@@ -5,7 +5,7 @@ from django.apps import AppConfig
 
 
 class FeaturesConfig(AppConfig):
-    name = 'features'
+    name = "features"
 
     def ready(self):
         # noinspection PyUnresolvedReferences

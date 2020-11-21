@@ -1,6 +1,6 @@
 from rest_framework import serializers
 
-from features.utils import INTEGER, BOOLEAN, STRING
+from features.utils import BOOLEAN, INTEGER, STRING
 
 
 class FeatureSegmentValueField(serializers.Field):
@@ -11,7 +11,7 @@ class FeatureSegmentValueField(serializers.Field):
             value_type = type(data).__name__
             value_types = [STRING, BOOLEAN, INTEGER]
             value_type = value_type if value_type in value_types else STRING
-            self.context['value_type'] = value_type
+            self.context["value_type"] = value_type
 
             return str(data)
 
