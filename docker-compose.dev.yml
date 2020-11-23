@@ -12,9 +12,8 @@ services:
   api:
     build:
       context: .
-      dockerfile: Dockerfile.dev
-    command: ./bin/docker-dev
-    # command: sleep 9999
+      dockerfile: docker/Dockerfile.dev
+    command: docker/bin/docker-dev
     volumes:
       - .:/app
     environment:
