@@ -120,6 +120,14 @@ docker-compose up
 This will use some default settings created in the `docker-compose.yml` file located in the root of 
 the project. These should be changed before using in any production environments.
 
+You can work on the project itself using Docker:
+
+```bash
+docker-compose -f docker-compose.dev.yml up
+```
+
+This gets an environment up and running along with Postgres and enables hot reloading etc. 
+
 ### Environment Variables
 
 The application relies on the following environment variables to run:
