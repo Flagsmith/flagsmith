@@ -1,8 +1,10 @@
-[<img alt="Feature Flag, Remote Config and A/B Testing platform, Bullet Train" width="100%" src="./hero.png"/>](https://bullet-train.io/)
+[<img alt="Feature Flag, Remote Config and A/B Testing platform, Flagsmith" width="100%" src="./hero.png"/>](https://flagsmith.com/)
 
 [![Donate](https://liberapay.com/assets/widgets/donate.svg)](https://liberapay.com/Bullet-Train/donate)
 
-# Bullet Train REST API
+Bullet Train is now Flagsmith read about it [here](https://flagsmith.com/blog/rebrand). 
+
+# Flagsmith REST API
 
 ## Development Environment
 
@@ -132,8 +134,10 @@ The application relies on the following environment variables to run:
 * `EMAIL_BACKEND`: email provider. Allowed values are `sgbackend.SendGridBackend` for Sendgrid or `django_ses.SESBackend` for Amazon SES. Defaults to `sgbackend.SendGridBackend`.
 * `SENDGRID_API_KEY`: API key for the Sendgrid account
 * `SENDER_EMAIL`: Email address from which emails are sent
-* `AWS_SES_REGION_NAME`: If using Amazon SES as the email provider, specify the region (e.g. eu-central-1) that contains your verified sender e-mail address. Defaults to us-east-1 
+* `AWS_SES_REGION_NAME`: If using Amazon SES as the email provider, specify the region (e.g. eu-central-1) that contains your verified sender e-mail address. Defaults to us-east-1
 * `AWS_SES_REGION_ENDPOINT`: ses region endpoint, e.g. email.eu-central-1.amazonaws.com. Required when using ses in a region other than us-east-1
+* `AWS_ACCESS_KEY_ID`: If using Amazon SES, these form part of your SES credentials.
+* `AWS_SECRET_ACCESS_KEY`: If using Amazon SES, these form part of your SES credentials.
 * `DATABASE_URL`: required by develop and master environments, should be a standard format database url e.g. postgres://user:password@host:port/db_name
 * `DJANGO_SECRET_KEY`: see 'Creating a secret key' section below
 * `GOOGLE_ANALYTICS_KEY`: if google analytics is required, add your tracking code
@@ -147,6 +151,18 @@ The application relies on the following environment variables to run:
 * `ALLOWED_ADMIN_IP_ADDRESSES`: restrict access to the django admin console to a comma separated list of IP addresses (e.g. `127.0.0.1,127.0.0.2`) 
 * `USER_CREATE_PERMISSIONS`: set the permissions for creating new users, using a comma separated list of djoser or rest_framework permissions. Use this to turn off public user creation for self hosting. e.g. `'djoser.permissions.CurrentUserOrAdmin'` Defaults to `'rest_framework.permissions.AllowAny'`.
 * `ENABLE_EMAIL_ACTIVATION`: new user registration will go via email activation flow, default False
+
+### Creating a secret key
+
+It is important to also set an environment variable on whatever platform you are using for 
+`DJANGO_SECRET_KEY`. There is a function to create one in `app.settings.common` if none exists in 
+the environment variables, however, this is not suitable for use in production. To generate a new 
+secret key, you can use the function defined in `src/secret-key-gen.py` by simply running it from a 
+command prompt:
+
+```bash
+python secret-key-gen.py
+```
 
 ## Adding dependencies
 
@@ -197,16 +213,16 @@ issue please search existing issues in order to prevent duplicates.
 ## Get in touch
 
 If you have any questions about our projects you can email
-<a href="mailto:support@bullet-train.io">support@bullet-train.io</a>.
+<a href="mailto:support@flagsmith.com">support@flagsmith.com</a>.
 
 ## Useful links
 
-[Website](https://bullet-train.io)
+[Website](https://www.flagsmith.com)
 
 [Product Roadmap](https://product-hub.io/roadmap/5d81f2406180537538d99f28)
 
-[Documentation](https://docs.bullet-train.io/)
+[Documentation](https://docs.flagsmith.com/)
 
-[Code Examples](https://github.com/BulletTrainHQ/bullet-train-examples)
+[Code Examples](https://github.com/Flagsmith/flagsmith-train-examples)
 
 [Youtube Tutorials](https://www.youtube.com/channel/UCki7GZrOdZZcsV9rAIRchCw)
