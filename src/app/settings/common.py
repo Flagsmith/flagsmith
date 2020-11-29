@@ -37,16 +37,16 @@ if ENV not in ("local", "dev", "staging", "production"):
 
 SECRET_KEY = env("DJANGO_SECRET_KEY", default=get_random_secret_key())
 
-HOSTED_SEATS_LIMIT = int(os.environ.get("HOSTED_SEATS_LIMIT", 0))
+HOSTED_SEATS_LIMIT = env.int("HOSTED_SEATS_LIMIT", default=0)
 
 # Google Analytics Configuration
-GOOGLE_ANALYTICS_KEY = os.environ.get("GOOGLE_ANALYTICS_KEY", "")
-GOOGLE_SERVICE_ACCOUNT = os.environ.get("GOOGLE_SERVICE_ACCOUNT")
+GOOGLE_ANALYTICS_KEY = env("GOOGLE_ANALYTICS_KEY", default="")
+GOOGLE_SERVICE_ACCOUNT = env("GOOGLE_SERVICE_ACCOUNT", default=None)
 if not GOOGLE_SERVICE_ACCOUNT:
     warnings.warn(
         "GOOGLE_SERVICE_ACCOUNT not configured, getting organisation usage will not work"
     )
-GA_TABLE_ID = os.environ.get("GA_TABLE_ID")
+GA_TABLE_ID = env("GA_TABLE_ID", default=None)
 if not GA_TABLE_ID:
     warnings.warn(
         "GA_TABLE_ID not configured, getting organisation usage will not work"
@@ -60,9 +60,7 @@ INFLUXDB_ORG = env.str("INFLUXDB_ORG", default="")
 ALLOWED_HOSTS = env.list("DJANGO_ALLOWED_HOSTS", default=[])
 CSRF_TRUSTED_ORIGINS = env.list("DJANGO_CSRF_TRUSTED_ORIGINS", default=[])
 
-INTERNAL_IPS = [
-    "127.0.0.1",
-]
+INTERNAL_IPS = ["127.0.0.1"]
 
 # In order to run a load balanced solution, we need to whitelist the internal ip
 try:
@@ -245,7 +243,7 @@ STATIC_ROOT = os.path.join(PROJECT_ROOT, "../../static/")
 CORS_ORIGIN_ALLOW_ALL = True
 CORS_ALLOW_HEADERS = default_headers + ("X-Environment-Key", "X-E2E-Test-Auth-Token")
 
-DEFAULT_FROM_EMAIL = os.environ.get("SENDER_EMAIL", "noreply@bullet-train.io")
+DEFAULT_FROM_EMAIL = env("SENDER_EMAIL", default="noreply@bullet-train.io")
 EMAIL_CONFIGURATION = {
     # Invitations with name is anticipated to take two arguments. The persons name and the
     # organisation name they are invited to.
@@ -259,8 +257,8 @@ EMAIL_CONFIGURATION = {
     "INVITE_FROM_EMAIL": DEFAULT_FROM_EMAIL,
 }
 
-AWS_SES_REGION_NAME = os.environ.get("AWS_SES_REGION_NAME")
-AWS_SES_REGION_ENDPOINT = os.environ.get("AWS_SES_REGION_ENDPOINT")
+AWS_SES_REGION_NAME = env("AWS_SES_REGION_NAME", default=None)
+AWS_SES_REGION_ENDPOINT = env("AWS_SES_REGION_ENDPOINT", default=None)
 
 # Used on init to create admin user for the site, update accordingly before hitting /auth/init
 ALLOW_ADMIN_INITIATION_VIA_URL = True
@@ -275,8 +273,8 @@ ACCOUNT_AUTHENTICATION_METHOD = "email"
 ACCOUNT_EMAIL_VERIFICATION = "none"  # TODO: configure email verification
 
 # SendGrid
-EMAIL_BACKEND = os.environ.get("EMAIL_BACKEND", "sgbackend.SendGridBackend")
-SENDGRID_API_KEY = os.environ.get("SENDGRID_API_KEY")
+EMAIL_BACKEND = env("EMAIL_BACKEND", default="sgbackend.SendGridBackend")
+SENDGRID_API_KEY = env("SENDGRID_API_KEY", default=None)
 if EMAIL_BACKEND == "sgbackend.SendGridBackend" and not SENDGRID_API_KEY:
     warnings.warn(
         "`SENDGRID_API_KEY` has not been configured. You will not receive emails."
@@ -299,9 +297,9 @@ SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
 
 
 # Chargebee
-ENABLE_CHARGEBEE = os.environ.get("ENABLE_CHARGEBEE", False)
-CHARGEBEE_API_KEY = os.environ.get("CHARGEBEE_API_KEY")
-CHARGEBEE_SITE = os.environ.get("CHARGEBEE_SITE")
+ENABLE_CHARGEBEE = env.bool("ENABLE_CHARGEBEE", default=False)
+CHARGEBEE_API_KEY = env("CHARGEBEE_API_KEY", default=None)
+CHARGEBEE_SITE = env("CHARGEBEE_SITE", default=None)
 
 
 LOGGING = {
@@ -326,7 +324,7 @@ LOGGING = {
     },
 }
 
-CACHE_FLAGS_SECONDS = int(os.environ.get("CACHE_FLAGS_SECONDS", 0))
+CACHE_FLAGS_SECONDS = env.int("CACHE_FLAGS_SECONDS", default=0)
 FLAGS_CACHE_LOCATION = "environment-flags"
 ENVIRONMENT_CACHE_LOCATION = "environment-objects"
 
@@ -352,7 +350,7 @@ CACHES = {
     },
 }
 
-LOG_LEVEL = env.str("LOG_LEVEL", "WARNING")
+LOG_LEVEL = env.str("LOG_LEVEL", default="WARNING")
 
 TRENCH_AUTH = {
     "FROM_EMAIL": DEFAULT_FROM_EMAIL,
@@ -404,8 +402,8 @@ DJOSER = {
 }
 
 # Github OAuth credentials
-GITHUB_CLIENT_ID = env.str("GITHUB_CLIENT_ID", "")
-GITHUB_CLIENT_SECRET = env.str("GITHUB_CLIENT_SECRET", "")
+GITHUB_CLIENT_ID = env.str("GITHUB_CLIENT_ID", default="")
+GITHUB_CLIENT_SECRET = env.str("GITHUB_CLIENT_SECRET", default="")
 
 # Django Axes settings
 AXES_COOLOFF_TIME = timedelta(minutes=env.int("AXES_COOLOFF_TIME", 15))

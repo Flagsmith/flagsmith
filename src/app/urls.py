@@ -11,7 +11,7 @@ urlpatterns = [
     url(r"^admin/", admin.site.urls),
     url(r"^health", include("health_check.urls", namespace="health")),
     url(r"^sales-dashboard/", include("sales_dashboard.urls")),
-    url(r"", lambda r: HttpResponse("Bullet Train API")),
+    url(r"", lambda r: HttpResponse("Flagsmith API")),
     # this url is used to generate email content for the password reset workflow
     url(
         r"^password-reset/confirm/(?P<uidb64>[0-9A-Za-z_\-]+)/(?P<token>[0-9A-Za-z]{1,"
