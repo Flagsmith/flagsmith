@@ -10,18 +10,16 @@ For the full list of settings and their values, see
 https://docs.djangoproject.com/en/1.9/ref/settings/
 """
 import os
+import sys
 import warnings
+from datetime import timedelta
 from importlib import reload
 
+import dj_database_url
 import environ
 import requests
-import sys
-
 from corsheaders.defaults import default_headers
-from datetime import timedelta
-
 from django.core.management.utils import get_random_secret_key
-
 
 env = environ.Env()
 
@@ -127,8 +125,9 @@ if GOOGLE_ANALYTICS_KEY or INFLUXDB_TOKEN:
 
 SITE_ID = 1
 
-# Initialise empty databases dict to be populated in environment settings
-DATABASES = {}
+DATABASES = {
+    "default": dj_database_url.parse(os.environ["DATABASE_URL"], conn_max_age=60)
+}
 
 REST_FRAMEWORK = {
     "DEFAULT_PERMISSION_CLASSES": ["rest_framework.permissions.IsAuthenticated"],
@@ -200,15 +199,9 @@ AUTH_PASSWORD_VALIDATORS = [
     {
         "NAME": "django.contrib.auth.password_validation.UserAttributeSimilarityValidator",
     },
-    {
-        "NAME": "django.contrib.auth.password_validation.MinimumLengthValidator",
-    },
-    {
-        "NAME": "django.contrib.auth.password_validation.CommonPasswordValidator",
-    },
-    {
-        "NAME": "django.contrib.auth.password_validation.NumericPasswordValidator",
-    },
+    {"NAME": "django.contrib.auth.password_validation.MinimumLengthValidator"},
+    {"NAME": "django.contrib.auth.password_validation.CommonPasswordValidator"},
+    {"NAME": "django.contrib.auth.password_validation.NumericPasswordValidator"},
 ]
 
 AUTHENTICATION_BACKENDS = (
@@ -317,10 +310,7 @@ LOGGING = {
     },
     "loggers": {
         "django": {"level": "INFO", "handlers": ["console"]},
-        "": {
-            "level": "DEBUG",
-            "handlers": ["console"],
-        },
+        "": {"level": "DEBUG", "handlers": ["console"]},
     },
 }
 
