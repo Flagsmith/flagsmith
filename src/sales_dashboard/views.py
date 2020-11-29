@@ -6,13 +6,15 @@ from analytics.influxdb_wrapper import (
 )
 from django.core.paginator import Paginator
 from django.contrib.admin.views.decorators import staff_member_required
-from django.db.models import Count
+from django.db.models import Count, Q
 from django.http import HttpResponse
 from django.template import loader
 from django.utils.safestring import mark_safe
-from organisations.models import Organisation
+from organisations.models import Organisation, UserOrganisation
+from projects.models import Project
 from django.shortcuts import get_object_or_404
 from django.views.generic import ListView
+from users.models import FFAdminUser
 
 OBJECTS_PER_PAGE = 50
 
@@ -63,6 +65,21 @@ class OrganisationList(ListView):
                 }
             )
         return list_of_organisations
+
+    def get_context_data(self, **kwargs):
+        data = super().get_context_data(**kwargs)
+
+        if "search" in self.request.GET:
+            search_term = self.request.GET["search"]
+            projects = Project.objects.all().filter(name__icontains=search_term)[:20]
+            data["projects"] = projects
+
+            users = FFAdminUser.objects.all().filter(
+                Q(last_name__icontains=search_term) | Q(email__icontains=search_term)
+            )[:20]
+            data["users"] = users
+
+        return data
 
 
 @staff_member_required
