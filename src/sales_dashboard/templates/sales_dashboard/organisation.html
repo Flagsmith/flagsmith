@@ -18,47 +18,77 @@
         </nav>
 
         <main role="main" class="col-md-9 ml-sm-auto col-lg-10 px-md-4">
-            <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+            <div
+                class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
                 <h1 class="h2">{{organisation.name}}</h1>
             </div>
             <h3>Plan: <strong>{{ organisation.subscription.plan|default:"Free"}}</strong></h3>
             <h3>Seats: <strong>{{organisation.subscription.max_seats|default:0 }}</strong></h3>
 
+            <h2>Projects</h2>
+            <div class="table-responsive">
+                <table class="table table-striped table-sm">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Created</th>
+                            <th>Name</th>
+                            <th>Features</th>
+                            <th>Segments</th>
+                            <th>Environments</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for project in organisation.projects.all %}
+                        <tr>
+                            <td>{{project.id}}</td>
+                            <td>{{project.created_date}}</td>
+                            <td>{{project.name}}</td>             
+                            <td>{{project.features.all.count}}</td>             
+                            <td>{{project.segments.all.count}}</td>             
+                            <td>{{project.environments.all.count}}</td>             
+                          </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+
             <h2>Users</h2>
             <div class="table-responsive">
                 <table class="table table-striped table-sm">
                     <thead>
-                    <tr>
-                        <th>ID</th>
-                        <th>Name</th>
-                        <th>Email Address</th>
-                        <th>Date Registered</th>
-                        <th>Last Logged In</th>
-                    </tr>
+                        <tr>
+                            <th>ID</th>
+                            <th>Name</th>
+                            <th>Email Address</th>
+                            <th>Date Registered</th>
+                            <th>Last Logged In</th>
+                        </tr>
                     </thead>
                     <tbody>
-                    {% for user in organisation.users.all %}
-                    <tr>
-                        <td>{{ user.id }}</td>
-                        <td>{{ user.first_name}}</td>
-                        <td><a href="mailto:{{user.email}}">{{user.email}}</a></td>
-                        <td>{{ user.date_joined }}</td>
-                        <td>{{ user.last_login }}</td>
-                    </tr>
-                    {% endfor %}
+                        {% for user in organisation.users.all %}
+                        <tr>
+                            <td>{{ user.id }}</td>
+                            <td>{{ user.first_name}}</td>
+                            <td><a href="mailto:{{user.email}}">{{user.email}}</a></td>
+                            <td>{{ user.date_joined }}</td>
+                            <td>{{ user.last_login }}</td>
+                        </tr>
+                        {% endfor %}
                     </tbody>
                 </table>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.8.0/Chart.bundle.js"></script>
-<div class="container">
-  <canvas id="examChart"></canvas>
-</div>
+            </div>
+            <div>
+                <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.8.0/Chart.bundle.js"></script>
+                <div class="container">
+                    <canvas id="examChart"></canvas>
+                </div>
             </div>
         </main>
     </div>
 </div>
 
 {% endblock %}
-
 
 {% block script %}
 <script>
@@ -69,28 +99,27 @@ var myChart = new Chart(ctx, {
     labels: {{labels}},
     datasets: [{
       label: 'Api Requests',
-      data: {{event_list}},
-      backgroundColor: [
-        'rgba(255, 99, 132, 0.2)',
-        'rgba(54, 162, 235, 0.2)',
-        'rgba(255, 206, 86, 0.2)',
-        'rgba(75, 192, 192, 0.2)',
-        'rgba(153, 102, 255, 0.2)',
-        'rgba(255, 159, 64, 0.2)'
-      ],
-      borderColor: [
-        'rgba(255,99,132,1)',
-        'rgba(54, 162, 235, 1)',
-        'rgba(255, 206, 86, 1)',
-        'rgba(75, 192, 192, 1)',
-        'rgba(153, 102, 255, 1)',
-        'rgba(255, 159, 64, 1)'
-      ],
-      borderWidth: 1
-    }]
-  },
-  options: {
-  }
-});
+                data: {{ event_list }},
+                backgroundColor: [
+                    'rgba(255, 99, 132, 0.2)',
+                    'rgba(54, 162, 235, 0.2)',
+                    'rgba(255, 206, 86, 0.2)',
+                    'rgba(75, 192, 192, 0.2)',
+                    'rgba(153, 102, 255, 0.2)',
+                    'rgba(255, 159, 64, 0.2)'
+                ],
+                borderColor: [
+                    'rgba(255,99,132,1)',
+                    'rgba(54, 162, 235, 1)',
+                    'rgba(255, 206, 86, 1)',
+                    'rgba(75, 192, 192, 1)',
+                    'rgba(153, 102, 255, 1)',
+                    'rgba(255, 159, 64, 1)'
+                ],
+                borderWidth: 1
+            }]
+        },
+        options: {}
+    });
 </script>
 {% endblock %}
