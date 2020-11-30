@@ -1,6 +1,4 @@
-from app.settings.common import *  # noqa
-
-# TODO: remove this in favour of production.py and environment variables
+from app.settings.common import *
 
 LOGGING = {
     "version": 1,
@@ -19,3 +17,5 @@ LOGGING = {
         "gunicorn": {"handlers": ["console"], "level": "DEBUG"},
     },
 }
+
+REST_FRAMEWORK["PAGE_SIZE"] = 999
