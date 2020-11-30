@@ -1,6 +1,6 @@
 from app.settings.common import *
 
-DEBUG = False
+# TODO: remove this in favour of production.py and environment variables
 
 LOGGING = {
     "version": 1,
