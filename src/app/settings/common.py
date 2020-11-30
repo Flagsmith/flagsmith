@@ -33,6 +33,8 @@ if ENV not in ("local", "dev", "staging", "production"):
         "ENVIRONMENT env variable must be one of local, dev, staging or production"
     )
 
+DEBUG = env("DEBUG", default=False)
+
 SECRET_KEY = env("DJANGO_SECRET_KEY", default=get_random_secret_key())
 
 HOSTED_SEATS_LIMIT = env.int("HOSTED_SEATS_LIMIT", default=0)
