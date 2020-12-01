@@ -72,6 +72,15 @@ class CreateFeatureSerializer(serializers.ModelSerializer):
         return attrs
 
 
+class UpdateFeatureSerializer(CreateFeatureSerializer):
+    """ prevent users from changing the value of default enabled after creation """
+
+    class Meta(CreateFeatureSerializer.Meta):
+        read_only_fields = CreateFeatureSerializer.Meta.read_only_fields + (
+            "default_enabled",
+        )
+
+
 class FeatureSegmentCreateSerializer(serializers.ModelSerializer):
     value = FeatureSegmentValueField(required=False)
 
