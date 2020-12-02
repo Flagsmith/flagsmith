@@ -156,6 +156,17 @@ The application relies on the following environment variables to run:
 * `USER_CREATE_PERMISSIONS`: set the permissions for creating new users, using a comma separated list of djoser or rest_framework permissions. Use this to turn off public user creation for self hosting. e.g. `'djoser.permissions.CurrentUserOrAdmin'` Defaults to `'rest_framework.permissions.AllowAny'`.
 * `ENABLE_EMAIL_ACTIVATION`: new user registration will go via email activation flow, default False
 
+## Pre commit
+
+The application uses pre-commit configuration ( `.pre-commit-config.yaml` ) to run black formatting before commits.
+
+To install pre-commit:
+
+```bash
+pip install pre-commit
+pre-commit install
+```
+
 ## Adding dependencies
 
 To add a python dependency, add it to requirements.txt / requirements-dev.txt with it's current version number. 
@@ -175,9 +186,9 @@ given project. The number of seconds this is cached for is configurable using th
 
 ## Stack
 
-- Python 2.7.14
-- Django 1.11.13
-- DjangoRestFramework 3.8.2
+- Python 3.8
+- Django 2.2.17
+- DjangoRestFramework 3.12.1
 
 ## Static Files
 
