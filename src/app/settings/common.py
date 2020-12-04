@@ -18,8 +18,10 @@ from importlib import reload
 import dj_database_url
 import environ
 import requests
+import sentry_sdk
 from corsheaders.defaults import default_headers
 from django.core.management.utils import get_random_secret_key
+from sentry_sdk.integrations.django import DjangoIntegration
 
 env = environ.Env()
 
@@ -401,3 +403,16 @@ AXES_BLACKLISTED_URLS = [
     "/admin/login/?next=/admin",
     "/admin/",
 ]
+
+# Sentry tracking
+SENTRY_SDK_DSN = env("SENTRY_SDK_DSN", default=None)
+if SENTRY_SDK_DSN:
+    sentry_sdk.init(
+        dsn=env.str("SENTRY_SDK_DSN"),
+        integrations=[DjangoIntegration()],
+        traces_sample_rate=env.float("SENTRY_TRACE_SAMPLE_RATE", default=1.0),
+        environment=env("ENVIRONMENT", default="unknown"),
+        # If you wish to associate users to errors (assuming you are using
+        # django.contrib.auth) you may enable sending PII data.
+        send_default_pii=True,
+    )
