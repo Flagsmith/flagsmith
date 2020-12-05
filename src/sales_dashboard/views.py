@@ -89,7 +89,10 @@ def organisation_info(request, organisation_id):
     template = loader.get_template("sales_dashboard/organisation.html")
     context = {
         "organisation": organisation,
-        "event_list": mark_safe(json.dumps(event_list)),
+        "event_list": event_list,
+        "traits": mark_safe(json.dumps(event_list["traits"])),
+        "identities": mark_safe(json.dumps(event_list["identities"])),
+        "flags": mark_safe(json.dumps(event_list["flags"])),
         "labels": mark_safe(json.dumps(labels)),
     }
 

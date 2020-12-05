@@ -2,6 +2,7 @@ import json
 from unittest import TestCase, mock
 
 import pytest
+from django.forms import model_to_dict
 from django.urls import reverse
 from rest_framework import status
 from rest_framework.test import APIClient, APITestCase
@@ -494,6 +495,28 @@ class ProjectFeatureTestCase(TestCase):
         feature = response_json["results"][0]
         assert "tags" in feature
 
+    def test_put_feature_does_not_update_feature_states(self):
+        # Given
+        feature = Feature.objects.create(
+            name="test_feature", project=self.project, default_enabled=False
+        )
+        url = reverse(
+            "api-v1:projects:project-features-detail",
+            args=[self.project.id, feature.id],
+        )
+        data = model_to_dict(feature)
+        data["default_enabled"] = True
+
+        # When
+        response = self.client.put(
+            url, data=json.dumps(data), content_type="application/json"
+        )
+
+        # Then
+        assert response.status_code == status.HTTP_200_OK
+
+        assert all(fs.enabled is False for fs in feature.feature_states.all())
+
 
 @pytest.mark.django_db
 class FeatureSegmentViewTest(TestCase):
@@ -731,14 +754,8 @@ class FeatureSegmentViewTest(TestCase):
         assert feature_segment_1.priority == 0
         assert feature_segment_2.priority == 1
         data = [
-            {
-                "id": feature_segment_1.id,
-                "priority": 1,
-            },
-            {
-                "id": feature_segment_2.id,
-                "priority": 0,
-            },
+            {"id": feature_segment_1.id, "priority": 1},
+            {"id": feature_segment_2.id, "priority": 0},
         ]
 
         # When
