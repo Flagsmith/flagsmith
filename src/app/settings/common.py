@@ -119,6 +119,7 @@ INSTALLED_APPS = [
     "integrations.datadog",
     "integrations.amplitude",
     "integrations.sentry",
+    "integrations.new_relic",
     # Rate limiting admin endpoints
     "axes",
 ]
