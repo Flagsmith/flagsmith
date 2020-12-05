@@ -82,7 +82,8 @@ class Feature(models.Model):
 
         super(Feature, self).save(*args, **kwargs)
 
-        # create feature states for all environments in the project
+        # create / update feature states for all environments in the project
+        # todo: is update necessary here
         environments = self.project.environments.all()
         for env in environments:
             FeatureState.objects.update_or_create(
