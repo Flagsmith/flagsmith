@@ -1,1 +1,1 @@
-default_app_config = "integrations.sentry.SentryConfig"
+default_app_config = "integrations.sentry.apps.SentryConfig"
