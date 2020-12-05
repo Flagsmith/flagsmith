@@ -2,15 +2,15 @@ import json
 
 import requests
 
+from integrations.common.wrapper import AbstractBaseEventIntegrationWrapper
 from util.logging import get_logger
-from util.util import postpone
 
 logger = get_logger(__name__)
 
 EVENTS_API_URI = "api/v1/events"
 
 
-class DataDogWrapper:
+class DataDogWrapper(AbstractBaseEventIntegrationWrapper):
     def __init__(self, base_url: str, api_key: str):
         self.base_url = base_url
         self.api_key = api_key
@@ -22,16 +22,10 @@ class DataDogWrapper:
             "Sent event to DataDog. Response code was %s" % response.status_code
         )
 
-    @postpone
-    def track_event_async(self, event: dict) -> None:
-        self._track_event(event)
-
     @staticmethod
-    def generate_event_data(log: str, email: str, environment_name: str):
-        event_data = {
+    def generate_event_data(log: str, email: str, environment_name: str) -> dict:
+        return {
             "text": f"{log} by user {email}",
             "title": "Bullet Train Feature Flag Event",
             "tags": [f"env:{environment_name}"],
         }
-
-        return event_data
