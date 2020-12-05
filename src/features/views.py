@@ -42,6 +42,7 @@ from .serializers import (
     FeatureStateSerializerWithIdentity,
     FeatureStateValueSerializer,
     FeatureWithTagsSerializer,
+    UpdateFeatureSerializer,
 )
 
 logger = logging.getLogger()
@@ -54,12 +55,12 @@ class FeatureViewSet(viewsets.ModelViewSet):
     permission_classes = [IsAuthenticated, FeaturePermissions]
 
     def get_serializer_class(self):
-        if self.action == "list":
-            return FeatureWithTagsSerializer
-        elif self.action in ["create", "update"]:
-            return CreateFeatureSerializer
-        else:
-            return FeatureSerializer
+        return {
+            "list": FeatureWithTagsSerializer,
+            "create": CreateFeatureSerializer,
+            "update": UpdateFeatureSerializer,
+            "partial_update": UpdateFeatureSerializer,
+        }.get(self.action, FeatureSerializer)
 
     def get_queryset(self):
         user_projects = self.request.user.get_permitted_projects(["VIEW_PROJECT"])
@@ -387,8 +388,7 @@ class SDKFeatureStates(GenericAPIView):
 
     def _get_flags_response_with_identifier(self, request, identifier):
         identity, _ = Identity.objects.get_or_create(
-            identifier=identifier,
-            environment=request.environment,
+            identifier=identifier, environment=request.environment
         )
 
         kwargs = {
