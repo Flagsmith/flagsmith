@@ -141,11 +141,6 @@ REST_FRAMEWORK = {
     "DEFAULT_THROTTLE_RATES": {"login": "1/s"},
 }
 
-AUTHENTICATION_BACKENDS = [
-    "axes.backends.AxesBackend",
-    "django.contrib.auth.backends.ModelBackend",
-]
-
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
@@ -205,10 +200,11 @@ AUTH_PASSWORD_VALIDATORS = [
     {"NAME": "django.contrib.auth.password_validation.NumericPasswordValidator"},
 ]
 
-AUTHENTICATION_BACKENDS = (
+AUTHENTICATION_BACKENDS = [
+    "axes.backends.AxesBackend",
     "admin_sso.auth.DjangoSSOAuthBackend",
     "django.contrib.auth.backends.ModelBackend",
-)
+]
 
 DJANGO_ADMIN_SSO_OAUTH_CLIENT_ID = env.str("OAUTH_CLIENT_ID", default="")
 DJANGO_ADMIN_SSO_OAUTH_CLIENT_SECRET = env.str("OAUTH_CLIENT_SECRET", default="")
