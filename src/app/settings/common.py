@@ -156,7 +156,7 @@ MIDDLEWARE = [
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
     "simple_history.middleware.HistoryRequestMiddleware",
-    "app.middleware.AxesMiddleware",
+    #"app.middleware.AxesMiddleware",
 ]
 
 if GOOGLE_ANALYTICS_KEY:
