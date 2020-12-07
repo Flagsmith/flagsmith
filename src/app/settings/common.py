@@ -16,12 +16,12 @@ from datetime import timedelta
 from importlib import reload
 
 import dj_database_url
-import environ
+from environs import Env
 import requests
 from corsheaders.defaults import default_headers
 from django.core.management.utils import get_random_secret_key
 
-env = environ.Env()
+env = Env()
 
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -129,9 +129,7 @@ if GOOGLE_ANALYTICS_KEY or INFLUXDB_TOKEN:
 
 SITE_ID = 1
 
-DATABASES = {
-    "default": dj_database_url.parse(os.environ["DATABASE_URL"], conn_max_age=60)
-}
+DATABASES = {"default": dj_database_url.parse(env("DATABASE_URL"), conn_max_age=60)}
 
 REST_FRAMEWORK = {
     "DEFAULT_PERMISSION_CLASSES": ["rest_framework.permissions.IsAuthenticated"],
