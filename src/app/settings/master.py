@@ -1,14 +1,6 @@
-import os
-
-import dj_database_url
-
 from app.settings.common import *
 
-DATABASES["default"] = dj_database_url.parse(
-    os.environ["DATABASE_URL"], conn_max_age=60
-)
-
-DEBUG = False
+# TODO: remove this in favour of production.py and environment variables
 
 LOGGING = {
     "version": 1,

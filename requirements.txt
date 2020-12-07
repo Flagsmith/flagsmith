@@ -22,7 +22,6 @@ chargebee==2.7.7
 python-http-client<3.2.0 # 3.2.0 is the latest but throws an error on installation saying that it's not found
 django-health-check==3.14.3
 django-storages==1.10.1
-django-environ==0.4.5
 django-trench==0.2.3
 djoser==2.0.5
 influxdb-client==1.11.0
@@ -32,3 +31,5 @@ django-axes==5.8.0
 django-admin-sso==3.0.0
 drf-yasg2==1.19.3
 django-debug-toolbar==3.1.1
+sentry-sdk==0.19.4
+environs==9.2.0

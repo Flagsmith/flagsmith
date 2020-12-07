@@ -1,0 +1,13 @@
+FROM python:3.8
+ENV PYTHONUNBUFFERED 1
+
+RUN mkdir /app
+WORKDIR /app
+COPY requirements.txt requirements-dev.txt /app/
+COPY src/ /app/src/
+COPY docker/bin/ /app/bin/
+
+RUN pip install -r requirements-dev.txt
+
+ENV DJANGO_SETTINGS_MODULE=app.settings.master-docker
+EXPOSE 8000
