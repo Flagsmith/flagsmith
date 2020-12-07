@@ -122,6 +122,14 @@ docker-compose up
 This will use some default settings created in the `docker-compose.yml` file located in the root of 
 the project. These should be changed before using in any production environments.
 
+You can work on the project itself using Docker:
+
+```bash
+docker-compose -f docker-compose.dev.yml up
+```
+
+This gets an environment up and running along with Postgres and enables hot reloading etc. 
+
 ### Environment Variables
 
 The application relies on the following environment variables to run:
@@ -151,6 +159,31 @@ The application relies on the following environment variables to run:
 * `ALLOWED_ADMIN_IP_ADDRESSES`: restrict access to the django admin console to a comma separated list of IP addresses (e.g. `127.0.0.1,127.0.0.2`) 
 * `USER_CREATE_PERMISSIONS`: set the permissions for creating new users, using a comma separated list of djoser or rest_framework permissions. Use this to turn off public user creation for self hosting. e.g. `'djoser.permissions.CurrentUserOrAdmin'` Defaults to `'rest_framework.permissions.AllowAny'`.
 * `ENABLE_EMAIL_ACTIVATION`: new user registration will go via email activation flow, default False
+* `SENTRY_SDK_DSN`: If using Sentry, set the project DSN here.
+* `SENTRY_TRACE_SAMPLE_RATE`: Float. If using Sentry, sets the trace sample rate. Defaults to 1.0.
+
+## Pre commit
+
+The application uses pre-commit configuration ( `.pre-commit-config.yaml` ) to run black formatting before commits.
+
+To install pre-commit:
+
+```bash
+pip install pre-commit
+pre-commit install
+```
+
+### Creating a secret key
+
+It is important to also set an environment variable on whatever platform you are using for 
+`DJANGO_SECRET_KEY`. There is a function to create one in `app.settings.common` if none exists in 
+the environment variables, however, this is not suitable for use in production. To generate a new 
+secret key, you can use the function defined in `src/secret-key-gen.py` by simply running it from a 
+command prompt:
+
+```bash
+python secret-key-gen.py
+```
 
 ## Adding dependencies
 
@@ -171,9 +204,9 @@ given project. The number of seconds this is cached for is configurable using th
 
 ## Stack
 
-- Python 2.7.14
-- Django 1.11.13
-- DjangoRestFramework 3.8.2
+- Python 3.8
+- Django 2.2.17
+- DjangoRestFramework 3.12.1
 
 ## Static Files
 
@@ -186,7 +219,7 @@ that the static files are hosted in.
 
 ## Documentation
 
-Further documentation can be found [here](https://docs.flagsmith.com). 
+Further documentation can be found [here](https://docs.bullet-train.io).
 
 ## Contributing
 

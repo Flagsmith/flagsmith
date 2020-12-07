@@ -1,65 +1,63 @@
 stages:
-    - test
-    - deploy
-    - deploy-aws
+  - test
+  - deploy
+
+cache:
+  key: ${CI_COMMIT_REF_SLUG}
+  paths:
+    - .venv/
 
 test:
-  image: python:3.7
+  image: python:3.7-slim
   stage: test
   services:
-    - postgres:10.9
+    - postgres:10.9-alpine
   variables:
     DJANGO_SETTINGS_MODULE: "app.settings.test"
     DATABASE_URL: postgres://testuser:testpass@postgres/test_db
     POSTGRES_USER: testuser
     POSTGRES_PASSWORD: testpass
   script:
+    - pip install virtualenv # set up local venv dir for caching of packages
+    - virtualenv .venv
+    - source .venv/bin/activate 
     - pip install -r requirements-dev.txt
     - black --check .
     - pytest src -p no:warnings
 
 deploydevelop:
-    image: ilyasemenov/gitlab-ci-git-push
-    stage: deploy
-    script: git-push dokku@bitwarden.bullet-train.io:bullet-train
-    only:
-        - develop
+  image: ilyasemenov/gitlab-ci-git-push
+  stage: deploy
+  script: git-push dokku@bitwarden.bullet-train.io:bullet-train
+  only:
+    - develop
+
+.deploy_to_beanstalk: &deploy_to_beanstalk |
+  echo "Deploying to beanstalk with label $CI_COMMIT_SHORT_SHA"
+  cp requirements.txt ./src/requirements.txt
+  cd src
+  eb deploy $ENVIRONMENT_NAME -l "$CI_COMMIT_SHORT_SHA"
 
 deployawsstaging:
-    image: bullettrain/elasticbeanstalk-pipenv  # TODO: remove pipenv from this docker image
-    stage: deploy-aws
-    script:
-        - export AWS_ACCESS_KEY_ID=$AWS_STAGING_ACCESS_KEY_ID
-        - export AWS_SECRET_ACCESS_KEY=$AWS_STAGING_SECRET_ACCESS_KEY
-        - export DATABASE_URL=$DATABASE_URL_STAGING
-        - export GOOGLE_ANALYTICS_CLIENT_ID=$GOOGLE_ANALYTICS_CLIENT_ID_STAGING
-        - export GOOGLE_ANALYTICS_KEY=$GOOGLE_ANALYTICS_KEY_STAGING
-        - export DJANGO_SETTINGS_MODULE=$DJANGO_SETTINGS_MODULE_STAGING
-        - cp requirements.txt ./src/requirements.txt
-        - sh generate.sh
-        - git config --global user.email "build@gitlab.com" 
-        - git config --global user.name "Gitlab"
-        - git add . && git commit -m "Commit to EB"
-        - cd src
-        - eb deploy $EB_ENVIRONMENT_STAGING
-    only:
-        - staging
+  image: flagsmith/eb-cli:latest
+  stage: deploy
+  variables:
+    ENVIRONMENT_NAME: staging-api
+    AWS_ACCESS_KEY_ID: "$AWS_STAGING_ACCESS_KEY_ID"
+    AWS_SECRET_ACCESS_KEY: "$AWS_STAGING_SECRET_ACCESS_KEY"
+  script:
+    - *deploy_to_beanstalk
+  only:
+    - staging
 
 deployawsmaster:
-    image: bullettrain/elasticbeanstalk-pipenv
-    stage: deploy-aws
-    script:
-        - export DATABASE_URL=$DATABASE_URL_PRODUCTION
-        - export GOOGLE_ANALYTICS_CLIENT_ID=$GOOGLE_ANALYTICS_CLIENT_ID_PRODUCTION
-        - export GOOGLE_ANALYTICS_KEY=$GOOGLE_ANALYTICS_KEY_PRODUCTION
-        - export DJANGO_SETTINGS_MODULE=$DJANGO_SETTINGS_MODULE_PRODUCTION
-        - cp requirements.txt ./src/requirements.txt
-        - sh generate.sh
-        - git config --global user.email "build@gitlab.com" 
-        - git config --global user.name "Gitlab"
-        - git add . && git commit -m "Commit to EB"
-        - cd src
-        - eb deploy $EB_ENVIRONMENT_PRODUCTION --timeout 30
-    only:
-        - master
-        - master-aws
+  image: flagsmith/eb-cli:latest
+  stage: deploy
+  variables:
+    ENVIRONMENT_NAME: production-api
+    AWS_ACCESS_KEY_ID: "$AWS_PRODUCTION_ACCESS_KEY_ID"
+    AWS_SECRET_ACCESS_KEY: "$AWS_PRODUCTION_SECRET_ACCESS_KEY"
+  script:
+    - *deploy_to_beanstalk
+  only:
+    - master

@@ -1,20 +1,13 @@
-FROM python:3.7
+FROM python:3.8-slim as application
 
-RUN rm /var/lib/dpkg/info/format
-RUN printf "1\n" > /var/lib/dpkg/info/format
-RUN dpkg --configure -a
-RUN  apt-get clean && apt-get update \
-    && apt-get install -y --no-install-recommends \
-        postgresql-client \
-    && rm -rf /var/lib/apt/lists/*
+WORKDIR /app
+COPY requirements.txt /app/
+COPY src/ /app/src/
+COPY docker/bin/ /app/bin/
 
-RUN pip install pipenv
-
-WORKDIR /usr/src
-COPY src/ ./
-COPY Pipfile* ./
-RUN pipenv install --deploy
+RUN pip install -r requirements.txt
 
 ENV DJANGO_SETTINGS_MODULE=app.settings.master-docker
-
 EXPOSE 8000
+
+CMD ["./bin/docker"]

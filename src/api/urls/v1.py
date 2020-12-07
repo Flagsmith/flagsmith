@@ -13,7 +13,7 @@ from analytics.views import SDKAnalyticsFlags
 
 schema_view = get_schema_view(
     openapi.Info(
-        title="Bullet Train API",
+        title="Flagsmith API",
         default_version="v1",
         description="",
         license=openapi.License(name="BSD License"),

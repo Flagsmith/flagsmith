@@ -1,3 +1,5 @@
+from collections import defaultdict
+
 from django.conf import settings
 from influxdb_client import InfluxDBClient, Point
 from influxdb_client.client.write_api import SYNCHRONOUS
@@ -88,14 +90,13 @@ def get_event_list_for_organisation(organisation_id: int):
         drop_columns='"organisation", "organisation_id", "type", "project", "project_id"',
         extra="|> aggregateWindow(every: 24h, fn: sum)",
     )
-    dataset = []
+    dataset = defaultdict(list)
     labels = []
     for result in results:
         for record in result.records:
-            dataset.append(
-                {"t": record.values["_time"].isoformat(), "y": record.values["_value"]}
-            )
-            labels.append(record.values["_time"].strftime("%Y-%m-%d"))
+            dataset[record["resource"]].append(record["_value"])
+            if len(labels) != 31:
+                labels.append(record.values["_time"].strftime("%Y-%m-%d"))
     return dataset, labels
 
 
@@ -120,6 +121,6 @@ def get_multiple_event_list_for_organisation(organisation_id: int):
 
     for result in results:
         for i, record in enumerate(result.records):
-            dataset[i][record.values["resource"]] = record.values["_value"]
-            dataset[i]["name"] = record.values["_time"].isoformat()
+            dataset[i][record.values["resource"].capitalize()] = record.values["_value"]
+            dataset[i]["name"] = record.values["_time"].strftime("%Y-%m-%d")
     return dataset
