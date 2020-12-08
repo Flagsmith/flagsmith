@@ -52,33 +52,3 @@ class EnvironmentSaveTestCase(TestCase):
     def test_on_creation_save_feature_is_created_with_the_correct_default(self):
         self.environment.save()
         self.assertFalse(FeatureState.objects.get().enabled)
-
-    def test_on_update_save_feature_gets_updated_with_the_correct_default(self):
-        self.environment.save()
-        self.assertFalse(FeatureState.objects.get().enabled)
-
-        self.feature.default_enabled = True
-        self.feature.save()
-
-        self.assertTrue(FeatureState.objects.get().enabled)
-
-    def test_on_update_save_feature_states_dont_get_updated_if_identity_present(self):
-        self.environment.save()
-        identity = Identity.objects.create(
-            identifier="test-identity", environment=self.environment
-        )
-
-        fs = FeatureState.objects.get()
-        fs.id = None
-        fs.identity = identity
-        fs.save()
-        self.assertEqual(FeatureState.objects.count(), 2)
-
-        self.feature.default_enabled = True
-        self.feature.save()
-        self.environment.save()
-        fs.refresh_from_db()
-
-        self.assertNotEqual(
-            fs.enabled, FeatureState.objects.exclude(id=fs.id).get().enabled
-        )
