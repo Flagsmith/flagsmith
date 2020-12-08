@@ -119,6 +119,7 @@ INSTALLED_APPS = [
     "integrations.datadog",
     "integrations.amplitude",
     "integrations.sentry",
+    "integrations.new_relic",
     # Rate limiting admin endpoints
     "axes",
 ]
@@ -151,7 +152,6 @@ MIDDLEWARE = [
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
     "simple_history.middleware.HistoryRequestMiddleware",
-    # "app.middleware.AxesMiddleware",
 ]
 
 if GOOGLE_ANALYTICS_KEY:
@@ -173,7 +173,7 @@ ROOT_URLCONF = "app.urls"
 TEMPLATES = [
     {
         "BACKEND": "django.template.backends.django.DjangoTemplates",
-        "DIRS": [],
+        "DIRS": ["templates"],
         "APP_DIRS": True,
         "OPTIONS": {
             "context_processors": [
@@ -201,7 +201,6 @@ AUTH_PASSWORD_VALIDATORS = [
 ]
 
 AUTHENTICATION_BACKENDS = [
-    "axes.backends.AxesBackend",
     "admin_sso.auth.DjangoSSOAuthBackend",
     "django.contrib.auth.backends.ModelBackend",
 ]
@@ -393,11 +392,17 @@ GITHUB_CLIENT_ID = env.str("GITHUB_CLIENT_ID", default="")
 GITHUB_CLIENT_SECRET = env.str("GITHUB_CLIENT_SECRET", default="")
 
 # Django Axes settings
-AXES_COOLOFF_TIME = timedelta(minutes=env.int("AXES_COOLOFF_TIME", 15))
-AXES_BLACKLISTED_URLS = [
-    "/admin/login/?next=/admin",
-    "/admin/",
-]
+ENABLE_AXES = env.bool("ENABLE_AXES", default=False)
+if ENABLE_AXES:
+    # must be the first item in the auth backends
+    AUTHENTICATION_BACKENDS.insert(0, "axes.backends.AxesBackend")
+    # must be the last item in the middleware stack
+    MIDDLEWARE.append("app.middleware.AxesMiddleware")
+    AXES_COOLOFF_TIME = timedelta(minutes=env.int("AXES_COOLOFF_TIME", 15))
+    AXES_BLACKLISTED_URLS = [
+        "/admin/login/?next=/admin",
+        "/admin/",
+    ]
 
 # Sentry tracking
 SENTRY_SDK_DSN = env("SENTRY_SDK_DSN", default=None)

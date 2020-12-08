@@ -71,6 +71,7 @@ class Feature(models.Model):
         """
         Override save method to initialise feature states for all environments
         """
+        feature_state_defaults = {}
         if self.pk:
             # If the feature has moved to a new project, delete the feature states from the old project
             old_feature = Feature.objects.get(pk=self.pk)
@@ -79,6 +80,8 @@ class Feature(models.Model):
                     feature=self,
                     environment__in=old_feature.project.environments.all(),
                 ).delete()
+        else:
+            feature_state_defaults["enabled"] = self.default_enabled
 
         super(Feature, self).save(*args, **kwargs)
 
@@ -91,7 +94,7 @@ class Feature(models.Model):
                 environment=env,
                 identity=None,
                 feature_segment=None,
-                defaults={"enabled": self.default_enabled},
+                defaults=feature_state_defaults,
             )
 
     def validate_unique(self, *args, **kwargs):
