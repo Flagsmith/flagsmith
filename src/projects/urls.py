@@ -3,6 +3,7 @@ from rest_framework_nested import routers
 
 from features.views import FeatureViewSet
 from integrations.datadog.views import DataDogConfigurationViewSet
+from integrations.new_relic.views import NewRelicConfigurationViewSet
 from projects.tags.views import TagViewSet
 from segments.views import SegmentViewSet
 
@@ -33,6 +34,11 @@ projects_router.register(
     r"integrations/datadog",
     DataDogConfigurationViewSet,
     basename="integrations-datadog",
+)
+projects_router.register(
+    r"integrations/new-relic",
+    NewRelicConfigurationViewSet,
+    basename="integrations-new-relic",
 )
 
 app_name = "projects"

@@ -4,6 +4,7 @@ from django.dispatch import receiver
 from audit.models import AuditLog, RelatedObjectType
 from audit.serializers import AuditLogSerializer
 from integrations.datadog.datadog import DataDogWrapper
+from integrations.new_relic.new_relic import NewRelicWrapper
 from util.logging import get_logger
 from webhooks.webhooks import WebhookEventType, call_organisation_webhooks
 
@@ -26,15 +27,16 @@ def call_webhooks(sender, instance, **kwargs):
     call_organisation_webhooks(organisation, data, WebhookEventType.AUDIT_LOG_CREATED)
 
 
-@receiver(post_save, sender=AuditLog)
-def send_audit_log_event_to_datadog(sender, instance, **kwargs):
+def _send_audit_log_event_verification(instance, integration):
     if not instance.project:
-        logger.warning("Audit log missing project, not sending data to DataDog.")
+        logger.warning(
+            f"Audit log missing project, not sending data to {integration.get('name')}."
+        )
         return
 
-    if not hasattr(instance.project, "data_dog_config"):
+    if not hasattr(instance.project, integration.get("attr")):
         logger.debug(
-            "No datadog integration configured for project %s" % instance.project.id
+            f"No datadog integration configured for project {instance.project.id}"
         )
         return
 
@@ -45,16 +47,15 @@ def send_audit_log_event_to_datadog(sender, instance, **kwargs):
         RelatedObjectType.SEGMENT.name,
     ]:
         logger.debug(
-            "Ignoring none Flag audit event %s for datadog"
-            % instance.related_object_type
+            f"Ignoring none Flag audit event {instance.related_object_type} for {integration.get('name', '').lower()}"
         )
         return
 
-    data_dog_config = instance.project.data_dog_config
-    data_dog = DataDogWrapper(
-        base_url=data_dog_config.base_url, api_key=data_dog_config.api_key
-    )
-    event_data = data_dog.generate_event_data(
+    return getattr(instance.project, integration.get("attr"))
+
+
+def _track_event_async(instance, integration_client):
+    event_data = integration_client.generate_event_data(
         log=instance.log,
         email=instance.author.email if instance.author else "",
         environment_name=instance.environment.name.lower()
@@ -62,4 +63,40 @@ def send_audit_log_event_to_datadog(sender, instance, **kwargs):
         else "",
     )
 
-    data_dog.track_event_async(event=event_data)
+    integration_client.track_event_async(event=event_data)
+
+
+@receiver(post_save, sender=AuditLog)
+def send_audit_log_event_to_datadog(sender, instance, **kwargs):
+    integration = {
+        "name": "DataDog",
+        "attr": "data_dog_config",
+    }
+    data_dog_config = _send_audit_log_event_verification(instance, integration)
+
+    if not data_dog_config:
+        return
+
+    data_dog = DataDogWrapper(
+        base_url=data_dog_config.base_url, api_key=data_dog_config.api_key
+    )
+    _track_event_async(instance, data_dog)
+
+
+@receiver(post_save, sender=AuditLog)
+def send_audit_log_event_to_new_relic(sender, instance, **kwargs):
+    integration = {
+        "name": "New Relic",
+        "attr": "new_relic_config",
+    }
+
+    new_relic_config = _send_audit_log_event_verification(instance, integration)
+    if not new_relic_config:
+        return
+
+    new_relic = NewRelicWrapper(
+        base_url=new_relic_config.base_url,
+        api_key=new_relic_config.api_key,
+        app_id=new_relic_config.app_id,
+    )
+    _track_event_async(instance, new_relic)
