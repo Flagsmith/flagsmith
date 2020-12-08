@@ -44,6 +44,22 @@ class FeatureTestCase(TestCase):
 
         self.assertEquals(feature_states.count(), 2)
 
+    def test_save_existing_feature_should_not_change_feature_state_enabled(self):
+        # Given
+        default_enabled = True
+        feature = Feature.objects.create(
+            name="Test Feature", project=self.project, default_enabled=default_enabled
+        )
+
+        # When
+        # we update the default_enabled state of the feature and save it again
+        feature.default_enabled = not default_enabled
+        feature.save()
+
+        # Then
+        # we expect that the feature state enabled values have not changed
+        assert all(fs.enabled == default_enabled for fs in feature.feature_states.all())
+
     def test_creating_feature_with_initial_value_should_set_value_for_all_feature_states(
         self,
     ):
