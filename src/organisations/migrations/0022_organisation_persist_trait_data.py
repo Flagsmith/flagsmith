@@ -13,6 +13,6 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='organisation',
             name='persist_trait_data',
-            field=models.BooleanField(default=True, help_text="Disable this if you don't want Bullet Train to store trait data for this org's identities."),
+            field=models.BooleanField(default=True, help_text="Disable this if you don't want Flagsmith to store trait data for this org's identities."),
         ),
     ]
