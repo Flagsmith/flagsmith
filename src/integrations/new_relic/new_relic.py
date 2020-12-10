@@ -34,6 +34,6 @@ class NewRelicWrapper(AbstractBaseEventIntegrationWrapper):
             "deployment": {
                 "revision": f"env:{environment_name}",
                 "changelog": f"{log} by user {email}",
-                "description": "Bullet Train Feature Flag Event",
+                "description": "Flagsmith Feature Flag Event",
             }
         }
