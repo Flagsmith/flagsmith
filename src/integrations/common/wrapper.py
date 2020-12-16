@@ -15,3 +15,17 @@ class AbstractBaseEventIntegrationWrapper(ABC):
     @abstractstaticmethod
     def generate_event_data(*args, **kwargs) -> None:
         raise NotImplementedError
+
+
+class AbstractBaseIdentityIntegrationWrapper(ABC):
+    @abstractmethod
+    def _identify_user(self, user_data: dict) -> None:
+        raise NotImplementedError
+
+    @postpone
+    def identify_user_async(self, data: dict) -> None:
+        self._identify_user(data)
+
+    @abstractstaticmethod
+    def generate_user_data(*args, **kwargs) -> None:
+        raise NotImplementedError
