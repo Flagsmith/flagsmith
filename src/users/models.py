@@ -67,6 +67,9 @@ class UserManager(BaseUserManager):
 
         return self._create_user(email, password, **extra_fields)
 
+    def get_by_natural_key(self, username):
+        return self.get(email__iexact=username)
+
 
 @python_2_unicode_compatible
 class FFAdminUser(AbstractUser):
