@@ -26,6 +26,6 @@ class DataDogWrapper(AbstractBaseEventIntegrationWrapper):
     def generate_event_data(log: str, email: str, environment_name: str) -> dict:
         return {
             "text": f"{log} by user {email}",
-            "title": "Bullet Train Feature Flag Event",
+            "title": "Flagsmith Feature Flag Event",
             "tags": [f"env:{environment_name}"],
         }

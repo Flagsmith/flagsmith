@@ -232,16 +232,15 @@ STATIC_ROOT = os.path.join(PROJECT_ROOT, "../../static/")
 CORS_ORIGIN_ALLOW_ALL = True
 CORS_ALLOW_HEADERS = default_headers + ("X-Environment-Key", "X-E2E-Test-Auth-Token")
 
-DEFAULT_FROM_EMAIL = env("SENDER_EMAIL", default="noreply@bullet-train.io")
+DEFAULT_FROM_EMAIL = env("SENDER_EMAIL", default="noreply@flagsmith.com")
 EMAIL_CONFIGURATION = {
     # Invitations with name is anticipated to take two arguments. The persons name and the
     # organisation name they are invited to.
-    "INVITE_SUBJECT_WITH_NAME": "%s has invited you to join the organisation '%s' on Bullet "
-    "Train",
+    "INVITE_SUBJECT_WITH_NAME": "%s has invited you to join the organisation '%s' on Flagsmith",
     # Invitations without a name is anticipated to take one arguments. The organisation name they
     # are invited to.
     "INVITE_SUBJECT_WITHOUT_NAME": "You have been invited to join the organisation '%s' on "
-    "Bullet Train",
+    "Flagsmith",
     # The email address invitations will be sent from.
     "INVITE_FROM_EMAIL": DEFAULT_FROM_EMAIL,
 }
