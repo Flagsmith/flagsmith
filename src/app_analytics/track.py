@@ -2,11 +2,11 @@ import logging
 import uuid
 
 import requests
+from app_analytics.influxdb_wrapper import InfluxDBWrapper
 from django.conf import settings
 from django.core.cache import caches
 from six.moves.urllib.parse import quote  # python 2/3 compatible urllib import
 
-from analytics.influxdb_wrapper import InfluxDBWrapper
 from environments.models import Environment
 from util.util import postpone
 

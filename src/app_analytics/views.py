@@ -1,14 +1,13 @@
+from app_analytics.track import track_feature_evaluation_influxdb
 from django.utils.decorators import method_decorator
 from drf_yasg2.utils import swagger_auto_schema
 from rest_framework import status
+from rest_framework.decorators import api_view
 from rest_framework.generics import GenericAPIView
 from rest_framework.response import Response
-from rest_framework.decorators import api_view
 
 from environments.authentication import EnvironmentKeyAuthentication
 from environments.permissions.permissions import EnvironmentKeyPermissions
-
-from analytics.track import track_feature_evaluation_influxdb
 
 
 class SDKAnalyticsFlags(GenericAPIView):

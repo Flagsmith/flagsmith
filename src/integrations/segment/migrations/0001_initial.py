@@ -14,7 +14,7 @@ class Migration(migrations.Migration):
 
     operations = [
         migrations.CreateModel(
-            name="AmplitudeConfiguration",
+            name="SegmentConfiguration",
             fields=[
                 (
                     "id",
@@ -31,7 +31,7 @@ class Migration(migrations.Migration):
                     "environment",
                     models.OneToOneField(
                         on_delete=django.db.models.deletion.CASCADE,
-                        related_name="amplitude_config",
+                        related_name="segment_config",
                         to="environments.Environment",
                     ),
                 ),
