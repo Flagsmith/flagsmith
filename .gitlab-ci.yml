@@ -29,7 +29,8 @@ test:
 build-dockerhub:
   stage: build
   image:
-    name: gcr.io/kaniko-project/executor:latest
+    # TODO: use latest instead of debug once we get to the bottom of issue using latest tag
+    name: gcr.io/kaniko-project/executor:debug
     entrypoint: [""]
   variables:
     DOCKER_HUB_AUTH: $DOCKER_HUB_AUTH
