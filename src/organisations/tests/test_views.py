@@ -1,12 +1,12 @@
 import json
 from datetime import datetime, timedelta
 from unittest import TestCase, mock
-from django.test.utils import override_settings
 
 import pytest
 from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.core import mail
+from django.test.utils import override_settings
 from django.urls import reverse
 from pytz import UTC
 from rest_framework import status
@@ -17,7 +17,7 @@ from features.models import Feature, FeatureSegment
 from organisations.models import Organisation, OrganisationRole, Subscription
 from projects.models import Project
 from segments.models import Segment
-from users.models import Invite, FFAdminUser
+from users.models import FFAdminUser, Invite
 from util.tests import Helper
 
 User = get_user_model()
@@ -252,7 +252,7 @@ class OrganisationTestCase(TestCase):
         # Then
         assert res.status_code == status.HTTP_200_OK
 
-    @mock.patch("analytics.influxdb_wrapper.influxdb_client")
+    @mock.patch("app_analytics.influxdb_wrapper.influxdb_client")
     def test_should_get_usage_for_organisation(self, mock_influxdb_client):
         # Given
         org_name = "test_org"

@@ -1,23 +1,23 @@
 from collections import namedtuple
 
 import coreapi
-from rest_framework import viewsets, status
+from rest_framework import status, viewsets
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.schemas import AutoSchema
 
 from app.pagination import CustomPagination
+from environments.identities.helpers import identify_integrations
 from environments.identities.models import Identity
 from environments.identities.serializers import IdentitySerializer
+from environments.identities.traits.serializers import TraitSerializerBasic
 from environments.models import Environment
 from environments.permissions.permissions import NestedEnvironmentPermissions
-from environments.identities.traits.serializers import TraitSerializerBasic
 from environments.sdk.serializers import (
-    IdentitySerializerWithTraitsAndSegments,
     IdentifyWithTraitsSerializer,
+    IdentitySerializerWithTraitsAndSegments,
 )
 from features.serializers import FeatureStateSerializerFull
-from integrations.amplitude.amplitude import AmplitudeWrapper
 from util.views import SDKAPIView
 
 
@@ -187,16 +187,7 @@ class SDKIdentities(SDKAPIView):
             identity.identity_traits.all(), many=True
         )
 
-        # If we have an amplitude configured, send the flags viewed by the user to their API
-        if (
-            hasattr(identity.environment, "amplitude_config")
-            and identity.environment.amplitude_config.api_key
-        ):
-            amplitude = AmplitudeWrapper(identity.environment.amplitude_config.api_key)
-            user_data = amplitude.generate_user_data(
-                user_id=identity.identifier, feature_states=all_feature_states
-            )
-            amplitude.identify_user_async(user_data=user_data)
+        identify_integrations(identity, all_feature_states)
 
         response = {"flags": serialized_flags.data, "traits": serialized_traits.data}
 

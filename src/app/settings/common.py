@@ -16,10 +16,10 @@ from datetime import timedelta
 from importlib import reload
 
 import dj_database_url
-from environs import Env
 import requests
 from corsheaders.defaults import default_headers
 from django.core.management.utils import get_random_secret_key
+from environs import Env
 
 env = Env()
 
@@ -120,12 +120,13 @@ INSTALLED_APPS = [
     "integrations.amplitude",
     "integrations.sentry",
     "integrations.new_relic",
+    "integrations.segment",
     # Rate limiting admin endpoints
     "axes",
 ]
 
 if GOOGLE_ANALYTICS_KEY or INFLUXDB_TOKEN:
-    INSTALLED_APPS.append("analytics")
+    INSTALLED_APPS.append("app_analytics")
 
 SITE_ID = 1
 
@@ -155,10 +156,10 @@ MIDDLEWARE = [
 ]
 
 if GOOGLE_ANALYTICS_KEY:
-    MIDDLEWARE.append("analytics.middleware.GoogleAnalyticsMiddleware")
+    MIDDLEWARE.append("app_analytics.middleware.GoogleAnalyticsMiddleware")
 
 if INFLUXDB_TOKEN:
-    MIDDLEWARE.append("analytics.middleware.InfluxDBMiddleware")
+    MIDDLEWARE.append("app_analytics.middleware.InfluxDBMiddleware")
 
 ALLOWED_ADMIN_IP_ADDRESSES = env.list("ALLOWED_ADMIN_IP_ADDRESSES", default=list())
 if len(ALLOWED_ADMIN_IP_ADDRESSES) > 0:

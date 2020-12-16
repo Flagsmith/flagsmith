@@ -4,6 +4,10 @@ from __future__ import unicode_literals
 import logging
 from datetime import datetime
 
+from app_analytics.influxdb_wrapper import (
+    get_events_for_organisation,
+    get_multiple_event_list_for_organisation,
+)
 from django.contrib.sites.shortcuts import get_current_site
 from drf_yasg2.utils import swagger_auto_schema
 from rest_framework import status, viewsets
@@ -13,7 +17,6 @@ from rest_framework.exceptions import ValidationError
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 
-from analytics.influxdb_wrapper import get_events_for_organisation
 from organisations.models import (
     OrganisationRole,
     OrganisationWebhook,
@@ -33,7 +36,6 @@ from organisations.serializers import (
 from projects.serializers import ProjectSerializer
 from users.models import Invite
 from users.serializers import InviteListSerializer, UserIdSerializer
-from analytics.influxdb_wrapper import get_multiple_event_list_for_organisation
 
 logger = logging.getLogger(__name__)
 
