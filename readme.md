@@ -240,7 +240,7 @@ pip install -r requirements.txt
 
 ## Documentation
 
-Further documentation can be found [here](https://docs.bullet-train.io).
+Further documentation can be found [here](https://docs.flagsmith.com/).
 
 ## Contributing
 
