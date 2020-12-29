@@ -6,6 +6,7 @@ from rest_framework import serializers
 from organisations.chargebee import get_subscription_data_from_hosted_page
 from users.models import FFAdminUser, Invite
 
+from .mixin import InviteMixin
 from .models import (
     Organisation,
     OrganisationRole,
@@ -98,7 +99,29 @@ class InviteSerializer(serializers.ModelSerializer):
         return super(InviteSerializer, self).validate(attrs)
 
 
-class MultiInvitesSerializer(serializers.Serializer):
+class GenerateInviteSerializer(serializers.Serializer, InviteMixin):
+    frontend_base_url = serializers.CharField()
+
+    def create(self, validated_data):
+        organisation = self._get_organisation()
+        user = self._get_invited_by()
+        data = {
+            "email": None,
+            "role": OrganisationRole.USER.name,
+            "invited_by": user,
+            "organisation": organisation,
+            "frontend_base_url": validated_data["frontend_base_url"],
+        }
+        invite = Invite(**data)
+        invite.save(send_mail=False)
+        return invite
+
+    def to_representation(self, instance):
+        # Return the invites in a dictionary since the serializer expects a single instance to be returned, not a list
+        return {"link": instance.get_invite_uri()}
+
+
+class MultiInvitesSerializer(serializers.Serializer, InviteMixin):
     invites = InviteSerializer(many=True, required=False)
     frontend_base_url = serializers.CharField()
     emails = serializers.ListSerializer(child=serializers.EmailField(), required=False)
@@ -139,15 +162,6 @@ class MultiInvitesSerializer(serializers.Serializer):
                     {"emails": "Invite for email %s already exists" % email}
                 )
         return super(MultiInvitesSerializer, self).validate(attrs)
-
-    def _get_invited_by(self):
-        return self.context.get("request").user if self.context.get("request") else None
-
-    def _get_organisation(self):
-        try:
-            return Organisation.objects.get(pk=self.context.get("organisation"))
-        except Organisation.DoesNotExist:
-            raise serializers.ValidationError({"emails": "Invalid organisation."})
 
 
 class UpdateSubscriptionSerializer(serializers.Serializer):
