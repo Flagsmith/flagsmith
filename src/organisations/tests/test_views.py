@@ -89,6 +89,28 @@ class OrganisationTestCase(TestCase):
         assert response.status_code == status.HTTP_200_OK
         assert organisation.name == new_organisation_name
 
+    def test_should_generate_invite_users(self):
+        # Given
+        org_name = "test_org"
+        organisation = Organisation.objects.create(name=org_name)
+        self.user.add_organisation(organisation)
+        data = {
+            "frontend_base_url": "https://example.com",
+        }
+        url = f"/api/v1/organisations/{organisation.pk}/generate_invite/"
+        # When
+        response = self.client.post(
+            url, data=json.dumps(data), content_type="application/json"
+        )
+
+        # Then
+        assert response.status_code == status.HTTP_201_CREATED
+        assert Invite.objects.filter(email__isnull=True).exists()
+        assert (
+            Invite.objects.filter(email__isnull=True).first().role
+            == OrganisationRole.USER.name
+        )
+
     def test_should_invite_users(self):
         # Given
         org_name = "test_org"

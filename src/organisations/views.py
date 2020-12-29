@@ -4,10 +4,6 @@ from __future__ import unicode_literals
 import logging
 from datetime import datetime
 
-from app_analytics.influxdb_wrapper import (
-    get_events_for_organisation,
-    get_multiple_event_list_for_organisation,
-)
 from django.contrib.sites.shortcuts import get_current_site
 from drf_yasg2.utils import swagger_auto_schema
 from rest_framework import status, viewsets
@@ -17,6 +13,10 @@ from rest_framework.exceptions import ValidationError
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 
+from app_analytics.influxdb_wrapper import (
+    get_events_for_organisation,
+    get_multiple_event_list_for_organisation,
+)
 from organisations.models import (
     OrganisationRole,
     OrganisationWebhook,
@@ -27,6 +27,7 @@ from organisations.permissions import (
     OrganisationPermission,
 )
 from organisations.serializers import (
+    GenerateInviteSerializer,
     MultiInvitesSerializer,
     OrganisationSerializerFull,
     OrganisationWebhookSerializer,
@@ -48,6 +49,8 @@ class OrganisationViewSet(viewsets.ModelViewSet):
             return UserIdSerializer
         elif self.action == "invite":
             return MultiInvitesSerializer
+        elif self.action == "generate_invite":
+            return GenerateInviteSerializer
         elif self.action == "update_subscription":
             return UpdateSubscriptionSerializer
         elif self.action == "get_portal_url":
@@ -56,7 +59,12 @@ class OrganisationViewSet(viewsets.ModelViewSet):
 
     def get_serializer_context(self):
         context = super(OrganisationViewSet, self).get_serializer_context()
-        if self.action in ("remove_users", "invite", "update_subscription"):
+        if self.action in (
+            "remove_users",
+            "invite",
+            "update_subscription",
+            "generate_invite",
+        ):
             context["organisation"] = self.kwargs.get("pk")
         return context
 
@@ -91,6 +99,13 @@ class OrganisationViewSet(viewsets.ModelViewSet):
         # serializer returns a dictionary containing the list of serialized invite objects since it's a single
         # serializer generating multiple instances.
         return Response(serializer.data.get("invites"), status=status.HTTP_201_CREATED)
+
+    @action(detail=True, methods=["POST"])
+    def generate_invite(self, request, pk):
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+        return Response(serializer.data.get("link"), status=status.HTTP_201_CREATED)
 
     @action(detail=True, methods=["POST"], url_path="remove-users")
     def remove_users(self, request, pk):
