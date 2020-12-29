@@ -87,10 +87,15 @@ class InviteSerializer(serializers.ModelSerializer):
 
 class InviteListSerializer(serializers.ModelSerializer):
     invited_by = UserListSerializer()
+    link = serializers.SerializerMethodField()
 
     class Meta:
         model = Invite
-        fields = ("id", "email", "date_created", "invited_by")
+        fields = ("id", "email", "date_created", "invited_by", "link")
+
+    def get_link(self, obj):
+        if obj.email is None:
+            return obj.get_invite_uri()
 
 
 class UserIdsSerializer(serializers.Serializer):

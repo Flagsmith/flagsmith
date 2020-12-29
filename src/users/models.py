@@ -112,7 +112,7 @@ class FFAdminUser(AbstractUser):
     def join_organisation(self, invite):
         organisation = invite.organisation
 
-        if invite.email.lower() != self.email.lower():
+        if invite.email is not None and invite.email.lower() != self.email.lower():
             raise InvalidInviteError("Registered email does not match invited email")
 
         self.add_organisation(organisation, role=OrganisationRole(invite.role))
@@ -305,7 +305,7 @@ class FFAdminUser(AbstractUser):
 
 @python_2_unicode_compatible
 class Invite(models.Model):
-    email = models.EmailField()
+    email = models.EmailField(null=True)
     hash = models.CharField(max_length=100, default=create_hash, unique=True)
     date_created = models.DateTimeField("DateCreated", auto_now_add=True)
     organisation = models.ForeignKey(
@@ -325,7 +325,9 @@ class Invite(models.Model):
 
     def save(self, *args, **kwargs):
         # send email invite before saving invite
-        self.send_invite_mail()
+        send_mail = kwargs.pop("send_mail", True)
+        if send_mail:
+            self.send_invite_mail()
         super(Invite, self).save(*args, **kwargs)
 
     def get_invite_uri(self):
