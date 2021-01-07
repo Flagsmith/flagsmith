@@ -130,7 +130,9 @@ if GOOGLE_ANALYTICS_KEY or INFLUXDB_TOKEN:
 
 SITE_ID = 1
 
-DATABASES = {"default": dj_database_url.parse(env("DATABASE_URL"), conn_max_age=60)}
+# Allows collectstatic to run without a database, mainly for Docker builds to collectstatic at build time
+if "DATABASE_URL" in os.environ:
+    DATABASES = {"default": dj_database_url.parse(env("DATABASE_URL"), conn_max_age=60)}
 
 REST_FRAMEWORK = {
     "DEFAULT_PERMISSION_CLASSES": ["rest_framework.permissions.IsAuthenticated"],
@@ -366,8 +368,10 @@ DJOSER = {
     "PASSWORD_RESET_CONFIRM_URL": "password-reset/confirm/{uid}/{token}",
     # if True user required to click activation link in email to activate account
     "SEND_ACTIVATION_EMAIL": env.bool("ENABLE_EMAIL_ACTIVATION", default=False),
-    "ACTIVATION_URL": "activate/{uid}/{token}",  # FE uri to redirect user to from activation email
-    "SEND_CONFIRMATION_EMAIL": False,  # register or activation endpoint will send confirmation email to user
+    # FE uri to redirect user to from activation email
+    "ACTIVATION_URL": "activate/{uid}/{token}",
+    # register or activation endpoint will send confirmation email to user
+    "SEND_CONFIRMATION_EMAIL": False,
     "SERIALIZERS": {
         "token": "custom_auth.serializers.CustomTokenSerializer",
         "user_create": "custom_auth.serializers.CustomUserCreateSerializer",
