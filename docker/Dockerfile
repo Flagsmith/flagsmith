@@ -2,10 +2,12 @@ FROM python:3.8-slim as application
 
 WORKDIR /app
 COPY requirements.txt /app/
-COPY src/ /app/src/
-COPY docker/bin/ /app/bin/
-
 RUN pip install -r requirements.txt
+
+COPY docker/bin/ /app/bin/
+COPY src/ /app/src/
+
+RUN python src/manage.py collectstatic --no-input
 
 ENV DJANGO_SETTINGS_MODULE=app.settings.master-docker
 EXPOSE 8000
