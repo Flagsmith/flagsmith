@@ -6,7 +6,7 @@
 
 Flagsmith makes it easy to create and manage features flags across web, mobile, and server side applications. Just wrap a section of code with a flag, and then use Flagsmith to toggle that feature on or off for different environments, users or user segments.
 
-![Alt text](/screenshot.png?raw=true "Flagsmith")
+<img alt="Flagsmith Screenshot" width="100%" src="./screenshot.png"/>
 
 ## Features
 
