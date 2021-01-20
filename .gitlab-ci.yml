@@ -1,5 +1,6 @@
 stages:
   - test
+  - build 
   - deploy
 
 cache:
@@ -24,6 +25,26 @@ test:
     - pip install -r requirements-dev.txt
     - black --check .
     - pytest src -p no:warnings
+
+build-dockerhub:
+  stage: build
+  image:
+    # TODO: use latest instead of debug once we get to the bottom of issue using latest tag
+    name: gcr.io/kaniko-project/executor:debug
+    entrypoint: [""]
+  variables:
+    DOCKER_HUB_AUTH: $DOCKER_HUB_AUTH
+  script:
+    - if [ "$CI_COMMIT_REF_NAME" == "master" ]; then IMAGE_TAG="latest"; else IMAGE_TAG=$CI_COMMIT_REF_SLUG; fi
+    - echo $CI_COMMIT_REF_NAME > $CI_PROJECT_DIR/src/CI_COMMIT_REF_NAME
+    - echo $CI_COMMIT_SHA > $CI_PROJECT_DIR/src/CI_COMMIT_SHA
+    - echo $IMAGE_TAG > $CI_PROJECT_DIR/src/IMAGE_TAG
+    - echo "{\"auths\":{\"https://index.docker.io/v1/\":{\"auth\":\"$DOCKER_HUB_AUTH\"}}}" > /kaniko/.docker/config.json
+    - /kaniko/executor --context $CI_PROJECT_DIR --dockerfile $CI_PROJECT_DIR/docker/Dockerfile --destination flagsmith/flagsmith-api:$IMAGE_TAG
+  only:
+    - master
+    - tags
+    - develop
 
 deploydevelop:
   image: ilyasemenov/gitlab-ci-git-push

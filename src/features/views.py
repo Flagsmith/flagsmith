@@ -70,7 +70,7 @@ class FeatureViewSet(viewsets.ModelViewSet):
 
     def create(self, request, *args, **kwargs):
         project_id = request.data.get("project")
-        project = Project.objects.get(pk=project_id)
+        project = get_object_or_404(Project, pk=project_id)
 
         if project.organisation not in request.user.organisations.all():
             return Response(status=status.HTTP_403_FORBIDDEN)

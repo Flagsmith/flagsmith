@@ -35,7 +35,7 @@ class Organisation(models.Model):
     )
     persist_trait_data = models.BooleanField(
         default=True,
-        help_text="Disable this if you don't want Bullet Train "
+        help_text="Disable this if you don't want Flagsmith "
         "to store trait data for this org's identities.",
     )
     block_access_to_admin = models.BooleanField(

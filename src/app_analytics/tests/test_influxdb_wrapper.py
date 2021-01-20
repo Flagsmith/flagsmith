@@ -1,14 +1,13 @@
 from unittest import mock
 
-from django.conf import settings
-
-import analytics
-from analytics.influxdb_wrapper import InfluxDBWrapper
-from analytics.influxdb_wrapper import (
-    get_events_for_organisation,
+import app_analytics
+from app_analytics.influxdb_wrapper import (
+    InfluxDBWrapper,
     get_event_list_for_organisation,
+    get_events_for_organisation,
     get_multiple_event_list_for_organisation,
 )
+from django.conf import settings
 
 # Given
 org_id = 123
@@ -20,7 +19,7 @@ def test_write(monkeypatch):
     # Given
     mock_influxdb_client = mock.MagicMock()
     monkeypatch.setattr(
-        analytics.influxdb_wrapper, "influxdb_client", mock_influxdb_client
+        app_analytics.influxdb_wrapper, "influxdb_client", mock_influxdb_client
     )
 
     mock_write_api = mock.MagicMock()
@@ -47,7 +46,7 @@ def test_influx_db_query_when_get_events_then_query_api_called(monkeypatch):
     )
     mock_influxdb_client = mock.MagicMock()
     monkeypatch.setattr(
-        analytics.influxdb_wrapper, "influxdb_client", mock_influxdb_client
+        app_analytics.influxdb_wrapper, "influxdb_client", mock_influxdb_client
     )
 
     mock_query_api = mock.MagicMock()
@@ -71,7 +70,7 @@ def test_influx_db_query_when_get_events_list_then_query_api_called(monkeypatch)
     )
     mock_influxdb_client = mock.MagicMock()
     monkeypatch.setattr(
-        analytics.influxdb_wrapper, "influxdb_client", mock_influxdb_client
+        app_analytics.influxdb_wrapper, "influxdb_client", mock_influxdb_client
     )
 
     mock_query_api = mock.MagicMock()
@@ -97,7 +96,7 @@ def test_influx_db_query_when_get_multiple_events_for_organistation_then_query_a
     )
     mock_influxdb_client = mock.MagicMock()
     monkeypatch.setattr(
-        analytics.influxdb_wrapper, "influxdb_client", mock_influxdb_client
+        app_analytics.influxdb_wrapper, "influxdb_client", mock_influxdb_client
     )
 
     mock_query_api = mock.MagicMock()

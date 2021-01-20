@@ -69,7 +69,7 @@ def send_failure_email(webhook, data, webhook_type, status_code=None):
 
     text_template = get_template("features/webhook_failure.txt")
     text_content = text_template.render(template_data)
-    subject = "Bullet Train Webhook Failure"
+    subject = "Flagsmith Webhook Failure"
     msg = EmailMultiAlternatives(
         subject,
         text_content,

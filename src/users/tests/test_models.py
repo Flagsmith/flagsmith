@@ -11,7 +11,6 @@ from environments.permissions.models import (
 from organisations.models import (
     Organisation,
     OrganisationRole,
-    UserOrganisation,
 )
 from projects.models import (
     Project,
