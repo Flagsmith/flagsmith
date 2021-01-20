@@ -4,7 +4,7 @@ from __future__ import unicode_literals
 
 from django.db import migrations, models
 import django.db.models.deletion
-import users.models
+import app
 
 
 class Migration(migrations.Migration):
@@ -21,7 +21,7 @@ class Migration(migrations.Migration):
                 ('id', models.AutoField(auto_created=True, primary_key=True,
                                         serialize=False, verbose_name='ID')),
                 ('email', models.EmailField(max_length=254)),
-                ('hash', models.CharField(default=users.models.create_hash, max_length=100,
+                ('hash', models.CharField(default=app.utils.create_hash, max_length=100,
                                           unique=True)),
                 ('date_created', models.DateTimeField(auto_now_add=True,
                                                       verbose_name=b'DateCreated')),

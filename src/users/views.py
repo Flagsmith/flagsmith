@@ -1,13 +1,11 @@
-from threading import Thread
-
 from django.conf import settings
 from django.contrib.sites.shortcuts import get_current_site
 from django.http import HttpResponse
-from django.shortcuts import get_object_or_404, redirect
+from django.shortcuts import redirect
 from django.views import View
 from drf_yasg2.utils import swagger_auto_schema
 from rest_framework import mixins, status, viewsets
-from rest_framework.decorators import action, api_view
+from rest_framework.decorators import action
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 
@@ -17,11 +15,9 @@ from organisations.permissions import (
     UserPermissionGroupPermission,
 )
 from organisations.serializers import (
-    OrganisationSerializerFull,
     UserOrganisationSerializer,
 )
-from users.exceptions import InvalidInviteError
-from users.models import FFAdminUser, Invite, UserPermissionGroup
+from users.models import FFAdminUser, UserPermissionGroup
 from users.serializers import (
     UserIdsSerializer,
     UserListSerializer,
@@ -94,30 +90,6 @@ def password_reset_redirect(request, uidb64, token):
     domain = current_site.domain
     return redirect(
         protocol + "://" + domain + "/password-reset/" + uidb64 + "/" + token
-    )
-
-
-@api_view(["POST"])
-def join_organisation(request, invite_hash):
-    invite = get_object_or_404(Invite, hash=invite_hash)
-
-    try:
-        request.user.join_organisation(invite)
-    except InvalidInviteError as e:
-        error_data = {"detail": str(e)}
-        return Response(data=error_data, status=status.HTTP_400_BAD_REQUEST)
-
-    if invite.organisation.over_plan_seats_limit():
-        Thread(
-            target=FFAdminUser.send_organisation_over_limit_alert,
-            args=[invite.organisation],
-        ).start()
-
-    return Response(
-        OrganisationSerializerFull(
-            invite.organisation, context={"request": request}
-        ).data,
-        status=status.HTTP_200_OK,
     )
 
 

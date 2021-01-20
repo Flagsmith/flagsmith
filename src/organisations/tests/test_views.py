@@ -6,7 +6,6 @@ import pytest
 from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.core import mail
-from django.test.utils import override_settings
 from django.urls import reverse
 from pytz import UTC
 from rest_framework import status
@@ -17,7 +16,8 @@ from features.models import Feature, FeatureSegment
 from organisations.models import Organisation, OrganisationRole, Subscription
 from projects.models import Project
 from segments.models import Segment
-from users.models import FFAdminUser, Invite
+from users.models import FFAdminUser
+from organisations.invites.models import Invite
 from util.tests import Helper
 
 User = get_user_model()
@@ -88,28 +88,6 @@ class OrganisationTestCase(TestCase):
         organisation.refresh_from_db()
         assert response.status_code == status.HTTP_200_OK
         assert organisation.name == new_organisation_name
-
-    def test_should_generate_invite_users(self):
-        # Given
-        org_name = "test_org"
-        organisation = Organisation.objects.create(name=org_name)
-        self.user.add_organisation(organisation)
-        data = {
-            "frontend_base_url": "https://example.com",
-        }
-        url = f"/api/v1/organisations/{organisation.pk}/generate_invite/"
-        # When
-        response = self.client.post(
-            url, data=json.dumps(data), content_type="application/json"
-        )
-
-        # Then
-        assert response.status_code == status.HTTP_201_CREATED
-        assert Invite.objects.filter(email__isnull=True).exists()
-        assert (
-            Invite.objects.filter(email__isnull=True).first().role
-            == OrganisationRole.USER.name
-        )
 
     def test_should_invite_users(self):
         # Given

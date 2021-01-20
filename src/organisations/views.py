@@ -4,6 +4,10 @@ from __future__ import unicode_literals
 import logging
 from datetime import datetime
 
+from app_analytics.influxdb_wrapper import (
+    get_events_for_organisation,
+    get_multiple_event_list_for_organisation,
+)
 from django.contrib.sites.shortcuts import get_current_site
 from drf_yasg2.utils import swagger_auto_schema
 from rest_framework import status, viewsets
@@ -13,10 +17,6 @@ from rest_framework.exceptions import ValidationError
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 
-from app_analytics.influxdb_wrapper import (
-    get_events_for_organisation,
-    get_multiple_event_list_for_organisation,
-)
 from organisations.models import (
     OrganisationRole,
     OrganisationWebhook,
@@ -27,7 +27,6 @@ from organisations.permissions import (
     OrganisationPermission,
 )
 from organisations.serializers import (
-    GenerateInviteSerializer,
     MultiInvitesSerializer,
     OrganisationSerializerFull,
     OrganisationWebhookSerializer,
@@ -35,8 +34,7 @@ from organisations.serializers import (
     UpdateSubscriptionSerializer,
 )
 from projects.serializers import ProjectSerializer
-from users.models import Invite
-from users.serializers import InviteListSerializer, UserIdSerializer
+from users.serializers import UserIdSerializer
 
 logger = logging.getLogger(__name__)
 
@@ -49,8 +47,6 @@ class OrganisationViewSet(viewsets.ModelViewSet):
             return UserIdSerializer
         elif self.action == "invite":
             return MultiInvitesSerializer
-        elif self.action == "generate_invite":
-            return GenerateInviteSerializer
         elif self.action == "update_subscription":
             return UpdateSubscriptionSerializer
         elif self.action == "get_portal_url":
@@ -59,12 +55,7 @@ class OrganisationViewSet(viewsets.ModelViewSet):
 
     def get_serializer_context(self):
         context = super(OrganisationViewSet, self).get_serializer_context()
-        if self.action in (
-            "remove_users",
-            "invite",
-            "update_subscription",
-            "generate_invite",
-        ):
+        if self.action in ("remove_users", "invite", "update_subscription"):
             context["organisation"] = self.kwargs.get("pk")
         return context
 
@@ -99,13 +90,6 @@ class OrganisationViewSet(viewsets.ModelViewSet):
         # serializer returns a dictionary containing the list of serialized invite objects since it's a single
         # serializer generating multiple instances.
         return Response(serializer.data.get("invites"), status=status.HTTP_201_CREATED)
-
-    @action(detail=True, methods=["POST"])
-    def generate_invite(self, request, pk):
-        serializer = self.get_serializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
-        serializer.save()
-        return Response(serializer.data.get("link"), status=status.HTTP_201_CREATED)
 
     @action(detail=True, methods=["POST"], url_path="remove-users")
     def remove_users(self, request, pk):
@@ -164,25 +148,6 @@ class OrganisationViewSet(viewsets.ModelViewSet):
         event_list = get_multiple_event_list_for_organisation(pk)
 
         return Response(event_list)
-
-
-class InviteViewSet(viewsets.ModelViewSet):
-    serializer_class = InviteListSerializer
-    permission_classes = (IsAuthenticated, NestedOrganisationEntityPermission)
-
-    def get_queryset(self):
-        organisation_pk = self.kwargs.get("organisation_pk")
-        if int(organisation_pk) not in [
-            org.id for org in self.request.user.organisations.all()
-        ]:
-            return []
-        return Invite.objects.filter(organisation__id=organisation_pk)
-
-    @action(detail=True, methods=["POST"])
-    def resend(self, request, organisation_pk, pk):
-        invite = self.get_object()
-        invite.send_invite_mail()
-        return Response(status=status.HTTP_200_OK)
 
 
 @api_view(["POST"])
