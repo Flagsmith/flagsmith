@@ -5,7 +5,8 @@ from rest_framework.exceptions import ValidationError
 from organisations.models import Organisation
 from organisations.serializers import UserOrganisationSerializer
 
-from .models import FFAdminUser, Invite, UserPermissionGroup
+from .models import FFAdminUser, UserPermissionGroup
+from organisations.invites.models import Invite
 
 
 class UserIdSerializer(serializers.Serializer):

@@ -1,4 +1,7 @@
-from .track import track_request_googleanalytics_async, track_request_influxdb_async
+from .track import (
+    track_request_googleanalytics_async,
+    track_request_influxdb_async,
+)
 
 
 class GoogleAnalyticsMiddleware:

@@ -23,6 +23,7 @@ services:
       DJANGO_DB_PORT: 5432
       DJANGO_ALLOWED_HOSTS: localhost
       DJANGO_DB_HOST: db
+      DATABASE_URL: postgres://postgres:password@localhost:5432/bullettrain
     ports:
      - "8000:8000"
     depends_on:

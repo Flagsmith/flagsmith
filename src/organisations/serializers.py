@@ -4,7 +4,8 @@ from django.conf import settings
 from rest_framework import serializers
 
 from organisations.chargebee import get_subscription_data_from_hosted_page
-from users.models import FFAdminUser, Invite
+from users.models import FFAdminUser
+from organisations.invites.models import Invite
 
 from .models import (
     Organisation,
