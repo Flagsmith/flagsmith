@@ -16,10 +16,10 @@ from datetime import timedelta
 from importlib import reload
 
 import dj_database_url
-from environs import Env
 import requests
 from corsheaders.defaults import default_headers
 from django.core.management.utils import get_random_secret_key
+from environs import Env
 
 env = Env()
 
@@ -94,6 +94,7 @@ INSTALLED_APPS = [
     "corsheaders",
     "users",
     "organisations",
+    "organisations.invites",
     "projects",
     "sales_dashboard",
     "environments",
@@ -120,16 +121,19 @@ INSTALLED_APPS = [
     "integrations.amplitude",
     "integrations.sentry",
     "integrations.new_relic",
+    "integrations.segment",
     # Rate limiting admin endpoints
     "axes",
 ]
 
 if GOOGLE_ANALYTICS_KEY or INFLUXDB_TOKEN:
-    INSTALLED_APPS.append("analytics")
+    INSTALLED_APPS.append("app_analytics")
 
 SITE_ID = 1
 
-DATABASES = {"default": dj_database_url.parse(env("DATABASE_URL"), conn_max_age=60)}
+# Allows collectstatic to run without a database, mainly for Docker builds to collectstatic at build time
+if "DATABASE_URL" in os.environ:
+    DATABASES = {"default": dj_database_url.parse(env("DATABASE_URL"), conn_max_age=60)}
 
 REST_FRAMEWORK = {
     "DEFAULT_PERMISSION_CLASSES": ["rest_framework.permissions.IsAuthenticated"],
@@ -155,10 +159,10 @@ MIDDLEWARE = [
 ]
 
 if GOOGLE_ANALYTICS_KEY:
-    MIDDLEWARE.append("analytics.middleware.GoogleAnalyticsMiddleware")
+    MIDDLEWARE.append("app_analytics.middleware.GoogleAnalyticsMiddleware")
 
 if INFLUXDB_TOKEN:
-    MIDDLEWARE.append("analytics.middleware.InfluxDBMiddleware")
+    MIDDLEWARE.append("app_analytics.middleware.InfluxDBMiddleware")
 
 ALLOWED_ADMIN_IP_ADDRESSES = env.list("ALLOWED_ADMIN_IP_ADDRESSES", default=list())
 if len(ALLOWED_ADMIN_IP_ADDRESSES) > 0:
@@ -232,16 +236,15 @@ STATIC_ROOT = os.path.join(PROJECT_ROOT, "../../static/")
 CORS_ORIGIN_ALLOW_ALL = True
 CORS_ALLOW_HEADERS = default_headers + ("X-Environment-Key", "X-E2E-Test-Auth-Token")
 
-DEFAULT_FROM_EMAIL = env("SENDER_EMAIL", default="noreply@bullet-train.io")
+DEFAULT_FROM_EMAIL = env("SENDER_EMAIL", default="noreply@flagsmith.com")
 EMAIL_CONFIGURATION = {
     # Invitations with name is anticipated to take two arguments. The persons name and the
     # organisation name they are invited to.
-    "INVITE_SUBJECT_WITH_NAME": "%s has invited you to join the organisation '%s' on Bullet "
-    "Train",
+    "INVITE_SUBJECT_WITH_NAME": "%s has invited you to join the organisation '%s' on Flagsmith",
     # Invitations without a name is anticipated to take one arguments. The organisation name they
     # are invited to.
     "INVITE_SUBJECT_WITHOUT_NAME": "You have been invited to join the organisation '%s' on "
-    "Bullet Train",
+    "Flagsmith",
     # The email address invitations will be sent from.
     "INVITE_FROM_EMAIL": DEFAULT_FROM_EMAIL,
 }
@@ -366,8 +369,10 @@ DJOSER = {
     "PASSWORD_RESET_CONFIRM_URL": "password-reset/confirm/{uid}/{token}",
     # if True user required to click activation link in email to activate account
     "SEND_ACTIVATION_EMAIL": env.bool("ENABLE_EMAIL_ACTIVATION", default=False),
-    "ACTIVATION_URL": "activate/{uid}/{token}",  # FE uri to redirect user to from activation email
-    "SEND_CONFIRMATION_EMAIL": False,  # register or activation endpoint will send confirmation email to user
+    # FE uri to redirect user to from activation email
+    "ACTIVATION_URL": "activate/{uid}/{token}",
+    # register or activation endpoint will send confirmation email to user
+    "SEND_CONFIRMATION_EMAIL": False,
     "SERIALIZERS": {
         "token": "custom_auth.serializers.CustomTokenSerializer",
         "user_create": "custom_auth.serializers.CustomUserCreateSerializer",

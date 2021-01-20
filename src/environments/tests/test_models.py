@@ -1,3 +1,5 @@
+from unittest import mock
+
 import pytest
 from django.test import TestCase
 
@@ -9,7 +11,7 @@ from projects.models import Project
 
 
 @pytest.mark.django_db
-class EnvironmentSaveTestCase(TestCase):
+class EnvironmentTestCase(TestCase):
     def setUp(self):
         self.organisation = Organisation.objects.create(name="Test Org")
         self.project = Project.objects.create(
@@ -52,3 +54,28 @@ class EnvironmentSaveTestCase(TestCase):
     def test_on_creation_save_feature_is_created_with_the_correct_default(self):
         self.environment.save()
         self.assertFalse(FeatureState.objects.get().enabled)
+
+    @mock.patch("environments.models.environment_cache")
+    def test_get_from_cache_stores_environment_in_cache_on_success(self, mock_cache):
+        # Given
+        self.environment.save()
+        mock_cache.get.return_value = None
+
+        # When
+        environment = Environment.get_from_cache(self.environment.api_key)
+
+        # Then
+        assert environment == self.environment
+        mock_cache.set.assert_called_with(
+            self.environment.api_key, self.environment, timeout=60
+        )
+
+    def test_get_from_cache_returns_None_if_no_matching_environment(self):
+        # Given
+        api_key = "no-matching-env"
+
+        # When
+        env = Environment.get_from_cache(api_key)
+
+        # Then
+        assert env is None

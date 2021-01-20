@@ -1,30 +1,30 @@
 {% load i18n %}
 
 {% block subject %}
-{% blocktrans %}Bullet Train Account Activation{% endblocktrans %}
+{% blocktrans %}Flagsmith Account Activation{% endblocktrans %}
 {% endblock subject %}
 
 {% block text_body %}
 {% blocktrans %}Hi,
 
-You're receiving this email because you need to confirm your email address with Bullet Train.{% endblocktrans %}
+You're receiving this email because you need to confirm your email address with Flagsmith.{% endblocktrans %}
 
 {% trans "Please click on the link below to activate your account:" %}
 {{ protocol }}://{{ domain }}/{{ url|safe }}
 
-{% trans "Thanks for using Bullet Train!" %}
+{% trans "Thanks for using Flagsmith!" %}
 
-{% blocktrans %}The Bullet Train Team{% endblocktrans %}
+{% blocktrans %}The Flagsmith Team{% endblocktrans %}
 {% endblock text_body %}
 
 {% block html_body %}
-<p>{% blocktrans %}Hi</p><p>You're receiving this email because you need to confirm your email address with Bullet Train.{% endblocktrans %}</p>
+<p>{% blocktrans %}Hi</p><p>You're receiving this email because you need to confirm your email address with Flagsmith.{% endblocktrans %}</p>
 
 <p>{% trans "Please click on the link below to activate your account:" %}</p>
-<p><a href="{{ protocol }}://{{ domain }}/{{ url|safe }}">Activate Bullet Train Account</a></p>
+<p><a href="{{ protocol }}://{{ domain }}/{{ url|safe }}">Activate Flagsmith Account</a></p>
 
-<p>{% trans "Thanks for using Bullet Train!" %}</p>
+<p>{% trans "Thanks for using Flagsmith!" %}</p>
 
-<p>{% blocktrans %}The Bullet Train Team{% endblocktrans %}</p>
+<p>{% blocktrans %}The Flagsmith Team{% endblocktrans %}</p>
 
 {% endblock html_body %}
