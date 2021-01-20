@@ -94,6 +94,7 @@ INSTALLED_APPS = [
     "corsheaders",
     "users",
     "organisations",
+    "organisations.invites",
     "projects",
     "sales_dashboard",
     "environments",
