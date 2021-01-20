@@ -5,7 +5,8 @@ from rest_framework.exceptions import ValidationError
 from organisations.models import Organisation
 from organisations.serializers import UserOrganisationSerializer
 
-from .models import FFAdminUser, Invite, UserPermissionGroup
+from .models import FFAdminUser, UserPermissionGroup
+from organisations.invites.models import Invite
 
 
 class UserIdSerializer(serializers.Serializer):
@@ -87,15 +88,10 @@ class InviteSerializer(serializers.ModelSerializer):
 
 class InviteListSerializer(serializers.ModelSerializer):
     invited_by = UserListSerializer()
-    link = serializers.SerializerMethodField()
 
     class Meta:
         model = Invite
-        fields = ("id", "email", "date_created", "invited_by", "link")
-
-    def get_link(self, obj):
-        if obj.email is None:
-            return obj.get_invite_uri()
+        fields = ("id", "email", "date_created", "invited_by")
 
 
 class UserIdsSerializer(serializers.Serializer):
