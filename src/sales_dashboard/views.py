@@ -1,19 +1,20 @@
 import json
 
-from analytics.influxdb_wrapper import (
+from app_analytics.influxdb_wrapper import (
     get_event_list_for_organisation,
     get_events_for_organisation,
 )
-from django.core.paginator import Paginator
 from django.contrib.admin.views.decorators import staff_member_required
+from django.core.paginator import Paginator
 from django.db.models import Count, Q
 from django.http import HttpResponse
+from django.shortcuts import get_object_or_404
 from django.template import loader
 from django.utils.safestring import mark_safe
+from django.views.generic import ListView
+
 from organisations.models import Organisation, UserOrganisation
 from projects.models import Project
-from django.shortcuts import get_object_or_404
-from django.views.generic import ListView
 from users.models import FFAdminUser
 
 OBJECTS_PER_PAGE = 50

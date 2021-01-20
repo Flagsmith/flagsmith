@@ -2,11 +2,11 @@ import logging
 import uuid
 
 import requests
+from app_analytics.influxdb_wrapper import InfluxDBWrapper
 from django.conf import settings
 from django.core.cache import caches
 from six.moves.urllib.parse import quote  # python 2/3 compatible urllib import
 
-from analytics.influxdb_wrapper import InfluxDBWrapper
 from environments.models import Environment
 from util.util import postpone
 
@@ -70,6 +70,9 @@ def track_request_googleanalytics(request):
         environment = Environment.get_from_cache(
             request.headers.get("X-Environment-Key")
         )
+        if environment is None:
+            return
+
         track_event(environment.project.organisation.get_unique_slug(), resource)
 
 
@@ -101,6 +104,8 @@ def track_request_influxdb(request):
         environment = Environment.get_from_cache(
             request.headers.get("X-Environment-Key")
         )
+        if environment is None:
+            return
 
         tags = {
             "resource": resource,
