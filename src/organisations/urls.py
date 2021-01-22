@@ -1,7 +1,8 @@
 from django.conf.urls import include, url
 from rest_framework_nested import routers
 
-from organisations.views import InviteViewSet, OrganisationWebhookViewSet
+from organisations.views import OrganisationWebhookViewSet
+from .invites.views import InviteViewSet, InviteLinkViewSet
 from users.views import FFAdminUserViewSet, UserPermissionGroupViewSet
 
 from . import views
@@ -12,6 +13,9 @@ router.register(r"", views.OrganisationViewSet, basename="organisation")
 organisations_router = routers.NestedSimpleRouter(router, r"", lookup="organisation")
 organisations_router.register(
     r"invites", InviteViewSet, basename="organisation-invites"
+)
+organisations_router.register(
+    r"invite-links", InviteLinkViewSet, basename="organisation-invite-links"
 )
 organisations_router.register(
     r"users", FFAdminUserViewSet, basename="organisation-users"

@@ -2,6 +2,7 @@ import urllib.parse
 
 import requests
 
+from integrations.common.wrapper import AbstractBaseIdentityIntegrationWrapper
 from util.logging import get_logger
 from util.util import postpone
 
@@ -10,7 +11,7 @@ logger = get_logger(__name__)
 AMPLITUDE_API_URL = "https://api.amplitude.com"
 
 
-class AmplitudeWrapper:
+class AmplitudeWrapper(AbstractBaseIdentityIntegrationWrapper):
     def __init__(self, api_key: str):
         self.api_key = api_key
         self.url = f"{AMPLITUDE_API_URL}/identify?api_key={self.api_key}"
@@ -23,12 +24,8 @@ class AmplitudeWrapper:
             "Sent event to Amplitude. Response code was: %s" % response.status_code
         )
 
-    @postpone
-    def identify_user_async(self, user_data: dict) -> None:
-        self._identify_user(user_data)
-
     def generate_user_data(self, user_id, feature_states):
-        user_data = {
+        return {
             "identification": {
                 "user_id": user_id,
                 "user_properties": {
@@ -39,5 +36,3 @@ class AmplitudeWrapper:
                 },
             }
         }
-
-        return user_data

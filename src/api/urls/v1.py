@@ -1,15 +1,15 @@
+from app_analytics.views import SDKAnalyticsFlags
 from django.conf.urls import url
 from django.urls import include
 from drf_yasg2 import openapi
 from drf_yasg2.views import get_schema_view
-from rest_framework import routers, permissions, authentication
+from rest_framework import authentication, permissions, routers
 
 from environments.identities.traits.views import SDKTraits
 from environments.identities.views import SDKIdentities
 from features.views import SDKFeatureStates
 from organisations.views import chargebee_webhook
 from segments.views import SDKSegments
-from analytics.views import SDKAnalyticsFlags
 
 schema_view = get_schema_view(
     openapi.Info(
@@ -17,7 +17,7 @@ schema_view = get_schema_view(
         default_version="v1",
         description="",
         license=openapi.License(name="BSD License"),
-        contact=openapi.Contact(email="support@bullet-train.io"),
+        contact=openapi.Contact(email="support@flagsmith.com"),
     ),
     public=True,
     permission_classes=(permissions.AllowAny,),

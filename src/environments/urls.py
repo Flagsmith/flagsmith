@@ -3,6 +3,7 @@ from rest_framework_nested import routers
 
 from features.views import FeatureStateViewSet
 from integrations.amplitude.views import AmplitudeConfigurationViewSet
+from integrations.segment.views import SegmentConfigurationViewSet
 
 from .identities.traits.views import TraitViewSet
 from .identities.views import IdentityViewSet
@@ -39,6 +40,11 @@ environments_router.register(
     r"integrations/amplitude",
     AmplitudeConfigurationViewSet,
     basename="integrations-amplitude",
+)
+environments_router.register(
+    r"integrations/segment",
+    SegmentConfigurationViewSet,
+    basename="integrations-segment",
 )
 
 identity_router = routers.NestedSimpleRouter(

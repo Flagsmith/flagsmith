@@ -1,13 +1,12 @@
 from unittest import mock
 
+import app_analytics
 import pytest
-from django.conf import settings
-
-import analytics
-from analytics.track import (
+from app_analytics.track import (
     track_request_googleanalytics,
     track_request_influxdb,
 )
+from django.conf import settings
 
 
 @pytest.mark.parametrize(
@@ -20,8 +19,8 @@ from analytics.track import (
         ("/health", 1),
     ),
 )
-@mock.patch("analytics.track.requests")
-@mock.patch("analytics.track.Environment")
+@mock.patch("app_analytics.track.requests")
+@mock.patch("app_analytics.track.Environment")
 def test_track_request_googleanalytics(
     MockEnvironment, mock_requests, request_uri, expected_ga_requests
 ):
@@ -53,8 +52,8 @@ def test_track_request_googleanalytics(
         ("/api/v1/traits/", "traits"),
     ),
 )
-@mock.patch("analytics.track.InfluxDBWrapper")
-@mock.patch("analytics.track.Environment")
+@mock.patch("app_analytics.track.InfluxDBWrapper")
+@mock.patch("app_analytics.track.Environment")
 def test_track_request_sends_data_to_influxdb_for_tracked_uris(
     MockEnvironment, MockInfluxDBWrapper, request_uri, expected_resource
 ):
@@ -82,8 +81,8 @@ def test_track_request_sends_data_to_influxdb_for_tracked_uris(
     )
 
 
-@mock.patch("analytics.track.InfluxDBWrapper")
-@mock.patch("analytics.track.Environment")
+@mock.patch("app_analytics.track.InfluxDBWrapper")
+@mock.patch("app_analytics.track.Environment")
 def test_track_request_does_not_send_data_to_influxdb_for_not_tracked_uris(
     MockEnvironment, MockInfluxDBWrapper
 ):

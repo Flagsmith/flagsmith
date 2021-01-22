@@ -1,5 +1,5 @@
 import json
-from unittest import TestCase, mock
+from unittest import mock
 from unittest.case import TestCase
 
 import pytest
@@ -8,8 +8,8 @@ from rest_framework import status
 from rest_framework.test import APIClient
 
 from organisations.models import Organisation, OrganisationRole, Subscription
-from users.models import FFAdminUser, Invite, UserPermissionGroup
-from users.serializers import UserIdsSerializer
+from users.models import FFAdminUser, UserPermissionGroup
+from organisations.invites.models import Invite, InviteLink
 from util.tests import Helper
 
 
@@ -43,6 +43,19 @@ class UserTestCase(TestCase):
             email=self.user.email, organisation=self.organisation
         )
         url = reverse("api-v1:users:user-join-organisation", args=[invite.hash])
+
+        # When
+        response = self.client.post(url)
+        self.user.refresh_from_db()
+
+        # Then
+        assert response.status_code == status.HTTP_200_OK
+        assert self.organisation in self.user.organisations.all()
+
+    def test_join_organisation_via_link(self):
+        # Given
+        invite = InviteLink.objects.create(organisation=self.organisation)
+        url = reverse("api-v1:users:user-join-organisation-link", args=[invite.hash])
 
         # When
         response = self.client.post(url)
@@ -103,7 +116,7 @@ class UserTestCase(TestCase):
         # Then
         assert self.user.is_admin(self.organisation)
 
-    @mock.patch("users.views.Thread")
+    @mock.patch("organisations.invites.views.Thread")
     def test_join_organisation_alerts_admin_users_if_exceeds_plan_limit(
         self, MockThread
     ):
