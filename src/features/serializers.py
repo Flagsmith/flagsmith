@@ -283,3 +283,7 @@ class FeatureStateValueSerializer(serializers.ModelSerializer):
     class Meta:
         model = FeatureStateValue
         fields = "__all__"
+
+
+class FeatureInfluxDataSerializer(serializers.Serializer):
+    events_list = serializers.ListSerializer(child=serializers.DictField())
