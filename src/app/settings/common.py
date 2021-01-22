@@ -78,7 +78,7 @@ if sys.version[0] == "2":
 # Application definition
 
 INSTALLED_APPS = [
-    "django.contrib.admin",
+    "core.custom_admin.apps.CustomAdminConfig",
     "django.contrib.auth",
     "django.contrib.contenttypes",
     "django.contrib.sessions",
@@ -412,3 +412,6 @@ if ENABLE_AXES:
 # Sentry tracking
 SENTRY_SDK_DSN = env("SENTRY_SDK_DSN", default=None)
 SENTRY_TRACE_SAMPLE_RATE = env.float("SENTRY_TRACE_SAMPLE_RATE", default=1.0)
+
+# allow users to access the admin console
+ENABLE_ADMIN_ACCESS_USER_PASS = env.bool("ENABLE_ADMIN_ACCESS_USER_PASS", default=None)

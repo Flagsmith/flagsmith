@@ -3,4 +3,9 @@
 {% load i18n %}
 
 {% block content %}
+
+{% if show_login_form %}
+{{ block.super }}
+{% endif %}
+
 {% endblock content %}
