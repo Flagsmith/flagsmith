@@ -32,6 +32,7 @@ from organisations.serializers import (
     OrganisationWebhookSerializer,
     PortalUrlSerializer,
     UpdateSubscriptionSerializer,
+    InfluxDataSerializer,
 )
 from projects.serializers import ProjectSerializer
 from users.serializers import UserIdSerializer
@@ -51,6 +52,8 @@ class OrganisationViewSet(viewsets.ModelViewSet):
             return UpdateSubscriptionSerializer
         elif self.action == "get_portal_url":
             return PortalUrlSerializer
+        elif self.action == "get_influx_data":
+            return InfluxDataSerializer
         return OrganisationSerializerFull
 
     def get_serializer_context(self):
@@ -145,9 +148,11 @@ class OrganisationViewSet(viewsets.ModelViewSet):
 
     @action(detail=True, methods=["GET"], url_path="influx-data")
     def get_influx_data(self, request, pk):
-        event_list = get_multiple_event_list_for_organisation(pk)
-
-        return Response(event_list)
+        serializer = self.get_serializer(
+            data={"events_list": get_multiple_event_list_for_organisation(pk)}
+        )
+        serializer.is_valid(raise_exception=True)
+        return Response(serializer.data)
 
 
 @api_view(["POST"])
