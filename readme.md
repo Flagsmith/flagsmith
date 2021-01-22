@@ -50,18 +50,6 @@ simply run the following command from the project root:
 docker-compose up
 ```
 
-## Code Style
-
-We are slowly migrating the code style to use [black](https://github.com/psf/black) as 
-a formatter. Black automatically formats the code for you, you can run the formatter
-by running:
-
-```bash
-python -m black path/to/directory/or/file.py
-```
-
-All new code should adhere to black formatting standards.
-
 ## Databases
 
 Databases are configured in app/settings/\<env\>.py
@@ -97,22 +85,22 @@ python src/manage.py createsuperuser
 
 Once you've created the super user, you can use the details to log in at `/admin/`. From here, you 
 can create an organisation and either create another user or simply assign the organisation to your
-admin user to begin using the application. 
+admin user to begin using the application.
 
 ### In a Heroku-ish environment
 
 Once the app has been deployed, you can initialise it to create a super user by sending a GET request 
 to  the `/api/v1/users/init/` endpoint. This will create a super user with the details configured in 
-`app.settings.common` with the following parameters: 
+`app.settings.common` with the following parameters:
 
-```
+```bash
 ADMIN_USERNAME,
 ADMIN_EMAIL,
 ADMIN_INITIAL_PASSWORD
-``` 
+```
 
 Note that this functionality can be turned off in the settings if required by setting 
-`ALLOW_ADMIN_INITIATION_VIA_URL=False`. 
+`ALLOW_ADMIN_INITIATION_VIA_URL=False`.
 
 ## Deploying
 
@@ -136,6 +124,9 @@ The changes required to run in your environment will be as follows
 
 ### Using Docker
 
+If you want to run the entire Flagsmith platform, including the front end dashboard, take a look at
+our [Flagsmith Docker repository](https://github.com/Flagsmith/flagsmith-docker).
+
 The application can be configured to run using docker with simply by running the following command:
 
 ```bash
@@ -158,6 +149,7 @@ This gets an environment up and running along with Postgres and enables hot relo
 The application relies on the following environment variables to run:
 
 * `ENV`: string representing the current running environment, e.g. 'local', 'dev', 'prod'. Defaults to 'local'
+* `LOG_LEVEL`: DJANGO logging level. Can be one of `DEBUG`, `INFO`, `WARNING`, `ERROR`, `CRITICAL`
 * `DJANGO_ALLOWED_HOSTS`: comma separated list of hosts the application will run on in the given environment
 * `DJANGO_CSRF_TRUSTED_ORIGINS`: comma separated list of hosts to allow unsafe (POST, PUT) requests from. Useful for allowing localhost to set traits in development.
 * `DJANGO_SETTINGS_MODULE`: python path to settings file for the given environment, e.g. "app.settings.develop"
@@ -227,9 +219,9 @@ given project. The number of seconds this is cached for is configurable using th
 
 ## Stack
 
-- Python 3.8
-- Django 2.2.17
-- DjangoRestFramework 3.12.1
+* Python 3.8
+* Django 2.2.17
+* DjangoRestFramework 3.12.1
 
 ## Static Files
 
@@ -240,9 +232,39 @@ configured. This can be done using environment variables or, in the case of AWS 
 you can add the correct permissions to the EC2 Role. The role will need full access to the specific bucket 
 that the static files are hosted in.
 
+## Information for Developers working on the project
+
+### Stack
+
+* Python
+* Django
+* Django Rest Framework
+
+### Development Environment for Contributers
+
+We're using [pip-tools](https://github.com/jazzband/pip-tools) to manage packages and dependencies.
+
+To upgrade packages or add new ones:
+
+```bash
+pip install -r requirements-dev.txt
+pip-compile
+```
+
+### Requirements with pip-tools
+
+We are using [pip-tools](https://github.com/jazzband/pip-tools) to manage dependencies.
+
+To add a new library to the project, edit requirements.in amd then:
+
+```bash
+pip-compile requirements.in
+pip install -r requirements.txt
+```
+
 ## Documentation
 
-Further documentation can be found [here](https://docs.bullet-train.io).
+Further documentation can be found [here](https://docs.flagsmith.com/).
 
 ## Contributing
 

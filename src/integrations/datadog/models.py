@@ -1,5 +1,6 @@
 from django.db import models
 
+from integrations.common.models import IntegrationsModel
 from projects.models import Project
 from util.logging import get_logger
 
