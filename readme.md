@@ -46,7 +46,7 @@ from an environment variable called `DATABASE_URL`. This should be configured in
 application configuration.
 
 When running the application using Docker, it reads the database configuration from the settings 
-located in `app.settings.master-docker`
+located in `app.settings.production`
 
 ## Initialising
 
@@ -125,6 +125,20 @@ This gets an environment up and running along with Postgres and enables hot relo
 
 The application relies on the following environment variables to run:
 
+#### Database Environment Variables
+
+* `DATABASE_URL`: required by develop and master environments, should be a standard format database url e.g. postgres://user:password@host:port/db_name
+
+You can also provide individual variables as below. Note that if a `DATABASE_URL` is defined, it will take precedent and the below variables will be ignored.
+
+* `DJANGO_DB_HOST`: Database hostname
+* `DJANGO_DB_NAME`: Database name
+* `DJANGO_DB_USER`: Database username
+* `DJANGO_DB_PASSWORD`: Database password
+* `DJANGO_DB_PORT`: Database port
+
+#### Application Environment Variables
+
 * `ENV`: string representing the current running environment, e.g. 'local', 'dev', 'prod'. Defaults to 'local'
 * `LOG_LEVEL`: DJANGO logging level. Can be one of `DEBUG`, `INFO`, `WARNING`, `ERROR`, `CRITICAL`
 * `DJANGO_ALLOWED_HOSTS`: comma separated list of hosts the application will run on in the given environment
@@ -138,7 +152,6 @@ The application relies on the following environment variables to run:
 * `AWS_SES_REGION_ENDPOINT`: ses region endpoint, e.g. email.eu-central-1.amazonaws.com. Required when using ses in a region other than us-east-1
 * `AWS_ACCESS_KEY_ID`: If using Amazon SES, these form part of your SES credentials.
 * `AWS_SECRET_ACCESS_KEY`: If using Amazon SES, these form part of your SES credentials.
-* `DATABASE_URL`: required by develop and master environments, should be a standard format database url e.g. postgres://user:password@host:port/db_name
 * `DJANGO_SECRET_KEY`: see 'Creating a secret key' section below
 * `GOOGLE_ANALYTICS_KEY`: if google analytics is required, add your tracking code
 * `GOOGLE_SERVICE_ACCOUNT`: service account json for accessing the google API, used for getting usage of an organisation - needs access to analytics.readonly scope
