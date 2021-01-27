@@ -13,12 +13,17 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.schemas import AutoSchema
 
+from app_analytics.influxdb_wrapper import (
+    get_multiple_event_list_for_feature,
+    get_multiple_event_list_for_organisation,
+)
 from audit.models import (
     IDENTITY_FEATURE_STATE_DELETED_MESSAGE,
     AuditLog,
     RelatedObjectType,
 )
 from environments.authentication import EnvironmentKeyAuthentication
+
 from environments.identities.models import Identity
 from environments.models import Environment
 from environments.permissions.permissions import (
@@ -43,6 +48,7 @@ from .serializers import (
     FeatureStateValueSerializer,
     FeatureWithTagsSerializer,
     UpdateFeatureSerializer,
+    FeatureInfluxDataSerializer,
 )
 
 logger = logging.getLogger()
@@ -60,6 +66,7 @@ class FeatureViewSet(viewsets.ModelViewSet):
             "create": CreateFeatureSerializer,
             "update": UpdateFeatureSerializer,
             "partial_update": UpdateFeatureSerializer,
+            "get_influx_data": FeatureInfluxDataSerializer,
         }.get(self.action, FeatureSerializer)
 
     def get_queryset(self):
@@ -76,6 +83,15 @@ class FeatureViewSet(viewsets.ModelViewSet):
             return Response(status=status.HTTP_403_FORBIDDEN)
 
         return super().create(request, *args, **kwargs)
+
+    @action(detail=True, methods=["GET"], url_path="influx-data")
+    def get_influx_data(self, request, pk, project_pk):
+        serializer = self.get_serializer(
+            data={"events_list": get_multiple_event_list_for_feature(pk, project_pk)}
+        )
+
+        serializer.is_valid(raise_exception=True)
+        return Response(serializer.data)
 
 
 @method_decorator(

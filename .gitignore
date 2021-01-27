@@ -12,6 +12,7 @@ checkstyle.txt
 .env*
 .direnv
 .envrc
+.tool-versions
 .elasticbeanstalk/
 
 # These get baked into the docker container on build
