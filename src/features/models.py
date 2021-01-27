@@ -6,6 +6,7 @@ from django.core.exceptions import (
     ValidationError,
 )
 from django.db import models
+from django.db.models import UniqueConstraint, Q
 from django.utils.encoding import python_2_unicode_compatible
 from django.utils.translation import ugettext_lazy as _
 from ordered_model.models import OrderedModelBase
@@ -228,10 +229,25 @@ class FeatureState(models.Model):
     history = HistoricalRecords()
 
     class Meta:
-        unique_together = (
-            ("feature", "environment", "identity"),
-            ("feature", "environment", "feature_segment"),
-        )
+        # Note: this is manually overridden in the migrations for Oracle DBs to include
+        # all 4 unique fields in each of these constraints. See migration 0025.
+        constraints = [
+            UniqueConstraint(
+                fields=["environment", "feature", "feature_segment"],
+                condition=Q(identity__isnull=True),
+                name="unique_for_feature_segment",
+            ),
+            UniqueConstraint(
+                fields=["environment", "feature", "identity"],
+                condition=Q(feature_segment__isnull=True),
+                name="unique_for_identity",
+            ),
+            UniqueConstraint(
+                fields=["environment", "feature"],
+                condition=Q(identity__isnull=True, feature_segment__isnull=True),
+                name="unique_for_environment",
+            ),
+        ]
         ordering = ["id"]
 
     def __gt__(self, other):
