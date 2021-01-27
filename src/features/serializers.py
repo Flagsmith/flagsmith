@@ -224,9 +224,31 @@ class FeatureStateSerializerBasic(serializers.ModelSerializer):
         create_feature_state_audit_log(instance, self.context.get("request"))
 
     def validate(self, attrs):
-        if attrs.get("identity") and attrs.get("environment"):
-            if not attrs["identity"].environment == attrs["environment"]:
-                raise ValidationError("Identity does not exist in environment.")
+        environment = attrs.get("environment")
+        identity = attrs.get("identity")
+
+        if identity and not identity.environment == environment:
+            raise ValidationError("Identity does not exist in environment.")
+
+        # validate uniqueness
+        # Note: we get the attribute from the instance if it's not in attrs to handle
+        # the case of a partial update
+        environment = environment or getattr(self.instance, "environment", None)
+        identity = identity or getattr(self.instance, "identity", None)
+        feature_segment = attrs.get("feature_segment") or getattr(
+            self.instance, "feature_segment", None
+        )
+        feature = attrs.get("feature") or getattr(self.instance, "feature", None)
+        queryset = FeatureState.objects.filter(
+            environment=environment,
+            feature=feature,
+            identity=identity,
+            feature_segment=feature_segment,
+        ).exclude(pk=getattr(self.instance, "pk", None))
+
+        if queryset.exists():
+            raise ValidationError("Feature state already exists.")
+
         return attrs
 
 
@@ -259,6 +281,9 @@ class FeatureStateSerializerCreate(serializers.ModelSerializer):
     def _create_audit_log(self, instance):
         create_feature_state_audit_log(instance, self.context.get("request"))
 
+    def validate(self, attrs):
+        return super(FeatureStateSerializerCreate, self).validate(attrs)
+
 
 def create_feature_state_audit_log(feature_state, request):
     if feature_state.identity:
@@ -283,3 +308,7 @@ class FeatureStateValueSerializer(serializers.ModelSerializer):
     class Meta:
         model = FeatureStateValue
         fields = "__all__"
+
+
+class FeatureInfluxDataSerializer(serializers.Serializer):
+    events_list = serializers.ListSerializer(child=serializers.DictField())

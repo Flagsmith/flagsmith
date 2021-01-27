@@ -16,6 +16,5 @@ LOGGING = {
     },
     "loggers": {
         "django": {"handlers": ["console"], "propagate": True, "level": "INFO"},
-        "gunicorn": {"handlers": ["console"], "level": "DEBUG"},
     },
 }

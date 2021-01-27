@@ -1,8 +1,7 @@
+from django.conf import settings
+
 from app_analytics.track import track_feature_evaluation_influxdb
-from django.utils.decorators import method_decorator
-from drf_yasg2.utils import swagger_auto_schema
 from rest_framework import status
-from rest_framework.decorators import api_view
 from rest_framework.generics import GenericAPIView
 from rest_framework.response import Response
 
@@ -22,5 +21,7 @@ class SDKAnalyticsFlags(GenericAPIView):
         """
         Send flag evaluation events from the SDK back to the API for reporting.
         """
-        track_feature_evaluation_influxdb(request.environment.id, request.data)
+        if settings.INFLUXDB_TOKEN:
+            track_feature_evaluation_influxdb(request.environment.id, request.data)
+
         return Response(status=status.HTTP_200_OK)
