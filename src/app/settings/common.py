@@ -78,7 +78,7 @@ if sys.version[0] == "2":
 # Application definition
 
 INSTALLED_APPS = [
-    "django.contrib.admin",
+    "core.custom_admin.apps.CustomAdminConfig",
     "django.contrib.auth",
     "django.contrib.contenttypes",
     "django.contrib.sessions",
@@ -134,6 +134,19 @@ SITE_ID = 1
 # Allows collectstatic to run without a database, mainly for Docker builds to collectstatic at build time
 if "DATABASE_URL" in os.environ:
     DATABASES = {"default": dj_database_url.parse(env("DATABASE_URL"), conn_max_age=60)}
+elif "DJANGO_DB_NAME" in os.environ:
+    # If there is no DATABASE_URL configured, check for old style DB config parameters
+    DATABASES = {
+        "default": {
+            "ENGINE": "django.db.backends.postgresql",
+            "NAME": os.environ["DJANGO_DB_NAME"],
+            "USER": os.environ["DJANGO_DB_USER"],
+            "PASSWORD": os.environ["DJANGO_DB_PASSWORD"],
+            "HOST": os.environ["DJANGO_DB_HOST"],
+            "PORT": os.environ["DJANGO_DB_PORT"],
+            "CONN_MAX_AGE": 60,
+        },
+    }
 
 REST_FRAMEWORK = {
     "DEFAULT_PERMISSION_CLASSES": ["rest_framework.permissions.IsAuthenticated"],
@@ -412,3 +425,6 @@ if ENABLE_AXES:
 # Sentry tracking
 SENTRY_SDK_DSN = env("SENTRY_SDK_DSN", default=None)
 SENTRY_TRACE_SAMPLE_RATE = env.float("SENTRY_TRACE_SAMPLE_RATE", default=1.0)
+
+# allow users to access the admin console
+ENABLE_ADMIN_ACCESS_USER_PASS = env.bool("ENABLE_ADMIN_ACCESS_USER_PASS", default=None)

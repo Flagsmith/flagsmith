@@ -9,7 +9,7 @@ COPY src/ /app/src/
 
 RUN python src/manage.py collectstatic --no-input
 
-ENV DJANGO_SETTINGS_MODULE=app.settings.master-docker
+ENV DJANGO_SETTINGS_MODULE=app.settings.production
 EXPOSE 8000
 
 CMD ["./bin/docker"]

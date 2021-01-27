@@ -9,5 +9,5 @@ COPY docker/bin/ /app/bin/
 
 RUN pip install -r requirements-dev.txt
 
-ENV DJANGO_SETTINGS_MODULE=app.settings.master-docker
+ENV DJANGO_SETTINGS_MODULE=app.settings.production
 EXPOSE 8000

@@ -199,3 +199,8 @@ class OrganisationWebhookSerializer(serializers.ModelSerializer):
         model = OrganisationWebhook
         fields = ("id", "url", "enabled")
         read_only_fields = ("id",)
+
+
+class InfluxDataSerializer(serializers.Serializer):
+    # todo this have to be changed after moving influxdb_wrapper to marshmallow
+    events_list = serializers.ListSerializer(child=serializers.DictField())
