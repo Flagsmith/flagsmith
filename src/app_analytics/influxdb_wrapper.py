@@ -29,7 +29,8 @@ class InfluxDBWrapper:
         self.records.append(point)
 
     def write(self):
-        self.write_api.write(bucket=settings.INFLUXDB_BUCKET, record=self.records)
+        if settings.INFLUXDB_URL:
+            self.write_api.write(bucket=settings.INFLUXDB_BUCKET, record=self.records)
 
     @staticmethod
     def influx_query_manager(
