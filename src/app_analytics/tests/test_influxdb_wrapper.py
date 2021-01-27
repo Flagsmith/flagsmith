@@ -32,8 +32,7 @@ def test_write(monkeypatch):
     influxdb.write()
 
     # Then
-    if settings.INFLUXDB_URL:
-        mock_write_api.write.assert_called()
+    mock_write_api.write.assert_called()
 
 
 def test_influx_db_query_when_get_events_then_query_api_called(monkeypatch):
