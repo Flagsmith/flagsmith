@@ -277,13 +277,21 @@ ACCOUNT_EMAIL_REQUIRED = True
 ACCOUNT_AUTHENTICATION_METHOD = "email"
 ACCOUNT_EMAIL_VERIFICATION = "none"  # TODO: configure email verification
 
-# SendGrid
+# Set up Email
 EMAIL_BACKEND = env("EMAIL_BACKEND", default="sgbackend.SendGridBackend")
-SENDGRID_API_KEY = env("SENDGRID_API_KEY", default=None)
-if EMAIL_BACKEND == "sgbackend.SendGridBackend" and not SENDGRID_API_KEY:
-    warnings.warn(
-        "`SENDGRID_API_KEY` has not been configured. You will not receive emails."
-    )
+if EMAIL_BACKEND == "sgbackend.SendGridBackend":
+    SENDGRID_API_KEY = env("SENDGRID_API_KEY", default=None)
+    if not SENDGRID_API_KEY:
+        warnings.warn(
+            "`SENDGRID_API_KEY` has not been configured. You will not receive emails."
+        )
+elif EMAIL_BACKEND == "django.core.mail.backends.smtp.EmailBackend":
+    EMAIL_HOST = env("EMAIL_HOST", default='localhost')
+    EMAIL_HOST_USER = env("EMAIL_HOST_USER", default=None)
+    EMAIL_HOST_PASSWORD = env("EMAIL_HOST_PASSWORD", default=None)
+    EMAIL_PORT = env("EMAIL_PORT", default=587)
+    EMAIL_USE_TLS = env.bool("EMAIL_USE_TLS", default=True)
+
 
 SWAGGER_SETTINGS = {
     "SHOW_REQUEST_HEADERS": True,
