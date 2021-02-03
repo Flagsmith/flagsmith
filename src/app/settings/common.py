@@ -286,7 +286,7 @@ if EMAIL_BACKEND == "sgbackend.SendGridBackend":
             "`SENDGRID_API_KEY` has not been configured. You will not receive emails."
         )
 elif EMAIL_BACKEND == "django.core.mail.backends.smtp.EmailBackend":
-    EMAIL_HOST = env("EMAIL_HOST", default='localhost')
+    EMAIL_HOST = env("EMAIL_HOST", default="localhost")
     EMAIL_HOST_USER = env("EMAIL_HOST_USER", default=None)
     EMAIL_HOST_PASSWORD = env("EMAIL_HOST_PASSWORD", default=None)
     EMAIL_PORT = env("EMAIL_PORT", default=587)
