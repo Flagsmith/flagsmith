@@ -119,7 +119,7 @@ You can work on the project itself using Docker:
 docker-compose -f docker-compose.dev.yml up
 ```
 
-This gets an environment up and running along with Postgres and enables hot reloading etc. 
+This gets an environment up and running along with Postgres and enables hot reloading etc.
 
 ### Environment Variables
 
@@ -140,32 +140,61 @@ You can also provide individual variables as below. Note that if a `DATABASE_URL
 #### Application Environment Variables
 
 * `ENV`: string representing the current running environment, e.g. 'local', 'dev', 'prod'. Defaults to 'local'
+* `DJANGO_SECRET_KEY`: secret key required by Django, if one isn't provided one will be created using `django.core.management.utilsget_random_secret_key`
 * `LOG_LEVEL`: DJANGO logging level. Can be one of `DEBUG`, `INFO`, `WARNING`, `ERROR`, `CRITICAL`
 * `DJANGO_ALLOWED_HOSTS`: comma separated list of hosts the application will run on in the given environment
 * `DJANGO_CSRF_TRUSTED_ORIGINS`: comma separated list of hosts to allow unsafe (POST, PUT) requests from. Useful for allowing localhost to set traits in development.
 * `DJANGO_SETTINGS_MODULE`: python path to settings file for the given environment, e.g. "app.settings.develop"
-* `DJANGO_SECRET_KEY`: secret key required by Django, if one isn't provided one will be created using `django.core.management.utilsget_random_secret_key`
-* `EMAIL_BACKEND`: email provider. Allowed values are `sgbackend.SendGridBackend` for Sendgrid or `django_ses.SESBackend` for Amazon SES. Defaults to `sgbackend.SendGridBackend`.
-* `SENDGRID_API_KEY`: API key for the Sendgrid account
-* `SENDER_EMAIL`: Email address from which emails are sent
-* `AWS_SES_REGION_NAME`: If using Amazon SES as the email provider, specify the region (e.g. eu-central-1) that contains your verified sender e-mail address. Defaults to us-east-1
-* `AWS_SES_REGION_ENDPOINT`: ses region endpoint, e.g. email.eu-central-1.amazonaws.com. Required when using ses in a region other than us-east-1
-* `AWS_ACCESS_KEY_ID`: If using Amazon SES, these form part of your SES credentials.
-* `AWS_SECRET_ACCESS_KEY`: If using Amazon SES, these form part of your SES credentials.
-* `DJANGO_SECRET_KEY`: see 'Creating a secret key' section below
 * `GOOGLE_ANALYTICS_KEY`: if google analytics is required, add your tracking code
 * `GOOGLE_SERVICE_ACCOUNT`: service account json for accessing the google API, used for getting usage of an organisation - needs access to analytics.readonly scope
 * `INFLUXDB_TOKEN`: If you want to send API events to InfluxDB, specify this write token.
 * `INFLUXDB_URL`: The URL for your InfluxDB database
 * `INFLUXDB_ORG`: The organisation string for your InfluxDB API call.
 * `GA_TABLE_ID`: GA table ID (view) to query when looking for organisation usage
-* `AWS_STORAGE_BUCKET_NAME`: bucket name to store static files. Required if `USE_S3_STORAGE' is true.
-* `AWS_S3_REGION_NAME`: region name of the static files bucket. Defaults to eu-west-2.
 * `ALLOWED_ADMIN_IP_ADDRESSES`: restrict access to the django admin console to a comma separated list of IP addresses (e.g. `127.0.0.1,127.0.0.2`) 
 * `USER_CREATE_PERMISSIONS`: set the permissions for creating new users, using a comma separated list of djoser or rest_framework permissions. Use this to turn off public user creation for self hosting. e.g. `'djoser.permissions.CurrentUserOrAdmin'` Defaults to `'rest_framework.permissions.AllowAny'`.
 * `ENABLE_EMAIL_ACTIVATION`: new user registration will go via email activation flow, default False
 * `SENTRY_SDK_DSN`: If using Sentry, set the project DSN here.
 * `SENTRY_TRACE_SAMPLE_RATE`: Float. If using Sentry, sets the trace sample rate. Defaults to 1.0.
+
+#### Email Environment Variables
+
+* `SENDER_EMAIL`: Email address from which emails are sent
+* `EMAIL_BACKEND`: One of:
+  * `django.core.mail.backends.smtp.EmailBackend`
+  * `sgbackend.SendGridBackend`
+  * `django_ses.SESBackend`
+
+If using `django.core.mail.backends.smtp.EmailBackend` you will need to configure:
+
+* `EMAIL_HOST` = env("EMAIL_HOST", default='localhost')
+* `EMAIL_HOST_USER` = env("EMAIL_HOST_USER", default=None)
+* `EMAIL_HOST_PASSWORD` = env("EMAIL_HOST_PASSWORD", default=None)
+* `EMAIL_PORT` = env("EMAIL_PORT", default=587)
+* `EMAIL_USE_TLS` = env.bool("EMAIL_USE_TLS", default=True)
+
+If using `sgbackend.SendGridBackend` you will need to configure:
+
+* `SENDGRID_API_KEY`: API key for the Sendgrid account
+
+If using AWS SES you will need to configure:
+
+* `AWS_SES_REGION_NAME`: If using Amazon SES as the email provider, specify the region (e.g. eu-central-1) that contains your verified sender e-mail address. Defaults to us-east-1
+* `AWS_SES_REGION_ENDPOINT`: ses region endpoint, e.g. email.eu-central-1.amazonaws.com. Required when using ses in a region other than us-east-1
+* `AWS_ACCESS_KEY_ID`: If using Amazon SES, these form part of your SES credentials.
+* `AWS_SECRET_ACCESS_KEY`: If using Amazon SES, these form part of your SES credentials.
+
+### Creating a secret key
+
+It is important to also set an environment variable on whatever platform you are using for 
+`DJANGO_SECRET_KEY`. There is a function to create one in `app.settings.common` if none exists in 
+the environment variables, however, this is not suitable for use in production. To generate a new 
+secret key, you can use the function defined in `src/secret-key-gen.py` by simply running it from a 
+command prompt:
+
+```bash
+python secret-key-gen.py
+```
 
 ## Pre commit
 
@@ -178,16 +207,10 @@ pip install pre-commit
 pre-commit install
 ```
 
-### Creating a secret key
-
-It is important to also set an environment variable on whatever platform you are using for 
-`DJANGO_SECRET_KEY`. There is a function to create one in `app.settings.common` if none exists in 
-the environment variables, however, this is not suitable for use in production. To generate a new 
-secret key, you can use the function defined in `src/secret-key-gen.py` by simply running it from a 
-command prompt:
+You can manually run the black formatter with:
 
 ```bash
-python secret-key-gen.py
+python -m black src
 ```
 
 ## Adding dependencies
@@ -206,21 +229,6 @@ on all endpoints that use the X-Environment-Key header.
 3. Project Segments - the application utilises an in memory cache for returning the segments for a 
 given project. The number of seconds this is cached for is configurable using the environment variable
 `"CACHE_PROJECT_SEGMENTS_SECONDS"`.
-
-## Stack
-
-* Python 3.8
-* Django 2.2.17
-* DjangoRestFramework 3.12.1
-
-## Static Files
-
-Although the application relies on very few static files, it is possible to optimise their configuration to 
-host these static files in S3. This is done using the relevant environment variables provided above. Note, however, 
-that in order to use the configuration, the environment that you are hosting on must have the correct AWS credentials
-configured. This can be done using environment variables or, in the case of AWS hosting such as Elastic Beanstalk, 
-you can add the correct permissions to the EC2 Role. The role will need full access to the specific bucket 
-that the static files are hosted in.
 
 ## Information for Developers working on the project
 
