@@ -78,6 +78,7 @@ class UpdateFeatureSerializer(CreateFeatureSerializer):
     class Meta(CreateFeatureSerializer.Meta):
         read_only_fields = CreateFeatureSerializer.Meta.read_only_fields + (
             "default_enabled",
+            "initial_value",
         )
 
 
