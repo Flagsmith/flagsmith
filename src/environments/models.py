@@ -107,10 +107,8 @@ class Environment(models.Model):
                 #  until we merge in the pulumi stuff, however, we'll have too many conflicts
                 environment_cache.set(environment.api_key, environment, timeout=60)
             return environment
-        except cls.DoesNotExist as err:
-            logger.error(
-                "Environment with api_key %s does not exist. %s" % (api_key, err)
-            )
+        except cls.DoesNotExist:
+            logger.info("Environment with api_key %s does not exist" % api_key)
 
 
 class Webhook(models.Model):
