@@ -436,3 +436,7 @@ SENTRY_TRACE_SAMPLE_RATE = env.float("SENTRY_TRACE_SAMPLE_RATE", default=1.0)
 
 # allow users to access the admin console
 ENABLE_ADMIN_ACCESS_USER_PASS = env.bool("ENABLE_ADMIN_ACCESS_USER_PASS", default=None)
+
+# Set this flag to prevent traits being stored for all Organisations within the application
+# Useful for data sensitive installations that dont want persistent traits.
+DEFAULT_ORG_STORE_TRAITS_VALUE = env.bool("DEFAULT_ORG_STORE_TRAITS_VALUE", True)

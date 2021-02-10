@@ -3,6 +3,7 @@ from __future__ import unicode_literals
 
 import enum
 
+from django.conf import settings
 from django.db import models
 from django.utils import timezone
 from django.utils.encoding import python_2_unicode_compatible
@@ -34,7 +35,7 @@ class Organisation(models.Model):
         help_text="Enable this to cease serving flags for this " "organisation.",
     )
     persist_trait_data = models.BooleanField(
-        default=True,
+        default=settings.DEFAULT_ORG_STORE_TRAITS_VALUE,
         help_text="Disable this if you don't want Flagsmith "
         "to store trait data for this org's identities.",
     )
