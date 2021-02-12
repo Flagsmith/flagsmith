@@ -55,23 +55,3 @@ class SegmentViewSet(viewsets.ModelViewSet):
             )
 
         return queryset
-
-
-class SDKSegments(SDKAPIView):
-    serializer_class = SegmentSerializer
-    permission_classes = (AllowAny,)
-
-    def get(self, request):
-        try:
-            environment = Environment.get_environment_from_request(request)
-        except EnvironmentHeaderNotPresentError:
-            error = {"detail": "Environment Key header not provided"}
-            return Response(error, status=status.HTTP_400_BAD_REQUEST)
-        except ObjectDoesNotExist:
-            error_response = {"error": "Environment not found for provided key"}
-            return Response(error_response, status=status.HTTP_400_BAD_REQUEST)
-
-        return Response(
-            self.get_serializer(environment.project.segments.all(), many=True).data,
-            status=status.HTTP_200_OK,
-        )
