@@ -3,7 +3,7 @@ from django.test import TransactionTestCase
 from environments.identities.models import Identity
 from environments.identities.traits.models import Trait
 from environments.models import FLOAT, Environment
-from features.models import CONFIG, Feature, FeatureSegment, FeatureState
+from features.models import Feature, FeatureSegment, FeatureState
 from features.utils import BOOLEAN, INTEGER, STRING
 from organisations.models import Organisation
 from projects.models import Project
@@ -109,9 +109,6 @@ class IdentityTestCase(TransactionTestCase):
         feature_2 = Feature.objects.create(
             name="Test Feature 2", project=project_flag_disabled
         )
-        remote_config = Feature.objects.create(
-            name="Test Feature 3", project=project_flag_disabled, type=CONFIG
-        )
         other_environment = Environment.objects.create(
             name="Test Environment 2", project=project_flag_disabled
         )
@@ -138,12 +135,6 @@ class IdentityTestCase(TransactionTestCase):
             enabled=False,
             identity=identity_1,
         )
-        remote_config = FeatureState.objects.create(
-            feature=remote_config,
-            environment=other_environment,
-            enabled=False,
-            identity=identity_1,
-        )
         FeatureState.objects.create(
             feature=feature,
             environment=self.environment,
@@ -165,11 +156,6 @@ class IdentityTestCase(TransactionTestCase):
         # But
         # not returned for identity
         assert disabled_flag not in identity_flags
-
-        # And
-        # remote configs are in environment flags and in identity flags
-        assert remote_config in identity_flags
-        assert remote_config in env_flags
 
         # And
         # identity flags are in environment flags
