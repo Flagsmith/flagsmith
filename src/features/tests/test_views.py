@@ -16,7 +16,6 @@ from audit.models import (
 from environments.identities.models import Identity
 from environments.models import Environment
 from features.models import (
-    CONFIG,
     Feature,
     FeatureSegment,
     FeatureState,
@@ -87,7 +86,6 @@ class ProjectFeatureTestCase(TestCase):
         data = {
             "name": "test feature",
             "initial_value": default_value,
-            "type": CONFIG,
             "project": self.project.id,
         }
         url = reverse("api-v1:projects:project-features-list", args=[self.project.id])
@@ -121,7 +119,6 @@ class ProjectFeatureTestCase(TestCase):
         url = reverse("api-v1:projects:project-features-list", args=[self.project.id])
         data = {
             "name": "test feature",
-            "type": CONFIG,
             "initial_value": default_value,
             "project": self.project.id,
         }
@@ -156,7 +153,6 @@ class ProjectFeatureTestCase(TestCase):
         data = {
             "name": "Test feature",
             "initial_value": default_value,
-            "type": CONFIG,
             "project": self.project.id,
         }
         url = reverse("api-v1:projects:project-features-list", args=[self.project.id])
@@ -865,7 +861,6 @@ class SDKFeatureStatesTestCase(APITestCase):
         self.feature = Feature.objects.create(
             name="Test feature",
             project=self.project,
-            type=CONFIG,
             initial_value=self.environment_fs_value,
         )
         segment = Segment.objects.create(name="Test segment", project=self.project)
@@ -919,9 +914,6 @@ class SDKFeatureStatesTestCase(APITestCase):
         disabled_flag = Feature.objects.create(
             name="Flag 1", project=project_flag_disabled
         )
-        config_flag = Feature.objects.create(
-            name="Config", project=project_flag_disabled, type=CONFIG
-        )
         enabled_flag = Feature.objects.create(
             name="Flag 2", project=project_flag_disabled, default_enabled=True
         )
@@ -934,13 +926,11 @@ class SDKFeatureStatesTestCase(APITestCase):
         # Then
         assert response.status_code == status.HTTP_200_OK
         response_json = response.json()
-        assert len(response_json) == 2
+        assert len(response_json) == 1
 
         # disabled flags are not returned
         for flag in response_json:
             assert flag["feature"]["id"] != disabled_flag.id
 
-        # And
-        # but enabled ones and remote configs are
-        assert response_json[0]["feature"]["id"] == config_flag.id
-        assert response_json[1]["feature"]["id"] == enabled_flag.id
+        # but enabled ones are
+        assert response_json[0]["feature"]["id"] == enabled_flag.id
