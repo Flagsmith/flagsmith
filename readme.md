@@ -156,6 +156,7 @@ You can also provide individual variables as below. Note that if a `DATABASE_URL
 * `ENABLE_EMAIL_ACTIVATION`: new user registration will go via email activation flow, default False
 * `SENTRY_SDK_DSN`: If using Sentry, set the project DSN here.
 * `SENTRY_TRACE_SAMPLE_RATE`: Float. If using Sentry, sets the trace sample rate. Defaults to 1.0.
+* `DEFAULT_ORG_STORE_TRAITS_VALUE`: Boolean. Set this flag to ensure new organisations default to not persisting traits. Useful for data sensitive installations that don't want persistent traits.
 
 #### Email Environment Variables
 
