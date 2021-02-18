@@ -28,10 +28,6 @@ from util.logging import get_logger
 
 logger = get_logger(__name__)
 
-# Feature Types
-FLAG = "FLAG"
-CONFIG = "CONFIG"
-
 FEATURE_STATE_VALUE_TYPES = (
     (INTEGER, "Integer"),
     (STRING, "String"),
@@ -41,8 +37,6 @@ FEATURE_STATE_VALUE_TYPES = (
 
 @python_2_unicode_compatible
 class Feature(models.Model):
-    FEATURE_TYPES = ((FLAG, "Feature Flag"), (CONFIG, "Remote Config"))
-
     name = models.CharField(max_length=2000)
     created_date = models.DateTimeField("DateCreated", auto_now_add=True)
     project = models.ForeignKey(
@@ -59,7 +53,7 @@ class Feature(models.Model):
     initial_value = models.CharField(max_length=2000, null=True, default=None)
     description = models.TextField(null=True, blank=True)
     default_enabled = models.BooleanField(default=False)
-    type = models.CharField(max_length=50, choices=FEATURE_TYPES, default=FLAG)
+    type = models.CharField(max_length=50, null=True, blank=True)
     history = HistoricalRecords()
     tags = models.ManyToManyField(Tag, blank=True)
 
@@ -340,7 +334,7 @@ class FeatureState(models.Model):
         # note: this is get_or_create since feature state values are updated separately, and hence if this is set to
         # update_or_create, it overwrites the FSV with the initial value again
         # Note: feature segments are handled differently as they have their own values
-        if not self.feature_segment and self.feature.type == CONFIG:
+        if not self.feature_segment:
             FeatureStateValue.objects.get_or_create(
                 feature_state=self, defaults=self._get_defaults()
             )
