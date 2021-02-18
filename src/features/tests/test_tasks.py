@@ -1,14 +1,12 @@
-import json
 from unittest import mock
 
 import pytest
 
 from environments.models import Environment
-from features.models import CONFIG, Feature, FeatureState, FeatureStateValue
+from features.models import Feature, FeatureState
 from features.tasks import trigger_feature_state_change_webhooks
 from organisations.models import Organisation
 from projects.models import Project
-from webhooks.webhooks import WebhookEventType
 
 
 @pytest.mark.django_db
@@ -22,7 +20,7 @@ def test_trigger_feature_state_change_webhooks(MockThread):
     project = Project.objects.create(name="Test project", organisation=organisation)
     environment = Environment.objects.create(name="Test environment", project=project)
     feature = Feature.objects.create(
-        name="Test feature", project=project, initial_value=initial_value, type=CONFIG
+        name="Test feature", project=project, initial_value=initial_value
     )
     feature_state = FeatureState.objects.get(feature=feature, environment=environment)
 
