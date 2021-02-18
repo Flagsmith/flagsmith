@@ -9,8 +9,6 @@ from environments.identities.models import Identity
 from environments.identities.traits.models import Trait
 from environments.models import STRING, Environment
 from features.models import (
-    CONFIG,
-    FLAG,
     Feature,
     FeatureSegment,
     FeatureState,
@@ -67,7 +65,6 @@ class FeatureTestCase(TestCase):
             name="Test Feature",
             project=self.project,
             initial_value="This is a value",
-            type=CONFIG,
         )
 
         feature_states = FeatureState.objects.filter(feature=feature)
@@ -86,7 +83,6 @@ class FeatureTestCase(TestCase):
             name="Test feature",
             project=self.project,
             initial_value=initial_value,
-            type=CONFIG,
         )
 
         # When
@@ -105,7 +101,6 @@ class FeatureTestCase(TestCase):
             name="Test feature",
             project=self.project,
             initial_value=initial_value,
-            type=CONFIG,
         )
 
         # When
@@ -153,14 +148,13 @@ class FeatureTestCase(TestCase):
         # Given
         feature_name = "Test Feature"
         Feature.objects.create(
-            name=feature_name, type=CONFIG, initial_value="test", project=self.project
+            name=feature_name, initial_value="test", project=self.project
         )
 
         # When
         with self.assertRaises(ValidationError):
             feature_two = Feature(
                 name=feature_name.lower(),
-                type=CONFIG,
                 initial_value="test",
                 project=self.project,
             )
@@ -218,7 +212,6 @@ class FeatureSegmentTest(TestCase):
         self.initial_value = "test"
         self.remote_config = Feature.objects.create(
             name="Remote Config",
-            type=CONFIG,
             initial_value="test",
             project=self.project,
         )
@@ -393,7 +386,7 @@ class FeatureSegmentTest(TestCase):
 
         # 1 with the same environment but a different feature
         another_feature = Feature.objects.create(
-            name="Another feature", project=self.project, type=FLAG
+            name="Another feature", project=self.project
         )
         feature_segment_4 = FeatureSegment.objects.create(
             feature=another_feature, segment=self.segment, environment=self.environment

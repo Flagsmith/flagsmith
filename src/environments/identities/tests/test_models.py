@@ -3,7 +3,7 @@ from django.test import TransactionTestCase
 from environments.identities.models import Identity
 from environments.identities.traits.models import Trait
 from environments.models import FLOAT, Environment
-from features.models import CONFIG, Feature, FeatureSegment, FeatureState
+from features.models import Feature, FeatureSegment, FeatureState
 from features.utils import BOOLEAN, INTEGER, STRING
 from organisations.models import Organisation
 from projects.models import Project
@@ -96,85 +96,59 @@ class IdentityTestCase(TransactionTestCase):
     def test_get_all_feature_states_exclude_disabled(self):
         # Given
         # a project with hide_disabled_flags enabled
-        project_flag_disabled = Project.objects.create(
+        hide_disabled_flags_project = Project.objects.create(
             name="Project Flag Disabled",
             organisation=self.organisation,
             hide_disabled_flags=True,
         )
 
-        # and a set of features and environments for that project
+        # with a single environment
+        environment = Environment.objects.create(
+            name="Test Environment 2", project=hide_disabled_flags_project
+        )
+
+        # 2 features, both defaulted to True
         feature = Feature.objects.create(
-            name="Test Feature", project=project_flag_disabled
+            name="Test Feature",
+            project=hide_disabled_flags_project,
+            default_enabled=True,
         )
         feature_2 = Feature.objects.create(
-            name="Test Feature 2", project=project_flag_disabled
-        )
-        remote_config = Feature.objects.create(
-            name="Test Feature 3", project=project_flag_disabled, type=CONFIG
-        )
-        other_environment = Environment.objects.create(
-            name="Test Environment 2", project=project_flag_disabled
+            name="Test Feature 2",
+            project=hide_disabled_flags_project,
+            default_enabled=True,
         )
 
-        identity_1 = Identity.objects.create(
+        # and an identity
+        identity = Identity.objects.create(
             identifier="test-identity-1",
-            environment=other_environment,
-        )
-        identity_2 = Identity.objects.create(
-            identifier="test-identity-2",
-            environment=self.environment,
+            environment=environment,
         )
 
-        # User assigned
+        # which has an overridden feature state for both features
         FeatureState.objects.create(
             feature=feature,
-            environment=other_environment,
+            environment=environment,
             enabled=True,
-            identity=identity_1,
+            identity=identity,
         )
         disabled_flag = FeatureState.objects.create(
             feature=feature_2,
-            environment=other_environment,
+            environment=environment,
             enabled=False,
-            identity=identity_1,
-        )
-        remote_config = FeatureState.objects.create(
-            feature=remote_config,
-            environment=other_environment,
-            enabled=False,
-            identity=identity_1,
-        )
-        FeatureState.objects.create(
-            feature=feature,
-            environment=self.environment,
-            identity=identity_2,
+            identity=identity,
         )
 
         # When
-        # we get all flags for an environment
-        env_flags = FeatureState.objects.filter(environment=other_environment)
-
-        # And
-        # we get flags for identity
-        identity_flags = identity_1.get_all_feature_states()
+        # we get flags for the identity
+        identity_flags = identity.get_all_feature_states()
 
         # Then
-        # disabled flags are in environment flags
-        assert disabled_flag in env_flags
+        # we only get a single flag returned
+        assert len(identity_flags) == 1
 
-        # But
-        # not returned for identity
-        assert disabled_flag not in identity_flags
-
-        # And
-        # remote configs are in environment flags and in identity flags
-        assert remote_config in identity_flags
-        assert remote_config in env_flags
-
-        # And
-        # identity flags are in environment flags
-        for flag in identity_flags:
-            assert flag in env_flags
+        # which is for the feature that has not been disabled for the identity
+        assert identity_flags[0].feature != disabled_flag.feature
 
     def test_create_trait_should_assign_relevant_attributes(self):
         identity = Identity.objects.create(

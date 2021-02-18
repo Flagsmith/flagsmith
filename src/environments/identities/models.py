@@ -6,7 +6,7 @@ from django.utils.encoding import python_2_unicode_compatible
 
 from environments.models import Environment
 from environments.identities.traits.models import Trait
-from features.models import FeatureState, FLAG
+from features.models import FeatureState
 
 
 @python_2_unicode_compatible
@@ -64,14 +64,8 @@ class Identity(models.Model):
         ]
 
         # When Project's hide_disabled_flags enabled, exclude disabled Features from the list
-        all_flags = (
-            FeatureState.objects.select_related(*select_related_args)
-            .filter(full_query)
-            .exclude(
-                feature__project__hide_disabled_flags=True,
-                enabled=False,
-                feature__type=FLAG,
-            )
+        all_flags = FeatureState.objects.select_related(*select_related_args).filter(
+            full_query
         )
 
         # iterate over all the flags and build a dictionary keyed on feature with the highest priority flag
@@ -83,6 +77,11 @@ class Identity(models.Model):
             else:
                 if flag > identity_flags[flag.feature_id]:
                     identity_flags[flag.feature_id] = flag
+
+        if self.environment.project.hide_disabled_flags:
+            # filter out any flags that are disabled if configured on the project
+            # Note: done here instead of the DB because of CH1245
+            return [value for value in identity_flags.values() if value.enabled]
 
         return list(identity_flags.values())
 

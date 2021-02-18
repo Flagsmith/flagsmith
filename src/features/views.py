@@ -32,7 +32,7 @@ from environments.permissions.permissions import (
 )
 from projects.models import Project
 
-from .models import FLAG, FeatureSegment, FeatureState
+from .models import FeatureSegment, FeatureState
 from .permissions import FeaturePermissions, FeatureStatePermissions
 from .serializers import (
     CreateFeatureSerializer,
@@ -376,7 +376,6 @@ class SDKFeatureStates(GenericAPIView):
                 .exclude(
                     feature__project__hide_disabled_flags=True,
                     enabled=False,
-                    feature__type=FLAG,
                 )
                 .select_related("feature", "feature_state_value"),
                 many=True,
@@ -393,7 +392,6 @@ class SDKFeatureStates(GenericAPIView):
                 .exclude(
                     feature__project__hide_disabled_flags=True,
                     enabled=False,
-                    feature__type=FLAG,
                 )
                 .select_related("feature", "feature_state_value"),
                 many=True,
