@@ -6,19 +6,16 @@ from django.db.utils import IntegrityError
 from django.test import TestCase
 
 from environments.identities.models import Identity
-from environments.identities.traits.models import Trait
-from environments.models import STRING, Environment
+from environments.models import Environment
 from features.models import (
     Feature,
     FeatureSegment,
     FeatureState,
-    FeatureStateValue,
 )
-from features.utils import BOOLEAN, INTEGER
 from organisations.models import Organisation
 from projects.models import Project
 from projects.tags.models import Tag
-from segments.models import EQUAL, Condition, Segment, SegmentRule
+from segments.models import Segment
 
 
 @pytest.mark.django_db
@@ -199,242 +196,6 @@ class FeatureTestCase(TestCase):
 
 
 @pytest.mark.django_db
-class FeatureSegmentTest(TestCase):
-    def setUp(self) -> None:
-        self.organisation = Organisation.objects.create(name="Test org")
-        self.project = Project.objects.create(
-            name="Test project", organisation=self.organisation
-        )
-        self.environment = Environment.objects.create(
-            name="Test environment", project=self.project
-        )
-
-        self.initial_value = "test"
-        self.remote_config = Feature.objects.create(
-            name="Remote Config",
-            initial_value="test",
-            project=self.project,
-        )
-
-        self.segment = Segment.objects.create(name="Test segment", project=self.project)
-        segment_rule = SegmentRule.objects.create(
-            segment=self.segment, type=SegmentRule.ALL_RULE
-        )
-
-        self.condition_property = "test_property"
-        self.condition_value = "test_value"
-        Condition.objects.create(
-            property=self.condition_property,
-            value=self.condition_value,
-            operator=EQUAL,
-            rule=segment_rule,
-        )
-
-        self.matching_identity = Identity.objects.create(
-            identifier="user_1", environment=self.environment
-        )
-        Trait.objects.create(
-            identity=self.matching_identity,
-            trait_key=self.condition_property,
-            value_type=STRING,
-            string_value=self.condition_value,
-        )
-
-        self.not_matching_identity = Identity.objects.create(
-            identifier="user_2", environment=self.environment
-        )
-
-    def test_feature_segment_save_updates_string_feature_state_value_for_environment(
-        self,
-    ):
-        # Given
-        overridden_value = "overridden value"
-        feature_segment = FeatureSegment(
-            feature=self.remote_config,
-            segment=self.segment,
-            environment=self.environment,
-            value=overridden_value,
-            value_type=STRING,
-        )
-
-        # When
-        feature_segment.save()
-
-        # Then
-        feature_state = FeatureState.objects.get(
-            feature_segment=feature_segment, environment=self.environment
-        )
-        assert feature_state.get_feature_state_value() == overridden_value
-
-    def test_feature_segment_save_updates_integer_feature_state_value_for_environment(
-        self,
-    ):
-        # Given
-        overridden_value = 12
-        feature_segment = FeatureSegment(
-            feature=self.remote_config,
-            segment=self.segment,
-            environment=self.environment,
-            value=str(overridden_value),
-            value_type=INTEGER,
-        )
-
-        # When
-        feature_segment.save()
-
-        # Then
-        feature_state = FeatureState.objects.get(
-            feature_segment=feature_segment, environment=self.environment
-        )
-        assert feature_state.get_feature_state_value() == overridden_value
-
-    def test_feature_segment_save_updates_boolean_feature_state_value_for_environment(
-        self,
-    ):
-        # Given
-        overridden_value = False
-        feature_segment = FeatureSegment(
-            feature=self.remote_config,
-            segment=self.segment,
-            environment=self.environment,
-            value=str(overridden_value),
-            value_type=BOOLEAN,
-        )
-
-        # When
-        feature_segment.save()
-
-        # Then
-        feature_state = FeatureState.objects.get(
-            feature_segment=feature_segment, environment=self.environment
-        )
-        assert feature_state.get_feature_state_value() == overridden_value
-
-    def test_feature_state_enabled_value_is_updated_when_feature_segment_updated(self):
-        # Given
-        feature_segment = FeatureSegment.objects.create(
-            feature=self.remote_config,
-            segment=self.segment,
-            environment=self.environment,
-            priority=1,
-        )
-        feature_state = FeatureState.objects.get(
-            feature_segment=feature_segment, enabled=False
-        )
-
-        # When
-        feature_segment.enabled = True
-        feature_segment.save()
-
-        # Then
-        feature_state.refresh_from_db()
-        assert feature_state.enabled
-
-    def test_feature_segment_is_less_than_other_if_priority_lower(self):
-        # Given
-        feature_segment_1 = FeatureSegment.objects.create(
-            feature=self.remote_config,
-            segment=self.segment,
-            environment=self.environment,
-            priority=1,
-        )
-
-        another_segment = Segment.objects.create(
-            name="Another segment", project=self.project
-        )
-        feature_segment_2 = FeatureSegment.objects.create(
-            feature=self.remote_config,
-            segment=another_segment,
-            environment=self.environment,
-            priority=2,
-        )
-
-        # When
-        result = feature_segment_2 < feature_segment_1
-
-        # Then
-        assert result
-
-    def test_feature_segments_are_created_with_correct_priority(self):
-        # Given - 5 feature segments
-
-        # 2 with the same feature, environment but a different segment
-        another_segment = Segment.objects.create(
-            name="Another segment", project=self.project
-        )
-        feature_segment_1 = FeatureSegment.objects.create(
-            feature=self.remote_config,
-            segment=self.segment,
-            environment=self.environment,
-        )
-
-        feature_segment_2 = FeatureSegment.objects.create(
-            feature=self.remote_config,
-            segment=another_segment,
-            environment=self.environment,
-        )
-
-        # 1 with the same feature but a different environment
-        another_environment = Environment.objects.create(
-            name="Another environment", project=self.project
-        )
-        feature_segment_3 = FeatureSegment.objects.create(
-            feature=self.remote_config,
-            segment=self.segment,
-            environment=another_environment,
-        )
-
-        # 1 with the same environment but a different feature
-        another_feature = Feature.objects.create(
-            name="Another feature", project=self.project
-        )
-        feature_segment_4 = FeatureSegment.objects.create(
-            feature=another_feature, segment=self.segment, environment=self.environment
-        )
-
-        # 1 with a different feature and a different environment
-        feature_segment_5 = FeatureSegment.objects.create(
-            feature=another_feature,
-            segment=self.segment,
-            environment=another_environment,
-        )
-
-        # Then
-        # the two with the same feature and environment are created with ascending priorities
-        assert feature_segment_1.priority == 0
-        assert feature_segment_2.priority == 1
-
-        # the ones with different combinations of features and environments are all created with a priority of 0
-        assert feature_segment_3.priority == 0
-        assert feature_segment_4.priority == 0
-        assert feature_segment_5.priority == 0
-
-    def test_feature_state_value_for_feature_segments(self):
-        # Given
-        segment = Segment.objects.create(name="Test Segment", project=self.project)
-
-        # When
-        feature_segment = FeatureSegment.objects.create(
-            segment=segment,
-            feature=self.remote_config,
-            environment=self.environment,
-            value="test",
-            value_type=STRING,
-        )
-
-        # Then
-        feature_state = FeatureState.objects.get(
-            feature=self.remote_config, feature_segment=feature_segment
-        )
-        assert not FeatureStateValue.objects.filter(
-            feature_state=feature_state
-        ).exists()
-
-        # and the feature_state value is correct
-        assert feature_state.get_feature_state_value() == feature_segment.get_value()
-
-
-@pytest.mark.django_db
 class FeatureStateTest(TestCase):
     def setUp(self) -> None:
         self.organisation = Organisation.objects.create(name="Test org")
@@ -496,12 +257,12 @@ class FeatureStateTest(TestCase):
             identity=identity, feature=self.feature, environment=self.environment
         )
 
-        segment_1_state = FeatureState.objects.get(
+        segment_1_state = FeatureState.objects.create(
             feature_segment=feature_segment_p1,
             feature=self.feature,
             environment=self.environment,
         )
-        segment_2_state = FeatureState.objects.get(
+        segment_2_state = FeatureState.objects.create(
             feature_segment=feature_segment_p2,
             feature=self.feature,
             environment=self.environment,
