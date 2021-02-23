@@ -385,12 +385,17 @@ class SDKIdentitiesTestCase(APITestCase):
         Condition.objects.create(
             operator="EQUAL", property=trait_key, value=trait_value, rule=segment_rule
         )
-        FeatureSegment.objects.create(
+        feature_segment = FeatureSegment.objects.create(
             segment=segment,
             feature=self.feature_2,
             environment=self.environment,
-            enabled=True,
             priority=1,
+        )
+        FeatureState.objects.create(
+            feature=self.feature_2,
+            feature_segment=feature_segment,
+            environment=self.environment,
+            enabled=True,
         )
 
         # When
@@ -434,12 +439,17 @@ class SDKIdentitiesTestCase(APITestCase):
         Condition.objects.create(
             operator="EQUAL", property=trait_key, value=trait_value, rule=segment_rule
         )
-        FeatureSegment.objects.create(
+        feature_segment = FeatureSegment.objects.create(
             segment=segment,
             feature=self.feature_1,
             environment=self.environment,
-            enabled=True,
             priority=1,
+        )
+        FeatureState.objects.create(
+            feature_segment=feature_segment,
+            feature=self.feature_1,
+            environment=self.environment,
+            enabled=True,
         )
 
         # When
@@ -474,12 +484,17 @@ class SDKIdentitiesTestCase(APITestCase):
             * 100.0,
             rule=segment_rule,
         )
-        FeatureSegment.objects.create(
+        feature_segment = FeatureSegment.objects.create(
             segment=segment,
             feature=self.feature_1,
             environment=self.environment,
-            enabled=True,
             priority=1,
+        )
+        FeatureState.objects.create(
+            feature_segment=feature_segment,
+            feature=self.feature_1,
+            environment=self.environment,
+            enabled=True,
         )
 
         # When
@@ -513,12 +528,17 @@ class SDKIdentitiesTestCase(APITestCase):
             value=identity_percentage_value / 2,
             rule=segment_rule,
         )
-        FeatureSegment.objects.create(
+        feature_segment = FeatureSegment.objects.create(
             segment=segment,
             feature=self.feature_1,
             environment=self.environment,
-            enabled=True,
             priority=1,
+        )
+        FeatureState.objects.create(
+            feature_segment=feature_segment,
+            feature=self.feature_1,
+            environment=self.environment,
+            enabled=True,
         )
 
         # When
