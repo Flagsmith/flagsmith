@@ -26,46 +26,17 @@ class OrganisationList(ListView):
     template_name = "sales_dashboard/home.html"
 
     def get_queryset(self):
+        queryset = Organisation.objects.annotate(
+            num_projects=Count("projects", distinct=True),
+            num_users=Count("users", distinct=True),
+            num_features=Count("projects__features", distinct=True),
+            num_segments=Count("projects__segments", distinct=True),
+        ).all()
+
         if "search" in self.request.GET:
-            search_term = self.request.GET["search"]
-            organisations = (
-                Organisation.objects.annotate(projects_num=Count("projects"))
-                .annotate(user_num=Count("users"))
-                .all()
-                .filter(name__icontains=search_term)
-            )
-        else:
-            organisations = (
-                Organisation.objects.annotate(projects_num=Count("projects"))
-                .annotate(user_num=Count("users"))
-                .all()
-            )
+            queryset = queryset.filter(name__icontains=self.request.GET["search"])
 
-        list_of_organisations = []
-
-        for organisation in organisations:
-            list_of_organisations.append(
-                {
-                    "id": organisation.id,
-                    "name": organisation.name,
-                    "date_registered": organisation.created_date,
-                    "projects": organisation.projects_num,
-                    "users": organisation.user_num,
-                    "flags": sum(
-                        [
-                            project.features.count()
-                            for project in organisation.projects.all()
-                        ]
-                    ),
-                    "segments": sum(
-                        [
-                            project.segments.count()
-                            for project in organisation.projects.all()
-                        ]
-                    ),
-                }
-            )
-        return list_of_organisations
+        return queryset
 
     def get_context_data(self, **kwargs):
         data = super().get_context_data(**kwargs)
