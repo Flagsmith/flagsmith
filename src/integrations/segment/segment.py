@@ -1,19 +1,14 @@
-import urllib.parse
-
-import analytics as segment_analytics
-import requests
+from analytics.client import Client as SegmentClient
 
 from integrations.common.wrapper import AbstractBaseIdentityIntegrationWrapper
 from util.logging import get_logger
-from util.util import postpone
 
 logger = get_logger(__name__)
 
 
 class SegmentWrapper(AbstractBaseIdentityIntegrationWrapper):
     def __init__(self, api_key: str):
-        self.analytics = segment_analytics
-        self.analytics.write_key = api_key
+        self.analytics = SegmentClient(write_key=api_key)
 
     def _identify_user(self, data: dict) -> None:
         self.analytics.identify(**data)
