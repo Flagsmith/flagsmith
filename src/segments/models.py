@@ -33,6 +33,9 @@ class Segment(models.Model):
         Project, on_delete=models.CASCADE, related_name="segments"
     )
 
+    class Meta:
+        ordering = ("id",)  # explicit ordering to prevent pagination warnings
+
     def __str__(self):
         return "Segment - %s" % self.name
 

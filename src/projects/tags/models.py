@@ -11,5 +11,8 @@ class Tag(models.Model):
     description = models.CharField(max_length=512)
     project = models.ForeignKey(Project, on_delete=models.CASCADE, related_name="tags")
 
+    class Meta:
+        ordering = ("id",)  # explicit ordering to prevent pagination warnings
+
     def __str__(self):
         return "Tag %s" % self.label
