@@ -128,3 +128,6 @@ class OrganisationWebhook(models.Model):
     organisation = models.ForeignKey(
         Organisation, on_delete=models.CASCADE, related_name="webhooks"
     )
+
+    class Meta:
+        ordering = ("id",)  # explicit ordering to prevent pagination warnings

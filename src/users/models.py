@@ -313,6 +313,9 @@ class UserPermissionGroup(models.Model):
         Organisation, on_delete=models.CASCADE, related_name="permission_groups"
     )
 
+    class Meta:
+        ordering = ("id",)  # explicit ordering to prevent pagination warnings
+
     def add_users_by_id(self, user_ids: list):
         users_to_add = []
         for user_id in user_ids:
