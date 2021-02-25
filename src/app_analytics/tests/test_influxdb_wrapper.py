@@ -5,8 +5,8 @@ from app_analytics.influxdb_wrapper import (
     InfluxDBWrapper,
     get_event_list_for_organisation,
     get_events_for_organisation,
-    get_multiple_event_list_for_organisation,
     get_multiple_event_list_for_feature,
+    get_multiple_event_list_for_organisation,
 )
 from django.conf import settings
 
@@ -14,6 +14,7 @@ from django.conf import settings
 org_id = 123
 env_id = 1234
 feature_id = 12345
+feature_name = "test_feature"
 influx_org = settings.INFLUXDB_ORG
 read_bucket = settings.INFLUXDB_BUCKET + "_downsampled_15m"
 
@@ -121,10 +122,10 @@ def test_influx_db_query_when_get_multiple_events_for_feature_then_query_api_cal
         '|> filter(fn:(r) => r._measurement == "feature_evaluation")                   '
         '|> filter(fn: (r) => r["_field"] == "request_count")                   '
         f'|> filter(fn: (r) => r["environment_id"] == "{env_id}")                   '
-        f'|> filter(fn: (r) => r["feature_id"] == "{feature_id}") '
+        f'|> filter(fn: (r) => r["feature_id"] == "{feature_name}") '
         '|> drop(columns: ["organisation", "organisation_id", "type", "project", "project_id"])'
-        "|> aggregateWindow(every: 30d, fn: mean, createEmpty: false)                    "
-        '|> yield(name: "mean")'
+        "|> aggregateWindow(every: 30d, fn: sum, createEmpty: false)                    "
+        '|> yield(name: "sum")'
     )
 
     mock_influxdb_client = mock.MagicMock()
@@ -136,7 +137,7 @@ def test_influx_db_query_when_get_multiple_events_for_feature_then_query_api_cal
     mock_influxdb_client.query_api.return_value = mock_query_api
 
     # When
-    assert get_multiple_event_list_for_feature(env_id, feature_id) == []
+    assert get_multiple_event_list_for_feature(env_id, feature_name) == []
 
     # Then
     mock_query_api.query.assert_called_once_with(org=influx_org, query=query)
