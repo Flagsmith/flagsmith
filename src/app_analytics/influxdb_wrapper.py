@@ -128,26 +128,27 @@ def get_multiple_event_list_for_organisation(organisation_id: int):
 
 
 def get_multiple_event_list_for_feature(
-    environment_id: str, feature_id: str
+    environment_id: int, feature_name: str, period: str = "30d"
 ) -> typing.List[dict]:
     """
-    Get aggregated request data for the given feature in a given environment across all time,
-    aggregated into 30 day windows.
+    Get aggregated request data for the given feature in a given environment across
+    all time, aggregated into time windows of length defined by the period argument.
 
     Example data structure
     [
         {
             "first_feature_name": 13,  // feature name and number of requests
-            "datetime: '2020-12-18'
+            "datetime": '2020-12-18'
         },
         {
             "first_feature_name": 15,
-            "datetime: '2020-11-18'  // 30 days prior
+            "datetime": '2020-11-18'  // 30 days prior
         }
     ]
 
     :param environment_id: an id of the environment to get usage for
-    :param feature_id: an id of the feature to get usage for
+    :param feature_name: the name of the feature to get usage for
+    :param period: the influx time period to filter on, e.g. 30d, 7d, etc.
 
     :return: a list of dicts with feature and request count in a specific environment
     """
@@ -156,13 +157,13 @@ def get_multiple_event_list_for_feature(
         filters=f'|> filter(fn:(r) => r._measurement == "feature_evaluation") \
                   |> filter(fn: (r) => r["_field"] == "request_count") \
                   |> filter(fn: (r) => r["environment_id"] == "{environment_id}") \
-                  |> filter(fn: (r) => r["feature_id"] == "{feature_id}")',
+                  |> filter(fn: (r) => r["feature_id"] == "{feature_name}")',
         drop_columns='"organisation", "organisation_id", "type", "project", "project_id"',
-        extra=f'|> aggregateWindow(every: 30d, fn: mean, createEmpty: false) \
-                   |> yield(name: "mean")',
+        extra=f'|> aggregateWindow(every: {period}, fn: sum, createEmpty: false) \
+                   |> yield(name: "sum")',
     )
     if not results:
-        return results
+        return []
 
     dataset = [{} for _ in range(len(results[0].records))]
 
@@ -170,9 +171,7 @@ def get_multiple_event_list_for_feature(
     # todo move it to marshmallow schema
     for result in results:
         for i, record in enumerate(result.records):
-            dataset[i][record.values["feature_id"].capitalize()] = record.values[
-                "_value"
-            ]
+            dataset[i][record.values["feature_id"]] = record.values["_value"]
             dataset[i]["datetime"] = record.values["_time"].strftime("%Y-%m-%d")
 
     return dataset

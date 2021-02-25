@@ -1,6 +1,10 @@
 import logging
 
 import coreapi
+from app_analytics.influxdb_wrapper import (
+    get_multiple_event_list_for_feature,
+    get_multiple_event_list_for_organisation,
+)
 from django.conf import settings
 from django.core.cache import caches
 from django.utils.decorators import method_decorator
@@ -13,17 +17,12 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.schemas import AutoSchema
 
-from app_analytics.influxdb_wrapper import (
-    get_multiple_event_list_for_feature,
-    get_multiple_event_list_for_organisation,
-)
 from audit.models import (
     IDENTITY_FEATURE_STATE_DELETED_MESSAGE,
     AuditLog,
     RelatedObjectType,
 )
 from environments.authentication import EnvironmentKeyAuthentication
-
 from environments.identities.models import Identity
 from environments.models import Environment
 from environments.permissions.permissions import (
@@ -32,10 +31,11 @@ from environments.permissions.permissions import (
 )
 from projects.models import Project
 
-from .models import FeatureSegment, FeatureState
+from .models import FeatureSegment, FeatureState, Feature
 from .permissions import FeaturePermissions, FeatureStatePermissions
 from .serializers import (
     CreateFeatureSerializer,
+    FeatureInfluxDataSerializer,
     FeatureSegmentChangePrioritiesSerializer,
     FeatureSegmentCreateSerializer,
     FeatureSegmentListSerializer,
@@ -48,7 +48,6 @@ from .serializers import (
     FeatureStateValueSerializer,
     FeatureWithTagsSerializer,
     UpdateFeatureSerializer,
-    FeatureInfluxDataSerializer,
 )
 
 logger = logging.getLogger()
@@ -86,8 +85,17 @@ class FeatureViewSet(viewsets.ModelViewSet):
 
     @action(detail=True, methods=["GET"], url_path="influx-data")
     def get_influx_data(self, request, pk, project_pk):
+        period = request.GET.get("period", "24h")
+        feature = get_object_or_404(Feature, pk=pk)
+
         serializer = self.get_serializer(
-            data={"events_list": get_multiple_event_list_for_feature(pk, project_pk)}
+            data={
+                "events_list": get_multiple_event_list_for_feature(
+                    feature_name=feature.name,
+                    environment_id=project_pk,
+                    period=period,
+                )
+            }
         )
 
         serializer.is_valid(raise_exception=True)
