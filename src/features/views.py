@@ -48,6 +48,7 @@ from .serializers import (
     FeatureStateValueSerializer,
     FeatureWithTagsSerializer,
     UpdateFeatureSerializer,
+    GetInfluxDataQuerySerializer,
 )
 
 logger = logging.getLogger()
@@ -65,7 +66,6 @@ class FeatureViewSet(viewsets.ModelViewSet):
             "create": CreateFeatureSerializer,
             "update": UpdateFeatureSerializer,
             "partial_update": UpdateFeatureSerializer,
-            "get_influx_data": FeatureInfluxDataSerializer,
         }.get(self.action, FeatureSerializer)
 
     def get_queryset(self):
@@ -83,22 +83,21 @@ class FeatureViewSet(viewsets.ModelViewSet):
 
         return super().create(request, *args, **kwargs)
 
+    @swagger_auto_schema(
+        query_serializer=GetInfluxDataQuerySerializer(),
+        responses={200: FeatureInfluxDataSerializer()},
+    )
     @action(detail=True, methods=["GET"], url_path="influx-data")
     def get_influx_data(self, request, pk, project_pk):
-        period = request.GET.get("period", "24h")
         feature = get_object_or_404(Feature, pk=pk)
 
-        serializer = self.get_serializer(
-            data={
-                "events_list": get_multiple_event_list_for_feature(
-                    feature_name=feature.name,
-                    environment_id=project_pk,
-                    period=period,
-                )
-            }
-        )
+        query_serializer = GetInfluxDataQuerySerializer(data=request.query_params)
+        query_serializer.is_valid(raise_exception=True)
 
-        serializer.is_valid(raise_exception=True)
+        events_list = get_multiple_event_list_for_feature(
+            feature_name=feature.name, **query_serializer.data
+        )
+        serializer = FeatureInfluxDataSerializer(instance={"events_list": events_list})
         return Response(serializer.data)
 
 
