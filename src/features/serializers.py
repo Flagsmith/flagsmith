@@ -313,3 +313,8 @@ class FeatureStateValueSerializer(serializers.ModelSerializer):
 
 class FeatureInfluxDataSerializer(serializers.Serializer):
     events_list = serializers.ListSerializer(child=serializers.DictField())
+
+
+class GetInfluxDataQuerySerializer(serializers.Serializer):
+    period = serializers.CharField(required=False, default="24h")
+    environment_id = serializers.IntegerField(required=True)
