@@ -1,7 +1,9 @@
 import json
+from datetime import datetime
 from unittest import TestCase, mock
 
 import pytest
+import pytz
 from django.forms import model_to_dict
 from django.urls import reverse
 from rest_framework import status
@@ -512,6 +514,35 @@ class ProjectFeatureTestCase(TestCase):
         assert response.status_code == status.HTTP_200_OK
 
         assert all(fs.enabled is False for fs in feature.feature_states.all())
+
+    @mock.patch("features.views.get_multiple_event_list_for_feature")
+    def test_get_influx_data(self, mock_get_event_list):
+        # Given
+        feature = Feature.objects.create(name="test_feature", project=self.project)
+        base_url = reverse(
+            "api-v1:projects:project-features-get-influx-data",
+            args=[self.project.id, feature.id],
+        )
+        url = f"{base_url}?environment_id={self.environment_1.id}"
+
+        mock_get_event_list.return_value = [
+            {
+                feature.name: 1,
+                "datetime": datetime(2021, 2, 26, 12, 0, 0, tzinfo=pytz.UTC),
+            }
+        ]
+
+        # When
+        response = self.client.get(url)
+
+        # Then
+        assert response.status_code == status.HTTP_200_OK
+
+        mock_get_event_list.assert_called_once_with(
+            feature_name=feature.name,
+            environment_id=self.environment_1.id,  # provided as a GET param
+            period="24h",  # this is the default but can be provided as a GET param
+        )
 
 
 @pytest.mark.django_db
