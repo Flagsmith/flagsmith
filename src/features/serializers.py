@@ -317,4 +317,4 @@ class FeatureInfluxDataSerializer(serializers.Serializer):
 
 class GetInfluxDataQuerySerializer(serializers.Serializer):
     period = serializers.CharField(required=False, default="24h")
-    environment_id = serializers.IntegerField(required=True)
+    environment_id = serializers.CharField(required=True)
