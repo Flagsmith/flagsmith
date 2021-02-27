@@ -540,7 +540,7 @@ class ProjectFeatureTestCase(TestCase):
 
         mock_get_event_list.assert_called_once_with(
             feature_name=feature.name,
-            environment_id=self.environment_1.id,  # provided as a GET param
+            environment_id=str(self.environment_1.id),  # provided as a GET param
             period="24h",  # this is the default but can be provided as a GET param
         )
 
