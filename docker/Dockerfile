@@ -9,6 +9,9 @@ COPY src/ /app/src/
 
 RUN python src/manage.py collectstatic --no-input
 
+ARG ACCESS_LOG_LOCATION="/dev/null"
+ENV ACCESS_LOG_LOCATION=${ACCESS_LOG_LOCATION}
+
 ENV DJANGO_SETTINGS_MODULE=app.settings.production
 EXPOSE 8000
 

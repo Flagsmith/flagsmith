@@ -121,6 +121,10 @@ docker-compose -f docker-compose.dev.yml up
 
 This gets an environment up and running along with Postgres and enables hot reloading etc.
 
+The docker container also accepts an argument that sets the access log file location for gunicorn. By default 
+this is set to /dev/null to maintain the default behaviour of gunicorn. It can either be set to `"-"` to redirect
+the logs to stdout or to a location on the file system as required. 
+
 ### Environment Variables
 
 The application relies on the following environment variables to run:
