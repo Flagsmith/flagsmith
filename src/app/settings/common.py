@@ -183,7 +183,7 @@ if len(ALLOWED_ADMIN_IP_ADDRESSES) > 0:
         "Restricting access to the admin site for ip addresses %s"
         % ", ".join(ALLOWED_ADMIN_IP_ADDRESSES)
     )
-    MIDDLEWARE.append("app.middleware.AdminWhitelistMiddleware")
+    MIDDLEWARE.append("core.middleware.admin.AdminWhitelistMiddleware")
 
 ROOT_URLCONF = "app.urls"
 
@@ -315,23 +315,22 @@ CHARGEBEE_API_KEY = env("CHARGEBEE_API_KEY", default=None)
 CHARGEBEE_SITE = env("CHARGEBEE_SITE", default=None)
 
 
+# Logging configuration
+LOG_LEVEL = env.str("LOG_LEVEL", default="WARNING")
 LOGGING = {
     "version": 1,
     "disable_existing_loggers": False,
     "formatters": {
-        "console_format": {"format": "%(name)-12s %(levelname)-8s %(message)s"}
+        "generic": {"format": "%(asctime)s [%(process)d] [%(levelname)s] %(message)s"},
     },
     "handlers": {
         "console": {
-            "level": "DEBUG",
+            "level": LOG_LEVEL,
             "class": "logging.StreamHandler",
-            "formatter": "console_format",
+            "formatter": "generic",
         },
     },
-    "loggers": {
-        "django": {"level": "INFO", "handlers": ["console"]},
-        "": {"level": "DEBUG", "handlers": ["console"]},
-    },
+    "loggers": {"": {"level": LOG_LEVEL, "handlers": ["console"]}},
 }
 
 CACHE_FLAGS_SECONDS = env.int("CACHE_FLAGS_SECONDS", default=0)
@@ -359,8 +358,6 @@ CACHES = {
         "LOCATION": PROJECT_SEGMENTS_CACHE_LOCATION,
     },
 }
-
-LOG_LEVEL = env.str("LOG_LEVEL", default="WARNING")
 
 TRENCH_AUTH = {
     "FROM_EMAIL": DEFAULT_FROM_EMAIL,
@@ -423,7 +420,7 @@ if ENABLE_AXES:
     # must be the first item in the auth backends
     AUTHENTICATION_BACKENDS.insert(0, "axes.backends.AxesBackend")
     # must be the last item in the middleware stack
-    MIDDLEWARE.append("app.middleware.AxesMiddleware")
+    MIDDLEWARE.append("core.middleware.axes.AxesMiddleware")
     AXES_COOLOFF_TIME = timedelta(minutes=env.int("AXES_COOLOFF_TIME", 15))
     AXES_BLACKLISTED_URLS = [
         "/admin/login/?next=/admin",
