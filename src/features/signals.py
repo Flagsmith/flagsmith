@@ -6,12 +6,12 @@ from audit.models import (
     AuditLog,
     RelatedObjectType,
 )
-from util.logging import get_logger
+import logging
 
 # noinspection PyUnresolvedReferences
 from .models import HistoricalFeatureSegment
 
-logger = get_logger(__name__)
+logger = logging.getLogger(__name__)
 
 
 @receiver(post_create_historical_record, sender=HistoricalFeatureSegment)

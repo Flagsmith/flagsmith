@@ -24,9 +24,9 @@ from features.utils import (
 )
 from projects.models import Project
 from projects.tags.models import Tag
-from util.logging import get_logger
+import logging
 
-logger = get_logger(__name__)
+logger = logging.getLogger(__name__)
 
 FEATURE_STATE_VALUE_TYPES = (
     (INTEGER, "Integer"),

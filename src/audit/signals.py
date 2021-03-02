@@ -5,10 +5,10 @@ from audit.models import AuditLog, RelatedObjectType
 from audit.serializers import AuditLogSerializer
 from integrations.datadog.datadog import DataDogWrapper
 from integrations.new_relic.new_relic import NewRelicWrapper
-from util.logging import get_logger
+import logging
 from webhooks.webhooks import WebhookEventType, call_organisation_webhooks
 
-logger = get_logger(__name__)
+logger = logging.getLogger(__name__)
 
 
 @receiver(post_save, sender=AuditLog)

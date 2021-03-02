@@ -1,9 +1,9 @@
 from analytics.client import Client as SegmentClient
 
 from integrations.common.wrapper import AbstractBaseIdentityIntegrationWrapper
-from util.logging import get_logger
+import logging
 
-logger = get_logger(__name__)
+logger = logging.getLogger(__name__)
 
 
 class SegmentWrapper(AbstractBaseIdentityIntegrationWrapper):
