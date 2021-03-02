@@ -2,10 +2,8 @@ version: '3'
 services:
   db:
     image: postgres
-    container_name: db
     environment:
       POSTGRES_DB: bullettrain
-      POSTGRES_USER: postgres
       POSTGRES_PASSWORD: password
     ports:
       - "5432:5432"
@@ -13,7 +11,7 @@ services:
     build:
       context: .
       dockerfile: docker/Dockerfile.dev
-    command: docker/bin/docker-dev
+    command: bin/docker-dev
     volumes:
       - .:/app
     environment:

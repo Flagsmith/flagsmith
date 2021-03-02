@@ -8,9 +8,9 @@ from api.serializers import ErrorSerializer
 from custom_auth.oauth.exceptions import GithubError, GoogleError
 from custom_auth.oauth.serializers import GoogleLoginSerializer, GithubLoginSerializer
 from custom_auth.serializers import CustomTokenSerializer
-from util.logging import get_logger
+import logging
 
-logger = get_logger(__name__)
+logger = logging.getLogger(__name__)
 
 AUTH_ERROR_MESSAGE = "An error occurred authenticating with {}"
 GITHUB_AUTH_ERROR_MESSAGE = AUTH_ERROR_MESSAGE.format("GITHUB")

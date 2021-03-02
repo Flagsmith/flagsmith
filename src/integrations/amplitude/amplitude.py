@@ -3,10 +3,10 @@ import urllib.parse
 import requests
 
 from integrations.common.wrapper import AbstractBaseIdentityIntegrationWrapper
-from util.logging import get_logger
+import logging
 from util.util import postpone
 
-logger = get_logger(__name__)
+logger = logging.getLogger(__name__)
 
 AMPLITUDE_API_URL = "https://api.amplitude.com"
 

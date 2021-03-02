@@ -12,9 +12,9 @@ from environments.exceptions import EnvironmentHeaderNotPresentError
 from features.models import FeatureState
 from projects.models import Project
 from util.history.custom_simple_history import NonWritingHistoricalRecords
-from util.logging import get_logger
+import logging
 
-logger = get_logger(__name__)
+logger = logging.getLogger(__name__)
 
 # User Trait Value Types
 INTEGER = "int"
