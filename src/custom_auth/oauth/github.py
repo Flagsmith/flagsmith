@@ -7,14 +7,14 @@ from custom_auth.oauth.helpers.github_helpers import (
     convert_response_data_to_dictionary,
     get_first_and_last_name,
 )
-from util.logging import get_logger
+import logging
 
 GITHUB_API_URL = "https://api.github.com"
 GITHUB_OAUTH_URL = "https://github.com/login/oauth"
 
 NON_200_ERROR_MESSAGE = "Github returned {} status code when getting an access token."
 
-logger = get_logger(__name__)
+logger = logging.getLogger(__name__)
 
 
 class GithubUser:
