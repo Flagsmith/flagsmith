@@ -6,20 +6,18 @@ from drf_yasg2 import openapi
 from drf_yasg2.utils import swagger_auto_schema
 from rest_framework import status, viewsets
 from rest_framework.generics import get_object_or_404
-from rest_framework.permissions import AllowAny
+from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 
 from environments.exceptions import EnvironmentHeaderNotPresentError
 from environments.identities.models import Identity
 from environments.models import Environment
-from segments.serializers import SegmentSerializer
 from util.views import SDKAPIView
 
-from . import serializers
+from .serializers import SegmentSerializer
 from .permissions import SegmentPermissions
 
 logger = logging.getLogger()
-logger.setLevel(logging.INFO)
 
 
 @method_decorator(
@@ -37,8 +35,8 @@ logger.setLevel(logging.INFO)
     ),
 )
 class SegmentViewSet(viewsets.ModelViewSet):
-    serializer_class = serializers.SegmentSerializer
-    permission_classes = [SegmentPermissions]
+    serializer_class = SegmentSerializer
+    permission_classes = [IsAuthenticated, SegmentPermissions]
 
     def get_queryset(self):
         project = get_object_or_404(
