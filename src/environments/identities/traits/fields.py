@@ -2,9 +2,9 @@ from rest_framework import serializers
 
 from environments.identities.traits.constants import ACCEPTED_TRAIT_VALUE_TYPES
 from features.utils import STRING
-from util.logging import get_logger
+import logging
 
-logger = get_logger(__name__)
+logger = logging.getLogger(__name__)
 
 
 class TraitValueField(serializers.Field):

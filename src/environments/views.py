@@ -17,7 +17,7 @@ from permissions.serializers import (
     MyUserObjectPermissionsSerializer,
     PermissionModelSerializer,
 )
-from util.logging import get_logger
+import logging
 
 from .identities.traits.models import Trait
 from .identities.traits.serializers import (
@@ -32,7 +32,7 @@ from .permissions.models import (
 )
 from .serializers import EnvironmentSerializerLight, WebhookSerializer
 
-logger = get_logger(__name__)
+logger = logging.getLogger(__name__)
 
 
 @method_decorator(
