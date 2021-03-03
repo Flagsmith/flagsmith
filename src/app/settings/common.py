@@ -321,7 +321,7 @@ LOGGING = {
     "version": 1,
     "disable_existing_loggers": False,
     "formatters": {
-        "generic": {"format": "%(asctime)s [%(process)d] [%(levelname)s] %(message)s"},
+        "generic": {"format": "%(name)-12s %(levelname)-8s %(message)s"},
     },
     "handlers": {
         "console": {
