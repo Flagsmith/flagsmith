@@ -2,9 +2,9 @@ from django.db import models
 
 from integrations.common.models import IntegrationsModel
 from projects.models import Project
-from util.logging import get_logger
+import logging
 
-logger = get_logger(__name__)
+logger = logging.getLogger(__name__)
 
 
 class NewRelicConfiguration(IntegrationsModel):

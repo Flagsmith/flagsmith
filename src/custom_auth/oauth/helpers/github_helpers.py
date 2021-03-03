@@ -1,7 +1,7 @@
 from custom_auth.oauth.exceptions import GithubError
-from util.logging import get_logger
+import logging
 
-logger = get_logger(__name__)
+logger = logging.getLogger(__name__)
 
 
 def convert_response_data_to_dictionary(text: str) -> dict:

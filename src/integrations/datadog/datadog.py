@@ -3,9 +3,9 @@ import json
 import requests
 
 from integrations.common.wrapper import AbstractBaseEventIntegrationWrapper
-from util.logging import get_logger
+import logging
 
-logger = get_logger(__name__)
+logger = logging.getLogger(__name__)
 
 EVENTS_API_URI = "api/v1/events"
 
