@@ -216,7 +216,9 @@ class FeatureStateViewSet(viewsets.ModelViewSet):
         if identity_pk:
             data["identity"] = identity_pk
 
-        serializer = FeatureStateSerializerBasic(data=data)
+        serializer = FeatureStateSerializerBasic(
+            data=data, context=self.get_serializer_context()
+        )
         if serializer.is_valid():
             feature_state = serializer.save()
             headers = self.get_success_headers(serializer.data)
@@ -284,7 +286,7 @@ class FeatureStateViewSet(viewsets.ModelViewSet):
         )
 
         AuditLog.objects.create(
-            author=self.request.user if self.request else None,
+            author=getattr(self.request, "user", None),
             related_object_id=feature_state.id,
             related_object_type=RelatedObjectType.FEATURE_STATE.name,
             environment=feature_state.environment,
