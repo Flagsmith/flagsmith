@@ -120,7 +120,7 @@ class SegmentSerializer(serializers.ModelSerializer):
         )
         request = self.context.get("request")
         AuditLog.objects.create(
-            author=request.user if request else None,
+            author=getattr(request, "user", None),
             related_object_id=instance.id,
             related_object_type=RelatedObjectType.SEGMENT.name,
             project=instance.project,
