@@ -283,7 +283,7 @@ class SDKTraits(mixins.CreateModelMixin, viewsets.GenericViewSet):
             traits = []
             delete_filter_query = Q()
 
-            for idx, trait in enumerate(request.data):
+            for trait in request.data:
                 if trait.get("trait_value") is None:
                     delete_filter_query = delete_filter_query | Q(
                         trait_key=trait.get("trait_key"),
