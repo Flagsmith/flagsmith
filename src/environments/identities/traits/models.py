@@ -1,3 +1,5 @@
+import typing
+
 from django.core.exceptions import ObjectDoesNotExist
 from django.db import models
 from django.utils.encoding import python_2_unicode_compatible
@@ -69,16 +71,25 @@ class Trait(models.Model):
         )  # The default was chosen for backwards compatibility
 
     @staticmethod
-    def generate_trait_value_data(value):
+    def generate_trait_value_data(value: typing.Any):
         """
         Takes the value and returns dictionary
         to use for passing into trait value serializer
 
-        :param value: trait value of variable type
+        :param value: trait value of variable type or deserialized output from TraitValueField
         :return: dictionary to pass directly into trait serializer
         """
-        tv_type = type(value).__name__
         accepted_types = (STRING, INTEGER, BOOLEAN, FLOAT)
+
+        # this method is called from multiple places in the code, some of which use
+        # the data that has been deserialized by TraitValueField, this conditional
+        # logic allows us to handle both cases
+        # TODO: tidy this up (probably when we move to storing traits in dynamo?)
+        if isinstance(value, dict) and value.get("type"):
+            tv_type = value["type"]
+            value = value["value"]
+        else:
+            tv_type = type(value).__name__
 
         return {
             # Default to string if not an anticipate type value to keep backwards compatibility.
