@@ -95,8 +95,6 @@ def _get_feature_state_webhook_data(feature_state, previous=False):
                 "description": feature_segment.segment.description,
             },
             "priority": feature_segment.priority,
-            "enabled": feature_segment.enabled,
-            "value": feature_segment.get_value(),
         }
 
     return data

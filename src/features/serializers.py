@@ -10,10 +10,8 @@ from audit.models import (
     RelatedObjectType,
 )
 from environments.identities.models import Identity
-from features.utils import BOOLEAN, INTEGER, STRING
 
-from .fields import FeatureSegmentValueField
-from .models import Feature, FeatureSegment, FeatureState, FeatureStateValue
+from .models import Feature, FeatureState, FeatureStateValue
 
 
 class CreateFeatureSerializer(serializers.ModelSerializer):
@@ -80,80 +78,6 @@ class UpdateFeatureSerializer(CreateFeatureSerializer):
             "default_enabled",
             "initial_value",
         )
-
-
-class FeatureSegmentCreateSerializer(serializers.ModelSerializer):
-    value = FeatureSegmentValueField(required=False)
-
-    class Meta:
-        model = FeatureSegment
-        fields = (
-            "id",
-            "feature",
-            "segment",
-            "environment",
-            "priority",
-            "enabled",
-            "value",
-        )
-        read_only_fields = (
-            "id",
-            "priority",
-        )
-
-    def create(self, validated_data):
-        validated_data["value_type"] = self.context.get("value_type", STRING)
-        return super(FeatureSegmentCreateSerializer, self).create(validated_data)
-
-    def update(self, instance, validated_data):
-        validated_data["value_type"] = self.context.get("value_type", STRING)
-        return super(FeatureSegmentCreateSerializer, self).update(
-            instance, validated_data
-        )
-
-
-class FeatureSegmentQuerySerializer(serializers.Serializer):
-    environment = serializers.IntegerField()
-    feature = serializers.IntegerField()
-
-
-class FeatureSegmentListSerializer(serializers.ModelSerializer):
-    value = serializers.SerializerMethodField()
-
-    class Meta:
-        model = FeatureSegment
-        fields = ("id", "segment", "priority", "environment", "enabled", "value")
-        read_only_fields = (
-            "id",
-            "segment",
-            "priority",
-            "environment",
-            "enabled",
-            "value",
-        )
-
-    def get_value(self, instance):
-        return instance.get_value()
-
-
-class FeatureSegmentChangePrioritiesSerializer(serializers.Serializer):
-    priority = serializers.IntegerField(
-        min_value=0, help_text="Value to change the feature segment's priority to."
-    )
-    id = serializers.IntegerField()
-
-    def create(self, validated_data):
-        try:
-            instance = FeatureSegment.objects.get(id=validated_data["id"])
-            return self.update(instance, validated_data)
-        except FeatureSegment.DoesNotExist:
-            raise ValidationError(
-                "No feature segment exists with id: %s" % validated_data["id"]
-            )
-
-    def update(self, instance, validated_data):
-        instance.to(validated_data["priority"])
-        return instance
 
 
 class FeatureSerializer(serializers.ModelSerializer):
@@ -227,9 +151,15 @@ class FeatureStateSerializerBasic(serializers.ModelSerializer):
     def validate(self, attrs):
         environment = attrs.get("environment")
         identity = attrs.get("identity")
+        feature_segment = attrs.get("feature_segment")
 
         if identity and not identity.environment == environment:
             raise ValidationError("Identity does not exist in environment.")
+
+        if feature_segment and not feature_segment.environnment == environment:
+            raise serializers.ValidationError(
+                "Feature Segment does not belong to environment."
+            )
 
         # validate uniqueness
         # Note: we get the attribute from the instance if it's not in attrs to handle
