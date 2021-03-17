@@ -45,16 +45,15 @@ class FeatureStatePermissions(BasePermission):
     def has_permission(self, request, view):
         try:
             if view.action == "create":
-                if request.data.get("environment"):
-                    environment = Environment.objects.get(request.data["environment"])
-                    return request.user.is_environment_admin(environment)
+                environment = Environment.objects.get(id=request.data["environment"])
+                return request.user.is_environment_admin(environment)
 
-            # detail view so we can check defer to object permissions
-            return view.detail
+            # - detail view means we can just defer to object permissions
+            # - list view means we just need to filter the objects based on permissions
+            return view.detail or view.action == "list"
 
         except Environment.DoesNotExist:
             return False
 
     def has_object_permission(self, request, view, obj):
-        # we only care about create permissions
-        return False
+        return request.user.is_environment_admin(obj.environment)

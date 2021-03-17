@@ -1,3 +1,4 @@
+from drf_writable_nested import NestedCreateMixin, NestedUpdateMixin
 from rest_framework import serializers
 from rest_framework.exceptions import ValidationError
 
@@ -238,7 +239,7 @@ def create_feature_state_audit_log(feature_state, request):
 class FeatureStateValueSerializer(serializers.ModelSerializer):
     class Meta:
         model = FeatureStateValue
-        fields = "__all__"
+        fields = ("type", "string_value", "integer_value", "boolean_value")
 
 
 class FeatureInfluxDataSerializer(serializers.Serializer):
@@ -248,3 +249,12 @@ class FeatureInfluxDataSerializer(serializers.Serializer):
 class GetInfluxDataQuerySerializer(serializers.Serializer):
     period = serializers.CharField(required=False, default="24h")
     environment_id = serializers.CharField(required=True)
+
+
+class WritableNestedFeatureStateSerializer(
+    NestedCreateMixin, NestedUpdateMixin, FeatureStateSerializerBasic
+):
+    feature_state_value = FeatureStateValueSerializer(required=False)
+
+    class Meta(FeatureStateSerializerBasic.Meta):
+        extra_kwargs = {"environment": {"required": True}}
