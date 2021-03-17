@@ -41,6 +41,7 @@ from .serializers import (
     FeatureWithTagsSerializer,
     UpdateFeatureSerializer,
     GetInfluxDataQuerySerializer,
+    WritableNestedFeatureStateSerializer,
 )
 
 logger = logging.getLogger()
@@ -317,9 +318,23 @@ class FeatureStateViewSet(viewsets.ModelViewSet):
         return feature_state_value
 
 
-class FeatureStateCreateViewSet(mixins.CreateModelMixin, viewsets.GenericViewSet):
-    serializer_class = FeatureStateSerializerBasic
+class SimpleFeatureStateViewSet(
+    mixins.CreateModelMixin,
+    mixins.UpdateModelMixin,
+    mixins.ListModelMixin,
+    viewsets.GenericViewSet,
+):
+    queryset = FeatureState.objects.select_related("feature_state_value")
+    serializer_class = WritableNestedFeatureStateSerializer
     permission_classes = [FeatureStatePermissions]
+    filterset_fields = ["environment", "feature", "feature_segment"]
+
+    def get_queryset(self):
+        return self.queryset.filter(
+            environment__in=self.request.user.get_permitted_environments(
+                permissions=["VIEW_ENVIRONMENT"]
+            )
+        )
 
 
 class SDKFeatureStates(GenericAPIView):
