@@ -3,7 +3,7 @@ from django.test import TransactionTestCase
 from environments.identities.models import Identity
 from environments.identities.traits.models import Trait
 from environments.models import FLOAT, Environment
-from features.models import Feature, FeatureSegment, FeatureState
+from features.models import Feature, FeatureSegment, FeatureState, FeatureStateValue
 from features.utils import BOOLEAN, INTEGER, STRING
 from organisations.models import Organisation
 from projects.models import Project
@@ -250,19 +250,29 @@ class IdentityTestCase(TransactionTestCase):
             type="CONFIG",
         )
 
-        FeatureSegment.objects.create(
+        feature_flag_feature_segment = FeatureSegment.objects.create(
             feature=feature_flag,
             segment=segment,
             environment=self.environment,
+        )
+        FeatureState.objects.create(
+            feature=feature_flag,
+            feature_segment=feature_flag_feature_segment,
+            environment=self.environment,
             enabled=True,
         )
+
         overridden_value = "overridden-value"
-        FeatureSegment.objects.create(
+        remote_config_feature_segment = FeatureSegment.objects.create(
+            feature=remote_config, segment=segment, environment=self.environment
+        )
+        feature_state = FeatureState.objects.create(
+            feature_segment=remote_config_feature_segment,
             feature=remote_config,
-            segment=segment,
             environment=self.environment,
-            value=overridden_value,
-            value_type=STRING,
+        )
+        FeatureStateValue.objects.filter(feature_state=feature_state).update(
+            string_value=overridden_value
         )
 
         # When
@@ -311,15 +321,18 @@ class IdentityTestCase(TransactionTestCase):
             feature=feature_flag,
             segment=segment,
             environment=self.environment,
-            enabled=True,
         )
         overridden_value = "overridden-value"
-        FeatureSegment.objects.create(
+        feature_segment = FeatureSegment.objects.create(
+            feature=remote_config, segment=segment, environment=self.environment
+        )
+        segment_feature_state = FeatureState.objects.create(
             feature=remote_config,
-            segment=segment,
+            feature_segment=feature_segment,
             environment=self.environment,
-            value=overridden_value,
-            value_type=STRING,
+        )
+        FeatureStateValue.objects.filter(feature_state=segment_feature_state).update(
+            string_value=overridden_value
         )
 
         # When
@@ -363,13 +376,17 @@ class IdentityTestCase(TransactionTestCase):
 
         # Feature segment value is converted to string in the serializer so we set as a string value here to test
         # bool value
-        overridden_value = "12"
-        FeatureSegment.objects.create(
+        overridden_value = 12
+        feature_segment = FeatureSegment.objects.create(
+            feature=remote_config, segment=segment, environment=self.environment
+        )
+        segment_feature_state = FeatureState.objects.create(
             feature=remote_config,
-            segment=segment,
+            feature_segment=feature_segment,
             environment=self.environment,
-            value=overridden_value,
-            value_type=INTEGER,
+        )
+        FeatureStateValue.objects.filter(feature_state=segment_feature_state).update(
+            integer_value=overridden_value, type=INTEGER
         )
 
         # When
@@ -379,7 +396,7 @@ class IdentityTestCase(TransactionTestCase):
         feature_state = next(
             filter(lambda fs: fs.feature == remote_config, feature_states)
         )
-        assert feature_state.get_feature_state_value() == int(overridden_value)
+        assert feature_state.get_feature_state_value() == overridden_value
 
     def test_get_all_feature_states_for_identity_returns_correct_value_for_matching_segment_when_value_boolean(
         self,
@@ -409,13 +426,17 @@ class IdentityTestCase(TransactionTestCase):
 
         # Feature segment value is converted to string in the serializer so we set as a string value here to test
         # bool value
-        overridden_value = "false"
-        FeatureSegment.objects.create(
+        overridden_value = False
+        feature_segment = FeatureSegment.objects.create(
+            feature=remote_config, segment=segment, environment=self.environment
+        )
+        feature_state = FeatureState.objects.create(
             feature=remote_config,
-            segment=segment,
+            feature_segment=feature_segment,
             environment=self.environment,
-            value=overridden_value,
-            value_type=BOOLEAN,
+        )
+        FeatureStateValue.objects.filter(feature_state=feature_state).update(
+            boolean_value=overridden_value, type=BOOLEAN
         )
 
         # When
@@ -426,53 +447,6 @@ class IdentityTestCase(TransactionTestCase):
             filter(lambda fs: fs.feature == remote_config, feature_states)
         )
         assert not feature_state.get_feature_state_value()
-
-    def test_get_all_feature_states_for_identity_returns_correct_values_for_matching_segment_when_value_float(
-        self,
-    ):
-        # Given
-        trait_key = "trait-key"
-        trait_value = 10.5
-        identity = Identity.objects.create(
-            identifier="test-identity", environment=self.environment
-        )
-        trait = Trait.objects.create(
-            identity=identity,
-            trait_key=trait_key,
-            float_value=trait_value,
-            value_type=FLOAT,
-        )
-
-        segment = Segment.objects.create(name="Test segment", project=self.project)
-        rule = SegmentRule.objects.create(segment=segment, type=SegmentRule.ALL_RULE)
-        Condition.objects.create(
-            rule=rule, property=trait_key, value=trait_value, operator=EQUAL
-        )
-
-        feature_flag = Feature.objects.create(
-            name="test-remote-config",
-            project=self.project,
-            initial_value="initial-value",
-            type="FLAG",
-        )
-
-        FeatureSegment.objects.create(
-            feature=feature_flag,
-            segment=segment,
-            environment=self.environment,
-            enabled=True,
-        )
-
-        # When
-        feature_states = identity.get_all_feature_states()
-        user_traits = identity.get_all_user_traits()
-
-        # Then
-        feature_state = next(
-            filter(lambda fs: fs.feature == feature_flag, feature_states)
-        )
-        assert feature_state.enabled is True
-        assert user_traits[0].float_value == trait_value
 
     def test_get_all_feature_states_highest_value_of_highest_priority_segment(self):
         # Given - an identity with a trait that has an integer value of 10
@@ -513,23 +487,35 @@ class IdentityTestCase(TransactionTestCase):
 
         # which is overridden by both segments with different values
         overridden_value_1 = "overridden-value-1"
-        FeatureSegment.objects.create(
+        feature_segment_1 = FeatureSegment.objects.create(
             feature=remote_config,
             segment=segment_1,
             environment=self.environment,
-            value=overridden_value_1,
-            value_type=STRING,
             priority=1,
+        )
+        segment_feature_state_1 = FeatureState.objects.create(
+            feature=remote_config,
+            feature_segment=feature_segment_1,
+            environment=self.environment,
+        )
+        FeatureStateValue.objects.filter(feature_state=segment_feature_state_1).update(
+            string_value=overridden_value_1, type=STRING
         )
 
         overridden_value_2 = "overridden-value-2"
-        FeatureSegment.objects.create(
+        feature_segment_2 = FeatureSegment.objects.create(
             feature=remote_config,
             segment=segment_2,
             environment=self.environment,
-            value=overridden_value_2,
-            value_type=STRING,
             priority=2,
+        )
+        segment_feature_state_2 = FeatureState.objects.create(
+            feature=remote_config,
+            feature_segment=feature_segment_2,
+            environment=self.environment,
+        )
+        FeatureStateValue.objects.filter(feature_state=segment_feature_state_2).update(
+            string_value=overridden_value_2, type=STRING
         )
 
         # When - we get all feature states for an identity
@@ -573,26 +559,31 @@ class IdentityTestCase(TransactionTestCase):
         remote_config = Feature.objects.create(
             name="my_feature", initial_value="initial value", project=self.project
         )
+        overridden_value_1 = "overridden value 1"
         feature_segment = FeatureSegment.objects.create(
+            feature=remote_config, environment=self.environment, segment=segment
+        )
+        segment_feature_state = FeatureState.objects.create(
             feature=remote_config,
+            feature_segment=feature_segment,
             environment=self.environment,
-            segment=segment,
-            value="overridden value 1",
-            value_type=STRING,
+        )
+        FeatureStateValue.objects.filter(feature_state=segment_feature_state).update(
+            string_value=overridden_value_1, type=STRING
         )
 
-        # WHEN - the value on the feature segment is updated and we get all the feature states for the identity
-        feature_segment.value = "overridden value 2"
-        feature_segment.save()
+        # WHEN - the value of the feature state attached to the feature segment is
+        # updated and we get all the feature states for the identity
+        overridden_value_2 = "overridden value 2"
+        segment_feature_state.feature_state_value.string_value = overridden_value_2
+        segment_feature_state.feature_state_value.save()
         feature_states = identity.get_all_feature_states()
 
         # THEN - the feature state value is correctly set to the newly updated feature segment value
         assert len(feature_states) == 1
 
         overridden_feature_state = feature_states[0]
-        assert (
-            overridden_feature_state.get_feature_state_value() == feature_segment.value
-        )
+        assert overridden_feature_state.get_feature_state_value() == overridden_value_2
 
     def test_get_all_feature_states_returns_correct_value_when_traits_passed_manually(
         self,
@@ -630,11 +621,16 @@ class IdentityTestCase(TransactionTestCase):
 
         # which is overridden by the segment
         enabled_for_segment = not default_state
-        FeatureSegment.objects.create(
+        feature_segment = FeatureSegment.objects.create(
             feature=feature_flag,
             segment=segment,
             environment=self.environment,
             priority=1,
+        )
+        FeatureState.objects.create(
+            feature=feature_flag,
+            feature_segment=feature_segment,
+            environment=self.environment,
             enabled=enabled_for_segment,
         )
 

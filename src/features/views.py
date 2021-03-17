@@ -1,10 +1,6 @@
 import logging
 
 import coreapi
-from app_analytics.influxdb_wrapper import (
-    get_multiple_event_list_for_feature,
-    get_multiple_event_list_for_organisation,
-)
 from django.conf import settings
 from django.core.cache import caches
 from django.utils.decorators import method_decorator
@@ -17,6 +13,7 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.schemas import AutoSchema
 
+from app_analytics.influxdb_wrapper import get_multiple_event_list_for_feature
 from audit.models import (
     IDENTITY_FEATURE_STATE_DELETED_MESSAGE,
     AuditLog,
@@ -30,16 +27,11 @@ from environments.permissions.permissions import (
     NestedEnvironmentPermissions,
 )
 from projects.models import Project
-
-from .models import FeatureSegment, FeatureState, Feature
+from .models import FeatureState, Feature
 from .permissions import FeaturePermissions, FeatureStatePermissions
 from .serializers import (
     CreateFeatureSerializer,
     FeatureInfluxDataSerializer,
-    FeatureSegmentChangePrioritiesSerializer,
-    FeatureSegmentCreateSerializer,
-    FeatureSegmentListSerializer,
-    FeatureSegmentQuerySerializer,
     FeatureSerializer,
     FeatureStateSerializerBasic,
     FeatureStateSerializerCreate,
@@ -458,60 +450,3 @@ def organisation_has_got_feature(request, organisation):
         organisation.has_requested_features = True
         organisation.save()
         return True
-
-
-@method_decorator(
-    name="list",
-    decorator=swagger_auto_schema(query_serializer=FeatureSegmentQuerySerializer()),
-)
-@method_decorator(
-    name="update_priorities",
-    decorator=swagger_auto_schema(
-        responses={200: FeatureSegmentListSerializer(many=True)}
-    ),
-)
-class FeatureSegmentViewSet(
-    mixins.ListModelMixin,
-    mixins.CreateModelMixin,
-    mixins.UpdateModelMixin,
-    mixins.DestroyModelMixin,
-    viewsets.GenericViewSet,
-):
-    def get_queryset(self):
-        permitted_projects = self.request.user.get_permitted_projects(["VIEW_PROJECT"])
-        queryset = FeatureSegment.objects.filter(
-            feature__project__in=permitted_projects
-        )
-
-        if self.action == "list":
-            filter_serializer = FeatureSegmentQuerySerializer(
-                data=self.request.query_params
-            )
-            filter_serializer.is_valid(raise_exception=True)
-            return queryset.filter(**filter_serializer.data)
-
-        return queryset
-
-    def get_serializer_class(self):
-        if self.action in ["create", "update", "partial_update"]:
-            return FeatureSegmentCreateSerializer
-
-        if self.action == "update_priorities":
-            return FeatureSegmentChangePrioritiesSerializer
-
-        return FeatureSegmentListSerializer
-
-    def get_serializer(self, *args, **kwargs):
-        if self.action == "update_priorities":
-            # update the serializer kwargs to ensure docs here are correct
-            kwargs = {**kwargs, "many": True, "partial": True}
-        return super(FeatureSegmentViewSet, self).get_serializer(*args, **kwargs)
-
-    @action(detail=False, methods=["POST"], url_path="update-priorities")
-    def update_priorities(self, request, *args, **kwargs):
-        serializer = self.get_serializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
-        updated_instances = serializer.save()
-        return Response(
-            FeatureSegmentListSerializer(instance=updated_instances, many=True).data
-        )
