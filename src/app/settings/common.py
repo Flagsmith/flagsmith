@@ -124,6 +124,8 @@ INSTALLED_APPS = [
     "integrations.segment",
     # Rate limiting admin endpoints
     "axes",
+    # for filtering querysets on viewsets
+    "django_filters",
 ]
 
 if GOOGLE_ANALYTICS_KEY or INFLUXDB_TOKEN:
@@ -157,6 +159,7 @@ REST_FRAMEWORK = {
     "UNICODE_JSON": False,
     "DEFAULT_PAGINATION_CLASS": "rest_framework.pagination.PageNumberPagination",
     "DEFAULT_THROTTLE_RATES": {"login": "1/s"},
+    "DEFAULT_FILTER_BACKENDS": ["django_filters.rest_framework.DjangoFilterBackend"],
 }
 
 MIDDLEWARE = [
