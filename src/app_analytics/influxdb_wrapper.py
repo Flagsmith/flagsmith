@@ -10,6 +10,11 @@ token = settings.INFLUXDB_TOKEN
 influx_org = settings.INFLUXDB_ORG
 read_bucket = settings.INFLUXDB_BUCKET + "_downsampled_15m"
 
+range_bucket_mappings = {
+    "24h": settings.INFLUXDB_BUCKET + "_downsampled_15m",
+    "7d": settings.INFLUXDB_BUCKET + "_downsampled_15m",
+    "30d": settings.INFLUXDB_BUCKET + "_downsampled_1h",
+}
 influxdb_client = InfluxDBClient(url=url, token=token, org=influx_org)
 
 
@@ -39,11 +44,12 @@ class InfluxDBWrapper:
         drop_columns: str = "'organisation', 'organisation_id', 'type', 'project', 'project_id'",
         filters: str = "|> filter(fn:(r) => r._measurement == 'api_call')",
         extra: str = "",
+        bucket: str = read_bucket,
     ):
         query_api = influxdb_client.query_api()
 
         query = (
-            f'from(bucket:"{read_bucket}")'
+            f'from(bucket:"{bucket}")'
             f" |> range(start: -{date_range}, stop: {date_stop})"
             f" {filters}"
             f" |> drop(columns: [{drop_columns}])"
@@ -54,7 +60,7 @@ class InfluxDBWrapper:
         return result
 
 
-def get_events_for_organisation(organisation_id):
+def get_events_for_organisation(organisation_id: id, date_range: str = "30d"):
     """
     Query influx db for usage for given organisation id
 
@@ -67,6 +73,7 @@ def get_events_for_organisation(organisation_id):
         |> filter(fn: (r) => r["organisation_id"] == "{organisation_id}")',
         drop_columns='"organisation", "project", "project_id"',
         extra="|> sum()",
+        date_range=date_range,
     )
 
     total = 0
@@ -174,4 +181,39 @@ def get_multiple_event_list_for_feature(
             dataset[i][record.values["feature_id"]] = record.values["_value"]
             dataset[i]["datetime"] = record.values["_time"].strftime("%Y-%m-%d")
 
+    return dataset
+
+
+def get_top_organisations(date_range: str, limit: str = ""):
+    """
+    Query influx db top used organisations
+
+    :param date_range: data range for top organisations
+    :param limit: limit for query
+
+
+    :return: top organisations in descending order based on api calls.
+    """
+    if limit:
+        limit = f"|> limit(n:{limit})"
+
+    bucket = range_bucket_mappings[date_range]
+    results = InfluxDBWrapper.influx_query_manager(
+        date_range=date_range,
+        bucket=bucket,
+        filters='|> filter(fn:(r) => r._measurement == "api_call") \
+                    |> filter(fn: (r) => r["_field"] == "request_count")',
+        drop_columns='"_start", "_stop", "_time"',
+        extra=f'|> group(columns: ["organisation"]) \
+              |> sum() \
+              |> group() \
+              |> sort(columns: ["_value"], desc: true) '
+        + limit,
+    )
+
+    dataset = {}
+    for result in results:
+        for record in result.records:
+            org_id = int(record.values["organisation"].partition("-")[0])
+            dataset[org_id] = record.get_value()
     return dataset

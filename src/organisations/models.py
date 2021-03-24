@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 from __future__ import unicode_literals
 
+import datetime
 import enum
 
 from django.conf import settings
@@ -8,10 +9,11 @@ from django.db import models
 from django.utils import timezone
 from django.utils.encoding import python_2_unicode_compatible
 
+from app_analytics.influxdb_wrapper import get_top_organisations
 from organisations.chargebee import (
+    get_customer_id_from_subscription_id,
     get_max_seats_for_plan,
     get_portal_url,
-    get_customer_id_from_subscription_id,
 )
 
 
