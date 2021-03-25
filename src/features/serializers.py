@@ -157,7 +157,7 @@ class FeatureStateSerializerBasic(serializers.ModelSerializer):
         if identity and not identity.environment == environment:
             raise ValidationError("Identity does not exist in environment.")
 
-        if feature_segment and not feature_segment.environnment == environment:
+        if feature_segment and not feature_segment.environment == environment:
             raise serializers.ValidationError(
                 "Feature Segment does not belong to environment."
             )
