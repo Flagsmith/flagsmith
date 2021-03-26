@@ -3,6 +3,8 @@ from rest_framework_nested import routers
 
 from features.views import FeatureStateViewSet
 from integrations.amplitude.views import AmplitudeConfigurationViewSet
+from integrations.heap.views import HeapConfigurationViewSet
+from integrations.mixpanel.views import MixpanelConfigurationViewSet
 from integrations.segment.views import SegmentConfigurationViewSet
 
 from .identities.traits.views import TraitViewSet
@@ -46,7 +48,16 @@ environments_router.register(
     SegmentConfigurationViewSet,
     basename="integrations-segment",
 )
-
+environments_router.register(
+    r"integrations/heap",
+    HeapConfigurationViewSet,
+    basename="integrations-heap",
+)
+environments_router.register(
+    r"integrations/mixpanel",
+    MixpanelConfigurationViewSet,
+    basename="integrations-mixpanel",
+)
 identity_router = routers.NestedSimpleRouter(
     environments_router, r"identities", lookup="identity"
 )
