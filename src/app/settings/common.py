@@ -122,6 +122,8 @@ INSTALLED_APPS = [
     "integrations.sentry",
     "integrations.new_relic",
     "integrations.segment",
+    "integrations.heap",
+    "integrations.mixpanel",
     # Rate limiting admin endpoints
     "axes",
     # for filtering querysets on viewsets

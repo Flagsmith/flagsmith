@@ -1,9 +1,13 @@
 from integrations.amplitude.amplitude import AmplitudeWrapper
+from integrations.heap.heap import HeapWrapper
+from integrations.mixpanel.mixpanel import MixpanelWrapper
 from integrations.segment.segment import SegmentWrapper
 
 IDENTITY_INTEGRATIONS = [
     {"relation_name": "amplitude_config", "wrapper": AmplitudeWrapper},
     {"relation_name": "segment_config", "wrapper": SegmentWrapper},
+    {"relation_name": "heap_config", "wrapper": HeapWrapper},
+    {"relation_name": "mixpanel_config", "wrapper": MixpanelWrapper},
 ]
 
 
