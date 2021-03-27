@@ -84,6 +84,7 @@ INSTALLED_APPS = [
     "django.contrib.sessions",
     "django.contrib.messages",
     "django.contrib.staticfiles",
+    "django.contrib.humanize",
     "rest_framework",
     "rest_framework.authtoken",
     "djoser",
@@ -122,6 +123,8 @@ INSTALLED_APPS = [
     "integrations.sentry",
     "integrations.new_relic",
     "integrations.segment",
+    "integrations.heap",
+    "integrations.mixpanel",
     # Rate limiting admin endpoints
     "axes",
 ]

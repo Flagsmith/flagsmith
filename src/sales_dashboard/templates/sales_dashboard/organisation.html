@@ -1,4 +1,5 @@
 {% extends "sales_dashboard/base.html" %}
+{% load humanize %}
 
 {% block content %}
 <div class="container-fluid">
@@ -23,8 +24,15 @@
                 <h1 class="h2">{{organisation.name}}</h1>
             </div>
             <h3>Plan: <strong>{{ organisation.subscription.plan|default:"Free"}}</strong></h3>
-            <h3>Seats in Plan: <strong>{{organisation.subscription.max_seats|default:0 }}</strong></h3>
-
+            <h3>Seats in Plan: <strong>{{organisation.subscription.max_seats|default:0}}</strong></h3>
+            <h3>
+                API Calls:
+                <ul>
+                    <li>24h: <strong>{{api_calls.24h|intcomma}}</strong></li>
+                    <li>7d: <strong>{{api_calls.7d|intcomma}}</strong></li>
+                    <li>30d: <strong>{{api_calls.30d|intcomma}}</strong></li>
+                </ul>
+            </h3>
             <h2>Projects</h2>
             <div class="table-responsive">
                 <table class="table table-striped table-sm">
