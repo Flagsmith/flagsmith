@@ -1,6 +1,9 @@
-from drf_writable_nested import NestedCreateMixin, NestedUpdateMixin
+from drf_writable_nested import (
+    WritableNestedModelSerializer,
+    NestedCreateMixin,
+    NestedUpdateMixin,
+)
 from rest_framework import serializers
-from rest_framework.exceptions import ValidationError
 
 from audit.models import (
     FEATURE_CREATED_MESSAGE,
@@ -13,38 +16,48 @@ from audit.models import (
 from environments.identities.models import Identity
 
 from .models import Feature, FeatureState, FeatureStateValue
+from .multivariate.serializers import (
+    MultivariateFeatureOptionSerializer,
+    MultivariateFeatureStateValueSerializer,
+)
 
 
-class CreateFeatureSerializer(serializers.ModelSerializer):
+class CreateFeatureSerializer(WritableNestedModelSerializer):
+    multivariate_options = MultivariateFeatureOptionSerializer(
+        many=True, required=False
+    )
+
     class Meta:
         model = Feature
-        fields = "__all__"
-        read_only_fields = ("feature_segments",)
+        fields = (
+            "id",
+            "name",
+            "type",
+            "default_enabled",
+            "initial_value",
+            "created_date",
+            "description",
+            "tags",
+            "multivariate_options",
+        )
+        read_only_fields = ("feature_segments", "created_date")
 
     def to_internal_value(self, data):
-        if data.get("initial_value"):
-            data["initial_value"] = str(data.get("initial_value"))
+        if data.get("initial_value") and not isinstance(data["initial_value"], str):
+            data["initial_value"] = str(data["initial_value"])
         return super(CreateFeatureSerializer, self).to_internal_value(data)
 
     def create(self, validated_data):
-        if Feature.objects.filter(
-            project=validated_data["project"], name__iexact=validated_data["name"]
-        ).exists():
-            raise serializers.ValidationError(
-                "Feature with that name already exists for this "
-                "project. Note that feature names are case "
-                "insensitive."
-            )
-
         instance = super(CreateFeatureSerializer, self).create(validated_data)
-
         self._create_audit_log(instance, True)
-
         return instance
 
     def update(self, instance, validated_data):
-        self._create_audit_log(instance, False)
-        return super(CreateFeatureSerializer, self).update(instance, validated_data)
+        updated_instance = super(CreateFeatureSerializer, self).update(
+            instance, validated_data
+        )
+        self._create_audit_log(updated_instance, False)
+        return updated_instance
 
     def _create_audit_log(self, instance, created):
         message = (
@@ -62,9 +75,28 @@ class CreateFeatureSerializer(serializers.ModelSerializer):
         )
 
     def validate(self, attrs):
+        view = self.context["view"]
+        project_id = str(view.kwargs.get("project_pk"))
+        if not project_id.isdigit():
+            raise serializers.ValidationError("Invalid project ID.")
+
+        unique_filters = {"project__id": project_id, "name__iexact": attrs["name"]}
+        existing_feature_queryset = Feature.objects.filter(**unique_filters)
+        if self.instance:
+            existing_feature_queryset = existing_feature_queryset.exclude(
+                id=self.instance.id
+            )
+
+        if existing_feature_queryset.exists():
+            raise serializers.ValidationError(
+                "Feature with that name already exists for this "
+                "project. Note that feature names are case "
+                "insensitive."
+            )
+
         # If tags selected check they from the same Project as Feature Project
-        if any(tag.project_id != attrs["project"].id for tag in attrs.get("tags", [])):
-            raise ValidationError(
+        if any(tag.project_id != int(project_id) for tag in attrs.get("tags", [])):
+            raise serializers.ValidationError(
                 "Selected Tags must be from the same Project as current Feature"
             )
 
@@ -121,18 +153,21 @@ class FeatureStateSerializerFull(serializers.ModelSerializer):
         fields = "__all__"
 
     def get_feature_state_value(self, obj):
-        return obj.get_feature_state_value()
+        return obj.get_feature_state_value(identity=self.context.get("identity"))
 
 
-class FeatureStateSerializerBasic(serializers.ModelSerializer):
+class FeatureStateSerializerBasic(WritableNestedModelSerializer):
     feature_state_value = serializers.SerializerMethodField()
+    multivariate_feature_state_values = MultivariateFeatureStateValueSerializer(
+        many=True, required=False
+    )
 
     class Meta:
         model = FeatureState
         fields = "__all__"
 
     def get_feature_state_value(self, obj):
-        return obj.get_feature_state_value()
+        return obj.get_feature_state_value(identity=self.context.get("identity"))
 
     def create(self, validated_data):
         instance = super(FeatureStateSerializerBasic, self).create(validated_data)
@@ -155,7 +190,7 @@ class FeatureStateSerializerBasic(serializers.ModelSerializer):
         feature_segment = attrs.get("feature_segment")
 
         if identity and not identity.environment == environment:
-            raise ValidationError("Identity does not exist in environment.")
+            raise serializers.ValidationError("Identity does not exist in environment.")
 
         if feature_segment and not feature_segment.environment == environment:
             raise serializers.ValidationError(
@@ -179,7 +214,7 @@ class FeatureStateSerializerBasic(serializers.ModelSerializer):
         ).exclude(pk=getattr(self.instance, "pk", None))
 
         if queryset.exists():
-            raise ValidationError("Feature state already exists.")
+            raise serializers.ValidationError("Feature state already exists.")
 
         return attrs
 
@@ -251,9 +286,7 @@ class GetInfluxDataQuerySerializer(serializers.Serializer):
     environment_id = serializers.CharField(required=True)
 
 
-class WritableNestedFeatureStateSerializer(
-    NestedCreateMixin, NestedUpdateMixin, FeatureStateSerializerBasic
-):
+class WritableNestedFeatureStateSerializer(FeatureStateSerializerBasic):
     feature_state_value = FeatureStateValueSerializer(required=False)
 
     class Meta(FeatureStateSerializerBasic.Meta):

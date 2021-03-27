@@ -7,6 +7,7 @@ from django.urls import reverse
 from rest_framework import status
 from rest_framework.test import APIClient, APITestCase
 
+from environments.identities.helpers import get_hashed_percentage_for_object_ids
 from environments.identities.models import Identity
 from environments.identities.traits.models import Trait
 from environments.models import Environment
@@ -477,7 +478,9 @@ class SDKIdentitiesTestCase(APITestCase):
             segment=segment, type=SegmentRule.ALL_RULE
         )
 
-        identity_percentage_value = segment.get_identity_percentage_value(self.identity)
+        identity_percentage_value = get_hashed_percentage_for_object_ids(
+            [segment.id, self.identity.id]
+        )
         Condition.objects.create(
             operator=models.PERCENTAGE_SPLIT,
             value=(identity_percentage_value + (1 - identity_percentage_value) / 2)
@@ -522,7 +525,9 @@ class SDKIdentitiesTestCase(APITestCase):
             segment=segment, type=SegmentRule.ALL_RULE
         )
 
-        identity_percentage_value = segment.get_identity_percentage_value(self.identity)
+        identity_percentage_value = get_hashed_percentage_for_object_ids(
+            [segment.id, self.identity.id]
+        )
         Condition.objects.create(
             operator=models.PERCENTAGE_SPLIT,
             value=identity_percentage_value / 2,

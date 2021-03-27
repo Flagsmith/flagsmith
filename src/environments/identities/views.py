@@ -160,13 +160,18 @@ class SDKIdentities(SDKAPIView):
 
         # we need to serialize the response again to ensure that the
         # trait values are serialized correctly
-        response_serializer = IdentifyWithTraitsSerializer(instance=instance)
+        response_serializer = IdentifyWithTraitsSerializer(
+            instance=instance,
+            context={"identity": instance.get("identity")},  # todo: improve this
+        )
         return Response(response_serializer.data)
 
     def _get_single_feature_state_response(self, identity, feature_name):
         for feature_state in identity.get_all_feature_states():
             if feature_state.feature.name == feature_name:
-                serializer = FeatureStateSerializerFull(feature_state)
+                serializer = FeatureStateSerializerFull(
+                    feature_state, context={"identity": identity}
+                )
                 return Response(data=serializer.data, status=status.HTTP_200_OK)
 
         return Response(
@@ -182,7 +187,9 @@ class SDKIdentities(SDKAPIView):
         :return: Response containing lists of both serialized flags and traits
         """
         all_feature_states = identity.get_all_feature_states()
-        serialized_flags = FeatureStateSerializerFull(all_feature_states, many=True)
+        serialized_flags = FeatureStateSerializerFull(
+            all_feature_states, many=True, context={"identity": identity}
+        )
         serialized_traits = TraitSerializerBasic(
             identity.identity_traits.all(), many=True
         )
