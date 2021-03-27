@@ -1,6 +1,7 @@
 import pytest
 
-from features.utils import BOOLEAN, INTEGER, STRING, get_value_type
+from features.utils import get_value_type
+from features.value_types import INTEGER, STRING, BOOLEAN
 
 
 @pytest.mark.parametrize(

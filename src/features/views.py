@@ -67,14 +67,11 @@ class FeatureViewSet(viewsets.ModelViewSet):
 
         return project.features.all()
 
-    def create(self, request, *args, **kwargs):
-        project_id = request.data.get("project")
-        project = get_object_or_404(Project, pk=project_id)
+    def perform_create(self, serializer):
+        serializer.save(project_id=self.kwargs.get("project_pk"))
 
-        if project.organisation not in request.user.organisations.all():
-            return Response(status=status.HTTP_403_FORBIDDEN)
-
-        return super().create(request, *args, **kwargs)
+    def perform_update(self, serializer):
+        serializer.save(project_id=self.kwargs.get("project_pk"))
 
     @swagger_auto_schema(
         query_serializer=GetInfluxDataQuerySerializer(),
