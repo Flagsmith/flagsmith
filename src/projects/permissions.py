@@ -8,6 +8,7 @@ PROJECT_PERMISSIONS = [
     ("CREATE_ENVIRONMENT", "Ability to create an environment in the given project."),
     ("DELETE_FEATURE", "Ability to delete features in the given project."),
     ("CREATE_FEATURE", "Ability to create features in the given project."),
+    ("EDIT_FEATURE", "Ability to edit features in the given project."),
 ]
 
 

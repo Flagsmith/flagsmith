@@ -37,6 +37,7 @@ class FeatureAdmin(SimpleHistoryAdmin):
         "description",
         "tags__label",
     )
+    readonly_fields = ("project",)
 
 
 class FeatureSegmentAdmin(admin.ModelAdmin):
