@@ -35,5 +35,6 @@ django-debug-toolbar==3.1.1
 sentry-sdk==0.19.4
 environs==9.2.0
 analytics-python
+django-lifecycle
 drf-writable-nested
 django-filter

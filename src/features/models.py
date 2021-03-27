@@ -1,5 +1,7 @@
 from __future__ import unicode_literals
 
+import typing
+
 from django.core.exceptions import (
     NON_FIELD_ERRORS,
     ObjectDoesNotExist,
@@ -9,10 +11,22 @@ from django.db import models
 from django.db.models import UniqueConstraint, Q
 from django.utils.encoding import python_2_unicode_compatible
 from django.utils.translation import ugettext_lazy as _
+from django_lifecycle import (
+    LifecycleModel,
+    hook,
+    BEFORE_CREATE,
+    AFTER_SAVE,
+    AFTER_CREATE,
+)
 from ordered_model.models import OrderedModelBase
 from simple_history.models import HistoricalRecords
 
+from environments.identities.helpers import get_hashed_percentage_for_object_ids
+from features.custom_lifecycle import CustomLifecycleModelMixin
+from features.feature_states.models import AbstractBaseFeatureValueModel
+from features.feature_types import MULTIVARIATE
 from features.helpers import get_correctly_typed_value
+from features.multivariate.models import MultivariateFeatureStateValue
 from features.tasks import trigger_feature_state_change_webhooks
 from features.utils import (
     get_boolean_from_string,
@@ -26,15 +40,12 @@ import logging
 
 logger = logging.getLogger(__name__)
 
-FEATURE_STATE_VALUE_TYPES = (
-    (INTEGER, "Integer"),
-    (STRING, "String"),
-    (BOOLEAN, "Boolean"),
-)
+if typing.TYPE_CHECKING:
+    from environments.identities.models import Identity
 
 
 @python_2_unicode_compatible
-class Feature(models.Model):
+class Feature(CustomLifecycleModelMixin, models.Model):
     name = models.CharField(max_length=2000)
     created_date = models.DateTimeField("DateCreated", auto_now_add=True)
     project = models.ForeignKey(
@@ -56,38 +67,21 @@ class Feature(models.Model):
     tags = models.ManyToManyField(Tag, blank=True)
 
     class Meta:
-        ordering = ["id"]
         # Note: uniqueness is changed to reference lowercase name in explicit SQL in the migrations
         unique_together = ("name", "project")
 
-    def save(self, *args, **kwargs):
-        """
-        Override save method to initialise feature states for all environments
-        """
-        feature_state_defaults = {}
-        if self.pk:
-            # If the feature has moved to a new project, delete the feature states from the old project
-            old_feature = Feature.objects.get(pk=self.pk)
-            if old_feature.project != self.project:
-                FeatureState.objects.filter(
-                    feature=self,
-                    environment__in=old_feature.project.environments.all(),
-                ).delete()
-        else:
-            feature_state_defaults["enabled"] = self.default_enabled
-
-        super(Feature, self).save(*args, **kwargs)
-
-        # create / update feature states for all environments in the project
-        # todo: is update necessary here
+    @hook(AFTER_CREATE)
+    def create_feature_states(self):
+        # create feature states for all environments
         environments = self.project.environments.all()
         for env in environments:
-            FeatureState.objects.update_or_create(
+            # unable to bulk create as we need signals
+            FeatureState.objects.create(
                 feature=self,
                 environment=env,
                 identity=None,
                 feature_segment=None,
-                defaults=feature_state_defaults,
+                enabled=self.default_enabled,
             )
 
     def validate_unique(self, *args, **kwargs):
@@ -194,7 +188,7 @@ class FeatureSegment(OrderedModelBase):
 
 
 @python_2_unicode_compatible
-class FeatureState(models.Model):
+class FeatureState(LifecycleModel, models.Model):
     feature = models.ForeignKey(
         Feature, related_name="feature_states", on_delete=models.CASCADE
     )
@@ -280,82 +274,109 @@ class FeatureState(models.Model):
         # it has a feature_segment or an identity
         return not (other.feature_segment or other.identity)
 
-    def get_feature_state_value(self):
-        try:
-            value_type = self.feature_state_value.type
-        except ObjectDoesNotExist:
-            return None
+    def get_feature_state_value(self, identity: "Identity" = None) -> typing.Any:
+        feature_state_value = (
+            self.get_multivariate_feature_state_value(identity)
+            if self.feature.type == MULTIVARIATE and identity
+            else getattr(self, "feature_state_value", None)
+        )
 
-        type_mapping = {
-            INTEGER: self.feature_state_value.integer_value,
-            STRING: self.feature_state_value.string_value,
-            BOOLEAN: self.feature_state_value.boolean_value,
-        }
+        # return the value of the feature state value only if the feature state
+        # has a related feature state value. Note that we use getattr rather than
+        # hasattr as we want to return None if no feature state value exists.
+        return feature_state_value and feature_state_value.value
 
-        return type_mapping.get(value_type)
+    def get_multivariate_feature_state_value(
+        self, identity: "Identity"
+    ) -> AbstractBaseFeatureValueModel:
+        # the multivariate_feature_state_values should be prefetched at this point
+        # so we just convert them to a list on use python operations from here to
+        # avoid further queries to the DB
+        mv_options = list(self.multivariate_feature_state_values.all())
+
+        percentage_value = (
+            get_hashed_percentage_for_object_ids([self.id, identity.id]) * 100
+        )
+
+        # Iterate over the mv options in order of id (so we get the same value each
+        # time) to determine the correct value to return to the identity based on
+        # the percentage allocations of the multivariate options. This gives us a
+        # way to ensure that the same value is returned every time we use the same
+        # percentage value.
+        start_percentage = 0
+        for mv_option in sorted(mv_options, key=lambda o: o.id):
+            limit = getattr(mv_option, "percentage_allocation", 0) + start_percentage
+            if start_percentage <= percentage_value < limit:
+                return mv_option.multivariate_feature_option
+
+            start_percentage = limit
+
+        # if none of the percentage allocations match the percentage value we got for
+        # the identity, then we just return the default feature state value (or None
+        # if there isn't one - although this should never happen)
+        return getattr(self, "feature_state_value", None)
 
     @property
     def previous_feature_state_value(self):
         try:
             history_instance = self.feature_state_value.history.first()
+            return (
+                history_instance
+                and history_instance.prev_record
+                and history_instance.prev_record.instance.value
+            )
         except ObjectDoesNotExist:
             return None
 
-        previous_feature_state_value = history_instance.prev_record
-
-        if previous_feature_state_value:
-            value_type = previous_feature_state_value.type
-
-            type_mapping = {
-                INTEGER: previous_feature_state_value.integer_value,
-                STRING: previous_feature_state_value.string_value,
-                BOOLEAN: previous_feature_state_value.boolean_value,
-            }
-
-            return type_mapping.get(value_type)
-
-    def save(self, *args, **kwargs):
+    @hook(BEFORE_CREATE)
+    def check_for_existing_env_feature_state(self):
         # prevent duplicate feature states being created for an environment
-        if (
-            not self.pk
-            and FeatureState.objects.filter(
-                environment=self.environment, feature=self.feature
-            ).exists()
-            and not (self.identity or self.feature_segment)
-        ):
+        if FeatureState.objects.filter(
+            environment=self.environment, feature=self.feature
+        ).exists() and not (self.identity or self.feature_segment):
             raise ValidationError(
                 "Feature state already exists for this environment and feature"
             )
 
-        super(FeatureState, self).save(*args, **kwargs)
-
-        # create default feature state value for feature state
-        # note: this is get_or_create since feature state values are updated separately,
-        # and hence if this is set to update_or_create, it overwrites the FSV with the
-        # initial value again
-        FeatureStateValue.objects.get_or_create(
-            feature_state=self, defaults=self._get_feature_state_defaults()
+    @hook(AFTER_CREATE)
+    def create_feature_state_value(self):
+        # note: this is only performed after create since feature state values are
+        # updated separately, and hence if this is performed after each save,
+        # it overwrites the FSV with the initial value again
+        FeatureStateValue.objects.create(
+            feature_state=self,
+            **self.get_feature_state_value_defaults(),
         )
-        # TODO: move this to an async call using celery or django-rq
+
+    @hook(AFTER_CREATE)
+    def create_multivariate_feature_state_values(self):
+        mv_feature_state_values = [
+            MultivariateFeatureStateValue(
+                feature_state=self,
+                multivariate_feature_option=mv_option,
+                percentage_allocation=mv_option.default_percentage_allocation,
+            )
+            for mv_option in self.feature.multivariate_options.all()
+        ]
+        MultivariateFeatureStateValue.objects.bulk_create(mv_feature_state_values)
+
+    @hook(AFTER_SAVE)
+    def trigger_feature_state_change_webhooks(self):
         trigger_feature_state_change_webhooks(self)
 
-    def _get_feature_state_defaults(self):
-        if not (self.feature.initial_value or self.feature.initial_value is False):
-            return None
+    def get_feature_state_value_defaults(self) -> dict:
+        if self.feature.initial_value is None:
+            return {}
 
         value = self.feature.initial_value
         type = get_value_type(value)
-        defaults = {"type": type}
-
+        parse_func = {
+            BOOLEAN: get_boolean_from_string,
+            INTEGER: get_integer_from_string,
+        }.get(type, lambda v: v)
         key_name = self.get_feature_state_key_name(type)
-        if type == BOOLEAN:
-            defaults[key_name] = get_boolean_from_string(value)
-        elif type == INTEGER:
-            defaults[key_name] = get_integer_from_string(value)
-        else:
-            defaults[key_name] = value
 
-        return defaults
+        return {"type": type, key_name: parse_func(value)}
 
     @staticmethod
     def get_feature_state_key_name(fsv_type):
@@ -386,36 +407,16 @@ class FeatureState(models.Model):
         }
 
     def __str__(self):
+        s = f"Feature {self.feature.name} - Enabled: {self.enabled}"
         if self.environment is not None:
-            return "Project %s - Environment %s - Feature %s - Enabled: %r" % (
-                self.environment.project.name,
-                self.environment.name,
-                self.feature.name,
-                self.enabled,
-            )
+            s = f"{self.environment} - {s}"
         elif self.identity is not None:
-            return "Identity %s - Feature %s - Enabled: %r" % (
-                self.identity.identifier,
-                self.feature.name,
-                self.enabled,
-            )
-        else:
-            return "Feature %s - Enabled: %r" % (self.feature.name, self.enabled)
+            s = f"Identity {self.identity.identifier} - {s}"
+        return s
 
 
-class FeatureStateValue(models.Model):
+class FeatureStateValue(AbstractBaseFeatureValueModel):
     feature_state = models.OneToOneField(
         FeatureState, related_name="feature_state_value", on_delete=models.CASCADE
     )
-
-    type = models.CharField(
-        max_length=10,
-        choices=FEATURE_STATE_VALUE_TYPES,
-        default=STRING,
-        null=True,
-        blank=True,
-    )
-    boolean_value = models.NullBooleanField(null=True, blank=True)
-    integer_value = models.IntegerField(null=True, blank=True)
-    string_value = models.CharField(null=True, max_length=2000, blank=True)
     history = HistoricalRecords()
