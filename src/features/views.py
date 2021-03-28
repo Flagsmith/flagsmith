@@ -26,11 +26,10 @@ from environments.permissions.permissions import (
     EnvironmentKeyPermissions,
     NestedEnvironmentPermissions,
 )
-from projects.models import Project
 from .models import FeatureState, Feature
 from .permissions import FeaturePermissions, FeatureStatePermissions
 from .serializers import (
-    CreateFeatureSerializer,
+    ListCreateFeatureSerializer,
     FeatureInfluxDataSerializer,
     FeatureSerializer,
     FeatureStateSerializerBasic,
@@ -38,7 +37,6 @@ from .serializers import (
     FeatureStateSerializerFull,
     FeatureStateSerializerWithIdentity,
     FeatureStateValueSerializer,
-    FeatureWithTagsSerializer,
     UpdateFeatureSerializer,
     GetInfluxDataQuerySerializer,
     WritableNestedFeatureStateSerializer,
@@ -55,8 +53,8 @@ class FeatureViewSet(viewsets.ModelViewSet):
 
     def get_serializer_class(self):
         return {
-            "list": FeatureWithTagsSerializer,
-            "create": CreateFeatureSerializer,
+            "list": ListCreateFeatureSerializer,
+            "create": ListCreateFeatureSerializer,
             "update": UpdateFeatureSerializer,
             "partial_update": UpdateFeatureSerializer,
         }.get(self.action, FeatureSerializer)
@@ -64,8 +62,7 @@ class FeatureViewSet(viewsets.ModelViewSet):
     def get_queryset(self):
         user_projects = self.request.user.get_permitted_projects(["VIEW_PROJECT"])
         project = get_object_or_404(user_projects, pk=self.kwargs["project_pk"])
-
-        return project.features.all()
+        return project.features.all().prefetch_related("multivariate_options")
 
     def perform_create(self, serializer):
         serializer.save(project_id=self.kwargs.get("project_pk"))
