@@ -1,8 +1,4 @@
-from drf_writable_nested import (
-    WritableNestedModelSerializer,
-    NestedCreateMixin,
-    NestedUpdateMixin,
-)
+from drf_writable_nested import WritableNestedModelSerializer
 from rest_framework import serializers
 
 from audit.models import (
@@ -22,7 +18,7 @@ from .multivariate.serializers import (
 )
 
 
-class CreateFeatureSerializer(WritableNestedModelSerializer):
+class ListCreateFeatureSerializer(WritableNestedModelSerializer):
     multivariate_options = MultivariateFeatureOptionSerializer(
         many=True, required=False
     )
@@ -45,15 +41,15 @@ class CreateFeatureSerializer(WritableNestedModelSerializer):
     def to_internal_value(self, data):
         if data.get("initial_value") and not isinstance(data["initial_value"], str):
             data["initial_value"] = str(data["initial_value"])
-        return super(CreateFeatureSerializer, self).to_internal_value(data)
+        return super(ListCreateFeatureSerializer, self).to_internal_value(data)
 
     def create(self, validated_data):
-        instance = super(CreateFeatureSerializer, self).create(validated_data)
+        instance = super(ListCreateFeatureSerializer, self).create(validated_data)
         self._create_audit_log(instance, True)
         return instance
 
     def update(self, instance, validated_data):
-        updated_instance = super(CreateFeatureSerializer, self).update(
+        updated_instance = super(ListCreateFeatureSerializer, self).update(
             instance, validated_data
         )
         self._create_audit_log(updated_instance, False)
@@ -103,11 +99,11 @@ class CreateFeatureSerializer(WritableNestedModelSerializer):
         return attrs
 
 
-class UpdateFeatureSerializer(CreateFeatureSerializer):
+class UpdateFeatureSerializer(ListCreateFeatureSerializer):
     """ prevent users from changing the value of default enabled after creation """
 
-    class Meta(CreateFeatureSerializer.Meta):
-        read_only_fields = CreateFeatureSerializer.Meta.read_only_fields + (
+    class Meta(ListCreateFeatureSerializer.Meta):
+        read_only_fields = ListCreateFeatureSerializer.Meta.read_only_fields + (
             "default_enabled",
             "initial_value",
         )
@@ -124,22 +120,6 @@ class FeatureSerializer(serializers.ModelSerializer):
             "initial_value",
             "default_enabled",
             "type",
-        )
-        writeonly_fields = ("initial_value", "default_enabled")
-
-
-class FeatureWithTagsSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Feature
-        fields = (
-            "id",
-            "name",
-            "created_date",
-            "initial_value",
-            "description",
-            "default_enabled",
-            "type",
-            "tags",
         )
         writeonly_fields = ("initial_value", "default_enabled")
 
