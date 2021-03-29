@@ -2,17 +2,16 @@ import json
 
 from app_analytics.influxdb_wrapper import (
     get_event_list_for_organisation,
-    get_top_organisations,
     get_events_for_organisation,
+    get_top_organisations,
 )
 from django.conf import settings
 from django.contrib.admin.views.decorators import staff_member_required
-from django.db.models import Count, Q, When, Case, Value, IntegerField
+from django.db.models import Case, Count, IntegerField, Q, Value, When
 from django.http import HttpResponse
 from django.shortcuts import get_object_or_404
 from django.template import loader
 from django.utils.safestring import mark_safe
-
 from django.views.generic import ListView
 
 from organisations.models import Organisation
@@ -29,10 +28,10 @@ class OrganisationList(ListView):
 
     def get_queryset(self):
         queryset = Organisation.objects.annotate(
-            num_projects=Count("projects"),
-            num_users=Count("users"),
-            num_flags=Count("projects__features"),
-            num_segments=Count("projects__segments"),
+            num_projects=Count("projects", distinct=True),
+            num_users=Count("users", distinct=True),
+            num_features=Count("projects__features", distinct=True),
+            num_segments=Count("projects__segments", distinct=True),
         )
 
         # Annotate the queryset with the organisations usage for the given time periods
