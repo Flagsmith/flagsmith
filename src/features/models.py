@@ -301,7 +301,7 @@ class FeatureState(models.Model):
         except ObjectDoesNotExist:
             return None
 
-        previous_feature_state_value = history_instance.prev_record
+        previous_feature_state_value = getattr(history_instance, "prev_record", None)
 
         if previous_feature_state_value:
             value_type = previous_feature_state_value.type
