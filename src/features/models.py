@@ -15,13 +15,11 @@ from simple_history.models import HistoricalRecords
 from features.helpers import get_correctly_typed_value
 from features.tasks import trigger_feature_state_change_webhooks
 from features.utils import (
-    BOOLEAN,
-    INTEGER,
-    STRING,
     get_boolean_from_string,
     get_integer_from_string,
     get_value_type,
 )
+from features.value_types import INTEGER, STRING, BOOLEAN, FEATURE_STATE_VALUE_TYPES
 from projects.models import Project
 from projects.tags.models import Tag
 import logging
@@ -142,10 +140,25 @@ class FeatureSegment(OrderedModelBase):
         related_name="feature_segments",
     )
 
-    enabled = models.BooleanField(default=False)
-    value = models.CharField(max_length=2000, blank=True, null=True)
-    value_type = models.CharField(
-        choices=FEATURE_STATE_VALUE_TYPES, max_length=50, blank=True, null=True
+    _enabled = models.BooleanField(
+        default=False,
+        db_column="enabled",
+        help_text="Deprecated in favour of using FeatureStateValue.",
+    )
+    _value = models.CharField(
+        max_length=2000,
+        blank=True,
+        null=True,
+        db_column="value",
+        help_text="Deprecated in favour of using FeatureStateValue.",
+    )
+    _value_type = models.CharField(
+        choices=FEATURE_STATE_VALUE_TYPES,
+        max_length=50,
+        blank=True,
+        null=True,
+        db_column="value_type",
+        help_text="Deprecated in favour of using FeatureStateValue.",
     )
 
     # specific attributes for managing the order of feature segments
@@ -159,17 +172,6 @@ class FeatureSegment(OrderedModelBase):
     class Meta:
         unique_together = ("feature", "environment", "segment")
         ordering = ("priority",)
-
-    def save(self, *args, **kwargs):
-        super(FeatureSegment, self).save(*args, **kwargs)
-
-        # update or create feature state for environment
-        FeatureState.objects.update_or_create(
-            environment=self.environment,
-            feature=self.feature,
-            feature_segment=self,
-            defaults={"enabled": self.enabled},
-        )
 
     def __str__(self):
         return (
@@ -279,9 +281,6 @@ class FeatureState(models.Model):
         return not (other.feature_segment or other.identity)
 
     def get_feature_state_value(self):
-        if self.feature_segment:
-            return self.feature_segment.get_value()
-
         try:
             value_type = self.feature_state_value.type
         except ObjectDoesNotExist:
@@ -331,40 +330,16 @@ class FeatureState(models.Model):
         super(FeatureState, self).save(*args, **kwargs)
 
         # create default feature state value for feature state
-        # note: this is get_or_create since feature state values are updated separately, and hence if this is set to
-        # update_or_create, it overwrites the FSV with the initial value again
-        # Note: feature segments are handled differently as they have their own values
-        if not self.feature_segment:
-            FeatureStateValue.objects.get_or_create(
-                feature_state=self, defaults=self._get_defaults()
-            )
+        # note: this is get_or_create since feature state values are updated separately,
+        # and hence if this is set to update_or_create, it overwrites the FSV with the
+        # initial value again
+        FeatureStateValue.objects.get_or_create(
+            feature_state=self, defaults=self._get_feature_state_defaults()
+        )
         # TODO: move this to an async call using celery or django-rq
         trigger_feature_state_change_webhooks(self)
 
-    def _get_defaults(self):
-        if self.feature_segment:
-            return self._get_defaults_for_segment_feature_state()
-        else:
-            return self._get_defaults_for_environment_feature_state()
-
-    def _get_defaults_for_segment_feature_state(self):
-        defaults = {"type": self.feature_segment.value_type}
-
-        key_name = self._get_feature_state_key_name(self.feature_segment.value_type)
-
-        if self.feature_segment.value_type == BOOLEAN:
-            if type(self.feature_segment.value) == BOOLEAN:
-                defaults[key_name] = self.feature_segment.value
-            else:
-                defaults[key_name] = get_boolean_from_string(self.feature_segment.value)
-        elif self.feature_segment.value_type == INTEGER:
-            defaults[key_name] = get_integer_from_string(self.feature_segment.value)
-        else:
-            defaults[key_name] = self.feature_segment.value
-
-        return defaults
-
-    def _get_defaults_for_environment_feature_state(self):
+    def _get_feature_state_defaults(self):
         if not (self.feature.initial_value or self.feature.initial_value is False):
             return None
 
@@ -372,7 +347,7 @@ class FeatureState(models.Model):
         type = get_value_type(value)
         defaults = {"type": type}
 
-        key_name = self._get_feature_state_key_name(type)
+        key_name = self.get_feature_state_key_name(type)
         if type == BOOLEAN:
             defaults[key_name] = get_boolean_from_string(value)
         elif type == INTEGER:
@@ -383,7 +358,7 @@ class FeatureState(models.Model):
         return defaults
 
     @staticmethod
-    def _get_feature_state_key_name(fsv_type):
+    def get_feature_state_key_name(fsv_type):
         return {
             INTEGER: "integer_value",
             BOOLEAN: "boolean_value",
@@ -407,7 +382,7 @@ class FeatureState(models.Model):
             # Default to string if not an anticipate type value to keep backwards compatibility.
             "type": fsv_type if fsv_type in accepted_types else STRING,
             "feature_state": self.id,
-            self._get_feature_state_key_name(fsv_type): value,
+            self.get_feature_state_key_name(fsv_type): value,
         }
 
     def __str__(self):
