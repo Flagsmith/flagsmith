@@ -1,4 +1,5 @@
 {% extends "sales_dashboard/base.html" %}
+{% load humanize %}
 
 {% block content %}
 <div class="container-fluid">
@@ -37,9 +38,9 @@
               <td>{{org.num_projects}}</td>
               <td>{{org.num_features}}</td>
               <td>{{org.num_segments}}</td>
-              <td>{{org.num_24h_calls}}</td>
-              <td>{{org.num_7d_calls}}</td>
-              <td>{{org.num_30d_calls}}</td>
+              <td>{{org.num_24h_calls|intcomma}}</td>
+              <td>{{org.num_7d_calls|intcomma}}</td>
+              <td>{{org.num_30d_calls|intcomma}}</td>
             </tr>
             {% endfor %}
           </tbody>

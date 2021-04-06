@@ -12,7 +12,10 @@ urlpatterns = [
     url(r"^admin/", admin.site.urls),
     url(r"^health", include("health_check.urls", namespace="health")),
     url(r"^version", views.version_info),
-    url(r"^sales-dashboard/", include("sales_dashboard.urls")),
+    url(
+        r"^sales-dashboard/",
+        include("sales_dashboard.urls", namespace="sales_dashboard"),
+    ),
     url(r"", lambda r: HttpResponse("Flagsmith API")),
     # this url is used to generate email content for the password reset workflow
     url(
