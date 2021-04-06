@@ -1,12 +1,14 @@
 from __future__ import unicode_literals
 
+import logging
+
 from django.core.exceptions import (
     NON_FIELD_ERRORS,
     ObjectDoesNotExist,
     ValidationError,
 )
 from django.db import models
-from django.db.models import UniqueConstraint, Q
+from django.db.models import Q, UniqueConstraint
 from django.utils.encoding import python_2_unicode_compatible
 from django.utils.translation import ugettext_lazy as _
 from ordered_model.models import OrderedModelBase
@@ -19,10 +21,14 @@ from features.utils import (
     get_integer_from_string,
     get_value_type,
 )
-from features.value_types import INTEGER, STRING, BOOLEAN, FEATURE_STATE_VALUE_TYPES
+from features.value_types import (
+    BOOLEAN,
+    FEATURE_STATE_VALUE_TYPES,
+    INTEGER,
+    STRING,
+)
 from projects.models import Project
 from projects.tags.models import Tag
-import logging
 
 logger = logging.getLogger(__name__)
 
@@ -48,7 +54,7 @@ class Feature(models.Model):
         ),
         on_delete=models.CASCADE,
     )
-    initial_value = models.CharField(max_length=2000, null=True, default=None)
+    initial_value = models.CharField(max_length=20000, null=True, default=None)
     description = models.TextField(null=True, blank=True)
     default_enabled = models.BooleanField(default=False)
     type = models.CharField(max_length=50, null=True, blank=True)
@@ -417,5 +423,5 @@ class FeatureStateValue(models.Model):
     )
     boolean_value = models.NullBooleanField(null=True, blank=True)
     integer_value = models.IntegerField(null=True, blank=True)
-    string_value = models.CharField(null=True, max_length=2000, blank=True)
+    string_value = models.CharField(null=True, max_length=20000, blank=True)
     history = HistoricalRecords()
