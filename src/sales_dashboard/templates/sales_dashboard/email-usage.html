@@ -1,0 +1,17 @@
+{% extends "sales_dashboard/base.html" %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        {% include "sales_dashboard/nav.html" %}
+
+        <main role="main" class="col-md-9 ml-sm-auto col-lg-10 px-md-4">
+            <form method="post" action="{% url 'sales_dashboard:email-usage' %}">
+                {% csrf_token %}
+                {{ form.as_p }}
+                <input type="submit"/>
+            </form>
+        </main>
+    </div>
+</div>
+{% endblock %}

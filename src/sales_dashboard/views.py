@@ -8,15 +8,19 @@ from app_analytics.influxdb_wrapper import (
 from django.conf import settings
 from django.contrib.admin.views.decorators import staff_member_required
 from django.db.models import Case, Count, IntegerField, Q, Value, When
-from django.http import HttpResponse
+from django.http import HttpResponse, HttpResponseRedirect
 from django.shortcuts import get_object_or_404
 from django.template import loader
+from django.urls import reverse, reverse_lazy
 from django.utils.safestring import mark_safe
 from django.views.generic import ListView
+from django.views.generic.edit import FormView
 
 from organisations.models import Organisation
 from projects.models import Project
 from users.models import FFAdminUser
+
+from .forms import EmailUsageForm, MaxSeatsForm
 
 OBJECTS_PER_PAGE = 50
 
@@ -71,10 +75,23 @@ class OrganisationList(ListView):
 @staff_member_required
 def organisation_info(request, organisation_id):
     organisation = get_object_or_404(Organisation, pk=organisation_id)
-    event_list, labels = get_event_list_for_organisation(organisation_id)
+
     template = loader.get_template("sales_dashboard/organisation.html")
+    max_seats_form = MaxSeatsForm(
+        {
+            "max_seats": (
+                0
+                if (organisation.has_subscription() is False)
+                else organisation.subscription.max_seats
+            )
+        }
+    )
+
+    event_list, labels = get_event_list_for_organisation(organisation_id)
+
     context = {
         "organisation": organisation,
+        "max_seats_form": max_seats_form,
         "event_list": event_list,
         "traits": mark_safe(json.dumps(event_list["traits"])),
         "identities": mark_safe(json.dumps(event_list["identities"])),
@@ -88,4 +105,33 @@ def organisation_info(request, organisation_id):
         },
     }
 
+    # If self hosted and running without an Influx DB data store, we dont want to/cant show usage
+    if settings.INFLUXDB_TOKEN:
+        event_list, labels = get_event_list_for_organisation(organisation_id)
+        context["event_list"] = event_list
+        context["traits"] = mark_safe(json.dumps(event_list["traits"]))
+        context["identities"] = mark_safe(json.dumps(event_list["identities"]))
+        context["flags"] = mark_safe(json.dumps(event_list["flags"]))
+        context["labels"] = mark_safe(json.dumps(labels))
+
     return HttpResponse(template.render(context, request))
+
+
+@staff_member_required
+def update_seats(request, organisation_id):
+    max_seats_form = MaxSeatsForm(request.POST)
+    if max_seats_form.is_valid():
+        organisation = get_object_or_404(Organisation, pk=organisation_id)
+        max_seats_form.save(organisation)
+
+    return HttpResponseRedirect(reverse("sales_dashboard:index"))
+
+
+class EmailUsage(FormView):
+    form_class = EmailUsageForm
+    template_name = "sales_dashboard/email-usage.html"
+    success_url = reverse_lazy("sales_dashboard:index")
+
+    def form_valid(self, form):
+        form.save()
+        return super().form_valid(form)
