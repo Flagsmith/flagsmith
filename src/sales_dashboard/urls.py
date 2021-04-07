@@ -1,5 +1,5 @@
-from django.urls import path
 from django.contrib.admin.views.decorators import staff_member_required
+from django.urls import path
 
 from . import views
 
@@ -11,6 +11,16 @@ urlpatterns = [
     path(
         "organisations/<int:organisation_id>",
         views.organisation_info,
-        name="organistation_info",
+        name="organisation_info",
+    ),
+    path(
+        "organisations/<int:organisation_id>/update_seats",
+        views.update_seats,
+        name="update_seats",
+    ),
+    path(
+        "email-usage/",
+        staff_member_required(views.EmailUsage.as_view()),
+        name="email-usage",
     ),
 ]

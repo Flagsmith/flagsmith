@@ -4,19 +4,7 @@
 {% block content %}
 <div class="container-fluid">
     <div class="row">
-        <nav id="sidebarMenu" class="col-md-3 col-lg-2 d-md-block bg-light sidebar collapse">
-            <div class="sidebar-sticky pt-3">
-                <ul class="nav flex-column">
-                    <li class="nav-item">
-                        <a class="nav-link active" href="/sales-dashboard/">
-                            <span data-feather="home"></span>
-                            Organisations <span class="sr-only">(current)</span>
-                        </a>
-                    </li>
-                </ul>
-
-            </div>
-        </nav>
+        {% include "sales_dashboard/nav.html" %}
 
         <main role="main" class="col-md-9 ml-sm-auto col-lg-10 px-md-4">
             <div
@@ -24,7 +12,18 @@
                 <h1 class="h2">{{organisation.name}}</h1>
             </div>
             <h3>Plan: <strong>{{ organisation.subscription.plan|default:"Free"}}</strong></h3>
-            <h3>Seats in Plan: <strong>{{organisation.subscription.max_seats|default:0}}</strong></h3>
+            <h3>Seats: </h3>
+            
+            {% if organisation.has_subscription %}
+            <form method="POST" action="{% url 'sales_dashboard:update_seats' organisation.id %}">
+                {% csrf_token %}
+                {{max_seats_form}}
+                <input type="submit"/>
+                </form>
+            {% else %}
+                <strong>{{organisation.subscription.max_seats|default:0 }}</strong>
+            {% endif %}
+
             <h3>
                 API Calls:
                 <ul>
@@ -33,6 +32,7 @@
                     <li>30d: <strong>{{api_calls.30d|intcomma}}</strong></li>
                 </ul>
             </h3>
+
             <h2>Projects</h2>
             <div class="table-responsive">
                 <table class="table table-striped table-sm">
