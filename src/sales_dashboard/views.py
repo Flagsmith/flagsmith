@@ -54,6 +54,13 @@ class OrganisationList(ListView):
             search_term = self.request.GET["search"]
             queryset = queryset.filter(name__icontains=search_term)
 
+        if self.request.GET.get("sort_field"):
+            sort_field = self.request.GET["sort_field"]
+            sort_direction = (
+                "-" if self.request.GET.get("sort_direction", "ASC") == "DESC" else ""
+            )
+            queryset = queryset.order_by(f"{sort_direction}{sort_field}")
+
         return queryset
 
     def get_context_data(self, **kwargs):

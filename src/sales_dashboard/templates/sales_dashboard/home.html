@@ -12,13 +12,33 @@
         <h1 class="h2">Organisations</h1>
       </div>
 
+      <div class="sort-form">
+        <form action="{% url 'sales_dashboard:index' %}" method="get" class="form-inline float-right">
+          <select name="sort_field" id="sort-field" class="custom-select m-1">
+            <option value="">Sort by...</option>
+            <option value="num_users">Seats</option>
+            <option value="num_projects">Projects</option>
+            <option value="num_features">Flags</option>
+            <option value="num_segments">Segments</option>
+            <option value="num_24h_calls">24h API calls</option>
+            <option value="num_7d_calls">7d API calls</option>
+            <option value="num_30d_calls">30d API calls</option>
+          </select>
+          <select name="sort_direction" id="sort-direction" class="custom-select m-1">
+            <option value="ASC">Ascending</option>
+            <option value="DESC">Descending</option>
+          </select>
+          <button type="submit" class="btn btn-primary m-1">Sort</button>
+        </form>
+      </div>
+
       <div class="table-responsive">
-        <table class="table table-striped table-sm">
-          <thead>
+        <table class="table table-striped table-sm"  data-toggle="table">
+          <thead class="thead-dark">
             <tr>
               <th>ID</th>
               <th>Name</th>
-              <th>Date Registered</th>
+              <th>Plan</th>
               <th>Seats</th>
               <th>Projects</th>
               <th>Flags</th>
@@ -33,7 +53,7 @@
             <tr>
               <td>{{org.id}}</td>
               <td><a href="/sales-dashboard/organisations/{{org.id}}">{{org.name}}</a></td>
-              <td>{{org.date_registered}}</td>
+              <td>{{org.subscription.plan|default:"Free"}}</td>
               <td>{{org.num_users}}</td>
               <td>{{org.num_projects}}</td>
               <td>{{org.num_features}}</td>
@@ -62,70 +82,6 @@
             {% endif %}
           </span>
         </div>
-      </div>
-
-      <div
-        class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
-        <h1 class="h2">Projects</h1>
-      </div>
-
-      <div class="table-responsive">
-        <table class="table table-striped table-sm">
-          <thead>
-            <tr>
-              <th>ID</th>
-              <th>Name</th>
-              <th>Organisation</th>
-            </tr>
-          </thead>
-          <tbody>
-            {{page_title}}
-            {% for project in projects %}
-            <tr>
-              <td>{{project.id}}</td>
-              <td>{{project.name}}</td>             
-              <td><a href="/sales-dashboard/organisations/{{project.organisation.id}}">{{project.organisation.name}}</a></td>
-            </tr>
-            {% endfor %}
-          </tbody>
-        </table>
-      </div>
-
-      <div
-        class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
-        <h1 class="h2">Users</h1>
-      </div>
-
-      <div class="table-responsive">
-        <table class="table table-striped table-sm">
-          <thead>
-            <tr>
-              <th>ID</th>
-              <th>Email Address</th>
-              <th>Name</th>
-              <th>Organisations</th>
-              <th>Joined</th>
-              <th>Last Login</th>
-            </tr>
-          </thead>
-          <tbody>
-            {{page_title}}
-            {% for user in users %}
-            <tr>
-              <td>{{user.id}}</td>
-              <td>{{user.email}}</td>
-              <td>{{user.first_name}} {{user.last_name}}</td>
-              <td>
-                {% for org in user.organisations.all %}
-                <a href="/sales-dashboard/organisations/{{org.id}}">{{org.name}}</a>
-                {% endfor%}
-              </td>
-              <td>{{ user.date_joined }}</td>
-              <td>{{ user.last_login }}</td>
-            </tr>
-            {% endfor %}
-          </tbody>
-        </table>
       </div>
     </main>
   </div>
