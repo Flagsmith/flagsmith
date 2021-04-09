@@ -9,9 +9,9 @@ from django.utils import timezone
 from django.utils.encoding import python_2_unicode_compatible
 
 from organisations.chargebee import (
+    get_customer_id_from_subscription_id,
     get_max_seats_for_plan,
     get_portal_url,
-    get_customer_id_from_subscription_id,
 )
 
 

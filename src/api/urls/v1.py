@@ -1,4 +1,4 @@
-from app_analytics.views import SDKAnalyticsFlags
+from app_analytics.views import SDKAnalyticsFlags, SelfHostedTelemetryAPIView
 from django.conf.urls import url
 from django.urls import include
 from drf_yasg2 import openapi
@@ -44,6 +44,7 @@ urlpatterns = [
     url(r"^identities/$", SDKIdentities.as_view(), name="sdk-identities"),
     url(r"^traits/", include(traits_router.urls), name="traits"),
     url(r"^analytics/flags/$", SDKAnalyticsFlags.as_view()),
+    url(r"^analytics/telemetry/$", SelfHostedTelemetryAPIView.as_view()),
     # API documentation
     url(
         r"^swagger(?P<format>\.json|\.yaml)$",
