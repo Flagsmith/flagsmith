@@ -146,7 +146,7 @@ This gets an environment up and running along with Postgres and enables hot relo
 
 The docker container also accepts an argument that sets the access log file location for gunicorn. By default 
 this is set to /dev/null to maintain the default behaviour of gunicorn. It can either be set to `"-"` to redirect
-the logs to stdout or to a location on the file system as required. 
+the logs to stdout or to a location on the file system as required.
 
 ### Environment Variables
 
@@ -212,6 +212,22 @@ If using AWS SES you will need to configure:
 * `AWS_SES_REGION_ENDPOINT`: ses region endpoint, e.g. email.eu-central-1.amazonaws.com. Required when using ses in a region other than us-east-1
 * `AWS_ACCESS_KEY_ID`: If using Amazon SES, these form part of your SES credentials.
 * `AWS_SECRET_ACCESS_KEY`: If using Amazon SES, these form part of your SES credentials.
+
+### API Telemetry
+
+Flagsmith collects information about self hosted installations. This helps us understand how the platform is being used. This data is *never* shared outside of the organisation, and is anonymous by design. You can opt out of sending this telemetry on startup by setting the `ENABLE_TELEMETRY` environment variable to `False`.
+
+We collect the following data on startup per API server instance:
+
+* Total number of Organisations
+* Total number of Projects
+* Total number of Environments
+* Total number of Features
+* Total number of Segments
+* Total number of Users
+* DEBUG django variable
+* ENV django variable
+* API server external IP address
 
 ### Creating a secret key
 
