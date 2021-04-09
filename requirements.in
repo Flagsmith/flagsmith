@@ -37,3 +37,4 @@ environs==9.2.0
 analytics-python
 drf-writable-nested
 django-filter
+dataclasses
