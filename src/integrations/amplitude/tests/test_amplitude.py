@@ -18,7 +18,7 @@ def test_amplitude_initialized_correctly():
     amplitude_wrapper = AmplitudeWrapper(api_key=api_key)
 
     # Then
-    expected_url = f"{AMPLITUDE_API_URL}/identify?api_key={api_key}"
+    expected_url = f"{AMPLITUDE_API_URL}/identify"
     assert amplitude_wrapper.url == expected_url
 
 
@@ -43,15 +43,18 @@ def test_amplitude_when_generate_user_data_with_correct_values_then_success():
     )
 
     # Then
+
+    feature_properties = {}
+
+    for feature_state in feature_states:
+        value = feature_state.get_feature_state_value()
+        feature_properties[feature_state.feature.name] = (
+            value if (feature_state.enabled and value) else feature_state.enabled
+        )
+
     expected_user_data = {
-        "identification": {
-            "user_id": user_id,
-            "user_properties": {
-                feature_state.feature.name: feature_state.get_feature_state_value()
-                if feature_state.get_feature_state_value() is not None
-                else "None"
-                for feature_state in feature_states
-            },
-        }
+        "user_id": user_id,
+        "user_properties": feature_properties,
     }
+
     assert expected_user_data == user_data

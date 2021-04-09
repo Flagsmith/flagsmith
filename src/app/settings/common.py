@@ -35,6 +35,9 @@ if ENV not in ("local", "dev", "staging", "production"):
 
 DEBUG = env("DEBUG", default=False)
 
+# Enables the sending of telemetry data to the central Flagsmith API for usage tracking
+ENABLE_TELEMETRY = env("ENABLE_TELEMETRY", default=True)
+
 SECRET_KEY = env("DJANGO_SECRET_KEY", default=get_random_secret_key())
 
 HOSTED_SEATS_LIMIT = env.int("HOSTED_SEATS_LIMIT", default=0)
@@ -84,6 +87,7 @@ INSTALLED_APPS = [
     "django.contrib.sessions",
     "django.contrib.messages",
     "django.contrib.staticfiles",
+    "django.contrib.humanize",
     "rest_framework",
     "rest_framework.authtoken",
     "djoser",
@@ -127,6 +131,7 @@ INSTALLED_APPS = [
     "integrations.mixpanel",
     # Rate limiting admin endpoints
     "axes",
+    "telemetry",
     # for filtering querysets on viewsets
     "django_filters",
 ]
@@ -298,7 +303,6 @@ elif EMAIL_BACKEND == "django.core.mail.backends.smtp.EmailBackend":
     EMAIL_PORT = env("EMAIL_PORT", default=587)
     EMAIL_USE_TLS = env.bool("EMAIL_USE_TLS", default=True)
 
-
 SWAGGER_SETTINGS = {
     "SHOW_REQUEST_HEADERS": True,
     "SECURITY_DEFINITIONS": {
@@ -314,12 +318,10 @@ FE_E2E_TEST_USER_EMAIL = "nightwatch@solidstategroup.com"
 
 SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
 
-
 # Chargebee
 ENABLE_CHARGEBEE = env.bool("ENABLE_CHARGEBEE", default=False)
 CHARGEBEE_API_KEY = env("CHARGEBEE_API_KEY", default=None)
 CHARGEBEE_SITE = env("CHARGEBEE_SITE", default=None)
-
 
 # Logging configuration
 LOG_LEVEL = env.str("LOG_LEVEL", default="WARNING")

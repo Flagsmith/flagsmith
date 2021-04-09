@@ -1,8 +1,31 @@
 [<img alt="Feature Flag, Remote Config and A/B Testing platform, Flagsmith" width="100%" src="./hero.png"/>](https://flagsmith.com/)
 
-[![Donate](https://liberapay.com/assets/widgets/donate.svg)](https://liberapay.com/Bullet-Train/donate)
+[Flagsmith](https://www.flagsmith.com/) is an open source, fully featured, Feature Flag and Remote Config service. Use our hosted API, deploy to your own private cloud, or run on-premise.
 
-Bullet Train is now Flagsmith read about it [here](https://flagsmith.com/blog/rebrand). 
+# Flagsmith
+
+Flagsmith makes it easy to create and manage features flags across web, mobile, and server side applications. Just wrap a section of code with a flag, and then use Flagsmith to toggle that feature on or off for different environments, users or user segments.
+
+<img alt="Flagsmith Screenshot" width="100%" src="./screenshot.png"/>
+
+## Features
+
+* **Feature flags**. Release features with confidence through phased rollouts.
+* **Remote config**. Easily toggle individual features on and off, and make changes without deploying new code.
+* **A/B and Multivariate Testing**. Use segments to run A/B and multivariate tests on new features. With segments, you can also introduce beta programs to get early user feedback.
+* **Organization Management**.  Organizations, projects, and roles for team members help keep your deployment organized.
+* **Integrations**. Easily enhance Flagsmith with your favourite tools.
+
+## Using Flagsmith
+
+* **Flagsmith hosted**. You can try our hosted version for free at https://www.flagsmith.com/
+* **Flagsmith open source**. The Flagsmith API is built using Python 3, Django 2, and DjangoRestFramework 3. You can begin running the open source application using docker-compose. We also have options fore deploying to AWS, Kubernetes and OpenShift.
+
+## Resources
+
+* [Website](https://www.flagsmith.com/)
+* [Documentation](https://docs.flagsmith.com/)
+* If you have any questions about our projects you can email [support@flagsmith.com](mailto:support@flagsmith.com)
 
 # Flagsmith REST API
 
@@ -123,7 +146,7 @@ This gets an environment up and running along with Postgres and enables hot relo
 
 The docker container also accepts an argument that sets the access log file location for gunicorn. By default 
 this is set to /dev/null to maintain the default behaviour of gunicorn. It can either be set to `"-"` to redirect
-the logs to stdout or to a location on the file system as required. 
+the logs to stdout or to a location on the file system as required.
 
 ### Environment Variables
 
@@ -189,6 +212,22 @@ If using AWS SES you will need to configure:
 * `AWS_SES_REGION_ENDPOINT`: ses region endpoint, e.g. email.eu-central-1.amazonaws.com. Required when using ses in a region other than us-east-1
 * `AWS_ACCESS_KEY_ID`: If using Amazon SES, these form part of your SES credentials.
 * `AWS_SECRET_ACCESS_KEY`: If using Amazon SES, these form part of your SES credentials.
+
+### API Telemetry
+
+Flagsmith collects information about self hosted installations. This helps us understand how the platform is being used. This data is *never* shared outside of the organisation, and is anonymous by design. You can opt out of sending this telemetry on startup by setting the `ENABLE_TELEMETRY` environment variable to `False`.
+
+We collect the following data on startup per API server instance:
+
+* Total number of Organisations
+* Total number of Projects
+* Total number of Environments
+* Total number of Features
+* Total number of Segments
+* Total number of Users
+* DEBUG django variable
+* ENV django variable
+* API server external IP address
 
 ### Creating a secret key
 

@@ -1,5 +1,6 @@
 from __future__ import unicode_literals
 
+import logging
 import typing
 
 from django.core.exceptions import (
@@ -8,20 +9,22 @@ from django.core.exceptions import (
     ValidationError,
 )
 from django.db import models
-from django.db.models import UniqueConstraint, Q
+from django.db.models import Q, UniqueConstraint
 from django.utils.encoding import python_2_unicode_compatible
 from django.utils.translation import ugettext_lazy as _
 from django_lifecycle import (
+    AFTER_CREATE,
+    AFTER_SAVE,
+    BEFORE_CREATE,
     LifecycleModel,
     hook,
-    BEFORE_CREATE,
-    AFTER_SAVE,
-    AFTER_CREATE,
 )
 from ordered_model.models import OrderedModelBase
 from simple_history.models import HistoricalRecords
 
-from environments.identities.helpers import get_hashed_percentage_for_object_ids
+from environments.identities.helpers import (
+    get_hashed_percentage_for_object_ids,
+)
 from features.custom_lifecycle import CustomLifecycleModelMixin
 from features.feature_states.models import AbstractBaseFeatureValueModel
 from features.feature_types import MULTIVARIATE
@@ -33,10 +36,14 @@ from features.utils import (
     get_integer_from_string,
     get_value_type,
 )
-from features.value_types import INTEGER, STRING, BOOLEAN, FEATURE_STATE_VALUE_TYPES
+from features.value_types import (
+    BOOLEAN,
+    FEATURE_STATE_VALUE_TYPES,
+    INTEGER,
+    STRING,
+)
 from projects.models import Project
 from projects.tags.models import Tag
-import logging
 
 logger = logging.getLogger(__name__)
 
@@ -59,7 +66,7 @@ class Feature(CustomLifecycleModelMixin, models.Model):
         ),
         on_delete=models.CASCADE,
     )
-    initial_value = models.CharField(max_length=2000, null=True, default=None)
+    initial_value = models.CharField(max_length=20000, null=True, default=None)
     description = models.TextField(null=True, blank=True)
     default_enabled = models.BooleanField(default=False)
     type = models.CharField(max_length=50, null=True, blank=True)
@@ -322,7 +329,7 @@ class FeatureState(LifecycleModel, models.Model):
             history_instance = self.feature_state_value.history.first()
             return (
                 history_instance
-                and history_instance.prev_record
+                and getattr(history_instance, "prev_record", None)
                 and history_instance.prev_record.instance.value
             )
         except ObjectDoesNotExist:
@@ -419,4 +426,6 @@ class FeatureStateValue(AbstractBaseFeatureValueModel):
     feature_state = models.OneToOneField(
         FeatureState, related_name="feature_state_value", on_delete=models.CASCADE
     )
-    history = HistoricalRecords()
+
+    # TODO: increase max length of string value on base model class
+    string_value = models.CharField(null=True, max_length=20000, blank=True)
