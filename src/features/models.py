@@ -429,3 +429,5 @@ class FeatureStateValue(AbstractBaseFeatureValueModel):
 
     # TODO: increase max length of string value on base model class
     string_value = models.CharField(null=True, max_length=20000, blank=True)
+
+    history = HistoricalRecords()
