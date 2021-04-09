@@ -7,3 +7,4 @@ pytest-django
 django-test-migrations
 black
 pip-tools
+responses

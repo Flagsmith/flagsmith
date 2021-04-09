@@ -3,6 +3,8 @@ import logging
 from django.conf import settings
 from django.core.exceptions import PermissionDenied
 
+from core.helpers import get_ip_address_from_request
+
 logger = logging.getLogger(__name__)
 
 
@@ -12,12 +14,7 @@ class AdminWhitelistMiddleware:
 
     def __call__(self, request):
         if request.path.startswith("/admin"):
-            x_forwarded_for = request.META.get("HTTP_X_FORWARDED_FOR")
-            ip = (
-                x_forwarded_for.split(",")[0]
-                if x_forwarded_for
-                else request.META.get("REMOTE_ADDR")
-            )
+            ip = get_ip_address_from_request(request)
             if (
                 settings.ALLOWED_ADMIN_IP_ADDRESSES
                 and ip not in settings.ALLOWED_ADMIN_IP_ADDRESSES

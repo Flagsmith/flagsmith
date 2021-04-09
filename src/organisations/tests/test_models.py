@@ -1,6 +1,3 @@
-from unittest import mock
-from unittest.mock import call
-
 import pytest
 from django.test import TestCase
 
