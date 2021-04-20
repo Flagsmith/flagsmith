@@ -19,7 +19,7 @@ Flagsmith makes it easy to create and manage features flags across web, mobile, 
 ## Using Flagsmith
 
 * **Flagsmith hosted**. You can try our hosted version for free at https://www.flagsmith.com/
-* **Flagsmith open source**. The Flagsmith API is built using Python 3, Django 2, and DjangoRestFramework 3. You can begin running the open source application using docker-compose. We also have options fore deploying to AWS, Kubernetes and OpenShift.
+* **Flagsmith open source**. The Flagsmith API is built using Python 3, Django 2, and DjangoRestFramework 3. You can begin running the open source application using docker-compose. We also have options for deploying to AWS, GCP, Azure, [Kubernetes](https://github.com/Flagsmith/flagsmith-charts) and [Redhat OpenShift](https://operatorhub.io/operator/flagsmith).
 
 ## Resources
 
