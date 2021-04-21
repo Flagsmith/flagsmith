@@ -1,6 +1,7 @@
 import logging
 
 import coreapi
+from app_analytics.influxdb_wrapper import get_multiple_event_list_for_feature
 from django.conf import settings
 from django.core.cache import caches
 from django.utils.decorators import method_decorator
@@ -13,7 +14,6 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.schemas import AutoSchema
 
-from app_analytics.influxdb_wrapper import get_multiple_event_list_for_feature
 from audit.models import (
     IDENTITY_FEATURE_STATE_DELETED_MESSAGE,
     AuditLog,
@@ -26,10 +26,10 @@ from environments.permissions.permissions import (
     EnvironmentKeyPermissions,
     NestedEnvironmentPermissions,
 )
-from .models import FeatureState, Feature
+
+from .models import Feature, FeatureState
 from .permissions import FeaturePermissions, FeatureStatePermissions
 from .serializers import (
-    ListCreateFeatureSerializer,
     FeatureInfluxDataSerializer,
     FeatureSerializer,
     FeatureStateSerializerBasic,
@@ -37,8 +37,9 @@ from .serializers import (
     FeatureStateSerializerFull,
     FeatureStateSerializerWithIdentity,
     FeatureStateValueSerializer,
-    UpdateFeatureSerializer,
     GetInfluxDataQuerySerializer,
+    ListCreateFeatureSerializer,
+    UpdateFeatureSerializer,
     WritableNestedFeatureStateSerializer,
 )
 
@@ -122,7 +123,7 @@ class FeatureStateViewSet(viewsets.ModelViewSet):
     def get_serializer_class(self):
         if self.action == "list":
             return FeatureStateSerializerWithIdentity
-        elif self.action in ["retrieve", "update"]:
+        elif self.action in ["retrieve", "update", "create"]:
             return FeatureStateSerializerBasic
         else:
             return FeatureStateSerializerCreate
@@ -203,9 +204,7 @@ class FeatureStateViewSet(viewsets.ModelViewSet):
         if identity_pk:
             data["identity"] = identity_pk
 
-        serializer = FeatureStateSerializerBasic(
-            data=data, context=self.get_serializer_context()
-        )
+        serializer = self.get_serializer(data=data)
         if serializer.is_valid():
             feature_state = serializer.save()
             headers = self.get_success_headers(serializer.data)
@@ -249,7 +248,7 @@ class FeatureStateViewSet(viewsets.ModelViewSet):
             feature_state_to_update, data=feature_state_data, partial=True
         )
         serializer.is_valid(raise_exception=True)
-        self.perform_update(serializer)
+        serializer.save()
 
         if getattr(feature_state_to_update, "_prefetched_objects_cache", None):
             # If 'prefetch_related' has been applied to a queryset, we need to
