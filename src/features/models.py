@@ -297,7 +297,7 @@ class FeatureState(LifecycleModel, models.Model):
         self, identity: "Identity"
     ) -> AbstractBaseFeatureValueModel:
         # the multivariate_feature_state_values should be prefetched at this point
-        # so we just convert them to a list on use python operations from here to
+        # so we just convert them to a list and use python operations from here to
         # avoid further queries to the DB
         mv_options = list(self.multivariate_feature_state_values.all())
 
@@ -357,15 +357,19 @@ class FeatureState(LifecycleModel, models.Model):
 
     @hook(AFTER_CREATE)
     def create_multivariate_feature_state_values(self):
-        mv_feature_state_values = [
-            MultivariateFeatureStateValue(
-                feature_state=self,
-                multivariate_feature_option=mv_option,
-                percentage_allocation=mv_option.default_percentage_allocation,
-            )
-            for mv_option in self.feature.multivariate_options.all()
-        ]
-        MultivariateFeatureStateValue.objects.bulk_create(mv_feature_state_values)
+        if not (self.feature_segment or self.identity):
+            # we only want to create the multivariate feature state values for
+            # feature states related to an environment only, i.e. when a new
+            # environment is created or a new MV feature is created
+            mv_feature_state_values = [
+                MultivariateFeatureStateValue(
+                    feature_state=self,
+                    multivariate_feature_option=mv_option,
+                    percentage_allocation=mv_option.default_percentage_allocation,
+                )
+                for mv_option in self.feature.multivariate_options.all()
+            ]
+            MultivariateFeatureStateValue.objects.bulk_create(mv_feature_state_values)
 
     @hook(AFTER_SAVE)
     def trigger_feature_state_change_webhooks(self):
