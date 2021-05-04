@@ -72,7 +72,7 @@ class CreateFeatureSerializer(serializers.ModelSerializer):
 
 
 class UpdateFeatureSerializer(CreateFeatureSerializer):
-    """ prevent users from changing the value of default enabled after creation """
+    """prevent users from changing the value of default enabled after creation"""
 
     class Meta(CreateFeatureSerializer.Meta):
         read_only_fields = CreateFeatureSerializer.Meta.read_only_fields + (
