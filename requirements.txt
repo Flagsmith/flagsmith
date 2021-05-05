@@ -43,7 +43,7 @@ django-axes==5.8.0
     # via -r requirements.in
 django-cors-headers==3.5.0
     # via -r requirements.in
-django-debug-toolbar==3.1.1
+django-debug-toolbar==3.2.1
     # via -r requirements.in
 django-environ==0.4.5
     # via -r requirements.in
