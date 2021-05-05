@@ -44,7 +44,7 @@ class FeaturePermissions(BasePermission):
 class FeatureStatePermissions(BasePermission):
     def has_permission(self, request, view):
         try:
-            if view.action == "create":
+            if view.action == "create" and request.data.get("environment"):
                 environment = Environment.objects.get(id=request.data["environment"])
                 return request.user.is_environment_admin(environment)
 

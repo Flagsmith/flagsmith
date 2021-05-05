@@ -6,8 +6,13 @@ from django.db import migrations
 def add_edit_feature_permission(apps, schema_editor):
     PermissionModel = apps.get_model('permissions', 'PermissionModel')
 
-    new_permission = ('EDIT_FEATURE', 'Ability to edit features in the given project (includes editing segments).')
-    PermissionModel.objects.get_or_create(key=new_permission[0], description=new_permission[1], type='PROJECT')
+    PermissionModel.objects.get_or_create(
+        key='EDIT_FEATURE',
+        type='PROJECT',
+        defaults={
+            'description': 'Ability to edit features in the given project (includes editing segments).'
+        }
+    )
 
 
 class Migration(migrations.Migration):
