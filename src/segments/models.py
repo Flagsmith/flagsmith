@@ -7,6 +7,7 @@ from django.core.exceptions import ValidationError
 from django.db import models
 from django.utils.encoding import python_2_unicode_compatible
 
+from environments.identities.helpers import get_hashed_percentage_for_object_ids
 from environments.identities.models import Identity
 from environments.identities.traits.models import Trait
 from environments.models import BOOLEAN, FLOAT, INTEGER
@@ -46,16 +47,6 @@ class Segment(models.Model):
         return rules.count() > 0 and all(
             rule.does_identity_match(identity, traits) for rule in rules
         )
-
-    def get_identity_percentage_value(self, identity: Identity) -> float:
-        """
-        Given a segment and an identity, generate a number between 0 and 1 to determine whether the identity falls
-        within a given percentile when using percentage split rules.
-        """
-        to_hash = f"{self.id},{identity.id}"
-        hashed_value = hashlib.md5(to_hash.encode("utf-8"))
-        hashed_value_as_int = int(hashed_value.hexdigest(), base=16)
-        return (hashed_value_as_int % 9999) / 9998
 
 
 @python_2_unicode_compatible
@@ -190,7 +181,10 @@ class Condition(models.Model):
             return False
 
         segment = self.rule.get_segment()
-        return segment.get_identity_percentage_value(identity) <= float_value
+        return (
+            get_hashed_percentage_for_object_ids(object_ids=[segment.id, identity.id])
+            <= float_value
+        )
 
     def check_integer_value(self, value: int) -> bool:
         try:
