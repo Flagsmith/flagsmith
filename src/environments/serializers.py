@@ -24,7 +24,6 @@ class EnvironmentSerializerLight(serializers.ModelSerializer):
     class Meta:
         model = Environment
         fields = ("id", "name", "api_key", "project")
-        read_only_fields = ("api_key",)
 
     def create(self, validated_data):
         instance = super(EnvironmentSerializerLight, self).create(validated_data)

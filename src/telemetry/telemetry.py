@@ -2,7 +2,6 @@ import json
 import logging
 
 import requests
-
 from telemetry.models import TelemetryData
 from telemetry.serializers import TelemetrySerializer
 
@@ -20,7 +19,9 @@ class SelfHostedTelemetryWrapper:
     def _send(self, data: dict) -> None:
         try:
             response = requests.post(
-                self.TELEMETRY_API_URI, data=json.dumps(data), timeout=2
+                self.TELEMETRY_API_URI,
+                json=data,
+                timeout=2,
             )
             logger.debug(
                 "Sent telemetry heartbeat to Flagsmith. Response code was %s"

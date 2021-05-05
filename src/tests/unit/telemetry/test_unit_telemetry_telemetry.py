@@ -1,9 +1,7 @@
 import json
-
-import responses
-
 from unittest import mock
 
+import responses
 from telemetry.telemetry import SelfHostedTelemetryWrapper
 from tests.unit.telemetry.helpers import get_example_telemetry_data
 
@@ -36,4 +34,4 @@ def test_self_hosted_telemetry_wrapper_send_heartbeat(MockTelemetryData):
     assert (
         responses.calls[0].request.url == SelfHostedTelemetryWrapper.TELEMETRY_API_URI
     )
-    assert responses.calls[0].request.body == json.dumps(data)
+    assert responses.calls[0].request.body.decode("utf-8") == json.dumps(data)
