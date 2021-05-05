@@ -1,12 +1,14 @@
+import hashlib
 import typing
 
 from django.db import models
-from django.db.models import Q
+from django.db.models import Q, Prefetch
 from django.utils.encoding import python_2_unicode_compatible
 
 from environments.models import Environment
 from environments.identities.traits.models import Trait
 from features.models import FeatureState
+from features.multivariate.models import MultivariateFeatureStateValue
 
 
 @python_2_unicode_compatible
@@ -61,11 +63,20 @@ class Identity(models.Model):
             "feature_state_value",
             "feature_segment",
             "feature_segment__segment",
+            "identity",
         ]
 
-        # When Project's hide_disabled_flags enabled, exclude disabled Features from the list
-        all_flags = FeatureState.objects.select_related(*select_related_args).filter(
-            full_query
+        all_flags = (
+            FeatureState.objects.select_related(*select_related_args)
+            .prefetch_related(
+                Prefetch(
+                    "multivariate_feature_state_values",
+                    queryset=MultivariateFeatureStateValue.objects.select_related(
+                        "multivariate_feature_option"
+                    ),
+                )
+            )
+            .filter(full_query)
         )
 
         # iterate over all the flags and build a dictionary keyed on feature with the highest priority flag

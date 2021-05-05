@@ -41,9 +41,15 @@ projects_router.register(
     basename="integrations-new-relic",
 )
 
+nested_features_router = routers.NestedSimpleRouter(
+    projects_router, r"features", lookup="feature"
+)
+
+
 app_name = "projects"
 
 urlpatterns = [
     url(r"^", include(router.urls)),
     url(r"^", include(projects_router.urls)),
+    url(r"^", include(nested_features_router.urls)),
 ]

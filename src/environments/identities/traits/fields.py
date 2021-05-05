@@ -1,7 +1,7 @@
 from rest_framework import serializers
 
 from environments.identities.traits.constants import ACCEPTED_TRAIT_VALUE_TYPES
-from features.utils import STRING
+from features.value_types import STRING
 import logging
 
 logger = logging.getLogger(__name__)

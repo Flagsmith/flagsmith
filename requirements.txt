@@ -53,6 +53,8 @@ django-health-check==3.14.3
     # via -r requirements.in
 django-ipware==3.0.2
     # via django-axes
+django-lifecycle==0.9.0
+    # via -r requirements.in
 django-ordered-model==3.4.1
     # via -r requirements.in
 django-ses==1.0.3
@@ -249,6 +251,8 @@ urllib3==1.25.11
     #   influxdb-client
     #   requests
     #   sentry-sdk
+urlman==1.4.0
+    # via django-lifecycle
 whitenoise==3.3.1
     # via -r requirements.in
 yubico-client==1.13.0

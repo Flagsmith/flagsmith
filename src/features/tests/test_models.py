@@ -139,7 +139,7 @@ class FeatureTestCase(TestCase):
         # Then
         FeatureState.objects.filter(feature__name=new_feature_name).exists()
 
-    def test_cannot_create_feature_with_same_case_insensitive_name(self):
+    def test_full_clean_fails_when_duplicate_case_insensitive_name(self):
         # unit test to validate validate_unique() method
 
         # Given
@@ -354,3 +354,61 @@ class FeatureStateTest(TestCase):
 
         # Then
         mock_trigger_webhooks.assert_called_with(feature_state)
+
+
+@pytest.mark.parametrize("hashed_percentage", (0.0, 0.3, 0.5, 0.8, 0.999999))
+@mock.patch("features.models.get_hashed_percentage_for_object_ids")
+def test_get_multivariate_value_returns_correct_value_when_we_pass_identity(
+    mock_get_hashed_percentage,
+    hashed_percentage,
+    multivariate_feature,
+    environment,
+    identity,
+):
+    # Given
+    mock_get_hashed_percentage.return_value = hashed_percentage
+    feature_state = FeatureState.objects.get(
+        environment=environment,
+        feature=multivariate_feature,
+        identity=None,
+        feature_segment=None,
+    )
+
+    # When
+    multivariate_value = feature_state.get_multivariate_feature_state_value(
+        identity=identity
+    )
+
+    # Then
+    # we get a multivariate value
+    assert multivariate_value
+
+    # and that value is not the control (since the fixture includes values that span
+    # the entire 100%)
+    assert multivariate_value.value != multivariate_value.initial_value
+
+
+@mock.patch.object(FeatureState, "get_multivariate_feature_state_value")
+def test_get_feature_state_value_for_multivariate_features(
+    mock_get_mv_feature_state_value, environment, multivariate_feature, identity
+):
+    # Given
+    value = "value"
+    mock_mv_feature_state_value = mock.MagicMock(value=value)
+    mock_get_mv_feature_state_value.return_value = mock_mv_feature_state_value
+
+    feature_state = FeatureState.objects.get(
+        environment=environment,
+        feature=multivariate_feature,
+        identity=None,
+        feature_segment=None,
+    )
+
+    # When
+    feature_state_value = feature_state.get_feature_state_value(identity=identity)
+
+    # Then
+    # the correct value is returned
+    assert feature_state_value == value
+    # and the correct call is made to get the multivariate feature state value
+    mock_get_mv_feature_state_value.assert_called_once_with(identity)
