@@ -96,7 +96,7 @@ class IdentifyWithTraitsSerializer(serializers.Serializer):
         }
 
     def update(self, instance, validated_data):
-        """ partially update any traits and return the full list of traits and flags """
+        """partially update any traits and return the full list of traits and flags"""
         trait_data_items = validated_data.get("traits", [])
         updated_traits = instance.update_traits(trait_data_items)
 
