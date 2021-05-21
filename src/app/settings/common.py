@@ -422,6 +422,11 @@ DJOSER = {
 GITHUB_CLIENT_ID = env.str("GITHUB_CLIENT_ID", default="")
 GITHUB_CLIENT_SECRET = env.str("GITHUB_CLIENT_SECRET", default="")
 
+# Allow the configuration of registration via OAuth
+ALLOW_REGISTRATION_WITHOUT_INVITE = env.bool(
+    "ALLOW_REGISTRATION_WITHOUT_INVITE", default=True
+)
+
 # Django Axes settings
 ENABLE_AXES = env.bool("ENABLE_AXES", default=False)
 if ENABLE_AXES:
