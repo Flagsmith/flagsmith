@@ -1,20 +1,26 @@
 import re
-
 import time
 from collections import ChainMap
+from unittest import mock
 
 import pyotp
 from django.conf import settings
 from django.core import mail
 from django.urls import reverse
 from rest_framework import status
-from rest_framework.test import APITestCase, override_settings
+from rest_framework.test import APIClient, APITestCase, override_settings
+
+from organisations.invites.models import Invite
+from organisations.models import Organisation
 from users.models import FFAdminUser
 
 
 class AuthIntegrationTestCase(APITestCase):
     test_email = "test@example.com"
     password = FFAdminUser.objects.make_random_password()
+
+    def setUp(self) -> None:
+        self.organisation = Organisation.objects.create(name="Test Organisation")
 
     def tearDown(self) -> None:
         FFAdminUser.objects.all().delete()
@@ -92,6 +98,41 @@ class AuthIntegrationTestCase(APITestCase):
         new_login_response = self.client.post(login_url, data=new_login_data)
         assert new_login_response.status_code == status.HTTP_200_OK
         assert new_login_response.json()["key"]
+
+    @override_settings(ALLOW_REGISTRATION_WITHOUT_INVITE=False)
+    def test_cannot_register_without_invite_if_disabled(self):
+        # Given
+        register_data = {
+            "email": self.test_email,
+            "password": self.password,
+            "first_name": "test",
+            "last_name": "register",
+        }
+
+        # When
+        url = reverse("api-v1:custom_auth:ffadminuser-list")
+        response = self.client.post(url, data=register_data)
+
+        # Then
+        assert response.status_code == status.HTTP_403_FORBIDDEN
+
+    @override_settings(ALLOW_REGISTRATION_WITHOUT_INVITE=False)
+    def test_can_register_with_invite_if_registration_disabled_without_invite(self):
+        # Given
+        register_data = {
+            "email": self.test_email,
+            "password": self.password,
+            "first_name": "test",
+            "last_name": "register",
+        }
+        Invite.objects.create(email=self.test_email, organisation=self.organisation)
+
+        # When
+        url = reverse("api-v1:custom_auth:ffadminuser-list")
+        response = self.client.post(url, data=register_data)
+
+        # Then
+        assert response.status_code == status.HTTP_201_CREATED
 
     @override_settings(
         DJOSER=ChainMap(
