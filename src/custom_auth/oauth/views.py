@@ -1,3 +1,5 @@
+import logging
+
 from drf_yasg2.utils import swagger_auto_schema
 from rest_framework import status
 from rest_framework.decorators import api_view, permission_classes
@@ -6,9 +8,11 @@ from rest_framework.response import Response
 
 from api.serializers import ErrorSerializer
 from custom_auth.oauth.exceptions import GithubError, GoogleError
-from custom_auth.oauth.serializers import GoogleLoginSerializer, GithubLoginSerializer
+from custom_auth.oauth.serializers import (
+    GithubLoginSerializer,
+    GoogleLoginSerializer,
+)
 from custom_auth.serializers import CustomTokenSerializer
-import logging
 
 logger = logging.getLogger(__name__)
 
@@ -20,7 +24,7 @@ GOOGLE_AUTH_ERROR_MESSAGE = AUTH_ERROR_MESSAGE.format("GOOGLE")
 @swagger_auto_schema(
     method="post",
     request_body=GoogleLoginSerializer,
-    responses={200: CustomTokenSerializer, 502: ErrorSerializer},
+    responses={200: CustomTokenSerializer(), 502: ErrorSerializer()},
 )
 @api_view(["POST"])
 @permission_classes([AllowAny])
@@ -41,7 +45,7 @@ def login_with_google(request):
 @swagger_auto_schema(
     method="post",
     request_body=GithubLoginSerializer,
-    responses={200: CustomTokenSerializer, 502: ErrorSerializer},
+    responses={200: CustomTokenSerializer(), 502: ErrorSerializer()},
 )
 @api_view(["POST"])
 @permission_classes([AllowAny])
