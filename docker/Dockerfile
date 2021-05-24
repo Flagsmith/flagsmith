@@ -15,4 +15,6 @@ ENV ACCESS_LOG_LOCATION=${ACCESS_LOG_LOCATION}
 ENV DJANGO_SETTINGS_MODULE=app.settings.production
 EXPOSE 8000
 
+USER nobody
+
 CMD ["./bin/docker"]
