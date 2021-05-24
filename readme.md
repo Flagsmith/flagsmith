@@ -181,6 +181,7 @@ You can also provide individual variables as below. Note that if a `DATABASE_URL
 * `GA_TABLE_ID`: GA table ID (view) to query when looking for organisation usage
 * `ALLOWED_ADMIN_IP_ADDRESSES`: restrict access to the django admin console to a comma separated list of IP addresses (e.g. `127.0.0.1,127.0.0.2`) 
 * `USER_CREATE_PERMISSIONS`: set the permissions for creating new users, using a comma separated list of djoser or rest_framework permissions. Use this to turn off public user creation for self hosting. e.g. `'djoser.permissions.CurrentUserOrAdmin'` Defaults to `'rest_framework.permissions.AllowAny'`.
+* `ALLOW_REGISTRATION_WITHOUT_INVITE`: Determines whether users can register without an invite. Defaults to True. Set to False or 0 to disable. Note that if disabled, new users must be invited via email. 
 * `ENABLE_EMAIL_ACTIVATION`: new user registration will go via email activation flow, default False
 * `SENTRY_SDK_DSN`: If using Sentry, set the project DSN here.
 * `SENTRY_TRACE_SAMPLE_RATE`: Float. If using Sentry, sets the trace sample rate. Defaults to 1.0.
