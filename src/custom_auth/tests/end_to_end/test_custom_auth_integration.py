@@ -1,14 +1,13 @@
 import re
 import time
 from collections import ChainMap
-from unittest import mock
 
 import pyotp
 from django.conf import settings
 from django.core import mail
 from django.urls import reverse
 from rest_framework import status
-from rest_framework.test import APIClient, APITestCase, override_settings
+from rest_framework.test import APITestCase, override_settings
 
 from organisations.invites.models import Invite
 from organisations.models import Organisation
@@ -264,7 +263,13 @@ class AuthIntegrationTestCase(APITestCase):
         assert current_user_response.status_code == status.HTTP_200_OK
         assert current_user_response.json()["email"] == self.test_email
 
+    @override_settings()
     def test_throttle_login_workflows(self):
+        # verify that a throttle rate exists already then set it
+        # to something easier to reliably test
+        assert settings.REST_FRAMEWORK["DEFAULT_THROTTLE_RATES"]["login"]
+        settings.REST_FRAMEWORK["DEFAULT_THROTTLE_RATES"]["login"] = "1/sec"
+
         # register the user
         register_data = {
             "email": self.test_email,

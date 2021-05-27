@@ -1,16 +1,24 @@
 from django.urls import include, path
 
-from custom_auth.views import CustomAuthTokenLoginOrRequestMFACode
+from custom_auth.views import (
+    CustomAuthTokenLoginOrRequestMFACode,
+    CustomAuthTokenLoginWithMFACode,
+)
 
 app_name = "custom_auth"
 
 
 urlpatterns = [
-    # Override auth/login endpoint for throttling login requests
+    # Override some endpoints for throttling requests
     path(
         "login/",
         CustomAuthTokenLoginOrRequestMFACode.as_view(),
         name="custom-mfa-authtoken-login",
+    ),
+    path(
+        "login/code/",
+        CustomAuthTokenLoginWithMFACode.as_view(),
+        name="mfa-authtoken-login-code",
     ),
     path("", include("djoser.urls")),
     path("", include("trench.urls")),  # MFA

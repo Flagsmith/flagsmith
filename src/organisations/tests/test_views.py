@@ -13,11 +13,11 @@ from rest_framework.test import APIClient, override_settings
 
 from environments.models import Environment
 from features.models import Feature, FeatureSegment
+from organisations.invites.models import Invite
 from organisations.models import Organisation, OrganisationRole, Subscription
 from projects.models import Project
 from segments.models import Segment
 from users.models import FFAdminUser
-from organisations.invites.models import Invite
 from util.tests import Helper
 
 User = get_user_model()
@@ -89,8 +89,11 @@ class OrganisationTestCase(TestCase):
         assert response.status_code == status.HTTP_200_OK
         assert organisation.name == new_organisation_name
 
+    @override_settings()
     def test_should_invite_users(self):
         # Given
+        settings.REST_FRAMEWORK["DEFAULT_THROTTLE_RATES"]["invite"] = None
+
         org_name = "test_org"
         organisation = Organisation.objects.create(name=org_name)
         self.user.add_organisation(organisation, OrganisationRole.ADMIN)
@@ -111,8 +114,10 @@ class OrganisationTestCase(TestCase):
         assert response.status_code == status.HTTP_201_CREATED
         assert Invite.objects.filter(email="test@example.com").exists()
 
+    @override_settings()
     def test_should_fail_if_invite_exists_already(self):
         # Given
+        settings.REST_FRAMEWORK["DEFAULT_THROTTLE_RATES"]["invite"] = None
         organisation = Organisation.objects.create(name="test org")
         self.user.add_organisation(organisation, OrganisationRole.ADMIN)
         email = "test_2@example.com"
@@ -136,8 +141,11 @@ class OrganisationTestCase(TestCase):
             Invite.objects.filter(email=email, organisation=organisation).count() == 1
         )
 
+    @override_settings()
     def test_should_return_all_invites_and_can_resend(self):
         # Given
+        settings.REST_FRAMEWORK["DEFAULT_THROTTLE_RATES"]["invite"] = None
+
         organisation = Organisation.objects.create(name="Test org 2")
         self.user.add_organisation(organisation, OrganisationRole.ADMIN)
 
@@ -188,8 +196,11 @@ class OrganisationTestCase(TestCase):
         assert res.status_code == status.HTTP_200_OK
         assert organisation not in user_2.organisations.all()
 
+    @override_settings()
     def test_can_invite_user_as_admin(self):
         # Given
+        settings.REST_FRAMEWORK["DEFAULT_THROTTLE_RATES"]["invite"] = None
+
         organisation = Organisation.objects.create(name="Test org")
         self.user.add_organisation(organisation, OrganisationRole.ADMIN)
         url = reverse(
@@ -213,8 +224,11 @@ class OrganisationTestCase(TestCase):
             Invite.objects.get(email=invited_email).role == OrganisationRole.ADMIN.name
         )
 
+    @override_settings()
     def test_can_invite_user_as_user(self):
         # Given
+        settings.REST_FRAMEWORK["DEFAULT_THROTTLE_RATES"]["invite"] = None
+
         organisation = Organisation.objects.create(name="Test org")
         self.user.add_organisation(organisation, OrganisationRole.ADMIN)
         url = reverse(
