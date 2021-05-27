@@ -39,4 +39,3 @@ django-lifecycle
 drf-writable-nested
 django-filter
 dataclasses
-pyre2
