@@ -1,14 +1,13 @@
 # -*- coding: utf-8 -*-
+import hashlib
+import re
 import typing
 
-import re2
 from django.core.exceptions import ValidationError
 from django.db import models
 from django.utils.encoding import python_2_unicode_compatible
 
-from environments.identities.helpers import (
-    get_hashed_percentage_for_object_ids,
-)
+from environments.identities.helpers import get_hashed_percentage_for_object_ids
 from environments.identities.models import Identity
 from environments.identities.traits.models import Trait
 from environments.models import BOOLEAN, FLOAT, INTEGER
@@ -259,4 +258,4 @@ class Condition(models.Model):
         elif self.operator == NOT_CONTAINS:
             return str_value not in value
         elif self.operator == REGEX:
-            return re2.compile(str(self.value)).match(value) is not None
+            return re.compile(str(self.value)).match(value) is not None

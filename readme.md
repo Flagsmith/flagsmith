@@ -37,17 +37,9 @@ to do this can be found in the following section entitled 'Databases'.
 ```bash
 virtualenv .venv
 source .venv/bin/activate
-pip install pip-tools
-pip-sync requirements.txt requirements-dev.txt
+pip install -r requirements-dev.txt
 python src/manage.py migrate
 python src/manage.py runserver
-```
-
-Note: if you're running on on MacOS and you find some issues installing the dependencies (specifically around 
-pyre2), you may need to run the following: 
-
-```
-brew install cmake re2
 ```
 
 The application can also be run locally using Docker Compose if required, however, it's beneficial 
