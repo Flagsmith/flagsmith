@@ -2,12 +2,17 @@ from unittest import TestCase, mock
 
 import pytest
 
-import segments
 from environments.identities.models import Identity
 from environments.models import Environment
 from organisations.models import Organisation
 from projects.models import Project
-from segments.models import PERCENTAGE_SPLIT, Condition, Segment, SegmentRule
+from segments.models import (
+    PERCENTAGE_SPLIT,
+    REGEX,
+    Condition,
+    Segment,
+    SegmentRule,
+)
 
 
 @pytest.mark.django_db
@@ -99,3 +104,16 @@ class ConditionTest(TestCase):
 
         # Then
         assert not res
+
+    def test_check_string_value_for_regex_condition(self):
+        # Given
+        condition = Condition.objects.create(
+            rule=self.rule, operator=REGEX, value="[A-Za-z0-9]+"
+        )
+
+        matching_value = "somealphanumericstring10"
+        not_matching_value = "some-special-chars!"
+
+        # Then
+        assert condition.check_string_value(not_matching_value)
+        assert condition.check_string_value(matching_value)

@@ -4,19 +4,25 @@ from __future__ import unicode_literals
 import logging
 from datetime import datetime
 
-from django.contrib.sites.shortcuts import get_current_site
-from drf_yasg2.utils import swagger_auto_schema
-from rest_framework import status, viewsets
-from rest_framework.authentication import BasicAuthentication
-from rest_framework.decorators import action, api_view, authentication_classes
-from rest_framework.exceptions import ValidationError
-from rest_framework.permissions import IsAuthenticated
-from rest_framework.response import Response
-
 from app_analytics.influxdb_wrapper import (
     get_events_for_organisation,
     get_multiple_event_list_for_organisation,
 )
+from django.contrib.sites.shortcuts import get_current_site
+from drf_yasg2.utils import swagger_auto_schema
+from rest_framework import status, viewsets
+from rest_framework.authentication import BasicAuthentication
+from rest_framework.decorators import (
+    action,
+    api_view,
+    authentication_classes,
+    throttle_classes,
+)
+from rest_framework.exceptions import ValidationError
+from rest_framework.permissions import IsAuthenticated
+from rest_framework.response import Response
+from rest_framework.throttling import ScopedRateThrottle
+
 from organisations.models import (
     OrganisationRole,
     OrganisationWebhook,
@@ -27,12 +33,12 @@ from organisations.permissions import (
     OrganisationPermission,
 )
 from organisations.serializers import (
+    InfluxDataSerializer,
     MultiInvitesSerializer,
     OrganisationSerializerFull,
     OrganisationWebhookSerializer,
     PortalUrlSerializer,
     UpdateSubscriptionSerializer,
-    InfluxDataSerializer,
 )
 from projects.serializers import ProjectSerializer
 from users.serializers import UserIdSerializer
@@ -64,6 +70,14 @@ class OrganisationViewSet(viewsets.ModelViewSet):
 
     def get_queryset(self):
         return self.request.user.organisations.all()
+
+    def get_throttles(self):
+        if self.action == "invite":
+            # since there is no way to set the throttle scope on an action,
+            # we set it for each request here.
+            self.throttle_scope = "invite"
+            return [ScopedRateThrottle()]
+        return super(OrganisationViewSet, self).get_throttles()
 
     def create(self, request, **kwargs):
         """
