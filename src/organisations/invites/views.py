@@ -3,23 +3,24 @@ from threading import Thread
 from django.shortcuts import get_object_or_404
 from django.utils import timezone
 from rest_framework import status, viewsets
-from rest_framework.decorators import api_view, action
+from rest_framework.decorators import action, api_view
 from rest_framework.mixins import (
-    ListModelMixin,
     CreateModelMixin,
-    UpdateModelMixin,
     DestroyModelMixin,
+    ListModelMixin,
+    UpdateModelMixin,
 )
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
+from rest_framework.throttling import ScopedRateThrottle
 from rest_framework.viewsets import GenericViewSet
 
+from organisations.invites.models import Invite, InviteLink
 from organisations.invites.serializers import InviteLinkSerializer
 from organisations.models import OrganisationRole
 from organisations.permissions import NestedOrganisationEntityPermission
 from organisations.serializers import OrganisationSerializerFull
 from users.exceptions import InvalidInviteError
-from organisations.invites.models import Invite, InviteLink
 from users.models import FFAdminUser
 from users.serializers import InviteListSerializer
 
@@ -101,6 +102,7 @@ class InviteLinkViewSet(
 class InviteViewSet(viewsets.ModelViewSet):
     serializer_class = InviteListSerializer
     permission_classes = (IsAuthenticated, NestedOrganisationEntityPermission)
+    throttle_scope = "invite"
 
     def get_queryset(self):
         organisation_pk = self.kwargs.get("organisation_pk")
@@ -110,7 +112,7 @@ class InviteViewSet(viewsets.ModelViewSet):
             organisation__id=organisation_pk
         )
 
-    @action(detail=True, methods=["POST"])
+    @action(detail=True, methods=["POST"], throttle_classes=[ScopedRateThrottle])
     def resend(self, request, organisation_pk, pk):
         invite = self.get_object()
         invite.send_invite_mail()
