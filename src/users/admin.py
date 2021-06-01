@@ -1,7 +1,17 @@
 from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin
 
+from organisations.models import UserOrganisation
+
 from .models import FFAdminUser
+
+
+class UserOrganisationInline(admin.TabularInline):
+    model = UserOrganisation
+    extra = 0
+    show_change_link = False
+    autocomplete_fields = ("organisation",)
+    verbose_name_plural = "Organisations"
 
 
 @admin.register(FFAdminUser)
@@ -47,3 +57,5 @@ class CustomUserAdmin(UserAdmin):
         "first_name",
         "last_name",
     )
+
+    inlines = [UserOrganisationInline]
