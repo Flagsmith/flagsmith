@@ -3,9 +3,8 @@ from __future__ import unicode_literals
 
 from django.contrib import admin
 
-from organisations.models import Organisation, Subscription
+from organisations.models import Organisation, Subscription, UserOrganisation
 from projects.models import Project
-from users.models import FFAdminUser
 
 
 class ProjectInline(admin.StackedInline):
@@ -21,10 +20,12 @@ class SubscriptionInline(admin.StackedInline):
     verbose_name_plural = "Subscription"
 
 
-class UserInline(admin.TabularInline):
-    model = FFAdminUser.organisations.through
+class UserOrganisationInline(admin.TabularInline):
+    model = UserOrganisation
     extra = 0
     show_change_link = True
+    autocomplete_fields = ("user",)
+    verbose_name_plural = "Users"
 
 
 @admin.register(Organisation)
@@ -32,7 +33,8 @@ class OrganisationAdmin(admin.ModelAdmin):
     inlines = [
         ProjectInline,
         SubscriptionInline,
+        UserOrganisationInline,
     ]
     list_display = ("__str__",)
     list_filter = ("projects", "subscription__plan")
-    search_fields = ("name", "subscription__subscription_id")
+    search_fields = ("id", "name", "subscription__subscription_id")
