@@ -52,7 +52,7 @@ class Organisation(models.Model):
         ordering = ["id"]
 
     def __str__(self):
-        return "Org %s" % self.name
+        return "Org %s (#%s)" % (self.name, self.id)
 
     # noinspection PyTypeChecker
     def get_unique_slug(self):
