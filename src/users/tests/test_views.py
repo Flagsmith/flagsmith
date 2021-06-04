@@ -3,13 +3,15 @@ from unittest import mock
 from unittest.case import TestCase
 
 import pytest
+from dateutil.relativedelta import relativedelta
 from django.urls import reverse
+from django.utils import timezone
 from rest_framework import status
 from rest_framework.test import APIClient
 
+from organisations.invites.models import Invite, InviteLink
 from organisations.models import Organisation, OrganisationRole, Subscription
 from users.models import FFAdminUser, UserPermissionGroup
-from organisations.invites.models import Invite, InviteLink
 from util.tests import Helper
 
 
@@ -64,6 +66,21 @@ class UserTestCase(TestCase):
         # Then
         assert response.status_code == status.HTTP_200_OK
         assert self.organisation in self.user.organisations.all()
+
+    def test_cannot_join_organisation_via_expired_link(self):
+        # Given
+        invite = InviteLink.objects.create(
+            organisation=self.organisation,
+            expires_at=timezone.now() - relativedelta(days=2),
+        )
+        url = reverse("api-v1:users:user-join-organisation-link", args=[invite.hash])
+
+        # When
+        response = self.client.post(url)
+
+        # Then
+        assert response.status_code == status.HTTP_400_BAD_REQUEST
+        assert self.organisation not in self.user.organisations.all()
 
     def test_user_can_join_second_organisation(self):
         # Given

@@ -1,7 +1,6 @@
 from threading import Thread
 
 from django.shortcuts import get_object_or_404
-from django.utils import timezone
 from rest_framework import status, viewsets
 from rest_framework.decorators import action, api_view
 from rest_framework.mixins import (
@@ -15,6 +14,7 @@ from rest_framework.response import Response
 from rest_framework.throttling import ScopedRateThrottle
 from rest_framework.viewsets import GenericViewSet
 
+from organisations.invites.exceptions import InviteExpiredError
 from organisations.invites.models import Invite, InviteLink
 from organisations.invites.serializers import InviteLinkSerializer
 from organisations.models import OrganisationRole
@@ -54,7 +54,7 @@ def join_organisation_from_link(request, hash):
     invite = get_object_or_404(InviteLink, hash=hash)
 
     if invite.is_expired:
-        return Response(data={"detail": "Invite has expired."})
+        raise InviteExpiredError()
 
     request.user.add_organisation(
         invite.organisation, role=OrganisationRole(invite.role)
