@@ -49,12 +49,6 @@ jobs:
             - name: Check Formatting
               run: black --check .
               
-            - name: Run Migrations
-              env:
-                  DATABASE_URL:
-                      'postgres://postgres:postgres@localhost:${{ job.services.postgres.ports[5432] }}/postgres'
-              run: python manage.py migrate
-              
             - name: Run Tests
               env:
                   DATABASE_URL:
