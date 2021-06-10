@@ -1,7 +1,10 @@
-name: Frontend Deploy to Dev
+name: Frontend Deploy to Staging
 
 on:
     push:
+        branches:
+            - main
+    pull_request:
         branches:
             - main
 
