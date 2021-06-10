@@ -4,6 +4,7 @@ on:
     push:
         branches:
             - main
+            - chore/*
     pull_request:
         branches:
             - main
@@ -26,12 +27,26 @@ jobs:
 
             - name: Build with Node.js 14.x
               uses: actions/setup-node@v1
+              env:
+                ENV: staging
               with:
                   node-version: 14.x
-            - run: npm i
-            - run: export ENV=dev; npm run env
-            - run: npm run dotenv
-            - run: npm run bundledev
+              run: |
+                npm i
+                npm run env
+                npm run dotenv
+                npm run bundledev
+
+            - name: Run E2E Tests
+              env:
+                E2E_TEST_TOKEN: ${{ secrets.E2E_TEST_TOKEN }}
+                ENV: staging
+              run: |
+                google-chrome --version
+                node -v
+                npm i
+                npm run env
+                npm run test
 
             - name: Setup Cloud SDK
               uses: google-github-actions/setup-gcloud@v0.2.0
