@@ -18,6 +18,7 @@ jobs:
         runs-on: ubuntu-latest
         name: Frontend Deploy to Staging
         environment: staging
+        container: kylessg/bullet-train-nightwatch:1.1
 
         steps:
             - name: Cloning repo
