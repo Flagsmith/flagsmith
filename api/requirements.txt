@@ -118,7 +118,7 @@ googleapis-common-protos==1.52.0
     # via google-api-core
 gunicorn==20.0.4
     # via -r requirements.in
-httplib2==0.18.1
+httplib2==0.19.0
     # via
     #   google-api-python-client
     #   google-auth-httplib2
@@ -171,6 +171,7 @@ pyotp==2.4.1
 pyparsing==2.4.7
     # via
     #   -r requirements.in
+    #   httplib2
     #   packaging
 python-dateutil==2.8.1
     # via
@@ -203,8 +204,6 @@ rsa==4.6
     # via
     #   google-auth
     #   oauth2client
-ruamel.yaml.clib==0.2.2
-    # via ruamel.yaml
 ruamel.yaml==0.16.12
     # via drf-yasg2
 rx==3.1.1
