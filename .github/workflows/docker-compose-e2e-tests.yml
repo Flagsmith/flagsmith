@@ -28,7 +28,7 @@ jobs:
             - name: Install dependencies
               run: |
                   wget https://dl.google.com/linux/chrome/deb/pool/main/g/google-chrome-stable/google-chrome-stable_85.0.4183.102-1_amd64.deb
-                  apt install -y ./google-chrome*.deb -f
+                  sudo apt install -y ./google-chrome*.deb -f
                   cd frontend; npm install
 
             - name: Run tests
