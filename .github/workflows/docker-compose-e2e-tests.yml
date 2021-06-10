@@ -1,0 +1,36 @@
+name: Docker Compose E2E Tests
+
+on:
+    push:
+        branches:
+            - main
+            - feature/docker-compose-e2e-tests # todo: remove when merged
+
+jobs:
+    docker:
+        timeout-minutes: 10
+        runs-on: ubuntu-latest
+
+        steps:
+            - name: Cloning repo
+              uses: actions/checkout@v2
+              with:
+                  fetch-depth: 0
+
+            - name: Start containers
+              run: docker-compose -f "docker/docker-compose.yml" up -d --build
+
+            - name: Install node
+              uses: actions/setup-node@v1
+              with:
+                  node-version: 14.x
+
+            - name: Install dependencies
+              run: cd frontend; npm install
+
+            - name: Run tests
+              run: cd frontend; npm run test
+
+            - name: Stop containers
+              if: always()
+              run: docker-compose -f "docker-compose.yml" down
