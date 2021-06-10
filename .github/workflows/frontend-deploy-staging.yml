@@ -35,7 +35,7 @@ jobs:
             - name: Setup Cloud SDK
               uses: google-github-actions/setup-gcloud@v0.2.0
               with:
-                  project_id: bullet-train-front-end-dev
+                  project_id: bullet-train-front-end-staging
                   service_account_key: ${{ secrets.FRONTEND_GOOGLECLOUD_SERVICEACCOUNT_KEY_STAGING }}
 
             - name: Deploy to App Engine
