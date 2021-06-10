@@ -1,0 +1,32 @@
+# NOTE: you have to use single-quoted strings in TOML for regular expressions.
+# It's the equivalent of r-strings in Python.  Multiline strings are treated as
+# verbose regular expressions by Black.  Use [ ] to denote a significant space
+# character.
+
+[tool.black]
+line-length = 88
+target-version = ['py36', 'py37', 'py38']
+include = '\.pyi?$'
+exclude = '''
+/(
+    \.eggs
+  | \.git
+  | \.hg
+  | \.mypy_cache
+  | \.tox
+  | \.venv
+  | _build
+  | buck-out
+  | build
+  | dist
+  | migrations
+)/
+'''
+
+[tool.isort]
+use_parentheses=true
+multi_line_output=3
+include_trailing_comma=true
+line_length=79
+known_first_party=['analytics','app','custom_auth','environments','integrations','organisations','projects','segments','users','webhooks','api','audit','e2etests','features','permissions','util']
+known_third_party=['apiclient','app_analytics','axes','chargebee','core','coreapi','corsheaders','dj_database_url','django','django_lifecycle','djoser','drf_writable_nested','drf_yasg2','environs','google','influxdb_client','ordered_model','pyotp','pytest','pytz','requests','responses','rest_framework','rest_framework_nested','rest_framework_recursive','sentry_sdk','shortuuid','simple_history','six','telemetry','tests','trench','whitenoise']

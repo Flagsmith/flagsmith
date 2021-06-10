@@ -1,0 +1,145 @@
+.dark {
+    .or-divider {
+        color: $dark-color;
+        &__line{
+            border-bottom: 1px dashed $dark-color;
+        }
+    }
+    .and-divider {
+        color: $dark-color;
+        &__line{
+            border-bottom: 1px dashed $dark-color;
+        }
+    }
+}
+.or-divider {
+    color: #ccc;
+    font-weight: 400;
+    font-size: 0.8em;
+    line-height: 2em;
+    &__line{
+        margin-left: $grid-gutter-width/2;
+        height: 2px;
+        border-bottom: 1px dashed #ccc;
+    }
+}
+.and-divider {
+    color: #ccc;
+    text-transform: uppercase;
+    font-weight: 400;
+    font-size: 0.8em;
+    line-height: 2em;
+    &__line{
+        margin-right: $grid-gutter-width/2;
+        &:last-child {
+            margin-right: 0;
+            margin-left: $grid-gutter-width/2;
+        }
+        height: 2px;
+        border-bottom: 1px solid #ccc;
+    }
+}
+.dark {
+
+    .input-container {
+        input.input {
+            border: 1px solid $bt-input-border-dark !important;
+            background-color: $input-bg-dark !important;
+            color: $body-text-dark;
+            &:focus {
+                border:1px solid $bt-input-border-active!important;
+            }
+            &::placeholder{
+                color:$input-placeholder-color-dark !important;
+            }
+        }
+    }
+}
+
+.input-container{
+    height:$input-height;
+
+    input.input{
+        border:1px solid $bt-input-border;
+        background-color: $input-bg;
+        @include transition(all 200ms);
+        &:focus {
+            border:1px solid $bt-input-border-active!important;
+        }
+        border-radius: $border-radius-default;
+        color:$body-text;
+        text-indent: 15px;
+        height:100%;
+
+        &--wide{
+            min-width:300px;
+        }
+
+        &::placeholder{
+            color:#2e2e2e;
+            opacity:0.5;
+        }
+    }
+}
+
+.form-group{
+    margin-bottom:1rem;
+}
+
+label {
+    color: $header-color;
+    font-weight: 500;
+}
+.dark {
+    label {
+        color: $header-color-dark;
+    }
+}
+.hljs, .hljs-header {
+    border-radius: $default-border-radius;
+}
+
+
+
+.__react_component_tooltip {
+    z-index: 99999999 !important;
+    position: fixed;
+}
+
+.notification {
+    text-align: center;
+    justify-content: center;
+    align-self: center;
+    &__icon {
+        color: $bt-brand-secondary;
+        font-size: 2em;
+    }
+    &__text {
+        color: $bt-brand-secondary;
+        font-weight: bold;
+    }
+}
+
+.badge {
+    display: inline-block;
+    padding: .25em .4em;
+    font-size: 75%;
+    font-weight: 700;
+    line-height: 1;
+    text-align: center;
+    white-space: nowrap;
+    vertical-align: baseline;
+    border-radius: .25rem;
+    transition: color .15s ease-in-out,background-color .15s ease-in-out,border-color .15s ease-in-out,box-shadow .15s ease-in-out;
+}
+
+.badge-pill {
+    padding-right: .6em;
+    padding-left: .6em;
+    border-radius: 10rem;
+}
+
+.badge-info {
+    background-color: $bt-brand-primary;
+    color: white;
+}

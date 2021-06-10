@@ -1,0 +1,20 @@
+version: '3.7'
+
+services:
+    bullettrain:
+        build:
+            context: .
+            target: development
+            dockerfile: Dockerfile
+        command: npm run dev
+        environment:
+            - API_URL=http://localhost:8000/api/v1/
+            - ASSET_URL=http://localhost:8080/
+        ports:
+            - '8080:8080'
+        volumes:
+            - .:/srv/bt
+            - frontend_node_modules:/srv/bt/node_modules
+
+volumes:
+    frontend_node_modules:
