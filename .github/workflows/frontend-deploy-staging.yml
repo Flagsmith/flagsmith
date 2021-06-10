@@ -31,11 +31,13 @@ jobs:
         - name: Setup npm environment
           env:
             ENV: staging
-          run: npm i && npm run env
+          run: |
+            npm i
+            npm run env
 
         - name: Run E2E Tests
           env:
-            E2E_TEST_TOKEN: ${{ secrets.E2E_TEST_TOKEN }}
+            E2E_TEST_TOKEN_STAGING: ${{ secrets.E2E_TEST_TOKEN }}
           run: |
             google-chrome --version
             node -v
