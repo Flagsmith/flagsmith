@@ -1,0 +1,31 @@
+{
+  "presets": [
+    "@babel/preset-react",
+    [
+      "@babel/preset-env",
+      {
+        "targets": {
+          "browsers": [
+            "last 2 versions"
+          ]
+        },
+        "modules": false
+      }
+    ]
+  ],
+  "plugins": [
+    "react-hot-loader/babel",
+    "@babel/plugin-proposal-class-properties",
+    "babel-plugin-transform-object-rest-spread",
+    "@babel/plugin-transform-modules-commonjs"
+  ],
+  "env": {
+    "production": {
+      "plugins": [
+        "transform-react-remove-prop-types",
+        "@babel/transform-react-constant-elements",
+        "@babel/transform-react-inline-elements"
+      ]
+    }
+  }
+}

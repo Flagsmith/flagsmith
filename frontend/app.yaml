@@ -1,0 +1,25 @@
+runtime: nodejs12
+
+handlers:
+- url: /static
+  static_dir: build/static
+  expiration: "365d"
+  http_headers:
+    Access-Control-Allow-Origin: "*"
+
+- url: /images
+  static_dir: build/images
+  expiration: "4h"
+  http_headers:
+    Access-Control-Allow-Origin: "*"
+
+- url: /fonts
+  static_dir: build/fonts
+  expiration: "365d"
+  http_headers:
+    Access-Control-Allow-Origin: "*"
+
+- url: /.*
+  secure: always
+  redirect_http_response_code: 301
+  script: auto

@@ -1,0 +1,26 @@
+name: API Deploy to Dev
+
+on:
+    push:
+        branches:
+            - develop
+        paths:
+            - 'api/**'
+            - '.github/**'
+
+jobs:
+    deploy-develop:
+        runs-on: ubuntu-latest
+        name: API Deploy to Dev
+
+        steps:
+            - name: Cloning repo
+              uses: actions/checkout@v2
+              with:
+                  fetch-depth: 0
+
+            - name: Push to dokku
+              uses: dokku/github-action@master
+              with:
+                  git_remote_url: 'ssh://dokku@bitwarden.bullet-train.io:22/bullet-train'
+                  ssh_private_key: ${{ secrets.SSH_PRIVATE_KEY }}

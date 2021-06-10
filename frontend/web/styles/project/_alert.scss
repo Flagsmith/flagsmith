@@ -1,0 +1,24 @@
+.alert-shown {
+    .navbar {
+        margin-top: 60px;
+    }
+    .app-container {
+        margin-top: 130px;
+    }
+    .aside {
+        margin-top: 60px;
+        height: calc(100% - 60px);
+    }
+    &.hide {
+        .navbar {
+            margin-top: 0;
+        }
+        .app-container {
+            margin-top: 70px;
+        }
+        .aside {
+            margin-top: 0;
+            height: 100%;
+        }
+    }
+}

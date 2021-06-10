@@ -1,0 +1,38 @@
+.color-block {
+    width: 30px;
+    height: 30px;
+    border-radius: 15px;
+    margin-right: 1em;
+    display: inline-block;
+    margin-bottom: 1em;
+    &--small {
+        width: 10px;
+        height: 10px;
+        border-radius: 5px;
+        margin-bottom: 0;
+    }
+    &--brand-primary {
+        background-color: $bt-brand-primary;
+    }
+    &--brand-secondary {
+        background-color: $bt-brand-secondary;
+    }
+    &--python {
+        background-color: #3572A5;
+    }
+    &--javascript {
+        background-color: #f1e05a;
+    }
+    &--c {
+        background-color: #178600;
+    }
+    &--typescript {
+        background-color: #2b7489;
+    }
+    &--ruby {
+        background-color: #701516;
+    }
+    &--java {
+        background-color: #b07219;
+    }
+}

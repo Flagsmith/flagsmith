@@ -1,0 +1,24 @@
+@import "../variables";
+
+#toast {
+	display: inline-block;
+	position: fixed;
+	right: 15px;
+	top: 15px;
+	z-index: 100000;
+
+	button{
+		box-shadow: none;
+		color:black
+	}
+}
+
+.toast-message {
+	top: -100px;
+	right: 15px;
+	width: 250px;
+	background: $toast-bg;
+	color: $toast-color;
+	box-shadow:0 0 10px rgba(0,0,0,0.25);
+	border:none;
+}
