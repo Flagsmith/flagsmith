@@ -3,7 +3,7 @@ name: Frontend Publish Docker Images
 on:
     push:
         branches:
-            - master
+            - main
         tags:
             - '*'
         paths:
