@@ -25,22 +25,22 @@ jobs:
               with:
                   fetch-depth: 0
 
-            - name: Test with Chromedriver
-              env:
-                  E2E_TEST_TOKEN_DEV: ${{ secrets.E2E_TEST_TOKEN_DEV }}
-                  SENDGRID_API_KEY: ${{ secrets.SENDGRID_API_KEY }}
-                  DJANGO_ALLOWED_HOSTS: '*'
-                  DATABASE_URL: postgresql://postgres:postgres@postgres:5432/flagsmith
-              run: |
-                  cd api
-                  python3.8 -m pip install --upgrade pip
-                  pip install -r requirements-dev.txt
-                  python3.8 manage.py migrate
-                  python3.8 manage.py runserver &
-
-                  cd ../frontend
-                  google-chrome --version
-                  node -v
-                  npm i
-                  export ENV=dev; echo 'Setting env to' $ENV; npm run env
-                  npm run test
+#            - name: Test with Chromedriver
+#              env:
+#                  E2E_TEST_TOKEN_DEV: ${{ secrets.E2E_TEST_TOKEN_DEV }}
+#                  SENDGRID_API_KEY: ${{ secrets.SENDGRID_API_KEY }}
+#                  DJANGO_ALLOWED_HOSTS: '*'
+#                  DATABASE_URL: postgresql://postgres:postgres@postgres:5432/flagsmith
+#              run: |
+#                  cd api
+#                  python3.8 -m pip install --upgrade pip
+#                  pip install -r requirements-dev.txt
+#                  python3.8 manage.py migrate
+#                  python3.8 manage.py runserver &
+#
+#                  cd ../frontend
+#                  google-chrome --version
+#                  node -v
+#                  npm i
+#                  export ENV=dev; echo 'Setting env to' $ENV; npm run env
+#                  npm run test

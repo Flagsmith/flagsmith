@@ -3,10 +3,7 @@ name: Frontend Publish Docker Images
 on:
     push:
         branches:
-            - master
-            - staging
-            - develop
-            - feature/ch1382/combine-api-and-fe-docker-repositories
+            - main
         tags:
             - '*'
         paths:
