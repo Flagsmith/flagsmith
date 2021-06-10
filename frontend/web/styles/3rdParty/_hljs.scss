@@ -1,0 +1,261 @@
+@mixin transition($transition...) {
+  -moz-transition:    $transition;
+  -o-transition:      $transition;
+  -webkit-transition: $transition;
+  transition:         $transition;
+}
+@mixin transition-property($property...) {
+  -moz-transition-property:    $property;
+  -o-transition-property:      $property;
+  -webkit-transition-property: $property;
+  transition-property:         $property;
+}
+@mixin transition-duration($duration...) {
+  -moz-transition-property:    $duration;
+  -o-transition-property:      $duration;
+  -webkit-transition-property: $duration;
+  transition-property:         $duration;
+}
+@mixin transition-timing-function($timing...) {
+  -moz-transition-timing-function:    $timing;
+  -o-transition-timing-function:      $timing;
+  -webkit-transition-timing-function: $timing;
+  transition-timing-function:         $timing;
+}
+@mixin transition-delay($delay...) {
+  -moz-transition-delay:    $delay;
+  -o-transition-delay:      $delay;
+  -webkit-transition-delay: $delay;
+  transition-delay:         $delay;
+}
+.invalid .value-editor .hljs{
+  border: 2px solid $brand-danger;
+}
+.value-editor {
+  position: relative;
+  textarea,.hljs {
+    padding-top: 20px;
+  }
+  textarea {
+    min-height: 50px;
+    padding-bottom: 5px;
+    text-indent: 10px;
+  }
+  &.light {
+    .select-language {
+      span {
+        color: $body-text;
+
+      }
+    }
+  }
+  code {
+  }
+  .select-language {
+    position: absolute;
+    top: 5px;
+    right: 10px;
+    span {
+      margin-right: 5px;
+      color: white;
+      font-weight: bold;
+      opacity: 0.5;
+      cursor: pointer;
+      font-size: 12px;
+      &.active {
+        color: $btn-code-button-color-alt;
+        opacity: 1;
+      }
+    }
+  }
+}
+.dark {
+  .hljs {
+    background: $bt-code-background-dark;
+  }
+  .hljs-header {
+    color: $btn-code-button-color-dark;
+    .hljs-description {
+      color: $btn-code-button-color-alt-dark;
+    }
+    background-color: $btn-code-button-background-dark;
+    &:hover {
+      background-color: $btn-code-button-background-dark-hover;
+
+    }
+    border: 1px solid $btn-code-button-background-dark;
+  }
+  :hover > .hljs-header {
+    background-color: $btn-code-button-background-dark-hover;
+  }
+}
+.hljs {
+  a {
+    color: white !important;
+    text-decoration: underline;
+    .hljs-regexp,.hljs-comment {
+      color: white !important;;
+    }
+  }
+  cursor: text;
+  outline: none;
+  font-size: 17px;
+  display: block;
+  overflow-x: auto;
+  padding: 0.5em;
+  background: $bt-code-background;
+  border-radius: 10px;
+  &.no-pad {
+    margin-bottom: 0;
+  }
+
+}
+.yaml {
+  .hljs-bullet {
+    color: #eee;
+  }
+  .hljs-attr {
+    color: #64c77c;
+  }
+  .hljs-string {
+    color: #4c96ec;
+  }
+}
+.hljs-container {
+  position: relative;
+  &:hover {
+    .hljs-copy {
+      opacity: 1;
+    }
+    .hljs-docs {
+      opacity: 1;
+    }
+    .hljs-github {
+      opacity: 1;
+    }
+  }
+}
+.btn--docs {
+  background: transparent!important;
+  border-width: 1px !important;
+  border-color: $bt-brand-primary !important;
+  box-shadow: none !important;
+  &:hover {
+    color: $bt-brand-primary;
+  }
+}
+.hljs-docs {
+  position: absolute;
+  opacity: 0;
+  bottom:45px;
+  right: 140px;
+}
+
+.btn.hljs-copy {
+  border-radius: 15px;
+  opacity: 0;
+  position: absolute;
+  bottom:45px;
+  right: 15px;
+}
+.tabbed .hljs {
+  border-top-right-radius: 0px;
+  border-top-left-radius: 0px;
+}
+
+:hover > .hljs-header {
+  background-color: $btn-code-button-background-hover;
+}
+
+.hljs-header {
+  user-select: none;
+  font-family: Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+  background-color: $btn-code-button-background;
+  border: 1px solid $btn-code-button-border;
+  overflow: hidden;
+  @include transition(all .2s ease-in-out);
+  color: $btn-code-button-color;
+  display: inline-block;
+  height: 34px;
+  line-height: 34px;
+  font-weight: bold;
+  font-size: .8em;
+  padding-left: 10px;
+  padding-right: 10px;
+  border-radius: $border-radius-default;
+  margin-right: 5px;
+  margin-bottom: $input-padding-y/2;
+  .hljs-description {
+    color: $btn-code-button-color-alt;
+  }
+
+}
+
+.hljs-description {
+
+}
+
+.hljs {
+  color: #bababa;
+  padding: 14px 14px 14px 14px;
+}
+
+.hljs-strong,
+.hljs-emphasis {
+  color: #a8a8a2;
+}
+
+.hljs-bullet,
+.hljs-quote,
+.hljs-link,
+.hljs-number,
+.hljs-regexp,
+.hljs-literal {
+  color: #6896ba;
+}
+
+.hljs-code,
+.hljs-selector-class {
+  color: #a6e22e;
+}
+
+.hljs-emphasis {
+  font-style: italic;
+}
+
+.hljs-keyword,
+.hljs-selector-tag,
+.hljs-section,
+.hljs-attribute,
+.hljs-name,
+.hljs-variable {
+  color: #cb7832;
+}
+
+.hljs-params {
+  color: #b9b9b9;
+}
+
+.hljs-string {
+  color: #6a8759;
+}
+
+.hljs-subst,
+.hljs-type,
+.hljs-built_in,
+.hljs-builtin-name,
+.hljs-symbol,
+.hljs-selector-id,
+.hljs-selector-attr,
+.hljs-selector-pseudo,
+.hljs-template-tag,
+.hljs-template-variable,
+.hljs-addition {
+  color: #e0c46c;
+}
+
+.hljs-comment,
+.hljs-deletion,
+.hljs-meta {
+  color: #7f7f7f;
+}

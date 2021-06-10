@@ -1,0 +1,18 @@
+.app-container {
+    margin-top: 1em;
+    margin-bottom: 70px;
+    padding-left: 2em;
+    -webkit-transition: all 0.3s ease;
+    -moz-transition: all 0.3s ease;
+    transition: all 0.3s ease;
+}
+
+.fullscreen-container {
+    min-height: 100vh;
+    padding-top: 2em;
+    align-items: center;
+    display: flex;
+    &__grey {
+        background-color: $bt-brand-faint-alt;
+    }
+}

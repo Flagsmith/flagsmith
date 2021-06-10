@@ -1,0 +1,16 @@
+version: '3.7'
+
+services:
+    bullettrain:
+        build:
+            context: .
+        environment:
+            - API_URL=http://localhost:8000/api/v1/
+            - ASSET_URL=http://localhost:8080/
+        ports:
+            - '8080:8080'
+        volumes:
+            - bt_node_modules:/srv/bt/node_modules
+
+volumes:
+    bt_node_modules:

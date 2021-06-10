@@ -1,0 +1,31 @@
+name: API Deploy to Staging
+
+on:
+    push:
+        branches:
+            - master
+        paths:
+            - 'api/**'
+            - '.github/**'
+
+defaults:
+    run:
+        working-directory: api
+
+jobs:
+    deploy-develop:
+        runs-on: ubuntu-latest
+        name: API Deploy to Staging
+        container: flagsmith/eb-cli:latest
+
+        steps:
+            - name: Cloning repo
+              uses: actions/checkout@v2
+              with:
+                  fetch-depth: 0
+
+            - name: Push to ElasticBeanstalk
+              env:
+                  AWS_ACCESS_KEY_ID: ${{ secrets.AWS_STAGING_ACCESS_KEY_ID }}
+                  AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_STAGING_SECRET_ACCESS_KEY }}
+              run: eb deploy staging-api -l "${GITHUB_SHA}"

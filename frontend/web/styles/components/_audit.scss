@@ -1,0 +1,31 @@
+@import "../variables";
+
+.audit {
+	&__log {
+		font-weight: bold;
+	}
+	&__author {
+		color: $body-text-faint;
+	}
+	&__date {
+		font-weight: bold;
+	}
+	&__item:nth-child(even) {
+		background: $bt-brand-faint-alt;
+	}
+}
+
+.dark {
+	.audit {
+
+		&__author {
+			color: $body-text-faint-dark;
+		}
+		&__item:nth-child(odd) {
+			background: $dark-bg-0;
+		}
+		&__item:nth-child(even) {
+			background: $dark-bg-2;
+		}
+	}
+}

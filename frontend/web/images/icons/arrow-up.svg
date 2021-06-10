@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="11px" height="7px" viewBox="0 0 11 7" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+    <title>Path</title>
+    <g id="UI-Design-" stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
+        <g id="Desktop-HD-2.3-dropdown-Copy" transform="translate(-283.000000, -50.000000)" fill="#6633ff" fill-rule="nonzero">
+            <g id="Sidebar-/-Link-button-org" transform="translate(97.000000, 46.000000)">
+                <g id="Sidebar-/-Link-button-Copy">
+                    <g id="Sidebar-/-Link-button">
+                        <g id="Group-2">
+                            <g id="Group" transform="translate(191.500000, 7.500000) scale(1, -1) translate(-191.500000, -7.500000) translate(186.000000, 4.000000)">
+                                <path d="M10.887525,0.601425 L10.397475,0.111375 C10.28115,-0.00495 10.09305,-0.00495 9.976725,0.111375 L5.4945,4.5837 L1.012275,0.111375 C0.89595,-0.00495 0.70785,-0.00495 0.591525,0.111375 L0.101475,0.601425 C-0.01485,0.71775 -0.01485,0.90585 0.101475,1.022175 L5.284125,6.204825 C5.40045,6.32115 5.58855,6.32115 5.704875,6.204825 L10.887525,1.022175 C11.00385,0.90585 11.00385,0.71775 10.887525,0.601425 Z" id="Path"></path>
+                            </g>
+                        </g>
+                    </g>
+                </g>
+            </g>
+        </g>
+    </g>
+</svg>

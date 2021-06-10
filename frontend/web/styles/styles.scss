@@ -1,0 +1,294 @@
+@import "variables";
+@import "3rdParty/index";
+@import "components/index";
+@import "flexbox/index";
+@import "project/index";
+@import "project/segments";
+
+.butter-bar {
+  background-color: $butter-bar-bg;
+  text-align: center;
+  line-height: 44px;
+  margin-top: -10px;
+
+}
+
+.dark .butter-bar {
+  background-color: $butter-bar-bg-dark;
+  color: $header-color-dark;
+}
+bold, strong {
+  font-weight: bold;
+}
+
+.overflow-visible {
+  overflow-x: visible !important;
+  overflow-y: visible !important;
+}
+
+.faint {
+  color: $text-muted;
+  font-size: 0.8em;
+}
+
+.value-editor {
+
+}
+
+.faint-lg {
+  color: $text-muted;
+  font-size: 1.25em;
+}
+.dark {
+
+  .flag-example {
+    background-color: $dark-bg-0;
+
+  }
+}
+.flag-example {
+  margin-left: -15px;
+  margin-right: -15px;
+  padding: 20px;
+  background-color: $bt-brand-faint-alt;
+  margin-top: 20px;
+  margin-bottom: 20px;
+}
+
+.striped-section {
+  padding: 20px;
+
+  &:nth-child(2) {
+    background-color: #f7f7f7;
+  }
+}
+
+.cursor-pointer {
+  cursor: pointer;
+}
+
+.gif {
+  position: relative;
+  cursor: pointer;
+
+  ion {
+    box-shadow: 0 7px 8px -4px rgba(0, 0, 0, 0.2), 0 13px 19px 2px rgba(0, 0, 0, 0.14), 0 5px 24px 4px rgba(0, 0, 0, 0.12);
+    height: 64px;
+    line-height: 64px;
+    border-radius: 32px;
+    width: 64px;
+    background: $bt-brand-faint-alt;
+    display: inline-block;
+    position: absolute;
+    font-size: 1.5em;
+  }
+
+  &.playing {
+    ion {
+      display: none;
+    }
+  }
+
+  &:hover {
+    ion {
+      color: #999;
+    }
+  }
+}
+
+.chip .feature-value-container {
+  border-radius: 0;
+  padding: 2px 5px;
+  border-radius: 8px;
+}
+
+.feature-value-container {
+  display: inline-block;
+  font-size: 0.8em;
+  background: $bt-code-background;
+  color: #fff;
+  padding: 5px 10px;
+  border-radius: 20px;
+  font-family: Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+
+  font-weight: bold;
+  .feature-value {
+    color: #fff;
+  }
+
+  &.string {
+    .quot {
+      color: #fff;
+    }
+
+    .feature-value {
+      color: #fff;
+    }
+  }
+}
+
+.maintenance {
+  background: $bt-brand-primary-dark-desaturated-light;
+
+  h1 {
+    font-weight: 400;
+    color: rgba(255, 255, 255, 0.5);
+    font-size: 2em;
+    font-family: Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+  }
+
+  a {
+    color: #6896ba;
+  }
+
+  color: white;
+  font-size: 1.25em;
+  line-height: 44px;
+
+  .small {
+    margin-top: 44px;
+    color: white;
+    font-size: 0.8em;
+  }
+}
+
+.clickable {
+  cursor: pointer;
+}
+
+body, html {
+  height: 100%;
+}
+
+body {
+  background: $body-bg;
+  font-family: $font-family;
+  font-weight: 400;
+  color: $body-text;
+}
+
+
+body.dark {
+  background-color: $body-bg-dark;
+  a {
+    color: $bt-link-color-dark;
+
+  }
+}
+
+a {
+  color: $bt-link-color;
+  font-weight: 500;
+  cursor: pointer;
+}
+
+.no-pointer {
+  pointer-events: none !important;
+}
+
+input:disabled {
+  opacity: 0.4;
+}
+
+.full-width {
+  width: 100%;
+
+  > input {
+    width: 100%;
+  }
+}
+
+.text-center {
+  text-align: center;
+}
+
+.text-right {
+  text-align: right;
+}
+
+.inline-block {
+  display: inline-block;
+}
+
+hr {
+  color: $bt-brand-faint-alt;
+}
+
+.form-group {
+  margin-bottom: $input-padding-y /2;
+}
+
+.header-icon {
+  margin-left: 10px;
+  font-size: 1.5em;
+}
+
+.alert-bar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 60px;
+  z-index: 200;
+  color: #fff;
+  padding: 15px;
+  font-size: 1.2em;
+  background-color: #384f68;
+  text-align: center;
+  -webkit-transition: all 0.3s ease;
+  -moz-transition: all 0.3s ease;
+  transition: all 0.3s ease;
+
+  a {
+    color: white;
+
+    &.close-btn {
+      font-size: 30px;
+      line-height: 30px;
+    }
+  }
+
+  &__text {
+    font-size: 14px;
+    @media screen and (max-width: 368px) {
+      font-size: 11px;
+    }
+  }
+
+  &.pulse {
+    background-color: $bt-brand-primary;
+  }
+
+  &.slideOut {
+    padding: 0;
+  }
+}
+
+@media screen and (max-width: 576px) {
+
+  .alert-bar {
+    padding: 10px 10px 5px 0;
+    font-size: 1em;
+  }
+
+}
+
+.bottom-banner {
+  position: fixed;
+  left: $aside-width+20px;
+  bottom: 20px;
+  margin: auto;
+  height: 44px;
+  line-height: 44px;
+  right: 0;
+  text-align: center;
+
+  .inner {
+    padding-left: 10px;
+    padding-right: 10px;
+    height: 44px;
+    background-color: white;
+    display: inline-block;
+    box-shadow: rgba(75, 75, 75, 0.21) 0px 1px 6px, rgba(75, 75, 75, 0.21) 0px 1px 4px;
+  }
+}

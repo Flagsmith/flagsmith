@@ -1,0 +1,60 @@
+.list-item {
+	display: block;
+	padding-left: $input-padding-x;
+	padding-right: $input-padding-x;
+	padding-top: 10px;
+	padding-bottom: 10px;
+	&:hover {
+		text-decoration: none;
+	}
+	transition: all .2s ease-in;
+		.btn--link {
+			color: $bt-link-color;
+			&:hover {
+				color: $bt-link-color-hover;
+			}
+		}
+
+
+
+	.subtitle {
+		font-size: 0.8em;
+	}
+	&.clickable:hover {
+		background: $card-default;
+		box-shadow: $card-default;
+		.btn--link {
+			color: $bt-link-color-hover;
+			text-decoration: none !important;
+		}
+	}
+}
+
+.chevron::before {
+	border-style: solid;
+	border-width: 0.25em 0.25em 0 0;
+	content: '';
+	display: inline-block;
+	height: 0.45em;
+	left: 0.15em;
+	position: relative;
+	top: 0.15em;
+	transform: rotate(-45deg);
+	vertical-align: top;
+	width: 0.45em;
+}
+
+.chevron.right:before {
+	left: 0;
+	transform: rotate(45deg);
+}
+
+.chevron.bottom:before {
+	top: 0;
+	transform: rotate(135deg);
+}
+
+.chevron.left:before {
+	left: 0.25em;
+	transform: rotate(-135deg);
+}

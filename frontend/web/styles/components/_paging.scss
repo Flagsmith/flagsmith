@@ -1,0 +1,33 @@
+@import "../variables";
+
+.paging {
+	padding: 5px;
+	.btn-paging {
+		background: transparent;
+		color: $body-text;
+		width: 34px;
+		height: 34px;
+		padding: 0;
+		line-height: 34px;
+		border-radius: 17px !important;
+		&:hover {
+			color: $body-text;
+			box-shadow: none;
+			background: transparent !important;
+		}
+	}
+	justify-content: center;
+	.page {
+		display: inline-block;
+		border-radius:34px;
+		margin-left: 10px;
+		margin-right: 10px;
+		font-weight: 500;
+		&:hover {
+			color: $bt-brand-primary;
+		}
+		&.active {
+			color: $bt-brand-primary;
+		}
+	}
+}
