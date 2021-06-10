@@ -199,7 +199,7 @@ requests==2.24.0
     #   smsapi-client
     #   twilio
     #   yubico-client
-rsa==4.6
+rsa==4.7
     # via
     #   google-auth
     #   oauth2client
