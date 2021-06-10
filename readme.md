@@ -1,4 +1,4 @@
-[<img alt="Feature Flag, Remote Config and A/B Testing platform, Flagsmith" width="100%" src="./static-files/hero.png"/>](https://flagsmith.com/)
+[![Feature Flag, Remote Config and A/B Testing platform, Flagsmith](static-files/hero.png)](https://www.flagsmith.com/)
 
 [Flagsmith](https://www.flagsmith.com/) is an open source, fully featured, Feature Flag and Remote Config service. Use
 our hosted API, deploy to your own private cloud, or run on-premise.
@@ -16,7 +16,7 @@ git clone git@github.com:flagsmith/flagsmith.git
 docker-compose -f docker/docker-compose.yml up
 ```
 
-<img alt="Flagsmith Screenshot" width="100%" src="./static-files/screenshot.png"/>
+![Flagsmith Screenshot](static-files/screenshot.png)
 
 ## Features
 
@@ -37,7 +37,7 @@ You can try our hosted version for free at https://www.flagsmith.com/
 
 The Flagsmith API is built using Python 3, Django 2, and DjangoRestFramework 3. You can try the application out using:
 
-- [Docker](https://github.com/Flagsmith/flagsmith-docker)
+- [Docker](/docker)
 - [Kubernetes](https://github.com/Flagsmith/flagsmith-charts)
 - [Redhat OpenShift](https://operatorhub.io/operator/flagsmith)
 
@@ -58,12 +58,11 @@ REST calls to the API.
 You can run the entire Flagsmith with Docker by running the following command:
 
 ```bash
-cd docker
-docker-compose up
+docker-compose -f docker/docker-compose.yml up
 ```
 
-This will use some default settings created in the `docker-compose.yml` file located in the root of the project. These
-should be changed before using in any production environments.
+This will use some default settings created in the `docker/docker-compose.yml` file. These should be changed before
+running in any sort of production environments.
 
 ## Resources
 
