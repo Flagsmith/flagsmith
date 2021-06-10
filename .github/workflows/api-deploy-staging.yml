@@ -9,10 +9,6 @@ on:
             - 'api/**'
             - '.github/**'
 
-defaults:
-    run:
-        working-directory: api
-
 jobs:
     deploy-staging:
         runs-on: ubuntu-latest
@@ -27,6 +23,7 @@ jobs:
                   fetch-depth: 0
 
             - name: Push to ElasticBeanstalk
+              working-directory: api
               env:
                   AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
                   AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
@@ -45,6 +42,7 @@ jobs:
                   fetch-depth: 0
 
             - name: Test with Chromedriver
+              working-directory: frontend
               env:
                   E2E_TEST_TOKEN: ${{ secrets.E2E_TEST_TOKEN }}
               run: |
