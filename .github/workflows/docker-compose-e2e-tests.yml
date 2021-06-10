@@ -4,8 +4,7 @@ on:
     # todo: fix in other branches
     push:
         branches:
-            - master
-            #- feature/ch1382/combine-api-and-fe-docker-repositories # todo: replace
+            - main
     #pull_request:
     #    branches:
     #        - master

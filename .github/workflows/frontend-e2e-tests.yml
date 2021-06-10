@@ -3,7 +3,6 @@ name: Frontend E2E Tests
 on:
     push:
         branches:
-            - staging
             - master
 
 defaults:
