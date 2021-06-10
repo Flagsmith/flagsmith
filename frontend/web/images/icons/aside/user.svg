@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="18px" height="21px" viewBox="0 0 18 21" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+    <title>Shape</title>
+    <g id="Symbols" stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
+        <g id="Atoms-/-icons-/illustrated/-User" transform="translate(-7.000000, -2.000000)" fill="#6633ff">
+            <g id="Group" transform="translate(7.000000, 2.000000)">
+                <path d="M8.96,10.24 C11.788,10.24 14.08,7.948 14.08,5.12 C14.08,2.292 11.788,0 8.96,0 C6.132,0 3.84,2.292 3.84,5.12 C3.84,7.948 6.132,10.24 8.96,10.24 Z M12.544,11.52 L11.876,11.52 C10.988,11.928 10,12.16 8.96,12.16 C7.92,12.16 6.936,11.928 6.044,11.52 L5.376,11.52 C2.408,11.52 0,13.928 0,16.896 L0,18.56 C0,19.62 0.86,20.48 1.92,20.48 L16,20.48 C17.06,20.48 17.92,19.62 17.92,18.56 L17.92,16.896 C17.92,13.928 15.512,11.52 12.544,11.52 Z" id="Shape"></path>
+            </g>
+        </g>
+    </g>
+</svg>

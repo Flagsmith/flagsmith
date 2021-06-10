@@ -1,5 +1,3 @@
-static/
-**/staticfiles/*
 *db.sqlite3*
 venv
 .venv
@@ -19,3 +17,9 @@ checkstyle.txt
 src/CI_COMMIT_REF_NAME
 src/CI_COMMIT_SHA
 src/IMAGE_TAG
+
+
+# Web
+.DS_Store
+.idea
+*.iml

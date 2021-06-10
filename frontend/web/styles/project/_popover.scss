@@ -1,0 +1,181 @@
+@import "../mixins/box-shadow-mixin";
+@import "../mixins/transition-mixin";
+
+.dark {
+    .popover {
+        background-color: $dark-bg-2;
+        &-bt {
+            border-top: 8px solid $dark-bg-2;
+            &:before {
+                border-left: 15px solid transparent;
+                border-right: 15px solid transparent;
+                border-bottom: 16px solid $dark-bg-2;
+            }
+
+            &__title {
+                color: $dark-highlight-color;
+                border-bottom: 1px solid $dark-bg-2;
+            }
+
+            &__list-item{
+                border-bottom: 1px solid $dark-bg-0 !important;
+
+                .btn {
+                    color: $bt-link-color-dark !important;
+                }
+
+                a {
+                    color: $dark-color !important;
+                    &:hover {
+                        color: $dark-highlight-color !important;
+                        //background-color: $bt-brand-faint-alt;
+                        text-decoration: none;
+                    }
+                }
+                border-bottom: 1px solid $dark-bg-2;
+            }
+        }
+    }
+}
+
+.popover {
+    @include transition(all 300ms ease);
+    border: none;
+    background-color: $body-bg;
+    z-index: 2000;
+    width: auto;
+    transform-origin: top;
+    position: absolute;
+    overflow: hidden;
+    transform: scaleY(0);
+    opacity: 0;
+    min-width: 200px;
+
+    #logout-link {
+        padding-left: 0 !important;
+        padding-right: 0 !important;
+    }
+
+    &.in {
+        @include box-shadow();
+        transform: scaleY(1);
+        height: auto;
+        opacity: 1;
+    }
+
+    &-bt {
+        border-top: 8px solid white;
+        border-radius: $border-radius-default;
+        overflow: visible;
+
+        &:before {
+            content: "";
+            position: absolute;
+            top: -18px;
+            right: 20px;
+            width: 0;
+            height: 0;
+            border-left: 15px solid transparent;
+            border-right: 15px solid transparent;
+            border-bottom: 16px solid white;
+        }
+
+        &.aside-select {
+            padding-bottom: 0;
+        }
+
+        &__title {
+            display: flex;
+            justify-content: center;
+            padding: .75em;
+            font-family: $font-family-header;
+            text-align: center;
+            font-weight: 500;
+            color: $header-color;
+            border-bottom: 1px solid $input-border-color;
+        }
+
+        &__list-item{
+            .btn {
+                position: absolute;
+                right: 10px;
+                height: 24px;
+                line-height: 20px;
+                padding: 0 2px;
+                width: 50px;
+                border-color: transparent !important;
+                font-weight: bold;
+                &:hover {
+                    box-shadow: none !important;
+                }
+                color: $bt-link-color !important;
+            }
+
+            &.active {
+                font-weight: bold;
+            }
+            width: 100%;
+            display: flex;
+            justify-content: center;
+            font-family: $font-family;
+            padding-left: 10px;
+            padding-right: 40px;
+            line-height: 44px;
+            a {
+                width: 100%;
+                color: $body-text !important;
+
+                &:hover {
+                    color: $bt-brand-primary !important;
+                    //background-color: $bt-brand-faint-alt;
+                    text-decoration: none;
+                }
+                &.edit {
+                    position: absolute;
+                    right: 0;
+                    left: 200px
+                }
+            }
+            border-bottom: 1px solid $input-border-color;
+            padding-right: 50px;
+        }
+    }
+}
+
+.popover-right .popover-inner {
+    left: auto;
+    right: 303px;
+    top: 60px;
+    .popover {
+        width: 300px;
+    }
+}
+
+.popover-inner {
+    position: absolute !important;
+    left: 10px;
+    &__content {
+        border-bottom-left-radius: $border-radius-default;
+        border-bottom-right-radius: $border-radius-default;
+        overflow: hidden;
+    }
+}
+
+
+
+.btn-container{
+    padding:10px;
+
+    .btn{
+        color:white;
+
+        &:hover{
+            color:#fff;
+            background:darken($bt-brand-secondary,5);
+        }
+    }
+}
+
+.popover a {
+    font-weight: 400;
+}

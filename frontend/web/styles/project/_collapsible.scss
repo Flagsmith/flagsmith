@@ -1,0 +1,16 @@
+.collapsible {
+    padding: .5em 0 0.5em 1.75em;
+    &__header{
+        cursor: pointer;
+        font-family: $font-family-header;
+        color: white;
+        margin-bottom: .5em;
+    }
+    &__content{
+
+    }
+    &.active {
+        background-color: $bt-brand-secondary;
+        box-shadow: inset 4px 0 0 $bt-brand-primary;
+    }
+}

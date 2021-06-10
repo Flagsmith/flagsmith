@@ -1,0 +1,15 @@
+.reveal {
+  .reveal--child {
+    opacity:0;
+    @include transition(all 200ms);
+  }
+  &:hover {
+    .reveal--child {
+      opacity:1;
+    }
+  }
+}
+
+.rule {
+}
+

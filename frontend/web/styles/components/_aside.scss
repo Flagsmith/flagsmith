@@ -1,0 +1,524 @@
+@import "../mixins/custom-scrollbar";
+
+$animation-duration: 350ms;
+$animation-timing-function: ease-in-out;
+
+@mixin keyframes($animationName) {
+    @-webkit-keyframes #{$animationName} {
+        @content;
+    }
+    @-moz-keyframes #{$animationName} {
+        @content;
+    }
+    @-o-keyframes #{$animationName} {
+        @content;
+    }
+    @keyframes #{$animationName} {
+        @content;
+    }
+}
+
+@include keyframes(asideIn) {
+    0% {
+        left: -$aside-width
+    }
+    100% {
+        left: 0
+    }
+}
+
+
+@include keyframes(navAsideIn) {
+    0% {
+        left: 0
+    }
+    100% {
+        left: $aside-width
+    }
+}
+
+.dark {
+    .aside {
+        box-shadow:  $aside-box-shadow-dark;
+        background-color: $aside-left-bg-dark;
+
+        &__add-btn {
+            path {
+                fill: $aside-add-color-dark;
+            }
+        }
+
+        .btn--project {
+            &:hover {
+                color: white;
+            }
+            background:  $aside-project-link-dark !important;
+            color: $aside-project-link-color-dark !important;
+            &.active {
+                color: $aside-project-link-color-active-dark !important;
+                background: $aside-project-link-active-dark !important;
+                box-shadow: $aside-project-link-active-box-shadow;
+            }
+        }
+
+        .collapsible {
+            &__header {
+                color: $aside-nav-color-dark;
+                svg {
+                    path {
+                        fill: $aside-nav-color-dark;
+                    }
+                }
+            }
+
+            &.active {
+                &__header {
+                    color: $aside-nav-color-dark;
+                    svg {
+                        path {
+                            fill: $aside-nav-color-dark;
+                        }
+                    }
+                }
+
+            }
+        }
+
+
+        &__projects-item {
+            &-title {
+                color: $aside-left-color-dark;
+                &.active {
+                    color: $aside-left-color-active-dark;
+                }
+            }
+        }
+
+        &__main-content {
+            background-color: $aside-bg-dark;
+        }
+        &__nav-item {
+            color: $aside-nav-color-dark;
+            &.disabled {
+                &.active, &.active:hover {
+                    color: $aside-nav-color-dark;
+                }
+            }
+            path {
+                fill: $aside-nav-color-dark;
+            }
+            &.active, &.active:hover {
+                background-color: $aside-nav-active-dark;
+                color: $aside-nav-active-color-dark;
+                .aside__nav-item--icon {
+                    path {
+                        fill: $aside-nav-active-color-dark !important;
+                    }
+                }
+            }
+
+            &:hover {
+                color: $aside-nav-hover-dark;
+                path {
+                    color: $aside-nav-hover-dark;
+                }
+            }
+        }
+        .aside__header-link {
+            &.active, &.active:hover {
+                .aside__title-wrapper {
+                    background-color: $aside-nav-active-dark;
+                    color: $aside-nav-active-color-dark;
+                    path {
+                        fill: $aside-nav-active-color-dark;
+                    }
+                }
+            }
+        }
+
+        &__link-text {
+            color: $aside-link-alt-color-dark;
+        }
+
+        &__link-icon {
+            color: $aside-link-alt-color-dark;
+        }
+
+        &__project-title {
+            color: $aside-nav-color-dark;
+        }
+
+        .collapsible.active {
+            background-color: $aside-nav-collapse-dark;
+            box-shadow: inset 4px 0 0 $aside-nav-collapse-border-dark;
+        }
+
+
+        &__environment-list-item {
+            color: $aside-nav-inactive-color-dark;
+            path {
+                fill: $aside-nav-inactive-color-dark;
+            }
+            &:hover {
+                color: $aside-nav-inactive-hover-color-dark;
+                path {
+                    fill: $aside-nav-inactive-hover-color-dark;
+                }
+            }
+            &.active, &.active:hover {
+                background-color: $aside-nav-active-dark;
+                color: $aside-nav-active-color-dark;
+                path {
+                    fill: $aside-nav-active-color-dark;
+                }
+            }
+
+            &:hover {
+                color: $aside-nav-hover-dark;
+            }
+
+        }
+
+        &__footer {
+            background-color: $aside-bg-dark;
+        }
+
+
+
+        .aside {
+            &__main-content {
+                background-color: $aside-bg-dark;
+                width: 250px;
+            }
+            .collapsible.active {
+                background-color: $aside-nav-collapse-dark;
+                box-shadow: inset 4px 0 0 $aside-nav-collapse-border-dark;
+            }
+        }
+    }
+
+}
+
+.aside {
+    position: fixed;
+    animation-name: asideIn;
+    animation-duration: $animation-duration;
+    animation-timing-function: $animation-timing-function;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    height: 100%;
+    box-shadow:  $aside-box-shadow;
+    background-color: $aside-left-bg;
+
+    &__add-btn {
+        path {
+            fill: $aside-add-color;
+        }
+    }
+
+    &__projects-sidebar {
+        width: 100px;
+        justify-content: center;
+        overflow-y: auto;
+        height: 100%;
+        @include customScroll;
+    }
+
+    &__projects-list-container {
+        display: flex;
+    }
+
+    .btn--project {
+        width: 38px;
+        height: 38px;
+        justify-content: center;
+        align-items: center;
+        display: flex;
+        padding: 0 16px;
+        line-height: inherit;
+        &:hover {
+            color: white;
+        }
+        background:  $aside-project-link !important;
+        color: $aside-project-link-color !important;
+        &.active {
+            color: $aside-project-link-color-active !important;
+            background: $aside-project-link-active !important;
+            box-shadow: $aside-project-link-active-box-shadow;
+        }
+    }
+
+    .collapsible {
+        font-weight: 500;
+        &__header {
+            color: $aside-nav-color;
+            svg {
+                path {
+                    fill: $aside-nav-color;
+                }
+            }
+        }
+
+        &.active {
+            &__header {
+                color: $aside-nav-color;
+                svg {
+                    path {
+                        fill: $aside-nav-color;
+                    }
+                }
+            }
+
+        }
+    }
+
+
+    &__projects-item {
+        flex-direction: column;
+        justify-content: center;
+        display: flex;
+        align-self: self-start;
+        margin-bottom: 1em;
+        text-align: center;
+
+        &:hover {
+            .btn--project {
+                @extend .btn:hover;
+                @extend .btn--project:hover;
+            }
+        }
+
+        &-title {
+            color: $aside-left-color;
+            font-family: $font-family-header;
+            font-size: 11px;
+            line-height: 1.3;
+            margin-top: 1em;
+            display: -webkit-box;
+            overflow: hidden;
+            -webkit-line-clamp: 2; /* number of lines to show */
+            -webkit-box-orient: vertical;
+            width: 76px;
+            &.active {
+                opacity: 1;
+                color: $aside-left-color-active;
+            }
+        }
+    }
+
+    &__wrapper {
+        height: 100%;
+    }
+
+    &__main-content {
+        background-color: $aside-bg;
+        width: 250px;
+    }
+
+    &__logo {
+        width: 44px;
+        display: flex;
+        align-self: self-start;
+        margin-bottom: 1em;
+        margin-top: .75em;
+    }
+
+    &__nav-item {
+        color: $aside-nav-color;
+        &.disabled {
+            opacity: 0.5;
+            &.active, &.active:hover {
+                color: $aside-nav-color;
+            }
+        }
+        path {
+            fill: $aside-nav-color;
+        }
+        padding: .5em .35em .5em 1.5em;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        &.active, &.active:hover {
+            background-color: $aside-nav-active;
+            color: $aside-nav-active-color;
+            text-decoration: none;
+            .aside__nav-item--icon {
+                path {
+                    fill: $aside-nav-active-color !important;
+                }
+            }
+        }
+
+        &:hover {
+            text-decoration: none;
+            color: $aside-nav-hover;
+            path {
+                color: $aside-nav-hover;
+            }
+        }
+        &--icon {
+            width: 15px;
+            margin-right: .75em;
+        }
+    }
+    &__title-wrapper {
+        padding: 1em 0;
+        text-decoration: none;
+        &:hover {
+            .aside__link-text {
+                text-decoration: none;
+            }
+        }
+    }
+    .aside__header-link {
+        display: block;
+        text-decoration: none;
+        &.active, &.active:hover {
+            .aside__title-wrapper {
+                background-color: $aside-nav-active;
+                color: $aside-nav-active-color;
+                path {
+                    fill: $aside-nav-active-color;
+                }
+                text-decoration: none !important;
+            }
+        }
+        &:focus {
+            text-decoration: none !important;
+        }
+    }
+
+    &__link-text {
+        color: $aside-link-alt-color;
+        font-family: $font-family-header;
+        font-weight: 500;
+        font-size: 14px;
+        padding-left: 2em;
+    }
+
+    &__link-icon {
+        color: $aside-link-alt-color;
+        padding-right: 1em;
+    }
+
+    &__project-title {
+        color: $aside-nav-color;
+        font-size: 24px;
+    }
+
+    .collapsible.active {
+        background-color: $aside-nav-collapse;
+        box-shadow: inset 4px 0 0 $aside-nav-collapse-border;
+    }
+
+    &__nav-item-icon {
+        margin-right: .75em;
+        width: 15px;
+    }
+
+    &__environment-nav {
+
+    }
+	&__environments-wrapper {
+		height: 55vh;
+		overflow-y: auto;
+        @include customScroll;
+    }
+    &__environment-list-item {
+        display: block;
+        color: $aside-nav-inactive-color;
+        path {
+            fill: $aside-nav-inactive-color;
+        }
+        &:hover {
+            color: $aside-nav-inactive-hover-color;
+            path {
+                fill: $aside-nav-inactive-hover-color;
+            }
+        }
+        padding: .5em .35em .5em .85em;
+        cursor: pointer;
+        &.active, &.active:hover {
+            border-top-left-radius: 8px;
+            border-bottom-left-radius: 8px;
+            background-color: $aside-nav-active;
+            color: $aside-nav-active-color;
+            path {
+                fill: $aside-nav-active-color;
+            }
+            opacity: 1;
+        }
+
+        &:hover {
+            color: $aside-nav-hover;
+            opacity: 1;
+            text-decoration: none;
+        }
+        &:focus {
+            text-decoration: none;
+        }
+
+        &--icon {
+            width: 15px;
+            margin-right: .75em;
+        }
+    }
+
+    &__footer {
+        background-color: $aside-bg;
+        position: absolute;
+        bottom: 0;
+		padding-bottom: 1em;
+        width: 250px;
+    }
+    &__popover {
+        left: 78px;
+    }
+    &-body {
+        padding-left: $aside-width;
+        margin: 0 1.5em;
+        &-full-width {
+            padding-left: 0;
+        }
+    }
+    .toggle {
+        //position: absolute;
+        //top: 15px;
+        position: absolute;
+        left: 40px;
+        top: 10px;
+
+        > .icon {
+            color: white;
+            font-size: 1.5rem;
+        }
+    }
+
+    &__logo {
+        path {
+         fill: $aside-logo;
+        }
+    }
+}
+
+@include media-breakpoint-down(xs) {
+    .aside {
+        &__projects-sidebar {
+            position: relative;
+            top: 3em;
+        }
+        &__footer {
+            padding-top: .5em;
+            padding-bottom: .5em;
+        }
+    }
+}
+
+@media (max-height: 576px) {
+    .aside {
+        &__environments-wrapper {
+            height: 300px;
+        }
+    }
+}

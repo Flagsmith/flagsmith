@@ -1,0 +1,14 @@
+.flag-different {
+  .rc-switch {
+    background-color: $bt-brand-secondary !important;
+    border-color: $bt-brand-secondary !important;
+  }
+  .feature-value {
+    .feature-value-container {
+      display: inline-block;
+      .quot,.feature-value {
+        color: $bt-brand-secondary !important;
+      }
+    }
+  }
+}

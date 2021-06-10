@@ -1,0 +1,127 @@
+.dark {
+    .panel {
+        box-shadow: $card-default-dark;
+        input {
+            background-color: $input-bg-dark;
+            color: $input-color-dark;
+        }
+        &--grey{
+            background:$panel-grey-background-dark;
+            .panel {
+                background-color: $panel-bg-darker;
+                .panel-content {
+                    background-color: $panel-bg-darker;
+                }
+            }
+        }
+
+        &--draggable {
+        }
+    }
+}
+.dark .panel--flat {
+    border: 1px solid #252836;
+}
+.panel{
+    &--flat {
+        box-shadow: none !important;
+    }
+    &--draggable {
+        cursor: move;
+        @include transition(background 200ms ease-in-out);
+
+        .panel-content {
+            @include transition(background 200ms ease-in-out);
+        }
+    }
+    border-radius:$border-radius-default;
+    box-shadow: $card-default;
+    border:1px solid #d6dbe0;
+    input[type="text"] {
+        opacity:1;
+        border-radius: $border-radius-default;
+    }
+
+    &--grey{
+        background:$panel-grey-background;
+        border-radius: 4px;
+        //border:1px solid #d6dbe0;
+        //box-shadow: $card-default;
+        padding:20px;
+
+    }
+    &--transparent {
+        border: none;
+        background-color: transparent;
+        box-shadow: none;
+        //padding: 20px;
+        .panel-heading {
+            background-color: transparent;
+        }
+    }
+    &--nested {
+        border-top-left-radius: 0 !important;
+        border-top-right-radius: 0 !important;
+    }
+
+    &--no-shadow {
+        box-shadow: none;
+    }
+
+    &__segments-achievements {
+            border: 1px solid $bt-brand-primary !important;
+
+    }
+}
+
+.header{
+    &--icon{
+        .btn--with-icon{
+            position: relative;
+            top: -4px;
+            margin-left:5px;
+        }
+    }
+}
+
+.plan{
+    background:#fff;
+    border-radius: $border-radius-default;
+    box-shadow: $card-default;
+    border:1px solid #d6dbe0;
+    padding:10px;
+    color:#5a5e63;
+
+    &__prefix{
+
+    }
+
+    &__prefix__image{
+        height:50px;
+    }
+
+    &__details{
+        padding-left:20px;
+        color: #5a5e63;
+    }
+
+    &--current{
+    }
+}
+
+/*Change text in autofill textbox*/
+.dark {
+    input:-webkit-autofill,
+    input:-webkit-autofill:hover,
+    input:-webkit-autofill:focus,
+    textarea:-webkit-autofill,
+    textarea:-webkit-autofill:hover,
+    textarea:-webkit-autofill:focus,
+    select:-webkit-autofill,
+    select:-webkit-autofill:hover,
+    select:-webkit-autofill:focus {
+        -webkit-text-fill-color: $body-text-dark;
+        -webkit-box-shadow: 0 0 0px 1000px $input-bg-dark inset;
+        transition: background-color 5000s ease-in-out 0s;
+    }
+}
