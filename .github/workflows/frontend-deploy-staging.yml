@@ -1,7 +1,10 @@
-name: Frontend Deploy to Dev
+name: Frontend Deploy to Staging
 
 on:
     push:
+        branches:
+            - main
+    pull_request:
         branches:
             - main
 
@@ -12,7 +15,8 @@ defaults:
 jobs:
     deploy-develop:
         runs-on: ubuntu-latest
-        name: Frontend Deploy to Dev
+        name: Frontend Deploy to Staging
+        environment: staging
 
         steps:
             - name: Cloning repo
@@ -32,8 +36,8 @@ jobs:
             - name: Setup Cloud SDK
               uses: google-github-actions/setup-gcloud@v0.2.0
               with:
-                  project_id: bullet-train-front-end-dev
-                  service_account_key: ${{ secrets.FRONTEND_GOOGLECLOUD_SERVICEACCOUNT_KEY_DEV }}
+                  project_id: bullet-train-front-end-staging
+                  service_account_key: ${{ secrets.FRONTEND_GOOGLECLOUD_SERVICEACCOUNT_KEY }}
 
             - name: Deploy to App Engine
               run: gcloud app deploy --quiet
