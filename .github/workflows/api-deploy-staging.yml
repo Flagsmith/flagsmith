@@ -17,6 +17,7 @@ jobs:
         runs-on: ubuntu-latest
         name: API Deploy to Staging
         container: flagsmith/eb-cli:latest
+        environment: staging
 
         steps:
             - name: Cloning repo
@@ -26,6 +27,6 @@ jobs:
 
             - name: Push to ElasticBeanstalk
               env:
-                  AWS_ACCESS_KEY_ID: ${{ secrets.AWS_STAGING_ACCESS_KEY_ID }}
-                  AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_STAGING_SECRET_ACCESS_KEY }}
+                  AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+                  AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
               run: eb deploy staging-api -l "${GITHUB_SHA}"
