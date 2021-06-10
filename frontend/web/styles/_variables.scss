@@ -1,0 +1,316 @@
+//Fonts
+$font-family: "OpenSans", sans-serif;
+$font-family-header: 'OpenSans', sans-serif;
+
+
+
+$dark-bg-0: #201128;
+$dark-bg-2: #1a1c26;
+$dark-bg-5: #1a1c26;
+$dark-bg-10: #252836;
+$dark-bg-20: #3A3D4A;
+$dark-bg-50: #B3B3B3;
+$dark-highlight: #424b72;
+$dark-highlight2: $dark-bg-20;
+$dark-highlight3: #f18e7f;
+
+$dark-highlight-color: #fff;
+$dark-color: #747484;
+
+
+$button-bg-dark: $dark-bg-0;
+$button-bg-dark-hover: darken($button-bg-dark,1);
+
+// COLORS
+
+$bt-brand-primary: #7B51FB;
+$bt-brand-primary-light: lighten($bt-brand-primary,40);
+$bt-brand-primary-lighter: lighten($bt-brand-primary,70);
+
+$bt-brand-primary-dark: #17103a;
+$bt-brand-primary-dark-desaturated: #202040;
+$bt-brand-primary-dark-desaturated-light: #38386d;
+$bt-brand-primary-dark-desaturated-lighter: #5d60cc;
+$bt-brand-primary-dark-desaturated-lighter-dark: #131216;
+
+
+$bt-brand-faint: #eff0ef;
+$bt-brand-faint-alt: #eff0ef;
+$bt-brand-faint-alt-dark: #1b1924;
+$bt-brand-faint-hover: #eee7f6;
+$bt-brand-faint-hover-dark: #242230;
+
+
+$bt-brand-tertiary: #f18e7f;
+$bt-brand-tertiary-dark: $dark-highlight3;
+$bt-brand-secondary: #00a696;
+$bt-brand-secondary-faint: #2d9189;
+$bt-brand-secondary-faint-dark: #12776d;
+$bt-brand-secondary-light: lighten($bt-brand-secondary,40);
+$bt-brand-secondary-hover: darken($bt-brand-secondary, 5);
+$bt-brand-secondary-active: $bt-brand-secondary-hover;
+
+
+$bt-brand-red: #f2576e;
+
+//Body
+$body-text-faint: #717186;
+$body-text-faint-dark: darken(#e3e3e3,10);
+$body-text: #43424f;
+$body-text-dark: $dark-color;
+$header-color: #38386d; // for headers and labels
+$header-color-dark: #d2d2d2; // for headers and labels
+$bt-link-color: $bt-brand-primary-dark; // for headers and labels
+$bt-link-color-dark: $dark-highlight-color; // for headers and labels
+$bt-link-color-hover: lighten($header-color,10); // for headers and labels
+
+//Navbar
+$nav-link-color: $header-color; // navbar link
+$nav-link-color-dark: darken($header-color-dark,10); // navbar link
+$nav-link-color-hover: $bt-brand-primary; //
+$nav-link-color-active: $bt-brand-primary-dark;
+$nav-link-color-hover-dark: $bt-brand-primary-dark-desaturated-light; //
+
+$nav-link-color-active-dark: $bt-brand-primary-dark-desaturated-light;
+$navbar-height: 5rem;
+$navbar-background: transparent;
+$nav-icon-color: $bt-brand-primary;
+$nav-icon-color-dark: $dark-highlight;
+
+// Input
+$input-bg: #fff;
+$input-bg-dark: $dark-bg-0;
+$input-color-dark: $body-text-dark;
+
+$bt-input-border: #d9d9e9;
+$bt-input-border-dark: $input-bg-dark;
+$bt-input-border-active: $input-bg-dark;
+
+
+
+
+$alert-danger-bg: $bt-brand-red;
+$alert-danger-border: $bt-brand-red;
+$alert-danger-text: rgb(255, 255, 255);
+
+$body-bg: #fff;
+$body-bg-dark: $dark-bg-5;
+
+
+$p-color: #22354a;
+$p-color-dark: #757678;
+$butter-bar-bg: #fdf1dd;
+$butter-bar-bg-dark: $dark-bg-10;
+
+$bt-gradient-text: $body-text;
+$bt-gradient-start: $bt-brand-faint-alt;
+$bt-gradient-end: #fff;
+
+
+//Panel
+$panel-heading-height: 50px;
+$panel-bg: #fff;
+$panel-bg-dark: $dark-bg-10;
+$panel-bg-darker: $dark-bg-5;
+$panel-heading-bg: #f7f7f7;
+$panel-heading-bg-dark: $dark-bg-10;
+$panel-heading-color: $header-color;
+$panel-heading-color-dark: $header-color-dark;
+$panel-heading-border: 1px solid #f1f1f1;
+$panel-heading-border-dark: 1px solid transparent;
+
+
+$bt-code-background: $dark-bg-0;
+$bt-code-background-dark: $dark-bg-0;
+$bt-switch-active:$bt-brand-primary;
+$bt-switch-active-dark: $dark-highlight;
+$bt-switch: #999;
+$bt-switch-dark: $dark-bg-0;
+
+
+$panel-grey-background-dark: $dark-bg-0;
+$panel-grey-background: #f7f7f7;
+//
+$panel-icon-color: $bt-brand-primary;
+$panel-icon-color: $bt-brand-primary-dark-desaturated-light;
+$panel-icon-border-color: #ddd;
+$panel-icon-background-color: #fff;
+
+$panel-icon-border-color-dark: $dark-bg-20;
+$panel-icon-background-color-dark: $dark-bg-20;
+$panel-icon-color-dark: $dark-bg-50;
+
+// Code help e.g. installing the SDK
+$btn-code-button-background-hover: darken($bt-brand-faint-alt,2);
+$btn-code-button-background: $bt-brand-faint-alt;
+$btn-code-button-background-dark-hover: lighten($panel-heading-bg-dark,2);
+$btn-code-button-background-dark: $panel-heading-bg-dark;
+$btn-code-button-border: $bt-brand-faint-alt;
+$btn-code-button-color: $header-color;
+$btn-code-button-color-dark: $dark-highlight-color;
+$btn-code-button-color-alt: $bt-brand-tertiary;
+$btn-code-button-color-alt-dark: $dark-color;
+$btn-color: white;
+$btn-color-dark: #d9d9d9;
+
+
+//Nav
+
+// BORDER RADIUS
+$default-border-radius: 8px;
+$btn-border-radius: 8px;
+
+// INPUT
+$input-border-radius: 0px;
+$input-height: 40px;
+$input-line-height: 25px;
+$input-font-size: inherit;
+$input-font-weight: 400;
+$input-border-color: rgb(224, 224, 224);
+$input-placeholder-color: rgb(224, 224, 224);
+$input-placeholder-color-dark: $header-color-dark;
+$input-border-highlight-color: $bt-brand-primary-light;
+
+$pagination-color: #333;
+
+
+
+
+//BUTTONS
+$btn-height: 44px;
+$btn-secondary-bg: rgb(240, 240, 240);
+$btn-default-color: white;
+$hover-bg: rgb(240, 240, 240);
+$hover-color: inherits;
+
+
+//Panel Dark
+$panel-alt-heading-bg: #fff;
+$panel-alt-heading-color: #fff;
+
+//TABS
+$tab-inactive-color: $body-text;
+$tab-active-background: $bt-brand-faint;
+$tab-inactive-background: $bt-brand-faint;
+$tab-inactive-color-dark: $header-color-dark;
+$tab-active-background-dark: $panel-heading-bg-dark;
+$tab-inactive-background-dark: $panel-heading-bg-dark;
+
+$tab-line-color: $bt-brand-primary;
+$tab-line-color-dark: $bt-brand-primary-dark-desaturated-lighter;
+
+$tab-active-color: $header-color;
+$tab-active-color-dark: $header-color-dark;
+
+//SCAFFOLDING
+$mobile-portrait: 320px;
+$mobile-landscape: 480px;
+$tablet-portrait: 768px;
+$tablet-landscape: 1024px;
+
+//GRID
+$input-padding-x: .75rem !default;
+$input-padding-y: 1rem !default;
+
+//MODALS
+$modal-backdrop-bg: rgba(0, 0, 0, 0.870588);
+$modal-header-background: $bt-brand-faint-alt;
+$modal-header-background-dark: $panel-heading-bg-dark;
+$side-modal-header-background: white;
+$side-modal-header-background-dark: $panel-heading-bg-dark;
+
+$modal-header-color: $header-color;
+$modal-header-color-dark: $header-color-dark;
+$modal-header-border-width: 0;
+$border-radius-default: 8px;
+//TRANSITIONS
+$button-transition: background-color 400ms cubic-bezier(0.23, 1, 0.32, 1);
+//Hero
+$hero-bg:white;
+
+$toast-bg:rgba(0,0,0,.9);
+$toast-color:white;
+
+$bold: 400;
+
+$card-default: 0 6px 13px 0 rgba(34,53,74,0.10);
+$card-default-dark: 0 6px 13px 0 rgba(0,0,0,0.10);
+
+
+$aside-base-background: $bt-brand-faint-alt;
+$aside-base-background-dark: $dark-bg-0;
+$aside-logo: $bt-brand-primary-dark-desaturated-lighter;
+// active project and environment
+$aside-base-highlight: $bt-brand-primary-dark-desaturated-lighter;
+$aside-base-highlight-dark: $dark-highlight2;
+$aside-base-highlight-color: white;
+$aside-base-highlight-color-dark: white;
+// active project and environment
+$aside-base-link: $bt-brand-faint-alt;
+$aside-base-link-dark: $dark-bg-5;
+$aside-base-link-color: $body-text-faint;
+$aside-base-link-color-dark: $body-text-faint-dark;
+// Environment link
+$aside-nav-color:$body-text;
+$aside-nav-color-dark:$body-text-dark;
+$aside-nav-inactive-color:transparentize($body-text, 0.25);
+$aside-nav-inactive-color-dark:transparentize($body-text-dark, 0.25);
+$aside-nav-inactive-hover-color:transparentize($header-color, 0.25);
+$aside-nav-inactive-hover-color-dark:transparentize($header-color-dark, 0.25);
+$aside-nav-hover:$header-color;
+$aside-nav-hover-dark:$header-color-dark;
+// Background of other links e.g. acreate environment/organisation
+$aside-link-alt-color:$bt-brand-secondary-faint;
+$aside-link-alt-color-dark:$dark-highlight-color;
+$aside-add-color:white;
+$aside-add-color-dark:white;
+
+
+
+
+//Aside
+$aside-width:330px;
+
+// Shadows
+$aside-box-shadow: 0 6px 13px 0 transparentize($bt-brand-primary-dark-desaturated-light,.75); // Box shadow right menu
+$aside-box-shadow-dark: 0 6px 16px 0 rgba(0,0,0,.25); // Box shadow right menu
+$aside-project-link-active-box-shadow: none;
+
+
+// Backgrounds
+$aside-bg:$aside-base-background;  // left aside menu
+$aside-bg-dark:$aside-base-background-dark;  // left aside menu
+$aside-left-bg:$bt-brand-primary-dark; // main aside menu
+$aside-left-bg-dark:$dark-bg-5; // main aside menu
+$aside-left-color:white; // main aside menu
+$aside-left-color-dark:white; // main aside menu
+$aside-left-color-active:white; // main aside menu
+$aside-left-color-active-dark:white; // main aside menu
+$aside-nav-collapse:darken($aside-base-background,2); // selected environment background
+$aside-nav-collapse-dark:lighten($aside-base-background-dark,2); // selected environment background
+
+// project link
+$aside-project-link-color: $aside-base-link-color;
+$aside-project-link-color-dark: $aside-base-link-color-dark;
+$aside-project-link: $aside-base-link;
+$aside-project-link-dark: $aside-base-link-dark;
+// project link active
+$aside-project-link-active:$aside-base-highlight;
+$aside-project-link-active-dark:$aside-base-highlight-dark;
+$aside-project-link-color-active:$aside-base-highlight-color;
+$aside-project-link-color-active-dark:$aside-base-highlight-color-dark;
+
+
+// Active environment link
+$aside-nav-active:$aside-base-highlight;
+$aside-nav-active-dark:$aside-base-highlight-dark;
+$aside-nav-active-color:$aside-base-highlight-color;
+$aside-nav-active-color-dark:$aside-base-highlight-color-dark;
+$aside-nav-collapse-border:$aside-base-highlight;
+$aside-nav-collapse-border-dark:$aside-base-highlight-dark;
+
+
+// Aside scrollbar
+$bt-scrollbar-track: rgba(243,236,255,0.1);
+$bt-scrollbar-thumb: rgba(243, 236, 255, 0.2);
+$bt-scrollbar-thumb-hover: rgba(243,236,255,0.6);

@@ -1,0 +1,99 @@
+.clearfix:after {
+    visibility: hidden;
+    display: block;
+    font-size: 0;
+    content: " ";
+    clear: both;
+    height: 0;
+}
+.clearfix { display: inline-block; }
+/* start commented backslash hack \*/
+* html .clearfix { height: 1%; }
+.clearfix { display: block; }
+/* close commented backslash hack */
+
+.float-right{
+    float:right;
+}
+
+.form-cta {
+    text-align: right;
+}
+
+.justify-content-center {
+    justify-content: center;
+}
+
+.hidden {
+    display: none;
+}
+.relative {
+    position: relative !important;
+}
+.float-left{
+    float:left;
+}
+
+.margin-top{
+    margin-top:20px;
+}
+
+.margin-bottom{
+    margin-bottom:20px;
+}
+
+.no-mb{
+    margin-bottom:0;
+}
+
+.text-left{
+    text-align: left;
+}
+
+.link-style{
+    text-decoration: underline;
+}
+
+
+.disable-transitions {
+    .fade {
+        transition: none!important;
+    }
+}
+.e2e {
+    pointer-events: none !important;
+}
+
+.show {
+    display: block!important;
+}
+
+.ml-auto, .mx-auto {
+    margin-left: auto!important;
+}
+
+.mr-auto, .mx-auto {
+    margin-right: auto!important;
+}
+
+.signup-form {
+    width: 400px;
+}
+
+.signup-icon {
+    width: 64px;
+    path {
+        fill: $bt-brand-primary;
+    }
+}
+
+.align-start {
+    align-items: flex-start;
+}
+
+.transition-none {
+    transition: none !important;
+    .modal-content {
+        transition: none !important;
+    }
+}

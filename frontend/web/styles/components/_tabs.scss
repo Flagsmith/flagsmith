@@ -1,0 +1,161 @@
+@import "../variables";
+.code-help {
+	.tabs {
+		display: flex;
+	}
+	.tabs-content {
+		flex:1;
+		width: 100%;
+		code {
+			margin: 20px;
+			margin-left: 0;
+			margin-right: 0;
+			height: 600px;
+			max-width: 100%;
+		}
+	}
+	.tabs-nav {
+		align-self: center;
+		button:first-child {
+
+			border-top-left-radius:10px;
+		}
+		button.btn:last-child{
+			border-top-right-radius:0 !important;
+			border-bottom-left-radius:10px !important;
+		}
+		display: block;
+		padding: 0 !important;
+		.tab-active, .tab-active:hover {
+			color: white !important;
+			background: #0AC2A3 !important;
+		}
+		.btn-tab {
+			border-radius: 0 !important;
+			text-align: left;
+			width: 190px !important;
+			margin: 0 !important;
+			color: white;
+			background: #2a1f2f;
+			display: block !important;
+			&:hover {
+				background: #19111a;
+				color: white;
+			}
+		}
+	}
+	.tab-line {
+		display: none;
+	}
+}
+.dark {
+	.tabs-nav {
+		background-color: $tab-inactive-background-dark;
+		button,button.btn,button.btn-primary {
+			background-color: $tab-inactive-background-dark;
+			color: $tab-inactive-color-dark;
+			&:hover {
+				color: $tab-active-color-dark;
+				background-color: $tab-inactive-background-dark;
+			}
+			&.tab-active {
+				background: $tab-active-background-dark;
+				color: $tab-active-color-dark;
+			}
+		}
+	}
+	.tab-line {
+		background-color: $tab-line-color-dark;
+	}
+}
+.tabs-nav {
+	display: flex;
+	flex-direction: row;
+	background-color: $bt-brand-faint-alt;
+	border-top-left-radius: $border-radius-default;
+	border-top-right-radius: $border-radius-default;
+	.tab-text {
+		font-weight: 600;
+	}
+	button,button.btn,button.btn-primary {
+		border-radius: 0 !important;
+		box-shadow: none;
+		&:first-child {
+			border-top-left-radius: $border-radius-default !important;
+		}
+		&:last-child {
+			border-top-right-radius: $border-radius-default !important;
+		}
+		flex:1;
+		background-color: $tab-inactive-background;
+		color: $tab-inactive-color;
+		&:hover {
+			color: $tab-active-color;
+			background-color: $tab-inactive-background;
+			box-shadow: none;
+		}
+		&:active {
+			box-shadow: none;
+		}
+		min-height: 34px;
+		&.tab-active {
+			background: $tab-active-background;
+			color: $tab-active-color;
+		}
+	}
+}
+
+.tab-line {
+	bottom: 0px;
+	display: block;
+	height: 2px;
+	margin-top: -2px;
+	position: relative;
+	transition: left 1s cubic-bezier(0.23, 1, 0.32, 1) 0ms;
+	background-color: $tab-line-color;
+}
+.tab-icon {
+	margin-right: $input-padding-x;
+}
+.tabs.pill {
+	.btn.btn-tab {
+		&:first-child{
+			border-top-left-radius: $border-radius-default;
+			border-bottom-left-radius: $border-radius-default;
+		}
+		&:last-child {
+			border-top-right-radius: $border-radius-default;
+			border-bottom-right-radius: $border-radius-default;
+		}
+	}
+	.tabs-nav {
+		border-radius: $border-radius-default;
+	}
+	.tab-line {
+		display: none;
+	}
+}
+	.btn.btn-tab {
+		&:first-child{
+			border-top-left-radius: $border-radius-default;
+		}
+		&:last-child {
+			border-top-right-radius: $border-radius-default;
+		}
+		color: $tab-inactive-color;
+		&.tab-active {
+			color: white;
+		}
+	}
+
+	.tab-item {
+		display: none;
+		&.tab-active {
+			display: block;
+		}
+	}
+
+	.tab-icon {
+		font-size: 1.4em;
+		display: block;
+	}

@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="9px" height="6px" viewBox="0 0 9 6" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+    <title>Path</title>
+    <g id="Symbols" stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
+        <g id="Atoms-/-icons-/caret-down" transform="translate(0.000000, -2.000000)" fill="#FFFFFF">
+            <g id="Group" transform="translate(0.000000, 2.000000)">
+                <path d="M0.600144172,0 L8.31914417,0 C8.85314417,0 9.12014417,0.645 8.74214417,1.023 L4.88414417,4.884 C4.65014417,5.118 4.26914417,5.118 4.03514417,4.884 L0.177144172,1.023 C-0.200855828,0.645 0.0661441724,0 0.600144172,0 Z" id="Path"></path>
+            </g>
+        </g>
+    </g>
+</svg>

@@ -1,0 +1,33 @@
+name: Frontend E2E Tests
+
+on:
+    push:
+        branches:
+            - main
+
+defaults:
+    run:
+        working-directory: frontend
+
+jobs:
+    test-js:
+        runs-on: ubuntu-latest
+        name: Frontend Deploy to Dev
+        container: kylessg/bullet-train-nightwatch:1.1
+
+        steps:
+            - name: Cloning repo
+              uses: actions/checkout@v2
+              with:
+                  fetch-depth: 0
+
+            # todo: implement other branches
+            - name: Test with Chromedriver
+              env:
+                  E2E_TEST_TOKEN_DEV: ${{ secrets.E2E_TEST_TOKEN_DEV }}
+              run: |
+                  google-chrome --version
+                  node -v
+                  npm i
+                  export ENV=dev; echo 'Setting env to' $ENV; npm run env
+                  npm run test

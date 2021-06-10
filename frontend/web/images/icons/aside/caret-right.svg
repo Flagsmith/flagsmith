@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="6px" height="10px" viewBox="0 0 6 10" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+    <title>Path</title>
+    <g id="UI-Design-" stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
+        <g id="Desktop-HD-2.3-dropdown" transform="translate(-107.000000, -360.000000)" fill="#FFFFFF">
+            <g id="Main-Sidebar" transform="translate(79.000000, 0.000000)">
+                <g id="Projects" transform="translate(16.000000, 124.000000)">
+                    <g id="Prod" transform="translate(12.000000, 234.000000)">
+                        <g id="Group" transform="translate(0.000000, 2.000000)">
+                            <path d="M-0.890053208,2.49669444 L6.8987969,2.49669444 C7.43762913,2.49669444 7.70704524,3.22888571 7.32562468,3.65798384 L3.4327132,8.0409148 C3.1965957,8.30654698 2.81214799,8.30654698 2.5760305,8.0409148 L-1.31688098,3.65798384 C-1.69830155,3.22888571 -1.42888543,2.49669444 -0.890053208,2.49669444 Z" id="Path" transform="translate(3.004372, 5.368417) rotate(-90.000000) translate(-3.004372, -5.368417) "></path>
+                        </g>
+                    </g>
+                </g>
+            </g>
+        </g>
+    </g>
+</svg>

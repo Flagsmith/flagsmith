@@ -1,0 +1,89 @@
+name: API Publish Docker Images
+
+on:
+    push:
+        branches:
+            - main
+        tags:
+            - '*'
+        paths:
+            - 'api/**'
+            - '.github/**'
+
+jobs:
+    build-api-dockerhub:
+        runs-on: ubuntu-latest
+        name: API Publish Docker Image
+
+        steps:
+            - name: Cloning repo
+              uses: actions/checkout@v2
+              with:
+                  fetch-depth: 0
+
+            - name: Edit version.txt
+              run: echo "$(git describe --tags `git rev-list --tags --max-count=1`)" > version.txt
+
+            - name: Commit update
+              uses: stefanzweifel/git-auto-commit-action@v4
+              with:
+                  commit_message: 'Automated update of version.txt'
+                  commit_user_name: Flagsmith Bot
+                  commit_user_email: support@flagsmith.com
+                  commit_author: Flagsmith Bot <support@flagsmith.com>
+
+            - name: Docker metadata
+              id: meta-build
+              uses: docker/metadata-action@v3
+              with:
+                  # todo: rename to flagsmith
+                  images: |
+                      dabeeeenster/flagsmith-api
+                  tags: |
+                      type=ref,event=branch
+
+            - name: Write git info to Docker image
+              run: |
+                  cd api
+                  echo ${{ env.GITHUB_REF_SLUG }} > CI_COMMIT_REF_NAME
+                  echo ${GITHUB_SHA} > CI_COMMIT_SHA
+                  echo ${{ steps.meta-build.outputs.tags }} > IMAGE_TAG
+
+            - name: Docker metadata
+              id: meta
+              uses: docker/metadata-action@v3
+              with:
+                  # todo: rename to flagsmith
+                  images: |
+                      dabeeeenster/flagsmith-api
+                  tags: |
+                      type=ref,event=branch
+                      type=semver,pattern={{version}}
+                      type=semver,pattern={{major}}.{{minor}}
+
+            - name: Set up QEMU
+              uses: docker/setup-qemu-action@v1
+
+            - name: Set up Docker Buildx
+              uses: docker/setup-buildx-action@v1
+
+            - name: Login to DockerHub
+              uses: docker/login-action@v1
+              with:
+                  username: ${{ secrets.DOCKERHUB_USERNAME }}
+                  password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+            - name: Inject slug/short variables
+              uses: rlespinasse/github-slug-action@v3.x
+
+            - name: Build and push
+              id: docker_build
+              uses: docker/build-push-action@v2
+              with:
+                  file: api/Dockerfile
+                  context: api/
+                  push: true
+                  tags: ${{ steps.meta.outputs.tags }}
+
+            - name: Image digest
+              run: echo ${{ steps.docker_build.outputs.digest }}
