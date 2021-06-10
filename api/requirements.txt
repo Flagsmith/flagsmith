@@ -199,12 +199,10 @@ requests==2.24.0
     #   smsapi-client
     #   twilio
     #   yubico-client
-rsa==4.6
+rsa==4.7
     # via
     #   google-auth
     #   oauth2client
-ruamel.yaml.clib==0.2.2
-    # via ruamel.yaml
 ruamel.yaml==0.16.12
     # via drf-yasg2
 rx==3.1.1
