@@ -1,4 +1,4 @@
-[<img alt="Feature Flag, Remote Config and A/B Testing platform, Flagsmith" width="100%" src="./hero.png"/>](https://flagsmith.com/)
+[<img alt="Feature Flag, Remote Config and A/B Testing platform, Flagsmith" width="100%" src="./static-files/hero.png"/>](https://flagsmith.com/)
 
 [Flagsmith](https://www.flagsmith.com/) is an open source, fully featured, Feature Flag and Remote Config service. Use
 our hosted API, deploy to your own private cloud, or run on-premise.
@@ -16,7 +16,7 @@ git clone git@github.com:flagsmith/flagsmith.git
 docker-compose -f docker/docker-compose.yml up
 ```
 
-<img alt="Flagsmith Screenshot" width="100%" src="./screenshot.png"/>
+<img alt="Flagsmith Screenshot" width="100%" src="./static-files/screenshot.png"/>
 
 ## Features
 

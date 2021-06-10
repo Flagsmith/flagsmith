@@ -1,5 +1,5 @@
 import json
-from datetime import timedelta, datetime
+from datetime import datetime, timedelta
 
 from django.urls import reverse
 from django.utils import timezone
@@ -84,7 +84,7 @@ class InviteLinkViewSetTestCase(APITestCase):
         returned_expires_at = response_json["expires_at"]
         expires_at = returned_expires_at.replace("Z", "+00:00")
 
-        assert datetime.fromisoformat(expires_at) == tomorrow
+        assert expires_at == tomorrow.isoformat()
 
     def test_delete_invite_link_for_organisation(self):
         # Given
