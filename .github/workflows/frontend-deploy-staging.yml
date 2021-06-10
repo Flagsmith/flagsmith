@@ -23,24 +23,15 @@ jobs:
           with:
             fetch-depth: 0
 
-        - name: Setup Node.js 14.x
-          uses: actions/setup-node@v1
-          with:
-            node-version: 14.x
-
-        - name: Setup npm environment
-          env:
-            ENV: staging
-          run: |
-            npm i
-            npm run env
-
         - name: Run E2E Tests
           env:
             E2E_TEST_TOKEN_STAGING: ${{ secrets.E2E_TEST_TOKEN }}
+            ENV: staging
           run: |
             google-chrome --version
             node -v
+            npm i
+            npm run env
             npm run test
 
     deploy-staging:
