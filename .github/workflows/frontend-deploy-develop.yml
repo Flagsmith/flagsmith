@@ -1,0 +1,39 @@
+name: Frontend Deploy to Dev
+
+on:
+    push:
+        branches:
+            - develop
+
+defaults:
+    run:
+        working-directory: frontend
+
+jobs:
+    deploy-develop:
+        runs-on: ubuntu-latest
+        name: Frontend Deploy to Dev
+
+        steps:
+            - name: Cloning repo
+              uses: actions/checkout@v2
+              with:
+                  fetch-depth: 0
+
+            - name: Build with Node.js 14.x
+              uses: actions/setup-node@v1
+              with:
+                  node-version: 14.x
+            - run: npm i
+            - run: export ENV=dev; npm run env
+            - run: npm run dotenv
+            - run: npm run bundledev
+
+            - name: Setup Cloud SDK
+              uses: google-github-actions/setup-gcloud@v0.2.0
+              with:
+                  project_id: bullet-train-front-end-dev
+                  service_account_key: ${{ secrets.FRONTEND_GOOGLECLOUD_SERVICEACCOUNT_KEY_DEV }}
+
+            - name: Deploy to App Engine
+              run: gcloud app deploy --quiet

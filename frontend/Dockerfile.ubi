@@ -1,0 +1,35 @@
+# Build Assets
+FROM registry.redhat.io/ubi8/nodejs-12 AS build
+
+COPY . .
+RUN pwd
+RUN npm install --production
+ENV ENV=prod
+ENV ASSET_URL=/
+RUN npm run bundle
+
+
+# Set up runtime container
+FROM registry.redhat.io/ubi8/nodejs-12 as application
+
+MAINTAINER Ben Rometsch <support@flagsmith.com>
+
+LABEL name="flagsmith-api" \
+      vendor="Flagsmith" \
+      maintainer="support@flagsmith.com" \
+      version="0.0.1" \
+      summary="Feature Flags and Remote Config API" \
+      description="Feature Flags and Remote Config API"
+COPY LICENSE /licenses/LICENSE
+
+USER root
+RUN yum -y update-minimal --security --sec-severity=Important --sec-severity=Critical
+USER 1001
+
+COPY --from=build /opt/app-root/src .
+
+ENV ENV=prod
+ENV NODE_ENV=production
+
+EXPOSE 8080
+CMD ["node",  "./server/index.js"]

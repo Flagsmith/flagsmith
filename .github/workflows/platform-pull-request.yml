@@ -1,0 +1,46 @@
+name: Platform Pull Requests
+
+on:
+    - pull_request
+
+jobs:
+    run-e2e-tests:
+        runs-on: ubuntu-latest
+        name: Full E2E tests
+        container: flagsmith/nightwatch:1.2
+
+        services:
+            postgres:
+                image: postgres:13
+                env:
+                    POSTGRES_USER: postgres
+                    POSTGRES_PASSWORD: postgres
+                    POSTGRES_DB: flagsmith
+                ports: ['5432:5432']
+                options: --health-cmd pg_isready --health-interval 10s --health-timeout 5s --health-retries 5
+
+        steps:
+            - name: Cloning repo
+              uses: actions/checkout@v2
+              with:
+                  fetch-depth: 0
+
+            - name: Test with Chromedriver
+              env:
+                  E2E_TEST_TOKEN_DEV: ${{ secrets.E2E_TEST_TOKEN_DEV }}
+                  SENDGRID_API_KEY: ${{ secrets.SENDGRID_API_KEY }}
+                  DJANGO_ALLOWED_HOSTS: '*'
+                  DATABASE_URL: postgresql://postgres:postgres@postgres:5432/flagsmith
+              run: |
+                  cd api
+                  python3.8 -m pip install --upgrade pip
+                  pip install -r requirements-dev.txt
+                  python3.8 manage.py migrate
+                  python3.8 manage.py runserver &
+
+                  cd ../frontend
+                  google-chrome --version
+                  node -v
+                  npm i
+                  export ENV=dev; echo 'Setting env to' $ENV; npm run env
+                  npm run test

@@ -1,0 +1,84 @@
+.tag {
+    line-height: 18px;
+    border-radius: $border-radius-default;
+    color: white;
+    font-weight: bold;
+    transition: all 300ms;
+    cursor: pointer;
+    &--select {
+        width: 56px;
+        line-height: 32px;
+        height: 32px;
+        user-select: none;
+        -moz-user-select: none;
+        -ms-user-select: none;
+        -webkit-user-select: none;
+    }
+}
+.tag-filter {
+    .tag {
+        opacity: 0.75;
+        min-width: 100px;
+        text-align: center;
+        .flex-row {
+            justify-content: center;
+        }
+        padding-bottom: 0.2em !important;
+        padding-top: 0.2em !important;
+        padding-left: 1em !important;
+        padding-right: 1em !important;
+        &.selected {
+            opacity: 1;
+        }
+        .icon {
+            margin-left: 5px;
+        }
+    }
+}
+.tag-values {
+    .tag {
+        margin-right: 0.5em;
+        padding-bottom: 0.5em !important;
+        padding-top: 0.5em !important;
+        padding-left: 1.5em !important;
+        padding-right: 1.5em !important;
+        .icon {
+            display: none;
+        }
+    }
+}
+.tag-list {
+    max-height: 250px;
+    overflow-y: auto;
+    user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    -webkit-user-select: none;
+    &:last-child {
+
+    }
+}
+
+.inline-tags {
+    .btn {
+        height: 34px;
+        line-height: 31px;
+        padding: 0 12px;
+        margin-bottom: 3px;
+    }
+    .tag {
+        border-width: 2px;
+        border-style: solid;
+        display: inline-block;
+        min-width: 80px;
+        .flex-row {
+            justify-content: center;
+        }
+    }
+}
+
+.dark {
+    .tag {
+        border-color: transparent;
+    }
+}

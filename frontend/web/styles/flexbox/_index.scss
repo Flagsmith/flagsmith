@@ -1,0 +1,79 @@
+@import "mixins";
+
+.flex {
+  @include flexbox();
+  @include flex-direction(column)
+}
+
+.flex-row {
+  @include flexbox();
+  @include flex-direction(row);
+  @include flex-wrap(wrap);
+  @include align-items(center);
+  @include align-self(stretch);
+  &.no-wrap {
+    @include flex-wrap(nowrap);
+  }
+  &.space {
+    @include flex-value(1);
+    @include justify-content(space-between);
+  }
+  &.noWrap {
+    @include flex-wrap(nowrap);
+  }
+  &.row-center {
+    @include justify-content(center);
+  }
+}
+
+.centered-container {
+  @include flexbox();
+  @include justify-content(center);
+  @include align-items(center);
+}
+
+.flex-column {
+  margin-left: $input-padding-x/2;
+  margin-right: $input-padding-x/2;
+}
+
+.flex-1 {
+  @include flexbox();
+  @include flex-value(1);
+}
+
+//Allow for responsive ordering e.g. col-xs-order-1
+@each $breakpoint in map-keys($grid-breakpoints) {
+  @include media-breakpoint-up($breakpoint) {
+    .col-#{$breakpoint}-order-1 {
+      order: 1;
+    }
+    .col-#{$breakpoint}-order-2 {
+      order: 2;
+    }
+    .col-#{$breakpoint}-order-3 {
+      order: 3;
+    }
+    .col-#{$breakpoint}-order-4 {
+      order: 4;
+    }
+    .col-#{$breakpoint}-order-5 {
+      order: 5;
+    }
+    .col-#{$breakpoint}-order-6 {
+      order: 6;
+    }
+    .col-#{$breakpoint}-order-7 {
+      order: 7;
+    }
+    .col-#{$breakpoint}-order-8 {
+      order: 8;
+    }
+    .col-#{$breakpoint}-order-9 {
+      order: 9;
+    }
+    .col-#{$breakpoint}-order-10 {
+      order: 10;
+    }
+  }
+}

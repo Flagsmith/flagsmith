@@ -1,0 +1,94 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="648px" height="495px" viewBox="0 0 648 495" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+    <!-- Generator: Sketch 55.1 (78136) - https://sketchapp.com -->
+    <title>train-track-feature-flags-sideview</title>
+    <desc>Created with Sketch.</desc>
+    <defs>
+        <radialGradient cx="50%" cy="53.8449755%" fx="50%" fy="53.8449755%" r="63.7687611%" gradientTransform="translate(0.500000,0.538450),scale(0.763758,1.000000),rotate(180.000000),translate(-0.500000,-0.538450)" id="radialGradient-1">
+            <stop stop-color="#476581" offset="0%"></stop>
+            <stop stop-color="#22354A" offset="100%"></stop>
+        </radialGradient>
+        <rect id="path-2" x="0" y="0" width="98.2125" height="41"></rect>
+        <filter x="-42.3%" y="-89.0%" width="184.5%" height="302.4%" filterUnits="objectBoundingBox" id="filter-3">
+            <feOffset dx="0" dy="5" in="SourceAlpha" result="shadowOffsetOuter1"></feOffset>
+            <feGaussianBlur stdDeviation="13" in="shadowOffsetOuter1" result="shadowBlurOuter1"></feGaussianBlur>
+            <feColorMatrix values="0 0 0 0 0.133333333   0 0 0 0 0.207843137   0 0 0 0 0.290196078  0 0 0 1 0" type="matrix" in="shadowBlurOuter1"></feColorMatrix>
+        </filter>
+        <linearGradient x1="50%" y1="60.1840049%" x2="95.625558%" y2="60.1840049%" id="linearGradient-4">
+            <stop stop-color="#DF6D8F" offset="0%"></stop>
+            <stop stop-color="#BB3B56" offset="100%"></stop>
+        </linearGradient>
+        <circle id="path-5" cx="121.45625" cy="22.50625" r="8"></circle>
+        <filter x="-265.6%" y="-234.4%" width="631.2%" height="631.2%" filterUnits="objectBoundingBox" id="filter-6">
+            <feMorphology radius="1" operator="dilate" in="SourceAlpha" result="shadowSpreadOuter1"></feMorphology>
+            <feOffset dx="0" dy="5" in="shadowSpreadOuter1" result="shadowOffsetOuter1"></feOffset>
+            <feGaussianBlur stdDeviation="13" in="shadowOffsetOuter1" result="shadowBlurOuter1"></feGaussianBlur>
+            <feComposite in="shadowBlurOuter1" in2="SourceAlpha" operator="out" result="shadowBlurOuter1"></feComposite>
+            <feColorMatrix values="0 0 0 0 0.976470588   0 0 0 0 0.309803922   0 0 0 0 0.450980392  0 0 0 1 0" type="matrix" in="shadowBlurOuter1"></feColorMatrix>
+        </filter>
+        <rect id="path-7" x="0" y="0" width="98.2125" height="41"></rect>
+        <filter x="-42.3%" y="-89.0%" width="184.5%" height="302.4%" filterUnits="objectBoundingBox" id="filter-8">
+            <feOffset dx="0" dy="5" in="SourceAlpha" result="shadowOffsetOuter1"></feOffset>
+            <feGaussianBlur stdDeviation="13" in="shadowOffsetOuter1" result="shadowBlurOuter1"></feGaussianBlur>
+            <feColorMatrix values="0 0 0 0 0.133333333   0 0 0 0 0.207843137   0 0 0 0 0.290196078  0 0 0 1 0" type="matrix" in="shadowBlurOuter1"></feColorMatrix>
+        </filter>
+        <linearGradient x1="50%" y1="60.1840049%" x2="95.625558%" y2="60.1840049%" id="linearGradient-9">
+            <stop stop-color="#6633ff" offset="0%"></stop>
+            <stop stop-color="#1F7E77" offset="100%"></stop>
+        </linearGradient>
+        <circle id="path-10" cx="138.45625" cy="22.50625" r="8"></circle>
+        <filter x="-265.6%" y="-234.4%" width="631.2%" height="631.2%" filterUnits="objectBoundingBox" id="filter-11">
+            <feMorphology radius="1" operator="dilate" in="SourceAlpha" result="shadowSpreadOuter1"></feMorphology>
+            <feOffset dx="0" dy="5" in="shadowSpreadOuter1" result="shadowOffsetOuter1"></feOffset>
+            <feGaussianBlur stdDeviation="13" in="shadowOffsetOuter1" result="shadowBlurOuter1"></feGaussianBlur>
+            <feComposite in="shadowBlurOuter1" in2="SourceAlpha" operator="out" result="shadowBlurOuter1"></feComposite>
+            <feColorMatrix values="0 0 0 0 0.168627451   0 0 0 0 0.890196078   0 0 0 0 0.839215686  0 0 0 1 0" type="matrix" in="shadowBlurOuter1"></feColorMatrix>
+        </filter>
+    </defs>
+    <g id="train-track-feature-flags-sideview" stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
+        <g id="train-track-feature-flags" transform="translate(-19.000000, 0.000000)">
+            <rect id="background-gradient" fill="url(#radialGradient-1)" x="19" y="0" width="648.15" height="495.03"></rect>
+            <g id="background-tracks" transform="translate(85.506063, 0.000000)" stroke="#314C6A" stroke-linecap="square" stroke-linejoin="round" stroke-width="7.047">
+                <polygon id="track-3" points="125.524687 493.29 125.524687 413.130375 259.417687 413.130375 259.417687 266.905125 539.535937 266.905125 539.535937 38.7585 96.4558125 38.7585 0.4404375 134.773875 0.4404375 394.632 0.4404375 431.62875 62.1016875 493.29"></polygon>
+                <polyline id="Path-2" points="299.057062 493.29 354.11175 438.235312 354.11175 166.925812 463.34025 166.925812 463.34025 269.988187 539.0955 345.743437 539.0955 493.29"></polyline>
+                <polyline id="Path-3" points="75.75525 493.29 75.75525 364.68225 225.504 214.9335 255.45375 214.9335 317.115 153.712687 579.61575 153.712687"></polyline>
+                <polyline id="Path-4" points="579.61575 431.62875 499.456125 431.62875 299.057062 231.229688 299.057062 66.9465 225.504 66.9465 149.74875 142.70175 75.75525 142.70175 -6.82121026e-13 66.9465 -6.82121026e-13 0"></polyline>
+            </g>
+            <path d="M1.36424205e-12,390.4035 L72.396857,318.006643 C77.0852665,313.318234 83.4441143,310.684312 90.0745266,310.684312 L173.747536,310.684312 C180.377948,310.684312 186.736796,313.318234 191.425205,318.006643 L201.885482,328.46692 C206.573891,333.155329 212.932739,335.78925 219.563152,335.78925 L237.642319,335.78925 C244.254182,335.78925 250.5968,333.170004 255.282094,328.504733 L343.712906,240.45183 C348.3982,235.786558 354.740818,233.167312 361.352681,233.167312 L450.574746,233.167312 C457.066934,233.167312 463.304099,230.639822 467.964844,226.120312 C472.625588,221.600803 478.862753,219.073312 485.354941,219.073312 L562.213411,219.073312 C568.843823,219.073312 575.202671,216.439391 579.89108,211.750982 L686.642063,105" id="track-2" stroke="#22354A" stroke-width="7.927875" stroke-linecap="square" stroke-linejoin="round" transform="translate(343.321031, 247.701750) scale(-1, 1) translate(-343.321031, -247.701750) "></path>
+            <g id="feature-toggle-2" transform="translate(468.000000, 226.000000)">
+                <g id="Rectangle">
+                    <use fill="black" fill-opacity="1" filter="url(#filter-3)" xlink:href="#path-2"></use>
+                    <use fill="#22354A" fill-rule="evenodd" xlink:href="#path-2"></use>
+                </g>
+                <text id="Feature" font-family="Raleway-Regular, Raleway" font-size="16.2" font-weight="normal" fill="#E9E9E9">
+                    <tspan x="4.05625" y="17">Feature</tspan>
+                </text>
+                <text id="Label" font-family="Raleway-Regular, Raleway" font-size="11.175" font-weight="normal" line-spacing="21.2625" fill="#A1AEB7">
+                    <tspan x="4.55625" y="32.2375">Disabled</tspan>
+                </text>
+                <rect id="Rectangle" stroke="url(#linearGradient-4)" stroke-width="2" fill="#22354A" x="113" y="14" width="33" height="17" rx="8.5"></rect>
+                <g id="Oval">
+                    <use fill="black" fill-opacity="1" filter="url(#filter-6)" xlink:href="#path-5"></use>
+                    <use stroke="#F94F73" stroke-width="2" fill="#22354A" fill-rule="evenodd" xlink:href="#path-5"></use>
+                </g>
+            </g>
+            <g id="feature-toggle-1" transform="translate(128.000000, 137.000000)">
+                <g id="Rectangle">
+                    <use fill="black" fill-opacity="1" filter="url(#filter-8)" xlink:href="#path-7"></use>
+                    <use fill="#22354A" fill-rule="evenodd" xlink:href="#path-7"></use>
+                </g>
+                <text id="Feature" font-family="Raleway-Regular, Raleway" font-size="16.2" font-weight="normal" fill="#E9E9E9">
+                    <tspan x="4.05625" y="17">Feature</tspan>
+                </text>
+                <text id="Label" font-family="Raleway-Regular, Raleway" font-size="11.175" font-weight="normal" line-spacing="21.2625" fill="#A1AEB7">
+                    <tspan x="4.55625" y="32.2375">Enabled</tspan>
+                </text>
+                <rect id="Rectangle" stroke="url(#linearGradient-9)" stroke-width="2" fill="#22354A" x="113" y="14" width="33" height="17" rx="8.5"></rect>
+                <g id="Oval">
+                    <use fill="black" fill-opacity="1" filter="url(#filter-11)" xlink:href="#path-10"></use>
+                    <use stroke="#6633ff" stroke-width="2" fill="#22354A" fill-rule="evenodd" xlink:href="#path-10"></use>
+                </g>
+            </g>
+        </g>
+    </g>
+</svg>

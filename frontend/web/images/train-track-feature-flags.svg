@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="648px" height="495px" viewBox="0 0 648 495" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+    <!-- Generator: Sketch 55.1 (78136) - https://sketchapp.com -->
+    <title>train-track-feature-flags</title>
+    <desc>Created with Sketch.</desc>
+    <defs>
+        <radialGradient cx="50%" cy="53.8449755%" fx="50%" fy="53.8449755%" r="63.7687611%" gradientTransform="translate(0.500000,0.538450),scale(0.763758,1.000000),rotate(180.000000),translate(-0.500000,-0.538450)" id="radialGradient-1">
+            <stop stop-color="#476581" offset="0%"></stop>
+            <stop stop-color="#22354A" offset="100%"></stop>
+        </radialGradient>
+        <linearGradient x1="50%" y1="0%" x2="50%" y2="100%" id="linearGradient-2">
+            <stop stop-color="#FD87AB" offset="0%"></stop>
+            <stop stop-color="#FC789D" stop-opacity="0.9" offset="50.6492821%"></stop>
+            <stop stop-color="#F94F73" stop-opacity="0" offset="100%"></stop>
+        </linearGradient>
+        <linearGradient x1="100%" y1="50%" x2="0%" y2="50%" id="linearGradient-3">
+            <stop stop-color="#56F3ED" offset="0%"></stop>
+            <stop stop-color="#41EBE2" stop-opacity="0.7" offset="65.9707559%"></stop>
+            <stop stop-color="#6633ff" stop-opacity="0" offset="100%"></stop>
+        </linearGradient>
+    </defs>
+    <g id="train-track-feature-flags" stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
+        <g>
+            <rect id="background-gradient" fill="url(#radialGradient-1)" x="0" y="0" width="648.15" height="495.03"></rect>
+            <g id="background-tracks" transform="translate(66.506062, 0.000000)" stroke="#314C6A" stroke-linecap="square" stroke-linejoin="round" stroke-width="7.047">
+                <polygon id="track-3" points="125.524687 493.29 125.524687 413.130375 259.417687 413.130375 259.417687 266.905125 539.535937 266.905125 539.535937 38.7585 96.4558125 38.7585 0.4404375 134.773875 0.4404375 394.632 0.4404375 431.62875 62.1016875 493.29"></polygon>
+                <polyline id="Path-2" points="299.057062 493.29 354.11175 438.235312 354.11175 166.925812 463.34025 166.925812 463.34025 269.988187 539.0955 345.743437 539.0955 493.29"></polyline>
+                <polyline id="Path-3" points="75.75525 493.29 75.75525 364.68225 225.504 214.9335 255.45375 214.9335 317.115 153.712687 579.61575 153.712687"></polyline>
+                <polyline id="Path-4" points="579.61575 431.62875 499.456125 431.62875 299.057062 231.229688 299.057062 66.9465 225.504 66.9465 149.74875 142.70175 75.75525 142.70175 -6.82121026e-13 66.9465 -6.82121026e-13 0"></polyline>
+            </g>
+            <polyline id="track-1" stroke="#22354A" stroke-width="7.927875" stroke-linecap="square" stroke-linejoin="round" points="626.4 78.3 336.69 78.3 247.95 167.04 247.966312 230.78925 332.530313 315.35325 397.274625 315.35325 446.603625 364.68225 446.603625 493.29"></polyline>
+            <polyline id="track-2" stroke="#22354A" stroke-width="7.927875" stroke-linecap="square" stroke-linejoin="round" points="0 285.4035 79.7191875 205.684313 184.102875 205.684313 209.207813 230.78925 247.966313 230.78925 351.028688 128.167313 460.697625 128.167313 475.232063 114.073313 572.56875 114.073313 686.642063 0"></polyline>
+            <path d="M446.603625,427.224375 C448.5496,427.224375 450.127125,428.8019 450.127125,430.747875 L450.127125,468.6255 L443.080125,468.6255 L443.080125,430.747875 C443.080125,428.8019 444.65765,427.224375 446.603625,427.224375 Z" id="red-bullet" fill="url(#linearGradient-2)"></path>
+            <path d="M135.65475,201.720375 L173.091938,201.720375 C175.28116,201.720375 177.055875,203.49509 177.055875,205.684313 C177.055875,207.873535 175.28116,209.64825 173.091938,209.64825 L135.65475,209.64825 L135.65475,201.720375 Z" id="green-bullet" fill="url(#linearGradient-3)"></path>
+        </g>
+    </g>
+</svg>
