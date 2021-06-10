@@ -25,28 +25,20 @@ jobs:
               with:
                   fetch-depth: 0
 
-            - name: Build with Node.js 14.x
+            - name: Setup Node.js 14.x
               uses: actions/setup-node@v1
-              env:
-                ENV: staging
               with:
                   node-version: 14.x
-              run: |
-                npm i
-                npm run env
-                npm run dotenv
-                npm run bundledev
+
+            - name: Setup npm environment
+              env:
+                ENV: staging
+              run: npm i && npm run env
 
             - name: Run E2E Tests
               env:
                 E2E_TEST_TOKEN: ${{ secrets.E2E_TEST_TOKEN }}
-                ENV: staging
-              run: |
-                google-chrome --version
-                node -v
-                npm i
-                npm run env
-                npm run test
+              run: npm run test
 
             - name: Setup Cloud SDK
               uses: google-github-actions/setup-gcloud@v0.2.0
@@ -55,4 +47,7 @@ jobs:
                   service_account_key: ${{ secrets.FRONTEND_GOOGLECLOUD_SERVICEACCOUNT_KEY }}
 
             - name: Deploy to App Engine
-              run: gcloud app deploy --quiet
+              run: |
+                npm run dotenv
+                npm run bundledev
+                gcloud app deploy --quiet
