@@ -68,7 +68,7 @@
     "ionicons": "4.0.0",
     "js-cookie": "2.2.1",
     "json-loader": "0.5.4",
-    "lodash": "4.17.15",
+    "lodash": "4.17.21",
     "material-ui-chip-input": "1.1.0",
     "moment": "2.22.2",
     "node-fetch": "2.6.1",
