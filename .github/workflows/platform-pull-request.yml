@@ -33,6 +33,8 @@ jobs:
                   DATABASE_URL: postgresql://postgres:postgres@postgres:5432/flagsmith
                   SENDGRID_API_KEY: ${{ secrets.SENDGRID_API_KEY }}
               run: |
+                  apt update
+                  apt install -y screen
                   python3.8 -m pip install --upgrade pip
                   python3.8 -m pip install -r requirements.txt
                   python3.8 manage.py migrate
