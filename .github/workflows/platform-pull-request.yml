@@ -18,19 +18,24 @@ jobs:
                     POSTGRES_DB: flagsmith
                 ports: ['5432:5432']
                 options: --health-cmd pg_isready --health-interval 10s --health-timeout 5s --health-retries 5
-            api:
-                image: flagsmith/flagsmith-api:latest
-                env:
-                    E2E_TEST_AUTH_TOKEN: some-token
-                    DJANGO_ALLOWED_HOSTS: '*'
-                    DATABASE_URL: postgresql://postgres:postgres@postgres:5432/flagsmith
-                ports: ['8000:8000']
 
         steps:
             - name: Cloning repo
               uses: actions/checkout@v2
               with:
                   fetch-depth: 0
+
+            - name: Run API
+              working-directory: api
+              env:
+                  E2E_TEST_AUTH_TOKEN: some-token
+                  DJANGO_ALLOWED_HOSTS: '*'
+                  DATABASE_URL: postgresql://postgres:postgres@postgres:5432/flagsmith
+                  SENDGRID_API_KEY: ${{ secrets.SENDGRID_API_KEY }}
+              run: |
+                  apt-get install -y docker
+                  docker build -t api .
+                  docker run -d -p 8000:8000 -e E2E_TEST_AUTH_TOKEN=$E2E_TEST_AUTH_TOKEN -e DJANGO_ALLOWED_HOSTS=$DJANGO_ALLOWED_HOSTS -e DATABASE_URL=$DATABASE_URL -e SENDGRID_API_KEY=$SENDGRID_API_KEY api:latest
 
             - name: Test with Chromedriver
               working-directory: frontend
