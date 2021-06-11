@@ -1,4 +1,4 @@
-# See https://docs.flagsmith.com/docker/ for more information on running Flagsmith in Docker
+# See https://docs.flagsmith.com/deployment/docker for more information on running Flagsmith in Docker
 # This will docker-compose file will run the entire Flagsmith Platform in Docker
 # Uncomment and configure InfluxDB lines below (not neccesary but adds some functionality that requires InfluxDB)
 
