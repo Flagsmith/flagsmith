@@ -32,6 +32,7 @@ jobs:
                   DJANGO_ALLOWED_HOSTS: '*'
                   DATABASE_URL: postgresql://postgres:postgres@postgres:5432/flagsmith
                   SENDGRID_API_KEY: ${{ secrets.SENDGRID_API_KEY }}
+                  FE_E2E_TEST_USER_EMAIL: nightwatch@solidstategroup.com
               run: |
                   apt update
                   apt install -y screen
