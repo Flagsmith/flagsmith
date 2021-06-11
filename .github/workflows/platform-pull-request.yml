@@ -25,21 +25,24 @@ jobs:
               with:
                   fetch-depth: 0
 
-            - name: Test with Chromedriver
+            - name: Run API
+              working-directory: api
               env:
-                  E2E_TEST_TOKEN_LOCAL: some-token
                   E2E_TEST_AUTH_TOKEN: some-token
-                  ENV: local
                   DJANGO_ALLOWED_HOSTS: '*'
                   DATABASE_URL: postgresql://postgres:postgres@postgres:5432/flagsmith
               run: |
-                  cd api
                   python3.8 -m pip install --upgrade pip
                   pip install -r requirements-dev.txt
                   python3.8 manage.py migrate
-                  python3.8 manage.py runserver &
+                  python3.8 manage.py runserver
 
-                  cd ../frontend
+            - name: Test with Chromedriver
+              working-directory: frontend
+              env:
+                  E2E_TEST_TOKEN_LOCAL: some-token
+                  ENV: local
+              run: |
                   google-chrome --version
                   node -v
                   npm i
