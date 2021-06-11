@@ -35,6 +35,7 @@ const sendSuccess = function () {
 };
 const clearDown = function (browser, done) {
     let token;
+    console.log(Project.env.toUpperCase());
     if (process.env[`E2E_TEST_TOKEN_${Project.env.toUpperCase()}`]) {
         token = process.env[`E2E_TEST_TOKEN_${Project.env.toUpperCase()}`];
     } else {
