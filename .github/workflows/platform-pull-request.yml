@@ -33,9 +33,10 @@ jobs:
                   DATABASE_URL: postgresql://postgres:postgres@postgres:5432/flagsmith
                   SENDGRID_API_KEY: ${{ secrets.SENDGRID_API_KEY }}
               run: |
-                  apt-get install -y docker
-                  docker build -t api .
-                  docker run -d -p 8000:8000 -e E2E_TEST_AUTH_TOKEN=$E2E_TEST_AUTH_TOKEN -e DJANGO_ALLOWED_HOSTS=$DJANGO_ALLOWED_HOSTS -e DATABASE_URL=$DATABASE_URL -e SENDGRID_API_KEY=$SENDGRID_API_KEY api:latest
+                  python3.8 -m pip install --upgrade pip
+                  python3.8 -m pip install -r requirements.txt
+                  python3.8 manage.py migrate
+                  screen -d -m python3.8 manage.py runserver
 
             - name: Test with Chromedriver
               working-directory: frontend
