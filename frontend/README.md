@@ -100,12 +100,11 @@ We use Flagsmith to manage features we rollout, if you are using your own Flagsm
 
 A list of the flags and remote config we're currently using in production can be found here https://gist.github.com/kyle-ssg/55f3b869c28bdd13c02c6688bc76c67f.
 
-
 ## Useful links
 
 [Website](https://flagsmith.com)
 
-[Product Roadmap](https://github.com/Flagsmith/flagsmith-api/projects/1)
+[Product Roadmap](https://github.com/Flagsmith/flagsmith/projects/1)
 
 [Documentation](https://docs.flagsmith.com/)
 
