@@ -27,8 +27,9 @@ jobs:
 
             - name: Test with Chromedriver
               env:
-                  E2E_TEST_TOKEN_DEV: ${{ secrets.E2E_TEST_TOKEN_DEV }}
-                  SENDGRID_API_KEY: ${{ secrets.SENDGRID_API_KEY }}
+                  E2E_TEST_TOKEN_LOCAL: some-token
+                  E2E_TEST_AUTH_TOKEN: some-token
+                  ENV: local
                   DJANGO_ALLOWED_HOSTS: '*'
                   DATABASE_URL: postgresql://postgres:postgres@postgres:5432/flagsmith
               run: |
@@ -42,5 +43,5 @@ jobs:
                   google-chrome --version
                   node -v
                   npm i
-                  export ENV=dev; echo 'Setting env to' $ENV; npm run env
+                  npm run env
                   npm run test
