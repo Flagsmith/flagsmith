@@ -19,7 +19,7 @@ jobs:
                 ports: ['5432:5432']
                 options: --health-cmd pg_isready --health-interval 10s --health-timeout 5s --health-retries 5
             api:
-                image: flagsmith-api:latest
+                image: flagsmith/flagsmith-api:latest
                 env:
                     E2E_TEST_AUTH_TOKEN: some-token
                     DJANGO_ALLOWED_HOSTS: '*'
