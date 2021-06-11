@@ -1,4 +1,4 @@
-FROM python:3.8-slim as application
+FROM python:3.8 as application
 
 WORKDIR /app
 COPY requirements.txt /app/

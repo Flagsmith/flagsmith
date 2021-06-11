@@ -32,10 +32,8 @@ jobs:
                   DJANGO_ALLOWED_HOSTS: '*'
                   DATABASE_URL: postgresql://postgres:postgres@postgres:5432/flagsmith
               run: |
-                  python3.8 -m pip install --upgrade pip
-                  pip install -r requirements-dev.txt
-                  python3.8 manage.py migrate
-                  python3.8 manage.py runserver
+                  docker build -t api .
+                  docker run -d -p 8000:8000 api:latest
 
             - name: Test with Chromedriver
               working-directory: frontend
