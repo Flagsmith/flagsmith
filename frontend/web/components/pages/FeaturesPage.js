@@ -29,7 +29,6 @@ const FeaturesPage = class extends Component {
                 this.setState({ tags: tags.map(v => v.id) });
             }
         });
-        this.getTags(this.props.match.params.projectId);
         AppActions.getFeatures(this.props.match.params.projectId, this.props.match.params.environmentId);
     }
 
