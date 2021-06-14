@@ -1,4 +1,4 @@
-name: API Deploy to Staging
+name: API Deploy to Production
 
 on:
   push:
@@ -12,7 +12,7 @@ on:
 jobs:
   deploy-staging:
     runs-on: ubuntu-latest
-    name: API Deploy to Staging
+    name: API Deploy to Production
     container: flagsmith/eb-cli:latest
     environment: production
 
