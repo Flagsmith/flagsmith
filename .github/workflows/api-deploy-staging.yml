@@ -33,6 +33,7 @@ jobs:
         name: Run E2E Tests
         container: kylessg/bullet-train-nightwatch:1.1
         environment: staging
+        needs: deploy-staging
 
         steps:
             - name: Cloning repo

@@ -2,9 +2,6 @@ name: API Deploy to Production
 
 on:
   push:
-    # TODO: remove this after one successful build
-    branches:
-      - main
     tags:
       - '*'
     paths:
@@ -12,7 +9,7 @@ on:
       - '.github/**'
 
 jobs:
-  deploy-staging:
+  deploy-production:
     runs-on: ubuntu-latest
     name: API Deploy to Production
     container: flagsmith/eb-cli:latest
@@ -29,13 +26,14 @@ jobs:
         env:
           AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
           AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-        run: eb deploy production-api -l "${GITHUB_SHA}"
+        run: eb deploy production-api -l "${GITHUB_REF}"
 
   run-tests:
     runs-on: ubuntu-latest
     name: Run E2E Tests
     container: kylessg/bullet-train-nightwatch:1.1
     environment: production
+    needs: deploy-production
 
     steps:
       - name: Cloning repo
