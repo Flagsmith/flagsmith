@@ -2,6 +2,7 @@ name: API Deploy to Production
 
 on:
   push:
+    # TODO: remove this after one successful build
     branches:
       - main
     tags:
