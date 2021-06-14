@@ -53,11 +53,6 @@ jobs:
               with:
                   node-version: 14.x
 
-            - name: Setup npm environment
-              env:
-                  ENV: prod
-              run: npm i && npm run env
-
             - name: Setup Cloud SDK
               uses: google-github-actions/setup-gcloud@v0.2.0
               with:
@@ -65,7 +60,12 @@ jobs:
                   service_account_key: ${{ secrets.FRONTEND_GOOGLECLOUD_SERVICEACCOUNT_KEY }}
 
             - name: Deploy to App Engine
+              env:
+                ASSET_URL: https://cdn.flagsmith.com
+                ENV: prod
               run: |
+                  npm i
+                  npm run env
                   npm run dotenv
-                  npm run bundledev
+                  npm run bundle
                   gcloud app deploy --quiet
