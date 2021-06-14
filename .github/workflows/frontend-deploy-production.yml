@@ -27,7 +27,7 @@ jobs:
 
             - name: Run E2E Tests
               env:
-                  E2E_TEST_TOKEN: ${{ secrets.E2E_TEST_TOKEN }}
+                  E2E_TEST_TOKEN_PROD: ${{ secrets.E2E_TEST_TOKEN }}
                   ENV: prod
               run: |
                   google-chrome --version
