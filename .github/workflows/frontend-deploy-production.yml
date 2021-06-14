@@ -65,6 +65,8 @@ jobs:
                   service_account_key: ${{ secrets.FRONTEND_GOOGLECLOUD_SERVICEACCOUNT_KEY }}
 
             - name: Deploy to App Engine
+              env:
+                ASSET_URL: https://cdn.flagsmith.com
               run: |
                   npm run dotenv
                   npm run bundle
