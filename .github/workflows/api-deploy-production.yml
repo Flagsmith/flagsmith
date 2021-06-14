@@ -3,8 +3,9 @@ name: API Deploy to Production
 on:
   push:
     branches:
-      - tags
       - main
+    tags:
+      - '*'
     paths:
       - 'api/**'
       - '.github/**'
