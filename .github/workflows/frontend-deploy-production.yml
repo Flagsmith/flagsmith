@@ -1,0 +1,71 @@
+name: Frontend Deploy to Production
+
+on:
+    push:
+        branches:
+            - main
+        paths:
+            - 'frontend/**'
+            - '.github/**'
+
+defaults:
+    run:
+        working-directory: frontend
+
+jobs:
+    run-tests:
+        runs-on: ubuntu-latest
+        name: Run E2E Tests
+        environment: production
+        container: kylessg/bullet-train-nightwatch:1.1
+
+        steps:
+            - name: Cloning repo
+              uses: actions/checkout@v2
+              with:
+                  fetch-depth: 0
+
+            - name: Run E2E Tests
+              env:
+                  E2E_TEST_TOKEN: ${{ secrets.E2E_TEST_TOKEN }}
+                  ENV: prod
+              run: |
+                  google-chrome --version
+                  node -v
+                  npm i
+                  npm run env
+                  npm run test
+
+    deploy-production:
+        runs-on: ubuntu-latest
+        name: Deploy to Production
+        environment: production
+        needs: run-tests
+
+        steps:
+            - name: Cloning repo
+              uses: actions/checkout@v2
+              with:
+                  fetch-depth: 0
+
+            - name: Setup Node.js 14.x
+              uses: actions/setup-node@v1
+              with:
+                  node-version: 14.x
+
+            - name: Setup npm environment
+              env:
+                  ENV: prod
+              run: npm i && npm run env
+
+            - name: Setup Cloud SDK
+              uses: google-github-actions/setup-gcloud@v0.2.0
+              with:
+                  project_id: bullet-train-front-end-prod
+                  service_account_key: ${{ secrets.FRONTEND_GOOGLECLOUD_SERVICEACCOUNT_KEY }}
+
+            - name: Deploy to App Engine
+              run: |
+                  npm run dotenv
+                  npm run bundledev
+                  gcloud app deploy --quiet
