@@ -67,5 +67,5 @@ jobs:
             - name: Deploy to App Engine
               run: |
                   npm run dotenv
-                  npm run bundledev
+                  npm run bundle
                   gcloud app deploy --quiet
