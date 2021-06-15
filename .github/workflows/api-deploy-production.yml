@@ -1,0 +1,54 @@
+name: API Deploy to Production
+
+on:
+  push:
+    tags:
+      - '*'
+    paths:
+      - 'api/**'
+      - '.github/**'
+
+jobs:
+  deploy-production:
+    runs-on: ubuntu-latest
+    name: API Deploy to Production
+    container: flagsmith/eb-cli:latest
+    environment: production
+
+    steps:
+      - name: Cloning repo
+        uses: actions/checkout@v2
+        with:
+          fetch-depth: 0
+
+      - name: Push to ElasticBeanstalk
+        working-directory: api
+        env:
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        run: eb deploy production-api -l "${GITHUB_REF}"
+
+  run-tests:
+    runs-on: ubuntu-latest
+    name: Run E2E Tests
+    container: kylessg/bullet-train-nightwatch:1.1
+    environment: production
+    needs: deploy-production
+
+    steps:
+      - name: Cloning repo
+        uses: actions/checkout@v2
+        with:
+          fetch-depth: 0
+
+      - name: Test with Chromedriver
+        working-directory: frontend
+        env:
+          E2E_TEST_TOKEN_PROD: ${{ secrets.E2E_TEST_TOKEN }}
+        run: |
+          google-chrome --version
+          node -v
+          npm i
+          export ENV=prod;
+          npm run env
+          npm run test
