@@ -8,11 +8,11 @@ const keywords = {
     USER_ID: 'user_123456',
     FEATURE_FUNCTION: 'myCoolFeature',
     SEGMENT_NAME: 'superUsers',
-    FEATURE_NAME: 'myCoolFeature',
+    FEATURE_NAME: 'my_cool_feature',
     TRAIT_NAME: 'age',
     USER_FEATURE_FUNCTION: 'myEvenCoolerFeature',
-    USER_FEATURE_NAME: 'myEvenCoolerFeature',
-    FEATURE_NAME_ALT: 'bannerSize',
+    USER_FEATURE_NAME: 'my_even_cool_feature',
+    FEATURE_NAME_ALT: 'banner_size',
     FEATURE_NAME_ALT_VALUE: 'big',
 };
 
@@ -84,7 +84,6 @@ const Constants = {
         'VIEW_SEGMENT': { 'event': 'Segment viewed', 'category': 'Segment' },
         'UPDATE_USER_ROLE': { 'event': 'Updated user role', 'category': 'Organisation' },
         'GET_INFLUX_DATA': { 'event': 'Get Influx data', 'category': 'Organisation' },
-
     },
     modals: {
         'PAYMENT': 'Payment Modal',
