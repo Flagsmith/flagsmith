@@ -1,6 +1,12 @@
 FROM python:3.8-slim as application
 
 WORKDIR /app
+
+# Install python packages locally in a virtualenv
+ENV VIRTUAL_ENV=/opt/venv
+RUN python3 -m venv $VIRTUAL_ENV
+ENV PATH="$VIRTUAL_ENV/bin:$PATH"
+
 COPY requirements.txt /app/
 RUN pip install -r requirements.txt
 
