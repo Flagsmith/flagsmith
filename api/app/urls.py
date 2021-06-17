@@ -18,7 +18,6 @@ urlpatterns = [
         r"^sales-dashboard/",
         include("sales_dashboard.urls", namespace="sales_dashboard"),
     ),
-    path("", views.frontend_homepage, name="index"),
     # this url is used to generate email content for the password reset workflow
     url(
         r"^password-reset/confirm/(?P<uidb64>[0-9A-Za-z_\-]+)/(?P<token>[0-9A-Za-z]{1,"
@@ -26,6 +25,9 @@ urlpatterns = [
         password_reset_redirect,
         name="password_reset_confirm",
     ),
+    path("", views.frontend_homepage, name="index"),
+    # Catch all for subfolder views on the front end
+    url(r"^.*/$", views.frontend_homepage, name="index"),
 ]
 
 if settings.DEBUG:
