@@ -26,6 +26,8 @@ jobs:
 
             - name: Set Up Chromedriver
               uses: nanasess/setup-chromedriver@master
+              with:
+                  chromedriver-version: '85.0.4183.87'
 
             - name: Run API
               working-directory: api
