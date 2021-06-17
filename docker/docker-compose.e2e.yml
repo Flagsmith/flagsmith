@@ -1,0 +1,47 @@
+# See https://docs.flagsmith.com/deployment/docker for more information on running Flagsmith in Docker
+# This will docker-compose file will run the entire Flagsmith Platform in Docker
+# Uncomment and configure InfluxDB lines below (not neccesary but adds some functionality that requires InfluxDB)
+
+version: '3'
+services:
+    db:
+        image: postgres:11.12-alpine
+        environment:
+            POSTGRES_PASSWORD: password
+            POSTGRES_DB: flagsmith
+        container_name: flagsmith_postgres
+
+    flagsmith-api:
+        image: flagsmith/flagsmith-api:v2.7.1
+        environment:
+            DJANGO_ALLOWED_HOSTS: '*' # Change this in production
+            DATABASE_URL: postgresql://postgres:password@db:5432/flagsmith
+            E2E_TEST_AUTH_TOKEN: some-token
+            DJANGO_ALLOWED_HOSTS: '*'
+            SENDGRID_API_KEY: 123
+            FE_E2E_TEST_USER_EMAIL: nightwatch@solidstategroup.com
+        ports:
+            - '8000:8000'
+        depends_on:
+            - db
+        links:
+            - db:db
+        container_name: flagsmith-api
+
+    frontend:
+        build: 
+            context: ../frontend/
+            dockerfile: ../docker/frontend/bullet-train-nightwatch/Dockerfile
+        environment:
+            # You might need to change the 2 host names below depending on your docker dns setup
+            DISABLE_INFLUXDB_FEATURES: 1 # Comment out to enable InfluxDB
+            FLAGSMITH: 4vfqhypYjcPoGGu8ByrBaj # This is the production Flagsmith API key
+            E2E_TEST_TOKEN: 13
+        ports:
+            - '8080:8080'
+        links:
+            - flagsmith-api:flagsmith-api
+        container_name: flagsmith_frontend
+        command: >
+            sh -c "export ENV=e2e && npm run env && npm run start"
+      
