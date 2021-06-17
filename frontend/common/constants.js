@@ -11,7 +11,7 @@ const keywords = {
     FEATURE_NAME: 'my_cool_feature',
     TRAIT_NAME: 'age',
     USER_FEATURE_FUNCTION: 'myEvenCoolerFeature',
-    USER_FEATURE_NAME: 'my_even_cool_feature',
+    USER_FEATURE_NAME: 'my_even_cooler_feature',
     FEATURE_NAME_ALT: 'banner_size',
     FEATURE_NAME_ALT_VALUE: 'big',
 };
