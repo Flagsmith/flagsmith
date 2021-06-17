@@ -265,7 +265,7 @@ const OrganisationSettingsPage = class extends Component {
                                         <form key={organisation.id} onSubmit={this.save}>
                                             <h5>Organisation Name</h5>
                                             <Row>
-                                                <Column className="m-l-0 mb-2">
+                                                <Column className="m-l-0">
                                                     <Input
                                                       ref={e => this.input = e}
                                                       value={this.state.name || organisation.name}
@@ -276,7 +276,7 @@ const OrganisationSettingsPage = class extends Component {
                                                       placeholder="My Organisation"
                                                     />
                                                 </Column>
-                                                <Button disabled={this.saveDisabled()} className="">
+                                                <Button disabled={this.saveDisabled()} className="float-right">
                                                     {isSaving ? 'Saving' : 'Save'}
                                                 </Button>
                                             </Row>
@@ -365,6 +365,7 @@ const OrganisationSettingsPage = class extends Component {
                                                     Invite members
                                                     </Button>
                                                 </Row>
+                                                <p>
                                                 {'You are currently using '}
                                                 <strong className={organisation.num_seats > (_.get(organisation, 'subscription.max_seats') || 1) ? 'text-danger' : ''}>
                                                     {`${organisation.num_seats} of ${_.get(organisation, 'subscription.max_seats') || 1}`}
@@ -382,6 +383,7 @@ const OrganisationSettingsPage = class extends Component {
                                                 </a>
                                                 )
                                                 }
+                                                </p>
                                                 {
                                                     this.props.hasFeature('invite_link') && inviteLinks && (
                                                     <form onSubmit={(e) => {
@@ -439,7 +441,7 @@ const OrganisationSettingsPage = class extends Component {
                                                         <p className="mt-3">
                                                               Anyone with link can join as a standard user, once they have joined you can edit their role from the team members panel.
                                                             {' '}
-                                                            <ButtonLink target="_blank" href="https://docs.flagsmith.com/permissions/">Learn about User Roles.</ButtonLink>
+                                                            <ButtonLink target="_blank" href="https://docs.flagsmith.com/advanced-use/permissions">Learn about User Roles.</ButtonLink>
                                                         </p>
                                                         <div className="text-right mt-2">
                                                             {error && <Error error={error}/>}
@@ -623,7 +625,7 @@ const OrganisationSettingsPage = class extends Component {
                                 <p>
                                 Audit webhooks let you know when audit logs occur, you can configure 1 or more audit webhooks per organisation.
                                     {' '}
-                                    <ButtonLink href="https://docs.flagsmith.com/system-administration/">Learn about audit webhooks.</ButtonLink>
+                                    <ButtonLink href="https://docs.flagsmith.com/advanced-use/system-administration#audit-log-webhooks/">Learn about Audit Webhooks.</ButtonLink>
                                 </p>
                                 {webhooksLoading && !webhooks ? (
                                     <Loader/>
