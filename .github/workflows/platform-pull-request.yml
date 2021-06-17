@@ -52,7 +52,7 @@ jobs:
                   E2E_TEST_TOKEN_DEV: some-token
               run: |
                   wget https://dl.google.com/linux/chrome/deb/pool/main/g/google-chrome-stable/google-chrome-stable_85.0.4183.102-1_amd64.deb
-                  sudo apt install -y ./google-chrome*.deb -f
+                  sudo apt install --allow-downgrades -y ./google-chrome*.deb -f 
                   google-chrome --version
                   node -v
                   npm i
