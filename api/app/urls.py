@@ -1,7 +1,7 @@
 from django.conf import settings
-from django.conf.urls import include, static, url
+from django.conf.urls import include, url
 from django.contrib import admin
-from django.http import HttpResponse
+from django.contrib.staticfiles.views import serve
 from django.urls import path
 
 from users.views import password_reset_redirect
@@ -25,9 +25,9 @@ urlpatterns = [
         password_reset_redirect,
         name="password_reset_confirm",
     ),
-    path("", views.frontend_homepage, name="index"),
+    path("", views.index, name="index"),
     # Catch all for subfolder views on the front end
-    url(r"^.*/$", views.frontend_homepage, name="index"),
+    url(r"^.*/$", views.index, name="index"),
 ]
 
 if settings.DEBUG:
