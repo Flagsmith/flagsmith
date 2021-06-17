@@ -67,7 +67,7 @@ django-templated-mail==1.1.1
     # via djoser
 django-trench==0.2.3
     # via -r requirements.in
-django==2.2.23
+django==2.2.24
     # via
     #   -r requirements.in
     #   django-admin-sso

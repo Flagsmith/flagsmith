@@ -1,13 +1,18 @@
 FROM python:3.8 as application
 
 WORKDIR /app
+
+# Install python packages locally in a virtualenv
+ENV VIRTUAL_ENV=/opt/venv
+RUN python3 -m venv $VIRTUAL_ENV
+ENV PATH="$VIRTUAL_ENV/bin:$PATH"
+
 COPY requirements.txt /app/
 RUN pip install -r requirements.txt
 
-COPY docker/ /app/bin/
-COPY . /app/src/
+COPY . /app/
 
-RUN python src/manage.py collectstatic --no-input
+RUN python manage.py collectstatic --no-input
 
 ARG ACCESS_LOG_LOCATION="/dev/null"
 ENV ACCESS_LOG_LOCATION=${ACCESS_LOG_LOCATION}
@@ -17,4 +22,4 @@ EXPOSE 8000
 
 USER nobody
 
-CMD ["./bin/docker"]
+CMD ["./scripts/run-docker.sh"]

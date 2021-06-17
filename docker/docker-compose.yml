@@ -1,11 +1,11 @@
-# See https://docs.flagsmith.com/docker/ for more information on running Flagsmith in Docker
+# See https://docs.flagsmith.com/deployment/docker for more information on running Flagsmith in Docker
 # This will docker-compose file will run the entire Flagsmith Platform in Docker
 # Uncomment and configure InfluxDB lines below (not neccesary but adds some functionality that requires InfluxDB)
 
 version: '3'
 services:
     api:
-        image: flagsmith/flagsmith-api:v2.6.0
+        image: flagsmith/flagsmith-api:v2.7.1
         environment:
             DJANGO_ALLOWED_HOSTS: '*' # Change this in production
             DATABASE_URL: postgresql://postgres:password@db:5432/flagsmith
@@ -23,7 +23,7 @@ services:
         container_name: flagsmith_api
 
     frontend:
-        image: flagsmith/flagsmith-frontend:v2.6.2
+        image: flagsmith/flagsmith-frontend:v2.7.0
         environment:
             # You might need to change the 2 host names below depending on your docker dns setup
             API_URL: http://localhost:8000/api/v1/

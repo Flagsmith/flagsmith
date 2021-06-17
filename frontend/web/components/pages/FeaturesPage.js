@@ -8,6 +8,7 @@ import TagSelect from '../TagSelect';
 import HistoryIcon from '../HistoryIcon';
 import TagValues from '../TagValues';
 import withAuditWebhooks from '../../../common/providers/withAuditWebhooks';
+import TagStore from '../../../common/stores/tags-store';
 
 const FeaturesPage = class extends Component {
     static displayName = 'FeaturesPage';
@@ -21,6 +22,13 @@ const FeaturesPage = class extends Component {
         this.state = {
             tags: [],
         };
+        ES6Component(this);
+        this.listenTo(TagStore, 'loaded', () => {
+            // const tags = TagStore.model && TagStore.model[parseInt(this.props.match.params.projectId)];
+            // if (this.state.tags.length === 0 && tags && tags.length > 0) {
+            //     this.setState({ tags: tags.map(v => v.id) });
+            // }
+        });
         AppActions.getFeatures(this.props.match.params.projectId, this.props.match.params.environmentId);
     }
 
