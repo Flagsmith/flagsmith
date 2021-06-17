@@ -32,7 +32,7 @@ jobs:
               env:
                   E2E_TEST_AUTH_TOKEN: some-token
                   DJANGO_ALLOWED_HOSTS: '*'
-                  DATABASE_URL: postgresql://postgres:postgres@postgres:5432/flagsmith
+                  DATABASE_URL: postgres://postgres:postgres@localhost:5432/flagsmith
                   SENDGRID_API_KEY: ${{ secrets.SENDGRID_API_KEY }}
                   FE_E2E_TEST_USER_EMAIL: nightwatch@solidstategroup.com
               run: |
