@@ -1,9 +1,11 @@
 from django.conf import settings
-from django.conf.urls import url, include
+from django.conf.urls import include, static, url
 from django.contrib import admin
 from django.http import HttpResponse
+from django.urls import path
 
 from users.views import password_reset_redirect
+
 from . import views
 
 urlpatterns = [
@@ -16,7 +18,7 @@ urlpatterns = [
         r"^sales-dashboard/",
         include("sales_dashboard.urls", namespace="sales_dashboard"),
     ),
-    url(r"", lambda r: HttpResponse("Flagsmith API")),
+    path("", views.frontend_homepage, name="index"),
     # this url is used to generate email content for the password reset workflow
     url(
         r"^password-reset/confirm/(?P<uidb64>[0-9A-Za-z_\-]+)/(?P<token>[0-9A-Za-z]{1,"

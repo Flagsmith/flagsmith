@@ -33,7 +33,7 @@ if ENV not in ("local", "dev", "staging", "production"):
         "ENVIRONMENT env variable must be one of local, dev, staging or production"
     )
 
-DEBUG = env("DEBUG", default=False)
+DEBUG = env("DEBUG", "False").lower() in ("true", "1", "t")
 
 # Enables the sending of telemetry data to the central Flagsmith API for usage tracking
 ENABLE_TELEMETRY = env("ENABLE_TELEMETRY", default=True)
@@ -176,6 +176,7 @@ REST_FRAMEWORK = {
 
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
+    "whitenoise.middleware.WhiteNoiseMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
     "corsheaders.middleware.CorsMiddleware",
     "django.middleware.common.CommonMiddleware",
