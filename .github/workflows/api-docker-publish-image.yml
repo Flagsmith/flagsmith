@@ -21,27 +21,6 @@ jobs:
               with:
                   fetch-depth: 0
 
-            - name: Edit version.txt
-              run: echo "$(git describe --tags `git rev-list --tags --max-count=1`)" > version.txt
-
-            - name: Commit update
-              uses: stefanzweifel/git-auto-commit-action@v4
-              with:
-                  commit_message: 'Automated update of version.txt'
-                  commit_user_name: Flagsmith Bot
-                  commit_user_email: support@flagsmith.com
-                  commit_author: Flagsmith Bot <support@flagsmith.com>
-
-            - name: Docker metadata
-              id: meta-build
-              uses: docker/metadata-action@v3
-              with:
-                  # todo: rename to flagsmith
-                  images: |
-                      dabeeeenster/flagsmith-api
-                  tags: |
-                      type=ref,event=branch
-
             - name: Write git info to Docker image
               run: |
                   cd api
@@ -53,9 +32,10 @@ jobs:
               id: meta
               uses: docker/metadata-action@v3
               with:
-                  # todo: rename to flagsmith
                   images: |
-                      dabeeeenster/flagsmith-api
+                      flagsmith/flagsmith
+                  flavor: |
+                      latest=${{ startsWith(github.ref, 'refs/heads/main') }}
                   tags: |
                       type=ref,event=branch
                       type=semver,pattern={{version}}
@@ -72,9 +52,6 @@ jobs:
               with:
                   username: ${{ secrets.DOCKERHUB_USERNAME }}
                   password: ${{ secrets.DOCKERHUB_TOKEN }}
-
-            - name: Inject slug/short variables
-              uses: rlespinasse/github-slug-action@v3.x
 
             - name: Build and push
               id: docker_build
