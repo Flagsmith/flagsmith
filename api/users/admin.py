@@ -3,6 +3,7 @@ from django.contrib.auth.admin import UserAdmin
 
 from organisations.models import UserOrganisation
 
+from .forms import CustomUserAdminForm
 from .models import FFAdminUser
 
 
@@ -17,6 +18,7 @@ class UserOrganisationInline(admin.TabularInline):
 @admin.register(FFAdminUser)
 class CustomUserAdmin(UserAdmin):
     model = FFAdminUser
+    form = CustomUserAdminForm
 
     add_fieldsets = (
         (
@@ -59,3 +61,5 @@ class CustomUserAdmin(UserAdmin):
     )
 
     inlines = [UserOrganisationInline]
+
+    # exclude = ["username"]
