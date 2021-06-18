@@ -44,7 +44,8 @@ module.exports = {
         browser
             .refresh()
             .waitAndClick(byId('feature-item-1'))
-            .waitForElementVisible('#create-feature-modal')
+            .waitForElementPresent('#create-feature-modal')
+            .pause(500)
             .waitForElementVisible(byId('featureValue'))
             .pause(200)
             .clearValue(byId('featureValue'))
