@@ -1,4 +1,3 @@
-const seleniumServer = require('selenium-server');
 const chromedriver = require('chromedriver');
 
 const SCREENSHOT_PATH = './screenshots/';
@@ -44,8 +43,11 @@ module.exports = {
             'desiredCapabilities': { // use Chrome as the default browser for tests
                 'browserName': 'chrome',
                 'javascriptEnabled': true, // turn off to test progressive enhancement
-                'chromeOptions': {
-                    'args': os.platform() === 'linux' ? ['headless', 'no-sandbox', browserSize] : [browserSize],
+                'goog:chromeOptions': {
+                    "args" : [
+                        "headless",
+                        "window-size=1920,1080"
+                    ],
                     w3c: false,
                 },
             },
