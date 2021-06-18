@@ -43,9 +43,9 @@ module.exports = {
             'desiredCapabilities': { // use Chrome as the default browser for tests
                 'browserName': 'chrome',
                 'javascriptEnabled': true, // turn off to test progressive enhancement
-                'goog:chromeOptions': {
+                'chromeOptions': {
                     "args" : [
-                        "headless",
+                        "headless",'no-sandbox', 'disable-setuid-sandbox','disable-gpu','disable-dev-shm-usage',
                         "window-size=1920,1080"
                     ],
                     w3c: false,
