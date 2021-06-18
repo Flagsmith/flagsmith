@@ -1,6 +1,7 @@
 /* eslint-disable no-unused-expressions */
 /* eslint-disable func-names */
-const inviteEmail = 'bullet-train@mailinator.com';
+const invitePrefix = `bullet-train${new Date().valueOf()}`;
+const inviteEmail = `${invitePrefix}@mailinator.com`;
 const email = 'nightwatch@solidstategroup.com';
 const password = 'str0ngp4ssw0rd!';
 const url = `http://localhost:${process.env.PORT || 8080}`;
@@ -62,7 +63,7 @@ module.exports = {
         let inviteUrl;
         browser.pause(10000); // now we throttle emails
         browser
-            .url('https://www.mailinator.com/v3/index.jsp?zone=public&query=bullet-train#/#inboxpane')
+            .url(`https://www.mailinator.com/v3/index.jsp?zone=public&query=${invitePrefix}#/#inboxpane`)
             .useXpath()
             .waitForElementVisible(`//tbody/tr/td/a[contains(text(),"${`Bullet Train Org${append}`}")]`, 60000)
             .click(`//tbody/tr/td/a[contains(text(),"${`Bullet Train Org${append}`}")]`)
@@ -76,12 +77,14 @@ module.exports = {
                 console.log('Invite URL:', inviteUrl);
                 browser.url(inviteUrl)
                     .pause(200) // Allows the dropdown to fade in
-                    .waitAndClick('#existing-member-btn')
-                    .waitForElementVisible('#login-btn')
+                    .waitForElementVisible(byId('signup-btn'))
                     .waitAndSet('[name="email"]', inviteEmail)
-                    .waitAndSet('[name="password"]', 'nightwatch')
-                    .waitForElementVisible('#login-btn')
-                    .click('#login-btn');
+                    .waitAndSet(byId('firstName'), 'Bullet') // visit the url
+                    .waitAndSet(byId('lastName'), 'Train')
+                    .waitAndSet(byId('email'), inviteEmail)
+                    .waitAndSet(byId('password'), password)
+                    .waitForElementVisible(byId('signup-btn'))
+                    .click(byId('signup-btn'));
                 browser
                     .useXpath()
                     .waitForElementPresent(`//div[contains(@class, "org-nav")]//a[contains(text(),"${`Bullet Train Org${append}`}")]`);
