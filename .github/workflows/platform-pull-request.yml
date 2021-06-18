@@ -38,7 +38,7 @@ jobs:
                   python3.8 manage.py migrate
                   python3.8 manage.py runserver &
 
-            - name: Test with Chromedriver
+            - name: Run E2E Tests with Chromedriver
               working-directory: frontend
               env:
                   ENV: local
