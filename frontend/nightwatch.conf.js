@@ -12,16 +12,6 @@ module.exports = {
     ],
     'output_folder': './reports', // reports (test outcome) output by nightwatch
     'custom_commands_path': ['./tests/custom-commands'],
-    /*'selenium': {
-        'start_process': true, // tells nightwatch to start/stop the selenium process
-        'server_path': seleniumServer.path,
-        'host': '127.0.0.1',
-        'port': 4444, // standard selenium port
-        'cli_args': {
-            'webdriver.chrome.driver': chromedriver.path,
-        },
-    },
-    */
     "webdriver": {
         "start_process": true,
         "server_path": "node_modules/.bin/chromedriver",
