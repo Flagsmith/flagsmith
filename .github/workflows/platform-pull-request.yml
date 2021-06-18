@@ -33,12 +33,10 @@ jobs:
                   SENDGRID_API_KEY: ${{ secrets.SENDGRID_API_KEY }}
                   FE_E2E_TEST_USER_EMAIL: nightwatch@solidstategroup.com
               run: |
-                  sudo apt update
-                  sudo apt install -y screen
                   python3.8 -m pip install --upgrade pip
                   python3.8 -m pip install -r requirements.txt
                   python3.8 manage.py migrate
-                  screen -d -m python3.8 manage.py runserver
+                  python3.8 manage.py runserver &
 
             - name: Test with Chromedriver
               working-directory: frontend
