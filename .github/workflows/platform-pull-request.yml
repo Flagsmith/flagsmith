@@ -32,7 +32,6 @@ jobs:
                   DATABASE_URL: postgres://postgres:postgres@localhost:5432/flagsmith
                   SENDGRID_API_KEY: ${{ secrets.SENDGRID_API_KEY }}
                   FE_E2E_TEST_USER_EMAIL: nightwatch@solidstategroup.com
-                  DISABLE_INFLUXDB_FEATURES: 1
               run: |
                   sudo apt update
                   sudo apt install -y screen
@@ -46,6 +45,7 @@ jobs:
               env:
                   ENV: local
                   E2E_TEST_TOKEN_DEV: some-token
+                  DISABLE_INFLUXDB_FEATURES: 1
               run: |
                   wget https://dl.google.com/linux/chrome/deb/pool/main/g/google-chrome-stable/google-chrome-stable_91.0.4472.114-1_amd64.deb
                   sudo apt install --allow-downgrades -y ./google-chrome*.deb -f 
