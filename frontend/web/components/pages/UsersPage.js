@@ -74,7 +74,7 @@ const UsersPage = class extends Component {
                                                 View and manage features states for individual users. This will override individual default
                                                 feature settings for your selected environment.
                                                 {' '}
-                                                <ButtonLink target="_blank" href="https://docs.flagsmith.com/managing-identities/">Learn more.</ButtonLink>
+                                                <ButtonLink target="_blank" href="https://docs.flagsmith.com/basic-features/managing-identities">Learn more.</ButtonLink>
                                             </p>
                                         </div>
                                     </Flex>
