@@ -115,7 +115,6 @@
     "node-slack-upload": "2.0.0",
     "nodemon": "1.18.11",
     "raw-loader": "0.5.1",
-    "react-markdown": "4.0.3",
-    "selenium-server": "3.141.59"
+    "react-markdown": "4.0.3"
   }
 }
