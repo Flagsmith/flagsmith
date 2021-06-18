@@ -61,5 +61,3 @@ class CustomUserAdmin(UserAdmin):
     )
 
     inlines = [UserOrganisationInline]
-
-    # exclude = ["username"]
