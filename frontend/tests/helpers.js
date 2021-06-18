@@ -16,10 +16,8 @@ const testHelpers = {
     login: async (browser, url, email, password) => {
         browser.url(url)
             .pause(200) // Allows the dropdown to fade in
-            .waitForElementVisible('#login-btn')
-            .setValue('[name="email"]', email)
-            .setValue('[name="password"]', password)
-            .waitForElementVisible('#login-btn')
+            .waitAndSet('[name="email"]', email)
+            .waitAndSet('[name="password"]', password)
             .click('#login-btn');
     },
     waitLoggedIn: async (browser) => {
@@ -29,7 +27,6 @@ const testHelpers = {
     setSegmentRule(browser, ruleIndex, orIndex, name, operator, value) {
         browser.waitAndSet(testHelpers.byTestID(`rule-${ruleIndex}-property-${orIndex}`), name);
         if (operator) {
-            browser.clearValue(testHelpers.byTestID(`rule-${ruleIndex}-operator-${orIndex}`));
             browser.waitAndSet(testHelpers.byTestID(`rule-${ruleIndex}-operator-${orIndex}`), operator);
         }
         browser.waitAndSet(testHelpers.byTestID(`rule-${ruleIndex}-value-${orIndex}`), value);
@@ -39,8 +36,7 @@ const testHelpers = {
             .waitForElementNotPresent('#create-feature-modal')
             .waitAndClick(byId(`remove-feature-btn-${index}`))
             .waitForElementPresent('#confirm-remove-feature-modal')
-            .waitForElementVisible('[name="confirm-feature-name"]')
-            .setValue('[name="confirm-feature-name"]', name)
+            .waitAndSet('[name="confirm-feature-name"]', name)
             .click('#confirm-remove-feature-btn')
             .waitForElementNotPresent('#confirm-remove-feature-modal')
             .waitForElementNotPresent(byId(`remove-feature-btn-${index}`));
@@ -76,8 +72,8 @@ const testHelpers = {
             .waitForElementNotPresent('#create-feature-modal')
             .waitAndClick('#show-create-feature-btn');
         browser.waitAndSet(byId('featureID'), name)
-            .setValue(byId('featureValue'), value)
-            .setValue(byId('featureDesc'), description)
+            .waitAndSet(byId('featureValue'), value)
+            .waitAndSet(byId('featureDesc'), description)
             .click(byId('create-feature-btn'))
             .waitForElementNotPresent('#create-feature-modal')
             .waitForElementVisible(byId(`feature-value-${index}`))
@@ -91,9 +87,8 @@ const testHelpers = {
         browser
             .waitForElementNotPresent('#create-feature-modal')
             .click('#show-create-feature-btn')
-            .waitForElementVisible('[name="featureID"]')
-            .setValue('[name="featureID"]', name)
-            .setValue('[name="featureDesc"]', description);
+            .waitAndSet('[name="featureID"]', name)
+            .waitAndSet('[name="featureDesc"]', description);
 
         if (value) {
             browser.click(byId('toggle-feature-button'));
@@ -133,9 +128,8 @@ const testHelpers = {
         browser
             .waitAndClick('#add-trait')
             .waitForElementPresent('#create-trait-modal')
-            .waitForElementVisible('[name="traitID"]')
-            .setValue('[name="traitID"]', id)
-            .setValue('[name="traitValue"]', value)
+            .waitAndSet('[name="traitID"]', id)
+            .waitAndSet('[name="traitValue"]', value)
             .click('#create-trait-btn')
             .waitForElementNotPresent('#create-trait-modal')
             .waitForElementVisible(byId(`user-trait-value-${index}`));
@@ -160,13 +154,14 @@ const testHelpers = {
     addSegmentOverrideConfig: (browser, index, value, selectionIndex = 0) => {
         browser.waitAndClick(byId('overrides'));
         browser.waitAndClick(byId(`select-segment-option-${selectionIndex}`));
+        browser.pause(500)
         browser.waitForElementVisible(byId(`segment-override-value-${index}`));
         browser.waitAndSet(byId(`segment-override-value-${0}`), value);
     },
     setSegmentOverrideIndex: (browser, index, newIndex) => {
         browser.waitAndClick(byId('overrides'));
         browser.pause(2000);
-        browser.setValue(byId(`sort-${index}`), `${newIndex}`);
+        browser.waitAndSet(byId(`sort-${index}`), `${newIndex}`);
         browser.pause(2000);
     },
     createSegment: (browser, index, id, rules) => {

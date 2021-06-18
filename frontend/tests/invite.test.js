@@ -19,8 +19,7 @@ module.exports = {
         browser.waitForElementVisible('#create-org-page');
 
         browser
-            .waitForElementVisible('[name="orgName"]')
-            .setValue('[name="orgName"]', `Bullet Train Org${append}`)
+            .waitAndSet('[name="orgName"]', `Bullet Train Org${append}`)
             .click('#create-org-btn')
             .waitForElementVisible('#project-select-page')
             .assert.containsText('#org-menu', `Bullet Train Org${append}`);
@@ -29,8 +28,7 @@ module.exports = {
         browser
             .waitForElementVisible('#create-first-project-btn')
             .click('#create-first-project-btn')
-            .waitForElementVisible('[name="projectName"]')
-            .setValue('[name="projectName"]', 'My Test Project')
+            .waitAndSet('[name="projectName"]', 'My Test Project')
             .click(byId('create-project-btn'));
 
         browser.waitForElementVisible('#features-page');
@@ -80,8 +78,8 @@ module.exports = {
                     .pause(200) // Allows the dropdown to fade in
                     .waitAndClick('#existing-member-btn')
                     .waitForElementVisible('#login-btn')
-                    .setValue('[name="email"]', inviteEmail)
-                    .setValue('[name="password"]', 'nightwatch')
+                    .waitAndSet('[name="email"]', inviteEmail)
+                    .waitAndSet('[name="password"]', 'nightwatch')
                     .waitForElementVisible('#login-btn')
                     .click('#login-btn');
                 browser

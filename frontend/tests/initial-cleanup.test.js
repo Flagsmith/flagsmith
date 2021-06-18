@@ -7,8 +7,7 @@ module.exports = {
             .url(`${url}/organisation-settings`)
             .waitForElementVisible('#delete-org-btn')
             .click('#delete-org-btn')
-            .waitForElementVisible('[name="confirm-org-name"]')
-            .setValue('[name="confirm-org-name"]', 'Bullet Train Ltd')
+            .waitAndSet('[name="confirm-org-name"]', 'Bullet Train Ltd')
             .click('#confirm-del-org-btn')
             .waitForElementVisible('#create-org-page');
         browser.end();
