@@ -42,8 +42,9 @@ module.exports = {
     },
     '[Features Tests] - Change feature value to number': function (browser) {
         browser
+            .refresh()
             .waitAndClick(byId('feature-item-1'))
-            .waitForElementPresent('#create-feature-modal')
+            .waitForElementVisible('#create-feature-modal')
             .waitForElementVisible(byId('featureValue'))
             .pause(200)
             .clearValue(byId('featureValue'))
