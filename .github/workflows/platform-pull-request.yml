@@ -32,6 +32,7 @@ jobs:
                   DATABASE_URL: postgres://postgres:postgres@localhost:5432/flagsmith
                   SENDGRID_API_KEY: ${{ secrets.SENDGRID_API_KEY }}
                   FE_E2E_TEST_USER_EMAIL: nightwatch@solidstategroup.com
+                  DISABLE_INFLUXDB_FEATURES: 1
               run: |
                   sudo apt update
                   sudo apt install -y screen
