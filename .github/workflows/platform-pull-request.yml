@@ -31,6 +31,7 @@ jobs:
                   DJANGO_ALLOWED_HOSTS: '*'
                   DATABASE_URL: postgres://postgres:postgres@localhost:5432/flagsmith
                   SENDGRID_API_KEY: ${{ secrets.SENDGRID_API_KEY }}
+                  DJANGO_SETTINGS_MODULE: app.settings.test
                   FE_E2E_TEST_USER_EMAIL: nightwatch@solidstategroup.com
               run: |
                   python3.8 -m pip install --upgrade pip
