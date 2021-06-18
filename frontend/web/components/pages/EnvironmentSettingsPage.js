@@ -178,7 +178,7 @@ const EnvironmentSettingsPage = class extends Component {
                                                     <p>
                                                             Feature webhooks let you know when features have changed. You can configure 1 or more Feature Webhooks per Environment.
                                                         {' '}
-                                                        <ButtonLink href="https://docs.flagsmith.com/advanced-use/system-administration#web-hooks" target="new">Learn about Feature Webhooks.</ButtonLink>
+                                                        <ButtonLink href="https://docs.flagsmith.com/advanced-use/system-administration#web-hooks" target="_blank">Learn about Feature Webhooks.</ButtonLink>
                                                     </p>
                                                 </div>
                                                 <div className="col-md-4 pr-0">

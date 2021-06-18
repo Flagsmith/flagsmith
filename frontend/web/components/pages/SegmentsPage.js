@@ -223,12 +223,12 @@ const SegmentsPage = class extends Component {
                                                             {' '}
                                                             <ButtonLink
                                                               href="https://docs.flagsmith.com/basic-features/managing-identities#identity-traits"
-                                                              target="new"
+                                                              target="_blank"
                                                             >User Traits
                                                             </ButtonLink>
                                                         .
                                                         As user's traits are updated they will automatically be added to
-                                                        the segments based on the rules you create. <ButtonLink href="https://docs.flagsmith.com/basic-features/managing-segments" target="new">Check out the documentation on Segments</ButtonLink>.
+                                                        the segments based on the rules you create. <ButtonLink href="https://docs.flagsmith.com/basic-features/managing-segments" target="_blank">Check out the documentation on Segments</ButtonLink>.
                                                         </p>
                                                     </Panel>
                                                 </FormGroup>
