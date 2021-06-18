@@ -49,7 +49,8 @@ We also have options for deploying to AWS, GCP and Azure. If you need help getti
 This repository is formed of 2 core components, the REST API (found in `/api`) and the web-based administrator dashboard
 (found in `/frontend`) that you can use to manage Flagsmith. Technical documentation for each component can be found at
 the [API](https://docs.flagsmith.com/deployment/locally-api) and
-[Frontend](https://docs.flagsmith.com/deployment/locally-frontend) pages within our [Documentation](https://docs.flagsmith.com/)
+[Frontend](https://docs.flagsmith.com/deployment/locally-frontend) pages within our
+[Documentation](https://docs.flagsmith.com/)
 
 These two components run as separate applications. The web-based dashboard is a single page app that communicates via
 REST calls to the API.

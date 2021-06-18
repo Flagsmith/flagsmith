@@ -122,7 +122,7 @@ const SegmentsPage = class extends Component {
                                                         <p>
                                                         Create and manage groups of users with similar traits. Segments can be used to override features within the features page for any environment.
                                                             {' '}
-                                                            <ButtonLink target="_blank" href="https://docs.flagsmith.com/permissions/">Learn about Segments.</ButtonLink>
+                                                            <ButtonLink target="_blank" href="https://docs.flagsmith.com/basic-features/managing-segments">Learn about Segments.</ButtonLink>
                                                         </p>
                                                     </Flex>
                                                     <FormGroup className="float-right">
@@ -222,13 +222,13 @@ const SegmentsPage = class extends Component {
                                                         You can create a segment that targets
                                                             {' '}
                                                             <ButtonLink
-                                                              href="https://docs.flagsmith.com/managing-identities/#identity-traits"
-                                                              target="new"
+                                                              href="https://docs.flagsmith.com/basic-features/managing-identities#identity-traits"
+                                                              target="_blank"
                                                             >User Traits
                                                             </ButtonLink>
                                                         .
                                                         As user's traits are updated they will automatically be added to
-                                                        the segments based on the rules you create. <ButtonLink href="https://docs.flagsmith.com/managing-segments/">Check out the documentation on Segments</ButtonLink>.
+                                                        the segments based on the rules you create. <ButtonLink href="https://docs.flagsmith.com/basic-features/managing-segments" target="_blank">Check out the documentation on Segments</ButtonLink>.
                                                         </p>
                                                     </Panel>
                                                 </FormGroup>

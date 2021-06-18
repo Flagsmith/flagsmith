@@ -138,7 +138,7 @@ const InviteUsers = class extends Component {
                       <p className="mt-3">
                           Users without administrator privileges will need to be invited to individual projects.
                           {' '}
-                          <ButtonLink target="_blank" href="https://docs.flagsmith.com/permissions/">Learn about User Roles.</ButtonLink>
+                          <ButtonLink target="_blank" href="https://docs.flagsmith.com/advanced-use/permissions">Learn about User Roles.</ButtonLink>
                       </p>
                       <div className="text-right mt-2">
                           {error && <Error error={error}/>}

@@ -84,7 +84,7 @@ const CreateWebhook = class extends Component {
                       <FormGroup className="mb-4 ml-1">
                           <div>
                               <label>Example Payload </label>
-                              <ButtonLink className="ml-1" href="https://docs.flagsmith.com/system-administration/" target="_blank">View docs</ButtonLink>
+                              <ButtonLink className="ml-1" href="https://docs.flagsmith.com/advanced-use/system-administration" target="_blank">View docs</ButtonLink>
                               <Highlight style={{ marginBottom: 10 }} className="json">
                                   {exampleJSON}
                               </Highlight>
