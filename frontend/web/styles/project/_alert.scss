@@ -22,3 +22,13 @@
         }
     }
 }
+
+.dark {
+    .alert {
+        &.alert-info {
+            background: $dark-bg-10;
+            border-color: $dark-bg-10;
+            color: $header-color-dark;
+        }
+    }
+}
