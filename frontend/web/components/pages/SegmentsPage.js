@@ -104,6 +104,7 @@ const SegmentsPage = class extends Component {
 
     render() {
         const { projectId, environmentId } = this.props.match.params;
+        const hasNoOperators = !this.props.getValue('segment_operators');
         return (
             <div data-test="segments-page" id="segments-page" className="app-container container">
                 <Permission level="project" permission="ADMIN" id={projectId}>
@@ -129,6 +130,7 @@ const SegmentsPage = class extends Component {
                                                         <div className="text-right">
                                                             {permission ? (
                                                                 <Button
+                                                                  disabled={hasNoOperators}
                                                                   className="btn-lg btn-primary"
                                                                   id="show-create-segment-btn"
                                                                   data-test="show-create-segment-btn"
@@ -155,6 +157,13 @@ const SegmentsPage = class extends Component {
                                                         </div>
                                                     </FormGroup>
                                                 </Row>
+                                                {hasNoOperators && (
+                                                    <div className="mt-2">
+                                                        <p className="alert alert-info">
+                                                            In order to use segments, please set the segment_operators remote config value. <a target="_blank" href="https://docs.flagsmith.com/deployment/overview#running-flagsmith-on-flagsmith">Learn about self hosting</a>.
+                                                        </p>
+                                                    </div>
+                                                )}
 
                                                 <FormGroup>
                                                     <PanelSearch
@@ -268,4 +277,4 @@ const SegmentsPage = class extends Component {
 
 SegmentsPage.propTypes = {};
 
-module.exports = SegmentsPage;
+module.exports = ConfigProvider(SegmentsPage);
