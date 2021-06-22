@@ -1,11 +1,14 @@
 import json
 import logging
-import urllib.parse
+import typing
 
 import requests
 
 from integrations.common.wrapper import AbstractBaseIdentityIntegrationWrapper
-from util.util import postpone
+
+if typing.TYPE_CHECKING:
+    from environments.identities.models import Identity
+    from features.models import FeatureState
 
 logger = logging.getLogger(__name__)
 
@@ -25,16 +28,18 @@ class AmplitudeWrapper(AbstractBaseIdentityIntegrationWrapper):
             "Sent event to Amplitude. Response code was: %s" % response.status_code
         )
 
-    def generate_user_data(self, user_id, feature_states):
+    def generate_user_data(
+        self, identity: "Identity", feature_states: typing.List["FeatureState"]
+    ) -> dict:
         feature_properties = {}
 
         for feature_state in feature_states:
-            value = feature_state.get_feature_state_value()
+            value = feature_state.get_feature_state_value(identity=identity)
             feature_properties[feature_state.feature.name] = (
                 value if (feature_state.enabled and value) else feature_state.enabled
             )
 
         return {
-            "user_id": user_id,
+            "user_id": identity.identifier,
             "user_properties": feature_properties,
         }
