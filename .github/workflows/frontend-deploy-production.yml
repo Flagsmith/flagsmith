@@ -17,7 +17,6 @@ jobs:
         runs-on: ubuntu-latest
         name: Run E2E Tests
         environment: production
-        container: kylessg/bullet-train-nightwatch:1.1
 
         steps:
             - name: Cloning repo
@@ -30,6 +29,8 @@ jobs:
                   E2E_TEST_TOKEN_PROD: ${{ secrets.E2E_TEST_TOKEN }}
                   ENV: prod
               run: |
+                  wget https://dl.google.com/linux/chrome/deb/pool/main/g/google-chrome-stable/google-chrome-stable_91.0.4472.114-1_amd64.deb
+                  sudo apt install --allow-downgrades -y ./google-chrome*.deb -f 
                   google-chrome --version
                   node -v
                   npm i
@@ -61,18 +62,18 @@ jobs:
 
             - name: Deploy to App Engine
               env:
-                ASSET_URL: https://cdn.flagsmith.com
-                ENV: prod
-                AMPLITUDE: ${{ secrets.AMPLITUDE }}
-                CRISP_CHAT: ${{ secrets.CRISP_CHAT }}
-                DEPLOYMENT_SLACK_CHANNEL: ${ secrets.DEPLOYMENT_SLACK_CHANNEL }}
-                E2E_SLACK_CHANNEL: ${{ secrets.E2E_SLACK_CHANNEL }}
-                EVENTS_SLACK_CHANNEL: ${{ secrets.EVENTS_SLACK_CHANNEL }}
-                FLAGSMITH_ANALYTICS: ${{ secrets.FLAGSMITH_ANALYTICS }}
-                GA: ${{ secrets.GA }}
-                LINKEDIN: ${{ secrets.LINKEDIN }}
-                MIXPANEL: ${{ secrets.MIXPANEL }}
-                SLACK_TOKEN: ${{ secrets.SLACK_TOKEN }}
+                  ASSET_URL: https://cdn.flagsmith.com
+                  ENV: prod
+                  AMPLITUDE: ${{ secrets.AMPLITUDE }}
+                  CRISP_CHAT: ${{ secrets.CRISP_CHAT }}
+                  DEPLOYMENT_SLACK_CHANNEL: ${ secrets.DEPLOYMENT_SLACK_CHANNEL }}
+                  E2E_SLACK_CHANNEL: ${{ secrets.E2E_SLACK_CHANNEL }}
+                  EVENTS_SLACK_CHANNEL: ${{ secrets.EVENTS_SLACK_CHANNEL }}
+                  FLAGSMITH_ANALYTICS: ${{ secrets.FLAGSMITH_ANALYTICS }}
+                  GA: ${{ secrets.GA }}
+                  LINKEDIN: ${{ secrets.LINKEDIN }}
+                  MIXPANEL: ${{ secrets.MIXPANEL }}
+                  SLACK_TOKEN: ${{ secrets.SLACK_TOKEN }}
               run: |
                   npm i
                   npm run env
