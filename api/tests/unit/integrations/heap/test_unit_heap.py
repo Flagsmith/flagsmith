@@ -1,5 +1,6 @@
 import pytest
 
+from environments.identities.models import Identity
 from environments.models import Environment
 from features.models import Feature, FeatureState
 from integrations.heap.heap import HEAP_API_URL, HeapWrapper
@@ -11,7 +12,7 @@ from projects.models import Project
 def test_heap_when_generate_user_data_with_correct_values_then_success():
     # Given
     api_key = "123key"
-    user_id = "user123"
+    identity = Identity(identifier="user123")
     heap_wrapper = HeapWrapper(api_key=api_key)
 
     organisation = Organisation.objects.create(name="Test Org")
@@ -24,13 +25,13 @@ def test_heap_when_generate_user_data_with_correct_values_then_success():
 
     # When
     user_data = heap_wrapper.generate_user_data(
-        user_id=user_id, feature_states=feature_states
+        identity=identity, feature_states=feature_states
     )
 
     # Then
     expected_user_data = {
         "app_id": api_key,
-        "identity": user_id,
+        "identity": identity.identifier,
         "event": "Flagsmith Feature Flags",
         "properties": {"Test Feature": False},
     }
