@@ -12,10 +12,10 @@ module.exports = {
     ],
     'output_folder': './reports', // reports (test outcome) output by nightwatch
     'custom_commands_path': ['./tests/custom-commands'],
-    "webdriver": {
-        "start_process": true,
-        "server_path": "node_modules/.bin/chromedriver",
-        "port": 4444
+    'webdriver': {
+        'start_process': true,
+        'server_path': 'node_modules/.bin/chromedriver',
+        'port': 4444
     },
     'test_settings': {
         'default': {
@@ -34,9 +34,9 @@ module.exports = {
                 'browserName': 'chrome',
                 'javascriptEnabled': true, // turn off to test progressive enhancement
                 'chromeOptions': {
-                    "args" : [
-                        "headless",'no-sandbox', 'disable-setuid-sandbox','disable-gpu','disable-dev-shm-usage',
-                        "window-size=1920,1080"
+                    'args' : [
+                        'headless','no-sandbox', 'disable-setuid-sandbox','disable-gpu','disable-dev-shm-usage',
+                        'window-size=1920,1080'
                     ],
                     w3c: false,
                 },
