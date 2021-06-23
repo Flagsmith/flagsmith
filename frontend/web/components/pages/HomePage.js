@@ -33,11 +33,15 @@ const HomePage = class extends React.Component {
                 AppActions.oauthLogin('github', {
                     access_token,
                 });
-            } else if (params && params.includes('saml')) {
-                const access_token = Utils.fromParam().code;
+            }
+        }
+        if (document.location.href.includes('saml')) {
+            const access_token = Utils.fromParam().code;
+            if (access_token) {
                 AppActions.oauthLogin('saml', {
                     access_token,
                 });
+                this.context.router.history.replace('/');
             }
         }
         API.trackPage(Constants.pages.HOME);
