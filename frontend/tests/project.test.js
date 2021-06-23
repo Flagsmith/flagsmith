@@ -9,8 +9,7 @@ module.exports = {
     '[Project Tests] - Create environment': function (browser) {
         browser.waitAndClick('#create-env-link')
             .waitForElementPresent('#create-env-modal')
-            .waitForElementVisible('[name="envName"]')
-            .setValue('[name="envName"]', 'Staging')
+            .waitAndSet('[name="envName"]', 'Staging')
             .click('#create-env-btn')
             .waitForElementNotPresent('#create-env-modal')
             .waitForElementVisible(byId('switch-environment-staging-active'));
@@ -18,8 +17,7 @@ module.exports = {
     '[Project Tests] - Edit environment': function (browser) {
         browser
             .waitAndClick('#env-settings-link')
-            .waitForElementVisible("[name='env-name']")
-            .setValue("[name='env-name']", 'Internal')
+            .waitAndSet("[name='env-name']", 'Internal')
             .click('#save-env-btn');
 
         browser.waitForElementVisible(byId('switch-environment-staginginternal-active'));
@@ -27,8 +25,7 @@ module.exports = {
     '[Project Tests] - Delete environment': function (browser) {
         browser
             .waitAndClick('#delete-env-btn')
-            .waitForElementVisible("[name='confirm-env-name']")
-            .setValue("[name='confirm-env-name']", 'StagingInternal')
+            .waitAndSet("[name='confirm-env-name']", 'StagingInternal')
             .click('#confirm-delete-env-btn')
             .waitForElementVisible(byId('features-page'));
         browser.url(`${url}/projects`)
@@ -45,9 +42,7 @@ module.exports = {
             .waitForElementVisible('#project-settings-link')
             .pause(200) // Slide in transition
             .waitAndClick('#project-settings-link')
-            .waitForElementVisible("[name='proj-name']")
-            .clearValue("[name='proj-name']")
-            .setValue("[name='proj-name']", 'Test Project')
+            .waitAndSet("[name='proj-name']", 'Test Project')
             .click('#save-proj-btn');
 
         browser.waitForElementVisible(byId('switch-project-test project-active'));
