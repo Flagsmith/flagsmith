@@ -30,7 +30,7 @@ const controller = {
         store.loading();
         API.trackEvent(Constants.events.OAUTH(type));
 
-        data.post(`${Project.api}auth/oauth/${type}/`, _data)
+        data.post(type === 'saml' ? `${Project.api}auth/saml/login/` : `${Project.api}auth/oauth/${type}/`, _data)
             .then((res) => {
                 // const isDemo = email == Project.demoAccount.email;
                 // store.isDemo = isDemo;
