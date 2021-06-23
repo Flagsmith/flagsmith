@@ -22,10 +22,7 @@ module.exports = {
             .pause(200)
             .waitAndClick(byId('user-feature-0'))
             .waitForElementPresent('#create-feature-modal')
-            .waitForElementVisible(byId('featureValue'))
-            .pause(200) // todo: Clear fails without a delay here. Find better solution
-            .clearValue(byId('featureValue'))
-            .setValue(byId('featureValue'), 'small')
+            .waitAndSet(byId('featureValue'), 'small')
             .click('#update-feature-btn')
             .waitForElementNotPresent('#create-feature-modal')
             .expect.element(byId('user-feature-value-0')).text.to.equal('"small"');

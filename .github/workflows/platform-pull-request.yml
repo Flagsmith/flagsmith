@@ -7,7 +7,6 @@ jobs:
     run-e2e-tests:
         runs-on: ubuntu-latest
         name: Full E2E tests
-        container: flagsmith/nightwatch:1.2
 
         services:
             postgres:
@@ -25,22 +24,32 @@ jobs:
               with:
                   fetch-depth: 0
 
-#            - name: Test with Chromedriver
-#              env:
-#                  E2E_TEST_TOKEN_DEV: ${{ secrets.E2E_TEST_TOKEN_DEV }}
-#                  SENDGRID_API_KEY: ${{ secrets.SENDGRID_API_KEY }}
-#                  DJANGO_ALLOWED_HOSTS: '*'
-#                  DATABASE_URL: postgresql://postgres:postgres@postgres:5432/flagsmith
-#              run: |
-#                  cd api
-#                  python3.8 -m pip install --upgrade pip
-#                  pip install -r requirements-dev.txt
-#                  python3.8 manage.py migrate
-#                  python3.8 manage.py runserver &
-#
-#                  cd ../frontend
-#                  google-chrome --version
-#                  node -v
-#                  npm i
-#                  export ENV=dev; echo 'Setting env to' $ENV; npm run env
-#                  npm run test
+            - name: Run API
+              working-directory: api
+              env:
+                  E2E_TEST_AUTH_TOKEN: some-token
+                  DJANGO_ALLOWED_HOSTS: '*'
+                  DATABASE_URL: postgres://postgres:postgres@localhost:5432/flagsmith
+                  SENDGRID_API_KEY: ${{ secrets.SENDGRID_API_KEY }}
+                  DJANGO_SETTINGS_MODULE: app.settings.test
+                  FE_E2E_TEST_USER_EMAIL: nightwatch@solidstategroup.com
+              run: |
+                  python3.8 -m pip install --upgrade pip
+                  python3.8 -m pip install -r requirements.txt
+                  python3.8 manage.py migrate
+                  python3.8 manage.py runserver &
+
+            - name: Run E2E Tests with Chromedriver
+              working-directory: frontend
+              env:
+                  ENV: local
+                  E2E_TEST_TOKEN_DEV: some-token
+                  DISABLE_INFLUXDB_FEATURES: 1
+              run: |
+                  wget https://dl.google.com/linux/chrome/deb/pool/main/g/google-chrome-stable/google-chrome-stable_91.0.4472.114-1_amd64.deb
+                  sudo apt install --allow-downgrades -y ./google-chrome*.deb -f 
+                  google-chrome --version
+                  node -v
+                  npm i
+                  npm run env
+                  npm run test

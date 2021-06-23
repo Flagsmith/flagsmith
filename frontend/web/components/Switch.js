@@ -8,7 +8,7 @@ export default class Switch extends PureComponent {
   static propTypes = {};
 
   render() {
-      // const { props } = this;
+      const { props } = this;
 
       if (E2E) {
           return (
