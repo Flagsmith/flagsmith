@@ -288,6 +288,10 @@ a, .btn, button{
                 background-color: lighten($google, 5);
             }
         }
+        &--saml {
+            color: white !important;
+           padding-left: 20px
+        }
         &--microsoft {
             background-color: #339af4;
             color: white !important;
