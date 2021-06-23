@@ -40,6 +40,14 @@ const HomePage = class extends React.Component {
                 });
             }
         }
+        if (document.location.href.includes('saml')) {
+            const access_token = Utils.fromParam().code;
+            if (access_token) {
+                AppActions.oauthLogin('saml', {
+                    access_token,
+                });
+            }
+        }
         API.trackPage(Constants.pages.HOME);
 
         if (document.location.href.indexOf('invite') != -1) {
