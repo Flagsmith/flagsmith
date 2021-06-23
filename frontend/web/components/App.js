@@ -143,6 +143,9 @@ const App = class extends Component {
     };
 
     onLogout = () => {
+        if (document.location.href.includes("saml?")) {
+            return
+        }
         this.context.router.history.replace('/');
     };
 
