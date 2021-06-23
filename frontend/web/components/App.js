@@ -143,6 +143,9 @@ const App = class extends Component {
     };
 
     onLogout = () => {
+        if (document.location.pathname.includes("oauth/")) {
+            return
+        }
         this.context.router.history.replace('/');
     };
 
