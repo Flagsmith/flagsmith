@@ -33,11 +33,6 @@ const HomePage = class extends React.Component {
                 AppActions.oauthLogin('github', {
                     access_token,
                 });
-            } else if (params && params.includes('saml')) {
-                const access_token = Utils.fromParam().code;
-                AppActions.oauthLogin('saml', {
-                    access_token,
-                });
             }
         }
         if (document.location.href.includes('saml')) {
