@@ -41,6 +41,7 @@ const HomePage = class extends React.Component {
                 AppActions.oauthLogin('saml', {
                     access_token,
                 });
+                this.context.router.history.replace('/');
             }
         }
         API.trackPage(Constants.pages.HOME);
