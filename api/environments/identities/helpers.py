@@ -23,7 +23,7 @@ def identify_integrations(identity, all_feature_states):
             wrapper = integration.get("wrapper")
             wrapper_instance = wrapper(api_key)
             user_data = wrapper_instance.generate_user_data(
-                user_id=identity.identifier, feature_states=all_feature_states
+                identity=identity, feature_states=all_feature_states
             )
             wrapper_instance.identify_user_async(data=user_data)
 

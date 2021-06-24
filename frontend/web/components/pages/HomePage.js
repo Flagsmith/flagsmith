@@ -4,6 +4,8 @@ import Card from '../Card';
 import { ButtonLink } from '../base/forms/Button';
 import { Google } from '../../project/auth';
 import NavIconSmall from '../svg/NavIconSmall';
+import CreateProjectModal from '../modals/CreateProject';
+import SamlForm from '../SamlForm';
 
 const HomePage = class extends React.Component {
     static contextTypes = {
@@ -31,6 +33,15 @@ const HomePage = class extends React.Component {
                 AppActions.oauthLogin('github', {
                     access_token,
                 });
+            }
+        }
+        if (document.location.href.includes('saml')) {
+            const access_token = Utils.fromParam().code;
+            if (access_token) {
+                AppActions.oauthLogin('saml', {
+                    access_token,
+                });
+                this.context.router.history.replace('/');
             }
         }
         API.trackPage(Constants.pages.HOME);
@@ -85,10 +96,10 @@ const HomePage = class extends React.Component {
                   }}
                 >
                     <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                        <title>{"Google icon"}</title>
+                        <title>Google icon</title>
                         <path
-                            fill="#fff"
-                            d="M12.24 10.285V14.4h6.806c-.275 1.765-2.056 5.174-6.806 5.174-4.095 0-7.439-3.389-7.439-7.574s3.345-7.574 7.439-7.574c2.33 0 3.891.989 4.785 1.849l3.254-3.138C18.189 1.186 15.479 0 12.24 0c-6.635 0-12 5.365-12 12s5.365 12 12 12c6.926 0 11.52-4.869 11.52-11.726 0-.788-.085-1.39-.189-1.989H12.24z"
+                          fill="#fff"
+                          d="M12.24 10.285V14.4h6.806c-.275 1.765-2.056 5.174-6.806 5.174-4.095 0-7.439-3.389-7.439-7.574s3.345-7.574 7.439-7.574c2.33 0 3.891.989 4.785 1.849l3.254-3.138C18.189 1.186 15.479 0 12.24 0c-6.635 0-12 5.365-12 12s5.365 12 12 12c6.926 0 11.52-4.869 11.52-11.726 0-.788-.085-1.39-.189-1.989H12.24z"
                         />
                     </svg> Google
                 </a>
@@ -102,10 +113,10 @@ const HomePage = class extends React.Component {
                   ref={JSON.parse(this.props.getValue('oauth_microsoft')).url}
                 >
                     <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                        <title>{"Microsoft icon"}</title>
+                        <title>Microsoft icon</title>
                         <path
-                            fill="#fff"
-                            d="M11.4 24H0V12.6h11.4V24zM24 24H12.6V12.6H24V24zM11.4 11.4H0V0h11.4v11.4zm12.6 0H12.6V0H24v11.4z"
+                          fill="#fff"
+                          d="M11.4 24H0V12.6h11.4V24zM24 24H12.6V12.6H24V24zM11.4 11.4H0V0h11.4v11.4zm12.6 0H12.6V0H24v11.4z"
                         />
                     </svg> Microsoft
                 </a>
@@ -115,12 +126,24 @@ const HomePage = class extends React.Component {
             oauths.push((
                 <a key="google" className="btn btn__oauth btn__oauth--google" href={Project.oauth.google.url}>
                     <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                        <title>{"Google icon"}</title>
+                        <title>Google icon</title>
                         <path
-                            fill="#fff"
-                            d="M12.24 10.285V14.4h6.806c-.275 1.765-2.056 5.174-6.806 5.174-4.095 0-7.439-3.389-7.439-7.574s3.345-7.574 7.439-7.574c2.33 0 3.891.989 4.785 1.849l3.254-3.138C18.189 1.186 15.479 0 12.24 0c-6.635 0-12 5.365-12 12s5.365 12 12 12c6.926 0 11.52-4.869 11.52-11.726 0-.788-.085-1.39-.189-1.989H12.24z"
+                          fill="#fff"
+                          d="M12.24 10.285V14.4h6.806c-.275 1.765-2.056 5.174-6.806 5.174-4.095 0-7.439-3.389-7.439-7.574s3.345-7.574 7.439-7.574c2.33 0 3.891.989 4.785 1.849l3.254-3.138C18.189 1.186 15.479 0 12.24 0c-6.635 0-12 5.365-12 12s5.365 12 12 12c6.926 0 11.52-4.869 11.52-11.726 0-.788-.085-1.39-.189-1.989H12.24z"
                         />
                     </svg> Google
+                </a>
+            ));
+        }
+        if (this.props.hasFeature('saml')) {
+            oauths.push((
+                <a
+                  onClick={() => {
+                      openModal('Single Sign-On', <SamlForm/>);
+                  }
+                } key="single-sign-on" className="btn btn__oauth btn__oauth--saml"
+                >
+                   Single Sign-On
                 </a>
             ));
         }
@@ -266,15 +289,15 @@ const HomePage = class extends React.Component {
 
                                                           <div>
                                                               <Link to={`/signup${redirect}`} className="float-left">
-                                                                    <ButtonLink className="pt-4 pb-3 mt-2" buttonText=" Not got an account?" />
-                                                                </Link>
+                                                                  <ButtonLink className="pt-4 pb-3 mt-2" buttonText=" Not got an account?" />
+                                                              </Link>
                                                               <Link
-                                                                  className="float-right"
-                                                                  to={`/password-recovery${redirect}`}
-                                                                  onClick={this.showForgotPassword}
-                                                                >
-                                                                    <ButtonLink className="pt-4 pb-3 mt-2" buttonText="Forgot password?" />
-                                                                </Link>
+                                                                className="float-right"
+                                                                to={`/password-recovery${redirect}`}
+                                                                onClick={this.showForgotPassword}
+                                                              >
+                                                                  <ButtonLink className="pt-4 pb-3 mt-2" buttonText="Forgot password?" />
+                                                              </Link>
                                                           </div>
                                                       </div>
                                                   </fieldset>
@@ -426,9 +449,9 @@ const HomePage = class extends React.Component {
                                                       </Button>
                                                       <Link id="existing-member-btn" to={`/login${redirect}`}>
                                                           <ButtonLink
-                                                              className="mt-4 pb-3 pt-2"
-                                                              buttonText="Already a member?"
-                                                            />
+                                                            className="mt-4 pb-3 pt-2"
+                                                            buttonText="Already a member?"
+                                                          />
                                                       </Link>
                                                   </div>
                                               </fieldset>

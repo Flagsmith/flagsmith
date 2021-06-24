@@ -1,4 +1,3 @@
-const seleniumServer = require('selenium-server');
 const chromedriver = require('chromedriver');
 
 const SCREENSHOT_PATH = './screenshots/';
@@ -13,14 +12,10 @@ module.exports = {
     ],
     'output_folder': './reports', // reports (test outcome) output by nightwatch
     'custom_commands_path': ['./tests/custom-commands'],
-    'selenium': {
-        'start_process': true, // tells nightwatch to start/stop the selenium process
-        'server_path': seleniumServer.path,
-        'host': '127.0.0.1',
-        'port': 4444, // standard selenium port
-        'cli_args': {
-            'webdriver.chrome.driver': chromedriver.path,
-        },
+    'webdriver': {
+        'start_process': true,
+        'server_path': 'node_modules/.bin/chromedriver',
+        'port': 4444
     },
     'test_settings': {
         'default': {
@@ -39,7 +34,10 @@ module.exports = {
                 'browserName': 'chrome',
                 'javascriptEnabled': true, // turn off to test progressive enhancement
                 'chromeOptions': {
-                    'args': os.platform() === 'linux' ? ['headless', 'no-sandbox', browserSize] : [browserSize],
+                    'args' : [
+                        'headless','no-sandbox', 'disable-setuid-sandbox','disable-gpu','disable-dev-shm-usage',
+                        'window-size=1920,1080'
+                    ],
                     w3c: false,
                 },
             },

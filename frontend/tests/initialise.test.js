@@ -10,12 +10,11 @@ module.exports = {
     '[Initialise Tests] - Register': function (browser) {
         browser.url(url)
             .waitAndSet(byId('firstName'), 'Bullet') // visit the url
-            .setValue(byId('lastName'), 'Train')
-            .setValue(byId('email'), email)
-            .setValue(byId('password'), password)
+            .waitAndSet(byId('lastName'), 'Train')
+            .waitAndSet(byId('email'), email)
+            .waitAndSet(byId('password'), password)
             .click(byId('signup-btn'))
-            .waitForElementVisible('#create-org-page', 10000)
-            .setValue('[name="orgName"]', 'Bullet Train Ltd')
+            .waitAndSet('[name="orgName"]', 'Bullet Train Ltd')
             .click('#create-org-btn')
             .waitForElementVisible(byId('project-select-page'), 10000);
     },
