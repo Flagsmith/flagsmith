@@ -18,7 +18,6 @@ jobs:
         runs-on: ubuntu-latest
         name: Deploy to Staging
         environment: staging
-        needs: run-tests
 
         steps:
             - name: Cloning repo
