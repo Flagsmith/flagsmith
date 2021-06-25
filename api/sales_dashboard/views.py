@@ -52,7 +52,9 @@ class OrganisationList(ListView):
 
         if "search" in self.request.GET:
             search_term = self.request.GET["search"]
-            queryset = queryset.filter(name__icontains=search_term)
+            queryset = queryset.filter(
+                Q(name__icontains=search_term) | Q(users__email__icontains=search_term)
+            )
 
         if self.request.GET.get("sort_field"):
             sort_field = self.request.GET["sort_field"]
