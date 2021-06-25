@@ -4,7 +4,6 @@ on:
     push:
         branches:
             - main
-            - chore/build-staging-frontend #todo: remove
         paths:
             - 'frontend/**'
             - '.github/**'
