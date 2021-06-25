@@ -1,0 +1,47 @@
+name: Frontend Deploy to Staging
+
+on:
+    push:
+        branches:
+            - main
+        paths:
+            - 'frontend/**'
+            - '.github/**'
+
+defaults:
+    run:
+        working-directory: frontend
+
+jobs:
+    deploy-staging:
+        runs-on: ubuntu-latest
+        name: Deploy to Staging
+        environment: staging
+
+        steps:
+            - name: Cloning repo
+              uses: actions/checkout@v2
+              with:
+                  fetch-depth: 0
+
+            - name: Setup Node.js 14.x
+              uses: actions/setup-node@v1
+              with:
+                  node-version: 14.x
+
+            - name: Setup Cloud SDK
+              uses: google-github-actions/setup-gcloud@v0.2.0
+              with:
+                  project_id: bullet-train-front-end-staging
+                  service_account_key: ${{ secrets.FRONTEND_GOOGLECLOUD_SERVICEACCOUNT_KEY }}
+
+            - name: Deploy to App Engine
+              env:
+                  ASSET_URL: https://staging.flagsmith.com
+                  ENV: staging
+              run: |
+                  npm i
+                  npm run env
+                  npm run dotenv
+                  npm run bundle
+                  gcloud app deploy --quiet
