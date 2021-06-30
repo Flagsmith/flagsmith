@@ -455,3 +455,9 @@ ENABLE_ADMIN_ACCESS_USER_PASS = env.bool("ENABLE_ADMIN_ACCESS_USER_PASS", defaul
 # Set this flag to prevent traits being stored for all Organisations within the application
 # Useful for data sensitive installations that dont want persistent traits.
 DEFAULT_ORG_STORE_TRAITS_VALUE = env.bool("DEFAULT_ORG_STORE_TRAITS_VALUE", True)
+
+
+### Front end environment variables
+
+FRONTEND_API_URL = env("API_URL", default="/api/v1")
+FRONTEND_ASSET_URL = env("ASSET_URL", default="/")

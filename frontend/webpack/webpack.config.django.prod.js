@@ -7,6 +7,7 @@ const webpack = require('webpack');
 const HtmlWebpackPlugin = require('html-webpack-plugin');
 const ExtractTextPlugin = require('extract-text-webpack-plugin');
 const CleanWebpackPlugin = require('clean-webpack-plugin');
+const CopyWebpackPlugin = require('copy-webpack-plugin');
 const UglifyJSPlugin = require('uglifyjs-webpack-plugin');
 const moment = require('moment');
 
@@ -66,6 +67,13 @@ module.exports = {
                 allChunks: true
             }),
 
+            // Copy static content
+            new CopyWebpackPlugin([
+                { from: path.join(__dirname, '../web/images'), to: path.join(__dirname, '../../api/static/images') },
+                { from: path.join(__dirname, '../web/static'), to: path.join(__dirname, '../../api/static/static') },
+                { from: path.join(__dirname, '../web/fonts'), to: path.join(__dirname, '../../api/static/fonts') },
+            ]),
+
         ]).concat(require('./pages').map((page) => {
             console.log(page);
             return new HtmlWebpackPlugin({
@@ -87,4 +95,6 @@ module.exports = {
             }),
         }, ]),
     },
+
+    
 };
