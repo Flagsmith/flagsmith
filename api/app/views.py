@@ -3,6 +3,7 @@ import json
 from django.conf import settings
 from django.contrib.staticfiles.storage import staticfiles_storage
 from django.http import HttpResponse, JsonResponse
+from django.template import loader
 
 from . import utils
 
@@ -12,8 +13,12 @@ def version_info(request):
 
 
 def index(request):
-    index_file = open(staticfiles_storage.path("index.html"), "r")
-    return HttpResponse(index_file.read())
+    template = loader.get_template("webpack/index.html")
+    context = {
+        "linkedin_api_key": settings.FRONTEND_LINKEDIN,
+    }
+
+    return HttpResponse(template.render(context, request))
 
 
 def project_overrides(request):
