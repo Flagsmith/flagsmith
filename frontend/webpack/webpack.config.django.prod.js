@@ -77,7 +77,7 @@ module.exports = {
         ]).concat(require('./pages').map((page) => {
             console.log(page);
             return new HtmlWebpackPlugin({
-                template: `../api/templates/${page}.html`, // template to use
+                template: `../api/app/templates/${page}.html`, // template to use
                 filename: `${page}.html`, // output template
                 'assets': { // add these script/link tags
                     'client': '/[hash].js',
