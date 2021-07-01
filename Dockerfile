@@ -35,4 +35,4 @@ EXPOSE 8000
 
 USER nobody
 
-CMD ["./docker/docker"]
+CMD ["./scripts/run-docker.sh"]

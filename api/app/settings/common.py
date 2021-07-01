@@ -460,5 +460,5 @@ DEFAULT_ORG_STORE_TRAITS_VALUE = env.bool("DEFAULT_ORG_STORE_TRAITS_VALUE", True
 
 ### Front end environment variables
 
-FRONTEND_API_URL = env("API_URL", default="/api/v1")
+FRONTEND_API_URL = env("API_URL", default="/api/v1/")
 FRONTEND_ASSET_URL = env("ASSET_URL", default="/")
