@@ -27,21 +27,21 @@ def index(request):
 
 def project_overrides(request):
     config_mapping_dict = {
-        "FRONTEND_API_URL": "api",
-        "FRONTEND_MAINTENANCE_MODE": "maintenance",
-        "FRONTEND_ASSET_URL": "assetURL",
-        "FRONTEND_LINKEDIN_API_KEY": "linkedin_api_key",
-        "FRONTEND_PREVENT_SIGNUP": "preventSignup",
-        "FRONTEND_FLAGSMITH_ON_FLAGSMITH_API_URL": "flagsmith",
-        "FRONTEND_GOOGLE_ANALYTICS_API_KEY": "ga",
-        "FRONTEND_CRISP_CHAT_API_KEY": "crispChat",
-        "FRONTEND_LINKEDIN_API_KEY": "sha",
-        "FRONTEND_MIXPANEL_API_KEY": "mixpanel",
-        "FRONTEND_SENTRY_API_KEY": "sentry",
-        "FRONTEND_FLAGSMITH_ON_FLAGSMITH_API_KEY": "flagsmithClientAPI",
-        "FRONTEND_DISABLE_INFLUXDB_FEATURES": "disableInflux",
-        "FRONTEND_FLAGSMITH_ANALYTICS": "flagsmithAnalytics",
-        "FRONTEND_AMPLITUDE_API_KEY": "amplitude",
+        "API_URL": "api",
+        "MAINTENANCE_MODE": "maintenance",
+        "ASSET_URL": "assetURL",
+        "LINKEDIN_API_KEY": "linkedin_api_key",
+        "PREVENT_SIGNUP": "preventSignup",
+        "FLAGSMITH_ON_FLAGSMITH_API_URL": "flagsmith",
+        "GOOGLE_ANALYTICS_API_KEY": "ga",
+        "CRISP_CHAT_API_KEY": "crispChat",
+        "LINKEDIN_API_KEY": "sha",
+        "MIXPANEL_API_KEY": "mixpanel",
+        "SENTRY_API_KEY": "sentry",
+        "FLAGSMITH_ON_FLAGSMITH_API_KEY": "flagsmithClientAPI",
+        "DISABLE_INFLUXDB_FEATURES": "disableInflux",
+        "FLAGSMITH_ANALYTICS": "flagsmithAnalytics",
+        "AMPLITUDE_API_KEY": "amplitude",
     }
 
     project_overrides = {}
