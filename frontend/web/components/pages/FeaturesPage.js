@@ -24,10 +24,10 @@ const FeaturesPage = class extends Component {
         };
         ES6Component(this);
         this.listenTo(TagStore, 'loaded', () => {
-            // const tags = TagStore.model && TagStore.model[parseInt(this.props.match.params.projectId)];
-            // if (this.state.tags.length === 0 && tags && tags.length > 0) {
-            //     this.setState({ tags: tags.map(v => v.id) });
-            // }
+            const tags = TagStore.model && TagStore.model[parseInt(this.props.match.params.projectId)];
+            if (this.state.tags.length === 0 && tags && tags.length > 0) {
+                this.setState({ tags: tags.map(v => v.id).concat('') });
+            }
         });
         AppActions.getFeatures(this.props.match.params.projectId, this.props.match.params.environmentId);
     }
@@ -36,6 +36,7 @@ const FeaturesPage = class extends Component {
         const { match: { params } } = newProps;
         const { match: { params: oldParams } } = this.props;
         if (params.environmentId != oldParams.environmentId || params.projectId != oldParams.projectId) {
+            this.getTags(params.projectId);
             AppActions.getFeatures(params.projectId, params.environmentId);
         }
     }
@@ -43,7 +44,7 @@ const FeaturesPage = class extends Component {
     componentDidMount = () => {
         API.trackPage(Constants.pages.FEATURES);
         const { match: { params } } = this.props;
-        AppActions.getTags(params.projectId);
+        this.getTags(params.projectId);
         AsyncStorage.setItem('lastEnv', JSON.stringify({
             orgId: AccountStore.getOrganisation().id,
             projectId: params.projectId,
@@ -59,6 +60,17 @@ const FeaturesPage = class extends Component {
         />, null, { className: 'side-modal fade' });
     };
 
+
+    getTags = (projectId) => {
+        AppActions.getTags(projectId);
+        AsyncStorage.getItem(`${projectId}tags`).then((res) => {
+            if (res) {
+                this.setState({
+                    tags: JSON.parse(res),
+                });
+            }
+        });
+    }
 
     editFlag = (projectFlag, environmentFlag) => {
         API.trackEvent(Constants.events.VIEW_FEATURE);
@@ -138,7 +150,12 @@ const FeaturesPage = class extends Component {
 
     filter = (flags) => {
         if (this.state.tags.length) {
-            return _.filter(flags, flag => _.intersection(flag.tags || [], this.state.tags).length) || [];
+            return _.filter(flags, (flag) => {
+                if (this.state.tags.includes('') && (!flag.tags || !flag.tags.length)) {
+                    return true;
+                }
+                return _.intersection(flag.tags || [], this.state.tags).length;
+            }) || [];
         }
         return flags;
     }
@@ -212,7 +229,13 @@ const FeaturesPage = class extends Component {
                                                           ]}
                                                           items={this.filter(projectFlags, this.state.tags)}
                                                           header={(
-                                                              <TagSelect projectId={projectId} value={this.state.tags} onChange={tags => this.setState({ tags })}/>
+                                                              <TagSelect
+                                                                  showUntagged
+                                                                projectId={projectId} value={this.state.tags} onChange={(tags) => {
+                                                                    this.setState({ tags });
+                                                                    AsyncStorage.setItem(`${projectId}tags`, JSON.stringify(tags));
+                                                                }}
+                                                              />
                                                           )}
                                                           renderRow={(projectFlag, i) => {
                                                               const { name, id, enabled, created_date, description, type } = projectFlag;
