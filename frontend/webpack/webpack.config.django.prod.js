@@ -43,15 +43,13 @@ module.exports = {
     output: {
         path: path.join(__dirname, '../../api/static'),
         filename: '[name].[hash].js',
-        publicPath: url.resolve(process.env.ASSET_URL || Project.assetUrl || 'https://cdn.flagsmith.com', 'static/'),
+        publicPath: '/static/',
     },
 
     plugins: require('./plugins')
         .concat([
-            // Clear out build folder
-            new CleanWebpackPlugin(['../../api/static'], {
-                root: path.join(__dirname, '../')
-            }),
+            // Clear out the static django build folder
+            new CleanWebpackPlugin(),
 
             new webpack.DefinePlugin({
                 __DEV__: false,
