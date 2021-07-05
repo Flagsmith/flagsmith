@@ -25,8 +25,10 @@ urlpatterns = [
         password_reset_redirect,
         name="password_reset_confirm",
     ),
-    path(
-        "static/project-overrides.js", views.project_overrides, name="project_overrides"
+    url(
+        r"^static/project-overrides.js",
+        views.project_overrides,
+        name="project_overrides",
     ),
     path("", views.index, name="index"),
     # Catch all for subfolder views on the front end

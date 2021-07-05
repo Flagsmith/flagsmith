@@ -42,8 +42,8 @@ module.exports = {
     },
     output: {
         path: path.join(__dirname, '../../api/static'),
+        publicPath: '/',
         filename: '[name].[hash].js',
-        publicPath: '/static/',
     },
 
     plugins: require('./plugins')
@@ -92,7 +92,5 @@ module.exports = {
                 use: 'css-loader!sass-loader'
             }),
         }, ]),
-    },
-
-    
+    },  
 };
