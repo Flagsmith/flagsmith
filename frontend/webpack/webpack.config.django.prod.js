@@ -49,7 +49,7 @@ module.exports = {
     plugins: require('./plugins')
         .concat([
             // Clear out the static django build folder
-            new CleanWebpackPlugin(),
+            new CleanWebpackPlugin(['static'], { root: path.join(__dirname, '../../api') }),
 
             new webpack.DefinePlugin({
                 __DEV__: false,
