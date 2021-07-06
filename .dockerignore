@@ -6,4 +6,8 @@ docker-compose*.yml
 Dockerfile
 .tool-versions
 .env*
-*/.venv*
+.venv*
+.idea
+.elasticbeanstalk
+.ebignore
+.ebextensions

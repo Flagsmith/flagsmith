@@ -20,7 +20,7 @@ FROM python:3.8-slim as application
 
 WORKDIR /app
 COPY api/requirements.txt /app/
-RUN pip install -r requirements.txt
+RUN pip install -r requirements.txt --no-cache-dir --compile
 
 COPY api /app/
 RUN python /app/manage.py collectstatic --no-input
