@@ -28,19 +28,18 @@ def index(request):
 def project_overrides(request):
     config_mapping_dict = {
         "API_URL": "api",
-        "MAINTENANCE_MODE": "maintenance",
         "ASSET_URL": "assetURL",
-        "LINKEDIN_API_KEY": "linkedin_api_key",
+        "MAINTENANCE_MODE": "maintenance",
         "PREVENT_SIGNUP": "preventSignup",
-        "FLAGSMITH_ON_FLAGSMITH_API_URL": "flagsmith",
-        "GOOGLE_ANALYTICS_API_KEY": "ga",
-        "CRISP_CHAT_API_KEY": "crispChat",
-        "LINKEDIN_API_KEY": "sha",
-        "MIXPANEL_API_KEY": "mixpanel",
-        "SENTRY_API_KEY": "sentry",
-        "FLAGSMITH_ON_FLAGSMITH_API_KEY": "flagsmithClientAPI",
         "DISABLE_INFLUXDB_FEATURES": "disableInflux",
         "FLAGSMITH_ANALYTICS": "flagsmithAnalytics",
+        "FLAGSMITH_ON_FLAGSMITH_API_URL": "flagsmith",
+        "FLAGSMITH_ON_FLAGSMITH_API_KEY": "flagsmithClientAPI",
+        "GOOGLE_ANALYTICS_API_KEY": "ga",
+        "LINKEDIN_API_KEY": "linkedin_api_key",
+        "CRISP_CHAT_API_KEY": "crispChat",
+        "MIXPANEL_API_KEY": "mixpanel",
+        "SENTRY_API_KEY": "sentry",
         "AMPLITUDE_API_KEY": "amplitude",
     }
 
