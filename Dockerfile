@@ -12,7 +12,7 @@ COPY . .
 RUN cd frontend && npm install --quiet --production
 ENV ENV=prod
 ENV ASSET_URL=/
-RUN cd frontend && npm run bundledjango && ls -l /app/api/static
+RUN cd frontend && npm run bundledjango
 
 
 # Build Django Application

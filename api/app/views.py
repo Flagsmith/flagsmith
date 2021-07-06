@@ -19,7 +19,7 @@ def index(request):
     #    template = loader.get_template("index.html")
 
     context = {
-        "linkedin_api_key": settings.FRONTEND_LINKEDIN_API_KEY,
+        "linkedin_api_key": settings.LINKEDIN_API_KEY,
     }
 
     return HttpResponse(template.render(context, request))
