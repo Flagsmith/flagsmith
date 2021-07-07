@@ -342,13 +342,7 @@ LOGGING = {
             "formatter": "generic",
         },
     },
-    "loggers": {
-        "": {"level": LOG_LEVEL, "handlers": ["console"]},
-        "django.db.backends": {
-            "level": LOG_LEVEL,
-            "handlers": ["console"],
-        },
-    },
+    "loggers": {"": {"level": LOG_LEVEL, "handlers": ["console"]}},
 }
 
 CACHE_FLAGS_SECONDS = env.int("CACHE_FLAGS_SECONDS", default=0)
