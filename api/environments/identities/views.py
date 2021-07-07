@@ -27,16 +27,12 @@ class IdentityViewSet(viewsets.ModelViewSet):
     pagination_class = CustomPagination
 
     def get_queryset(self):
-        environment = self.get_environment_from_request()
-        user_permitted_identities = self.request.user.get_permitted_identities()
-        queryset = user_permitted_identities.filter(
-            environment__api_key=environment.api_key
-        )
+        environment_api_key = self.kwargs["environment_api_key"]
+        queryset = Identity.objects.filter(environment__api_key=environment_api_key)
 
-        if self.request.query_params.get("q"):
-            queryset = queryset.filter(
-                identifier__icontains=self.request.query_params.get("q")
-            )
+        search_query = self.request.query_params.get("q")
+        if search_query:
+            queryset = queryset.filter(identifier__icontains=search_query)
 
         return queryset
 
