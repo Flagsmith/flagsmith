@@ -27,8 +27,8 @@ class IdentityViewSet(viewsets.ModelViewSet):
     pagination_class = CustomPagination
 
     def get_queryset(self):
-        environment_api_key = self.kwargs["environment_api_key"]
-        queryset = Identity.objects.filter(environment__api_key=environment_api_key)
+        environment = self.get_environment_from_request()
+        queryset = Identity.objects.filter(environment=environment)
 
         search_query = self.request.query_params.get("q")
         if search_query:
