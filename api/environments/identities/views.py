@@ -34,6 +34,10 @@ class IdentityViewSet(viewsets.ModelViewSet):
         if search_query:
             queryset = queryset.filter(identifier__icontains=search_query)
 
+        # change the default order by to avoid performance issues with pagination
+        # when environments have small number (<page_size) of records
+        queryset = queryset.order_by("created_date")
+
         return queryset
 
     def get_environment_from_request(self):
