@@ -13,11 +13,9 @@ logger = logging.getLogger(__name__)
 
 
 class RudderstackWrapper(AbstractBaseIdentityIntegrationWrapper):
-    def __init__(self, api_key: str):
-        rudder_analytics.write_key = "1vM74NsY874t06s0UY6r3S0wnT1"
-        rudder_analytics.data_plane_url = (
-            "https://flagsmithmny.dataplane.rudderstack.com"
-        )
+    def __init__(self, base_url: str, api_key: str):
+        rudder_analytics.write_key = api_key
+        rudder_analytics.data_plane_url = base_url
 
     def _identify_user(self, user_data: dict) -> None:
         rudder_analytics.identify(user_data.get("user_id"), user_data.get("traits"))
