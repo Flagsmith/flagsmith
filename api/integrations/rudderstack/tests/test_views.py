@@ -7,14 +7,14 @@ from rest_framework import status
 from rest_framework.test import APIClient
 
 from environments.models import Environment
-from integrations.segment.models import SegmentConfiguration
+from integrations.rudderstack.models import RudderstackConfiguration
 from organisations.models import Organisation, OrganisationRole
 from projects.models import Project
 from util.tests import Helper
 
 
 @pytest.mark.django_db
-class SegmentConfigurationTestCase(TestCase):
+class RudderstackConfigurationTestCase(TestCase):
     def setUp(self):
         self.client = APIClient()
         user = Helper.create_ffadminuser()
@@ -32,11 +32,11 @@ class SegmentConfigurationTestCase(TestCase):
             name="Test Environment", project=self.project
         )
         self.list_url = reverse(
-            "api-v1:environments:integrations-segment-list",
+            "api-v1:environments:integrations-rudderstack-list",
             args=[self.environment.api_key],
         )
 
-    def test_should_create_segment_config_when_post(self):
+    def test_should_create_rudderstack_config_when_post(self):
         # Given
         data = {"api_key": "abc-123"}
 
@@ -50,13 +50,15 @@ class SegmentConfigurationTestCase(TestCase):
         # Then
         assert response.status_code == status.HTTP_201_CREATED
         assert (
-            SegmentConfiguration.objects.filter(environment=self.environment).count()
+            RudderstackConfiguration.objects.filter(
+                environment=self.environment
+            ).count()
             == 1
         )
 
-    def test_should_return_BadRequest_when_duplicate_segment_config_is_posted(self):
+    def test_should_return_BadRequest_when_duplicate_rudderstack_config_is_posted(self):
         # Given
-        config = SegmentConfiguration.objects.create(
+        config = RudderstackConfiguration.objects.create(
             api_key="api_123", environment=self.environment
         )
 
@@ -71,13 +73,15 @@ class SegmentConfigurationTestCase(TestCase):
         # Then
         assert response.status_code == status.HTTP_400_BAD_REQUEST
         assert (
-            SegmentConfiguration.objects.filter(environment=self.environment).count()
+            RudderstackConfiguration.objects.filter(
+                environment=self.environment
+            ).count()
             == 1
         )
 
     def test_should_update_configuration_when_put(self):
         # Given
-        config = SegmentConfiguration.objects.create(
+        config = RudderstackConfiguration.objects.create(
             api_key="api_123", environment=self.environment
         )
 
@@ -86,7 +90,7 @@ class SegmentConfigurationTestCase(TestCase):
 
         # When
         url = reverse(
-            "api-v1:environments:integrations-segment-detail",
+            "api-v1:environments:integrations-rudderstack-detail",
             args=[self.environment.api_key, config.id],
         )
         response = self.client.put(
@@ -100,7 +104,7 @@ class SegmentConfigurationTestCase(TestCase):
         assert response.status_code == status.HTTP_200_OK
         assert config.api_key == api_key_updated
 
-    def test_should_return_segment_config_list_when_requested(self):
+    def test_should_return_rudderstack_config_list_when_requested(self):
         # Given - set up data
 
         # When
@@ -111,13 +115,13 @@ class SegmentConfigurationTestCase(TestCase):
 
     def test_should_remove_configuration_when_delete(self):
         # Given
-        config = SegmentConfiguration.objects.create(
+        config = RudderstackConfiguration.objects.create(
             api_key="api_123", environment=self.environment
         )
 
         # When
         url = reverse(
-            "api-v1:environments:integrations-segment-detail",
+            "api-v1:environments:integrations-rudderstack-detail",
             args=[self.environment.api_key, config.id],
         )
         res = self.client.delete(url)
@@ -125,6 +129,6 @@ class SegmentConfigurationTestCase(TestCase):
         # Then
         assert res.status_code == status.HTTP_204_NO_CONTENT
         #  and
-        assert not SegmentConfiguration.objects.filter(
+        assert not RudderstackConfiguration.objects.filter(
             environment=self.environment
         ).exists()
