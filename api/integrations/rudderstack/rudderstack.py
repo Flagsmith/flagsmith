@@ -12,7 +12,7 @@ if typing.TYPE_CHECKING:
 logger = logging.getLogger(__name__)
 
 
-class SegmentWrapper(AbstractBaseIdentityIntegrationWrapper):
+class RudderstackWrapper(AbstractBaseIdentityIntegrationWrapper):
     def __init__(self, api_key: str):
         rudder_analytics.write_key = "1vM74NsY874t06s0UY6r3S0wnT1"
         rudder_analytics.data_plane_url = (

@@ -8,4 +8,4 @@ from integrations.rudderstack.serializers import (
 class RudderstackConfigurationViewSet(IntegrationCommonViewSet):
     serializer_class = RudderstackConfigurationSerializer
     pagination_class = None  # set here to ensure documentation is correct
-    model_class = SegmentConfiguration
+    model_class = RudderstackConfiguration
