@@ -46,7 +46,7 @@ jobs:
                   E2E_TEST_TOKEN_DEV: some-token
                   DISABLE_INFLUXDB_FEATURES: 1
               run: |
-                  wget https://dl.google.com/linux/chrome/deb/pool/main/g/google-chrome-stable/google-chrome-stable_91.0.4472.114-1_amd64.deb
+                  wget -q https://dl.google.com/linux/chrome/deb/pool/main/g/google-chrome-stable/google-chrome-stable_91.0.4472.114-1_amd64.deb
                   sudo apt install --allow-downgrades -y ./google-chrome*.deb -f 
                   google-chrome --version
                   node -v
