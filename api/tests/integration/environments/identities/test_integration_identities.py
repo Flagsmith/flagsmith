@@ -148,8 +148,8 @@ def test_get_feature_states_for_identity_only_makes_one_query_to_get_mv_feature_
             ],
         )
 
-    base_number_of_queries = 3
-    number_of_integrations = 9
+    base_number_of_queries = 4
+    number_of_integrations = 8
 
     # When we make a request to get the flags for the identity, 12 queries are made
     # (although 4 of these are made in a separate thread)
