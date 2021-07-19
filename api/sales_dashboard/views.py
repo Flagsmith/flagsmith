@@ -61,7 +61,7 @@ class OrganisationList(ListView):
             if filter_plan == "free":
                 queryset = queryset.filter(subscription__isnull=True)
             else:
-                queryset = queryset.filter(Q(subscription__plan__icontains=filter_plan))
+                queryset = queryset.filter(subscription__plan__icontains=filter_plan)
 
         if self.request.GET.get("sort_field"):
             sort_field = self.request.GET["sort_field"]
