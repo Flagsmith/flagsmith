@@ -129,7 +129,7 @@ const UsersPage = class extends Component {
                                                       >
                                                           <Flex>
                                                               <Link
-                                                                to={`/project/${this.props.match.params.projectId}/environment/${this.props.match.params.environmentId}/users/${identifier}/${id}`}
+                                                                to={`/project/${this.props.match.params.projectId}/environment/${this.props.match.params.environmentId}/users/${encodeURIComponent(identifier)}/${id}`}
                                                               >
                                                                   <ButtonLink>
                                                                       {identifier}
