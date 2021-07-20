@@ -44,7 +44,9 @@ class AuditLogViewSet(mixins.ListModelMixin, viewsets.GenericViewSet):
                 self.request.query_params.get("environment")
             )
             q = q & (Q(environment__id=environment_id) | Q(environment=None))
-        return AuditLog.objects.filter(q)
+        return AuditLog.objects.filter(q).select_related(
+            "project", "environment", "author"
+        )
 
     def _get_value_as_int(self, value):
         try:
