@@ -52,8 +52,10 @@ class EnvironmentSerializerLight(serializers.ModelSerializer):
         )
 
 
-class CloneEnvironmentInputSerializer(serializers.Serializer):
-    name = serializers.CharField(max_length=2000)
+class CloneEnvironmentInputSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Environment
+        fields = ("name",)
 
 
 class WebhookSerializer(serializers.ModelSerializer):
