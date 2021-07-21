@@ -1,7 +1,7 @@
 /* eslint-disable no-unused-expressions */
 /* eslint-disable func-names */
-const invitePrefix = `bullet-train${new Date().valueOf()}`;
-const inviteEmail = `${invitePrefix}@mailinator.com`;
+const invitePrefix = `flagsmith2` //${new Date().valueOf()}`;
+const inviteEmail = `${invitePrefix}@restmail.net`;
 const email = 'nightwatch@solidstategroup.com';
 const password = 'str0ngp4ssw0rd!';
 const url = `http://localhost:${process.env.PORT || 8080}`;
@@ -11,6 +11,19 @@ const helpers = require('./helpers');
 const byId = helpers.byTestID;
 
 module.exports = {
+    '[Invite Tests] - restmail': function (browser) {
+        var apiUrl = 'https://restmail.net/mail/' + invitePrefix
+        browser.apiGet(apiUrl, function (response) {
+            var jsonBody = JSON.parse(response.body)
+            browser.assert.equal(response.statusCode, '200')
+            var pattern = /<a[^>]*href=["']([^"']*)["']/g;
+            var htmlBody = jsonBody[0].html;
+            while (match = pattern.exec(htmlBody)) {
+                console.log(match[1]);
+            }
+        })
+    },
+    /*
     '[Invite Tests] - Login': function (browser) {
         testHelpers.login(browser, url, email, password);
     },
@@ -95,4 +108,5 @@ module.exports = {
             .useCss();
         helpers.logout(browser);
     },
+    */
 };
