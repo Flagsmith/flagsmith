@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
 from __future__ import unicode_literals
 
+import logging
+
 from django.utils.decorators import method_decorator
 from drf_yasg2 import openapi
 from drf_yasg2.utils import swagger_auto_schema
@@ -17,7 +19,6 @@ from permissions.serializers import (
     MyUserObjectPermissionsSerializer,
     PermissionModelSerializer,
 )
-import logging
 
 from .identities.traits.models import Trait
 from .identities.traits.serializers import (
@@ -30,7 +31,11 @@ from .permissions.models import (
     UserEnvironmentPermission,
     UserPermissionGroupEnvironmentPermission,
 )
-from .serializers import EnvironmentSerializerLight, WebhookSerializer
+from .serializers import (
+    CloneEnvironmentInputSerializer,
+    EnvironmentSerializerLight,
+    WebhookSerializer,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -103,6 +108,19 @@ class EnvironmentViewSet(viewsets.ModelViewSet):
                 {"detail": "Couldn't get trait keys"},
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR,
             )
+
+    @action(detail=True, methods=["POST"])
+    def clone_env(self, request, *args, **kwargs):
+        input_serializer = CloneEnvironmentInputSerializer(data=request.data)
+        if not input_serializer.is_valid():
+            return Response(input_serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+        name = input_serializer.validated_data.get("name")
+        env = self.get_object()
+        clone = env.clone(name)
+        clone.save()
+        serializer = self.get_serializer(instance=clone)
+        return Response(serializer.data, status=status.HTTP_200_OK)
 
     @action(detail=True, methods=["POST"], url_path="delete-traits")
     def delete_traits(self, request, *args, **kwargs):
