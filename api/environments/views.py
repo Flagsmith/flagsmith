@@ -110,7 +110,7 @@ class EnvironmentViewSet(viewsets.ModelViewSet):
             )
 
     @action(detail=True, methods=["POST"])
-    def clone_env(self, request, *args, **kwargs):
+    def clone(self, request, *args, **kwargs):
         input_serializer = CloneEnvironmentInputSerializer(data=request.data)
         if not input_serializer.is_valid():
             return Response(input_serializer.errors, status=status.HTTP_400_BAD_REQUEST)
