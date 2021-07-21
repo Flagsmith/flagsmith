@@ -41,15 +41,21 @@ def environment_api_key():
 
 
 @pytest.fixture()
-def environment(admin_client, project, environment_api_key):
+def environment_dict(admin_client, project, environment_api_key):
     environment_data = {
         "name": "Test Environment",
         "api_key": environment_api_key,
         "project": project,
     }
     url = reverse("api-v1:environments:environment-list")
+
     response = admin_client.post(url, data=environment_data)
-    return response.json()["id"]
+    return response.json()
+
+
+@pytest.fixture()
+def environment(environment_dict) -> int:
+    return environment_dict["id"]
 
 
 @pytest.fixture()
