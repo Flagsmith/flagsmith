@@ -109,6 +109,10 @@ class EnvironmentViewSet(viewsets.ModelViewSet):
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR,
             )
 
+    @swagger_auto_schema(
+        request_body=CloneEnvironmentInputSerializer,
+        responses={200: EnvironmentSerializerLight()},
+    )
     @action(detail=True, methods=["POST"])
     def clone(self, request, *args, **kwargs):
         input_serializer = CloneEnvironmentInputSerializer(data=request.data)
