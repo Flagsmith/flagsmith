@@ -1,8 +1,6 @@
 import logging
 import typing
 
-import rudder_analytics
-
 from integrations.common.wrapper import AbstractBaseIdentityIntegrationWrapper
 
 if typing.TYPE_CHECKING:
@@ -13,12 +11,11 @@ logger = logging.getLogger(__name__)
 
 
 class PendoWrapper(AbstractBaseIdentityIntegrationWrapper):
-    def __init__(self, base_url: str, api_key: str):
-        rudder_analytics.write_key = api_key
-        rudder_analytics.data_plane_url = base_url
+    def __init__(self, api_key: str):
+        self.api_key = api_key
 
     def _identify_user(self, user_data: dict) -> None:
-        rudder_analytics.identify(user_data.get("user_id"), user_data.get("traits"))
+        # todo: call pendo API with Identity data
         logger.debug(f"Sent event to Pendo.")
 
     def generate_user_data(
