@@ -59,7 +59,7 @@ module.exports = {
             .click('#confirm-btn-yes')
             .waitForElementNotPresent(byId('pending-invite-1'));
     },
-    '[Invite Tests] - Accept invite via Restmail': function (browser) {
+    '[Invite Tests] - Accept invite': function (browser) {
         var apiUrl = 'https://restmail.net/mail/' + invitePrefix
         browser.apiGet(apiUrl, function (response) {
             var jsonBody = JSON.parse(response.body)
