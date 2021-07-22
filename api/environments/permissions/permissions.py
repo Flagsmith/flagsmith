@@ -48,6 +48,10 @@ class EnvironmentPermissions(BasePermission):
 
         if view.action == "user_permissions":
             return True
+        if view.action == "clone":
+            return request.user.has_project_permission(
+                "CREATE_ENVIRONMENT", obj.project
+            )
 
         return False
 
