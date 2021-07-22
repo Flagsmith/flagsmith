@@ -10,8 +10,8 @@ MIDDLEWARE.extend(["debug_toolbar.middleware.DebugToolbarMiddleware"])
 
 EMAIL_BACKEND = "django.core.mail.backends.console.EmailBackend"
 
-# overwrite swagger settings to allow access without authentication
-SWAGGER_SETTINGS = {
-    "USE_SESSION_AUTH": False,
-    "SHOW_REQUEST_HEADERS": True,
-}
+
+SWAGGER_SETTINGS["USE_SESSION_AUTH"] = False
+
+# Allow admin login with username and password
+ENABLE_ADMIN_ACCESS_USER_PASS = False
