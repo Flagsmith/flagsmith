@@ -34,7 +34,37 @@ const sendSuccess = function () {
     return Promise.resolve();
 };
 const clearDown = function (browser, done) {
-    done();
+    let token;
+    if (process.env[`E2E_TEST_TOKEN_${Project.env.toUpperCase()}`]) {
+        token = process.env[`E2E_TEST_TOKEN_${Project.env.toUpperCase()}`];
+    } else {
+        const fs = require('fs');
+        if (fs.existsSync('./tests/tokens.json')) {
+            token = require('./tokens.json')[Project.env];
+        } else {
+            console.log('No tokens.json found for teardown. Either set E2E_TEST_TOKEN in your environment or create the file in /tests');
+        }
+    }
+    if (token) {
+        fetch(`${Project.api}e2etests/teardown/`, {
+            method: 'POST',
+            headers: {
+                'Accept': 'application/json',
+                'Content-Type': 'application/json',
+                'X-E2E-Test-Auth-Token': token.trim(),
+            },
+            body: JSON.stringify({}),
+        }).then((res) => {
+            if (res.ok) {
+                console.log('\n', '\x1b[32m', 'e2e teardown successful', '\x1b[0m', '\n');
+                done();
+            } else {
+                console.error('\n', '\x1b[31m', 'e2e teardown failed', res.status, '\x1b[0m', '\n');
+            }
+        });
+    } else {
+        console.error('\n', '\x1b[31m', 'e2e teardown failed - no available token', '\x1b[0m', '\n');
+    }
 };
 
 const sendFailure = (browser, done, request, error) => {
