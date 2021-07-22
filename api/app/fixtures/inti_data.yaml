@@ -1,0 +1,1866 @@
+- model: contenttypes.contenttype
+  pk: 1
+  fields:
+    app_label: permissions
+    model: permissionmodel
+- model: contenttypes.contenttype
+  pk: 2
+  fields:
+    app_label: environments
+    model: environmentpermissionmodel
+- model: contenttypes.contenttype
+  pk: 3
+  fields:
+    app_label: projects
+    model: projectpermissionmodel
+- model: contenttypes.contenttype
+  pk: 4
+  fields:
+    app_label: admin
+    model: logentry
+- model: contenttypes.contenttype
+  pk: 5
+  fields:
+    app_label: auth
+    model: permission
+- model: contenttypes.contenttype
+  pk: 6
+  fields:
+    app_label: auth
+    model: group
+- model: contenttypes.contenttype
+  pk: 7
+  fields:
+    app_label: contenttypes
+    model: contenttype
+- model: contenttypes.contenttype
+  pk: 8
+  fields:
+    app_label: sessions
+    model: session
+- model: contenttypes.contenttype
+  pk: 9
+  fields:
+    app_label: authtoken
+    model: token
+- model: contenttypes.contenttype
+  pk: 10
+  fields:
+    app_label: authtoken
+    model: tokenproxy
+- model: contenttypes.contenttype
+  pk: 11
+  fields:
+    app_label: sites
+    model: site
+- model: contenttypes.contenttype
+  pk: 12
+  fields:
+    app_label: admin_sso
+    model: assignment
+- model: contenttypes.contenttype
+  pk: 13
+  fields:
+    app_label: users
+    model: ffadminuser
+- model: contenttypes.contenttype
+  pk: 14
+  fields:
+    app_label: users
+    model: userpermissiongroup
+- model: contenttypes.contenttype
+  pk: 15
+  fields:
+    app_label: organisations
+    model: organisation
+- model: contenttypes.contenttype
+  pk: 16
+  fields:
+    app_label: organisations
+    model: subscription
+- model: contenttypes.contenttype
+  pk: 17
+  fields:
+    app_label: organisations
+    model: userorganisation
+- model: contenttypes.contenttype
+  pk: 18
+  fields:
+    app_label: organisations
+    model: organisationwebhook
+- model: contenttypes.contenttype
+  pk: 19
+  fields:
+    app_label: invites
+    model: invite
+- model: contenttypes.contenttype
+  pk: 20
+  fields:
+    app_label: invites
+    model: invitelink
+- model: contenttypes.contenttype
+  pk: 21
+  fields:
+    app_label: projects
+    model: project
+- model: contenttypes.contenttype
+  pk: 22
+  fields:
+    app_label: projects
+    model: userprojectpermission
+- model: contenttypes.contenttype
+  pk: 23
+  fields:
+    app_label: projects
+    model: userpermissiongroupprojectpermission
+- model: contenttypes.contenttype
+  pk: 24
+  fields:
+    app_label: environments
+    model: environment
+- model: contenttypes.contenttype
+  pk: 25
+  fields:
+    app_label: environments
+    model: webhook
+- model: contenttypes.contenttype
+  pk: 26
+  fields:
+    app_label: environment_permissions
+    model: environmentpermissionmodel
+- model: contenttypes.contenttype
+  pk: 27
+  fields:
+    app_label: environment_permissions
+    model: userpermissiongroupenvironmentpermission
+- model: contenttypes.contenttype
+  pk: 28
+  fields:
+    app_label: environment_permissions
+    model: userenvironmentpermission
+- model: contenttypes.contenttype
+  pk: 29
+  fields:
+    app_label: identities
+    model: identity
+- model: contenttypes.contenttype
+  pk: 30
+  fields:
+    app_label: traits
+    model: trait
+- model: contenttypes.contenttype
+  pk: 31
+  fields:
+    app_label: features
+    model: feature
+- model: contenttypes.contenttype
+  pk: 32
+  fields:
+    app_label: features
+    model: featurestate
+- model: contenttypes.contenttype
+  pk: 33
+  fields:
+    app_label: features
+    model: featurestatevalue
+- model: contenttypes.contenttype
+  pk: 34
+  fields:
+    app_label: features
+    model: historicalfeature
+- model: contenttypes.contenttype
+  pk: 35
+  fields:
+    app_label: features
+    model: historicalfeaturestate
+- model: contenttypes.contenttype
+  pk: 36
+  fields:
+    app_label: features
+    model: historicalfeaturestatevalue
+- model: contenttypes.contenttype
+  pk: 37
+  fields:
+    app_label: features
+    model: featuresegment
+- model: contenttypes.contenttype
+  pk: 38
+  fields:
+    app_label: features
+    model: historicalfeaturesegment
+- model: contenttypes.contenttype
+  pk: 39
+  fields:
+    app_label: multivariate
+    model: multivariatefeatureoption
+- model: contenttypes.contenttype
+  pk: 40
+  fields:
+    app_label: multivariate
+    model: multivariatefeaturestatevalue
+- model: contenttypes.contenttype
+  pk: 41
+  fields:
+    app_label: segments
+    model: segment
+- model: contenttypes.contenttype
+  pk: 42
+  fields:
+    app_label: segments
+    model: condition
+- model: contenttypes.contenttype
+  pk: 43
+  fields:
+    app_label: segments
+    model: segmentrule
+- model: contenttypes.contenttype
+  pk: 44
+  fields:
+    app_label: audit
+    model: auditlog
+- model: contenttypes.contenttype
+  pk: 45
+  fields:
+    app_label: tags
+    model: tag
+- model: contenttypes.contenttype
+  pk: 46
+  fields:
+    app_label: trench
+    model: mfamethod
+- model: contenttypes.contenttype
+  pk: 47
+  fields:
+    app_label: db
+    model: testmodel
+- model: contenttypes.contenttype
+  pk: 48
+  fields:
+    app_label: datadog
+    model: datadogconfiguration
+- model: contenttypes.contenttype
+  pk: 49
+  fields:
+    app_label: amplitude
+    model: amplitudeconfiguration
+- model: contenttypes.contenttype
+  pk: 50
+  fields:
+    app_label: new_relic
+    model: newrelicconfiguration
+- model: contenttypes.contenttype
+  pk: 51
+  fields:
+    app_label: segment
+    model: segmentconfiguration
+- model: contenttypes.contenttype
+  pk: 52
+  fields:
+    app_label: heap
+    model: heapconfiguration
+- model: contenttypes.contenttype
+  pk: 53
+  fields:
+    app_label: mixpanel
+    model: mixpanelconfiguration
+- model: contenttypes.contenttype
+  pk: 54
+  fields:
+    app_label: axes
+    model: accessattempt
+- model: contenttypes.contenttype
+  pk: 55
+  fields:
+    app_label: axes
+    model: accesslog
+- model: sites.site
+  pk: 1
+  fields:
+    domain: example.com
+    name: example.com
+- model: organisations.organisation
+  pk: 1
+  fields:
+    name: org-1
+    has_requested_features: false
+    webhook_notification_email: null
+    created_date: 2021-07-20 04:57:55.926705+00:00
+    alerted_over_plan_limit: false
+    stop_serving_flags: false
+    persist_trait_data: true
+    block_access_to_admin: false
+    feature_analytics: false
+- model: invites.invitelink
+  pk: 1
+  fields:
+    hash: BAA7BfPHiZZPVNQ3PNCvkd
+    date_created: 2021-07-20 04:57:56.253399+00:00
+    organisation: 1
+    role: ADMIN
+    expires_at: null
+- model: invites.invitelink
+  pk: 2
+  fields:
+    hash: J8sQrrM5uHe9zy7snkYfSA
+    date_created: 2021-07-20 04:57:56.255448+00:00
+    organisation: 1
+    role: USER
+    expires_at: null
+- model: projects.project
+  pk: 1
+  fields:
+    name: project-1
+    created_date: 2021-07-20 04:58:05.257270+00:00
+    organisation: 1
+    hide_disabled_flags: false
+- model: environments.environment
+  pk: 1
+  fields:
+    name: Production
+    created_date: 2021-07-20 04:58:05.324091+00:00
+    project: 1
+    api_key: VYD3NWo3ywDHiifjNfENP8
+    webhooks_enabled: false
+    webhook_url: null
+- model: environments.environment
+  pk: 2
+  fields:
+    name: Development
+    created_date: 2021-07-20 04:58:05.366256+00:00
+    project: 1
+    api_key: EFB8G8jY5hYHjYS3xHz56K
+    webhooks_enabled: false
+    webhook_url: null
+- model: identities.identity
+  pk: 1
+  fields:
+    identifier: production_user_123456
+    created_date: 2021-07-20 04:58:05.458095+00:00
+    environment: 1
+- model: identities.identity
+  pk: 2
+  fields:
+    identifier: development_user_123456
+    created_date: 2021-07-20 04:58:05.459598+00:00
+    environment: 2
+- model: features.feature
+  pk: 1
+  fields:
+    name: feature-1
+    created_date: 2021-07-20 04:58:35.049040+00:00
+    project: 1
+    initial_value: flag_value
+    description: null
+    default_enabled: true
+    type: STANDARD
+    tags: []
+- model: features.featurestate
+  pk: 1
+  fields:
+    feature: 1
+    environment: 1
+    identity: null
+    feature_segment: null
+    enabled: true
+- model: features.featurestate
+  pk: 2
+  fields:
+    feature: 1
+    environment: 2
+    identity: null
+    feature_segment: null
+    enabled: true
+- model: features.featurestatevalue
+  pk: 1
+  fields:
+    type: unicode
+    boolean_value: null
+    integer_value: null
+    feature_state: 1
+    string_value: flag_value
+- model: features.featurestatevalue
+  pk: 2
+  fields:
+    type: unicode
+    boolean_value: null
+    integer_value: null
+    feature_state: 2
+    string_value: flag_value
+- model: permissions.permissionmodel
+  pk: CREATE_ENVIRONMENT
+  fields:
+    description: Ability to create an environment in the given project.
+    type: PROJECT
+- model: permissions.permissionmodel
+  pk: CREATE_FEATURE
+  fields:
+    description: Ability to create features in the given project.
+    type: PROJECT
+- model: permissions.permissionmodel
+  pk: DELETE_FEATURE
+  fields:
+    description: Ability to delete features in the given project.
+    type: PROJECT
+- model: permissions.permissionmodel
+  pk: VIEW_ENVIRONMENT
+  fields:
+    description: View permission for the given environment.
+    type: ENVIRONMENT
+- model: permissions.permissionmodel
+  pk: VIEW_PROJECT
+  fields:
+    description: View permission for the given project.
+    type: PROJECT
+- model: axes.accesslog
+  pk: 1
+  fields:
+    user_agent: Mozilla/5.0 (X11; Linux x86_64; rv:90.0) Gecko/20100101 Firefox/90.0
+    ip_address: 127.0.0.1
+    username: local@flagsmith.com
+    http_accept: application/json
+    path_info: /api/v1/auth/login/
+    attempt_time: 2021-07-20 04:57:47.638423+00:00
+    logout_time: null
+- model: auth.permission
+  pk: 1
+  fields:
+    name: Can add log entry
+    content_type: 4
+    codename: add_logentry
+- model: auth.permission
+  pk: 2
+  fields:
+    name: Can change log entry
+    content_type: 4
+    codename: change_logentry
+- model: auth.permission
+  pk: 3
+  fields:
+    name: Can delete log entry
+    content_type: 4
+    codename: delete_logentry
+- model: auth.permission
+  pk: 4
+  fields:
+    name: Can view log entry
+    content_type: 4
+    codename: view_logentry
+- model: auth.permission
+  pk: 5
+  fields:
+    name: Can add permission
+    content_type: 5
+    codename: add_permission
+- model: auth.permission
+  pk: 6
+  fields:
+    name: Can change permission
+    content_type: 5
+    codename: change_permission
+- model: auth.permission
+  pk: 7
+  fields:
+    name: Can delete permission
+    content_type: 5
+    codename: delete_permission
+- model: auth.permission
+  pk: 8
+  fields:
+    name: Can view permission
+    content_type: 5
+    codename: view_permission
+- model: auth.permission
+  pk: 9
+  fields:
+    name: Can add group
+    content_type: 6
+    codename: add_group
+- model: auth.permission
+  pk: 10
+  fields:
+    name: Can change group
+    content_type: 6
+    codename: change_group
+- model: auth.permission
+  pk: 11
+  fields:
+    name: Can delete group
+    content_type: 6
+    codename: delete_group
+- model: auth.permission
+  pk: 12
+  fields:
+    name: Can view group
+    content_type: 6
+    codename: view_group
+- model: auth.permission
+  pk: 13
+  fields:
+    name: Can add content type
+    content_type: 7
+    codename: add_contenttype
+- model: auth.permission
+  pk: 14
+  fields:
+    name: Can change content type
+    content_type: 7
+    codename: change_contenttype
+- model: auth.permission
+  pk: 15
+  fields:
+    name: Can delete content type
+    content_type: 7
+    codename: delete_contenttype
+- model: auth.permission
+  pk: 16
+  fields:
+    name: Can view content type
+    content_type: 7
+    codename: view_contenttype
+- model: auth.permission
+  pk: 17
+  fields:
+    name: Can add session
+    content_type: 8
+    codename: add_session
+- model: auth.permission
+  pk: 18
+  fields:
+    name: Can change session
+    content_type: 8
+    codename: change_session
+- model: auth.permission
+  pk: 19
+  fields:
+    name: Can delete session
+    content_type: 8
+    codename: delete_session
+- model: auth.permission
+  pk: 20
+  fields:
+    name: Can view session
+    content_type: 8
+    codename: view_session
+- model: auth.permission
+  pk: 21
+  fields:
+    name: Can add Token
+    content_type: 9
+    codename: add_token
+- model: auth.permission
+  pk: 22
+  fields:
+    name: Can change Token
+    content_type: 9
+    codename: change_token
+- model: auth.permission
+  pk: 23
+  fields:
+    name: Can delete Token
+    content_type: 9
+    codename: delete_token
+- model: auth.permission
+  pk: 24
+  fields:
+    name: Can view Token
+    content_type: 9
+    codename: view_token
+- model: auth.permission
+  pk: 25
+  fields:
+    name: Can add token
+    content_type: 10
+    codename: add_tokenproxy
+- model: auth.permission
+  pk: 26
+  fields:
+    name: Can change token
+    content_type: 10
+    codename: change_tokenproxy
+- model: auth.permission
+  pk: 27
+  fields:
+    name: Can delete token
+    content_type: 10
+    codename: delete_tokenproxy
+- model: auth.permission
+  pk: 28
+  fields:
+    name: Can view token
+    content_type: 10
+    codename: view_tokenproxy
+- model: auth.permission
+  pk: 29
+  fields:
+    name: Can add site
+    content_type: 11
+    codename: add_site
+- model: auth.permission
+  pk: 30
+  fields:
+    name: Can change site
+    content_type: 11
+    codename: change_site
+- model: auth.permission
+  pk: 31
+  fields:
+    name: Can delete site
+    content_type: 11
+    codename: delete_site
+- model: auth.permission
+  pk: 32
+  fields:
+    name: Can view site
+    content_type: 11
+    codename: view_site
+- model: auth.permission
+  pk: 33
+  fields:
+    name: Can add Assignment
+    content_type: 12
+    codename: add_assignment
+- model: auth.permission
+  pk: 34
+  fields:
+    name: Can change Assignment
+    content_type: 12
+    codename: change_assignment
+- model: auth.permission
+  pk: 35
+  fields:
+    name: Can delete Assignment
+    content_type: 12
+    codename: delete_assignment
+- model: auth.permission
+  pk: 36
+  fields:
+    name: Can view Assignment
+    content_type: 12
+    codename: view_assignment
+- model: auth.permission
+  pk: 37
+  fields:
+    name: Can add Feature flag admin user
+    content_type: 13
+    codename: add_ffadminuser
+- model: auth.permission
+  pk: 38
+  fields:
+    name: Can change Feature flag admin user
+    content_type: 13
+    codename: change_ffadminuser
+- model: auth.permission
+  pk: 39
+  fields:
+    name: Can delete Feature flag admin user
+    content_type: 13
+    codename: delete_ffadminuser
+- model: auth.permission
+  pk: 40
+  fields:
+    name: Can view Feature flag admin user
+    content_type: 13
+    codename: view_ffadminuser
+- model: auth.permission
+  pk: 41
+  fields:
+    name: Can add user permission group
+    content_type: 14
+    codename: add_userpermissiongroup
+- model: auth.permission
+  pk: 42
+  fields:
+    name: Can change user permission group
+    content_type: 14
+    codename: change_userpermissiongroup
+- model: auth.permission
+  pk: 43
+  fields:
+    name: Can delete user permission group
+    content_type: 14
+    codename: delete_userpermissiongroup
+- model: auth.permission
+  pk: 44
+  fields:
+    name: Can view user permission group
+    content_type: 14
+    codename: view_userpermissiongroup
+- model: auth.permission
+  pk: 45
+  fields:
+    name: Can add organisation
+    content_type: 15
+    codename: add_organisation
+- model: auth.permission
+  pk: 46
+  fields:
+    name: Can change organisation
+    content_type: 15
+    codename: change_organisation
+- model: auth.permission
+  pk: 47
+  fields:
+    name: Can delete organisation
+    content_type: 15
+    codename: delete_organisation
+- model: auth.permission
+  pk: 48
+  fields:
+    name: Can view organisation
+    content_type: 15
+    codename: view_organisation
+- model: auth.permission
+  pk: 49
+  fields:
+    name: Can add subscription
+    content_type: 16
+    codename: add_subscription
+- model: auth.permission
+  pk: 50
+  fields:
+    name: Can change subscription
+    content_type: 16
+    codename: change_subscription
+- model: auth.permission
+  pk: 51
+  fields:
+    name: Can delete subscription
+    content_type: 16
+    codename: delete_subscription
+- model: auth.permission
+  pk: 52
+  fields:
+    name: Can view subscription
+    content_type: 16
+    codename: view_subscription
+- model: auth.permission
+  pk: 53
+  fields:
+    name: Can add user organisation
+    content_type: 17
+    codename: add_userorganisation
+- model: auth.permission
+  pk: 54
+  fields:
+    name: Can change user organisation
+    content_type: 17
+    codename: change_userorganisation
+- model: auth.permission
+  pk: 55
+  fields:
+    name: Can delete user organisation
+    content_type: 17
+    codename: delete_userorganisation
+- model: auth.permission
+  pk: 56
+  fields:
+    name: Can view user organisation
+    content_type: 17
+    codename: view_userorganisation
+- model: auth.permission
+  pk: 57
+  fields:
+    name: Can add organisation webhook
+    content_type: 18
+    codename: add_organisationwebhook
+- model: auth.permission
+  pk: 58
+  fields:
+    name: Can change organisation webhook
+    content_type: 18
+    codename: change_organisationwebhook
+- model: auth.permission
+  pk: 59
+  fields:
+    name: Can delete organisation webhook
+    content_type: 18
+    codename: delete_organisationwebhook
+- model: auth.permission
+  pk: 60
+  fields:
+    name: Can view organisation webhook
+    content_type: 18
+    codename: view_organisationwebhook
+- model: auth.permission
+  pk: 61
+  fields:
+    name: Can add invite
+    content_type: 19
+    codename: add_invite
+- model: auth.permission
+  pk: 62
+  fields:
+    name: Can change invite
+    content_type: 19
+    codename: change_invite
+- model: auth.permission
+  pk: 63
+  fields:
+    name: Can delete invite
+    content_type: 19
+    codename: delete_invite
+- model: auth.permission
+  pk: 64
+  fields:
+    name: Can view invite
+    content_type: 19
+    codename: view_invite
+- model: auth.permission
+  pk: 65
+  fields:
+    name: Can add invite link
+    content_type: 20
+    codename: add_invitelink
+- model: auth.permission
+  pk: 66
+  fields:
+    name: Can change invite link
+    content_type: 20
+    codename: change_invitelink
+- model: auth.permission
+  pk: 67
+  fields:
+    name: Can delete invite link
+    content_type: 20
+    codename: delete_invitelink
+- model: auth.permission
+  pk: 68
+  fields:
+    name: Can view invite link
+    content_type: 20
+    codename: view_invitelink
+- model: auth.permission
+  pk: 69
+  fields:
+    name: Can add project
+    content_type: 21
+    codename: add_project
+- model: auth.permission
+  pk: 70
+  fields:
+    name: Can change project
+    content_type: 21
+    codename: change_project
+- model: auth.permission
+  pk: 71
+  fields:
+    name: Can delete project
+    content_type: 21
+    codename: delete_project
+- model: auth.permission
+  pk: 72
+  fields:
+    name: Can view project
+    content_type: 21
+    codename: view_project
+- model: auth.permission
+  pk: 73
+  fields:
+    name: Can add user project permission
+    content_type: 22
+    codename: add_userprojectpermission
+- model: auth.permission
+  pk: 74
+  fields:
+    name: Can change user project permission
+    content_type: 22
+    codename: change_userprojectpermission
+- model: auth.permission
+  pk: 75
+  fields:
+    name: Can delete user project permission
+    content_type: 22
+    codename: delete_userprojectpermission
+- model: auth.permission
+  pk: 76
+  fields:
+    name: Can view user project permission
+    content_type: 22
+    codename: view_userprojectpermission
+- model: auth.permission
+  pk: 77
+  fields:
+    name: Can add user permission group project permission
+    content_type: 23
+    codename: add_userpermissiongroupprojectpermission
+- model: auth.permission
+  pk: 78
+  fields:
+    name: Can change user permission group project permission
+    content_type: 23
+    codename: change_userpermissiongroupprojectpermission
+- model: auth.permission
+  pk: 79
+  fields:
+    name: Can delete user permission group project permission
+    content_type: 23
+    codename: delete_userpermissiongroupprojectpermission
+- model: auth.permission
+  pk: 80
+  fields:
+    name: Can view user permission group project permission
+    content_type: 23
+    codename: view_userpermissiongroupprojectpermission
+- model: auth.permission
+  pk: 81
+  fields:
+    name: Can add project permission model
+    content_type: 3
+    codename: add_projectpermissionmodel
+- model: auth.permission
+  pk: 82
+  fields:
+    name: Can change project permission model
+    content_type: 3
+    codename: change_projectpermissionmodel
+- model: auth.permission
+  pk: 83
+  fields:
+    name: Can delete project permission model
+    content_type: 3
+    codename: delete_projectpermissionmodel
+- model: auth.permission
+  pk: 84
+  fields:
+    name: Can view project permission model
+    content_type: 3
+    codename: view_projectpermissionmodel
+- model: auth.permission
+  pk: 85
+  fields:
+    name: Can add environment
+    content_type: 24
+    codename: add_environment
+- model: auth.permission
+  pk: 86
+  fields:
+    name: Can change environment
+    content_type: 24
+    codename: change_environment
+- model: auth.permission
+  pk: 87
+  fields:
+    name: Can delete environment
+    content_type: 24
+    codename: delete_environment
+- model: auth.permission
+  pk: 88
+  fields:
+    name: Can view environment
+    content_type: 24
+    codename: view_environment
+- model: auth.permission
+  pk: 89
+  fields:
+    name: Can add webhook
+    content_type: 25
+    codename: add_webhook
+- model: auth.permission
+  pk: 90
+  fields:
+    name: Can change webhook
+    content_type: 25
+    codename: change_webhook
+- model: auth.permission
+  pk: 91
+  fields:
+    name: Can delete webhook
+    content_type: 25
+    codename: delete_webhook
+- model: auth.permission
+  pk: 92
+  fields:
+    name: Can view webhook
+    content_type: 25
+    codename: view_webhook
+- model: auth.permission
+  pk: 93
+  fields:
+    name: Can add environment permission model
+    content_type: 26
+    codename: add_environmentpermissionmodel
+- model: auth.permission
+  pk: 94
+  fields:
+    name: Can change environment permission model
+    content_type: 26
+    codename: change_environmentpermissionmodel
+- model: auth.permission
+  pk: 95
+  fields:
+    name: Can delete environment permission model
+    content_type: 26
+    codename: delete_environmentpermissionmodel
+- model: auth.permission
+  pk: 96
+  fields:
+    name: Can view environment permission model
+    content_type: 26
+    codename: view_environmentpermissionmodel
+- model: auth.permission
+  pk: 97
+  fields:
+    name: Can add user permission group environment permission
+    content_type: 27
+    codename: add_userpermissiongroupenvironmentpermission
+- model: auth.permission
+  pk: 98
+  fields:
+    name: Can change user permission group environment permission
+    content_type: 27
+    codename: change_userpermissiongroupenvironmentpermission
+- model: auth.permission
+  pk: 99
+  fields:
+    name: Can delete user permission group environment permission
+    content_type: 27
+    codename: delete_userpermissiongroupenvironmentpermission
+- model: auth.permission
+  pk: 100
+  fields:
+    name: Can view user permission group environment permission
+    content_type: 27
+    codename: view_userpermissiongroupenvironmentpermission
+- model: auth.permission
+  pk: 101
+  fields:
+    name: Can add user environment permission
+    content_type: 28
+    codename: add_userenvironmentpermission
+- model: auth.permission
+  pk: 102
+  fields:
+    name: Can change user environment permission
+    content_type: 28
+    codename: change_userenvironmentpermission
+- model: auth.permission
+  pk: 103
+  fields:
+    name: Can delete user environment permission
+    content_type: 28
+    codename: delete_userenvironmentpermission
+- model: auth.permission
+  pk: 104
+  fields:
+    name: Can view user environment permission
+    content_type: 28
+    codename: view_userenvironmentpermission
+- model: auth.permission
+  pk: 105
+  fields:
+    name: Can add identity
+    content_type: 29
+    codename: add_identity
+- model: auth.permission
+  pk: 106
+  fields:
+    name: Can change identity
+    content_type: 29
+    codename: change_identity
+- model: auth.permission
+  pk: 107
+  fields:
+    name: Can delete identity
+    content_type: 29
+    codename: delete_identity
+- model: auth.permission
+  pk: 108
+  fields:
+    name: Can view identity
+    content_type: 29
+    codename: view_identity
+- model: auth.permission
+  pk: 109
+  fields:
+    name: Can add trait
+    content_type: 30
+    codename: add_trait
+- model: auth.permission
+  pk: 110
+  fields:
+    name: Can change trait
+    content_type: 30
+    codename: change_trait
+- model: auth.permission
+  pk: 111
+  fields:
+    name: Can delete trait
+    content_type: 30
+    codename: delete_trait
+- model: auth.permission
+  pk: 112
+  fields:
+    name: Can view trait
+    content_type: 30
+    codename: view_trait
+- model: auth.permission
+  pk: 113
+  fields:
+    name: Can add feature
+    content_type: 31
+    codename: add_feature
+- model: auth.permission
+  pk: 114
+  fields:
+    name: Can change feature
+    content_type: 31
+    codename: change_feature
+- model: auth.permission
+  pk: 115
+  fields:
+    name: Can delete feature
+    content_type: 31
+    codename: delete_feature
+- model: auth.permission
+  pk: 116
+  fields:
+    name: Can view feature
+    content_type: 31
+    codename: view_feature
+- model: auth.permission
+  pk: 117
+  fields:
+    name: Can add feature state
+    content_type: 32
+    codename: add_featurestate
+- model: auth.permission
+  pk: 118
+  fields:
+    name: Can change feature state
+    content_type: 32
+    codename: change_featurestate
+- model: auth.permission
+  pk: 119
+  fields:
+    name: Can delete feature state
+    content_type: 32
+    codename: delete_featurestate
+- model: auth.permission
+  pk: 120
+  fields:
+    name: Can view feature state
+    content_type: 32
+    codename: view_featurestate
+- model: auth.permission
+  pk: 121
+  fields:
+    name: Can add feature state value
+    content_type: 33
+    codename: add_featurestatevalue
+- model: auth.permission
+  pk: 122
+  fields:
+    name: Can change feature state value
+    content_type: 33
+    codename: change_featurestatevalue
+- model: auth.permission
+  pk: 123
+  fields:
+    name: Can delete feature state value
+    content_type: 33
+    codename: delete_featurestatevalue
+- model: auth.permission
+  pk: 124
+  fields:
+    name: Can view feature state value
+    content_type: 33
+    codename: view_featurestatevalue
+- model: auth.permission
+  pk: 125
+  fields:
+    name: Can add historical feature
+    content_type: 34
+    codename: add_historicalfeature
+- model: auth.permission
+  pk: 126
+  fields:
+    name: Can change historical feature
+    content_type: 34
+    codename: change_historicalfeature
+- model: auth.permission
+  pk: 127
+  fields:
+    name: Can delete historical feature
+    content_type: 34
+    codename: delete_historicalfeature
+- model: auth.permission
+  pk: 128
+  fields:
+    name: Can view historical feature
+    content_type: 34
+    codename: view_historicalfeature
+- model: auth.permission
+  pk: 129
+  fields:
+    name: Can add historical feature state
+    content_type: 35
+    codename: add_historicalfeaturestate
+- model: auth.permission
+  pk: 130
+  fields:
+    name: Can change historical feature state
+    content_type: 35
+    codename: change_historicalfeaturestate
+- model: auth.permission
+  pk: 131
+  fields:
+    name: Can delete historical feature state
+    content_type: 35
+    codename: delete_historicalfeaturestate
+- model: auth.permission
+  pk: 132
+  fields:
+    name: Can view historical feature state
+    content_type: 35
+    codename: view_historicalfeaturestate
+- model: auth.permission
+  pk: 133
+  fields:
+    name: Can add historical feature state value
+    content_type: 36
+    codename: add_historicalfeaturestatevalue
+- model: auth.permission
+  pk: 134
+  fields:
+    name: Can change historical feature state value
+    content_type: 36
+    codename: change_historicalfeaturestatevalue
+- model: auth.permission
+  pk: 135
+  fields:
+    name: Can delete historical feature state value
+    content_type: 36
+    codename: delete_historicalfeaturestatevalue
+- model: auth.permission
+  pk: 136
+  fields:
+    name: Can view historical feature state value
+    content_type: 36
+    codename: view_historicalfeaturestatevalue
+- model: auth.permission
+  pk: 137
+  fields:
+    name: Can add feature segment
+    content_type: 37
+    codename: add_featuresegment
+- model: auth.permission
+  pk: 138
+  fields:
+    name: Can change feature segment
+    content_type: 37
+    codename: change_featuresegment
+- model: auth.permission
+  pk: 139
+  fields:
+    name: Can delete feature segment
+    content_type: 37
+    codename: delete_featuresegment
+- model: auth.permission
+  pk: 140
+  fields:
+    name: Can view feature segment
+    content_type: 37
+    codename: view_featuresegment
+- model: auth.permission
+  pk: 141
+  fields:
+    name: Can add historical feature segment
+    content_type: 38
+    codename: add_historicalfeaturesegment
+- model: auth.permission
+  pk: 142
+  fields:
+    name: Can change historical feature segment
+    content_type: 38
+    codename: change_historicalfeaturesegment
+- model: auth.permission
+  pk: 143
+  fields:
+    name: Can delete historical feature segment
+    content_type: 38
+    codename: delete_historicalfeaturesegment
+- model: auth.permission
+  pk: 144
+  fields:
+    name: Can view historical feature segment
+    content_type: 38
+    codename: view_historicalfeaturesegment
+- model: auth.permission
+  pk: 145
+  fields:
+    name: Can add multivariate feature option
+    content_type: 39
+    codename: add_multivariatefeatureoption
+- model: auth.permission
+  pk: 146
+  fields:
+    name: Can change multivariate feature option
+    content_type: 39
+    codename: change_multivariatefeatureoption
+- model: auth.permission
+  pk: 147
+  fields:
+    name: Can delete multivariate feature option
+    content_type: 39
+    codename: delete_multivariatefeatureoption
+- model: auth.permission
+  pk: 148
+  fields:
+    name: Can view multivariate feature option
+    content_type: 39
+    codename: view_multivariatefeatureoption
+- model: auth.permission
+  pk: 149
+  fields:
+    name: Can add multivariate feature state value
+    content_type: 40
+    codename: add_multivariatefeaturestatevalue
+- model: auth.permission
+  pk: 150
+  fields:
+    name: Can change multivariate feature state value
+    content_type: 40
+    codename: change_multivariatefeaturestatevalue
+- model: auth.permission
+  pk: 151
+  fields:
+    name: Can delete multivariate feature state value
+    content_type: 40
+    codename: delete_multivariatefeaturestatevalue
+- model: auth.permission
+  pk: 152
+  fields:
+    name: Can view multivariate feature state value
+    content_type: 40
+    codename: view_multivariatefeaturestatevalue
+- model: auth.permission
+  pk: 153
+  fields:
+    name: Can add segment
+    content_type: 41
+    codename: add_segment
+- model: auth.permission
+  pk: 154
+  fields:
+    name: Can change segment
+    content_type: 41
+    codename: change_segment
+- model: auth.permission
+  pk: 155
+  fields:
+    name: Can delete segment
+    content_type: 41
+    codename: delete_segment
+- model: auth.permission
+  pk: 156
+  fields:
+    name: Can view segment
+    content_type: 41
+    codename: view_segment
+- model: auth.permission
+  pk: 157
+  fields:
+    name: Can add condition
+    content_type: 42
+    codename: add_condition
+- model: auth.permission
+  pk: 158
+  fields:
+    name: Can change condition
+    content_type: 42
+    codename: change_condition
+- model: auth.permission
+  pk: 159
+  fields:
+    name: Can delete condition
+    content_type: 42
+    codename: delete_condition
+- model: auth.permission
+  pk: 160
+  fields:
+    name: Can view condition
+    content_type: 42
+    codename: view_condition
+- model: auth.permission
+  pk: 161
+  fields:
+    name: Can add segment rule
+    content_type: 43
+    codename: add_segmentrule
+- model: auth.permission
+  pk: 162
+  fields:
+    name: Can change segment rule
+    content_type: 43
+    codename: change_segmentrule
+- model: auth.permission
+  pk: 163
+  fields:
+    name: Can delete segment rule
+    content_type: 43
+    codename: delete_segmentrule
+- model: auth.permission
+  pk: 164
+  fields:
+    name: Can view segment rule
+    content_type: 43
+    codename: view_segmentrule
+- model: auth.permission
+  pk: 165
+  fields:
+    name: Can add audit log
+    content_type: 44
+    codename: add_auditlog
+- model: auth.permission
+  pk: 166
+  fields:
+    name: Can change audit log
+    content_type: 44
+    codename: change_auditlog
+- model: auth.permission
+  pk: 167
+  fields:
+    name: Can delete audit log
+    content_type: 44
+    codename: delete_auditlog
+- model: auth.permission
+  pk: 168
+  fields:
+    name: Can view audit log
+    content_type: 44
+    codename: view_auditlog
+- model: auth.permission
+  pk: 169
+  fields:
+    name: Can add permission model
+    content_type: 1
+    codename: add_permissionmodel
+- model: auth.permission
+  pk: 170
+  fields:
+    name: Can change permission model
+    content_type: 1
+    codename: change_permissionmodel
+- model: auth.permission
+  pk: 171
+  fields:
+    name: Can delete permission model
+    content_type: 1
+    codename: delete_permissionmodel
+- model: auth.permission
+  pk: 172
+  fields:
+    name: Can view permission model
+    content_type: 1
+    codename: view_permissionmodel
+- model: auth.permission
+  pk: 173
+  fields:
+    name: Can add tag
+    content_type: 45
+    codename: add_tag
+- model: auth.permission
+  pk: 174
+  fields:
+    name: Can change tag
+    content_type: 45
+    codename: change_tag
+- model: auth.permission
+  pk: 175
+  fields:
+    name: Can delete tag
+    content_type: 45
+    codename: delete_tag
+- model: auth.permission
+  pk: 176
+  fields:
+    name: Can view tag
+    content_type: 45
+    codename: view_tag
+- model: auth.permission
+  pk: 177
+  fields:
+    name: Can add MFA Method
+    content_type: 46
+    codename: add_mfamethod
+- model: auth.permission
+  pk: 178
+  fields:
+    name: Can change MFA Method
+    content_type: 46
+    codename: change_mfamethod
+- model: auth.permission
+  pk: 179
+  fields:
+    name: Can delete MFA Method
+    content_type: 46
+    codename: delete_mfamethod
+- model: auth.permission
+  pk: 180
+  fields:
+    name: Can view MFA Method
+    content_type: 46
+    codename: view_mfamethod
+- model: auth.permission
+  pk: 181
+  fields:
+    name: Can add test model
+    content_type: 47
+    codename: add_testmodel
+- model: auth.permission
+  pk: 182
+  fields:
+    name: Can change test model
+    content_type: 47
+    codename: change_testmodel
+- model: auth.permission
+  pk: 183
+  fields:
+    name: Can delete test model
+    content_type: 47
+    codename: delete_testmodel
+- model: auth.permission
+  pk: 184
+  fields:
+    name: Can view test model
+    content_type: 47
+    codename: view_testmodel
+- model: auth.permission
+  pk: 185
+  fields:
+    name: Can add data dog configuration
+    content_type: 48
+    codename: add_datadogconfiguration
+- model: auth.permission
+  pk: 186
+  fields:
+    name: Can change data dog configuration
+    content_type: 48
+    codename: change_datadogconfiguration
+- model: auth.permission
+  pk: 187
+  fields:
+    name: Can delete data dog configuration
+    content_type: 48
+    codename: delete_datadogconfiguration
+- model: auth.permission
+  pk: 188
+  fields:
+    name: Can view data dog configuration
+    content_type: 48
+    codename: view_datadogconfiguration
+- model: auth.permission
+  pk: 189
+  fields:
+    name: Can add amplitude configuration
+    content_type: 49
+    codename: add_amplitudeconfiguration
+- model: auth.permission
+  pk: 190
+  fields:
+    name: Can change amplitude configuration
+    content_type: 49
+    codename: change_amplitudeconfiguration
+- model: auth.permission
+  pk: 191
+  fields:
+    name: Can delete amplitude configuration
+    content_type: 49
+    codename: delete_amplitudeconfiguration
+- model: auth.permission
+  pk: 192
+  fields:
+    name: Can view amplitude configuration
+    content_type: 49
+    codename: view_amplitudeconfiguration
+- model: auth.permission
+  pk: 193
+  fields:
+    name: Can add new relic configuration
+    content_type: 50
+    codename: add_newrelicconfiguration
+- model: auth.permission
+  pk: 194
+  fields:
+    name: Can change new relic configuration
+    content_type: 50
+    codename: change_newrelicconfiguration
+- model: auth.permission
+  pk: 195
+  fields:
+    name: Can delete new relic configuration
+    content_type: 50
+    codename: delete_newrelicconfiguration
+- model: auth.permission
+  pk: 196
+  fields:
+    name: Can view new relic configuration
+    content_type: 50
+    codename: view_newrelicconfiguration
+- model: auth.permission
+  pk: 197
+  fields:
+    name: Can add segment configuration
+    content_type: 51
+    codename: add_segmentconfiguration
+- model: auth.permission
+  pk: 198
+  fields:
+    name: Can change segment configuration
+    content_type: 51
+    codename: change_segmentconfiguration
+- model: auth.permission
+  pk: 199
+  fields:
+    name: Can delete segment configuration
+    content_type: 51
+    codename: delete_segmentconfiguration
+- model: auth.permission
+  pk: 200
+  fields:
+    name: Can view segment configuration
+    content_type: 51
+    codename: view_segmentconfiguration
+- model: auth.permission
+  pk: 201
+  fields:
+    name: Can add heap configuration
+    content_type: 52
+    codename: add_heapconfiguration
+- model: auth.permission
+  pk: 202
+  fields:
+    name: Can change heap configuration
+    content_type: 52
+    codename: change_heapconfiguration
+- model: auth.permission
+  pk: 203
+  fields:
+    name: Can delete heap configuration
+    content_type: 52
+    codename: delete_heapconfiguration
+- model: auth.permission
+  pk: 204
+  fields:
+    name: Can view heap configuration
+    content_type: 52
+    codename: view_heapconfiguration
+- model: auth.permission
+  pk: 205
+  fields:
+    name: Can add mixpanel configuration
+    content_type: 53
+    codename: add_mixpanelconfiguration
+- model: auth.permission
+  pk: 206
+  fields:
+    name: Can change mixpanel configuration
+    content_type: 53
+    codename: change_mixpanelconfiguration
+- model: auth.permission
+  pk: 207
+  fields:
+    name: Can delete mixpanel configuration
+    content_type: 53
+    codename: delete_mixpanelconfiguration
+- model: auth.permission
+  pk: 208
+  fields:
+    name: Can view mixpanel configuration
+    content_type: 53
+    codename: view_mixpanelconfiguration
+- model: auth.permission
+  pk: 209
+  fields:
+    name: Can add access attempt
+    content_type: 54
+    codename: add_accessattempt
+- model: auth.permission
+  pk: 210
+  fields:
+    name: Can change access attempt
+    content_type: 54
+    codename: change_accessattempt
+- model: auth.permission
+  pk: 211
+  fields:
+    name: Can delete access attempt
+    content_type: 54
+    codename: delete_accessattempt
+- model: auth.permission
+  pk: 212
+  fields:
+    name: Can view access attempt
+    content_type: 54
+    codename: view_accessattempt
+- model: auth.permission
+  pk: 213
+  fields:
+    name: Can add access log
+    content_type: 55
+    codename: add_accesslog
+- model: auth.permission
+  pk: 214
+  fields:
+    name: Can change access log
+    content_type: 55
+    codename: change_accesslog
+- model: auth.permission
+  pk: 215
+  fields:
+    name: Can delete access log
+    content_type: 55
+    codename: delete_accesslog
+- model: auth.permission
+  pk: 216
+  fields:
+    name: Can view access log
+    content_type: 55
+    codename: view_accesslog
+- model: users.ffadminuser
+  pk: 1
+  fields:
+    password: pbkdf2_sha256$150000$ZgVj2otuj0jc$DTiJ9444rkdUMdSr7YPKuBgPZFInh5wyb2TAH0V1Fsg= # test123
+    last_login: 2021-07-20 04:57:47.633424+00:00
+    is_superuser: true
+    is_staff: true
+    is_active: true
+    date_joined: 2021-07-20 04:53:29.305413+00:00
+    email: local@flagsmith.com
+    username: null
+    first_name: local 
+    last_name: local
+    google_user_id: null
+    github_user_id: null
+    groups: []
+    user_permissions: []
+- model: organisations.userorganisation
+  pk: 1
+  fields:
+    user: 1
+    organisation: 1
+    date_joined: 2021-07-20 04:57:55.929882+00:00
+    role: ADMIN
+- model: projects.userprojectpermission
+  pk: 1
+  fields:
+    admin: true
+    user: 1
+    project: 1
+    permissions: []
+- model: environment_permissions.userenvironmentpermission
+  pk: 1
+  fields:
+    admin: true
+    user: 1
+    environment: 1
+    permissions: []
+- model: environment_permissions.userenvironmentpermission
+  pk: 2
+  fields:
+    admin: true
+    user: 1
+    environment: 2
+    permissions: []
+- model: features.historicalfeature
+  pk: 1
+  fields:
+    id: 1
+    name: feature-1
+    created_date: 2021-07-20 04:58:35.049040+00:00
+    initial_value: flag_value
+    description: null
+    default_enabled: true
+    type: STANDARD
+    project: 1
+    history_date: 2021-07-20 04:58:35.054686+00:00
+    history_change_reason: null
+    history_type: +
+    history_user: 1
+- model: features.historicalfeaturestate
+  pk: 1
+  fields:
+    id: 1
+    enabled: true
+    feature: 1
+    environment: 1
+    identity: null
+    feature_segment: null
+    history_date: 2021-07-20 04:58:35.069255+00:00
+    history_change_reason: null
+    history_type: +
+    history_user: 1
+- model: features.historicalfeaturestate
+  pk: 2
+  fields:
+    id: 2
+    enabled: true
+    feature: 1
+    environment: 2
+    identity: null
+    feature_segment: null
+    history_date: 2021-07-20 04:58:35.101545+00:00
+    history_change_reason: null
+    history_type: +
+    history_user: 1
+- model: features.historicalfeaturestatevalue
+  pk: 1
+  fields:
+    id: 1
+    type: unicode
+    boolean_value: null
+    integer_value: null
+    string_value: flag_value
+    feature_state: 1
+    history_date: 2021-07-20 04:58:35.090179+00:00
+    history_change_reason: null
+    history_type: +
+    history_user: 1
+- model: features.historicalfeaturestatevalue
+  pk: 2
+  fields:
+    id: 2
+    type: unicode
+    boolean_value: null
+    integer_value: null
+    string_value: flag_value
+    feature_state: 2
+    history_date: 2021-07-20 04:58:35.119667+00:00
+    history_change_reason: null
+    history_type: +
+    history_user: 1
+- model: audit.auditlog
+  pk: 1
+  fields:
+    created_date: 2021-07-20 04:58:05.331956+00:00
+    project: 1
+    environment: 1
+    log: 'New Environment created: Production'
+    author: 1
+    related_object_id: 1
+    related_object_type: ENVIRONMENT
+- model: audit.auditlog
+  pk: 2
+  fields:
+    created_date: 2021-07-20 04:58:05.372327+00:00
+    project: 1
+    environment: 2
+    log: 'New Environment created: Development'
+    author: 1
+    related_object_id: 2
+    related_object_type: ENVIRONMENT
+- model: audit.auditlog
+  pk: 3
+  fields:
+    created_date: 2021-07-20 04:58:35.124757+00:00
+    project: 1
+    environment: null
+    log: 'New Flag / Remote Config created: feature-1'
+    author: 1
+    related_object_id: 1
+    related_object_type: FEATURE
+- model: authtoken.token
+  pk: e58e63a45fdf84cae69ff585e28ebacf06cc696d
+  fields:
+    user: 1
+    created: 2021-07-20 04:57:47.626443+00:00
