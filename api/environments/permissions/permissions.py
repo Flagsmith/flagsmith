@@ -23,16 +23,18 @@ class EnvironmentKeyPermissions(BasePermission):
 class EnvironmentPermissions(BasePermission):
     def has_permission(self, request, view):
         try:
+            if view.action == "clone":
+                api_key = request.path_info.split("/")[-3]
+                project = Project.objects.get(environments__api_key=api_key)
+
             if view.action == "create":
                 project_id = request.data.get("project")
                 project = Project.objects.get(id=project_id)
-                return request.user.has_project_permission(
-                    "CREATE_ENVIRONMENT", project
-                )
+
+            return request.user.has_project_permission("CREATE_ENVIRONMENT", project)
 
             # return true as all users can list and specific object permissions will be handled later
             return True
-
         except Project.DoesNotExist:
             return False
 
@@ -48,11 +50,6 @@ class EnvironmentPermissions(BasePermission):
 
         if view.action == "user_permissions":
             return True
-        if view.action == "clone":
-            return request.user.has_project_permission(
-                "CREATE_ENVIRONMENT", obj.project
-            )
-
         return False
 
 
