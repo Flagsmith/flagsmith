@@ -32,7 +32,7 @@ from .permissions.models import (
     UserPermissionGroupEnvironmentPermission,
 )
 from .serializers import (
-    CloneEnvironmentInputSerializer,
+    CloneEnvironmentSerializer,
     EnvironmentSerializerLight,
     WebhookSerializer,
 )
@@ -63,6 +63,8 @@ class EnvironmentViewSet(viewsets.ModelViewSet):
             return TraitKeysSerializer
         if self.action == "delete_traits":
             return DeleteAllTraitKeysSerializer
+        if self.action == "clone":
+            return CloneEnvironmentSerializer
         return EnvironmentSerializerLight
 
     def get_serializer_context(self):
@@ -109,21 +111,11 @@ class EnvironmentViewSet(viewsets.ModelViewSet):
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR,
             )
 
-    @swagger_auto_schema(
-        request_body=CloneEnvironmentInputSerializer,
-        responses={200: EnvironmentSerializerLight()},
-    )
     @action(detail=True, methods=["POST"])
     def clone(self, request, *args, **kwargs):
-        input_serializer = CloneEnvironmentInputSerializer(data=request.data)
-        if not input_serializer.is_valid():
-            return Response(input_serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-
-        name = input_serializer.validated_data.get("name")
-        env = self.get_object()
-        clone = env.clone(name)
-        clone.save()
-        serializer = self.get_serializer(instance=clone)
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        serializer.save(source_env=self.get_object())
         return Response(serializer.data, status=status.HTTP_200_OK)
 
     @action(detail=True, methods=["POST"], url_path="delete-traits")
