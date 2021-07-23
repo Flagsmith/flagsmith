@@ -4,9 +4,9 @@ const data = require('../data/base/_data');
 const PAGE_SIZE = 999;
 
 const controller = {
-    getAuditLog: (page) => {
+    getAuditLog: (page, projectId) => {
         store.loading();
-        const endpoint = (page && `${page}${store.search ? `&q=${store.search}` : ''}`) || `${Project.api}audit/${store.search ? `?q=${store.search}` : ''}`;
+        const endpoint = ((page && `${page}${store.search ? `&q=${store.search}&project=${projectId}` : `&project=${projectId}`}`) || `${Project.api}audit/${store.search ? `?q=${store.search}&project=${projectId}` : `?project=${projectId}`}`);
         data.get(endpoint)
             .then((res) => {
                 store.model = res && res.results;
@@ -41,13 +41,13 @@ store.dispatcherIndex = Dispatcher.register(store, (payload) => {
     switch (action.actionType) {
         case Actions.GET_AUDIT_LOG:
             store.search = '';
-            controller.getAuditLog();
+            controller.getAuditLog(null, action.projectId);
             break;
         case Actions.GET_AUDIT_LOG_PAGE:
-            controller.getAuditLog(action.page);
+            controller.getAuditLog(action.page, action.projectId);
             break;
         case Actions.SEARCH_AUDIT_LOG:
-            controller.searchAuditLog(action.search);
+            controller.searchAuditLog(action.search, action.projectId);
             break;
         default:
     }
