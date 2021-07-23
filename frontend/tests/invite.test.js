@@ -1,7 +1,7 @@
 /* eslint-disable no-unused-expressions */
 /* eslint-disable func-names */
-const invitePrefix = `bullet-train${new Date().valueOf()}`;
-const inviteEmail = `${invitePrefix}@mailinator.com`;
+const invitePrefix = `flagsmith${new Date().valueOf()}`;
+const inviteEmail = `${invitePrefix}@restmail.net`;
 const email = 'nightwatch@solidstategroup.com';
 const password = 'str0ngp4ssw0rd!';
 const url = `http://localhost:${process.env.PORT || 8080}`;
@@ -60,22 +60,14 @@ module.exports = {
             .waitForElementNotPresent(byId('pending-invite-1'));
     },
     '[Invite Tests] - Accept invite': function (browser) {
-        let inviteUrl;
-        browser.pause(10000); // now we throttle emails
-        browser
-            .url(`https://www.mailinator.com/v3/index.jsp?zone=public&query=${invitePrefix}#/#inboxpane`)
-            .useXpath()
-            .waitForElementVisible(`//tbody/tr/td/a[contains(text(),"${`Bullet Train Org${append}`}")]`, 60000)
-            .click(`//tbody/tr/td/a[contains(text(),"${`Bullet Train Org${append}`}")]`)
-            .useCss()
-            .waitForElementVisible('#msg_body')
-            .pause(1000) // TODO revise this. currently necessary as the msg_body does not appear to show text immediately leading to an empty result
-            .frame('msg_body')
-            .getText('body', (res) => {
-                console.log(res.value);
-                inviteUrl = res.value.match(/(https?[^.]*)/g)[0];
-                console.log('Invite URL:', inviteUrl);
-                browser.url(inviteUrl)
+        var apiUrl = 'https://restmail.net/mail/' + invitePrefix
+        browser.apiGet(apiUrl, function (response) {
+            var jsonBody = JSON.parse(response.body)
+            browser.assert.equal(response.statusCode, '200')
+            var pattern = /<a[^>]*href=["']([^"']*)["']/g;
+            var htmlBody = jsonBody[0].html;
+            while (match = pattern.exec(htmlBody)) {
+                browser.url(match[1])
                     .pause(200) // Allows the dropdown to fade in
                     .waitForElementVisible(byId('signup-btn'))
                     .waitAndSet('[name="email"]', inviteEmail)
@@ -88,7 +80,8 @@ module.exports = {
                 browser
                     .useXpath()
                     .waitForElementPresent(`//div[contains(@class, "org-nav")]//a[contains(text(),"${`Bullet Train Org${append}`}")]`);
-            });
+            }
+        })
     },
     '[Invite Tests] - Finish': function (browser) {
         browser
