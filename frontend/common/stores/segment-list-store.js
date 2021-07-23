@@ -11,7 +11,7 @@ const controller = {
             store.envId = environmentId;
             data.get(`${Project.api}projects/${projectId}/segments/`)
                 .then((res) => {
-                    store.model = res.results;
+                    store.model = res.results && _.sortBy(res.results, 'name');
                     store.loaded();
                 });
         }
