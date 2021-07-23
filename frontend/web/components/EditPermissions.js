@@ -215,37 +215,40 @@ export default class EditPermissions extends PureComponent {
                                                 title=""
                                                 className="panel--transparent"
                                                 items={users}
-                                                renderRow={({ id, first_name, last_name, email, role }) => (
-                                                    <Row
-                                                      onClick={() => {
-                                                          if (role !== 'ADMIN') {
-                                                              this.editUserPermissions({ id, first_name, last_name, email, role });
-                                                          }
-                                                      }} space className={`list-item${role === 'ADMIN' ? '' : ' clickable'}`}
-                                                      key={id}
-                                                    >
-                                                        <div>
-                                                            <strong>
-                                                                {`${first_name} ${last_name}`}
-                                                            </strong>
-                                                            {' '}
-                                                            {id == AccountStore.getUserId() && '(You)'}
-                                                            <div className="list-item-footer faint">
-                                                                {email}
+                                                renderRow={({ id, first_name, last_name, email, role }) => {
+                                                    const onClick = () => {
+                                                        if (role !== 'ADMIN') {
+                                                            this.editUserPermissions({ id, first_name, last_name, email, role });
+                                                        }
+                                                    };
+                                                    return (
+                                                        <Row
+                                                          onClick={onClick} space className={`list-item${role === 'ADMIN' ? '' : ' clickable'}`}
+                                                          key={id}
+                                                        >
+                                                            <div>
+                                                                <strong>
+                                                                    {`${first_name} ${last_name}`}
+                                                                </strong>
+                                                                {' '}
+                                                                {id == AccountStore.getUserId() && '(You)'}
+                                                                <div className="list-item-footer faint">
+                                                                    {email}
+                                                                </div>
                                                             </div>
-                                                        </div>
-                                                        {role === 'ADMIN' ? (
-                                                            <Tooltip html title="Organisation Administrator">
-                                                                {'Organisation administrators have all permissions enabled.<br/>To change the role of this user, visit Organisation Settings.'}
-                                                            </Tooltip>
-                                                        ) : (
-                                                            <div className="flex-row">
-                                                                <span className="mr-3">Regular User</span>
-                                                                <ion style={{ fontSize: 24 }} className="icon--primary ion ion-md-settings"/>
-                                                            </div>
-                                                        )}
-                                                    </Row>
-                                                )}
+                                                            {role === 'ADMIN' ? (
+                                                                <Tooltip html title="Organisation Administrator">
+                                                                    {'Organisation administrators have all permissions enabled.<br/>To change the role of this user, visit Organisation Settings.'}
+                                                                </Tooltip>
+                                                            ) : (
+                                                                <div onClick={onClick} className="flex-row">
+                                                                    <span className="mr-3">Regular User</span>
+                                                                    <ion style={{ fontSize: 24 }} className="icon--primary ion ion-md-settings"/>
+                                                                </div>
+                                                            )}
+                                                        </Row>
+                                                    );
+                                                }}
                                                 renderNoResults={(
                                                     <div>
                                                 You have no users in this organisation.

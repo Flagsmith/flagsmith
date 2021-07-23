@@ -55,49 +55,52 @@ export default class TheComponent extends PureComponent {
                         nextPage={() => AppActions.getGroupsPage(this.props.orgId, userGroupsPaging.next)}
                         prevPage={() => AppActions.getGroupsPage(this.props.orgId, userGroupsPaging.previous)}
                         goToPage={page => AppActions.getGroupsPage(this.props.orgId, `${Project.api}organisations/${this.props.orgId}/groups/?page=${page}`)}
-                        renderRow={({ id, name, users }, index) => (
-                            <Row
-                              space className="list-item clickable" key={id}
-                              data-test={`user-item-${index}`}
-                            >
-                                <Flex
-                                  onClick={() => {
-                                      if (this.props.onClick) {
-                                          this.props.onClick({ id, users, name });
-                                      } else {
-                                          openModal('Edit Group', <CreateGroup orgId={this.props.orgId} group={{ id, users, name }}/>);
-                                      }
-                                  }}
-
+                        renderRow={({ id, name, users }, index) => {
+                            const onClick = () => {
+                                if (this.props.onClick) {
+                                    this.props.onClick({ id, users, name });
+                                } else {
+                                    openModal('Edit Group', <CreateGroup orgId={this.props.orgId} group={{ id, users, name }}/>);
+                                }
+                            };
+                            return (
+                                <Row
+                                  space className="list-item clickable" key={id}
+                                  data-test={`user-item-${index}`}
                                 >
-                                  <div>
-                                    <ButtonLink>
-                                      {name}
-                                    </ButtonLink>
-                                  </div>
-                                    <div className="list-item-footer faint">
-                                        {users.length}{users.length == 1 ? ' Member' : ' Members'}
-                                    </div>
-                                </Flex>
+                                    <Flex
+                                      onClick={onClick}
 
-                                {this.props.showRemove ? (
-                                    <Column>
-                                        <button
-                                          id="remove-group"
-                                          className="btn btn--with-icon"
-                                          type="button"
-                                          onClick={() => this.removeGroup(id, name)}
-                                        >
-                                            <RemoveIcon/>
-                                        </button>
-                                    </Column>
-                                ) : (
-                                    <ion style={{ fontSize: 24 }} className="icon--primary ion ion-md-settings"/>
+                                    >
+                                        <div>
+                                            <ButtonLink>
+                                                {name}
+                                            </ButtonLink>
+                                        </div>
+                                        <div className="list-item-footer faint">
+                                            {users.length}{users.length == 1 ? ' Member' : ' Members'}
+                                        </div>
+                                    </Flex>
 
-                                )}
+                                    {this.props.showRemove ? (
+                                        <Column>
+                                            <button
+                                              id="remove-group"
+                                              className="btn btn--with-icon"
+                                              type="button"
+                                              onClick={() => this.removeGroup(id, name)}
+                                            >
+                                                <RemoveIcon/>
+                                            </button>
+                                        </Column>
+                                    ) : (
+                                        <ion onClick={onClick} style={{ fontSize: 24 }} className="icon--primary ion ion-md-settings"/>
 
-                            </Row>
-                        )}
+                                    )}
+
+                                </Row>
+                            );
+                        }}
                         renderNoResults={(
                             <FormGroup className="text-center pb-4">
                                       You have no groups in your organisation.
