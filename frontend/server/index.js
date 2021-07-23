@@ -99,6 +99,10 @@ app.get('/health', (req, res) => {
     res.send('OK');
 });
 
+app.get('/robots.txt', (req, res) => {
+    res.send('User-agent: *\r\nDisallow: /');
+});
+
 // parse various different custom JSON types as JSON
 app.use(bodyParser.json());
 
