@@ -11,6 +11,7 @@ from rest_framework import mixins, status, viewsets
 from rest_framework.decorators import action
 from rest_framework.generics import GenericAPIView, get_object_or_404
 from rest_framework.permissions import IsAuthenticated
+from rest_framework.renderers import JSONRenderer
 from rest_framework.response import Response
 from rest_framework.schemas import AutoSchema
 
@@ -334,6 +335,7 @@ class SDKFeatureStates(GenericAPIView):
     serializer_class = FeatureStateSerializerFull
     permission_classes = (EnvironmentKeyPermissions,)
     authentication_classes = (EnvironmentKeyAuthentication,)
+    renderer_classes = [JSONRenderer]
 
     schema = AutoSchema(
         manual_fields=[
