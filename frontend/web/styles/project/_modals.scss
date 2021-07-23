@@ -287,4 +287,7 @@ $side-width: 66%;
     .side-modal__footer {
         position: relative !important;
     }
+    .side-modal #create-feature-modal {
+        height: 100%;
+    }
 }
