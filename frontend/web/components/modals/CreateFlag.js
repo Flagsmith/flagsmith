@@ -374,17 +374,17 @@ const CreateFlag = class extends Component {
                 {identity && description && (
                     <FormGroup className="mb-4 mr-3 ml-3" >
                         <InputGroup
-                            value={description}
-                            data-test="featureDesc"
-                            inputProps={{
-                                className: 'full-width',
-                                readOnly: !!identity,
-                                name: 'featureDesc',
-                            }}
-                            onChange={e => this.setState({ description: Utils.safeParseEventValue(e) })}
-                            isValid={name && name.length}
-                            type="text" title={identity ? 'Description' : 'Description (optional)'}
-                            placeholder="No description"
+                          value={description}
+                          data-test="featureDesc"
+                          inputProps={{
+                              className: 'full-width',
+                              readOnly: !!identity,
+                              name: 'featureDesc',
+                          }}
+                          onChange={e => this.setState({ description: Utils.safeParseEventValue(e) })}
+                          isValid={name && name.length}
+                          type="text" title={identity ? 'Description' : 'Description (optional)'}
+                          placeholder="No description"
                         />
                     </FormGroup>
                 )}
@@ -420,7 +420,7 @@ const CreateFlag = class extends Component {
                     </FormGroup>
                 ) }
 
-                {!!identity &&   hasFeature('mv') && (
+                {!!identity && hasFeature('mv') && (
                     <div>
                         <FormGroup className="mb-4 mx-3">
                             <VariationOptions
@@ -599,7 +599,7 @@ const CreateFlag = class extends Component {
                                                           renderRow={({ id, feature_state_value, enabled, identity }) => (
                                                               <Row
                                                                 onClick={() => {
-                                                                    this.toggleUserFlag({ id, feature_state_value, enabled, identity });
+                                                                    window.open(`${document.location.origin}/project/${this.props.projectId}/environment/${this.props.environmentId}/users/${identity.identifier}/${identity.id}`, '_blank');
                                                                 }} space className="list-item cursor-pointer"
                                                                 key={id}
                                                               >
