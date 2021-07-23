@@ -112,8 +112,7 @@ process.on('SIGINT', () => {
     process.exit(2);
 });
 
-module.exports = Object.assign(
-    {
+module.exports = Object.assign({
         before: (browser, done) => {
             if (slackMessage) {
                 slackMessage(`Running tests.${formatCommit()}`, E2E_SLACK_CHANNEL_NAME);
