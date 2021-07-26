@@ -141,9 +141,19 @@ if GOOGLE_ANALYTICS_KEY or INFLUXDB_TOKEN:
 
 SITE_ID = 1
 
+DJANGO_DB_CONN_MAX_AGE = 60
+try:
+    DJANGO_DB_CONN_MAX_AGE = env.int("DJANGO_DB_CONN_MAX_AGE")
+except ValueError:
+    DJANGO_DB_CONN_MAX_AGE = None
+
 # Allows collectstatic to run without a database, mainly for Docker builds to collectstatic at build time
 if "DATABASE_URL" in os.environ:
-    DATABASES = {"default": dj_database_url.parse(env("DATABASE_URL"), conn_max_age=60)}
+    DATABASES = {
+        "default": dj_database_url.parse(
+            env("DATABASE_URL"), conn_max_age=DJANGO_DB_CONN_MAX_AGE
+        )
+    }
 elif "DJANGO_DB_NAME" in os.environ:
     # If there is no DATABASE_URL configured, check for old style DB config parameters
     DATABASES = {
