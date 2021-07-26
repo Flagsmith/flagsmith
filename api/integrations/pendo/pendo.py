@@ -1,5 +1,8 @@
+import json
 import logging
 import typing
+
+import requests
 
 from integrations.common.wrapper import AbstractBaseIdentityIntegrationWrapper
 
@@ -9,14 +12,26 @@ if typing.TYPE_CHECKING:
 
 logger = logging.getLogger(__name__)
 
+PENDO_API_URL = "https://app.pendo.io"
+
 
 class PendoWrapper(AbstractBaseIdentityIntegrationWrapper):
     def __init__(self, api_key: str):
-        self.api_key = api_key
+        self.url = f"{PENDO_API_URL}/api/v1/metadata/visitor/agent/value"
+        self.headers = {
+            "x-pendo-integration-key": api_key,
+            "content-type": "application/json",
+        }
 
     def _identify_user(self, user_data: dict) -> None:
-        # todo: call pendo API with Identity data
-        logger.debug(f"Sent event to Pendo.")
+        response = requests.post(
+            self.url, headers=self.headers, data=json.dumps(user_data)
+        )
+
+        logger.debug(
+            "Sent event to Pendo. Response code was: %s" % response.status_code
+        )
+        logger.debug("Sent event to Pendo. Body code was: %s" % response.content)
 
     def generate_user_data(
         self, identity: "Identity", feature_states: typing.List["FeatureState"]
@@ -29,7 +44,9 @@ class PendoWrapper(AbstractBaseIdentityIntegrationWrapper):
                 value if (feature_state.enabled and value) else feature_state.enabled
             )
 
-        return {
-            "user_id": identity.identifier,
-            "traits": feature_properties,
-        }
+        return [
+            {
+                "visitorId": identity.identifier,
+                "values": feature_properties,
+            }
+        ]
