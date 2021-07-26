@@ -13,7 +13,7 @@ test-api:
     image: python:3.7-slim
     stage: test
     services:
-        - postgres:10.9-alpine
+        - postgres:11.12-alpine
     variables:
         DJANGO_SETTINGS_MODULE: 'app.settings.test'
         DATABASE_URL: postgres://testuser:testpass@postgres/test_db
