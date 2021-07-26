@@ -4,6 +4,7 @@ from unittest.case import TestCase
 
 import pytest
 from dateutil.relativedelta import relativedelta
+from django.test import Client as DjangoClient
 from django.urls import reverse
 from django.utils import timezone
 from rest_framework import status
@@ -399,3 +400,51 @@ class UserPermissionGroupViewSetTestCase(TestCase):
         assert response.status_code == status.HTTP_200_OK
         # and admin user is still in the group
         assert self.admin in group.users.all()
+
+
+@pytest.mark.django_db
+class InitialConfigurationTestCase(TestCase):
+    def setUp(self):
+        self.client = DjangoClient()
+
+    def tearDown(self) -> None:
+        Helper.clean_up()
+
+    def test_returns_302_when_user_exists_but_is_not_logged_in(self):
+        # Given
+        self.user = Helper.create_ffadminuser()
+        url = reverse("api-v1:users:config-init")
+
+        # When
+        get_response = self.client.get(url)
+        post_response = self.client.get(url)
+
+        # Then
+        assert get_response.status_code == status.HTTP_302_FOUND
+        assert post_response.status_code == status.HTTP_302_FOUND
+
+    def test_returns_403_when_user_exists_and_is_not_logged_in(self):
+        # Given
+        self.user = Helper.create_ffadminuser()
+        self.client.force_login(user=self.user)
+
+        url = reverse("api-v1:users:config-init")
+
+        # When
+        get_response = self.client.get(url)
+
+        post_response = self.client.get(url)
+
+        # Then
+        assert get_response.status_code == status.HTTP_403_FORBIDDEN
+        assert post_response.status_code == status.HTTP_403_FORBIDDEN
+
+    def test_returns_200_when_no_user_exists(self):
+        # Given
+        url = reverse("api-v1:users:config-init")
+
+        # When
+        response = self.client.get(url)
+
+        # Then
+        assert response.status_code == status.HTTP_200_OK
