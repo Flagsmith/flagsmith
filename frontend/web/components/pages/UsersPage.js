@@ -9,7 +9,9 @@ const UsersPage = class extends Component {
 
     constructor(props, context) {
         super(props, context);
-        this.state = {};
+        this.state = {
+            search: null
+        };
     }
 
     componentDidMount() {
@@ -109,7 +111,7 @@ const UsersPage = class extends Component {
                             <FormGroup>
                                 <IdentityListProvider>
                                     {({ isLoading, identities, identitiesPaging }) => {
-                                        const fullReload = ((identitiesPaging && identitiesPaging.currentPage === 1) || !identities || !identities.length) && isLoading;
+                                        const fullReload = ((identitiesPaging && this.state.search === null && identitiesPaging.currentPage === 1) || !identities || !identities.length) && isLoading;
                                         return (
                                             <div>
 
