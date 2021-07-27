@@ -1,14 +1,11 @@
 import warnings
 
-from django.db.models.signals import post_migrate
-from django.dispatch import receiver
 from django.urls import reverse
 
-from .models import FFAdminUser
 
-
-@receiver(post_migrate, sender=FFAdminUser)
 def warn_insecure(sender, **kwargs):
+    from .models import FFAdminUser
+
     if FFAdminUser.objects.count() == 0:
         path = reverse("api-v1:users:config-init")
         warnings.warn(
