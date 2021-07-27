@@ -2,7 +2,7 @@ from django.urls import reverse
 from rest_framework import status
 
 
-def test_404_when_user_exists(admin_user, django_client):
+def test_returns_404_when_user_exists(admin_user, django_client):
     # Given
     url = reverse("api-v1:users:config-init")
 
