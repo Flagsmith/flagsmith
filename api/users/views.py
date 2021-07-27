@@ -1,7 +1,7 @@
 from django.conf import settings
 from django.contrib.auth.mixins import PermissionRequiredMixin
 from django.contrib.sites.shortcuts import get_current_site
-from django.http import HttpResponse
+from django.http import Http404, HttpResponse
 from django.shortcuts import redirect
 from django.views import View
 from django.views.generic.edit import FormView
@@ -36,6 +36,9 @@ class InitialConfigurationView(PermissionRequiredMixin, FormView):
 
     def has_permission(self):
         return FFAdminUser.objects.count() == 0
+
+    def handle_no_permission(self):
+        raise Http404("CAN NOT INIT CONFIGURATION. USER(S) ALREADY EXIST IN SYSTEM.")
 
     def form_valid(self, form):
         form.create_admin()
