@@ -96,7 +96,7 @@ INSTALLED_APPS = [
     "admin_sso",
     "api",
     "corsheaders",
-    "users.apps.AuthenticationConfig",
+    "users",
     "organisations",
     "organisations.invites",
     "projects",
