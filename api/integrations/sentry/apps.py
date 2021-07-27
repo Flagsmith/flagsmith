@@ -12,9 +12,17 @@ class SentryConfig(AppConfig):
             sentry_sdk.init(
                 dsn=settings.SENTRY_SDK_DSN,
                 integrations=[DjangoIntegration()],
-                traces_sample_rate=settings.SENTRY_TRACE_SAMPLE_RATE,
                 environment=settings.ENV,
+                traces_sampler=traces_sampler,
                 # If you wish to associate users to errors (assuming you are using
                 # django.contrib.auth) you may enable sending PII data.
                 send_default_pii=True,
             )
+
+
+def traces_sampler(ctx):
+    sample_rate = settings.SENTRY_TRACE_SAMPLE_RATE
+    wsgi_env = ctx.get("wsgi_environ")
+    if wsgi_env and wsgi_env.get("PATH_INFO") == "/health":
+        sample_rate = 0
+    return sample_rate
