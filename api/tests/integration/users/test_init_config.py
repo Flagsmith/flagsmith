@@ -67,3 +67,24 @@ def test_valid_request_updates_site_model(db, django_client):
     # Then
     assert response.status_code == status.HTTP_200_OK
     assert Site.objects.filter(name=user_dict.get("site_name")).count() == 1
+
+
+def test_invalid_form_does_not_change_anything(db, django_client):
+    # Given
+    url = reverse("api-v1:users:config-init")
+    user_dict = {
+        "username": "test-admin",
+        "email": "invalid_email",  # Invalid email
+        "password": "test123",
+        "site_name": "test_site",
+        "site_domain": "test.com",
+    }
+
+    # When
+    response = django_client.post(url, data=user_dict)
+
+    # Then
+    assert response.status_code == status.HTTP_200_OK
+
+    assert Site.objects.filter(name=user_dict.get("site_name")).count() == 0
+    assert FFAdminUser.objects.filter(email=user_dict.get("email")).count() == 0
