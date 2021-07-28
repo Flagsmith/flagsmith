@@ -79,6 +79,23 @@ class EnvironmentTestCase(TestCase):
         feature_states = FeatureState.objects.filter(environment=clone)
         assert feature_states.count() == 1
 
+    def test_clone_does_not_modify_source_feature_state(self):
+        # Given
+        self.environment.save()
+        source_feature_state_before_clone = FeatureState.objects.filter(
+            environment=self.environment
+        ).first()
+
+        # When
+        clone = self.environment.clone(name="Cloned env")
+        clone.save()
+        source_feature_state_after_clone = FeatureState.objects.filter(
+            environment=self.environment
+        ).first()
+
+        # Then
+        assert source_feature_state_before_clone == source_feature_state_after_clone
+
     @mock.patch("environments.models.environment_cache")
     def test_get_from_cache_stores_environment_in_cache_on_success(self, mock_cache):
         # Given
