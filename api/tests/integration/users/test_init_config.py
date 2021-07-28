@@ -1,5 +1,9 @@
+import pytest
+from django.contrib.sites.models import Site
 from django.urls import reverse
 from rest_framework import status
+
+from users.models import FFAdminUser
 
 
 def test_returns_404_when_user_exists(admin_user, django_client):
@@ -15,7 +19,8 @@ def test_returns_404_when_user_exists(admin_user, django_client):
     assert post_response.status_code == status.HTTP_404_NOT_FOUND
 
 
-def test_returns_200_when_no_user_exists(db, django_client):
+@pytest.mark.django_db()
+def test_returns_200_when_no_user_exists(django_client):
     # Given
     url = reverse("api-v1:users:config-init")
 
@@ -24,3 +29,41 @@ def test_returns_200_when_no_user_exists(db, django_client):
 
     # Then
     assert response.status_code == status.HTTP_200_OK
+
+
+def test_valid_request_creates_a_superuser(db, django_client):
+    # Given
+    url = reverse("api-v1:users:config-init")
+    user_dict = {
+        "username": "test-admin",
+        "email": "test@email.com",
+        "password": "test123",
+        "site_name": "test_site",
+        "site_domain": "test.com",
+    }
+
+    # When
+    response = django_client.post(url, data=user_dict)
+
+    # Then
+    assert response.status_code == status.HTTP_200_OK
+    assert FFAdminUser.objects.filter(email=user_dict.get("email")).count() == 1
+
+
+def test_valid_request_updates_site_model(db, django_client):
+    # Given
+    url = reverse("api-v1:users:config-init")
+    user_dict = {
+        "username": "test-admin",
+        "email": "test@email.com",
+        "password": "test123",
+        "site_name": "test_site",
+        "site_domain": "test.com",
+    }
+
+    # When
+    response = django_client.post(url, data=user_dict)
+
+    # Then
+    assert response.status_code == status.HTTP_200_OK
+    assert Site.objects.filter(name=user_dict.get("site_name")).count() == 1
