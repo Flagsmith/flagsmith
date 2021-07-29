@@ -35,7 +35,7 @@ def organisation(admin_client):
 
 
 @pytest.fixture()
-def project(admin_client, organisation):
+def project(admin_client, organisation) -> int:
     project_data = {"name": "Test Project", "organisation": organisation}
     url = reverse("api-v1:projects:project-list")
     response = admin_client.post(url, data=project_data)
@@ -61,6 +61,22 @@ def environment(admin_client, project, environment_api_key) -> int:
 
 
 @pytest.fixture()
+def segment(admin_client, project) -> int:
+    url = reverse("api-v1:projects:project-segments-list", args=[project])
+    segment_data = {
+        "name": "Test Segment",
+        "project": project,
+        "rules": [{"type": "ALL", "rules": [], "conditions": []}],
+    }
+
+    response = admin_client.post(
+        url, data=json.dumps(segment_data), content_type="application/json"
+    )
+    print(response.content)
+    return response.json()["id"]
+
+
+@pytest.fixture()
 def identity_identifier():
     return uuid.uuid4()
 
@@ -72,6 +88,21 @@ def identity(admin_client, identity_identifier, environment, environment_api_key
         "api-v1:environments:environment-identities-list", args=[environment_api_key]
     )
     response = admin_client.post(url, data=identity_data)
+    return response.json()["id"]
+
+
+@pytest.fixture()
+def feature(admin_client, project, environment):
+    default_value = "This is a value"
+    data = {
+        "name": "test feature",
+        "initial_value": default_value,
+        "project": project,
+    }
+    url = reverse("api-v1:projects:project-features-list", args=[project])
+
+    # When
+    response = admin_client.post(url, data=data)
     return response.json()["id"]
 
 
