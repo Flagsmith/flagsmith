@@ -22,13 +22,15 @@ class EnvironmentKeyPermissions(BasePermission):
 
 class EnvironmentPermissions(BasePermission):
     def has_permission(self, request, view):
+        def get_action_filter(action):
+            if action == "create":
+                return {"id": request.data.get("project")}
+            if action == "clone":
+                return {"environments__api_key": request.path_info.split("/")[-3]}
+
         if view.action in ("clone", "create"):
-            filter_args = {
-                "clone": {"environments__api_key": request.path_info.split("/")[-3]},
-                "create": {"id": request.data.get("project")},
-            }[view.action]
             try:
-                project = Project.objects.get(**filter_args)
+                project = Project.objects.get(**get_action_filter(view.action))
                 return request.user.has_project_permission(
                     "CREATE_ENVIRONMENT", project
                 )
