@@ -10,6 +10,6 @@ services:
       - "5432:5432"
     environment:
       POSTGRES_DB: flagsmith
-      POSTGRES_PASSWORD: password
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
 volumes:
   pg_11_data:
