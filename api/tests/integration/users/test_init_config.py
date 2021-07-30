@@ -31,10 +31,10 @@ def test_returns_200_when_no_user_exists(django_client):
     assert response.status_code == status.HTTP_200_OK
 
 
-def test_valid_request_creates_a_superuser(db, django_client):
+def test_valid_request_creates_admin_and_updates_site(db, django_client):
     # Given
     url = reverse("api-v1:users:config-init")
-    user_dict = {
+    form_data = {
         "username": "test-admin",
         "email": "test@email.com",
         "password": "test123",
@@ -43,36 +43,18 @@ def test_valid_request_creates_a_superuser(db, django_client):
     }
 
     # When
-    response = django_client.post(url, data=user_dict)
+    response = django_client.post(url, data=form_data)
 
     # Then
     assert response.status_code == status.HTTP_200_OK
-    assert FFAdminUser.objects.filter(email=user_dict.get("email")).count() == 1
-
-
-def test_valid_request_updates_site_model(db, django_client):
-    # Given
-    url = reverse("api-v1:users:config-init")
-    user_dict = {
-        "username": "test-admin",
-        "email": "test@email.com",
-        "password": "test123",
-        "site_name": "test_site",
-        "site_domain": "test.com",
-    }
-
-    # When
-    response = django_client.post(url, data=user_dict)
-
-    # Then
-    assert response.status_code == status.HTTP_200_OK
-    assert Site.objects.filter(name=user_dict.get("site_name")).count() == 1
+    assert FFAdminUser.objects.filter(email=form_data.get("email")).count() == 1
+    assert Site.objects.filter(name=form_data.get("site_name")).count() == 1
 
 
 def test_invalid_form_does_not_change_anything(db, django_client):
     # Given
     url = reverse("api-v1:users:config-init")
-    user_dict = {
+    form_data = {
         "username": "test-admin",
         "email": "invalid_email",  # Invalid email
         "password": "test123",
@@ -81,10 +63,10 @@ def test_invalid_form_does_not_change_anything(db, django_client):
     }
 
     # When
-    response = django_client.post(url, data=user_dict)
+    response = django_client.post(url, data=form_data)
 
     # Then
     assert response.status_code == status.HTTP_200_OK
 
-    assert Site.objects.filter(name=user_dict.get("site_name")).count() == 0
-    assert FFAdminUser.objects.filter(email=user_dict.get("email")).count() == 0
+    assert Site.objects.filter(name=form_data.get("site_name")).count() == 0
+    assert FFAdminUser.objects.filter(email=form_data.get("email")).count() == 0
