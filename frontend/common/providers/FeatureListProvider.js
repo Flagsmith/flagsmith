@@ -58,10 +58,20 @@ const FeatureListProvider = class extends Component {
         AppActions.editFlag(projectId, Object.assign({}, projectFlag, flag), (newProjectFlag) => {
             AppActions.editEnvironmentFlag(projectId, environmentId, flag, projectFlag, {
                 ...environmentFlag,
-                multivariate_feature_state_values: newProjectFlag.multivariate_options && newProjectFlag.multivariate_options.map((v)=>({
-                    multivariate_feature_option:v.id,
-                    percentage_allocation:v.default_percentage_allocation
-                }))
+                multivariate_feature_state_values: newProjectFlag.multivariate_options && newProjectFlag.multivariate_options.map((v) => {
+                    const matching = environmentFlag.multivariate_feature_state_values && environmentFlag.multivariate_feature_state_values.find(environmentValue => environmentValue.multivariate_feature_option === v.id);
+                    if (matching) {
+                        return ({
+                            id: matching.id,
+                            multivariate_feature_option: v.id,
+                            percentage_allocation: v.default_percentage_allocation,
+                        });
+                    }
+                    return ({
+                        multivariate_feature_option: v.id,
+                        percentage_allocation: v.default_percentage_allocation,
+                    });
+                }),
             }, segmentOverrides);
         });
     };
