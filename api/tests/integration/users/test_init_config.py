@@ -66,6 +66,7 @@ def test_invalid_form_does_not_change_anything(db, django_client):
     response = django_client.post(url, data=form_data)
 
     # Then
+    # Re renders the form with error
     assert response.status_code == status.HTTP_200_OK
 
     assert Site.objects.filter(name=form_data.get("site_name")).count() == 0
