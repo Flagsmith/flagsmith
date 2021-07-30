@@ -1,3 +1,4 @@
+from django.db.models import Q
 from rest_framework import exceptions
 from rest_framework.permissions import BasePermission
 
@@ -22,23 +23,24 @@ class EnvironmentKeyPermissions(BasePermission):
 
 class EnvironmentPermissions(BasePermission):
     def has_permission(self, request, view):
-        def get_action_filter(action):
-            if action == "create":
-                return {"id": request.data.get("project")}
-            if action == "clone":
-                return {"environments__api_key": request.path_info.split("/")[-3]}
+        if view.action not in ["clone", "create"]:
+            # return true as all users can list and specific object permissions will be handled later
+            return True
+        try:
 
-        if view.action in ("clone", "create"):
-            try:
-                project = Project.objects.get(**get_action_filter(view.action))
-                return request.user.has_project_permission(
-                    "CREATE_ENVIRONMENT", project
-                )
-            except Project.DoesNotExist:
-                return False
+            if view.action == "clone":
+                api_key = request.path_info.split("/")[-3]
+                project_lookup = Q(environments__api_key=api_key)
 
-        # return true as all users can list and specific object permissions will be handled later
-        return True
+            elif view.action == "create":
+                project_id = request.data.get("project")
+                project_lookup = Q(id=project_id)
+
+            project = Project.objects.get(project_lookup)
+            return request.user.has_project_permission("CREATE_ENVIRONMENT", project)
+
+        except Project.DoesNotExist:
+            return False
 
     def has_object_permission(self, request, view, obj):
         if request.user.is_admin(obj.project.organisation):
