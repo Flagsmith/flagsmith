@@ -1,4 +1,5 @@
 import React, { Component } from 'react';
+import Select from 'react-select';
 
 const CreateEnvironmentPage = class extends Component {
     static displayName = 'CreateEnvironmentPage'
@@ -50,52 +51,85 @@ const CreateEnvironmentPage = class extends Component {
                                         {Constants.strings.ENVIRONMENT_DESCRIPTION}
                                     </p>
                                     <ProjectProvider id={this.props.match.params.projectId} onSave={this.onSave}>
-                                        {({ isLoading, isSaving, createEnv, error }) => (
-                                            <form
-                                              id="create-env-modal"
-                                              onSubmit={(e) => {
-                                                  e.preventDefault();
-                                                  !isSaving && name && createEnv(name, this.props.match.params.projectId);
-                                              }}
-                                            >
-                                                <InputGroup
-                                                  ref={(e) => {
-                                                      if (e) this.input = e;
+                                        {({ isLoading, isSaving, createEnv, error, project }) => {
+                                            if (project && project.environments && project.environments.length && !this.state.selectedEnv) {
+                                                this.state.selectedEnv = project.environments[0];
+                                            }
+                                            return (
+                                                <form
+                                                  id="create-env-modal"
+                                                  onSubmit={(e) => {
+                                                      e.preventDefault();
+                                                      !isSaving && name && createEnv(name, this.props.match.params.projectId, this.state.selectedEnv && this.state.selectedEnv.api_key);
                                                   }}
-                                                  inputProps={{ name: 'envName', className: 'full-width' }}
-                                                  onChange={e => this.setState({ name: Utils.safeParseEventValue(e) })}
-                                                  isValid={name}
-                                                  type="text" title="Name*"
-                                                  placeholder="An environment name e.g. Develop"
-                                                />
-                                                {error && <Error error={error}/>}
-                                                <div className="text-right">
-                                                    {permission ? (
-                                                        <Button id="create-env-btn" className="mt-3" disabled={isSaving || !name}>
-                                                            {isSaving ? 'Creating' : 'Create Environment'}
-                                                        </Button>
-                                                    ) : (
-                                                        <Tooltip
-                                                          html
-                                                          title={(
-                                                            <Button id="create-env-btn" disabled={isSaving || !name}>
-                                                          Create Environment
-                                                            </Button>
-                                                    )}
-                                                          place="right"
-                                                        >
-                                                            {
-                                                          Constants.projectPermissions('Create Environment')
-                                                      }
-                                                        </Tooltip>
-                                                    )}
+                                                >
+                                                    <div className="no-pad">
+                                                        <div className="row">
+                                                            <div className="col-md-12">
+                                                                <InputGroup
+                                                                  ref={(e) => {
+                                                                      if (e) this.input = e;
+                                                                  }}
+                                                                  inputProps={{ name: 'envName', className: 'full-width' }}
+                                                                  onChange={e => this.setState({ name: Utils.safeParseEventValue(e) })}
+                                                                  isValid={name}
+                                                                  type="text" title="Name*"
+                                                                  placeholder="An environment name e.g. Develop"
+                                                                />
+                                                            </div>
+                                                            <div className="col-md-6">
+                                                                {this.props.hasFeature('clone_environment') && project && project.environments && project.environments.length && (
+                                                                    <InputGroup
+                                                                      title="Clone from environment" component={(
+                                                                          <Select
+                                                                            onChange={(env) => {
+                                                                                this.setState({ selectedEnv: project.environments.find(v => v.api_key === env.value) });
+                                                                            }}
+                                                                            options={project.environments.map(env => ({ label: env.name, value: env.api_key }))}
+                                                                            value={this.state.selectedEnv ? {
+                                                                                label: this.state.selectedEnv.name,
+                                                                                value: this.state.selectedEnv.api_key,
+                                                                            } : {
+                                                                                label: 'Please select an environment',
+                                                                            }}
+                                                                          />
+                                                                    )}
+                                                                    />
+                                                                )}
+                                                            </div>
+                                                        </div>
+                                                    </div>
 
-                                                </div>
-                                                <p className="text-center faint">
-                                                    Not seeing an environment? Check that your project administrator has invited you to it.
-                                                </p>
-                                            </form>
-                                        )}
+
+                                                    {error && <Error error={error}/>}
+                                                    <div className="text-right">
+                                                        {permission ? (
+                                                            <Button id="create-env-btn" className="mt-3" disabled={isSaving || !name}>
+                                                                {isSaving ? 'Creating' : 'Create Environment'}
+                                                            </Button>
+                                                        ) : (
+                                                            <Tooltip
+                                                              html
+                                                              title={(
+                                                                  <Button id="create-env-btn" disabled={isSaving || !name}>
+                                                                        Create Environment
+                                                                  </Button>
+                                                                )}
+                                                              place="right"
+                                                            >
+                                                                {
+                                                                    Constants.projectPermissions('Create Environment')
+                                                                }
+                                                            </Tooltip>
+                                                        )}
+
+                                                    </div>
+                                                    <p className="text-center faint">
+                                                        Not seeing an environment? Check that your project administrator has invited you to it.
+                                                    </p>
+                                                </form>
+                                            );
+                                        }}
                                     </ProjectProvider>
                                 </div>
                             ) : (
@@ -129,4 +163,4 @@ const CreateEnvironmentPage = class extends Component {
 
 CreateEnvironmentPage.propTypes = {};
 
-module.exports = CreateEnvironmentPage;
+module.exports = ConfigProvider(CreateEnvironmentPage);
