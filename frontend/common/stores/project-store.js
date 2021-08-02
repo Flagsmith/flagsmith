@@ -26,23 +26,24 @@ const controller = {
         }
     },
 
-    createEnv: (name, projectId) => {
+    createEnv: (name, projectId, cloneId) => {
         API.trackEvent(Constants.events.CREATE_ENVIRONMENT);
-        data.post(`${Project.api}environments/`, { name, project: projectId })
-            .then((res) => {
-                data.post(`${Project.api}environments/${res.api_key}/identities/`, {
-                    environment: res.api_key,
-                    identifier: `${name.toLowerCase()}_user_123456`,
-                })
-                    .then(() => {
-                        store.savedEnv = res;
-                        if (store.model && store.model.environments) {
-                            store.model.environments = store.model.environments.concat([res]);
-                        }
-                        store.saved();
-                        AppActions.refreshOrganisation();
-                    });
-            });
+        const req = cloneId ? data.post(`${Project.api}environments/${cloneId}/clone/`, { name }) : data.post(`${Project.api}environments/`, { name, project: projectId });
+
+        req.then((res) => {
+            data.post(`${Project.api}environments/${res.api_key}/identities/`, {
+                environment: res.api_key,
+                identifier: `${name.toLowerCase()}_user_123456`,
+            })
+                .then(() => {
+                    store.savedEnv = res;
+                    if (store.model && store.model.environments) {
+                        store.model.environments = store.model.environments.concat([res]);
+                    }
+                    store.saved();
+                    AppActions.refreshOrganisation();
+                });
+        });
     },
     editEnv: (env) => {
         API.trackEvent(Constants.events.EDIT_ENVIRONMENT);
@@ -96,7 +97,7 @@ store.dispatcherIndex = Dispatcher.register(store, (payload) => {
             controller.getProject(action.projectId);
             break;
         case Actions.CREATE_ENV:
-            controller.createEnv(action.name, action.projectId);
+            controller.createEnv(action.name, action.projectId, action.cloneId);
             break;
         case Actions.EDIT_ENVIRONMENT:
             controller.editEnv(action.env);
