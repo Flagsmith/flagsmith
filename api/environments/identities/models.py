@@ -1,12 +1,13 @@
 import hashlib
 import typing
+from copy import deepcopy
 
 from django.db import models
-from django.db.models import Q, Prefetch
+from django.db.models import Prefetch, Q
 from django.utils.encoding import python_2_unicode_compatible
 
-from environments.models import Environment
 from environments.identities.traits.models import Trait
+from environments.models import Environment
 from features.models import FeatureState
 from features.multivariate.models import MultivariateFeatureStateValue
 
@@ -184,3 +185,10 @@ class Identity(models.Model):
         # return the full list of traits for this identity by refreshing from the db
         # TODO: handle this in the above logic to avoid a second hit to the DB
         return self.get_all_user_traits()
+
+    def clone(self, environment: Environment) -> "Identity":
+        clone = deepcopy(self)
+        clone.id = None
+        clone.environment = environment
+        clone.save()
+        return clone

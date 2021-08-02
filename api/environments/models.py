@@ -65,14 +65,15 @@ class Environment(LifecycleModel):
         return "Project %s - Environment %s" % (self.project.name, self.name)
 
     def clone(self, name: str, api_key: str = None) -> "Environment":
+        # NOTE: clone will not trigger create hooks
         # Creates a copy/clone of the object
         clone = deepcopy(self)
-        # update the state to let django know that this object is not coming from database
-        # ref: https://docs.djangoproject.com/en/3.2/topics/db/queries/#copying-model-instances
-        clone._state.adding = True
         clone.id = None
         clone.name = name
         clone.api_key = api_key if api_key else create_hash()
+        clone.save()
+        for fs in self.feature_states.all():
+            fs.clone(clone)
         return clone
 
     @staticmethod

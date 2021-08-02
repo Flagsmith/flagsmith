@@ -2,6 +2,7 @@ from __future__ import unicode_literals
 
 import logging
 import typing
+from copy import deepcopy
 
 from django.core.exceptions import (
     NON_FIELD_ERRORS,
@@ -170,6 +171,13 @@ class FeatureSegment(OrderedModelBase):
     # used for audit purposes
     history = HistoricalRecords()
 
+    def clone(environment) -> "FeatureSegment":
+        clone = deepcopy(self)
+        clone.id = None
+        clone.environment = environment
+        clone.save()
+        return clone
+
     class Meta:
         unique_together = ("feature", "environment", "segment")
         ordering = ("priority",)
@@ -199,6 +207,7 @@ class FeatureState(LifecycleModel, models.Model):
     feature = models.ForeignKey(
         Feature, related_name="feature_states", on_delete=models.CASCADE
     )
+
     environment = models.ForeignKey(
         "environments.Environment",
         related_name="feature_states",
@@ -224,6 +233,18 @@ class FeatureState(LifecycleModel, models.Model):
 
     enabled = models.BooleanField(default=False)
     history = HistoricalRecords()
+
+    def clone(self, env) -> "FeatureState":
+        clone = deepcopy(self)
+        clone.id = None
+        clone.identity = self.identity.clone(env) if self.identity else None
+        clone.feature_segment = (
+            self.feature_segment.clone(env) if self.feature_segment else None
+        )
+        clone.environment = env
+        clone.save()
+        self.feature_state_value.clone(clone)
+        return clone
 
     class Meta:
         # Note: this is manually overridden in the migrations for Oracle DBs to include
@@ -435,3 +456,10 @@ class FeatureStateValue(AbstractBaseFeatureValueModel):
     string_value = models.CharField(null=True, max_length=20000, blank=True)
 
     history = HistoricalRecords()
+
+    def clone(self, feature_state: FeatureState) -> "FeatureStateValue":
+        clone = deepcopy(self)
+        clone.id = None
+        clone.feature_state = feature_state
+        clone.save()
+        return clone
