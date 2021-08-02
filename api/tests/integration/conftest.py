@@ -1,6 +1,7 @@
 import uuid
 
 import pytest
+from django.test import Client as DjangoClient
 from django.urls import reverse
 from rest_framework.test import APIClient
 
@@ -10,6 +11,11 @@ from app.utils import create_hash
 @pytest.fixture()
 def admin_user(django_user_model):
     return django_user_model.objects.create(email="test@example.com")
+
+
+@pytest.fixture()
+def django_client():
+    return DjangoClient()
 
 
 @pytest.fixture()
