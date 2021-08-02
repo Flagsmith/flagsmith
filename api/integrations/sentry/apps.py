@@ -3,6 +3,8 @@ from django.apps import AppConfig
 from django.conf import settings
 from sentry_sdk.integrations.django import DjangoIntegration
 
+from .samplers import block_health_sampler
+
 
 class SentryConfig(AppConfig):
     name = "integrations.sentry"
@@ -13,16 +15,8 @@ class SentryConfig(AppConfig):
                 dsn=settings.SENTRY_SDK_DSN,
                 integrations=[DjangoIntegration()],
                 environment=settings.ENV,
-                traces_sampler=traces_sampler,
+                traces_sampler=block_health_sampler,
                 # If you wish to associate users to errors (assuming you are using
                 # django.contrib.auth) you may enable sending PII data.
                 send_default_pii=True,
             )
-
-
-def traces_sampler(ctx):
-    sample_rate = settings.SENTRY_TRACE_SAMPLE_RATE
-    wsgi_env = ctx.get("wsgi_environ")
-    if wsgi_env and wsgi_env.get("PATH_INFO") == "/health":
-        sample_rate = 0
-    return sample_rate
