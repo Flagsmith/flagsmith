@@ -1,0 +1,16 @@
+{% load i18n %}
+
+{% block subject %}
+{% blocktrans %} your installation is unsecure. Please create the admin user{% endblocktrans %}
+{% endblock %}
+<br>
+<br>
+{% block html_body %}
+<form action="{% url 'api-v1:users:config-init'  %}" method="POST">
+    {% csrf_token %}
+{{form.as_p}}
+    <input type="submit" value="Save">
+</form>
+
+<p>{% blocktrans %}The Flagsmith team{% endblocktrans %}</p>
+{% endblock html_body %}
