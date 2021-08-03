@@ -1,4 +1,6 @@
 import typing
+from copy import deepcopy
+from typing import TYPE_CHECKING
 
 from django.core.exceptions import ObjectDoesNotExist
 from django.db import models
@@ -6,7 +8,10 @@ from django.utils.encoding import python_2_unicode_compatible
 from simple_history.models import HistoricalRecords
 
 from environments.identities.traits.exceptions import TraitPersistenceError
-from environments.models import INTEGER, STRING, BOOLEAN, FLOAT
+from environments.models import BOOLEAN, FLOAT, INTEGER, STRING
+
+if TYPE_CHECKING:
+    from environments.identities.models import Identity
 
 
 @python_2_unicode_compatible
@@ -99,6 +104,13 @@ class Trait(models.Model):
 
     def __str__(self):
         return "Identity: %s - %s" % (self.identity.identifier, self.trait_key)
+
+    def clone(self, identity: "Identity") -> "Trait":
+        clone = deepcopy(self)
+        clone.id = None
+        clone.identity = identity
+        clone.save()
+        return clone
 
     def save(self, *args, **kwargs):
         if not self.identity.environment.project.organisation.persist_trait_data:

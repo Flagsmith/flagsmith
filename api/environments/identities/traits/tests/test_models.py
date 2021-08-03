@@ -1,5 +1,6 @@
 import pytest
 
+from environments.identities.models import Identity
 from environments.identities.traits.models import Trait
 
 
@@ -45,3 +46,20 @@ def test_generate_trait_value_data_for_deserialized_data(
     deserialized_data, expected_data
 ):
     assert Trait.generate_trait_value_data(deserialized_data) == expected_data
+
+
+def test_clone_creates_a_new_object(db, environment, identity):
+    # Given
+    trait = Trait.objects.create(
+        trait_key="test-key-one", string_value="testing trait", identity_id=identity
+    )
+    new_identity = Identity.objects.create(
+        identifier="test-identity", environment_id=environment
+    )
+    # When
+    cloned_trait = trait.clone(new_identity)
+
+    # Then
+    assert cloned_trait.id != trait.id
+    assert cloned_trait.trait_key == trait.trait_key
+    assert cloned_trait.trait_value == trait.trait_value
