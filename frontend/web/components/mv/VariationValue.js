@@ -17,7 +17,7 @@ const VariationValue = ({
                           <ValueEditor
                             data-test="featureValue"
                             name="featureValue" className="full-width"
-                            value={Utils.getTypedValue(Utils.featureStateToValue(value))}
+                            value={Utils.getTypedValue(Utils.featureStateToValue(value)) + ""}
                             onChange={(e) => {
                                 onChange({
                                     ...value,
