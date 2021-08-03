@@ -9,3 +9,9 @@ INSTALLED_APPS.extend(["debug_toolbar"])
 MIDDLEWARE.extend(["debug_toolbar.middleware.DebugToolbarMiddleware"])
 
 EMAIL_BACKEND = "django.core.mail.backends.console.EmailBackend"
+
+
+SWAGGER_SETTINGS["USE_SESSION_AUTH"] = False
+
+# Allow admin login with username and password
+ENABLE_ADMIN_ACCESS_USER_PASS = True
