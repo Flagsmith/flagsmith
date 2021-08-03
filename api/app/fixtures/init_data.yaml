@@ -15,29 +15,6 @@
     persist_trait_data: true
     block_access_to_admin: false
     feature_analytics: false
-- model: organisations.userorganisation
-  pk: 1
-  fields:
-    user: 1
-    organisation: 1
-    date_joined: 2021-08-02 12:23:25.419702+00:00
-    role: ADMIN
-- model: invites.invitelink
-  pk: 1
-  fields:
-    hash: bRRc9MSLgoifYFyqBcSUsK
-    date_created: 2021-08-02 12:23:26.850004+00:00
-    organisation: 1
-    role: ADMIN
-    expires_at: null
-- model: invites.invitelink
-  pk: 2
-  fields:
-    hash: UVySd6hw2sciGyj6c6mStb
-    date_created: 2021-08-02 12:23:26.853142+00:00
-    organisation: 1
-    role: USER
-    expires_at: null
 - model: projects.project
   pk: 1
   fields:
@@ -45,13 +22,6 @@
     created_date: 2021-08-02 12:23:33.981797+00:00
     organisation: 1
     hide_disabled_flags: false
-- model: projects.userprojectpermission
-  pk: 1
-  fields:
-    admin: true
-    user: 1
-    project: 1
-    permissions: []
 - model: environments.environment
   pk: 1
   fields:
@@ -70,20 +40,6 @@
     api_key: T4JZKgozvyhqbUS2pMXZpR
     webhooks_enabled: false
     webhook_url: null
-- model: environment_permissions.userenvironmentpermission
-  pk: 1
-  fields:
-    admin: true
-    user: 1
-    environment: 2
-    permissions: []
-- model: environment_permissions.userenvironmentpermission
-  pk: 2
-  fields:
-    admin: true
-    user: 1
-    environment: 1
-    permissions: []
 - model: identities.identity
   pk: 1
   fields:
@@ -96,21 +52,6 @@
     identifier: production_user_123456
     created_date: 2021-08-02 12:23:35.388576+00:00
     environment: 1
-- model: features.historicalfeature
-  pk: 1
-  fields:
-    id: 1
-    name: test_feature
-    created_date: 2021-08-02 12:24:03.315647+00:00
-    initial_value: null
-    description: null
-    default_enabled: true
-    type: STANDARD
-    project: 1
-    history_date: 2021-08-02 12:24:03.341241+00:00
-    history_change_reason: null
-    history_type: +
-    history_user: 1
 - model: features.feature
   pk: 1
   fields:
@@ -122,32 +63,6 @@
     default_enabled: true
     type: STANDARD
     tags: []
-- model: features.historicalfeaturestate
-  pk: 1
-  fields:
-    id: 1
-    enabled: true
-    feature: 1
-    environment: 1
-    identity: null
-    feature_segment: null
-    history_date: 2021-08-02 12:24:03.405917+00:00
-    history_change_reason: null
-    history_type: +
-    history_user: 1
-- model: features.historicalfeaturestate
-  pk: 2
-  fields:
-    id: 2
-    enabled: true
-    feature: 1
-    environment: 2
-    identity: null
-    feature_segment: null
-    history_date: 2021-08-02 12:24:03.503869+00:00
-    history_change_reason: null
-    history_type: +
-    history_user: 1
 - model: features.featurestate
   pk: 1
   fields:
@@ -164,32 +79,6 @@
     identity: null
     feature_segment: null
     enabled: true
-- model: features.historicalfeaturestatevalue
-  pk: 1
-  fields:
-    id: 1
-    type: unicode
-    boolean_value: null
-    integer_value: null
-    string_value: null
-    feature_state: 1
-    history_date: 2021-08-02 12:24:03.471413+00:00
-    history_change_reason: null
-    history_type: +
-    history_user: 1
-- model: features.historicalfeaturestatevalue
-  pk: 2
-  fields:
-    id: 2
-    type: unicode
-    boolean_value: null
-    integer_value: null
-    string_value: null
-    feature_state: 2
-    history_date: 2021-08-02 12:24:03.558367+00:00
-    history_change_reason: null
-    history_type: +
-    history_user: 1
 - model: features.featurestatevalue
   pk: 1
   fields:
@@ -206,36 +95,6 @@
     integer_value: null
     feature_state: 2
     string_value: null
-- model: audit.auditlog
-  pk: 1
-  fields:
-    created_date: 2021-08-02 12:23:34.409197+00:00
-    project: 1
-    environment: 2
-    log: 'New Environment created: Development'
-    author: 1
-    related_object_id: 2
-    related_object_type: ENVIRONMENT
-- model: audit.auditlog
-  pk: 2
-  fields:
-    created_date: 2021-08-02 12:23:34.439136+00:00
-    project: 1
-    environment: 1
-    log: 'New Environment created: Production'
-    author: 1
-    related_object_id: 1
-    related_object_type: ENVIRONMENT
-- model: audit.auditlog
-  pk: 3
-  fields:
-    created_date: 2021-08-02 12:24:03.575146+00:00
-    project: 1
-    environment: null
-    log: 'New Flag / Remote Config created: test_feature'
-    author: 1
-    related_object_id: 1
-    related_object_type: FEATURE
 - model: permissions.permissionmodel
   pk: CREATE_ENVIRONMENT
   fields:
