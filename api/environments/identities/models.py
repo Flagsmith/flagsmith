@@ -1,6 +1,5 @@
 import hashlib
 import typing
-from copy import deepcopy
 
 from django.db import models
 from django.db.models import Prefetch, Q
@@ -185,15 +184,3 @@ class Identity(models.Model):
         # return the full list of traits for this identity by refreshing from the db
         # TODO: handle this in the above logic to avoid a second hit to the DB
         return self.get_all_user_traits()
-
-    def clone(self, environment: Environment) -> "Identity":
-        identity_clone = deepcopy(self)
-        identity_clone.id = None
-        identity_clone.environment = environment
-        identity_clone.save()
-
-        if self.environment.project.organisation.persist_trait_data:
-            for trait in self.identity_traits.all():
-                trait.clone(identity_clone)
-
-        return identity_clone
