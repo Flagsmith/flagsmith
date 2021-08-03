@@ -49,6 +49,7 @@ from projects.tags.models import Tag
 logger = logging.getLogger(__name__)
 
 if typing.TYPE_CHECKING:
+    from environments.models import Environment
     from environments.identities.models import Identity
 
 
@@ -171,7 +172,7 @@ class FeatureSegment(OrderedModelBase):
     # used for audit purposes
     history = HistoricalRecords()
 
-    def clone(environment) -> "FeatureSegment":
+    def clone(self, environment: "Environment") -> "FeatureSegment":
         clone = deepcopy(self)
         clone.id = None
         clone.environment = environment

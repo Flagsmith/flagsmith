@@ -154,8 +154,8 @@ class FeatureSegmentTest(TestCase):
         )
 
         # When
-        feature_segment_clone = feature_segment.clone()
+        feature_segment_clone = feature_segment.clone(new_env)
 
         # Then
         assert feature_segment_clone.id != feature_segment.id
-        assert feature_segment_clone.priority != feature_segment.priority
+        assert feature_segment_clone.priority == feature_segment.priority
