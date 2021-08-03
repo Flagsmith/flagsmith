@@ -3,8 +3,13 @@ from django.test import TransactionTestCase
 from environments.identities.models import Identity
 from environments.identities.traits.models import Trait
 from environments.models import FLOAT, Environment
-from features.models import Feature, FeatureSegment, FeatureState, FeatureStateValue
-from features.value_types import INTEGER, STRING, BOOLEAN
+from features.models import (
+    Feature,
+    FeatureSegment,
+    FeatureState,
+    FeatureStateValue,
+)
+from features.value_types import BOOLEAN, INTEGER, STRING
 from organisations.models import Organisation
 from projects.models import Project
 from segments.models import (
@@ -819,3 +824,28 @@ class IdentityTestCase(TransactionTestCase):
         # Then
         # the number of queries are what we expect (see above context manager) and the segment is returned
         assert len(segments) == 1 and segments[0] == segment
+
+    def test_clone_creates_a_new_object_with_same_traits(self):
+        # Given
+        identity = Identity.objects.create(
+            identifier="test-identity", environment=self.environment
+        )
+        Trait.objects.create(
+            trait_key="test-key-one", string_value="testing trait", identity=identity
+        )
+        new_env = Environment.objects.create(
+            name="Test Environment New", project=self.project
+        )
+        # When
+        identity_clone = identity.clone(new_env)
+
+        # Then
+        assert identity.id != identity_clone.id
+        assert (
+            identity.identity_traits.first().trait_key
+            == identity_clone.identity_traits.first().trait_key
+        )
+        assert (
+            identity.identity_traits.first().string_value
+            == identity_clone.identity_traits.first().string_value
+        )
