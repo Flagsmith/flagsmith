@@ -18,7 +18,7 @@ class RudderstackWrapper(AbstractBaseIdentityIntegrationWrapper):
         rudder_analytics.data_plane_url = base_url
 
     def _identify_user(self, user_data: dict) -> None:
-        rudder_analytics.identify(user_data.get("user_id"), user_data.get("traits"))
+        rudder_analytics.identify(**user_data)
         logger.debug(f"Sent event to Rudderstack.")
 
     def generate_user_data(
