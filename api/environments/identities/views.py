@@ -28,15 +28,22 @@ class IdentityViewSet(viewsets.ModelViewSet):
 
     def get_queryset(self):
         environment = self.get_environment_from_request()
-        user_permitted_identities = self.request.user.get_permitted_identities()
-        queryset = user_permitted_identities.filter(
-            environment__api_key=environment.api_key
-        )
+        queryset = Identity.objects.filter(environment=environment)
 
-        if self.request.query_params.get("q"):
-            queryset = queryset.filter(
-                identifier__icontains=self.request.query_params.get("q")
-            )
+        search_query = self.request.query_params.get("q")
+        if search_query:
+            if search_query.startswith('"') and search_query.endswith('"'):
+                # Quoted searches should do an exact match just like Google
+                queryset = queryset.filter(
+                    identifier__exact=search_query.replace('"', "")
+                )
+            else:
+                # Otherwise do a fuzzy search
+                queryset = queryset.filter(identifier__icontains=search_query)
+
+        # change the default order by to avoid performance issues with pagination
+        # when environments have small number (<page_size) of records
+        queryset = queryset.order_by("created_date")
 
         return queryset
 

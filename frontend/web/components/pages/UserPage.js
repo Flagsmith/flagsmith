@@ -62,7 +62,7 @@ const UserPage = class extends Component {
     confirmToggle = (projectFlag, environmentFlag, cb) => {
         openModal('Toggle Feature', <ConfirmToggleFeature
           identity={this.props.match.params.id}
-          identityName={this.props.match.params.identity}
+          identityName={decodeURIComponent(this.props.match.params.identity)}
           environmentId={this.props.match.params.environmentId}
           projectFlag={projectFlag}
           environmentFlag={environmentFlag}
@@ -75,7 +75,7 @@ const UserPage = class extends Component {
         openModal(`Edit User Feature: ${projectFlag.name}`, <CreateFlagModal
           isEdit
           identity={this.props.match.params.id}
-          identityName={this.props.match.params.identity}
+          identityName={decodeURIComponent(this.props.match.params.identity)}
           environmentId={this.props.match.params.environmentId}
           projectId={this.props.match.params.projectId}
           projectFlag={projectFlag}
@@ -90,7 +90,7 @@ const UserPage = class extends Component {
           isEdit={false}
           onSave={this.onTraitSaved}
           identity={this.props.match.params.id}
-          identityName={this.props.match.params.identity}
+          identityName={decodeURIComponent(this.props.match.params.identity)}
           environmentId={this.props.match.params.environmentId}
           projectId={this.props.match.params.projectId}
         />);
@@ -103,7 +103,7 @@ const UserPage = class extends Component {
           {...trait}
           onSave={this.onTraitSaved}
           identity={this.props.match.params.id}
-          identityName={this.props.match.params.identity}
+          identityName={decodeURIComponent(this.props.match.params.identity)}
           environmentId={this.props.match.params.environmentId}
           projectId={this.props.match.params.projectId}
         />);

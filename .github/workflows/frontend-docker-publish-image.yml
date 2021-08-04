@@ -40,9 +40,8 @@ jobs:
               id: meta-build
               uses: docker/metadata-action@v3
               with:
-                  # todo: rename to flagsmith
                   images: |
-                      dabeeeenster/flagsmith-api
+                      flagsmith/flagsmith-frontend
                   tags: |
                       type=ref,event=branch
 
@@ -50,9 +49,8 @@ jobs:
               id: meta
               uses: crazy-max/ghaction-docker-meta@v2
               with:
-                  # todo: rename to flagsmith
                   images: |
-                      dabeeeenster/flagsmith-frontend
+                      flagsmith/flagsmith-frontend
                   tags: |
                       type=ref,event=branch
                       type=semver,pattern={{version}}

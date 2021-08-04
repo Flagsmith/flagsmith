@@ -1,0 +1,15 @@
+version: "3"
+services:
+  db:
+    image: postgres:11.12-alpine
+    pull_policy: always
+    restart: unless-stopped
+    volumes:
+      - 'pg_11_data:/var/lib/postgresql/data:Z'
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_DB: flagsmith
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+volumes:
+  pg_11_data:

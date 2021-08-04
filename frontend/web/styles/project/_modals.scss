@@ -64,7 +64,8 @@ $side-width: 66%;
     }
 }
 .side-modal {
-    overflow-y: hidden!important;
+    overflow-y: hidden !important;
+
     .close {
         position: absolute;
         top: -40px;
@@ -72,41 +73,47 @@ $side-width: 66%;
         cursor: pointer;
         font-size: 30px;
     }
+
     .modal-body {
         padding: 0;
         height: 100%;
     }
+
     z-index: 10000000;
-    padding-left:0;
+    padding-left: 0;
     left: 0;
-    right:0;
-    top:0;
-    bottom:0;
+    right: 0;
+    top: 0;
+    bottom: 0;
     opacity: 1;
+
     .modal-header {
         text-transform: none;
         background: $modal-header-background;
         border-radius: 0;
         text-align: left;
     }
+
     .modal-dialog {
-        box-shadow:rgba(75, 75, 75, 0.11) 0px 1px 6px 0px, rgba(75, 75, 75, 0.11) 0px 1px 4px 0px;
-    transition: transform .2s ease-out;
+        box-shadow: rgba(75, 75, 75, 0.11) 0px 1px 6px 0px, rgba(75, 75, 75, 0.11) 0px 1px 4px 0px;
+        transition: transform .2s ease-out;
         transform: translate(100%, 0%) !important;
         position: absolute;
-        max-width:1000px;
-        width:$side-width !important;
-        height:100% !important;
-        max-height:100% !important;
-        margin:0;
-        right:0;
+        max-width: 1000px;
+        width: $side-width !important;
+        height: 100% !important;
+        max-height: 100% !important;
+        margin: 0;
+        right: 0;
         left: auto;
     }
+
     &.in {
         .modal-dialog {
             transform: translate(0%, 0%) !important;
         }
     }
+
     //.footer {
     //    position: fixed;
     //    bottom: 0;
@@ -122,9 +129,13 @@ $side-width: 66%;
         left: 0;
         right: 0;
         padding: 20px;
-        height:130px;
+        height: 130px;
         background-color: $side-modal-header-background;
     }
+
+
+
+
     .modal-content {
         border: none;
         width: 100%;
@@ -268,4 +279,15 @@ $side-width: 66%;
 
 .modal-open #crisp-chatbox [data-chat-status="initial"] {
     display: none !important;
+}
+
+
+
+@media (max-width: 600px) { /* portrait tablets, portrait iPad, e-readers (Nook/Kindle), landscape 800x480 phones (Android) */
+    .side-modal__footer {
+        position: relative !important;
+    }
+    .side-modal #create-feature-modal {
+        height: 100%;
+    }
 }

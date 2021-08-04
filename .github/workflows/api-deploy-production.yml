@@ -31,7 +31,6 @@ jobs:
     run-tests:
         runs-on: ubuntu-latest
         name: Run E2E Tests
-        container: kylessg/bullet-train-nightwatch:1.1
         environment: production
         needs: deploy-production
 
@@ -46,6 +45,8 @@ jobs:
               env:
                   E2E_TEST_TOKEN_PROD: ${{ secrets.E2E_TEST_TOKEN }}
               run: |
+                  wget -q https://dl.google.com/linux/chrome/deb/pool/main/g/google-chrome-stable/google-chrome-stable_91.0.4472.114-1_amd64.deb
+                  sudo apt install --allow-downgrades -y ./google-chrome*.deb -f 
                   google-chrome --version
                   node -v
                   npm i
