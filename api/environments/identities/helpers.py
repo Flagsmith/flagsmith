@@ -5,7 +5,6 @@ import typing
 from integrations.amplitude.amplitude import AmplitudeWrapper
 from integrations.heap.heap import HeapWrapper
 from integrations.mixpanel.mixpanel import MixpanelWrapper
-from integrations.pendo.pendo import PendoWrapper
 from integrations.rudderstack.rudderstack import RudderstackWrapper
 from integrations.segment.segment import SegmentWrapper
 
@@ -15,7 +14,6 @@ IDENTITY_INTEGRATIONS = [
     {"relation_name": "heap_config", "wrapper": HeapWrapper},
     {"relation_name": "mixpanel_config", "wrapper": MixpanelWrapper},
     {"relation_name": "rudderstack_config", "wrapper": RudderstackWrapper},
-    {"relation_name": "pendo_config", "wrapper": PendoWrapper},
 ]
 
 

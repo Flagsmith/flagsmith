@@ -130,7 +130,6 @@ INSTALLED_APPS = [
     "integrations.heap",
     "integrations.mixpanel",
     "integrations.rudderstack",
-    "integrations.pendo",
     # Rate limiting admin endpoints
     "axes",
     "telemetry",
