@@ -1,4 +1,5 @@
 import json
+import urllib
 from unittest import mock
 from unittest.case import TestCase
 
@@ -7,7 +8,9 @@ from django.urls import reverse
 from rest_framework import status
 from rest_framework.test import APIClient, APITestCase
 
-from environments.identities.helpers import get_hashed_percentage_for_object_ids
+from environments.identities.helpers import (
+    get_hashed_percentage_for_object_ids,
+)
 from environments.identities.models import Identity
 from environments.identities.traits.models import Trait
 from environments.models import Environment
@@ -173,6 +176,29 @@ class IdentityTestCase(TestCase):
 
         # and - only identity matching search appears
         assert res.json().get("count") == 1
+
+    def test_can_search_for_identities_with_exact_match(self):
+        # Given
+        identity_to_return = Identity.objects.create(
+            identifier="1", environment=self.environment
+        )
+        Identity.objects.create(identifier="12", environment=self.environment)
+        Identity.objects.create(identifier="121", environment=self.environment)
+        base_url = reverse(
+            "api-v1:environments:environment-identities-list",
+            args=[self.environment.api_key],
+        )
+        url = "%s?%s" % (base_url, urllib.parse.urlencode({"q": '"1"'}))
+
+        # When
+        res = self.client.get(url)
+
+        # Then
+        assert res.status_code == status.HTTP_200_OK
+
+        # and - only identity matching search appears
+        assert res.json().get("count") == 1
+        assert res.json()["results"][0]["id"] == identity_to_return.id
 
     def test_search_is_case_insensitive(self):
         # Given
