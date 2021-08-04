@@ -179,7 +179,9 @@ class IdentityTestCase(TestCase):
 
     def test_can_search_for_identities_with_exact_match(self):
         # Given
-        Identity.objects.create(identifier="1", environment=self.environment)
+        identity_to_return = Identity.objects.create(
+            identifier="1", environment=self.environment
+        )
         Identity.objects.create(identifier="12", environment=self.environment)
         Identity.objects.create(identifier="121", environment=self.environment)
         base_url = reverse(
@@ -196,6 +198,7 @@ class IdentityTestCase(TestCase):
 
         # and - only identity matching search appears
         assert res.json().get("count") == 1
+        assert res.json()["results"][0]["id"] == identity_to_return.id
 
     def test_search_is_case_insensitive(self):
         # Given
