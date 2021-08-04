@@ -106,12 +106,16 @@ class RudderstackConfigurationTestCase(TestCase):
 
     def test_should_return_rudderstack_config_list_when_requested(self):
         # Given - set up data
+        config = RudderstackConfiguration.objects.create(
+            api_key="api_123", environment=self.environment
+        )
 
         # When
         response = self.client.get(self.list_url)
 
         # Then
         assert response.status_code == status.HTTP_200_OK
+        assert len(response.json()) == 1
 
     def test_should_remove_configuration_when_delete(self):
         # Given
