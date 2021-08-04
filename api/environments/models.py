@@ -73,7 +73,7 @@ class Environment(LifecycleModel):
         clone.api_key = api_key if api_key else create_hash()
         clone.save()
         # Clone the related objects
-        for fs in self.feature_states.all():
+        for fs in self.feature_states.filter(identity=None):
             fs.clone(clone)
         return clone
 

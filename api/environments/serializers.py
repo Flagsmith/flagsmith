@@ -62,7 +62,6 @@ class CloneEnvironmentSerializer(EnvironmentSerializerLight):
         name = validated_data.get("name")
         source_env = validated_data.get("source_env")
         clone = source_env.clone(name)
-        clone.save()
         self._create_audit_log(clone, True)
         return clone
 
