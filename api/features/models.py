@@ -235,10 +235,12 @@ class FeatureState(LifecycleModel, models.Model):
     enabled = models.BooleanField(default=False)
     history = HistoricalRecords()
 
-    def clone(self, env) -> "FeatureState":
+    def clone(self, env: "Environment") -> "FeatureState":
+        # Clonning the Identity is not allowed
+        assert self.identity is None
+
         clone = deepcopy(self)
         clone.id = None
-        clone.identity = None  # Clonning the Identity is not supported
         clone.feature_segment = (
             self.feature_segment.clone(env) if self.feature_segment else None
         )
