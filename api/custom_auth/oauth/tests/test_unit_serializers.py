@@ -2,6 +2,7 @@ from unittest import TestCase, mock
 
 import pytest
 from django.contrib.auth import get_user_model
+from django.utils import timezone
 from rest_framework.authtoken.models import Token
 
 from custom_auth.oauth.serializers import (
@@ -44,6 +45,7 @@ class OAuthLoginSerializerTestCase(TestCase):
         # Then
         assert UserModel.objects.filter(email=self.test_email).exists()
         assert isinstance(response, Token)
+        assert (timezone.now() - response.user.last_login).seconds < 5
         assert response.user.email == self.test_email
 
 
