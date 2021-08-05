@@ -143,13 +143,13 @@ class FeatureStateSerializerBasic(WritableNestedModelSerializer):
         many=True, required=False
     )
     # TODO: better variable name
-    feature_last_updated_since = serializers.SerializerMethodField()
+    days_since_feature_last_updated = serializers.SerializerMethodField()
 
     class Meta:
         model = FeatureState
         fields = "__all__"
 
-    def get_feature_last_updated_since(self, obj) -> int:
+    def get_days_since_feature_last_updated(self, obj) -> int:
         cache = self.context.get("feature_updated_at_cache")
         updated_at = [
             x["updated_at"] for x in cache if x["feature__id"] == obj.feature.pk
@@ -278,7 +278,7 @@ class GetInfluxDataQuerySerializer(serializers.Serializer):
 
 class WritableNestedFeatureStateSerializer(FeatureStateSerializerBasic):
     feature_state_value = FeatureStateValueSerializer(required=False)
-    feature_last_updated_since = None
+    days_since_feature_last_updated = None
 
     class Meta(FeatureStateSerializerBasic.Meta):
         extra_kwargs = {"environment": {"required": True}}
