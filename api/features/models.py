@@ -173,6 +173,8 @@ class FeatureSegment(OrderedModelBase):
     history = HistoricalRecords()
 
     def clone(self, environment: "Environment") -> "FeatureSegment":
+        assert self.environment.id != environment.id
+
         clone = deepcopy(self)
         clone.id = None
         clone.environment = environment

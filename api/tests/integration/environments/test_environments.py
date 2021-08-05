@@ -8,6 +8,7 @@ def test_clone_environment_returns_200(
     # Given
     env_name = "Cloned env"
     url = reverse("api-v1:environments:environment-clone", args=[environment_api_key])
+
     # When
     res = admin_client.post(url, {"name": env_name})
 

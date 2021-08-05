@@ -159,3 +159,4 @@ class FeatureSegmentTest(TestCase):
         # Then
         assert feature_segment_clone.id != feature_segment.id
         assert feature_segment_clone.priority == feature_segment.priority
+        assert feature_segment_clone.environment.id == new_env.id
