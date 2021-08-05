@@ -93,6 +93,18 @@ class EnvironmentTestCase(TestCase):
         # Then
         assert source_feature_state_before_clone == source_feature_state_after_clone
 
+    def test_clone_does_not_create_idetntity(self):
+        # Given
+        self.environment.save()
+        Identity.objects.create(
+            environment=self.environment, identifier="test_identity"
+        )
+        # When
+        clone = self.environment.clone(name="Cloned env")
+
+        # Then
+        assert clone.identities.count() == 0
+
     def test_clone_clones_the_feature_states(self):
         # Given
         self.environment.save()
