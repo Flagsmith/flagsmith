@@ -65,14 +65,19 @@ class Environment(LifecycleModel):
         return "Project %s - Environment %s" % (self.project.name, self.name)
 
     def clone(self, name: str, api_key: str = None) -> "Environment":
+        """
+        Creates a clone of the environment, related objects and returns the
+        cloned object after saving it to the database.
         # NOTE: clone will not trigger create hooks
-        # Creates a copy/clone of the object
+        """
         clone = deepcopy(self)
         clone.id = None
         clone.name = name
         clone.api_key = api_key if api_key else create_hash()
         clone.save()
-        # Clone the related objects
+        # Since identities are closely tied to the enviroment
+        # it does not make much sense to clone them, hence
+        # only clone feature states without identities
         for fs in self.feature_states.filter(identity=None):
             fs.clone(clone)
         return clone
