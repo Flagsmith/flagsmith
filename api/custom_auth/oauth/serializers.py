@@ -1,6 +1,6 @@
 from django.conf import settings
 from django.contrib.auth import get_user_model
-from django.contrib.auth.models import update_last_login
+from django.contrib.auth.signals import user_logged_in
 from rest_framework import serializers
 from rest_framework.authtoken.models import Token
 from rest_framework.exceptions import PermissionDenied
@@ -26,7 +26,9 @@ class OAuthLoginSerializer(serializers.Serializer):
 
     def create(self, validated_data):
         user = self._get_user()
-        update_last_login(None, user)
+        user_logged_in.send(
+            sender=get_user_model(), request=self.context.get("request"), user=user
+        )
         return Token.objects.get_or_create(user=user)[0]
 
     def _get_user(self):

@@ -2,6 +2,7 @@ from unittest import TestCase, mock
 
 import pytest
 from django.contrib.auth import get_user_model
+from django.test import RequestFactory
 from django.utils import timezone
 from rest_framework.authtoken.models import Token
 
@@ -27,13 +28,15 @@ class OAuthLoginSerializerTestCase(TestCase):
             "last_name": self.test_last_name,
             "google_user_id": self.test_id,
         }
+        rf = RequestFactory()
+        self.request = rf.post("test-login-url")
 
     @mock.patch("custom_auth.oauth.serializers.get_user_info")
     def test_create(self, mock_get_user_info):
         # Given
         access_token = "access-token"
         data = {"access_token": access_token}
-        serializer = OAuthLoginSerializer(data=data)
+        serializer = OAuthLoginSerializer(data=data, context={"request": self.request})
 
         # monkey patch the get_user_info method to return the mock user data
         serializer.get_user_info = lambda: self.mock_user_data
@@ -50,11 +53,17 @@ class OAuthLoginSerializerTestCase(TestCase):
 
 
 class GoogleLoginSerializerTestCase(TestCase):
+    def setUp(self) -> None:
+        rf = RequestFactory()
+        self.request = rf.post("test-login-url")
+
     @mock.patch("custom_auth.oauth.serializers.get_user_info")
     def test_get_user_info(self, mock_get_user_info):
         # Given
         access_token = "some-access-token"
-        serializer = GoogleLoginSerializer(data={"access_token": access_token})
+        serializer = GoogleLoginSerializer(
+            data={"access_token": access_token}, context={"request": self.request}
+        )
 
         # When
         serializer.is_valid()
@@ -65,11 +74,17 @@ class GoogleLoginSerializerTestCase(TestCase):
 
 
 class GithubLoginSerializerTestCase(TestCase):
+    def setUp(self) -> None:
+        rf = RequestFactory()
+        self.request = rf.post("test-login-url")
+
     @mock.patch("custom_auth.oauth.serializers.GithubUser")
     def test_get_user_info(self, MockGithubUser):
         # Given
         access_token = "some-access-token"
-        serializer = GithubLoginSerializer(data={"access_token": access_token})
+        serializer = GithubLoginSerializer(
+            data={"access_token": access_token}, context={"request": self.request}
+        )
 
         mock_github_user = mock.MagicMock()
         MockGithubUser.return_value = mock_github_user
