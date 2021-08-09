@@ -84,15 +84,13 @@ def sdk_client(environment_api_key):
 
 @pytest.fixture()
 def feature(admin_client, project):
-    default_value = "This is a value"
     data = {
         "name": "test feature",
-        "initial_value": default_value,
+        "initial_value": "default_value",
         "project": project,
     }
     url = reverse("api-v1:projects:project-features-list", args=[project])
 
-    # When
     response = admin_client.post(url, data=data)
     return response.json()["id"]
 
@@ -106,7 +104,6 @@ def segment(admin_client, project):
         "rules": [{"type": "ALL", "rules": [], "conditions": []}],
     }
 
-    # When
     response = admin_client.post(
         url, data=json.dumps(data), content_type="application/json"
     )

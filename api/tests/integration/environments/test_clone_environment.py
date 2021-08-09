@@ -5,12 +5,7 @@ from rest_framework import status
 from tests.integration.helpers import get_env_feature_states_list_with_api
 
 from environments.permissions.models import UserEnvironmentPermission
-from features.models import (
-    Feature,
-    FeatureSegment,
-    FeatureState,
-    FeatureStateValue,
-)
+from features.models import FeatureSegment, FeatureState
 
 
 def test_clone_environment_returns_200(
@@ -93,7 +88,7 @@ def test_clone_environment_clones_feature_states_with_value(
     )
 
 
-def test_clone_environment_creates_permission_with_the_current_user(
+def test_clone_environment_creates_permission_object_with_the_current_user(
     admin_user, admin_client, environment, environment_api_key
 ):
     # Given
@@ -107,7 +102,7 @@ def test_clone_environment_creates_permission_with_the_current_user(
     assert res.status_code == status.HTTP_200_OK
     assert (
         UserEnvironmentPermission.objects.filter(
-            user=admin_user, environment_id=environment
+            user=admin_user, environment_id=environment, admin=True
         ).count()
         == 1
     )
@@ -178,7 +173,7 @@ def test_clone_clones_segments_overrides(
         },
     )
 
-    # Then fetch the feature state of clone environment for the feature segement
+    # Then, fetch the feature state of clone environment for the feature segement
     clone_feature_segment_id = FeatureSegment.objects.get(
         feature_id=feature, environment_id=clone_env_id, segment=segment
     ).id

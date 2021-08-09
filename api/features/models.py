@@ -172,14 +172,6 @@ class FeatureSegment(OrderedModelBase):
     # used for audit purposes
     history = HistoricalRecords()
 
-    def clone(self, environment: "Environment") -> "FeatureSegment":
-        assert self.environment.id != environment.id
-        clone = deepcopy(self)
-        clone.id = None
-        clone.environment = environment
-        clone.save()
-        return clone
-
     class Meta:
         unique_together = ("feature", "environment", "segment")
         ordering = ("priority",)
@@ -192,16 +184,23 @@ class FeatureSegment(OrderedModelBase):
             + str(self.priority)
         )
 
-    # noinspection PyTypeChecker
-    def get_value(self):
-        return get_correctly_typed_value(self.value_type, self.value)
-
     def __lt__(self, other):
         """
         Kind of counter intuitive but since priority 1 is highest, we want to check if priority is GREATER than the
         priority of the other feature segment.
         """
         return other and self.priority > other.priority
+
+    def clone(self, environment: "Environment") -> "FeatureSegment":
+        clone = deepcopy(self)
+        clone.id = None
+        clone.environment = environment
+        clone.save()
+        return clone
+
+    # noinspection PyTypeChecker
+    def get_value(self):
+        return get_correctly_typed_value(self.value_type, self.value)
 
 
 @python_2_unicode_compatible
@@ -235,25 +234,6 @@ class FeatureState(LifecycleModel, models.Model):
 
     enabled = models.BooleanField(default=False)
     history = HistoricalRecords()
-
-    def clone(self, env: "Environment") -> "FeatureState":
-        # Clonning the Identity is not allowed
-        assert self.identity is None
-        clone = deepcopy(self)
-        clone.id = None
-        clone.feature_segment = (
-            FeatureSegment.objects.get(
-                environment=env,
-                feature=clone.feature,
-                segment=self.feature_segment.segment,
-            )
-            if self.feature_segment
-            else None
-        )
-        clone.environment = env
-        clone.save()
-        self.feature_state_value.clone(clone)
-        return clone
 
     class Meta:
         # Note: this is manually overridden in the migrations for Oracle DBs to include
@@ -310,6 +290,27 @@ class FeatureState(LifecycleModel, models.Model):
         # if we've reached here, then self is just the environment default. In this case, other is higher priority if
         # it has a feature_segment or an identity
         return not (other.feature_segment or other.identity)
+
+    def clone(self, env: "Environment") -> "FeatureState":
+        # Clonning the Identity is not allowed because they are closely tied
+        # to the enviroment
+        assert self.identity is None
+        clone = deepcopy(self)
+        clone.id = None
+        clone.feature_segment = (
+            FeatureSegment.objects.get(
+                environment=env,
+                feature=clone.feature,
+                segment=self.feature_segment.segment,
+            )
+            if self.feature_segment
+            else None
+        )
+        clone.environment = env
+        clone.save()
+        # clone the related objects
+        self.feature_state_value.clone(clone)
+        return clone
 
     def get_feature_state_value(self, identity: "Identity" = None) -> typing.Any:
         feature_state_value = (
