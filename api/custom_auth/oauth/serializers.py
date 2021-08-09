@@ -27,7 +27,7 @@ class OAuthLoginSerializer(serializers.Serializer):
     def create(self, validated_data):
         user = self._get_user()
         user_logged_in.send(
-            sender=get_user_model(), request=self.context.get("request"), user=user
+            sender=UserModel, request=self.context.get("request"), user=user
         )
         return Token.objects.get_or_create(user=user)[0]
 
