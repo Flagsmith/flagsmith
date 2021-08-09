@@ -29,7 +29,7 @@ class OAuthLoginSerializerTestCase(TestCase):
             "google_user_id": self.test_id,
         }
         rf = RequestFactory()
-        self.request = rf.post("test-login-url")
+        self.request = rf.post("placeholer-login-url")
 
     @mock.patch("custom_auth.oauth.serializers.get_user_info")
     def test_create(self, mock_get_user_info):
@@ -55,7 +55,7 @@ class OAuthLoginSerializerTestCase(TestCase):
 class GoogleLoginSerializerTestCase(TestCase):
     def setUp(self) -> None:
         rf = RequestFactory()
-        self.request = rf.post("test-login-url")
+        self.request = rf.post("placeholer-login-url")
 
     @mock.patch("custom_auth.oauth.serializers.get_user_info")
     def test_get_user_info(self, mock_get_user_info):
@@ -76,7 +76,7 @@ class GoogleLoginSerializerTestCase(TestCase):
 class GithubLoginSerializerTestCase(TestCase):
     def setUp(self) -> None:
         rf = RequestFactory()
-        self.request = rf.post("test-login-url")
+        self.request = rf.post("placeholer-login-url")
 
     @mock.patch("custom_auth.oauth.serializers.GithubUser")
     def test_get_user_info(self, MockGithubUser):
