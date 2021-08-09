@@ -1,3 +1,4 @@
+import json
 import uuid
 
 import pytest
@@ -79,3 +80,49 @@ def sdk_client(environment_api_key):
     client = APIClient()
     client.credentials(HTTP_X_ENVIRONMENT_KEY=environment_api_key)
     return client
+
+
+@pytest.fixture()
+def feature(admin_client, project):
+    default_value = "This is a value"
+    data = {
+        "name": "test feature",
+        "initial_value": default_value,
+        "project": project,
+    }
+    url = reverse("api-v1:projects:project-features-list", args=[project])
+
+    # When
+    response = admin_client.post(url, data=data)
+    return response.json()["id"]
+
+
+@pytest.fixture()
+def segment(admin_client, project):
+    url = reverse("api-v1:projects:project-segments-list", args=[project])
+    data = {
+        "name": "Test Segment",
+        "project": project,
+        "rules": [{"type": "ALL", "rules": [], "conditions": []}],
+    }
+
+    # When
+    response = admin_client.post(
+        url, data=json.dumps(data), content_type="application/json"
+    )
+    return response.json()["id"]
+
+
+@pytest.fixture()
+def feature_segment(admin_client, segment, feature, environment):
+    data = {
+        "feature": feature,
+        "segment": segment,
+        "environment": environment,
+    }
+    url = reverse("api-v1:features:feature-segment-list")
+
+    response = admin_client.post(
+        url, data=json.dumps(data), content_type="application/json"
+    )
+    return response.json()["id"]

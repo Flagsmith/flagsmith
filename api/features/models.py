@@ -174,7 +174,6 @@ class FeatureSegment(OrderedModelBase):
 
     def clone(self, environment: "Environment") -> "FeatureSegment":
         assert self.environment.id != environment.id
-
         clone = deepcopy(self)
         clone.id = None
         clone.environment = environment
@@ -240,11 +239,16 @@ class FeatureState(LifecycleModel, models.Model):
     def clone(self, env: "Environment") -> "FeatureState":
         # Clonning the Identity is not allowed
         assert self.identity is None
-
         clone = deepcopy(self)
         clone.id = None
         clone.feature_segment = (
-            self.feature_segment.clone(env) if self.feature_segment else None
+            FeatureSegment.objects.get(
+                environment=env,
+                feature=clone.feature,
+                segment=self.feature_segment.segment,
+            )
+            if self.feature_segment
+            else None
         )
         clone.environment = env
         clone.save()
