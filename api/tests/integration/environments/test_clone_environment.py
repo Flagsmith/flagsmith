@@ -12,7 +12,7 @@ def test_clone_environment_clones_feature_states_with_value(
     admin_client, project, environment, environment_api_key, feature
 ):
 
-    # Firstly, Update feature state value of the source enviroment
+    # Firstly, let's update feature state value of the source enviroment
     # fetch the feature state id to update
     feature_state = get_env_feature_states_list_with_api(
         admin_client, {"enviroment": environment, "feature": feature}
@@ -120,7 +120,7 @@ def test_env_clone_creates_feature_segment(
 def test_env_clone_clones_segments_overrides(
     admin_client, environment, environment_api_key, feature, feature_segment, segment
 ):
-    # Firstly, Let's override the segment in source environment
+    # Firstly, let's override the segment in source environment
     create_url = reverse("api-v1:features:featurestates-list")
     data = {
         "feature_state_value": {
@@ -149,7 +149,7 @@ def test_env_clone_clones_segments_overrides(
 
     clone_env_id = res.json()["id"]
 
-    # Then, fetch the feature state of source environment for the feature segement
+    # Then, fetch the feature state of source environment
     source_env_feature_states = get_env_feature_states_list_with_api(
         admin_client,
         {
@@ -159,11 +159,14 @@ def test_env_clone_clones_segments_overrides(
         },
     )
 
-    # Then, fetch the feature state of clone environment for the feature segement
+    # Then, fetch the feature state of clone environment
+
+    # fetch the feature segment id to filter feature states
     clone_feature_segment_id = get_feature_segement_list_with_api(
         admin_client,
         {"environment": res.json()["id"], "feature": feature, "segment": segment},
     )["results"][0]["id"]
+
     clone_env_feature_states = get_env_feature_states_list_with_api(
         admin_client,
         {

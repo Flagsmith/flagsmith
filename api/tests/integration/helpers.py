@@ -68,7 +68,7 @@ def get_env_feature_states_list_with_api(client: APIClient, query_params: dict) 
 
 def get_feature_segement_list_with_api(client: APIClient, query_params: dict) -> dict:
     """
-    Return feature segments using the provided test client.
+    Returns feature segments using the provided test client.
 
     :param client: DRF api client to use to make the request
     :param query_params: A Mapping object used as query params for filtering
