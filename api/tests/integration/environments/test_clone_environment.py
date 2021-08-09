@@ -2,42 +2,27 @@ import json
 
 from django.urls import reverse
 from rest_framework import status
-from tests.integration.helpers import get_env_feature_states_list_with_api
-
-from environments.permissions.models import UserEnvironmentPermission
-from features.models import FeatureSegment, FeatureState
-
-
-def test_clone_environment_returns_200(
-    admin_client, project, environment, environment_api_key
-):
-    # Given
-    env_name = "Cloned env"
-    url = reverse("api-v1:environments:environment-clone", args=[environment_api_key])
-
-    # When
-    res = admin_client.post(url, {"name": env_name})
-
-    # Then
-    assert res.status_code == status.HTTP_200_OK
-    assert res.json()["name"] == env_name
+from tests.integration.helpers import (
+    get_env_feature_states_list_with_api,
+    get_feature_segement_list_with_api,
+)
 
 
 def test_clone_environment_clones_feature_states_with_value(
     admin_client, project, environment, environment_api_key, feature
 ):
 
-    # Firstly, create an environment and update it's feature state
+    # Firstly, Update feature state value of the source enviroment
+    # fetch the feature state id to update
+    feature_state = get_env_feature_states_list_with_api(
+        admin_client, {"enviroment": environment, "feature": feature}
+    )["results"][0]["id"]
 
-    # Fetch the feature state id to update
-    feature_state = FeatureState.objects.get(
-        environment_id=environment, feature=feature
-    )
     fs_update_url = reverse(
-        "api-v1:features:featurestates-detail", args=[feature_state.id]
+        "api-v1:features:featurestates-detail", args=[feature_state]
     )
     data = {
-        "id": feature_state.id,
+        "id": feature_state,
         "feature_state_value": "new_value",
         "enabled": False,
         "feature": feature,
@@ -45,6 +30,7 @@ def test_clone_environment_clones_feature_states_with_value(
         "identity": None,
         "feature_segment": None,
     }
+    # Update the feature state
     admin_client.put(
         fs_update_url, data=json.dumps(data), content_type="application/json"
     )
@@ -88,24 +74,24 @@ def test_clone_environment_clones_feature_states_with_value(
     )
 
 
-def test_clone_environment_creates_permission_object_with_the_current_user(
+def test_clone_environment_creates_admin_permission_with_the_current_user(
     admin_user, admin_client, environment, environment_api_key
 ):
-    # Given
+    # Firstly, let's create the clone of the enviroment
     env_name = "Cloned env"
     url = reverse("api-v1:environments:environment-clone", args=[environment_api_key])
-
-    # When
     res = admin_client.post(url, {"name": env_name})
+    clone_env_api_key = res.json()["api_key"]
 
-    # Then
-    assert res.status_code == status.HTTP_200_OK
-    assert (
-        UserEnvironmentPermission.objects.filter(
-            user=admin_user, environment_id=environment, admin=True
-        ).count()
-        == 1
+    # Now, fetch the permission of the newly creatd enviroment
+    perm_url = reverse(
+        "api-v1:environments:environment-user-permissions-list",
+        args=[clone_env_api_key],
     )
+    response = admin_client.get(perm_url)
+
+    # Then, assert that current user is admin
+    assert response.json()[0]["admin"] is True
 
 
 def test_env_clone_creates_feature_segment(
@@ -131,7 +117,7 @@ def test_env_clone_creates_feature_segment(
     assert json_response["results"][0]["id"] != feature_segment
 
 
-def test_clone_clones_segments_overrides(
+def test_env_clone_clones_segments_overrides(
     admin_client, environment, environment_api_key, feature, feature_segment, segment
 ):
     # Firstly, Let's override the segment in source environment
@@ -174,9 +160,10 @@ def test_clone_clones_segments_overrides(
     )
 
     # Then, fetch the feature state of clone environment for the feature segement
-    clone_feature_segment_id = FeatureSegment.objects.get(
-        feature_id=feature, environment_id=clone_env_id, segment=segment
-    ).id
+    clone_feature_segment_id = get_feature_segement_list_with_api(
+        admin_client,
+        {"environment": res.json()["id"], "feature": feature, "segment": segment},
+    )["results"][0]["id"]
     clone_env_feature_states = get_env_feature_states_list_with_api(
         admin_client,
         {

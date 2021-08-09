@@ -54,7 +54,7 @@ def create_feature_with_api(
 
 def get_env_feature_states_list_with_api(client: APIClient, query_params: dict) -> dict:
     """
-    Return the feature states using the provided test client.
+    Returns feature states using the provided test client.
 
     :param client: DRF api client to use to make the request
     :param query_params: A Mapping object used as query params for filtering
@@ -63,7 +63,23 @@ def get_env_feature_states_list_with_api(client: APIClient, query_params: dict) 
     url = reverse(
         "api-v1:features:featurestates-list",
     )
+    return get_json_response(client, url, query_params)
+
+
+def get_feature_segement_list_with_api(client: APIClient, query_params: dict) -> dict:
+    """
+    Return feature segments using the provided test client.
+
+    :param client: DRF api client to use to make the request
+    :param query_params: A Mapping object used as query params for filtering
+
+    """
+
+    url = reverse("api-v1:features:feature-segment-list")
+    return get_json_response(client, url, query_params)
+
+
+def get_json_response(client: APIClient, url: str, query_params: dict) -> dict:
     if query_params:
         url = f"{url}?{urlencode(query_params)}"
-    response = client.get(url)
-    return response.json()
+    return client.get(url).json()
