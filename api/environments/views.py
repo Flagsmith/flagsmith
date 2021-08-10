@@ -115,7 +115,10 @@ class EnvironmentViewSet(viewsets.ModelViewSet):
     def clone(self, request, *args, **kwargs):
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
-        serializer.save(source_env=self.get_object())
+        clone = serializer.save(source_env=self.get_object())
+        UserEnvironmentPermission.objects.create(
+            user=self.request.user, environment=clone, admin=True
+        )
         return Response(serializer.data, status=status.HTTP_200_OK)
 
     @action(detail=True, methods=["POST"], url_path="delete-traits")

@@ -2,9 +2,10 @@ import json
 import typing
 
 from django.urls import reverse
+from django.utils.http import urlencode
 from rest_framework.test import APIClient
 
-from features.feature_types import STANDARD, MULTIVARIATE
+from features.feature_types import MULTIVARIATE, STANDARD
 from features.value_types import STRING
 
 
@@ -49,3 +50,34 @@ def create_feature_with_api(
         content_type="application/json",
     )
     return create_standard_feature_response.json()["id"]
+
+
+def get_env_feature_states_list_with_api(client: APIClient, query_params: dict) -> dict:
+    """
+    Returns feature states using the provided test client.
+
+    :param client: DRF api client to use to make the request
+    :param query_params: A Mapping object used as query params for filtering
+
+    """
+    url = reverse("api-v1:features:featurestates-list")
+    return get_json_response(client, url, query_params)
+
+
+def get_feature_segement_list_with_api(client: APIClient, query_params: dict) -> dict:
+    """
+    Returns feature segments using the provided test client.
+
+    :param client: DRF api client to use to make the request
+    :param query_params: A Mapping object used as query params for filtering
+
+    """
+
+    url = reverse("api-v1:features:feature-segment-list")
+    return get_json_response(client, url, query_params)
+
+
+def get_json_response(client: APIClient, url: str, query_params: dict) -> dict:
+    if query_params:
+        url = f"{url}?{urlencode(query_params)}"
+    return client.get(url).json()
