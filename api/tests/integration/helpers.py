@@ -60,9 +60,7 @@ def get_env_feature_states_list_with_api(client: APIClient, query_params: dict) 
     :param query_params: A Mapping object used as query params for filtering
 
     """
-    url = reverse(
-        "api-v1:features:featurestates-list",
-    )
+    url = reverse("api-v1:features:featurestates-list")
     return get_json_response(client, url, query_params)
 
 

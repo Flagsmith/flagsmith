@@ -159,14 +159,13 @@ def test_env_clone_clones_segments_overrides(
         },
     )
 
-    # Then, fetch the feature state of clone environment
-
-    # fetch the feature segment id to filter feature states
+    # (fetch the feature segment id to filter feature states)
     clone_feature_segment_id = get_feature_segement_list_with_api(
         admin_client,
         {"environment": res.json()["id"], "feature": feature, "segment": segment},
     )["results"][0]["id"]
 
+    # Then, fetch the feature state of clone environment
     clone_env_feature_states = get_env_feature_states_list_with_api(
         admin_client,
         {
