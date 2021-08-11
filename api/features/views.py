@@ -162,7 +162,7 @@ class FeatureStateViewSet(viewsets.ModelViewSet):
     def get_serializer_context(self):
         context = super().get_serializer_context()
         queryset = self.get_base_qs()
-        # Add emptry order by to force group by to happen on featur__id
+        # Add emptry order by to force group by to happen on feature__id
         feature_updated_at_cache = list(
             queryset.values("feature__id")
             .annotate(updated_at=Max("updated_at"))
