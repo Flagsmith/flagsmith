@@ -14,8 +14,8 @@ from tests.integration.helpers import (
 
 @pytest.fixture()
 def frozen_time():
-    with freeze_time(timezone.now() - timedelta(days=2)) as f:
-        yield f
+    with freeze_time(timezone.now() - timedelta(days=2)) as foop:
+        yield foop
 
 
 def test_updates_days_since_feature_last_updated_is_part_of_respone(
@@ -28,6 +28,7 @@ def test_updates_days_since_feature_last_updated_is_part_of_respone(
     )
 
     # When
+    frozen_time.move_to(datetime.now() + timedelta(days=2))
     response = admin_client.get(url)
     # Then
     assert response.json()["results"][0]["days_since_feature_last_updated"] == 2
