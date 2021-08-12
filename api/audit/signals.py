@@ -14,6 +14,7 @@ from audit.serializers import AuditLogSerializer
 from environments.models import Environment
 from integrations.datadog.datadog import DataDogWrapper
 from integrations.new_relic.new_relic import NewRelicWrapper
+from integrations.slack.slack import SlackWrapper
 from webhooks.webhooks import WebhookEventType, call_organisation_webhooks
 
 logger = logging.getLogger(__name__)
@@ -135,3 +136,20 @@ def _write_multiple_environments_to_dynamo(environments: typing.Iterable[Environ
     with dynamo_env_table.batch_writer() as writer:
         for environment in environments:
             writer.put_item(Item=build_environment_document(environment))
+
+
+@receiver(post_save, sender=AuditLog)
+def send_audit_log_event_to_slack(sender, instance, **kwargs):
+    integration = {
+        "name": "Slack",
+        "attr": "slack_config",
+    }
+    slack_config = _send_audit_log_event_verification(instance, integration)
+    if not slack_config:
+        return
+    # TODO: error handling
+    channel_id = slack_config.slack_config.get(
+        environment=instance.environment
+    ).channel_id
+    slack = SlackWrapper(api_token=slack_config.api_token, channel_id=channel_id)
+    _track_event_async(instance, slack)
