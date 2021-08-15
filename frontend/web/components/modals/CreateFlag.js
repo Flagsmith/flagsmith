@@ -117,7 +117,7 @@ const CreateFlag = class extends Component {
                 environmentFlag,
                 identityFlag: Object.assign({}, identityFlag || {}, {
                     multivariate_options: this.state.identityVariations,
-                    feature_state_value: initial_value,
+                    feature_state_value: initial_value || null,
                     enabled: default_enabled,
                 }),
                 environmentId,
@@ -125,7 +125,7 @@ const CreateFlag = class extends Component {
         } else {
             !isSaving && name && func(this.props.projectId, this.props.environmentId, {
                 name,
-                initial_value,
+                initial_value: initial_value || null,
                 default_enabled,
                 tags: this.state.tags,
                 hide_from_client,
@@ -408,7 +408,7 @@ const CreateFlag = class extends Component {
                               <ValueEditor
                                 data-test="featureValue"
                                 name="featureValue" className="full-width"
-                                value={initial_value + ""}
+                                value={`${initial_value}`}
                                 onChange={e => this.setState({ initial_value: Utils.getTypedValue(Utils.safeParseEventValue(e)) })}
                                 disabled={hide_from_client}
                                 placeholder="e.g. 'big' "
