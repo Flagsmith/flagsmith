@@ -85,8 +85,7 @@ module.exports = {
             .waitAndClick(byId('feature-item-1'))
             .waitForElementPresent('#create-feature-modal')
             .waitAndSet(byId('featureValue'), 'false')
-            .pause(50)
-            .click('#update-feature-btn')
+            .waitAndClick('#update-feature-btn')
             .waitForElementNotPresent('#create-feature-modal')
             .waitForElementVisible(byId('feature-value-1'))
             .expect.element(byId('feature-value-1')).text.to.equal('false');

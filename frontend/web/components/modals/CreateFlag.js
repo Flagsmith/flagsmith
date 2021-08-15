@@ -33,7 +33,7 @@ const CreateFlag = class extends Component {
             hide_from_client,
             name,
             tags,
-            initial_value: Utils.getTypedValue(feature_state_value),
+            initial_value: typeof feature_state_value === 'undefined' ? undefined : Utils.getTypedValue(feature_state_value),
             description,
             multivariate_options: _.cloneDeep(multivariate_options),
             identityVariations: this.props.identityFlag && this.props.identityFlag.multivariate_feature_state_values ? _.cloneDeep(this.props.identityFlag.multivariate_feature_state_values) : [],
@@ -117,7 +117,7 @@ const CreateFlag = class extends Component {
                 environmentFlag,
                 identityFlag: Object.assign({}, identityFlag || {}, {
                     multivariate_options: this.state.identityVariations,
-                    feature_state_value: initial_value || null,
+                    feature_state_value: initial_value,
                     enabled: default_enabled,
                 }),
                 environmentId,
@@ -125,7 +125,7 @@ const CreateFlag = class extends Component {
         } else {
             !isSaving && name && func(this.props.projectId, this.props.environmentId, {
                 name,
-                initial_value: initial_value || null,
+                initial_value,
                 default_enabled,
                 tags: this.state.tags,
                 hide_from_client,
@@ -408,7 +408,7 @@ const CreateFlag = class extends Component {
                               <ValueEditor
                                 data-test="featureValue"
                                 name="featureValue" className="full-width"
-                                value={`${initial_value}`}
+                                value={`${typeof initial_value === 'undefined' ? '' : initial_value}`}
                                 onChange={e => this.setState({ initial_value: Utils.getTypedValue(Utils.safeParseEventValue(e)) })}
                                 disabled={hide_from_client}
                                 placeholder="e.g. 'big' "
