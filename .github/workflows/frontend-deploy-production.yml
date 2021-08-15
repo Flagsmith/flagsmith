@@ -70,7 +70,6 @@ jobs:
                   E2E_SLACK_CHANNEL: ${{ secrets.E2E_SLACK_CHANNEL }}
                   EVENTS_SLACK_CHANNEL: ${{ secrets.EVENTS_SLACK_CHANNEL }}
                   FLAGSMITH_ANALYTICS: ${{ secrets.FLAGSMITH_ANALYTICS }}
-                  PAYMENTS_ENABLED: 1
                   GA: ${{ secrets.GA }}
                   LINKEDIN: ${{ secrets.LINKEDIN }}
                   MIXPANEL: ${{ secrets.MIXPANEL }}

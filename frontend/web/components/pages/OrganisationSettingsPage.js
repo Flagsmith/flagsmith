@@ -157,9 +157,9 @@ const OrganisationSettingsPage = class extends Component {
             let totalTraits = 0;
             let totalIdentities = 0;
             data.events_list.map((v) => {
-                totalFlags += v.Flags||0;
-                totalTraits += v.Traits||0;
-                totalIdentities += v.Identities||0;
+                totalFlags += v.Flags || 0;
+                totalTraits += v.Traits || 0;
+                totalIdentities += v.Identities || 0;
             });
             return (
                 <div>
@@ -171,54 +171,54 @@ const OrganisationSettingsPage = class extends Component {
 
                         <table className="table">
                             <thead>
-                            <th style={{width:200, borderBottom:"1px solid #ccc"}}>
-                                <td>
+                                <th style={{ width: 200, borderBottom: '1px solid #ccc' }}>
+                                    <td>
                                     Usage type
-                                </td>
-                            </th>
-                            <th style={{ borderBottom:"1px solid #ccc"}}>
-                                <td>
+                                    </td>
+                                </th>
+                                <th style={{ borderBottom: '1px solid #ccc' }}>
+                                    <td>
                                     API calls
-                                </td>
-                            </th>
+                                    </td>
+                                </th>
                             </thead>
                             <tbody>
-                            <tr style={{borderBottom:"1px solid #ccc"}}>
-                                <td>
+                                <tr style={{ borderBottom: '1px solid #ccc' }}>
+                                    <td>
                                     Flags
-                                </td>
-                                <td>
-                                    {Utils.numberWithCommas(totalFlags)}
-                                </td>
-                            </tr>
-                            <tr style={{borderBottom:"1px solid #ccc"}}>
-                                <td>
+                                    </td>
+                                    <td>
+                                        {Utils.numberWithCommas(totalFlags)}
+                                    </td>
+                                </tr>
+                                <tr style={{ borderBottom: '1px solid #ccc' }}>
+                                    <td>
                                     Identities
-                                </td>
-                                <td>
-                                    {Utils.numberWithCommas(totalIdentities)}
-                                </td>
-                            </tr>
-                            <tr style={{borderBottom:"1px solid #ccc"}}>
-                                <td>
+                                    </td>
+                                    <td>
+                                        {Utils.numberWithCommas(totalIdentities)}
+                                    </td>
+                                </tr>
+                                <tr style={{ borderBottom: '1px solid #ccc' }}>
+                                    <td>
                                     Traits
-                                </td>
-                                <td>
-                                    {Utils.numberWithCommas(totalTraits)}
-                                </td>
-                            </tr>
-                            <tr style={{ borderTop:"1px solid #ccc"}}>
-                                <td>
-                                    <strong>
+                                    </td>
+                                    <td>
+                                        {Utils.numberWithCommas(totalTraits)}
+                                    </td>
+                                </tr>
+                                <tr style={{ borderTop: '1px solid #ccc' }}>
+                                    <td>
+                                        <strong>
                                         Total
-                                    </strong>
-                                </td>
-                                <td>
-                                    <strong>
-                                        {Utils.numberWithCommas(totalFlags+totalIdentities+totalTraits)}
-                                    </strong>
-                                </td>
-                            </tr>
+                                        </strong>
+                                    </td>
+                                    <td>
+                                        <strong>
+                                            {Utils.numberWithCommas(totalFlags + totalIdentities + totalTraits)}
+                                        </strong>
+                                    </td>
+                                </tr>
                             </tbody>
                         </table>
                     </div>
@@ -247,7 +247,7 @@ const OrganisationSettingsPage = class extends Component {
         const { name, webhook_notification_email } = this.state;
         const { props: { webhooks, webhooksLoading } } = this;
         const hasRbacPermission = !this.props.hasFeature('plan_based_access') || Utils.getPlansPermission(AccountStore.getPlans(), 'RBAC');
-
+        const paymentsEnabled = this.props.hasFeature('payments_enabled');
         return (
             <div className="app-container container">
 
@@ -281,12 +281,12 @@ const OrganisationSettingsPage = class extends Component {
                                                 </Button>
                                             </Row>
                                         </form>
-                                        {projectOverrides.paymentsEnabled && (
+                                        {paymentsEnabled && (
                                             <div className="plan plan--current flex-row m-t-2">
                                                 <div className="plan__prefix">
                                                     <img
-                                                        src="/images/nav-logo.svg" className="plan__prefix__image"
-                                                        alt="BT"
+                                                      src="/images/nav-logo.svg" className="plan__prefix__image"
+                                                      alt="BT"
                                                     />
                                                 </div>
                                                 <div className="plan__details flex flex-1">
@@ -301,26 +301,26 @@ const OrganisationSettingsPage = class extends Component {
                                                     )}
                                                     { organisation.subscription ? (
                                                         <button
-                                                            disabled={!this.state.manageSubscriptionLoaded}
-                                                            type="button" className="btn btn-primary text-center ml-auto mt-2 mb-2"
-                                                            onClick={() => {
-                                                                if (this.state.chargebeeURL) {
-                                                                    window.location = this.state.chargebeeURL;
-                                                                } else {
-                                                                    openModal('Payment plans', <PaymentModal
-                                                                        viewOnly={false}
-                                                                    />, null, { large: true });
-                                                                }
-                                                            }}
+                                                          disabled={!this.state.manageSubscriptionLoaded}
+                                                          type="button" className="btn btn-primary text-center ml-auto mt-2 mb-2"
+                                                          onClick={() => {
+                                                              if (this.state.chargebeeURL) {
+                                                                  window.location = this.state.chargebeeURL;
+                                                              } else {
+                                                                  openModal('Payment plans', <PaymentModal
+                                                                    viewOnly={false}
+                                                                  />, null, { large: true });
+                                                              }
+                                                          }}
                                                         >
                                                             Manage payment plan
                                                         </button>
                                                     ) : (
                                                         <button
-                                                            type="button" className="btn btn-primary text-center ml-auto mt-2 mb-2"
-                                                            onClick={() => openModal('Payment Plans', <PaymentModal
-                                                                viewOnly={false}
-                                                            />, null, { large: true })}
+                                                          type="button" className="btn btn-primary text-center ml-auto mt-2 mb-2"
+                                                          onClick={() => openModal('Payment Plans', <PaymentModal
+                                                            viewOnly={false}
+                                                          />, null, { large: true })}
                                                         >
                                                             View plans
                                                         </button>
@@ -367,7 +367,7 @@ const OrganisationSettingsPage = class extends Component {
                                                     Invite members
                                                     </Button>
                                                 </Row>
-                                                {projectOverrides.paymentsEnabled && (
+                                                {paymentsEnabled && (
                                                     <p>
                                                         {'You are currently using '}
                                                         <strong className={organisation.num_seats > (_.get(organisation, 'subscription.max_seats') || 1) ? 'text-danger' : ''}>
@@ -378,9 +378,9 @@ const OrganisationSettingsPage = class extends Component {
                                                         {organisation.num_seats > (_.get(organisation, 'subscription.max_seats') || 1)
                                                         && (
                                                             <a
-                                                                href="#" onClick={() => openModal('Payment Plans', <PaymentModal
+                                                              href="#" onClick={() => openModal('Payment Plans', <PaymentModal
                                                                 viewOnly={false}
-                                                            />, null, { large: true })}
+                                                              />, null, { large: true })}
                                                             >
                                                                 Upgrade
                                                             </a>
