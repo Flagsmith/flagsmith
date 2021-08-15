@@ -10,39 +10,11 @@
 			margin: 20px;
 			margin-left: 0;
 			margin-right: 0;
-			height: 600px;
 			max-width: 100%;
 		}
 	}
 	.tabs-nav {
-		align-self: center;
-		button:first-child {
-
-			border-top-left-radius:10px;
-		}
-		button.btn:last-child{
-			border-top-right-radius:0 !important;
-			border-bottom-left-radius:10px !important;
-		}
-		display: block;
-		padding: 0 !important;
-		.tab-active, .tab-active:hover {
-			color: white !important;
-			background: #0AC2A3 !important;
-		}
-		.btn-tab {
-			border-radius: 0 !important;
-			text-align: left;
-			width: 190px !important;
-			margin: 0 !important;
-			color: white;
-			background: #2a1f2f;
-			display: block !important;
-			&:hover {
-				background: #19111a;
-				color: white;
-			}
-		}
+		display: none;
 	}
 	.tab-line {
 		display: none;

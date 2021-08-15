@@ -125,14 +125,42 @@ Code example:
                                     {this.props.subtitle}
                                 </div>
                             )}
+
                         <div className="code-help">
+                            <Select
+                              data-test="select-segment"
+                              placeholder="Select a language"
+                              value={{
+                                  label: language,
+                              }}
+                              onChange={(v) => {
+                                  const lang = v.label;
+                                  this.setState({ language: lang });
+                                  flagsmith.setTrait('preferred_language', lang);
+                                  this.setState({ tab });
+                              }}
+                              options={
+                                    Object.keys(this.props.snippets).map((v, i) => (
+                                        {
+                                            label: v,
+                                            value: i,
+                                        }
+                                    ))
+                                }
+                              styles={{
+                                  control: base => ({
+                                      ...base,
+                                      width: 200,
+                                      alignSelf: 'flex-end',
+                                      '&:hover': { borderColor: '$bt-brand-secondary' },
+                                      border: '1px solid $bt-brand-secondary',
+                                  }),
+                              }}
+                            />
                             <Tabs
                               value={tab}
                               onChange={(tab) => {
                                   const lang = Object.keys(this.props.snippets)[tab];
-                                  this.setState({ language: lang });
-                                  flagsmith.setTrait('preferred_language', lang);
-                                  this.setState({ tab });
                               }}
                             >
                                 {_.map(this.props.snippets, (s, key) => {
