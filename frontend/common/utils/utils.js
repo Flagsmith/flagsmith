@@ -94,7 +94,7 @@ module.exports = Object.assign({}, require('./base/_utils'), {
         };
     },
 
-    getTypedValue(str) {
+    getTypedValue(str, boolToString) {
         if (typeof str === 'undefined') {
             return '';
         }
@@ -109,9 +109,11 @@ module.exports = Object.assign({}, require('./base/_utils'), {
 
 
         if (str == 'true') {
+            if (boolToString) return 'true';
             return true;
         }
         if (str == 'false') {
+            if (boolToString) return 'false';
             return false;
         }
 
