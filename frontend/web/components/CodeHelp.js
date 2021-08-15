@@ -78,17 +78,6 @@ const CodeHelp = class extends Component {
         };
     }
 
-    componentDidMount() {
-        this.getLang();
-    }
-
-    getLang = () => {
-        AsyncStorage.getItem('language', (err, res) => {
-            if (res) {
-                this.setState({ tab: parseInt(res) });
-            }
-        });
-    }
 
     copy = (s) => {
         const res = Clipboard.setString(s);
@@ -97,14 +86,13 @@ const CodeHelp = class extends Component {
 
     render() {
         const { hideHeader } = this.props;
+        const language = this.state.language || flagsmith.getTrait('preferred_language');
+        const tab = language ? Math.max(Object.keys(this.props.snippets).indexOf(language), 0) : 0;
         return (
             <div>
                 {!hideHeader && (
                     <div
                       style={{ cursor: 'pointer' }} onClick={() => {
-                          if (!this.state.visible) {
-                              this.getLang();
-                          }
                           this.setState({ visible: !this.state.visible });
                       }}
                     >
@@ -139,8 +127,11 @@ Code example:
                             )}
                         <div className="code-help">
                             <Tabs
-                              value={this.state.tab} onChange={(tab) => {
-                                  AsyncStorage.setItem('language', `${tab}`);
+                              value={tab}
+                              onChange={(tab) => {
+                                  const lang = Object.keys(this.props.snippets)[tab];
+                                  this.setState({ language: lang });
+                                  flagsmith.setTrait('preferred_language', lang);
                                   this.setState({ tab });
                               }}
                             >
@@ -196,4 +187,4 @@ Code example:
 
 CodeHelp.propTypes = {};
 
-module.exports = CodeHelp;
+module.exports = ConfigProvider(CodeHelp);
