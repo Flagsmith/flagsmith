@@ -103,6 +103,10 @@ module.exports = Object.assign({}, require('./base/_utils'), {
         }
 
         const isNum = /^\d+$/.test(str);
+        if (isNum && parseInt(str) > Number.MAX_SAFE_INTEGER) {
+            return `${str}`;
+        }
+
 
         if (str == 'true') {
             return true;
