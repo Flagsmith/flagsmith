@@ -389,30 +389,30 @@ const OrganisationSettingsPage = class extends Component {
                                                     </p>
                                                 )}
                                                 {
-                                                    this.props.hasFeature('invite_link') && inviteLinks && (
-                                                    <form onSubmit={(e) => {
-                                                        e.preventDefault();
-                                                    }}
-                                                    >
-                                                        <div className="mt-3">
-                                                            <Row>
-                                                                <div className="mr-2" style={{ width: 280 }}>
-                                                                    <Select
-                                                                      value={{
-                                                                          value: this.state.role,
-                                                                          label: this.state.role === 'ADMIN' ? 'Organisation Administrator' : 'User',
-                                                                      }}
-                                                                      onChange={v => this.setState({ role: v.value })}
-                                                                      options={[
-                                                                          { label: 'Organisation Administrator', value: 'ADMIN' },
-                                                                          { label: hasRbacPermission ? 'User' : 'User - Please upgrade for role based access',
-                                                                              value: 'USER',
-                                                                              isDisabled: !hasRbacPermission,
-                                                                          },
-                                                                      ]}
-                                                                    />
-                                                                </div>
-                                                                {inviteLinks.find(f => f.role === this.state.role) && (
+                                                     inviteLinks && (
+                                                     <form onSubmit={(e) => {
+                                                         e.preventDefault();
+                                                     }}
+                                                     >
+                                                         <div className="mt-3">
+                                                             <Row>
+                                                                 <div className="mr-2" style={{ width: 280 }}>
+                                                                     <Select
+                                                                       value={{
+                                                                           value: this.state.role,
+                                                                           label: this.state.role === 'ADMIN' ? 'Organisation Administrator' : 'User',
+                                                                       }}
+                                                                       onChange={v => this.setState({ role: v.value })}
+                                                                       options={[
+                                                                           { label: 'Organisation Administrator', value: 'ADMIN' },
+                                                                           { label: hasRbacPermission ? 'User' : 'User - Please upgrade for role based access',
+                                                                               value: 'USER',
+                                                                               isDisabled: !hasRbacPermission,
+                                                                           },
+                                                                       ]}
+                                                                     />
+                                                                 </div>
+                                                                 {inviteLinks.find(f => f.role === this.state.role) && (
                                                                   <>
                                                                       <div className="mr-2">
                                                                           <Input
@@ -436,22 +436,22 @@ const OrganisationSettingsPage = class extends Component {
                                                                           </Button>
                                                                       </div>
                                                                   </>
-                                                                )}
+                                                                 )}
 
 
-                                                            </Row>
+                                                             </Row>
 
-                                                        </div>
-                                                        <p className="mt-3">
+                                                         </div>
+                                                         <p className="mt-3">
                                                               Anyone with link can join as a standard user, once they have joined you can edit their role from the team members panel.
-                                                            {' '}
-                                                            <ButtonLink target="_blank" href="https://docs.flagsmith.com/advanced-use/permissions">Learn about User Roles.</ButtonLink>
-                                                        </p>
-                                                        <div className="text-right mt-2">
-                                                            {error && <Error error={error}/>}
-                                                        </div>
-                                                    </form>
-                                                    )
+                                                             {' '}
+                                                             <ButtonLink target="_blank" href="https://docs.flagsmith.com/advanced-use/permissions">Learn about User Roles.</ButtonLink>
+                                                         </p>
+                                                         <div className="text-right mt-2">
+                                                             {error && <Error error={error}/>}
+                                                         </div>
+                                                     </form>
+                                                     )
                                                 }
                                                 <div>
                                                     {isLoading && <div className="centered-container"><Loader/></div>}
