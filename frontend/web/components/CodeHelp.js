@@ -78,6 +78,18 @@ const CodeHelp = class extends Component {
         };
     }
 
+    componentDidMount() {
+        this.getLang();
+    }
+
+    getLang = () => {
+        AsyncStorage.getItem('language', (err, res) => {
+            if (res) {
+                this.setState({ tab: parseInt(res) });
+            }
+        });
+    }
+
     copy = (s) => {
         const res = Clipboard.setString(s);
         toast(res ? 'Clipboard set' : 'Could not set clipboard :(');
@@ -88,7 +100,14 @@ const CodeHelp = class extends Component {
         return (
             <div>
                 {!hideHeader && (
-                    <div style={{ cursor: 'pointer' }} onClick={() => this.setState({ visible: !this.state.visible })}>
+                    <div
+                      style={{ cursor: 'pointer' }} onClick={() => {
+                          if (!this.state.visible) {
+                              this.getLang();
+                          }
+                          this.setState({ visible: !this.state.visible });
+                      }}
+                    >
                         <Row>
                             <Flex style={isMobile ? { overflowX: 'scroll' } : {}}>
                                 <div>
@@ -119,7 +138,12 @@ Code example:
                                 </div>
                             )}
                         <div className="code-help">
-                            <Tabs value={this.state.tab} onChange={tab => this.setState({ tab })}>
+                            <Tabs
+                              value={this.state.tab} onChange={(tab) => {
+                                  AsyncStorage.setItem('language', `${tab}`);
+                                  this.setState({ tab });
+                              }}
+                            >
                                 {_.map(this.props.snippets, (s, key) => {
                                     const docs = getDocsLink(key);
                                     const github = getGithubLink(key);
