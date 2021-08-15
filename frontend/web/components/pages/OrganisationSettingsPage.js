@@ -281,51 +281,53 @@ const OrganisationSettingsPage = class extends Component {
                                                 </Button>
                                             </Row>
                                         </form>
-                                        <div className="plan plan--current flex-row m-t-2">
-                                            <div className="plan__prefix">
-                                                <img
-                                                  src="/images/nav-logo.svg" className="plan__prefix__image"
-                                                  alt="BT"
-                                                />
-                                            </div>
-                                            <div className="plan__details flex flex-1">
-                                                <p className="text-small m-b-0">Your plan</p>
-                                                <h3 className="m-b-0">{Utils.getPlanName(_.get(organisation, 'subscription.plan')) ? Utils.getPlanName(_.get(organisation, 'subscription.plan')) : 'Free'}</h3>
-                                            </div>
-                                            <div>
-                                                {organisation.subscription && (
-                                                <a className="btn btn-primary mr-2" href="https://flagsmith.chargebeeportal.com/" target="_blank">
-                                                  Manage Invoices
-                                                </a>
-                                                )}
-                                                { organisation.subscription ? (
-                                                    <button
-                                                      disabled={!this.state.manageSubscriptionLoaded}
-                                                      type="button" className="btn btn-primary text-center ml-auto mt-2 mb-2"
-                                                      onClick={() => {
-                                                          if (this.state.chargebeeURL) {
-                                                              window.location = this.state.chargebeeURL;
-                                                          } else {
-                                                              openModal('Payment plans', <PaymentModal
+                                        {projectOverrides.paymentsEnabled && (
+                                            <div className="plan plan--current flex-row m-t-2">
+                                                <div className="plan__prefix">
+                                                    <img
+                                                        src="/images/nav-logo.svg" className="plan__prefix__image"
+                                                        alt="BT"
+                                                    />
+                                                </div>
+                                                <div className="plan__details flex flex-1">
+                                                    <p className="text-small m-b-0">Your plan</p>
+                                                    <h3 className="m-b-0">{Utils.getPlanName(_.get(organisation, 'subscription.plan')) ? Utils.getPlanName(_.get(organisation, 'subscription.plan')) : 'Free'}</h3>
+                                                </div>
+                                                <div>
+                                                    {organisation.subscription && (
+                                                        <a className="btn btn-primary mr-2" href="https://flagsmith.chargebeeportal.com/" target="_blank">
+                                                            Manage Invoices
+                                                        </a>
+                                                    )}
+                                                    { organisation.subscription ? (
+                                                        <button
+                                                            disabled={!this.state.manageSubscriptionLoaded}
+                                                            type="button" className="btn btn-primary text-center ml-auto mt-2 mb-2"
+                                                            onClick={() => {
+                                                                if (this.state.chargebeeURL) {
+                                                                    window.location = this.state.chargebeeURL;
+                                                                } else {
+                                                                    openModal('Payment plans', <PaymentModal
+                                                                        viewOnly={false}
+                                                                    />, null, { large: true });
+                                                                }
+                                                            }}
+                                                        >
+                                                            Manage payment plan
+                                                        </button>
+                                                    ) : (
+                                                        <button
+                                                            type="button" className="btn btn-primary text-center ml-auto mt-2 mb-2"
+                                                            onClick={() => openModal('Payment Plans', <PaymentModal
                                                                 viewOnly={false}
-                                                              />, null, { large: true });
-                                                          }
-                                                      }}
-                                                    >
-                                                  Manage payment plan
-                                                    </button>
-                                                ) : (
-                                                    <button
-                                                      type="button" className="btn btn-primary text-center ml-auto mt-2 mb-2"
-                                                      onClick={() => openModal('Payment Plans', <PaymentModal
-                                                        viewOnly={false}
-                                                      />, null, { large: true })}
-                                                    >
-                                                  View plans
-                                                    </button>
-                                                ) }
+                                                            />, null, { large: true })}
+                                                        >
+                                                            View plans
+                                                        </button>
+                                                    ) }
+                                                </div>
                                             </div>
-                                        </div>
+                                        )}
                                     </div>
                                 </div>
                             </FormGroup>
@@ -365,25 +367,27 @@ const OrganisationSettingsPage = class extends Component {
                                                     Invite members
                                                     </Button>
                                                 </Row>
-                                                <p>
-                                                {'You are currently using '}
-                                                <strong className={organisation.num_seats > (_.get(organisation, 'subscription.max_seats') || 1) ? 'text-danger' : ''}>
-                                                    {`${organisation.num_seats} of ${_.get(organisation, 'subscription.max_seats') || 1}`}
-                                                </strong>
-                                                {` seat${organisation.num_seats === 1 ? '' : 's'}. `} for your plan.
-                                                {' '}
-                                                {organisation.num_seats > (_.get(organisation, 'subscription.max_seats') || 1)
-                                                && (
-                                                <a
-                                                  href="#" onClick={() => openModal('Payment Plans', <PaymentModal
-                                                    viewOnly={false}
-                                                  />, null, { large: true })}
-                                                >
-                                                      Upgrade
-                                                </a>
-                                                )
-                                                }
-                                                </p>
+                                                {projectOverrides.paymentsEnabled && (
+                                                    <p>
+                                                        {'You are currently using '}
+                                                        <strong className={organisation.num_seats > (_.get(organisation, 'subscription.max_seats') || 1) ? 'text-danger' : ''}>
+                                                            {`${organisation.num_seats} of ${_.get(organisation, 'subscription.max_seats') || 1}`}
+                                                        </strong>
+                                                        {` seat${organisation.num_seats === 1 ? '' : 's'}. `} for your plan.
+                                                        {' '}
+                                                        {organisation.num_seats > (_.get(organisation, 'subscription.max_seats') || 1)
+                                                        && (
+                                                            <a
+                                                                href="#" onClick={() => openModal('Payment Plans', <PaymentModal
+                                                                viewOnly={false}
+                                                            />, null, { large: true })}
+                                                            >
+                                                                Upgrade
+                                                            </a>
+                                                        )
+                                                        }
+                                                    </p>
+                                                )}
                                                 {
                                                     this.props.hasFeature('invite_link') && inviteLinks && (
                                                     <form onSubmit={(e) => {
