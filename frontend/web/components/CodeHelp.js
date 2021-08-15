@@ -86,7 +86,7 @@ const CodeHelp = class extends Component {
 
     render() {
         const { hideHeader } = this.props;
-        const language = this.state.language || flagsmith.getTrait('preferred_language');
+        const language = this.state.language || flagsmith.getTrait('preferred_language') || Object.keys(this.props.snippets)[0];
         const tab = language ? Math.max(Object.keys(this.props.snippets).indexOf(language), 0) : 0;
         return (
             <div>
