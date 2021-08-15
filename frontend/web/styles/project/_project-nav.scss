@@ -53,6 +53,9 @@
 }
 .dark {
     .navbar {
+        .ion {
+            color: $nav-icon-color-dark;
+        }
         svg {
             path {
                 fill: $nav-icon-color-dark;
