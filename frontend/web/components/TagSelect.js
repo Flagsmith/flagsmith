@@ -43,24 +43,26 @@ class TagSelect extends PureComponent {
                                   className="px-2 py-2 mr-2"
                                   tag={tag}
                                 />
+
                             </div>
                         ))}
+
+                        {showClearAll && (
+                            <Button
+                                onClick={() => {
+                                    if (this.props.value && this.props.value.length >= projectTags.length) {
+                                        this.props.onChange([]);
+                                    } else {
+                                        this.props.onChange((showUntagged ? [''] : []).concat(projectTags.map(v => v.id)));
+                                    }
+                                }} style={{ marginBottom: 10 }} className="btn--link"
+                            >
+                                Toggle all
+                            </Button>
+                        )}
                     </Row>
                 </div>
 
-                {showClearAll && (
-                    <Button
-                      onClick={() => {
-                          if (this.props.value && this.props.value.length >= projectTags.length) {
-                              this.props.onChange([]);
-                          } else {
-                              this.props.onChange((showUntagged ? [''] : []).concat(projectTags.map(v => v.id)));
-                          }
-                      }} style={{ marginBottom: 10 }} className="btn--link"
-                    >
-                        Toggle all
-                    </Button>
-                )}
 
             </Row>
         );

@@ -25,13 +25,6 @@ class ValueEditor extends Component {
 
     render() {
         const { ...rest } = this.props;
-        if (!this.props.hasFeature('value_editor')) {
-            return (
-                <textarea
-                  {...rest}
-                />
-            );
-        }
         return (
             <div className={cx('value-editor', { light: this.state.language === 'txt' })}>
                 <Row className="select-language">
