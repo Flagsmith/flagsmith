@@ -95,6 +95,9 @@ module.exports = Object.assign({}, require('./base/_utils'), {
     },
 
     getTypedValue(str) {
+        if (typeof str === 'undefined') {
+            return '';
+        }
         if (typeof str !== 'string') {
             return str;
         }
