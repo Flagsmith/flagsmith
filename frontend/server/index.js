@@ -58,6 +58,7 @@ app.get('/static/project-overrides.js', (req, res) => {
         { name: 'maintenance', value: process.env.MAINTENANCE },
         { name: 'assetURL', value: process.env.ASSET_URL },
         { name: 'flagsmithClientAPI', value: process.env.FLAGSMITH_CLIENT_API },
+        { name: 'paymentsEnabled', value: process.env.PAYMENTS_ENABLED },
         { name: 'disableInflux', value: process.env.DISABLE_INFLUXDB_FEATURES },
         { name: 'flagsmithAnalytics', value: !!process.env.FLAGSMITH_ANALYTICS },
         { name: 'amplitude', value: process.env.AMPLITUDE },
