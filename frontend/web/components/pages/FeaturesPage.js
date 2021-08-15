@@ -230,7 +230,8 @@ const FeaturesPage = class extends Component {
                                                           items={this.filter(projectFlags, this.state.tags)}
                                                           header={(
                                                               <TagSelect
-                                                                  showUntagged
+                                                                showUntagged
+                                                                showClearAll
                                                                 projectId={projectId} value={this.state.tags} onChange={(tags) => {
                                                                     this.setState({ tags });
                                                                     AsyncStorage.setItem(`${projectId}tags`, JSON.stringify(tags));

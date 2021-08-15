@@ -17,7 +17,8 @@ class TagSelect extends PureComponent {
 
     render() {
         const projectTags = (this.props.tags && this.props.tags[this.props.projectId]) || [];
-        const showUntagged = this.props.showUntagged && { color: '#666', label: 'Untagged', id:"" };
+        const showUntagged = this.props.showUntagged && { color: '#666', label: 'Untagged', id: '' };
+        const showClearAll = this.props.showClearAll;
         return (
             <Row className="tag-filter mx-2 mt-3">
                 <div className="ml-1">
@@ -43,11 +44,23 @@ class TagSelect extends PureComponent {
                                   tag={tag}
                                 />
                             </div>
-
                         ))}
                     </Row>
-
                 </div>
+
+                {showClearAll && (
+                    <Button
+                      onClick={() => {
+                          if (this.props.value && this.props.value.length >= projectTags.length) {
+                              this.props.onChange([]);
+                          } else {
+                              this.props.onChange((showUntagged ? [''] : []).concat(projectTags.map(v => v.id)));
+                          }
+                      }} style={{ marginBottom: 10 }} className="btn--link"
+                    >
+                        Toggle all
+                    </Button>
+                )}
 
             </Row>
         );
