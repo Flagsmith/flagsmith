@@ -300,7 +300,7 @@ const CreateFlag = class extends Component {
         const invalid = !!multivariate_options && multivariate_options.length && controlValue < 0;
         const Settings = (
             <>
-                {hasFeature('tags') && !identity && this.state.tags && (
+                {!identity && this.state.tags && (
                     <FormGroup className="mb-4 mr-3 ml-3" >
                         <InputGroup
                           title={identity ? 'Tags' : 'Tags (optional)'}
@@ -420,7 +420,7 @@ const CreateFlag = class extends Component {
                     </FormGroup>
                 ) }
 
-                {!!identity && hasFeature('mv') && (
+                {!!identity && (
                     <div>
                         <FormGroup className="mb-4 mx-3">
                             <VariationOptions
@@ -439,7 +439,7 @@ const CreateFlag = class extends Component {
                         </FormGroup>
                     </div>
                 )}
-                {this.props.hasFeature('mv') && !identity && (
+                {!identity && (
                     <div>
                         <FormGroup className="ml-3 mb-4 mr-3">
                             <VariationOptions
@@ -513,7 +513,7 @@ const CreateFlag = class extends Component {
                                                                   </Tooltip>
                                                                 )}
                                                               action={
-                                                                    this.props.hasFeature('killswitch') && (
+                                                                   (
                                                                         <Button onClick={() => this.changeSegment(this.props.segmentOverrides)} type="button" className={`btn--outline${enabledSegment ? '' : '-red'}`}>
                                                                             {enabledSegment ? 'Enable All' : 'Disable All'}
                                                                         </Button>
@@ -557,7 +557,7 @@ const CreateFlag = class extends Component {
                                                               </Tooltip>
                                                             )}
                                                           action={
-                                                                this.props.hasFeature('killswitch') && (
+                                                               (
                                                                     <Button onClick={() => this.changeIdentity(this.state.userOverrides)} type="button" className={`btn--outline${enabledIndentity ? '' : '-red'}`}>
                                                                         {enabledIndentity ? 'Enable All' : 'Disable All'}
                                                                     </Button>
@@ -570,30 +570,30 @@ const CreateFlag = class extends Component {
                                                           prevPage={() => this.userOverridesPage(this.state.userOverridesPaging.currentPage - 1)}
                                                           goToPage={page => this.userOverridesPage(page)}
                                                           searchPanel={
-                                                                this.props.hasFeature('improved_identity_overrides') && (
-                                                                    <div className="text-center mt-2 mb-2">
-                                                                        <IdentityListProvider>
-                                                                            {({ isLoading, identities }) => (
-                                                                                <Flex className="text-left">
-                                                                                    <Select
-                                                                                      onInputChange={this.onSearchIdentityChange}
-                                                                                      data-test="select-identity"
-                                                                                      placeholder="Search"
-                                                                                      value={this.state.selectedIdentity}
-                                                                                      onChange={selectedIdentity => this.setState({ selectedIdentity }, this.addItem)}
-                                                                                      options={this.identityOptions(identities, this.state.userOverrides, isLoading)}
-                                                                                      styles={{
-                                                                                          control: base => ({
-                                                                                              ...base,
-                                                                                              '&:hover': { borderColor: '$bt-brand-secondary' },
-                                                                                              border: '1px solid $bt-brand-secondary',
-                                                                                          }),
-                                                                                      }}
-                                                                                    />
-                                                                                </Flex>
-                                                                            )}
-                                                                        </IdentityListProvider>
-                                                                    </div>
+                                                                 (
+                                                                     <div className="text-center mt-2 mb-2">
+                                                                         <IdentityListProvider>
+                                                                             {({ isLoading, identities }) => (
+                                                                                 <Flex className="text-left">
+                                                                                     <Select
+                                                                                       onInputChange={this.onSearchIdentityChange}
+                                                                                       data-test="select-identity"
+                                                                                       placeholder="Search"
+                                                                                       value={this.state.selectedIdentity}
+                                                                                       onChange={selectedIdentity => this.setState({ selectedIdentity }, this.addItem)}
+                                                                                       options={this.identityOptions(identities, this.state.userOverrides, isLoading)}
+                                                                                       styles={{
+                                                                                           control: base => ({
+                                                                                               ...base,
+                                                                                               '&:hover': { borderColor: '$bt-brand-secondary' },
+                                                                                               border: '1px solid $bt-brand-secondary',
+                                                                                           }),
+                                                                                       }}
+                                                                                     />
+                                                                                 </Flex>
+                                                                             )}
+                                                                         </IdentityListProvider>
+                                                                     </div>
                                                                 )
                                                             }
                                                           renderRow={({ id, feature_state_value, enabled, identity }) => (
@@ -638,33 +638,33 @@ const CreateFlag = class extends Component {
                                                                     </Tooltip>
                                                                     )}
                                                               >
-                                                                  {this.props.hasFeature('improved_identity_overrides') && (
-                                                                  <IdentityListProvider>
-                                                                      {({ isLoading, identities }) => (
-                                                                          <div>
-                                                                              <Flex className="text-left">
-                                                                                  <Select
-                                                                                    data-test="select-identity"
-                                                                                    placeholder="Search"
-                                                                                    onInputChange={this.onSearchIdentityChange}
-                                                                                    value={this.state.selectedIdentity}
-                                                                                    onChange={selectedIdentity => this.setState({ selectedIdentity }, this.addItem)}
-                                                                                    options={this.identityOptions(identities, this.state.userOverrides, isLoading)}
-                                                                                    styles={{
-                                                                                        control: base => ({
-                                                                                            ...base,
-                                                                                            '&:hover': { borderColor: '$bt-brand-secondary' },
-                                                                                            border: '1px solid $bt-brand-secondary',
-                                                                                        }),
-                                                                                    }}
-                                                                                  />
-                                                                              </Flex>
-                                                                              <div className="mt-2">
+                                                                  { (
+                                                                      <IdentityListProvider>
+                                                                          {({ isLoading, identities }) => (
+                                                                              <div>
+                                                                                  <Flex className="text-left">
+                                                                                      <Select
+                                                                                        data-test="select-identity"
+                                                                                        placeholder="Search"
+                                                                                        onInputChange={this.onSearchIdentityChange}
+                                                                                        value={this.state.selectedIdentity}
+                                                                                        onChange={selectedIdentity => this.setState({ selectedIdentity }, this.addItem)}
+                                                                                        options={this.identityOptions(identities, this.state.userOverrides, isLoading)}
+                                                                                        styles={{
+                                                                                            control: base => ({
+                                                                                                ...base,
+                                                                                                '&:hover': { borderColor: '$bt-brand-secondary' },
+                                                                                                border: '1px solid $bt-brand-secondary',
+                                                                                            }),
+                                                                                        }}
+                                                                                      />
+                                                                                  </Flex>
+                                                                                  <div className="mt-2">
                                                                                         No identities are overriding this feature.
+                                                                                  </div>
                                                                               </div>
-                                                                          </div>
-                                                                      )}
-                                                                  </IdentityListProvider>
+                                                                          )}
+                                                                      </IdentityListProvider>
                                                                   )}
                                                               </Panel>
                                                             )}
