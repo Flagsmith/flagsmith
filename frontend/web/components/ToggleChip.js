@@ -3,7 +3,7 @@ import cx from 'classnames';
 
 export default function (props) {
     return (
-        <Row onClick={props.onClick} className={cx('chip mr-2 clickable', props.className, { 'chip--active': props.active })}>
+        <Row style={props.color? {backgroundColor:props.color}: null} onClick={props.onClick} className={cx('chip mr-2 clickable', props.className, { 'light':!!props.color, 'chip--active': props.active })}>
             {props.children}
             <span
               className={cx('chip-icon ion', {

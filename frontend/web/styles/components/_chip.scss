@@ -4,7 +4,6 @@
 		background-color: $dark-bg-0;
 		.chip-icon {
 			color: $input-placeholder-color-dark;
-			background: $dark-bg-2;
 		}
 	}
 }
@@ -16,6 +15,7 @@
 	border-radius: 16px;
 	margin-right: $input-padding-x;
 	font-size: 0.75em;
+	font-weight: bold;
 	color: #777;
 	.chip-icon {
 		font-size: 2em;
@@ -28,15 +28,17 @@
 		align-items: center;
 		border-radius: 50%;
 		color: $input-placeholder-color;
-		background: darken($input-placeholder-color, 10);
+		background: rgba(0,0,0,.2);
 	}
 	&--active {
 		color: white;
 		background: $bt-brand-primary;
-		font-weight: bold;
 		.chip-icon {
 			color: white;
-			background: darken($bt-brand-primary, 5);
+			background: rgba(0,0,0,.2);
 		}
+	}
+	&.light {
+		color: white;
 	}
 }
