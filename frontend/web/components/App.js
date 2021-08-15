@@ -268,7 +268,7 @@ const App = class extends Component {
                                                 {user ? (
                                                     <React.Fragment>
                                                         <nav className="my-2 my-md-0 hidden-xs-down">
-                                                            {organisation && !organisation.subscription && (
+                                                            {organisation && !organisation.subscription && flagsmith.hasFeature('payments_enabled') && (
                                                                 <a
                                                                   href="#"
                                                                   disabled={!this.state.manageSubscriptionLoaded}
