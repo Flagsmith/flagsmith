@@ -16,11 +16,15 @@
       background: $input-bg-dark;
       border: none;
     }
+    &__single-value {
+      color: $input-color-dark;
+    }
     &__indicator-separator {
       display: none;
     }
     &__menu {
       background: $input-bg-dark;
+      color: $input-color-dark;
     }
     &__option {
       background: $dark-bg-0;
