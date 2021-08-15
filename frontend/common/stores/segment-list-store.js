@@ -29,7 +29,7 @@ const controller = {
             .then((res) => {
                 data.get(`${Project.api}projects/${projectId}/segments/`)
                     .then((res) => {
-                        store.model = _.sortBy(res.results, r => r.name);
+                        store.model = res.results && _.sortBy(res.results, 'name');
                         store.loaded();
                         store.saved();
                     });
@@ -43,7 +43,7 @@ const controller = {
             .then((res) => {
                 data.get(`${Project.api}projects/${projectId}/segments/`)
                     .then((res) => {
-                        store.model = res.results;
+                        store.model = res.results && _.sortBy(res.results, 'name');
                         store.loaded();
                         store.saved();
                     });
@@ -56,7 +56,7 @@ const controller = {
             .then(() => {
                 data.get(`${Project.api}projects/${projectId}/segments/`)
                     .then((res) => {
-                        store.model = res.results.map(segment => ({ ...segment, rules: JSON.parse(segment.rules) }));
+                        store.model = res.results && _.sortBy(res.results, 'name');
                         store.loaded();
                         store.saved();
                     });
