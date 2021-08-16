@@ -352,23 +352,22 @@ const App = class extends Component {
                                                                               }}
                                                                             />
                                                                         )}
+                                                                        {!this.props.hasFeature('disable_create_org') && (
+                                                                            <div className="pl-3 pr-3 mt-2 mb-2">
+                                                                                <Link
+                                                                                  id="create-org-link" onClick={toggle}
+                                                                                  to="/create"
+                                                                                >
+                                                                                    <Button>
 
+                                                                                        Create Organisation <span
+                                                                                          className="ion-md-add"
+                                                                                        />
 
-                                                                        <div className="pl-3 pr-3 mt-2 mb-2">
-                                                                            <Link
-                                                                              id="create-org-link" onClick={toggle}
-                                                                              to="/create"
-                                                                            >
-                                                                                <Button>
-
-                                                                                    Create Organisation <span
-                                                                                      className="ion-md-add"
-                                                                                    />
-
-                                                                                </Button>
-                                                                            </Link>
-                                                                        </div>
-
+                                                                                    </Button>
+                                                                                </Link>
+                                                                            </div>
+                                                                        )}
                                                                         <a
                                                                           id="logout-link" href="#"
                                                                           onClick={AppActions.logout}

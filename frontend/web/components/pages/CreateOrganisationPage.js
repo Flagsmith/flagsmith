@@ -1,7 +1,8 @@
 import React, { Component } from 'react';
 import { Link } from 'react-router';
+import ConfigProvider from '../../../common/providers/ConfigProvider';
 
-export default class ExampleOne extends Component {
+class CreateOrganisationPage extends Component {
     static displayName = 'CreateOrganisastionPage'
 
     constructor(props, context) {
@@ -34,6 +35,13 @@ export default class ExampleOne extends Component {
     };
 
     render() {
+        if (this.props.hasFeature('disable_create_org')) {
+            return (
+                <div id="create-org-page" className="container app-container">
+                    This Flagsmith instance is configured to not allow creating additional organisations, please contact an administrator.
+                </div>
+            );
+        }
         return (
             <div id="create-org-page" className="container app-container">
                 <h3 className="pt-5">
@@ -51,11 +59,11 @@ export default class ExampleOne extends Component {
                         }}
                         >
                             <InputGroup
-                              ref={e => this.input = e}
-                              inputProps={{ name: 'orgName', className: 'full-width' }}
-                              title="Organisation Name"
-                              placeholder="E.g. ACME Ltd"
-                              onChange={e => this.setState({ name: Utils.safeParseEventValue(e) })}
+                                ref={e => this.input = e}
+                                inputProps={{ name: 'orgName', className: 'full-width' }}
+                                title="Organisation Name"
+                                placeholder="E.g. ACME Ltd"
+                                onChange={e => this.setState({ name: Utils.safeParseEventValue(e) })}
                             />
                             <div className="text-right mt-2">
                                 <Button disabled={isSaving || !this.state.name} id="create-org-btn">
@@ -69,3 +77,5 @@ export default class ExampleOne extends Component {
         );
     }
 }
+
+export default ConfigProvider(CreateOrganisationPage);
