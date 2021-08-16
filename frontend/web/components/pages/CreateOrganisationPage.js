@@ -38,7 +38,8 @@ class CreateOrganisationPage extends Component {
         if (this.props.hasFeature('disable_create_org')) {
             return (
                 <div id="create-org-page" className="container app-container">
-                    This Flagsmith instance is configured to not allow creating additional organisations, please contact an administrator. If you think you are seeing this page by mistake, please check you are invited to the organisation.
+                    This Flagsmith instance is configured to prevent additional organisations from being created. Please contact an administrator. 
+                    If you think you are seeing this page by mistake, please check you are invited to the correct organisation.
                 </div>
             );
         }
