@@ -6,14 +6,14 @@ from projects.models import Project
 class SlackConfiguration(models.Model):
     api_token = models.CharField(max_length=100, blank=False, null=False)
     project = models.OneToOneField(
-        Project, on_delete=models.CASCADE, related_name="slack_config", primary_key=True
+        Project, on_delete=models.CASCADE, related_name="slack_config"
     )
     created_date = models.DateTimeField("DateCreated", auto_now_add=True)
 
 
 class SlackEnvironment(models.Model):
     slack_configuration = models.ForeignKey(
-        SlackConfiguration, related_name="slack_config", on_delete=models.CASCADE
+        SlackConfiguration, related_name="env_config", on_delete=models.CASCADE
     )
     channel_id = models.CharField(
         max_length=50,
@@ -28,7 +28,7 @@ class SlackEnvironment(models.Model):
         null=False,
         on_delete=models.CASCADE,
     )
-    enabled = models.BooleanField(default=False)
+    enabled = models.BooleanField(default=True)
 
     class Meta:
         unique_together = ("slack_configuration", "environment")
