@@ -83,8 +83,6 @@ const HomePage = class extends React.Component {
         }
 
         if (this.props.getValue('oauth_google')) {
-            const { apiKey, clientId } = JSON.parse(this.props.getValue('oauth_google'));
-            Google.init(apiKey, clientId);
             oauths.push((
                 <a
                   key="github" className="btn btn__oauth btn__oauth--google" onClick={() => {
