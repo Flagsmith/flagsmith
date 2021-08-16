@@ -116,6 +116,7 @@ class RudderstackConfigurationTestCase(TestCase):
         # Then
         assert response.status_code == status.HTTP_200_OK
         assert len(response.json()) == 1
+        assert response.json()[0]["id"] == config.id
 
     def test_should_remove_configuration_when_delete(self):
         # Given
