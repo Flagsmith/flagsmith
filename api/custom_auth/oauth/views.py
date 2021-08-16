@@ -30,7 +30,9 @@ GOOGLE_AUTH_ERROR_MESSAGE = AUTH_ERROR_MESSAGE.format("GOOGLE")
 @permission_classes([AllowAny])
 def login_with_google(request):
     try:
-        serializer = GoogleLoginSerializer(data=request.data)
+        serializer = GoogleLoginSerializer(
+            data=request.data, context={"request": request}
+        )
         serializer.is_valid(raise_exception=True)
         token = serializer.save()
         return Response(data=CustomTokenSerializer(instance=token).data)
@@ -51,7 +53,9 @@ def login_with_google(request):
 @permission_classes([AllowAny])
 def login_with_github(request):
     try:
-        serializer = GithubLoginSerializer(data=request.data)
+        serializer = GithubLoginSerializer(
+            data=request.data, context={"request": request}
+        )
         serializer.is_valid(raise_exception=True)
         token = serializer.save()
         return Response(data=CustomTokenSerializer(instance=token).data)

@@ -2,11 +2,11 @@ import hashlib
 import typing
 
 from django.db import models
-from django.db.models import Q, Prefetch
+from django.db.models import Prefetch, Q
 from django.utils.encoding import python_2_unicode_compatible
 
-from environments.models import Environment
 from environments.identities.traits.models import Trait
+from environments.models import Environment
 from features.models import FeatureState
 from features.multivariate.models import MultivariateFeatureStateValue
 

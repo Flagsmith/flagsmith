@@ -3,8 +3,13 @@ from django.test import TransactionTestCase
 from environments.identities.models import Identity
 from environments.identities.traits.models import Trait
 from environments.models import FLOAT, Environment
-from features.models import Feature, FeatureSegment, FeatureState, FeatureStateValue
-from features.value_types import INTEGER, STRING, BOOLEAN
+from features.models import (
+    Feature,
+    FeatureSegment,
+    FeatureState,
+    FeatureStateValue,
+)
+from features.value_types import BOOLEAN, INTEGER, STRING
 from organisations.models import Organisation
 from projects.models import Project
 from segments.models import (

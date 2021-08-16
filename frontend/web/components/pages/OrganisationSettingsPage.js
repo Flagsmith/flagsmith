@@ -157,9 +157,9 @@ const OrganisationSettingsPage = class extends Component {
             let totalTraits = 0;
             let totalIdentities = 0;
             data.events_list.map((v) => {
-                totalFlags += v.Flags||0;
-                totalTraits += v.Traits||0;
-                totalIdentities += v.Identities||0;
+                totalFlags += v.Flags || 0;
+                totalTraits += v.Traits || 0;
+                totalIdentities += v.Identities || 0;
             });
             return (
                 <div>
@@ -171,54 +171,54 @@ const OrganisationSettingsPage = class extends Component {
 
                         <table className="table">
                             <thead>
-                            <th style={{width:200, borderBottom:"1px solid #ccc"}}>
-                                <td>
+                                <th style={{ width: 200, borderBottom: '1px solid #ccc' }}>
+                                    <td>
                                     Usage type
-                                </td>
-                            </th>
-                            <th style={{ borderBottom:"1px solid #ccc"}}>
-                                <td>
+                                    </td>
+                                </th>
+                                <th style={{ borderBottom: '1px solid #ccc' }}>
+                                    <td>
                                     API calls
-                                </td>
-                            </th>
+                                    </td>
+                                </th>
                             </thead>
                             <tbody>
-                            <tr style={{borderBottom:"1px solid #ccc"}}>
-                                <td>
+                                <tr style={{ borderBottom: '1px solid #ccc' }}>
+                                    <td>
                                     Flags
-                                </td>
-                                <td>
-                                    {Utils.numberWithCommas(totalFlags)}
-                                </td>
-                            </tr>
-                            <tr style={{borderBottom:"1px solid #ccc"}}>
-                                <td>
+                                    </td>
+                                    <td>
+                                        {Utils.numberWithCommas(totalFlags)}
+                                    </td>
+                                </tr>
+                                <tr style={{ borderBottom: '1px solid #ccc' }}>
+                                    <td>
                                     Identities
-                                </td>
-                                <td>
-                                    {Utils.numberWithCommas(totalIdentities)}
-                                </td>
-                            </tr>
-                            <tr style={{borderBottom:"1px solid #ccc"}}>
-                                <td>
+                                    </td>
+                                    <td>
+                                        {Utils.numberWithCommas(totalIdentities)}
+                                    </td>
+                                </tr>
+                                <tr style={{ borderBottom: '1px solid #ccc' }}>
+                                    <td>
                                     Traits
-                                </td>
-                                <td>
-                                    {Utils.numberWithCommas(totalTraits)}
-                                </td>
-                            </tr>
-                            <tr style={{ borderTop:"1px solid #ccc"}}>
-                                <td>
-                                    <strong>
+                                    </td>
+                                    <td>
+                                        {Utils.numberWithCommas(totalTraits)}
+                                    </td>
+                                </tr>
+                                <tr style={{ borderTop: '1px solid #ccc' }}>
+                                    <td>
+                                        <strong>
                                         Total
-                                    </strong>
-                                </td>
-                                <td>
-                                    <strong>
-                                        {Utils.numberWithCommas(totalFlags+totalIdentities+totalTraits)}
-                                    </strong>
-                                </td>
-                            </tr>
+                                        </strong>
+                                    </td>
+                                    <td>
+                                        <strong>
+                                            {Utils.numberWithCommas(totalFlags + totalIdentities + totalTraits)}
+                                        </strong>
+                                    </td>
+                                </tr>
                             </tbody>
                         </table>
                     </div>
@@ -247,7 +247,7 @@ const OrganisationSettingsPage = class extends Component {
         const { name, webhook_notification_email } = this.state;
         const { props: { webhooks, webhooksLoading } } = this;
         const hasRbacPermission = !this.props.hasFeature('plan_based_access') || Utils.getPlansPermission(AccountStore.getPlans(), 'RBAC');
-
+        const paymentsEnabled = this.props.hasFeature('payments_enabled');
         return (
             <div className="app-container container">
 
@@ -281,51 +281,53 @@ const OrganisationSettingsPage = class extends Component {
                                                 </Button>
                                             </Row>
                                         </form>
-                                        <div className="plan plan--current flex-row m-t-2">
-                                            <div className="plan__prefix">
-                                                <img
-                                                  src="/images/nav-logo.svg" className="plan__prefix__image"
-                                                  alt="BT"
-                                                />
+                                        {paymentsEnabled && (
+                                            <div className="plan plan--current flex-row m-t-2">
+                                                <div className="plan__prefix">
+                                                    <img
+                                                      src="/images/nav-logo.svg" className="plan__prefix__image"
+                                                      alt="BT"
+                                                    />
+                                                </div>
+                                                <div className="plan__details flex flex-1">
+                                                    <p className="text-small m-b-0">Your plan</p>
+                                                    <h3 className="m-b-0">{Utils.getPlanName(_.get(organisation, 'subscription.plan')) ? Utils.getPlanName(_.get(organisation, 'subscription.plan')) : 'Free'}</h3>
+                                                </div>
+                                                <div>
+                                                    {organisation.subscription && (
+                                                        <a className="btn btn-primary mr-2" href="https://flagsmith.chargebeeportal.com/" target="_blank">
+                                                            Manage Invoices
+                                                        </a>
+                                                    )}
+                                                    { organisation.subscription ? (
+                                                        <button
+                                                          disabled={!this.state.manageSubscriptionLoaded}
+                                                          type="button" className="btn btn-primary text-center ml-auto mt-2 mb-2"
+                                                          onClick={() => {
+                                                              if (this.state.chargebeeURL) {
+                                                                  window.location = this.state.chargebeeURL;
+                                                              } else {
+                                                                  openModal('Payment plans', <PaymentModal
+                                                                    viewOnly={false}
+                                                                  />, null, { large: true });
+                                                              }
+                                                          }}
+                                                        >
+                                                            Manage payment plan
+                                                        </button>
+                                                    ) : (
+                                                        <button
+                                                          type="button" className="btn btn-primary text-center ml-auto mt-2 mb-2"
+                                                          onClick={() => openModal('Payment Plans', <PaymentModal
+                                                            viewOnly={false}
+                                                          />, null, { large: true })}
+                                                        >
+                                                            View plans
+                                                        </button>
+                                                    ) }
+                                                </div>
                                             </div>
-                                            <div className="plan__details flex flex-1">
-                                                <p className="text-small m-b-0">Your plan</p>
-                                                <h3 className="m-b-0">{Utils.getPlanName(_.get(organisation, 'subscription.plan')) ? Utils.getPlanName(_.get(organisation, 'subscription.plan')) : 'Free'}</h3>
-                                            </div>
-                                            <div>
-                                                {organisation.subscription && (
-                                                <a className="btn btn-primary mr-2" href="https://flagsmith.chargebeeportal.com/" target="_blank">
-                                                  Manage Invoices
-                                                </a>
-                                                )}
-                                                { organisation.subscription ? (
-                                                    <button
-                                                      disabled={!this.state.manageSubscriptionLoaded}
-                                                      type="button" className="btn btn-primary text-center ml-auto mt-2 mb-2"
-                                                      onClick={() => {
-                                                          if (this.state.chargebeeURL) {
-                                                              window.location = this.state.chargebeeURL;
-                                                          } else {
-                                                              openModal('Payment plans', <PaymentModal
-                                                                viewOnly={false}
-                                                              />, null, { large: true });
-                                                          }
-                                                      }}
-                                                    >
-                                                  Manage payment plan
-                                                    </button>
-                                                ) : (
-                                                    <button
-                                                      type="button" className="btn btn-primary text-center ml-auto mt-2 mb-2"
-                                                      onClick={() => openModal('Payment Plans', <PaymentModal
-                                                        viewOnly={false}
-                                                      />, null, { large: true })}
-                                                    >
-                                                  View plans
-                                                    </button>
-                                                ) }
-                                            </div>
-                                        </div>
+                                        )}
                                     </div>
                                 </div>
                             </FormGroup>
@@ -365,50 +367,52 @@ const OrganisationSettingsPage = class extends Component {
                                                     Invite members
                                                     </Button>
                                                 </Row>
-                                                <p>
-                                                {'You are currently using '}
-                                                <strong className={organisation.num_seats > (_.get(organisation, 'subscription.max_seats') || 1) ? 'text-danger' : ''}>
-                                                    {`${organisation.num_seats} of ${_.get(organisation, 'subscription.max_seats') || 1}`}
-                                                </strong>
-                                                {` seat${organisation.num_seats === 1 ? '' : 's'}. `} for your plan.
-                                                {' '}
-                                                {organisation.num_seats > (_.get(organisation, 'subscription.max_seats') || 1)
-                                                && (
-                                                <a
-                                                  href="#" onClick={() => openModal('Payment Plans', <PaymentModal
-                                                    viewOnly={false}
-                                                  />, null, { large: true })}
-                                                >
-                                                      Upgrade
-                                                </a>
-                                                )
-                                                }
-                                                </p>
+                                                {paymentsEnabled && (
+                                                    <p>
+                                                        {'You are currently using '}
+                                                        <strong className={organisation.num_seats > (_.get(organisation, 'subscription.max_seats') || 1) ? 'text-danger' : ''}>
+                                                            {`${organisation.num_seats} of ${_.get(organisation, 'subscription.max_seats') || 1}`}
+                                                        </strong>
+                                                        {` seat${organisation.num_seats === 1 ? '' : 's'}. `} for your plan.
+                                                        {' '}
+                                                        {organisation.num_seats > (_.get(organisation, 'subscription.max_seats') || 1)
+                                                        && (
+                                                            <a
+                                                              href="#" onClick={() => openModal('Payment Plans', <PaymentModal
+                                                                viewOnly={false}
+                                                              />, null, { large: true })}
+                                                            >
+                                                                Upgrade
+                                                            </a>
+                                                        )
+                                                        }
+                                                    </p>
+                                                )}
                                                 {
-                                                    this.props.hasFeature('invite_link') && inviteLinks && (
-                                                    <form onSubmit={(e) => {
-                                                        e.preventDefault();
-                                                    }}
-                                                    >
-                                                        <div className="mt-3">
-                                                            <Row>
-                                                                <div className="mr-2" style={{ width: 280 }}>
-                                                                    <Select
-                                                                      value={{
-                                                                          value: this.state.role,
-                                                                          label: this.state.role === 'ADMIN' ? 'Organisation Administrator' : 'User',
-                                                                      }}
-                                                                      onChange={v => this.setState({ role: v.value })}
-                                                                      options={[
-                                                                          { label: 'Organisation Administrator', value: 'ADMIN' },
-                                                                          { label: hasRbacPermission ? 'User' : 'User - Please upgrade for role based access',
-                                                                              value: 'USER',
-                                                                              isDisabled: !hasRbacPermission,
-                                                                          },
-                                                                      ]}
-                                                                    />
-                                                                </div>
-                                                                {inviteLinks.find(f => f.role === this.state.role) && (
+                                                     inviteLinks && (
+                                                     <form onSubmit={(e) => {
+                                                         e.preventDefault();
+                                                     }}
+                                                     >
+                                                         <div className="mt-3">
+                                                             <Row>
+                                                                 <div className="mr-2" style={{ width: 280 }}>
+                                                                     <Select
+                                                                       value={{
+                                                                           value: this.state.role,
+                                                                           label: this.state.role === 'ADMIN' ? 'Organisation Administrator' : 'User',
+                                                                       }}
+                                                                       onChange={v => this.setState({ role: v.value })}
+                                                                       options={[
+                                                                           { label: 'Organisation Administrator', value: 'ADMIN' },
+                                                                           { label: hasRbacPermission ? 'User' : 'User - Please upgrade for role based access',
+                                                                               value: 'USER',
+                                                                               isDisabled: !hasRbacPermission,
+                                                                           },
+                                                                       ]}
+                                                                     />
+                                                                 </div>
+                                                                 {inviteLinks.find(f => f.role === this.state.role) && (
                                                                   <>
                                                                       <div className="mr-2">
                                                                           <Input
@@ -432,22 +436,22 @@ const OrganisationSettingsPage = class extends Component {
                                                                           </Button>
                                                                       </div>
                                                                   </>
-                                                                )}
+                                                                 )}
 
 
-                                                            </Row>
+                                                             </Row>
 
-                                                        </div>
-                                                        <p className="mt-3">
+                                                         </div>
+                                                         <p className="mt-3">
                                                               Anyone with link can join as a standard user, once they have joined you can edit their role from the team members panel.
-                                                            {' '}
-                                                            <ButtonLink target="_blank" href="https://docs.flagsmith.com/advanced-use/permissions">Learn about User Roles.</ButtonLink>
-                                                        </p>
-                                                        <div className="text-right mt-2">
-                                                            {error && <Error error={error}/>}
-                                                        </div>
-                                                    </form>
-                                                    )
+                                                             {' '}
+                                                             <ButtonLink target="_blank" href="https://docs.flagsmith.com/advanced-use/permissions">Learn about User Roles.</ButtonLink>
+                                                         </p>
+                                                         <div className="text-right mt-2">
+                                                             {error && <Error error={error}/>}
+                                                         </div>
+                                                     </form>
+                                                     )
                                                 }
                                                 <div>
                                                     {isLoading && <div className="centered-container"><Loader/></div>}

@@ -6,6 +6,9 @@
     transition: all 300ms;
     cursor: pointer;
     &--select {
+        .chip-icon {
+            margin-left: 5px;
+        }
         width: 56px;
         line-height: 32px;
         height: 32px;
@@ -66,14 +69,8 @@
         padding: 0 12px;
         margin-bottom: 3px;
     }
-    .tag {
-        border-width: 2px;
-        border-style: solid;
-        display: inline-block;
-        min-width: 80px;
-        .flex-row {
-            justify-content: center;
-        }
+    .chip {
+        margin-top: 5px;
     }
 }
 

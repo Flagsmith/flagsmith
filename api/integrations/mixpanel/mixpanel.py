@@ -19,9 +19,12 @@ class MixpanelWrapper(AbstractBaseIdentityIntegrationWrapper):
     def __init__(self, api_key: str):
         self.api_key = api_key
         self.url = f"{MIXPANEL_API_URL}/engage#profile-set"
+
+        # Pass the integration ID as per https://developer.mixpanel.com/docs/partner-integration-id
         self.headers = {
             "Accept": "text/plain",
             "Content-Type": "application/x-www-form-urlencoded",
+            "X-Mixpanel-Integration-ID": "flagsmith",
         }
 
     def _identify_user(self, user_data: dict) -> None:

@@ -81,7 +81,7 @@ const SegmentOverride = ConfigProvider(SortableElement(({ hasFeature, controlVal
 
                 )}
 
-                {hasFeature('mv') && (
+                {(
                     <div>
                         <FormGroup className="mb-4">
                             <VariationOptions

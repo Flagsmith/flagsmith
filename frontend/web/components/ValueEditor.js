@@ -25,42 +25,56 @@ class ValueEditor extends Component {
 
     render() {
         const { ...rest } = this.props;
-        if (!this.props.hasFeature('value_editor')) {
-            return (
-                <textarea
-                  {...rest}
-                />
-            );
-        }
         return (
             <div className={cx('value-editor', { light: this.state.language === 'txt' })}>
                 <Row className="select-language">
                     <span
-                      onClick={() => this.setState({ language: 'txt' })}
+                      onMouseDown={(e) => {
+                          e.preventDefault();
+                          e.stopPropagation();
+                          this.setState({ language: 'txt' });
+                      }}
                       className={cx('txt', { active: this.state.language === 'txt' })}
                     >
                     .txt
                     </span>
                     <span
-                      onClick={() => this.setState({ language: 'json' })}
+                      onMouseDown={(e) => {
+                          e.preventDefault();
+                          e.stopPropagation();
+                          this.setState({ language: 'json' });
+                      }}
                       className={cx('json', { active: this.state.language === 'json' })}
                     >
                     .json
                     </span>
                     <span
-                      onClick={() => this.setState({ language: 'xml' })}
+                      onMouseDown={(e) => {
+                          e.preventDefault();
+                          e.stopPropagation();
+                          this.setState({ language: 'xml' });
+                      }}
                       className={cx('xml', { active: this.state.language === 'xml' })}
                     >
                     .xml
                     </span>
                     <span
-                      onClick={() => this.setState({ language: 'ini' })}
+                      onMouseDown={(e) => {
+                          e.preventDefault();
+                          e.stopPropagation();
+
+                          this.setState({ language: 'ini' });
+                      }}
                       className={cx('ini', { active: this.state.language === 'ini' })}
                     >
                     .toml
                     </span>
                     <span
-                      onClick={() => this.setState({ language: 'yaml' })}
+                      onMouseDown={(e) => {
+                          e.preventDefault();
+                          e.stopPropagation();
+                          this.setState({ language: 'yaml' });
+                      }}
                       className={cx('yaml', { active: this.state.language === 'yaml' })}
                     >
                     .yaml

@@ -60,7 +60,7 @@ export default class Rule extends PureComponent {
                                   className="input-container--flat full-width"
                                   value={`${rule.value}`}
                                   placeholder="Value *"
-                                  onChange={e => this.setRuleProperty(i, 'value', { value: Utils.getTypedValue(Utils.safeParseEventValue(e)) })}
+                                  onChange={e => this.setRuleProperty(i, 'value', { value: Utils.getTypedValue(Utils.safeParseEventValue(e), true) })}
                                   isValid={rule.value && this.validateRule(rule)}
                                 />
                             </Flex>
@@ -72,7 +72,7 @@ export default class Rule extends PureComponent {
                                 <ButtonOutline
                                   data-test={`${this.props['data-test']}-or`}
                                   type="button" onClick={this.addRule}
-                                 
+
                                 >
                                     Or
                                 </ButtonOutline>
@@ -111,7 +111,7 @@ export default class Rule extends PureComponent {
 
     setRuleProperty = (i, prop, { value }) => {
         const { props: { rule: { conditions: rules } } } = this;
-        rules[i][prop] = Utils.getTypedValue(value);
+        rules[i][prop] = Utils.getTypedValue(value,true);
         if (prop === 'operator' && value === 'PERCENTAGE_SPLIT') {
             rules[i].property = '';
         }

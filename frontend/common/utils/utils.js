@@ -94,17 +94,26 @@ module.exports = Object.assign({}, require('./base/_utils'), {
         };
     },
 
-    getTypedValue(str) {
+    getTypedValue(str, boolToString) {
+        if (typeof str === 'undefined') {
+            return '';
+        }
         if (typeof str !== 'string') {
             return str;
         }
 
         const isNum = /^\d+$/.test(str);
+        if (isNum && parseInt(str) > Number.MAX_SAFE_INTEGER) {
+            return `${str}`;
+        }
+
 
         if (str == 'true') {
+            if (boolToString) return 'true';
             return true;
         }
         if (str == 'false') {
+            if (boolToString) return 'false';
             return false;
         }
 
