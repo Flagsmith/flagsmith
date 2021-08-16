@@ -357,15 +357,11 @@ const App = class extends Component {
                                                                                 <Link
                                                                                   id="create-org-link" onClick={toggle}
                                                                                   to="/create"
-                                                                                >
-                                                                                    <Button>
-
-                                                                                        Create Organisation <span
-                                                                                          className="ion-md-add"
-                                                                                        />
-
-                                                                                    </Button>
-                                                                                </Link>
+                                                                                  >
+                                                                                    <Flex className="text-center">
+                                                                                        <Button>Create Organisation <span className="ion-md-add"/></Button>                          
+                                                                                    </Flex>
+                                                                               </Link>
                                                                             </div>
                                                                         )}
                                                                         <a
