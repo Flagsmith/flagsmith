@@ -1,10 +1,12 @@
 name: Platform Pull Requests
 
 on:
-    - pull_request
+    pull_request:
+        types: [opened, synchronize, reopened, ready_for_review]
 
 jobs:
     run-e2e-tests:
+        if: github.event.pull_request.draft == false
         runs-on: ubuntu-latest
         name: Full E2E tests
 
