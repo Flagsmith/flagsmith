@@ -408,7 +408,7 @@ const CreateFlag = class extends Component {
                               <ValueEditor
                                 data-test="featureValue"
                                 name="featureValue" className="full-width"
-                                value={`${typeof initial_value === 'undefined' ? '' : initial_value}`}
+                                value={`${typeof initial_value === 'undefined' || initial_value === null ? '' : initial_value}`}
                                 onChange={e => this.setState({ initial_value: Utils.getTypedValue(Utils.safeParseEventValue(e)) })}
                                 disabled={hide_from_client}
                                 placeholder="e.g. 'big' "
