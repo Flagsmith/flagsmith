@@ -103,8 +103,8 @@ class _EditPermissionsModal extends Component {
                                           </bold>
                                           <div className="list-item-footer faint">
                                               {
-                                              hasRbacPermission ? 'Full View and Write permissions for the given environment.'
-                                                  : 'Please upgrade your account to enable role based access.'
+                                              hasRbacPermission ? `Full View and Write permissions for the given ${Format.camelCase(this.props.level)}.`
+                                                  : `Please upgrade your account to enable role based access.`
                                             }
                                           </div>
                                       </Flex>
