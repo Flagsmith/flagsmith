@@ -293,19 +293,17 @@ const App = class extends Component {
                                                             <NavLink
                                                               id="account-settings-link"
                                                               activeClassName="active"
-                                                              className="nav-link p-2"
+                                                              className="nav-link"
                                                               to={projectId ? `/project/${projectId}/environment/${environmentId}/account` : '/account'}
                                                             >
                                                                 <UserSettingsIcon />
                                                                 Account
                                                             </NavLink>
-
-
                                                             {AccountStore.getOrganisationRole() === 'ADMIN' && (
                                                             <NavLink
                                                               id="org-settings-link"
                                                               activeClassName="active"
-                                                              className="nav-link p-2"
+                                                              className="nav-link"
                                                               to="/organisation-settings"
                                                             >
                                                                 <ion style={{ marginRight: 4 }} className="icon--primary ion ion-md-settings"/>
@@ -313,8 +311,12 @@ const App = class extends Component {
                                                             </NavLink>
                                                             )}
                                                         </nav>
-
-
+                                                        <div style={{ marginRight: 16, marginTop: 0 }} className="dark-mode">
+                                                            <Switch
+                                                              checked={flagsmith.hasFeature('dark_mode')} onChange={this.toggleDarkMode} onMarkup="Light"
+                                                              offMarkup="Dark"
+                                                            />
+                                                        </div>
                                                         <div className="org-nav">
                                                             <Popover
                                                               className="popover-right"
@@ -378,13 +380,6 @@ const App = class extends Component {
                                                                     </div>
                                                                 )}
                                                             </Popover>
-                                                        </div>
-
-                                                        <div style={{ marginRight: -15, marginTop: 5 }} className="ml-4 dark-mode">
-                                                            <Switch
-                                                              checked={flagsmith.hasFeature('dark_mode')} onChange={this.toggleDarkMode} onMarkup="Light"
-                                                              offMarkup="Dark"
-                                                            />
                                                         </div>
                                                     </React.Fragment>
                                                 ) : (
