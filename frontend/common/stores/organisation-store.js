@@ -27,28 +27,28 @@ const controller = {
                             store.loaded();
                         }).catch(() => {
                         });
-                        data.get(`${Project.api}organisations/${id}/invite-links/`).then((links) => {
-                            store.model.inviteLinks = links;
-                            if (!links || !links.length) {
-                                Promise.all([
-                                    data.post(`${Project.api}organisations/${id}/invite-links/`, {
-                                        role: 'ADMIN',
-                                    }),
-                                    data.post(`${Project.api}organisations/${id}/invite-links/`, {
-                                        role: 'USER',
-                                    }),
-                                ]).then(() => {
-                                    data.get(`${Project.api}organisations/${id}/invite-links/`).then((links) => {
-                                        store.model.inviteLinks = links;
-
-                                        store.loaded();
-                                    });
-                                });
-                            } else {
-                                store.loaded();
-                            }
-                        });
                     }
+                    data.get(`${Project.api}organisations/${id}/invite-links/`).then((links) => {
+                        store.model.inviteLinks = links;
+                        if (!links || !links.length) {
+                            Promise.all([
+                                data.post(`${Project.api}organisations/${id}/invite-links/`, {
+                                    role: 'ADMIN',
+                                }),
+                                data.post(`${Project.api}organisations/${id}/invite-links/`, {
+                                    role: 'USER',
+                                }),
+                            ]).then(() => {
+                                data.get(`${Project.api}organisations/${id}/invite-links/`).then((links) => {
+                                    store.model.inviteLinks = links;
+
+                                    store.loaded();
+                                });
+                            });
+                        } else {
+                            store.loaded();
+                        }
+                    });
 
                     return Promise.all(projects.map((project, i) => data.get(`${Project.api}environments/?project=${project.id}`)
                         .then((res) => {
