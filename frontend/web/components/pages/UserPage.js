@@ -12,6 +12,14 @@ const returnIfDefined = (value, value2) => {
     }
     return value;
 };
+const valuesEqual = (actualValue, flagValue) => {
+    const nullFalseyA = actualValue == null || actualValue === '' || typeof actualValue === 'undefined';
+    const nullFalseyB = flagValue == null || flagValue === '' || typeof flagValue === 'undefined';
+    if (nullFalseyA && nullFalseyB) {
+        return true;
+    }
+    return actualValue == flagValue;
+};
 const UserPage = class extends Component {
     static displayName = 'UserPage'
 
@@ -179,7 +187,7 @@ const UserPage = class extends Component {
                                                       const actualValue = !!actualFlags && actualFlags[name] && actualFlags[name].feature_state_value;
                                                       const flagEnabledDifferent = type === 'FLAG' && (hasUserOverride ? false
                                                           : actualEnabled !== flagEnabled);
-                                                      const flagValueDifferent = type !== 'FLAG' && (hasUserOverride ? false : actualValue !== flagValue);
+                                                      const flagValueDifferent = type !== 'FLAG' && (hasUserOverride ? false : !valuesEqual(actualValue, flagValue));
                                                       const projectFlag = projectFlags && projectFlags.find(p => p.id === (environmentFlag && environmentFlag.feature));
                                                       const isMultiVariateOverride = flagValueDifferent && projectFlag && projectFlag.multivariate_options && projectFlag.multivariate_options.find((v) => {
                                                           const value = Utils.featureStateToValue(v);
