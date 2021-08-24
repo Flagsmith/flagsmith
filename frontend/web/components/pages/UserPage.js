@@ -185,9 +185,9 @@ const UserPage = class extends Component {
 
                                                       const actualEnabled = (actualFlags && !!actualFlags && actualFlags[name] && actualFlags[name].enabled) || false;
                                                       const actualValue = !!actualFlags && actualFlags[name] && actualFlags[name].feature_state_value;
-                                                      const flagEnabledDifferent = type === 'FLAG' && (hasUserOverride ? false
+                                                      const flagEnabledDifferent = (hasUserOverride ? false
                                                           : actualEnabled !== flagEnabled);
-                                                      const flagValueDifferent = type !== 'FLAG' && (hasUserOverride ? false : !valuesEqual(actualValue, flagValue));
+                                                      const flagValueDifferent = (hasUserOverride ? false : !valuesEqual(actualValue, flagValue));
                                                       const projectFlag = projectFlags && projectFlags.find(p => p.id === (environmentFlag && environmentFlag.feature));
                                                       const isMultiVariateOverride = flagValueDifferent && projectFlag && projectFlag.multivariate_options && projectFlag.multivariate_options.find((v) => {
                                                           const value = Utils.featureStateToValue(v);
