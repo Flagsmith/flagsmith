@@ -200,7 +200,7 @@ const UserPage = class extends Component {
                                                             data-test={`user-feature-${i}`}
                                                           >
                                                               <div
-                                                                onClick={() => this.editFlag(_.find(projectFlags, { id }), environmentFlags[id], identityFlag)}
+                                                                onClick={() => this.editFlag(_.find(projectFlags, { id }), environmentFlags[id], actualFlags[name])}
                                                                 className="flex flex-1"
                                                               >
                                                                   <Row>
