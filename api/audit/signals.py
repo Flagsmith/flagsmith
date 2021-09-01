@@ -1,11 +1,15 @@
+import logging
+
+import boto3
+from django.conf import settings
 from django.db.models.signals import post_save
 from django.dispatch import receiver
+from flag_engine.environments.builders import build_environment_dict
 
 from audit.models import AuditLog, RelatedObjectType
 from audit.serializers import AuditLogSerializer
 from integrations.datadog.datadog import DataDogWrapper
 from integrations.new_relic.new_relic import NewRelicWrapper
-import logging
 from webhooks.webhooks import WebhookEventType, call_organisation_webhooks
 
 logger = logging.getLogger(__name__)
@@ -100,3 +104,13 @@ def send_audit_log_event_to_new_relic(sender, instance, **kwargs):
         app_id=new_relic_config.app_id,
     )
     _track_event_async(instance, new_relic)
+
+
+@receiver(post_save, sender=AuditLog)
+def send_env_to_dynamodb(sender, instance, **kwargs):
+    if instance.environment and settings.DYNAMO_ENV_TABLE_NAME:
+        env_dict = build_environment_dict(instance.environment)
+        dynamodb = boto3.resource("dynamodb")
+
+        table = dynamodb.Table(settings.DYNAMO_ENV_TABLE_NAME)
+        table.put_item(Item=env_dict)
