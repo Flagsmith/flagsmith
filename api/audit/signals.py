@@ -106,11 +106,16 @@ def send_audit_log_event_to_new_relic(sender, instance, **kwargs):
     _track_event_async(instance, new_relic)
 
 
+# Intialize the dynamo client globally
+dynamo_env_table = None
+if settings.ENVIRONMENTS_TABLE_NAME_DYNAMO:
+    dynamo_env_table = boto3.resource("dynamodb").Table(
+        settings.ENVIRONMENTS_TABLE_NAME_DYNAMO
+    )
+
+
 @receiver(post_save, sender=AuditLog)
 def send_env_to_dynamodb(sender, instance, **kwargs):
-    if instance.environment and settings.DYNAMO_ENV_TABLE_NAME:
+    if instance.environment and dynamo_env_table:
         env_dict = build_environment_dict(instance.environment)
-        dynamodb = boto3.resource("dynamodb")
-
-        table = dynamodb.Table(settings.DYNAMO_ENV_TABLE_NAME)
-        table.put_item(Item=env_dict)
+        dynamo_env_table.put_item(Item=env_dict)
