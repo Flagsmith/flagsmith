@@ -1,18 +1,29 @@
 import hashlib
 import typing
 
+import boto3
+from django.conf import settings
 from django.db import models
 from django.db.models import Prefetch, Q
 from django.utils.encoding import python_2_unicode_compatible
+from django_lifecycle import AFTER_CREATE, LifecycleModel, hook
+from flag_engine.identities.builders import build_identity_dict
 
 from environments.identities.traits.models import Trait
 from environments.models import Environment
 from features.models import FeatureState
 from features.multivariate.models import MultivariateFeatureStateValue
 
+# Intialize the dynamo client globally
+dynamo_identity_table = None
+if settings.IDENTITIES_TABLE_NAME_DYNAMO:
+    dynamo_identity_table = boto3.resource("dynamodb").Table(
+        settings.IDENTITIES_TABLE_NAME_DYNAMO
+    )
+
 
 @python_2_unicode_compatible
-class Identity(models.Model):
+class Identity(LifecycleModel):
     identifier = models.CharField(max_length=2000)
     created_date = models.DateTimeField("DateCreated", auto_now_add=True)
     environment = models.ForeignKey(
@@ -26,6 +37,10 @@ class Identity(models.Model):
         # hard code the table name after moving from the environments app to prevent
         # issues with production deployment due to multi server configuration.
         db_table = "environments_identity"
+
+    @hook(AFTER_CREATE)
+    def create_in_dynamodb(self):
+        self.send_to_dynamodb()
 
     def get_all_feature_states(self, traits: typing.List[Trait] = None):
         """
@@ -136,6 +151,8 @@ class Identity(models.Model):
 
         if persist:
             Trait.objects.bulk_create(trait_models)
+            # Update the Identity document in dynamodb
+            self.send_to_dynamodb()
 
         return trait_models
 
@@ -181,6 +198,14 @@ class Identity(models.Model):
         if keys_to_delete:
             current_traits.filter(trait_key__in=keys_to_delete).delete()
 
+        # Update the Identity document in dynamodb
+        self.send_to_dynamodb()
+
         # return the full list of traits for this identity by refreshing from the db
         # TODO: handle this in the above logic to avoid a second hit to the DB
         return self.get_all_user_traits()
+
+    def send_to_dynamodb(self):
+        if dynamo_identity_table:
+            identity_dict = build_identity_dict(self)
+            dynamo_identity_table.put_item(Item=identity_dict)
