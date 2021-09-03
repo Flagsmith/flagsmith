@@ -17,7 +17,7 @@ from organisations.invites.models import Invite
 from organisations.models import Organisation, OrganisationRole, Subscription
 from projects.models import Project
 from segments.models import Segment
-from users.models import FFAdminUser
+from users.models import FFAdminUser, UserPermissionGroup
 from util.tests import Helper
 
 User = get_user_model()
@@ -173,13 +173,17 @@ class OrganisationTestCase(TestCase):
         assert invite_list_response.status_code == status.HTTP_200_OK
         assert invite_resend_response.status_code == status.HTTP_200_OK
 
-    def test_can_remove_a_user_from_an_organisation(self):
+    def test_remove_user_from_an_organisation_also_removes_from_group(self):
         # Given
         organisation = Organisation.objects.create(name="Test org")
+        group = UserPermissionGroup.objects.create(
+            name="Test Group", organisation=organisation
+        )
         self.user.add_organisation(organisation, OrganisationRole.ADMIN)
 
         user_2 = FFAdminUser.objects.create(email="test@example.com")
         user_2.add_organisation(organisation)
+        group.users.add(user_2)
 
         url = reverse(
             "api-v1:organisations:organisation-remove-users", args=[organisation.pk]
@@ -195,6 +199,7 @@ class OrganisationTestCase(TestCase):
         # Then
         assert res.status_code == status.HTTP_200_OK
         assert organisation not in user_2.organisations.all()
+        assert group not in user_2.permission_groups.all()
 
     @override_settings()
     def test_can_invite_user_as_admin(self):
