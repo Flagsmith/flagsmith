@@ -205,10 +205,4 @@ class Identity(LifecycleModel):
     def send_to_dynamodb(self):
         if dynamo_identity_table:
             identity_dict = build_identity_dict(self)
-            # Add the pk for dynamodb
-            identity_dict.update(
-                {
-                    "pk": f"{identity_dict['environment_api_key']}_{identity_dict['identifier']}"
-                }
-            )
             dynamo_identity_table.put_item(Item=identity_dict)

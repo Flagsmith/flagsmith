@@ -59,13 +59,8 @@ class IdentityTestCase(TransactionTestCase):
             identifier="test-identity", environment=self.environment
         )
 
-        identity_dict = build_identity_dict(identity)
-        identity_dict.update(
-            {
-                "pk": f"{identity_dict['environment_api_key']}_{identity_dict['identifier']}"
-            }
-        )
         # Then
+        identity_dict = build_identity_dict(identity)
         dynamo_identity_table.put_item.assert_called_with(Item=identity_dict)
 
     def test_get_all_feature_states(self):
@@ -691,11 +686,6 @@ class IdentityTestCase(TransactionTestCase):
 
         # and put_item was called with correct args
         identity_dict = build_identity_dict(identity)
-        identity_dict.update(
-            {
-                "pk": f"{identity_dict['environment_api_key']}_{identity_dict['identifier']}"
-            }
-        )
         dynamo_identity_table.put_item.assert_called_with(Item=identity_dict)
 
     @mock.patch("environments.identities.models.dynamo_identity_table")
