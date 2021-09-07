@@ -49,8 +49,6 @@ app.get('/static/project-overrides.js', (req, res) => {
     const envToBool = (name, defaultVal) => {
         const envVar = `${process.env[name]}`;
         if (envVar === 'undefined') {
-            console.log("returning defaults", name, defaultVal)
-
             return defaultVal;
         }
         return envVar === 'true' || envVar === '1';
@@ -72,7 +70,6 @@ app.get('/static/project-overrides.js', (req, res) => {
         { name: 'flagsmithAnalytics', value: envToBool('ENABLE_FLAG_EVALUATION_ANALYTICS', true) },
         { name: 'amplitude', value: process.env.AMPLITUDE_API_KEY },
     ];
-    console.log(values);
     const output = values.map(getVariable).join('');
 
     res.setHeader('content-type', 'text/javascript');
