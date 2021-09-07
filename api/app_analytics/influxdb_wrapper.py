@@ -4,6 +4,7 @@ from collections import defaultdict
 from django.conf import settings
 from influxdb_client import InfluxDBClient, Point
 from influxdb_client.client.write_api import SYNCHRONOUS
+from urllib3 import Retry
 
 url = settings.INFLUXDB_URL
 token = settings.INFLUXDB_TOKEN
@@ -15,7 +16,8 @@ range_bucket_mappings = {
     "7d": settings.INFLUXDB_BUCKET + "_downsampled_15m",
     "30d": settings.INFLUXDB_BUCKET + "_downsampled_1h",
 }
-influxdb_client = InfluxDBClient(url=url, token=token, org=influx_org)
+retries = Retry(connect=3, read=3, redirect=3)
+influxdb_client = InfluxDBClient(url=url, token=token, org=influx_org, retries=retries)
 
 
 class InfluxDBWrapper:
