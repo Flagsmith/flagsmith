@@ -3,14 +3,14 @@ import typing
 from django.core.exceptions import ObjectDoesNotExist
 from django.db import models
 from django.utils.encoding import python_2_unicode_compatible
-from simple_history.models import HistoricalRecords
+from django_lifecycle import AFTER_DELETE, AFTER_SAVE, LifecycleModel, hook
 
 from environments.identities.traits.exceptions import TraitPersistenceError
 from environments.models import BOOLEAN, FLOAT, INTEGER, STRING
 
 
 @python_2_unicode_compatible
-class Trait(models.Model):
+class Trait(LifecycleModel):
     TRAIT_VALUE_TYPES = (
         (INTEGER, "Integer"),
         (STRING, "String"),
@@ -39,6 +39,11 @@ class Trait(models.Model):
         # hard code the table name after moving from the environments app to prevent
         # issues with production deployment due to multi server configuration.
         db_table = "environments_trait"
+
+    @hook(AFTER_DELETE)
+    @hook(AFTER_SAVE)
+    def send_to_dynamodb(self):
+        self.identity.send_to_dynamodb()
 
     @property
     def trait_value(self):
