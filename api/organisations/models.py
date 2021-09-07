@@ -99,10 +99,10 @@ class Subscription(models.Model):
     cancellation_date = models.DateTimeField(blank=True, null=True)
     customer_id = models.CharField(max_length=100, blank=True, null=True)
 
-    CHARGEBEE = "ChargeBee"
-    XERO = "Xero"
+    CHARGEBEE = "CHARGEBEE"
+    XERO = "XERO"
     PAYMENT_METHODS = [
-        (CHARGEBEE, "ChargeBee"),
+        (CHARGEBEE, "Chargebee"),
         (XERO, "Xero"),
     ]
     payment_method = models.CharField(
