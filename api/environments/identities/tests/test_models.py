@@ -54,8 +54,6 @@ class IdentityTestCase(TransactionTestCase):
     @mock.patch("environments.identities.models.dynamo_identity_table")
     def test_create_identity_should_call_put_item(self, dynamo_identity_table):
         # Given
-        dynamo_identity_table.put_item = mock.MagicMock()
-
         # When
         identity = Identity.objects.create(
             identifier="test-identity", environment=self.environment
@@ -672,7 +670,6 @@ class IdentityTestCase(TransactionTestCase):
     @mock.patch("environments.identities.models.dynamo_identity_table")
     def test_generate_traits_with_persistence(self, dynamo_identity_table):
         # Given
-        dynamo_identity_table.put_item = mock.MagicMock()
         identity = Identity.objects.create(
             identifier="identifier", environment=self.environment
         )
@@ -730,14 +727,12 @@ class IdentityTestCase(TransactionTestCase):
         # and put_item was not called
         dynamo_identity_table.put_item.assert_not_called()
 
-    @mock.patch("environments.identities.models.dynamo_identity_table")
-    def test_update_traits(self, dynamo_identity_table):
+    def test_update_traits(self):
         """
         This is quite a long test to verify the update traits functionality correctly
         handles updating and creating traits.
         """
         # Given
-        dynamo_identity_table.put_item = mock.MagicMock()
         # an identity
         identity = Identity.objects.create(
             identifier="identifier", environment=self.environment
@@ -781,15 +776,6 @@ class IdentityTestCase(TransactionTestCase):
         # and the third trait is created correctly
         updated_trait_3 = get_trait_from_list_by_key(trait_3_key, updated_traits)
         assert updated_trait_3.trait_value == trait_3_value
-
-        # and put_item was called with correct args
-        identity_dict = build_identity_dict(identity)
-        identity_dict.update(
-            {
-                "pk": f"{identity_dict['environment_api_key']}_{identity_dict['identifier']}"
-            }
-        )
-        dynamo_identity_table.put_item.assert_called_with(Item=identity_dict)
 
     def test_update_traits_deletes_when_nulled_out(self):
         """

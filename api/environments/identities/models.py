@@ -198,9 +198,6 @@ class Identity(LifecycleModel):
         if keys_to_delete:
             current_traits.filter(trait_key__in=keys_to_delete).delete()
 
-        # Update the Identity document in dynamodb
-        self.send_to_dynamodb()
-
         # return the full list of traits for this identity by refreshing from the db
         # TODO: handle this in the above logic to avoid a second hit to the DB
         return self.get_all_user_traits()
