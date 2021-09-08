@@ -9,7 +9,7 @@ services:
         command: npm run dev
         environment:
             - FLAGSMITH_API_URL=http://localhost:8000/api/v1/
-            - ASSET_URL=http://localhost:8080/
+            - STATIC_ASSET_CDN_URL=http://localhost:8080/
         ports:
             - '8080:8080'
         volumes:

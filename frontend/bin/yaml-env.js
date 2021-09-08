@@ -22,7 +22,7 @@ env_variables:
   FLAGSMITH_API_URL: ${process.env.FLAGSMITH_API_URL}
   AMPLITUDE: ${process.env.AMPLITUDE_API_KEY}
   ENABLE_MAINTENANCE_MODE: ${process.env.ENABLE_MAINTENANCE_MODE}
-  ASSET_URL: ${process.env.ASSET_URL}
+  STATIC_ASSET_CDN_URL: ${process.env.STATIC_ASSET_CDN_URL}
 `;
 
 fs.writeFileSync(src, str);

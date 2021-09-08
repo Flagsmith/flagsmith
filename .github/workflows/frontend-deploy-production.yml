@@ -62,7 +62,7 @@ jobs:
 
             - name: Deploy to App Engine
               env:
-                  ASSET_URL: https://cdn.flagsmith.com
+                  STATIC_ASSET_CDN_URL: https://cdn.flagsmith.com
                   ENV: prod
                   AMPLITUDE_API_KEY: ${{ secrets.AMPLITUDE_API_KEY }}
                   CRISP_WEBSITE_ID: ${{ secrets.CRISP_WEBSITE_ID }}

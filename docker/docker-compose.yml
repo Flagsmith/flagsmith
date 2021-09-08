@@ -27,9 +27,9 @@ services:
         environment:
             # You might need to change the 2 host names below depending on your docker dns setup
             API_URL: http://localhost:8000/api/v1/
-            ASSET_URL: http://localhost:8080/
+            STATIC_ASSET_CDN_URL: http://localhost:8080/
             DISABLE_INFLUXDB_FEATURES: 1 # Comment out to enable InfluxDB
-            FLAGSMITH: 4vfqhypYjcPoGGu8ByrBaj # This is the production Flagsmith API key
+            FLAGSMITH_ON_FLAGSMITH_API_KEY: 4vfqhypYjcPoGGu8ByrBaj # This is the production Flagsmith API key
         ports:
             - '8080:8080'
         links:
