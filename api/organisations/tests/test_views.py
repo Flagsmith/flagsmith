@@ -266,7 +266,7 @@ class OrganisationTestCase(TestCase):
         # Then
         assert res.status_code == status.HTTP_200_OK
 
-    @mock.patch("app_analytics.influxdb_wrapper.influxdb_client")
+    @mock.patch("app_analytics.analytics.influxdb_wrapper.influxdb_client")
     def test_should_get_usage_for_organisation(self, mock_influxdb_client):
         # Given
         org_name = "test_org"

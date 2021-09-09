@@ -1,7 +1,7 @@
 import logging
 
 import coreapi
-from app_analytics.influxdb_wrapper import get_multiple_event_list_for_feature
+from app_analytics import get_multiple_event_list_for_feature
 from django.conf import settings
 from django.core.cache import caches
 from django.utils.decorators import method_decorator

@@ -4,7 +4,7 @@ from __future__ import unicode_literals
 import logging
 from datetime import datetime
 
-from app_analytics.influxdb_wrapper import (
+from app_analytics import (
     get_events_for_organisation,
     get_multiple_event_list_for_organisation,
 )

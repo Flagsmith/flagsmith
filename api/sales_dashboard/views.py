@@ -1,6 +1,6 @@
 import json
 
-from app_analytics.influxdb_wrapper import (
+from app_analytics import (
     get_event_list_for_organisation,
     get_events_for_organisation,
     get_top_organisations,

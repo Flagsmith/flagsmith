@@ -2,7 +2,7 @@ import logging
 import uuid
 
 import requests
-from app_analytics.influxdb_wrapper import InfluxDBWrapper
+from app_analytics import InfluxDBWrapper
 from django.conf import settings
 from django.core.cache import caches
 from six.moves.urllib.parse import quote  # python 2/3 compatible urllib import
@@ -99,7 +99,6 @@ def track_request_influxdb(request):
     :param request: (HttpRequest) the request being made
     """
     resource = get_resource_from_uri(request.path)
-
     if resource and resource in TRACKED_RESOURCE_ACTIONS:
         environment = Environment.get_from_cache(
             request.headers.get("X-Environment-Key")
