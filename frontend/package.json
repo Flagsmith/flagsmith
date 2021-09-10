@@ -5,9 +5,7 @@
   "main": "index.js",
   "scripts": {
     "kill": "kill -9 $(lsof -ti tcp:4444)",
-    "test": "cross-env E2E=true nightwatch ./tests/index.test.js",
-    "test:pause": "cross-env PAUSE=true E2E=true nightwatch ./tests/index.test.js",
-    "test:brk": "cross-env BRK=true E2E=true nightwatch ./tests/index.test.js",
+    "test": "cross-env E2E=true nightwatch e2e/initialise.js && cross-env E2E=true nightwatch",
     "env": "node ./bin/env.js",
     "start": "cross-env NODE_ENV=production node ./server",
     "dev": "cross-env npm run env && node_modules/.bin/nodemon --watch server --ignore server/config/config.json --watch webpack --exec node ./server",
@@ -110,8 +108,8 @@
   },
   "devDependencies": {
     "chai": "4.2.0",
-    "chromedriver": "91.0.1",
-    "nightwatch": "1.7.3",
+    "chromedriver": "93.0.1",
+    "nightwatch": "1.7.8",
     "node-slack-upload": "2.0.0",
     "nodemon": "1.18.11",
     "raw-loader": "0.5.1",

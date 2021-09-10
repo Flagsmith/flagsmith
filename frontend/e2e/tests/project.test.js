@@ -1,11 +1,15 @@
-/* eslint-disable func-names */
-const expect = require('chai').expect;
-const helpers = require('./helpers');
+const email = 'nightwatch@solidstategroup.com';
+const password = 'str0ngp4ssw0rd!';
+const url = `http://localhost:${process.env.PORT || 8080}/`;
+const helpers = require('../helpers');
 
 const byId = helpers.byTestID;
-const url = `http://localhost:${process.env.PORT || 8080}`;
 
 module.exports = {
+    '[Project Tests] - Login': function (browser) {
+        testHelpers.login(browser, url, email, password);
+        browser.waitAndClick('#project-select-0');
+    },
     '[Project Tests] - Create environment': function (browser) {
         browser.waitAndClick('#create-env-link')
             .waitForElementPresent('#create-env-modal')
@@ -28,7 +32,7 @@ module.exports = {
             .waitAndSet("[name='confirm-env-name']", 'StagingInternal')
             .click('#confirm-delete-env-btn')
             .waitForElementVisible(byId('features-page'));
-        browser.url(`${url}/projects`)
+        browser.url(`${url}projects`)
             .waitForElementVisible('#project-select-page');
     },
     '[Project Tests] - View project': function (browser) {
