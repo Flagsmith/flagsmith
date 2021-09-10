@@ -110,6 +110,7 @@ const CreateFlag = class extends Component {
     save = (func, isSaving) => {
         const { projectFlag, segmentOverrides, environmentFlag, identity, identityFlag, environmentId } = this.props;
         const { name, initial_value, description, default_enabled, hide_from_client } = this.state;
+        const hasMultivariate = this.props.environmentFlag && this.props.environmentFlag.multivariate_feature_state_values && this.props.environmentFlag.multivariate_feature_state_values.length;
         if (identity) {
             !isSaving && name && func({
                 identity,
@@ -117,7 +118,7 @@ const CreateFlag = class extends Component {
                 environmentFlag,
                 identityFlag: Object.assign({}, identityFlag || {}, {
                     multivariate_options: this.state.identityVariations,
-                    feature_state_value: initial_value,
+                    feature_state_value: hasMultivariate ? this.props.environmentFlag.feature_state_value : initial_value,
                     enabled: default_enabled,
                 }),
                 environmentId,
@@ -514,9 +515,9 @@ const CreateFlag = class extends Component {
                                                                 )}
                                                               action={
                                                                    (
-                                                                        <Button onClick={() => this.changeSegment(this.props.segmentOverrides)} type="button" className={`btn--outline${enabledSegment ? '' : '-red'}`}>
-                                                                            {enabledSegment ? 'Enable All' : 'Disable All'}
-                                                                        </Button>
+                                                                       <Button onClick={() => this.changeSegment(this.props.segmentOverrides)} type="button" className={`btn--outline${enabledSegment ? '' : '-red'}`}>
+                                                                           {enabledSegment ? 'Enable All' : 'Disable All'}
+                                                                       </Button>
                                                                     )
                                                                 }
                                                             >
@@ -558,9 +559,9 @@ const CreateFlag = class extends Component {
                                                             )}
                                                           action={
                                                                (
-                                                                    <Button onClick={() => this.changeIdentity(this.state.userOverrides)} type="button" className={`btn--outline${enabledIndentity ? '' : '-red'}`}>
-                                                                        {enabledIndentity ? 'Enable All' : 'Disable All'}
-                                                                    </Button>
+                                                                   <Button onClick={() => this.changeIdentity(this.state.userOverrides)} type="button" className={`btn--outline${enabledIndentity ? '' : '-red'}`}>
+                                                                       {enabledIndentity ? 'Enable All' : 'Disable All'}
+                                                                   </Button>
                                                                 )
                                                             }
                                                           icon="ion-md-person"
