@@ -27,7 +27,7 @@ module.exports = {
                 'on_error': true,
             },
             'globals': {
-                'waitForConditionTimeout': 10000, // sometimes internet is slow so wait.
+                'waitForConditionTimeout': 30000, // sometimes internet is slow so wait.
                 'asyncHookTimeout': 200000000,
             },
             'desiredCapabilities': { // use Chrome as the default browser for tests
