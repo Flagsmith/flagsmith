@@ -78,7 +78,7 @@ const UserPage = class extends Component {
         />);
     }
 
-    editFlag = (projectFlag, environmentFlag, identityFlag) => {
+    editFlag = (projectFlag, environmentFlag, identityFlag, multivariate_feature_state_values) => {
         API.trackEvent(Constants.events.VIEW_USER_FEATURE);
         openModal(`Edit User Feature: ${projectFlag.name}`, <CreateFlagModal
           isEdit
@@ -87,7 +87,10 @@ const UserPage = class extends Component {
           environmentId={this.props.match.params.environmentId}
           projectId={this.props.match.params.projectId}
           projectFlag={projectFlag}
-          identityFlag={identityFlag}
+          identityFlag={{
+              ...identityFlag,
+              multivariate_feature_state_values
+          }}
           environmentFlag={environmentFlag}
         />);
     };
@@ -200,7 +203,7 @@ const UserPage = class extends Component {
                                                             data-test={`user-feature-${i}`}
                                                           >
                                                               <div
-                                                                onClick={() => this.editFlag(_.find(projectFlags, { id }), environmentFlags[id], actualFlags[name])}
+                                                                onClick={() => this.editFlag(_.find(projectFlags, { id }), environmentFlags[id], actualFlags[name],identityFlags && identityFlags[id] && identityFlags[id].multivariate_feature_state_values)}
                                                                 className="flex flex-1"
                                                               >
                                                                   <Row>
