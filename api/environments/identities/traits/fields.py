@@ -4,7 +4,7 @@ from rest_framework import serializers
 
 from environments.identities.traits.constants import (
     ACCEPTED_TRAIT_VALUE_TYPES,
-    TRAIT_VALUE_MAX_LENGTH,
+    TRAIT_STRING_VALUE_MAX_LENGTH,
 )
 from features.value_types import STRING
 
@@ -22,9 +22,9 @@ class TraitValueField(serializers.Field):
         if data_type not in ACCEPTED_TRAIT_VALUE_TYPES:
             data = str(data)
             data_type = STRING
-        if data_type == STRING and len(data) > TRAIT_VALUE_MAX_LENGTH:
+        if data_type == STRING and len(data) > TRAIT_STRING_VALUE_MAX_LENGTH:
             raise serializers.ValidationError(
-                "Value string is too long. Must be less than 2000 character"
+                f"Value string is too long. Must be less than {TRAIT_STRING_VALUE_MAX_LENGTH} character"
             )
         return {"type": data_type, "value": data}
 
