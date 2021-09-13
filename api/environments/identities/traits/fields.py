@@ -1,8 +1,12 @@
+import logging
+
 from rest_framework import serializers
 
-from environments.identities.traits.constants import ACCEPTED_TRAIT_VALUE_TYPES
+from environments.identities.traits.constants import (
+    ACCEPTED_TRAIT_VALUE_TYPES,
+    TRAIT_STRING_VALUE_MAX_LENGTH,
+)
 from features.value_types import STRING
-import logging
 
 logger = logging.getLogger(__name__)
 
@@ -18,7 +22,10 @@ class TraitValueField(serializers.Field):
         if data_type not in ACCEPTED_TRAIT_VALUE_TYPES:
             data = str(data)
             data_type = STRING
-
+        if data_type == STRING and len(data) > TRAIT_STRING_VALUE_MAX_LENGTH:
+            raise serializers.ValidationError(
+                f"Value string is too long. Must be less than {TRAIT_STRING_VALUE_MAX_LENGTH} character"
+            )
         return {"type": data_type, "value": data}
 
     def to_representation(self, value):
