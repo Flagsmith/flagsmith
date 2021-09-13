@@ -2,10 +2,12 @@ import hashlib
 import itertools
 import typing
 
-from integrations.amplitude.amplitude import AmplitudeWrapper
-from integrations.heap.heap import HeapWrapper
-from integrations.mixpanel.mixpanel import MixpanelWrapper
-from integrations.segment.segment import SegmentWrapper
+from integrations import (
+    AmplitudeWrapper,
+    HeapWrapper,
+    MixpanelWrapper,
+    SegmentWrapper,
+)
 
 IDENTITY_INTEGRATIONS = [
     {"relation_name": "amplitude_config", "wrapper": AmplitudeWrapper},

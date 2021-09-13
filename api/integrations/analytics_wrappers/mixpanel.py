@@ -4,7 +4,9 @@ import typing
 
 import requests
 
-from integrations.common.wrapper import AbstractBaseIdentityIntegrationWrapper
+from integrations.analytics_wrappers.base_wrapper import (
+    AbstractBaseIdentityIntegrationWrapper,
+)
 
 if typing.TYPE_CHECKING:
     from environments.identities.models import Identity

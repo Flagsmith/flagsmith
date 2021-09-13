@@ -1,11 +1,21 @@
 import typing
 from abc import ABC, abstractmethod, abstractstaticmethod
+from threading import Thread
 
-from util.util import postpone
+# from util.util import postpone
 
 if typing.TYPE_CHECKING:
     from environments.identities.models import Identity
     from features.models import FeatureState
+
+
+def postpone(function):
+    def decorator(*args, **kwargs):
+        t = Thread(target=function, args=args, kwargs=kwargs)
+        t.daemon = True
+        t.start()
+
+    return decorator
 
 
 class AbstractBaseEventIntegrationWrapper(ABC):

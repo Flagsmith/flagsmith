@@ -1,10 +1,9 @@
-import json
 import logging
 import typing
 
 import requests
 
-from integrations.common.wrapper import AbstractBaseIdentityIntegrationWrapper
+from .base_wrapper import AbstractBaseIdentityIntegrationWrapper
 
 if typing.TYPE_CHECKING:
     from environments.identities.models import Identity
@@ -12,21 +11,17 @@ if typing.TYPE_CHECKING:
 
 logger = logging.getLogger(__name__)
 
-AMPLITUDE_API_URL = "https://api.amplitude.com"
+HEAP_API_URL = "https://heapanalytics.com"
 
 
-class AmplitudeWrapper(AbstractBaseIdentityIntegrationWrapper):
+class HeapWrapper(AbstractBaseIdentityIntegrationWrapper):
     def __init__(self, api_key: str):
         self.api_key = api_key
-        self.url = f"{AMPLITUDE_API_URL}/identify"
+        self.url = f"{HEAP_API_URL}/api/track"
 
     def _identify_user(self, user_data: dict) -> None:
-        payload = {"api_key": self.api_key, "identification": json.dumps([user_data])}
-
-        response = requests.post(self.url, data=payload)
-        logger.debug(
-            "Sent event to Amplitude. Response code was: %s" % response.status_code
-        )
+        response = requests.post(self.url, json=user_data)
+        logger.debug("Sent event to Heap. Response code was: %s" % response.status_code)
 
     def generate_user_data(
         self, identity: "Identity", feature_states: typing.List["FeatureState"]
@@ -40,6 +35,8 @@ class AmplitudeWrapper(AbstractBaseIdentityIntegrationWrapper):
             )
 
         return {
-            "user_id": identity.identifier,
-            "user_properties": feature_properties,
+            "app_id": self.api_key,
+            "identity": identity.identifier,
+            "event": "Flagsmith Feature Flags",
+            "properties": feature_properties,
         }
