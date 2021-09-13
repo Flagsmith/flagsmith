@@ -99,6 +99,19 @@ class Subscription(models.Model):
     cancellation_date = models.DateTimeField(blank=True, null=True)
     customer_id = models.CharField(max_length=100, blank=True, null=True)
 
+    CHARGEBEE = "CHARGEBEE"
+    XERO = "XERO"
+    PAYMENT_METHODS = [
+        (CHARGEBEE, "Chargebee"),
+        (XERO, "Xero"),
+    ]
+    payment_method = models.CharField(
+        max_length=20,
+        choices=PAYMENT_METHODS,
+        default=CHARGEBEE,
+    )
+    notes = models.CharField(max_length=500, blank=True, null=True)
+
     def update_plan(self, plan_id):
         self.cancellation_date = None
         self.plan = plan_id
