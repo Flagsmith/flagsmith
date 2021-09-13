@@ -7,6 +7,7 @@ from rest_framework import status
 from rest_framework.test import APIClient, APITestCase
 
 from environments.identities.models import Identity
+from environments.identities.traits.constants import TRAIT_VALUE_MAX_LENGTH
 from environments.identities.traits.models import Trait
 from environments.models import INTEGER, STRING, Environment
 from organisations.models import Organisation, OrganisationRole
@@ -281,6 +282,22 @@ class SDKTraitsTest(APITestCase):
 
         # Then
         assert res.status_code == status.HTTP_400_BAD_REQUEST
+
+    def test_set_trait_with_too_long_string_value_returns_400(self):
+        # Given
+        url = reverse("api-v1:sdk-traits-list")
+        trait_value = "t" * (TRAIT_VALUE_MAX_LENGTH + 1)
+
+        # When
+        res = self.client.post(
+            url,
+            data=self._generate_json_trait_data(trait_value=trait_value),
+            content_type=self.JSON,
+        )
+
+        # Then
+        assert res.status_code == status.HTTP_400_BAD_REQUEST
+        assert "string is too long" in res.json()["trait_value"][0]
 
     def test_can_set_trait_with_bad_value_for_an_identity(self):
         # Given
