@@ -59,7 +59,13 @@
             <tr>
               <td>{{org.id}}</td>
               <td><a href="/sales-dashboard/organisations/{{org.id}}">{{org.name}}</a></td>
-              <td>{{org.subscription.plan|default:"Free"}}</td>
+              <td>
+                {% if org.has_subscription %}
+                {{org.subscription.plan}} - {{org.subscription.payment_method}}
+                {% else %}
+                Free
+                {% endif %}
+              </td>
               <td>{{org.num_users}}</td>
               <td>{{org.num_projects}}</td>
               <td>{{org.num_features}}</td>
