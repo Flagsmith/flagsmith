@@ -9,6 +9,19 @@ from environments.identities.traits.exceptions import TraitPersistenceError
 from environments.models import BOOLEAN, FLOAT, INTEGER, STRING
 
 
+class TriatQuerySet(models.QuerySet):
+    def delete(self, *args, **kwargs):
+        super(TriatQuerySet, self).delete(*args, **kwargs)
+        # update all the affected identity documents in dynamodb
+        self.first().identity.bulk_send_to_dynamodb([trait.identity for trait in self])
+
+    def bulk_create(self, *args, **kwargs):
+        super(TriatQuerySet, self).bulk_create(*args, **kwargs)
+        # Since we only bulk create traits for the same identity
+        # It is safe to pick any element from the qs
+        self.first().identity.send_to_dynamodb()
+
+
 @python_2_unicode_compatible
 class Trait(LifecycleModel):
     TRAIT_VALUE_TYPES = (
@@ -31,6 +44,8 @@ class Trait(LifecycleModel):
     float_value = models.FloatField(null=True, blank=True)
 
     created_date = models.DateTimeField("DateCreated", auto_now_add=True)
+
+    objects = TriatQuerySet.as_manager()
 
     class Meta:
         verbose_name_plural = "User Traits"

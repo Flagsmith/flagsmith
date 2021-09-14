@@ -6,7 +6,6 @@ from django.conf import settings
 from django.db import models
 from django.db.models import Prefetch, Q
 from django.utils.encoding import python_2_unicode_compatible
-from django_lifecycle import AFTER_CREATE, LifecycleModel, hook
 from flag_engine.identities.builders import build_identity_dict
 
 from environments.identities.traits.models import Trait
@@ -23,7 +22,7 @@ if settings.IDENTITIES_TABLE_NAME_DYNAMO:
 
 
 @python_2_unicode_compatible
-class Identity(LifecycleModel):
+class Identity(models.Model):
     identifier = models.CharField(max_length=2000)
     created_date = models.DateTimeField("DateCreated", auto_now_add=True)
     environment = models.ForeignKey(
@@ -37,10 +36,6 @@ class Identity(LifecycleModel):
         # hard code the table name after moving from the environments app to prevent
         # issues with production deployment due to multi server configuration.
         db_table = "environments_identity"
-
-    @hook(AFTER_CREATE)
-    def create_in_dynamodb(self):
-        self.send_to_dynamodb()
 
     def get_all_feature_states(self, traits: typing.List[Trait] = None):
         """
@@ -151,8 +146,6 @@ class Identity(LifecycleModel):
 
         if persist:
             Trait.objects.bulk_create(trait_models)
-            # Update the Identity document in dynamodb
-            self.send_to_dynamodb()
 
         return trait_models
 
@@ -202,7 +195,17 @@ class Identity(LifecycleModel):
         # TODO: handle this in the above logic to avoid a second hit to the DB
         return self.get_all_user_traits()
 
+    @staticmethod
+    def bulk_send_to_dynamodb(identities: typing.List["Identity"]):
+        if not dynamo_identity_table:
+            return
+        for identity in identities:
+            with dynamo_identity_table.batch_writer() as batch:
+                identity_dict = build_identity_dict(identity)
+                batch.put_item(Item=identity_dict)
+
     def send_to_dynamodb(self):
-        if dynamo_identity_table:
-            identity_dict = build_identity_dict(self)
-            dynamo_identity_table.put_item(Item=identity_dict)
+        if not dynamo_identity_table:
+            return
+        identity_dict = build_identity_dict(self)
+        dynamo_identity_table.put_item(Item=identity_dict)
