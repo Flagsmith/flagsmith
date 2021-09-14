@@ -180,11 +180,11 @@ class OrganisationTestCase(TestCase):
             name="Test Group", organisation=organisation
         )
         self.user.add_organisation(organisation, OrganisationRole.ADMIN)
-
         user_2 = FFAdminUser.objects.create(email="test@example.com")
         user_2.add_organisation(organisation)
+        # Add users to the group
         group.users.add(user_2)
-
+        group.users.add(self.user)
         url = reverse(
             "api-v1:organisations:organisation-remove-users", args=[organisation.pk]
         )
@@ -200,6 +200,8 @@ class OrganisationTestCase(TestCase):
         assert res.status_code == status.HTTP_200_OK
         assert organisation not in user_2.organisations.all()
         assert group not in user_2.permission_groups.all()
+        # Test that other users are still part of the group
+        assert group in self.user.permission_groups.all()
 
     @override_settings()
     def test_can_invite_user_as_admin(self):
