@@ -66,7 +66,7 @@ jobs:
             - name: Download features
               run: >
                 curl --location --request GET 'https://api.flagsmith.com/api/v1/flags/'
-                --header 'X-Environment-Key: ${{ secrets.ENVIRONMENT_KEY }}' > flags.json
+                --header 'X-Environment-Key: ${{ secrets.FLAGSMITH_ENVIRONMENT_KEY }}' > frontend/flags.json
 
 
             - name: Build and push
