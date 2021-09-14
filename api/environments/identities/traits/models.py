@@ -11,15 +11,19 @@ from environments.models import BOOLEAN, FLOAT, INTEGER, STRING
 
 class TriatQuerySet(models.QuerySet):
     def delete(self, *args, **kwargs):
-        super(TriatQuerySet, self).delete(*args, **kwargs)
+        super().delete(*args, **kwargs)
         # update all the affected identity documents in dynamodb
-        self.first().identity.bulk_send_to_dynamodb([trait.identity for trait in self])
+        if self:
+            self.first().identity.bulk_send_to_dynamodb(
+                [trait.identity for trait in self]
+            )
 
     def bulk_create(self, *args, **kwargs):
-        super(TriatQuerySet, self).bulk_create(*args, **kwargs)
+        super().bulk_create(*args, **kwargs)
         # Since we only bulk create traits for the same identity
         # It is safe to pick any element from the qs
-        self.first().identity.send_to_dynamodb()
+        if self:
+            self.first().send_to_dynamodb()
 
 
 @python_2_unicode_compatible

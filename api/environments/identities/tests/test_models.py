@@ -51,18 +51,6 @@ class IdentityTestCase(TransactionTestCase):
         assert isinstance(identity.environment, Environment)
         assert hasattr(identity, "created_date")
 
-    @mock.patch("environments.identities.models.dynamo_identity_table")
-    def test_create_identity_should_call_put_item(self, dynamo_identity_table):
-        # Given
-        # When
-        identity = Identity.objects.create(
-            identifier="test-identity", environment=self.environment
-        )
-
-        # Then
-        identity_dict = build_identity_dict(identity)
-        dynamo_identity_table.put_item.assert_called_with(Item=identity_dict)
-
     def test_get_all_feature_states(self):
         feature = Feature.objects.create(name="Test Feature", project=self.project)
         feature_2 = Feature.objects.create(name="Test Feature 2", project=self.project)
