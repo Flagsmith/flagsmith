@@ -103,7 +103,7 @@ module.exports = {
                         'no-sandbox',
                         'ignore-certificate-errors',
                         'allow-insecure-localhost',
-                        'headless',
+                        // 'headless',
                         browserSize,
                         'allow-file-access-from-files',
                         'use-fake-device-for-media-stream',

@@ -88,6 +88,7 @@ if (isDev) { // Serve files from src directory and use webpack-dev-server
     console.log('Running production mode');
     app.use(express.static('build'));
     app.set('views', 'build/');
+    process.send({ done: true });
 }
 
 app.engine('handlebars', exphbs());

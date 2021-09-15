@@ -20,7 +20,7 @@ module.exports = {
         main: './web/main.js',
     },
     optimization: { // chunk bundle into Libraries, App JS and dumb components
-        minimizer: [
+        minimizer: process.env.E2E ? [] : [
             new UglifyJSPlugin({
                 cache: true,
                 parallel: true,
