@@ -13,12 +13,24 @@ const testHelpers = {
             .expect.element(testHelpers.byTestID('email')).to.be.visible;
     },
     byTestID: byId,
-    login: async (browser, url, email, password) => {
+    login: async (browser, url, email, password, retryOnFail) => {
         browser.url(url)
             .pause(200) // Allows the dropdown to fade in
             .waitAndSet('[name="email"]', email)
             .waitAndSet('[name="password"]', password)
-            .click('#login-btn');
+            .click('#login-btn')
+            .waitForElementNotPresent('#login-btn', '#login-btn', 20000, 500, false, (res, err) => {
+                if (!retryOnFail) return;
+                console.log('Retrying Login 1');
+                browser.url(url)
+                    .pause(2000)
+                    .waitAndSet('[name="email"]', email)
+                    .waitAndSet('[name="password"]', password)
+                    .click('#login-btn')
+                    .waitForElementNotPresent('#login-btn', '#login-btn', 20000, 500, false, (res, err) => {
+
+                    });
+            });
     },
     waitLoggedIn: async (browser) => {
         browser.waitForElementNotPresent('#login-btn');
@@ -122,7 +134,7 @@ const testHelpers = {
     gotoFeature(browser, index) {
         browser.click(byId(`feature-item-${index}`))
             .waitForElementPresent('#create-feature-modal');
-        browser.pause(200)
+        browser.pause(200);
     },
     createTrait(browser, index, id, value) {
         browser
@@ -154,7 +166,7 @@ const testHelpers = {
     addSegmentOverrideConfig: (browser, index, value, selectionIndex = 0) => {
         browser.waitAndClick(byId('overrides'));
         browser.waitAndClick(byId(`select-segment-option-${selectionIndex}`));
-        browser.pause(500)
+        browser.pause(500);
         browser.waitForElementVisible(byId(`segment-override-value-${index}`));
         browser.waitAndSet(byId(`segment-override-value-${0}`), value);
     },

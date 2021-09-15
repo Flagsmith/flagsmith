@@ -26,6 +26,9 @@ const OrganisationSettingsPage = class extends Component {
             role: 'ADMIN',
             manageSubscriptionLoaded: true,
         };
+        if (!AccountStore.getOrganisation()) {
+            return;
+        }
         AppActions.getOrganisation(AccountStore.getOrganisation().id);
 
         if (this.props.hasFeature('usage_chart') && !projectOverrides.disableInflux) {
@@ -257,7 +260,7 @@ const OrganisationSettingsPage = class extends Component {
                         isSaving,
                         user,
                         organisation,
-                    }, { createOrganisation, selectOrganisation, deleteOrganisation }) => (
+                    }, { createOrganisation, selectOrganisation, deleteOrganisation }) => !!organisation && (
                         <div>
                             <FormGroup>
                                 <div className="margin-bottom">
@@ -608,7 +611,7 @@ const OrganisationSettingsPage = class extends Component {
                                                                 </Button>
                                                             </Row>
                                                             <p>Groups allow you to manage permissions for viewing and editing projects, features and environments.</p>
-                                                            <UserGroupList showRemove orgId={organisation.id}/>
+                                                            <UserGroupList showRemove orgId={organisation && organisation.id}/>
                                                         </div>
 
                                                     </div>

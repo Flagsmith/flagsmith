@@ -19,6 +19,7 @@ process.on('SIGINT', () => {
     if (server && !server.killed) server.kill('SIGINT');
     process.exit(2);
 });
+let firstTime = true;
 module.exports = {
     // An array of folders (excluding subfolders) where your tests are located;
     // if this is not specified, the test source must be passed as the second argument to the test runner.
@@ -40,7 +41,7 @@ module.exports = {
     'test_workers': { 'enabled': true, 'workers': 'auto' },
     parallel_process_delay: process.env.E2E_PARALLEL_PROCESS_DELAY
         ? parseInt(process.env.E2E_PARALLEL_PROCESS_DELAY)
-        : 500,
+        : 50,
     test_settings: {
         default: {
             globals: {
@@ -49,13 +50,15 @@ module.exports = {
                 'asyncHookTimeout': 60000,
                 'retryAssertionTimeout': 30000,
                 before: (browser, done) => {
-                    console.log('Starting server');
-                    process.env.NODE_ENV = 'production';
-                    server = fork('./server');
-                    server.on('message', () => {
-                        console.log('Nightwatch ack server complete');
-                        done();
-                    });
+                    firstTime = false;
+                    setTimeout(() => {
+                        console.log("Starting server")
+                        process.env.NODE_ENV = "production"
+                        server = fork('./server');
+                        server.on('message', () => {
+                            done();
+                        });
+                    }, 1000);
                 },
                 after: (browser, done) => {
                     exec('killall chromedriver');
@@ -102,7 +105,7 @@ module.exports = {
                         'no-sandbox',
                         'ignore-certificate-errors',
                         'allow-insecure-localhost',
-                        'headless',
+                        // 'headless',
                         browserSize,
                         'allow-file-access-from-files',
                         'use-fake-device-for-media-stream',

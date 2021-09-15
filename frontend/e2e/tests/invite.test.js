@@ -12,7 +12,7 @@ const byId = helpers.byTestID;
 
 module.exports = {
     '[Invite Tests] - Login': function (browser) {
-        testHelpers.login(browser, url, email, password);
+        testHelpers.login(browser, url, email, password, true);
     },
     '[Invite Tests] - Invite user': function (browser) {
         browser.pause(200);
@@ -62,10 +62,5 @@ module.exports = {
                     .waitForElementPresent(`//div[contains(@class, "org-nav")]//a[contains(text(),"${'Bullet Train Ltd'}")]`);
             }
         });
-    },
-    '[Invite Tests] - Finish': function (browser) {
-        browser
-            .useCss();
-        helpers.logout(browser);
     },
 };
