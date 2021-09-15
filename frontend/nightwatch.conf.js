@@ -19,7 +19,6 @@ process.on('SIGINT', () => {
     if (server && !server.killed) server.kill('SIGINT');
     process.exit(2);
 });
-let firstTime = true;
 module.exports = {
     // An array of folders (excluding subfolders) where your tests are located;
     // if this is not specified, the test source must be passed as the second argument to the test runner.
@@ -50,15 +49,13 @@ module.exports = {
                 'asyncHookTimeout': 60000,
                 'retryAssertionTimeout': 30000,
                 before: (browser, done) => {
-                    firstTime = false;
-                    setTimeout(() => {
-                        console.log('Starting server');
-                        process.env.NODE_ENV = 'production';
-                        server = fork('./server');
-                        server.on('message', () => {
-                            done();
-                        });
-                    }, 1000);
+                    console.log('Starting server');
+                    process.env.NODE_ENV = 'production';
+                    server = fork('./server');
+                    server.on('message', () => {
+                        console.log('Nightwatch ack server complete');
+                        done();
+                    });
                 },
                 after: (browser, done) => {
                     exec('killall chromedriver');
