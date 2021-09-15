@@ -30,7 +30,7 @@ if (!process.env.E2E) {
 }
 module.exports = {
     devtool: process.env.E2E ? false : 'source-map',
-    mode: process.env.E2E ? 'none' : 'production',
+    mode: 'production',
 
     entry: {
         main: './web/main.js',
