@@ -31,6 +31,8 @@ jobs:
               with:
                   path: frontend/node_modules
                   key: ${{ runner.os }}-node-${{ hashFiles('frontend/package-lock.json') }}
+                  restore-keys: |
+                      ${{ runner.os }}-node-
 
             - name: Run API
               working-directory: api
