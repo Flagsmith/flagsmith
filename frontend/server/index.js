@@ -60,6 +60,7 @@ app.get('/static/project-overrides.js', (req, res) => {
         { name: 'flagsmithClientAPI', value: process.env.FLAGSMITH_CLIENT_API },
         { name: 'disableInflux', value: process.env.DISABLE_INFLUXDB_FEATURES },
         { name: 'flagsmithAnalytics', value: !!process.env.FLAGSMITH_ANALYTICS },
+        { name: 'capterraKey', value: !!process.env.CAPTERRA_API_KEY },
         { name: 'amplitude', value: process.env.AMPLITUDE },
     ];
     const output = values.map(getVariable).join('');

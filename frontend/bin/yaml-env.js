@@ -14,6 +14,7 @@ env_variables:
   EVENTS_SLACK_CHANNEL: ${process.env.EVENTS_SLACK_CHANNEL}
   FLAGSMITH: ${process.env.FLAGSMITH}
   FLAGSMITH_ANALYTICS: ${process.env.FLAGSMITH_ANALYTICS}
+  CAPTERRA_API_KEY: ${process.env.CAPTERRA_API_KEY}
   GA: ${process.env.GA}
   CRISP_CHAT: ${process.env.CRISP_CHAT}
   LINKEDIN: ${process.env.LINKEDIN}
