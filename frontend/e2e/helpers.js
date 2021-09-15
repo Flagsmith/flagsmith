@@ -16,21 +16,10 @@ const testHelpers = {
     login: async (browser, url, email, password, retryOnFail) => {
         browser.url(url)
             .pause(200) // Allows the dropdown to fade in
-            .waitAndSet('[name="email"]', email)
+            .waitAndSet('[name="email"]', `${email}`)
             .waitAndSet('[name="password"]', password)
             .click('#login-btn')
-            .waitForElementNotPresent('#login-btn', '#login-btn', 20000, 500, false, (res, err) => {
-                if (!retryOnFail) return;
-                console.log('Retrying Login 1');
-                browser.url(url)
-                    .pause(2000)
-                    .waitAndSet('[name="email"]', email)
-                    .waitAndSet('[name="password"]', password)
-                    .click('#login-btn')
-                    .waitForElementNotPresent('#login-btn', '#login-btn', 20000, 500, false, (res, err) => {
-
-                    });
-            });
+            .waitForElementVisible('#project-select-page');
     },
     waitLoggedIn: async (browser) => {
         browser.waitForElementNotPresent('#login-btn');
@@ -121,6 +110,7 @@ const testHelpers = {
     gotoTraits(browser) {
         browser
             .waitAndClick('#users-link')
+            .pause(500)
             .waitAndClick(byId('user-item-0'))
             .waitForElementVisible('#add-trait')
             .pause(100);
@@ -161,6 +151,7 @@ const testHelpers = {
     goToUser(browser, index) {
         browser
             .waitAndClick('#users-link')
+            .pause(500)
             .waitAndClick(byId(`user-item-${index}`));
     },
     addSegmentOverrideConfig: (browser, index, value, selectionIndex = 0) => {

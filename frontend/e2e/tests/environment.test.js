@@ -6,11 +6,11 @@ const helpers = require('../helpers');
 const byId = helpers.byTestID;
 
 module.exports = {
-    '[Project Tests] - Login': function (browser) {
+    '[Environment Tests] - Login': function (browser) {
         testHelpers.login(browser, url, email, password, true);
         browser.waitAndClick('#project-select-0');
     },
-    '[Project Tests] - Create environment': function (browser) {
+    '[Environment Tests] - Create environment': function (browser) {
         browser.waitAndClick('#create-env-link')
             .waitForElementPresent('#create-env-modal')
             .waitAndSet('[name="envName"]', 'Staging')
@@ -18,7 +18,7 @@ module.exports = {
             .waitForElementNotPresent('#create-env-modal')
             .waitForElementVisible(byId('switch-environment-staging-active'));
     },
-    '[Project Tests] - Edit environment': function (browser) {
+    '[Environment Tests] - Edit environment': function (browser) {
         browser
             .waitAndClick('#env-settings-link')
             .waitAndSet("[name='env-name']", 'Internal')
@@ -26,7 +26,7 @@ module.exports = {
 
         browser.waitForElementVisible(byId('switch-environment-staginginternal-active'));
     },
-    '[Project Tests] - Delete environment': function (browser) {
+    '[Environment Tests] - Delete environment': function (browser) {
         browser
             .waitAndClick('#delete-env-btn')
             .waitAndSet("[name='confirm-env-name']", 'StagingInternal')

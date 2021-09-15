@@ -52,8 +52,8 @@ module.exports = {
                 before: (browser, done) => {
                     firstTime = false;
                     setTimeout(() => {
-                        console.log("Starting server")
-                        process.env.NODE_ENV = "production"
+                        console.log('Starting server');
+                        process.env.NODE_ENV = 'production';
                         server = fork('./server');
                         server.on('message', () => {
                             done();
@@ -63,8 +63,10 @@ module.exports = {
                 after: (browser, done) => {
                     exec('killall chromedriver');
                     server.kill('SIGINT');
-                    process.exit();
                     done();
+                    setTimeout(() => {
+                        process.exit();
+                    }, 2000);
                 },
                 afterEach(browser, done) {
                     if (
@@ -105,7 +107,7 @@ module.exports = {
                         'no-sandbox',
                         'ignore-certificate-errors',
                         'allow-insecure-localhost',
-                        'headless',
+                        // 'headless',
                         browserSize,
                         'allow-file-access-from-files',
                         'use-fake-device-for-media-stream',

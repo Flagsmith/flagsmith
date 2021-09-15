@@ -193,7 +193,9 @@ const App = class extends Component {
             return (
                 <AccountProvider onNoUser={this.onNoUser} onLogout={this.onLogout} onLogin={this.onLogin}>
                     {() => (
-                        <AppLoader />
+                        <div id="login-page">
+                            <AppLoader />
+                        </div>
                     )}
                 </AccountProvider>
             );
@@ -361,7 +363,7 @@ const App = class extends Component {
                                                                                   to="/create"
                                                                                   >
                                                                                     <Flex className="text-center">
-                                                                                        <Button>Create Organisation <span className="ion-md-add"/></Button>                          
+                                                                                        <Button>Create Organisation <span className="ion-md-add"/></Button>
                                                                                     </Flex>
                                                                                </Link>
                                                                             </div>

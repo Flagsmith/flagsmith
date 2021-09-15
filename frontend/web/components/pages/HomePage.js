@@ -149,7 +149,7 @@ const HomePage = class extends React.Component {
           <>
               <AccountProvider onLogout={this.onLogout} onLogin={this.onLogin}>
                   {({ isLoading, isSaving, error }, { register }) => (
-                      <div style={{ flexDirection: 'column' }} className="fullscreen-container">
+                      <div id="login-page" style={{ flexDirection: 'column' }} className="fullscreen-container">
                           <div className="mb-4">
                               <NavIconSmall className="signup-icon" />
                           </div>
