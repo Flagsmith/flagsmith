@@ -16,7 +16,7 @@ let server;
 
 // Tests unexpected terminated i.e. Ctrl+c
 process.on('SIGINT', () => {
-    if (!server.killed) server.kill('SIGINT');
+    if (server && !server.killed) server.kill('SIGINT');
     process.exit(2);
 });
 let firstTime = true;
