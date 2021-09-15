@@ -63,6 +63,12 @@ jobs:
                   echo ${GITHUB_SHA} > CI_COMMIT_SHA
                   echo ${{ steps.meta-build.outputs.tags }} > IMAGE_TAG
 
+            - name: Download features
+              run: >
+                curl --location --request GET 'https://api.flagsmith.com/api/v1/flags/'
+                --header 'X-Environment-Key: ${{ secrets.FLAGSMITH_ENVIRONMENT_KEY }}' > frontend/flags.json
+
+
             - name: Build and push
               id: docker_build
               uses: docker/build-push-action@v2
