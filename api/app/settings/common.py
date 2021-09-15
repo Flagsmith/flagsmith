@@ -40,6 +40,9 @@ DEBUG = env("DEBUG", default=False)
 # Enables the sending of telemetry data to the central Flagsmith API for usage tracking
 ENABLE_TELEMETRY = env("ENABLE_TELEMETRY", default=True)
 
+# Enables gzip compression
+ENABLE_GZIP_COMPRESSION = env.bool("ENABLE_GZIP_COMPRESSION", default=False)
+
 SECRET_KEY = env("DJANGO_SECRET_KEY", default=get_random_secret_key())
 
 HOSTED_SEATS_LIMIT = env.int("HOSTED_SEATS_LIMIT", default=0)
@@ -185,6 +188,10 @@ MIDDLEWARE = [
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
     "simple_history.middleware.HistoryRequestMiddleware",
 ]
+
+if ENABLE_GZIP_COMPRESSION:
+    # ref: https://docs.djangoproject.com/en/2.2/ref/middleware/#middleware-ordering
+    MIDDLEWARE.insert(1, "django.middleware.gzip.GZipMiddleware")
 
 if GOOGLE_ANALYTICS_KEY:
     MIDDLEWARE.append("app_analytics.middleware.GoogleAnalyticsMiddleware")
