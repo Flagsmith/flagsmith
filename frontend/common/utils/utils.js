@@ -153,6 +153,11 @@ module.exports = Object.assign({}, require('./base/_utils'), {
         );
         return !!found;
     },
+    appendImage: (src) => {
+        const img = document.createElement('img');
+        img.src = src;
+        document.body.appendChild(img);
+    },
     getPlanPermission: (plan, permission) => {
         let valid = true;
         if (!plan) {
