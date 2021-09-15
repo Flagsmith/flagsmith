@@ -190,7 +190,9 @@ MIDDLEWARE = [
 ]
 
 if ENABLE_GZIP_COMPRESSION:
+    # ref: https://docs.djangoproject.com/en/2.2/ref/middleware/#middleware-ordering
     MIDDLEWARE.insert(1, "django.middleware.gzip.GZipMiddleware")
+
 if GOOGLE_ANALYTICS_KEY:
     MIDDLEWARE.append("app_analytics.middleware.GoogleAnalyticsMiddleware")
 
