@@ -2,11 +2,11 @@ from djoser.serializers import UserSerializer as DjoserUserSerializer
 from rest_framework import serializers
 from rest_framework.exceptions import ValidationError
 
+from organisations.invites.models import Invite
 from organisations.models import Organisation
 from organisations.serializers import UserOrganisationSerializer
 
 from .models import FFAdminUser, UserPermissionGroup
-from organisations.invites.models import Invite
 
 
 class UserIdSerializer(serializers.Serializer):
@@ -21,6 +21,9 @@ class UserIdSerializer(serializers.Serializer):
 
         if user and organisation in user.organisations.all():
             user.remove_organisation(organisation)
+        user.permission_groups.remove(
+            *UserPermissionGroup.objects.filter(organisation=organisation)
+        )
 
         return user
 
