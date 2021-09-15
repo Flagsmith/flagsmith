@@ -52,6 +52,8 @@ module.exports = {
                 before: (browser, done) => {
                     firstTime = false;
                     setTimeout(() => {
+                        console.log('Starting server');
+                        process.env.NODE_ENV = 'production';
                         server = fork('./server');
                         server.on('message', () => {
                             done();

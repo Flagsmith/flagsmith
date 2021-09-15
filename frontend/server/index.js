@@ -88,7 +88,6 @@ if (isDev) { // Serve files from src directory and use webpack-dev-server
     console.log('Running production mode');
     app.use(express.static('build'));
     app.set('views', 'build/');
-    process.send({ done: true });
 }
 
 app.engine('handlebars', exphbs());
@@ -169,4 +168,7 @@ if (process.env.SLACK_TOKEN && process.env.DEPLOYMENT_SLACK_CHANNEL && postToSla
 
 app.listen(port, () => {
     console.log(`Server listening on: ${port}`);
+    if (!isDev) {
+        process.send({ done: true });
+    }
 });
