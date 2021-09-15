@@ -26,6 +26,12 @@ jobs:
               with:
                   fetch-depth: 0
 
+            - name: Cache npm
+              uses: actions/checkout@v2
+              with:
+                  path: frontend/node_modules
+                  key: ${{ runner.os }}-node_modules
+
             - name: Run API
               working-directory: api
               env:
