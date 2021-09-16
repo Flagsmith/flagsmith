@@ -199,8 +199,8 @@ class Identity(models.Model):
     def bulk_send_to_dynamodb(identities: typing.List["Identity"]):
         if not dynamo_identity_table:
             return
-        for identity in identities:
-            with dynamo_identity_table.batch_writer() as batch:
+        with dynamo_identity_table.batch_writer() as batch:
+            for identity in identities:
                 identity_dict = build_identity_dict(identity)
                 batch.put_item(Item=identity_dict)
 

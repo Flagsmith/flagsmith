@@ -11,12 +11,14 @@ from environments.models import BOOLEAN, FLOAT, INTEGER, STRING
 
 class TriatQuerySet(models.QuerySet):
     def delete(self, *args, **kwargs):
+        from environments.identities.models import Identity
+
         # collect all the identities that we need to update
-        identitie_to_delete = [trait.identity for trait in self]
+        identities_to_update = [trait.identity for trait in self]
         super().delete(*args, **kwargs)
         # update all the identities
-        if identitie_to_delete:
-            identitie_to_delete[0].bulk_send_to_dynamodb(identitie_to_delete)
+        if identities_to_update:
+            Identity.bulk_send_to_dynamodb(identities_to_update)
 
     def bulk_create(self, *args, **kwargs):
         super().bulk_create(*args, **kwargs)

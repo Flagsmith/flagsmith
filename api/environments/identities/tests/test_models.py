@@ -683,7 +683,6 @@ class IdentityTestCase(TransactionTestCase):
             identifier="identifier", environment=self.environment
         )
 
-        dynamo_identity_table.put_item = mock.MagicMock()
         trait_data_items = [
             generate_trait_data_item("string_trait", "string_value"),
             generate_trait_data_item("integer_trait", 1),
