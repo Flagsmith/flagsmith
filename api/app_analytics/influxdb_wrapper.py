@@ -1,3 +1,4 @@
+import logging
 import typing
 from collections import defaultdict
 
@@ -5,6 +6,8 @@ from django.conf import settings
 from influxdb_client import InfluxDBClient, Point
 from influxdb_client.client.write_api import SYNCHRONOUS
 from urllib3 import Retry
+
+logger = logging.getLogger(__name__)
 
 url = settings.INFLUXDB_URL
 token = settings.INFLUXDB_TOKEN
@@ -37,7 +40,10 @@ class InfluxDBWrapper:
         self.records.append(point)
 
     def write(self):
-        self.write_api.write(bucket=settings.INFLUXDB_BUCKET, record=self.records)
+        try:
+            self.write_api.write(bucket=settings.INFLUXDB_BUCKET, record=self.records)
+        except Exception as e:
+            logger.error(f"Write to influx DB failed with {e}")
 
     @staticmethod
     def influx_query_manager(
@@ -58,8 +64,12 @@ class InfluxDBWrapper:
             f"{extra}"
         )
 
-        result = query_api.query(org=influx_org, query=query)
-        return result
+        try:
+            result = query_api.query(org=influx_org, query=query)
+            return result
+        except Exception as e:
+            logger.error(f"Influx read query failed failed with {e}")
+            return []
 
 
 def get_events_for_organisation(organisation_id: id, date_range: str = "30d"):
