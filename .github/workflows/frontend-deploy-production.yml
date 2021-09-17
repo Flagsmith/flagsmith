@@ -62,22 +62,22 @@ jobs:
 
             - name: Deploy to App Engine
               env:
-                  ASSET_URL: https://cdn.flagsmith.com
+                  STATIC_ASSET_CDN_URL: https://cdn.flagsmith.com
                   ENV: prod
-                  AMPLITUDE: ${{ secrets.AMPLITUDE }}
-                  CRISP_CHAT: ${{ secrets.CRISP_CHAT }}
+                  AMPLITUDE_API_KEY: ${{ secrets.AMPLITUDE_API_KEY }}
+                  CRISP_WEBSITE_ID: ${{ secrets.CRISP_WEBSITE_ID }}
                   DEPLOYMENT_SLACK_CHANNEL: ${ secrets.DEPLOYMENT_SLACK_CHANNEL }}
                   E2E_SLACK_CHANNEL: ${{ secrets.E2E_SLACK_CHANNEL }}
                   EVENTS_SLACK_CHANNEL: ${{ secrets.EVENTS_SLACK_CHANNEL }}
-                  FLAGSMITH_ANALYTICS: ${{ secrets.FLAGSMITH_ANALYTICS }}
+                  ENABLE_FLAG_EVALUATION_ANALYTICS: ${{ secrets.ENABLE_FLAG_EVALUATION_ANALYTICS }}
+                  GOOGLE_ANALYTICS_API_KEY: ${{ secrets.GOOGLE_ANALYTICS_API_KEY }}
                   CAPTERRA_API_KEY: ${{ secrets.CAPTERRA_API_KEY }}
-                  GA: ${{ secrets.GA }}
                   LINKEDIN: ${{ secrets.LINKEDIN }}
-                  MIXPANEL: ${{ secrets.MIXPANEL }}
+                  MIXPANEL_API_KEY: ${{ secrets.MIXPANEL_API_KEY }}
                   SLACK_TOKEN: ${{ secrets.SLACK_TOKEN }}
               run: |
                   npm i
                   npm run env
                   npm run dotenv
                   npm run bundle
-                  gcloud app deploy --quiet
+                  gcloud app deploy --quiet --no-promote

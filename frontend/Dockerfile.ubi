@@ -5,7 +5,7 @@ COPY . .
 RUN pwd
 RUN npm install --production
 ENV ENV=prod
-ENV ASSET_URL=/
+ENV STATIC_ASSET_CDN_URL=/
 RUN npm run bundle
 
 
