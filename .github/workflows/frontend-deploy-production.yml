@@ -70,6 +70,7 @@ jobs:
                   E2E_SLACK_CHANNEL: ${{ secrets.E2E_SLACK_CHANNEL }}
                   EVENTS_SLACK_CHANNEL: ${{ secrets.EVENTS_SLACK_CHANNEL }}
                   ENABLE_FLAG_EVALUATION_ANALYTICS: ${{ secrets.ENABLE_FLAG_EVALUATION_ANALYTICS }}
+                  ENABLE_INFLUXDB_FEATURES: ${{ secrets.ENABLE_INFLUXDB_FEATURES }}
                   GOOGLE_ANALYTICS_API_KEY: ${{ secrets.GOOGLE_ANALYTICS_API_KEY }}
                   LINKEDIN: ${{ secrets.LINKEDIN }}
                   MIXPANEL_API_KEY: ${{ secrets.MIXPANEL_API_KEY }}
