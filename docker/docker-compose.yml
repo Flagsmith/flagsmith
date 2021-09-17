@@ -26,7 +26,7 @@ services:
         image: flagsmith/flagsmith-frontend:v2.7.0
         environment:
             # You might need to change the 2 host names below depending on your docker dns setup
-            API_URL: http://localhost:8000/api/v1/
+            FLAGSMITH_API_URL: http://localhost:8000/api/v1/
             STATIC_ASSET_CDN_URL: http://localhost:8080/
             ENABLE_INFLUXDB_FEATURES: false # Comment out to enable InfluxDB
             FLAGSMITH_ON_FLAGSMITH_API_KEY: 4vfqhypYjcPoGGu8ByrBaj # This is the production Flagsmith API key
