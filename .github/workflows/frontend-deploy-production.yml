@@ -79,4 +79,4 @@ jobs:
                   npm run env
                   npm run dotenv
                   npm run bundle
-                  gcloud app deploy --quiet
+                  gcloud app deploy --quiet --no-promote
