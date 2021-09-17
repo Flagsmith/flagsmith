@@ -71,6 +71,7 @@ jobs:
                   EVENTS_SLACK_CHANNEL: ${{ secrets.EVENTS_SLACK_CHANNEL }}
                   ENABLE_FLAG_EVALUATION_ANALYTICS: ${{ secrets.ENABLE_FLAG_EVALUATION_ANALYTICS }}
                   GOOGLE_ANALYTICS_API_KEY: ${{ secrets.GOOGLE_ANALYTICS_API_KEY }}
+                  CAPTERRA_API_KEY: ${{ secrets.CAPTERRA_API_KEY }}
                   LINKEDIN: ${{ secrets.LINKEDIN }}
                   MIXPANEL_API_KEY: ${{ secrets.MIXPANEL_API_KEY }}
                   SLACK_TOKEN: ${{ secrets.SLACK_TOKEN }}
