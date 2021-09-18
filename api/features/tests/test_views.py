@@ -24,7 +24,7 @@ from features.models import (
     FeatureStateValue,
 )
 from features.multivariate.models import MultivariateFeatureOption
-from features.value_types import STRING, INTEGER, BOOLEAN
+from features.value_types import BOOLEAN, INTEGER, STRING
 from organisations.models import Organisation, OrganisationRole
 from projects.models import Project
 from projects.tags.models import Tag
@@ -82,6 +82,36 @@ class ProjectFeatureTestCase(TestCase):
             description="Test Tag description",
             project=self.project2,
         )
+
+    def test_default_is_archived_is_false(self):
+        # Given - set up data
+        data = {
+            "name": "test feature",
+        }
+        url = reverse("api-v1:projects:project-features-list", args=[self.project.id])
+
+        # When
+        response = self.client.post(
+            url, data=json.dumps(data), content_type="application/json"
+        ).json()
+
+        # Then
+        assert response["is_archived"] is False
+
+    def test_update_is_archived_works(self):
+        # Given
+        feature = Feature.objects.create(name="test feature", project=self.project)
+        url = reverse(
+            "api-v1:projects:project-features-detail",
+            args=[self.project.id, feature.id],
+        )
+        data = {"name": "test feature", "is_archived": True}
+
+        # When
+        response = self.client.put(url, data=data).json()
+
+        # Then
+        assert response["is_archived"] is True
 
     def test_should_create_feature_states_when_feature_created(self):
         # Given - set up data
