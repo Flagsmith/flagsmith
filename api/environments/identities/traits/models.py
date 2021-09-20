@@ -3,14 +3,33 @@ import typing
 from django.core.exceptions import ObjectDoesNotExist
 from django.db import models
 from django.utils.encoding import python_2_unicode_compatible
-from simple_history.models import HistoricalRecords
+from django_lifecycle import AFTER_DELETE, AFTER_SAVE, LifecycleModel, hook
 
 from environments.identities.traits.exceptions import TraitPersistenceError
 from environments.models import BOOLEAN, FLOAT, INTEGER, STRING
 
 
+class TraitQuerySet(models.QuerySet):
+    def delete(self, *args, **kwargs):
+        from environments.identities.models import Identity
+
+        # collect all the identities that we need to update
+        identities_to_update = [trait.identity for trait in self]
+        super().delete(*args, **kwargs)
+        # update all the identities
+        if identities_to_update:
+            Identity.bulk_send_to_dynamodb(identities_to_update)
+
+    def bulk_create(self, *args, **kwargs):
+        super().bulk_create(*args, **kwargs)
+        # Since we only bulk create traits for the same identity
+        # It is safe to pick any element from the qs
+        if self:
+            self.first().send_to_dynamodb()
+
+
 @python_2_unicode_compatible
-class Trait(models.Model):
+class Trait(LifecycleModel):
     TRAIT_VALUE_TYPES = (
         (INTEGER, "Integer"),
         (STRING, "String"),
@@ -32,6 +51,8 @@ class Trait(models.Model):
 
     created_date = models.DateTimeField("DateCreated", auto_now_add=True)
 
+    objects = TraitQuerySet.as_manager()
+
     class Meta:
         verbose_name_plural = "User Traits"
         unique_together = ("trait_key", "identity")
@@ -39,6 +60,11 @@ class Trait(models.Model):
         # hard code the table name after moving from the environments app to prevent
         # issues with production deployment due to multi server configuration.
         db_table = "environments_trait"
+
+    @hook(AFTER_DELETE)
+    @hook(AFTER_SAVE)
+    def send_to_dynamodb(self):
+        self.identity.send_to_dynamodb()
 
     @property
     def trait_value(self):
