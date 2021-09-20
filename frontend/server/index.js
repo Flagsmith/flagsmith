@@ -80,6 +80,61 @@ app.get('/static/project-overrides.js', (req, res) => {
     `);
 });
 
+app.get('/api/project-overrides', (req, res) => {
+    const getVariable = ({ name, value }) => {
+        if (!value || value === 'undefined') {
+            if (typeof value === 'boolean') {
+                return `    ${name}: false,`;
+            }
+            return '';
+        }
+
+        if (typeof value !== 'string') {
+            return `    ${name}: ${value},`;
+        }
+
+        return `    ${name}: '${value}',
+        `;
+    };
+    let sha = '';
+    if (fs.existsSync(path.join(__dirname, 'CI_COMMIT_SHA'))) {
+        sha = fs.readFileSync(path.join(__dirname, 'CI_COMMIT_SHA'));
+    }
+
+    const envToBool = (name, defaultVal) => {
+        const envVar = `${process.env[name]}`;
+        if (envVar === 'undefined') {
+            return defaultVal;
+        }
+        return envVar === 'true' || envVar === '1';
+    };
+
+    const values = [
+        { name: 'preventSignup', value: !envToBool('ALLOW_SIGNUPS', true) },
+        { name: 'flagsmith', value: process.env.FLAGSMITH_ON_FLAGSMITH_API_KEY },
+        { name: 'ga', value: process.env.GOOGLE_ANALYTICS_API_KEY },
+        { name: 'crispChat', value: process.env.CRISP_WEBSITE_ID },
+        { name: 'sha', value: sha },
+        { name: 'mixpanel', value: process.env.MIXPANEL_API_KEY },
+        { name: 'sentry', value: process.env.SENTRY_API_KEY },
+        { name: 'api', value: process.env.FLAGSMITH_PROXY_API_URL ? '/api/v1/' : process.env.FLAGSMITH_API_URL },
+        { name: 'maintenance', value: process.env.ENABLE_MAINTENANCE_MODE },
+        { name: 'assetURL', value: process.env.STATIC_ASSET_CDN_URL },
+        { name: 'flagsmithClientAPI', value: process.env.FLAGSMITH_ON_FLAGSMITH_API_URL },
+        { name: 'disableInflux', value: !envToBool('ENABLE_INFLUXDB_FEATURES', true) },
+        { name: 'flagsmithAnalytics', value: envToBool('ENABLE_FLAG_EVALUATION_ANALYTICS', true) },
+        { name: 'amplitude', value: process.env.AMPLITUDE_API_KEY },
+        { name: 'capterraKey', value: !!process.env.CAPTERRA_API_KEY },
+    ];
+    const output = values.map(getVariable).join('');
+
+    res.setHeader('content-type', 'text/javascript');
+    res.send(`window.projectOverrides = {
+        ${output}
+    };
+    `);
+});
+
 // Optionally proxy the API to get around CSRF issues, exposing the API to the world
 // PROXY_API_URL should end with the hostname and not /api/v1/
 // e.g. PROXY_API_URL=http://api.flagsmith.com/
