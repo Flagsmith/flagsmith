@@ -27,6 +27,7 @@ from environments.permissions.permissions import (
     EnvironmentKeyPermissions,
     NestedEnvironmentPermissions,
 )
+from users.serializers import UserIdsSerializer
 
 from .models import Feature, FeatureState
 from .permissions import FeaturePermissions, FeatureStatePermissions
@@ -40,6 +41,7 @@ from .serializers import (
     FeatureStateValueSerializer,
     GetInfluxDataQuerySerializer,
     ListCreateFeatureSerializer,
+    ProjectFeatureSerializer,
     UpdateFeatureSerializer,
     WritableNestedFeatureStateSerializer,
 )
@@ -60,7 +62,32 @@ class FeatureViewSet(viewsets.ModelViewSet):
             "create": ListCreateFeatureSerializer,
             "update": UpdateFeatureSerializer,
             "partial_update": UpdateFeatureSerializer,
-        }.get(self.action, FeatureSerializer)
+        }.get(self.action, ProjectFeatureSerializer)
+
+    @swagger_auto_schema(
+        request_body=UserIdsSerializer,
+        responses={200: ProjectFeatureSerializer},
+    )
+    @action(detail=True, methods=["POST"], url_path="add-owner")
+    def add_owner(self, request, organisation_pk, pk):
+        feature = self.get_object()
+        try:
+            feature.add_owners_by_id(request.data["user_ids"])
+        except FFAdminUser.DoesNotExist as e:
+            return Response({"detail": str(e)}, status=status.HTTP_400_BAD_REQUEST)
+
+        return Response(ProjectFeatureSerializer(instance=feature).data)
+
+    @swagger_auto_schema(
+        request_body=UserIdsSerializer,
+        responses={200: ProjectFeatureSerializer},
+    )
+    @action(detail=True, methods=["POST"], url_path="remove-owner")
+    def remove_users(self, request, organisation_pk, pk):
+        feature = self.get_object()
+        feature.remove_owners_by_id(request.data["user_ids"])
+
+        return Response(ProjectFeatureSerializer(instance=feature).data)
 
     def get_queryset(self):
         user_projects = self.request.user.get_permitted_projects(["VIEW_PROJECT"])
@@ -68,7 +95,9 @@ class FeatureViewSet(viewsets.ModelViewSet):
         return project.features.all().prefetch_related("multivariate_options")
 
     def perform_create(self, serializer):
-        serializer.save(project_id=self.kwargs.get("project_pk"))
+        serializer.save(
+            project_id=self.kwargs.get("project_pk"), user=self.request.user
+        )
 
     def perform_update(self, serializer):
         serializer.save(project_id=self.kwargs.get("project_pk"))

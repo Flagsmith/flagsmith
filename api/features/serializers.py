@@ -10,12 +10,36 @@ from audit.models import (
     RelatedObjectType,
 )
 from environments.identities.models import Identity
+from users.models import FFAdminUser
+from users.serializers import (
+    UserIdsSerializer,
+    UserListSerializer,
+    UserPermissionGroupSerializerDetail,
+)
 
 from .models import Feature, FeatureState, FeatureStateValue
 from .multivariate.serializers import (
     MultivariateFeatureOptionSerializer,
     MultivariateFeatureStateValueSerializer,
 )
+
+
+class ProjectFeatureSerializer(serializers.ModelSerializer):
+    owners = UserListSerializer(many=True, read_only=True)
+
+    class Meta:
+        model = Feature
+        fields = (
+            "id",
+            "name",
+            "created_date",
+            "description",
+            "initial_value",
+            "default_enabled",
+            "type",
+            "owners",
+        )
+        writeonly_fields = ("initial_value", "default_enabled")
 
 
 class ListCreateFeatureSerializer(WritableNestedModelSerializer):
@@ -45,7 +69,9 @@ class ListCreateFeatureSerializer(WritableNestedModelSerializer):
         return super(ListCreateFeatureSerializer, self).to_internal_value(data)
 
     def create(self, validated_data):
+        user = validated_data.pop("user")
         instance = super(ListCreateFeatureSerializer, self).create(validated_data)
+        instance.owners.add(user)
         self._create_audit_log(instance, True)
         return instance
 

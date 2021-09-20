@@ -23,6 +23,7 @@ from django_lifecycle import (
 from ordered_model.models import OrderedModelBase
 from simple_history.models import HistoricalRecords
 
+# from users.models import FFAdminUser
 from environments.identities.helpers import (
     get_hashed_percentage_for_object_ids,
 )
@@ -75,11 +76,31 @@ class Feature(CustomLifecycleModelMixin, models.Model):
     history = HistoricalRecords()
     tags = models.ManyToManyField(Tag, blank=True)
     is_archived = models.BooleanField(default=False)
+    owners = models.ManyToManyField("users.FFAdminUser", related_name="owned_features")
 
     class Meta:
         # Note: uniqueness is changed to reference lowercase name in explicit SQL in the migrations
         unique_together = ("name", "project")
         ordering = ("id",)  # explicit ordering to prevent pagination warnings
+
+    def add_owners_by_id(self, owner_ids: typing.List):
+        from users.models import FFAdminUser
+
+        owners_to_add = []
+
+        for owner_id in owner_ids:
+            try:
+                user = FFAdminUser.objects.get(id=owner_id)
+            except FFAdminUser.DoesNotExist:
+                # re-raise exception with useful error message
+                raise FFAdminUser.DoesNotExist(
+                    f"Admin User with user_id: {owner_id} does not exist " % owner_id
+                )
+            owners_to_add.append(user)
+        self.owners.add(*owners_to_add)
+
+    def remove_owner_by_id(owner_ids: typing.List):
+        self.users.remove(*owner_ids)
 
     @hook(AFTER_CREATE)
     def create_feature_states(self):
