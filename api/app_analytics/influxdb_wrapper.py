@@ -217,7 +217,6 @@ def get_top_organisations(date_range: str, limit: str = ""):
     dataset = {}
     for result in results:
         for record in result.records:
-            print(record.values["organisation"].partition("-")[0])
             try:
                 org_id = int(record.values["organisation"].partition("-")[0])
                 dataset[org_id] = record.get_value()

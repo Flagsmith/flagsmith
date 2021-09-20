@@ -57,7 +57,7 @@
           </thead>
           <tbody>
             {% for org in object_list %}
-            <tr{% if org.over_plan_and_free_seats_limit %} class="table-warning"{% endif %}>
+            <tr{% if org.over_plan_seats_limit %} class="table-warning"{% endif %}>
               <td>{{org.id}}</td>
               <td><a href="/sales-dashboard/organisations/{{org.id}}">{{org.name}}</a></td>
               <td>{{org.subscription.plan|default:"Free"}}</td>

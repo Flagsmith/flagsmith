@@ -66,13 +66,8 @@ class Organisation(models.Model):
         return hasattr(self, "subscription")
 
     def over_plan_seats_limit(self):
-        return (
-            self.has_subscription() and 0 < self.subscription.max_seats < self.num_seats
-        )
-
-    def over_plan_and_free_seats_limit(self):
         if self.has_subscription():
-            return self.over_plan_seats_limit()
+            return self.num_seats > getattr(self.subscription, "max_seats")
         else:
             return self.num_seats > Subscription.MAX_SEATS_IN_FREE_PLAN
 
