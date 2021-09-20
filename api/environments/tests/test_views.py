@@ -1,8 +1,9 @@
 import json
-from unittest import TestCase
+from unittest import TestCase, mock
 
 import pytest
 from django.urls import reverse
+from flag_engine.identities.builders import build_identity_dict
 from rest_framework import status
 from rest_framework.test import APIClient
 
@@ -322,6 +323,36 @@ class EnvironmentTestCase(TestCase):
         assert Trait.objects.filter(
             identity=identity, trait_key=trait_to_persist
         ).exists()
+
+    @mock.patch("environments.identities.models.dynamo_identity_table")
+    def test_delete_trait_keys_calls_dynamo_put_item(self, dynamo_identity_table):
+        # Given
+        environment = Environment.objects.create(
+            project=self.project, name="Test Environment"
+        )
+
+        identity = Identity.objects.create(
+            identifier="test-identity", environment=environment
+        )
+
+        trait_to_delete = "trait-key-to-delete"
+        Trait.objects.create(
+            identity=identity,
+            trait_key=trait_to_delete,
+            value_type=STRING,
+            string_value="blah",
+        )
+        url = reverse(
+            "api-v1:environments:environment-delete-traits", args=[environment.api_key]
+        )
+        # When
+        self.client.post(url, data={"key": trait_to_delete})
+
+        # Then
+        identity_dict = build_identity_dict(identity)
+        dynamo_identity_table.batch_writer.return_value.__enter__.return_value.put_item.assert_called_with(
+            Item=identity_dict
+        )
 
     def test_user_can_list_environment_permission(self):
         # Given

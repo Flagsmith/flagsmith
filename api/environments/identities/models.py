@@ -1,14 +1,24 @@
 import hashlib
 import typing
 
+import boto3
+from django.conf import settings
 from django.db import models
 from django.db.models import Prefetch, Q
 from django.utils.encoding import python_2_unicode_compatible
+from flag_engine.identities.builders import build_identity_dict
 
 from environments.identities.traits.models import Trait
 from environments.models import Environment
 from features.models import FeatureState
 from features.multivariate.models import MultivariateFeatureStateValue
+
+# Intialize the dynamo client globally
+dynamo_identity_table = None
+if settings.IDENTITIES_TABLE_NAME_DYNAMO:
+    dynamo_identity_table = boto3.resource("dynamodb").Table(
+        settings.IDENTITIES_TABLE_NAME_DYNAMO
+    )
 
 
 @python_2_unicode_compatible
@@ -184,3 +194,18 @@ class Identity(models.Model):
         # return the full list of traits for this identity by refreshing from the db
         # TODO: handle this in the above logic to avoid a second hit to the DB
         return self.get_all_user_traits()
+
+    @staticmethod
+    def bulk_send_to_dynamodb(identities: typing.List["Identity"]):
+        if not dynamo_identity_table:
+            return
+        with dynamo_identity_table.batch_writer() as batch:
+            for identity in identities:
+                identity_dict = build_identity_dict(identity)
+                batch.put_item(Item=identity_dict)
+
+    def send_to_dynamodb(self):
+        if not dynamo_identity_table:
+            return
+        identity_dict = build_identity_dict(self)
+        dynamo_identity_table.put_item(Item=identity_dict)
