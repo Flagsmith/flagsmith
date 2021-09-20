@@ -84,13 +84,15 @@ app.get('/api/project-overrides', (req, res) => {
     const getVariable = ({ name, value }) => {
         if (!value || value === 'undefined') {
             if (typeof value === 'boolean') {
-                return `    ${name}: false,`;
+                return `    ${name}: false,
+                `;
             }
             return '';
         }
 
         if (typeof value !== 'string') {
-            return `    ${name}: ${value},`;
+            return `    ${name}: ${value},
+            `;
         }
 
         return `    ${name}: '${value}',
@@ -124,7 +126,7 @@ app.get('/api/project-overrides', (req, res) => {
         { name: 'disableInflux', value: !envToBool('ENABLE_INFLUXDB_FEATURES', true) },
         { name: 'flagsmithAnalytics', value: envToBool('ENABLE_FLAG_EVALUATION_ANALYTICS', true) },
         { name: 'amplitude', value: process.env.AMPLITUDE_API_KEY },
-        { name: 'capterraKey', value: !!process.env.CAPTERRA_API_KEY },
+        { name: 'capterraKey', value: process.env.CAPTERRA_API_KEY },
     ];
     const output = values.map(getVariable).join('');
 

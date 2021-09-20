@@ -66,6 +66,7 @@ jobs:
                   ENV: prod
                   AMPLITUDE_API_KEY: ${{ secrets.AMPLITUDE_API_KEY }}
                   CRISP_WEBSITE_ID: ${{ secrets.CRISP_WEBSITE_ID }}
+                  CAPTERRA_API_KEY: ${{ secrets.CAPTERRA_API_KEY }}
                   DEPLOYMENT_SLACK_CHANNEL: ${ secrets.DEPLOYMENT_SLACK_CHANNEL }}
                   E2E_SLACK_CHANNEL: ${{ secrets.E2E_SLACK_CHANNEL }}
                   EVENTS_SLACK_CHANNEL: ${{ secrets.EVENTS_SLACK_CHANNEL }}
@@ -75,7 +76,6 @@ jobs:
                   LINKEDIN: ${{ secrets.LINKEDIN }}
                   MIXPANEL_API_KEY: ${{ secrets.MIXPANEL_API_KEY }}
                   SLACK_TOKEN: ${{ secrets.SLACK_TOKEN }}
-                  AMPLITUDE: ${{ secrets.AMPLITUDE_API_KEY }}
               run: |
                   npm i
                   npm run env
