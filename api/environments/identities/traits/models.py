@@ -9,7 +9,7 @@ from environments.identities.traits.exceptions import TraitPersistenceError
 from environments.models import BOOLEAN, FLOAT, INTEGER, STRING
 
 
-class TriatQuerySet(models.QuerySet):
+class TraitQuerySet(models.QuerySet):
     def delete(self, *args, **kwargs):
         from environments.identities.models import Identity
 
@@ -51,7 +51,7 @@ class Trait(LifecycleModel):
 
     created_date = models.DateTimeField("DateCreated", auto_now_add=True)
 
-    objects = TriatQuerySet.as_manager()
+    objects = TraitQuerySet.as_manager()
 
     class Meta:
         verbose_name_plural = "User Traits"
