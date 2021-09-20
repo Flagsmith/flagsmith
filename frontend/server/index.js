@@ -95,8 +95,8 @@ app.get('/api/project-overrides', (req, res) => {
             `;
         }
 
-        return `    ${name}: '${value}',
-        `;
+        return `    ${name}: ${value},
+            `;
     };
     let sha = '';
     if (fs.existsSync(path.join(__dirname, 'CI_COMMIT_SHA'))) {
