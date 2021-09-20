@@ -1,8 +1,8 @@
 import Utils from '../../utils/utils';
 
-module.exports = (envId, { FEATURE_NAME, FEATURE_FUNCTION, FEATURE_NAME_ALT }) => `use BulletTrain\\BulletTrain;
+module.exports = (envId, { FEATURE_NAME, FEATURE_FUNCTION, FEATURE_NAME_ALT }) => `use Flagsmith\\Flagsmith;
 
-$bt = new BulletTrain('${envId}');
+$bt = new Flagsmith('${envId}');
 
 // Check for a feature
 $${FEATURE_NAME} = $bt->featureEnabled("${FEATURE_NAME}");

@@ -1,6 +1,6 @@
-module.exports = (envId, { LIB_NAME, USER_ID, LIB_NAME_JAVA, FEATURE_NAME, FEATURE_FUNCTION, FEATURE_NAME_ALT, FEATURE_NAME_ALT_VALUE, NPM_CLIENT }, userId) => `use BulletTrain\\BulletTrain;
+module.exports = (envId, { LIB_NAME, USER_ID, LIB_NAME_JAVA, FEATURE_NAME, FEATURE_FUNCTION, FEATURE_NAME_ALT, FEATURE_NAME_ALT_VALUE, NPM_CLIENT }, userId) => `use Flagsmith\\Flagsmith;
 
-$bt = new BulletTrain('${envId}');
+$bt = new Flagsmith('${envId}');
 
 // This will create a user in the dashboard if they don't already exist
 
