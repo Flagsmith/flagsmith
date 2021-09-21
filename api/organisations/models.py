@@ -67,9 +67,9 @@ class Organisation(models.Model):
 
     def over_plan_seats_limit(self):
         if self.has_subscription():
-            return self.num_seats > getattr(self.subscription, "max_seats")
-        else:
-            return self.num_seats > Subscription.MAX_SEATS_IN_FREE_PLAN
+            return self.num_seats > self.subscription.max_seats
+
+        return self.num_seats > Subscription.MAX_SEATS_IN_FREE_PLAN
 
     def reset_alert_status(self):
         self.alerted_over_plan_limit = False
