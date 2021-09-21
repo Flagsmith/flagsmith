@@ -8,6 +8,8 @@ ACTION_PERMISSIONS_MAP = {
     "destroy": "DELETE_FEATURE",
     "list": "VIEW_PROJECT",
     "create": "CREATE_FEATURE",
+    "add_owner": "CREATE_FEATURE",
+    "remove_owner": "CREATE_FEATURE",
 }
 
 

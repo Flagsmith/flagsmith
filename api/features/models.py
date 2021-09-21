@@ -83,6 +83,20 @@ class Feature(CustomLifecycleModelMixin, models.Model):
         unique_together = ("name", "project")
         ordering = ("id",)  # explicit ordering to prevent pagination warnings
 
+    @hook(AFTER_CREATE)
+    def create_feature_states(self):
+        # create feature states for all environments
+        environments = self.project.environments.all()
+        for env in environments:
+            # unable to bulk create as we need signals
+            FeatureState.objects.create(
+                feature=self,
+                environment=env,
+                identity=None,
+                feature_segment=None,
+                enabled=self.default_enabled,
+            )
+
     def add_owners_by_id(self, owner_ids: typing.List):
         from users.models import FFAdminUser
 
@@ -99,22 +113,8 @@ class Feature(CustomLifecycleModelMixin, models.Model):
             owners_to_add.append(user)
         self.owners.add(*owners_to_add)
 
-    def remove_owner_by_id(owner_ids: typing.List):
-        self.users.remove(*owner_ids)
-
-    @hook(AFTER_CREATE)
-    def create_feature_states(self):
-        # create feature states for all environments
-        environments = self.project.environments.all()
-        for env in environments:
-            # unable to bulk create as we need signals
-            FeatureState.objects.create(
-                feature=self,
-                environment=env,
-                identity=None,
-                feature_segment=None,
-                enabled=self.default_enabled,
-            )
+    def remove_owners_by_id(self, owner_ids: typing.List):
+        self.owners.remove(*owner_ids)
 
     def validate_unique(self, *args, **kwargs):
         """

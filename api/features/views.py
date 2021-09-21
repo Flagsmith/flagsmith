@@ -27,6 +27,7 @@ from environments.permissions.permissions import (
     EnvironmentKeyPermissions,
     NestedEnvironmentPermissions,
 )
+from users.models import FFAdminUser
 from users.serializers import UserIdsSerializer
 
 from .models import Feature, FeatureState
@@ -69,7 +70,7 @@ class FeatureViewSet(viewsets.ModelViewSet):
         responses={200: ProjectFeatureSerializer},
     )
     @action(detail=True, methods=["POST"], url_path="add-owner")
-    def add_owner(self, request, organisation_pk, pk):
+    def add_owner(self, request, *args, **kwargs):
         feature = self.get_object()
         try:
             feature.add_owners_by_id(request.data["user_ids"])
@@ -83,7 +84,7 @@ class FeatureViewSet(viewsets.ModelViewSet):
         responses={200: ProjectFeatureSerializer},
     )
     @action(detail=True, methods=["POST"], url_path="remove-owner")
-    def remove_users(self, request, organisation_pk, pk):
+    def remove_owner(self, request, *args, **kwargs):
         feature = self.get_object()
         feature.remove_owners_by_id(request.data["user_ids"])
 
