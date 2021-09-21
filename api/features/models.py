@@ -79,6 +79,7 @@ class Feature(CustomLifecycleModelMixin, models.Model):
     class Meta:
         # Note: uniqueness is changed to reference lowercase name in explicit SQL in the migrations
         unique_together = ("name", "project")
+        ordering = ("id",)  # explicit ordering to prevent pagination warnings
 
     @hook(AFTER_CREATE)
     def create_feature_states(self):
