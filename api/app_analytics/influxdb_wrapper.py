@@ -8,6 +8,7 @@ from influxdb_client.client.write_api import SYNCHRONOUS
 from requests.exceptions import RequestException
 from sentry_sdk import capture_exception
 from urllib3 import Retry
+from urllib3.exceptions import HTTPError
 
 logger = logging.getLogger(__name__)
 
@@ -44,7 +45,7 @@ class InfluxDBWrapper:
     def write(self):
         try:
             self.write_api.write(bucket=settings.INFLUXDB_BUCKET, record=self.records)
-        except RequestException as e:
+        except HTTPError as e:
             capture_exception(e)
 
     @staticmethod
@@ -69,7 +70,7 @@ class InfluxDBWrapper:
         try:
             result = query_api.query(org=influx_org, query=query)
             return result
-        except RequestException as e:
+        except HTTPError as e:
             capture_exception(e)
             return []
 
