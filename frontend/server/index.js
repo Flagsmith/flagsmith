@@ -83,9 +83,9 @@ app.get('/api/project-overrides', (req, res) => {
 });
 
 // Optionally proxy the API to get around CSRF issues, exposing the API to the world
-// PROXY_API_URL should end with the hostname and not /api/v1/
-// e.g. PROXY_API_URL=http://api.flagsmith.com/
-if (process.env.PROXY_API_URL) {
+// FLAGSMITH_PROXY_API_URL should end with the hostname and not /api/v1/
+// e.g. FLAGSMITH_PROXY_API_URL=http://api.flagsmith.com/
+if (process.env.FLAGSMITH_PROXY_API_URL) {
     const { createProxyMiddleware } = require('http-proxy-middleware');
     app.use('/api/v1/', createProxyMiddleware({ target: process.env.FLAGSMITH_PROXY_API_URL, changeOrigin: true }));
 }
