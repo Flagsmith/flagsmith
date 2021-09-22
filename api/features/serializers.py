@@ -66,7 +66,7 @@ class ListCreateFeatureSerializer(WritableNestedModelSerializer):
         return super(ListCreateFeatureSerializer, self).to_internal_value(data)
 
     def create(self, validated_data):
-        # Add the default(the creator of the feature) owner of the feature
+        # Add the default(User creating the feature) owner of the feature
         # NOTE: pop the user before passing the data to create
         user = validated_data.pop("user")
         instance = super(ListCreateFeatureSerializer, self).create(validated_data)
