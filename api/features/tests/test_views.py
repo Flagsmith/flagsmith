@@ -44,12 +44,12 @@ class ProjectFeatureTestCase(TestCase):
 
     def setUp(self):
         self.client = APIClient()
-        user = Helper.create_ffadminuser()
-        self.client.force_authenticate(user=user)
+        self.user = Helper.create_ffadminuser()
+        self.client.force_authenticate(user=self.user)
 
         self.organisation = Organisation.objects.create(name="Test Org")
 
-        user.add_organisation(self.organisation, OrganisationRole.ADMIN)
+        self.user.add_organisation(self.organisation, OrganisationRole.ADMIN)
 
         self.project = Project.objects.create(
             name="Test project", organisation=self.organisation
@@ -145,6 +145,35 @@ class ProjectFeatureTestCase(TestCase):
             environment=self.environment_1
         ).first()
         assert feature_state.get_feature_state_value() == default_value
+
+    def test_owners_is_read_only_for_feature_create(self):
+        # Given - set up data
+        default_value = "This is a value"
+        data = {
+            "name": "test feature",
+            "initial_value": default_value,
+            "project": self.project.id,
+            "owners": [
+                {
+                    "id": 2,
+                    "email": "fake_user@mail.com",
+                    "first_name": "fake",
+                    "last_name": "user",
+                }
+            ],
+        }
+        url = reverse("api-v1:projects:project-features-list", args=[self.project.id])
+
+        # When
+        response = self.client.post(
+            url, data=json.dumps(data), content_type="application/json"
+        )
+        print(response.json())
+
+        # Then
+        assert response.status_code == status.HTTP_201_CREATED
+        assert response.json()["owners"][0]["id"] == self.user.id
+        assert response.json()["owners"][0]["email"] == self.user.email
 
     def test_should_create_feature_states_with_integer_value_when_feature_created(self):
         # Given - set up data
@@ -284,6 +313,58 @@ class ProjectFeatureTestCase(TestCase):
             ).count()
             == 1
         )
+
+    def test_add_owners_adds_owner(self):
+        # Given
+        feature = Feature.objects.create(name="Test Feature", project=self.project)
+        user_2 = FFAdminUser.objects.create_user(email="user2@mail.com")
+        user_3 = FFAdminUser.objects.create_user(email="user3@mail.com")
+        url = reverse(
+            "api-v1:projects:project-features-add-owners",
+            args=[self.project.id, feature.id],
+        )
+        data = {"user_ids": [user_2.id, user_3.id]}
+        # When
+        json_response = self.client.post(
+            url, data=json.dumps(data), content_type="application/json"
+        ).json()
+        assert len(json_response["owners"]) == 2
+        assert json_response["owners"][0] == {
+            "id": user_2.id,
+            "email": user_2.email,
+            "first_name": user_2.first_name,
+            "last_name": user_2.last_name,
+        }
+        assert json_response["owners"][1] == {
+            "id": user_3.id,
+            "email": user_3.email,
+            "first_name": user_3.first_name,
+            "last_name": user_3.last_name,
+        }
+
+    def test_remove_owners_only_remove_specified_owners(self):
+        # Given
+        user_2 = FFAdminUser.objects.create_user(email="user2@mail.com")
+        user_3 = FFAdminUser.objects.create_user(email="user3@mail.com")
+        feature = Feature.objects.create(name="Test Feature", project=self.project)
+        feature.owners.add(user_2, user_3)
+
+        url = reverse(
+            "api-v1:projects:project-features-remove-owners",
+            args=[self.project.id, feature.id],
+        )
+        data = {"user_ids": [user_2.id]}
+        # When
+        json_response = self.client.post(
+            url, data=json.dumps(data), content_type="application/json"
+        ).json()
+        assert len(json_response["owners"]) == 1
+        assert json_response["owners"][0] == {
+            "id": user_3.id,
+            "email": user_3.email,
+            "first_name": user_3.first_name,
+            "last_name": user_3.last_name,
+        }
 
     def test_audit_log_created_when_feature_state_created_for_identity(self):
         # Given
