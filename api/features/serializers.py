@@ -46,6 +46,7 @@ class ListCreateFeatureSerializer(WritableNestedModelSerializer):
     multivariate_options = MultivariateFeatureOptionSerializer(
         many=True, required=False
     )
+    owners = UserListSerializer(many=True, read_only=True)
 
     class Meta:
         model = Feature
@@ -60,6 +61,7 @@ class ListCreateFeatureSerializer(WritableNestedModelSerializer):
             "tags",
             "multivariate_options",
             "is_archived",
+            "owners",
         )
         read_only_fields = ("feature_segments", "created_date")
 

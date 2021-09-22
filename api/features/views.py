@@ -69,8 +69,8 @@ class FeatureViewSet(viewsets.ModelViewSet):
         request_body=UserIdsSerializer,
         responses={200: ProjectFeatureSerializer},
     )
-    @action(detail=True, methods=["POST"], url_path="add-owner")
-    def add_owner(self, request, *args, **kwargs):
+    @action(detail=True, methods=["POST"], url_path="add-owners")
+    def add_owners(self, request, *args, **kwargs):
         feature = self.get_object()
         try:
             feature.add_owners_by_id(request.data["user_ids"])
@@ -83,8 +83,8 @@ class FeatureViewSet(viewsets.ModelViewSet):
         request_body=UserIdsSerializer,
         responses={200: ProjectFeatureSerializer},
     )
-    @action(detail=True, methods=["POST"], url_path="remove-owner")
-    def remove_owner(self, request, *args, **kwargs):
+    @action(detail=True, methods=["POST"], url_path="remove-owners")
+    def remove_owners(self, request, *args, **kwargs):
         feature = self.get_object()
         feature.remove_owners_by_id(request.data["user_ids"])
 
