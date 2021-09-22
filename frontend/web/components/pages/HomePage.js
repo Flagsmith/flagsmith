@@ -120,7 +120,7 @@ const HomePage = class extends React.Component {
                 </a>
             ));
         }
-        if (this.props.hasFeature('oauth-google')) {
+        if (this.props.hasFeature('oauth_google')) {
             oauths.push((
                 <a key="google" className="btn btn__oauth btn__oauth--google" href={Project.oauth.google.url}>
                     <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
