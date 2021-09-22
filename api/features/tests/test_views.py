@@ -171,6 +171,7 @@ class ProjectFeatureTestCase(TestCase):
 
         # Then
         assert response.status_code == status.HTTP_201_CREATED
+        assert len(response.json()["owners"]) == 1
         assert response.json()["owners"][0]["id"] == self.user.id
         assert response.json()["owners"][0]["email"] == self.user.email
 

@@ -10,12 +10,7 @@ from audit.models import (
     RelatedObjectType,
 )
 from environments.identities.models import Identity
-from users.models import FFAdminUser
-from users.serializers import (
-    UserIdsSerializer,
-    UserListSerializer,
-    UserPermissionGroupSerializerDetail,
-)
+from users.serializers import UserListSerializer
 
 from .models import Feature, FeatureState, FeatureStateValue
 from .multivariate.serializers import (
@@ -71,8 +66,9 @@ class ListCreateFeatureSerializer(WritableNestedModelSerializer):
         return super(ListCreateFeatureSerializer, self).to_internal_value(data)
 
     def create(self, validated_data):
-        user = validated_data.pop("user")
         instance = super(ListCreateFeatureSerializer, self).create(validated_data)
+        # Add the default(the creator of the feature) owner of the feature
+        user = validated_data.pop("user")
         instance.owners.add(user)
         self._create_audit_log(instance, True)
         return instance
