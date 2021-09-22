@@ -134,7 +134,7 @@ class UserPermissionGroupViewSet(viewsets.ModelViewSet):
     )
     @action(detail=True, methods=["POST"], url_path="add-users")
     def add_users(self, request, organisation_pk, pk):
-        feature = self.get_object()
+        group = self.get_object()
         try:
             group.add_users_by_id(request.data["user_ids"])
         except FFAdminUser.DoesNotExist as e:

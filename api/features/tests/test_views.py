@@ -168,7 +168,6 @@ class ProjectFeatureTestCase(TestCase):
         response = self.client.post(
             url, data=json.dumps(data), content_type="application/json"
         )
-        print(response.json())
 
         # Then
         assert response.status_code == status.HTTP_201_CREATED

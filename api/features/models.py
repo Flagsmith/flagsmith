@@ -23,7 +23,6 @@ from django_lifecycle import (
 from ordered_model.models import OrderedModelBase
 from simple_history.models import HistoricalRecords
 
-# from users.models import FFAdminUser
 from environments.identities.helpers import (
     get_hashed_percentage_for_object_ids,
 )
