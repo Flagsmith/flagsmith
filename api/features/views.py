@@ -165,7 +165,7 @@ class FeatureStateViewSet(viewsets.ModelViewSet):
         Override queryset to filter based on provided URL parameters.
         """
         environment_api_key = self.kwargs["environment_api_key"]
-        identity_pk = self.kwargs.get("identity_pk")
+        identity_identifier = self.kwargs.get("identity_identifier")
         environment = get_object_or_404(
             self.request.user.get_permitted_environments(["VIEW_ENVIRONMENT"]),
             api_key=environment_api_key,
@@ -175,8 +175,8 @@ class FeatureStateViewSet(viewsets.ModelViewSet):
             environment=environment, feature_segment=None
         )
 
-        if identity_pk:
-            queryset = queryset.filter(identity__pk=identity_pk)
+        if identity_identifier:
+            queryset = queryset.filter(identity__identifier=identity_identifier)
         elif "anyIdentity" in self.request.query_params:
             queryset = queryset.exclude(identity=None)
         else:
@@ -202,7 +202,10 @@ class FeatureStateViewSet(viewsets.ModelViewSet):
         """
         Get identity object from URL parameters in request.
         """
-        identity = Identity.objects.get(pk=self.kwargs["identity_pk"])
+        environment = self.get_environment_from_request()
+        identity = Identity.objects.get(
+            environment=environment, identifier=self.kwargs["identity_identifier"]
+        )
         return identity
 
     def create(self, request, *args, **kwargs):
@@ -232,9 +235,14 @@ class FeatureStateViewSet(viewsets.ModelViewSet):
             error = {"detail": "Feature does not exist in project"}
             return Response(error, status=status.HTTP_400_BAD_REQUEST)
 
-        identity_pk = self.kwargs.get("identity_pk")
-        if identity_pk:
-            data["identity"] = identity_pk
+        # identity_pk = self.kwargs.get("identity_pk")
+
+        identity_identifier = self.kwargs.get("identity_identifier")
+        if identity_identifier:
+            data["identity"] = self.get_identity_from_request(environment).pk
+        # data["identity"] = {
+        #     "identifier": identity_identifier
+        # }  # self.get_identity_from_request(environment)
 
         serializer = self.get_serializer(data=data)
         if serializer.is_valid():
