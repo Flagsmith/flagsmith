@@ -57,7 +57,8 @@ class IdentityTestCase(TestCase):
 
         # When
         response = self.client.get(
-            self.identities_url % (self.identity.environment.api_key, self.identity.id)
+            self.identities_url
+            % (self.identity.environment.api_key, self.identity.identifier)
         )
 
         # Then
@@ -70,7 +71,7 @@ class IdentityTestCase(TestCase):
         # When
         response = self.client.post(
             self.feature_states_url
-            % (self.identity.environment.api_key, self.identity.id),
+            % (self.identity.environment.api_key, self.identity.identifier),
             data=self.post_template % (feature.id, True),
             content_type="application/json",
         )
@@ -87,13 +88,13 @@ class IdentityTestCase(TestCase):
         # When
         initial_response = self.client.post(
             self.feature_states_url
-            % (self.identity.environment.api_key, self.identity.id),
+            % (self.identity.environment.api_key, self.identity.identifier),
             data=self.post_template % (feature.id, True),
             content_type="application/json",
         )
         second_response = self.client.post(
             self.feature_states_url
-            % (self.identity.environment.api_key, self.identity.id),
+            % (self.identity.environment.api_key, self.identity.identifier),
             data=self.post_template % (feature.id, True),
             content_type="application/json",
         )
@@ -117,7 +118,11 @@ class IdentityTestCase(TestCase):
         # When
         response = self.client.put(
             self.feature_states_detail_url
-            % (self.identity.environment.api_key, self.identity.id, feature_state.id),
+            % (
+                self.identity.environment.api_key,
+                self.identity.id,
+                feature_state.id,
+            ),
             data=self.put_template % True,
             content_type="application/json",
         )
@@ -149,7 +154,7 @@ class IdentityTestCase(TestCase):
             self.feature_states_detail_url
             % (
                 self.identity.environment.api_key,
-                self.identity.id,
+                self.identity.identifier,
                 identity_feature_one.id,
             ),
             content_type="application/json",
@@ -265,7 +270,7 @@ class IdentityTestCase(TestCase):
         # Given
         url = reverse(
             "api-v1:environments:environment-identities-detail",
-            args=[self.environment.api_key, self.identity.id],
+            args=[self.environment.api_key, self.identity.identifier],
         )
 
         # When
