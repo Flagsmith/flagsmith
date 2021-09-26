@@ -497,9 +497,8 @@ class TraitViewSetTestCase(TestCase):
         )
         url = reverse(
             "api-v1:environments:identities-traits-detail",
-            args=[self.environment.api_key, self.identity.id, trait.id],
+            args=[self.environment.api_key, self.identity.identifier, trait.id],
         )
-
         # When
         res = self.client.delete(url)
 
@@ -532,7 +531,7 @@ class TraitViewSetTestCase(TestCase):
 
         url = reverse(
             "api-v1:environments:identities-traits-detail",
-            args=[self.environment.api_key, self.identity.id, trait.id],
+            args=[self.environment.api_key, self.identity.identifier, trait.id],
         )
 
         # When
@@ -567,7 +566,7 @@ class TraitViewSetTestCase(TestCase):
 
         base_url = reverse(
             "api-v1:environments:identities-traits-detail",
-            args=[self.environment.api_key, self.identity.id, trait.id],
+            args=[self.environment.api_key, self.identity.identifier, trait.id],
         )
         url = base_url + "?deleteAllMatchingTraits=true"
 
@@ -606,7 +605,7 @@ class TraitViewSetTestCase(TestCase):
 
         base_url = reverse(
             "api-v1:environments:identities-traits-detail",
-            args=[self.environment.api_key, self.identity.id, trait.id],
+            args=[self.environment.api_key, self.identity.identifier, trait.id],
         )
         url = base_url + "?deleteAllMatchingTraits=true"
 

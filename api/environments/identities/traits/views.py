@@ -36,13 +36,16 @@ class TraitViewSet(viewsets.ModelViewSet):
         Override queryset to filter based on provided URL parameters.
         """
         environment_api_key = self.kwargs["environment_api_key"]
-        identity_pk = self.kwargs.get("identity_pk")
+
+        identity_identifier = self.kwargs.get("identity_identifier")
         environment = self.request.user.get_permitted_environments(
             ["VIEW_ENVIRONMENT"]
         ).get(api_key=environment_api_key)
 
-        if identity_pk:
-            identity = Identity.objects.get(pk=identity_pk, environment=environment)
+        if identity_identifier:
+            identity = Identity.objects.get(
+                identifier=identity_identifier, environment=environment
+            )
         else:
             identity = None
 
@@ -53,12 +56,6 @@ class TraitViewSet(viewsets.ModelViewSet):
         Get environment object from URL parameters in request.
         """
         return Environment.objects.get(api_key=self.kwargs["environment_api_key"])
-
-    def get_identity_from_request(self, environment):
-        """
-        Get identity object from URL parameters in request.
-        """
-        return Identity.objects.get(pk=self.kwargs["identity_pk"])
 
     def create(self, request, *args, **kwargs):
         """
