@@ -111,7 +111,7 @@
   },
   "devDependencies": {
     "chai": "4.2.0",
-    "chromedriver": "93.0.1",
+    "chromedriver": "94.0.0",
     "nightwatch": "1.7.8",
     "node-slack-upload": "2.0.0",
     "nodemon": "1.18.11",

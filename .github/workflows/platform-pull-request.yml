@@ -53,6 +53,7 @@ jobs:
               working-directory: frontend
               env:
                   ENV: local
+                  STATIC_ASSET_CDN_URL: /
                   E2E_TEST_TOKEN_DEV: some-token
                   ENABLE_INFLUXDB_FEATURES: false
               run: |
