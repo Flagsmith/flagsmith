@@ -34,3 +34,20 @@
     }
   }
 }
+.select-sm {
+  .react-select {
+    &__control {
+      height: 30px !important;
+      min-height: 30px !important;
+    }
+    &__value-container {
+      margin-top: -5px;
+    }
+    &__indicator {
+      margin-top: -3px;
+    }
+    &__indicator-separator {
+      display: none;
+    }
+  }
+}
