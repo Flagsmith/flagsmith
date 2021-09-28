@@ -23,6 +23,7 @@ class TagSelect extends PureComponent {
             <Row className="tag-filter mx-2 mt-3">
                 <div className="ml-1">
                     <Row>
+                        {this.props.children}
                         {showUntagged && (
                             <div className="mr-1 mb-2">
                                 <Tag
