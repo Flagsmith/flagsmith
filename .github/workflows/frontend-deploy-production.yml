@@ -65,6 +65,7 @@ jobs:
                   STATIC_ASSET_CDN_URL: https://cdn.flagsmith.com
                   ENV: prod
                   AMPLITUDE_API_KEY: ${{ secrets.AMPLITUDE_API_KEY }}
+                  DELIGHTED_API_KEY: ${{ secrets.DELIGHTED_API_KEY }}
                   CRISP_WEBSITE_ID: ${{ secrets.CRISP_WEBSITE_ID }}
                   CAPTERRA_API_KEY: ${{ secrets.CAPTERRA_API_KEY }}
                   DEPLOYMENT_SLACK_CHANNEL: ${ secrets.DEPLOYMENT_SLACK_CHANNEL }}

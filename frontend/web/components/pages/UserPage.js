@@ -224,19 +224,25 @@ const UserPage = class extends Component {
                                                                   ) : (
                                                                       flagEnabledDifferent ? (
                                                                           <span data-test={`feature-override-${i}`} className="flex-row chip">
-                                                                              {isMultiVariateOverride ? (
-                                                                                  <span>
-                                                                              This flag is being overridden by a variation defined on your feature, the control value is <strong>{flagEnabled ? 'on' : 'off'}</strong> for this user
-                                                                                  </span>
-                                                                              ) : (
-                                                                                  <span>
-                                                                              This flag is being overridden by segments and would normally be <strong>{flagEnabled ? 'on' : 'off'}</strong> for this user
-                                                                                  </span>
-                                                                              )}
+                                                                              <Row>
+                                                                                  <Flex>
+                                                                                      {isMultiVariateOverride ? (
+                                                                                          <span>
+                                                                                              This flag is being overridden by a variation defined on your feature, the control value is <strong>{flagEnabled ? 'on' : 'off'}</strong> for this user
+                                                                                          </span>
+                                                                                      ) : (
+                                                                                          <span>
+                                                                                              This flag is being overridden by segments and would normally be <strong>{flagEnabled ? 'on' : 'off'}</strong> for this user
+                                                                                          </span>
+                                                                                      )}
 
-                                                                              <span
-                                                                                className="chip-icon icon ion-md-information"
-                                                                              />
+                                                                                  </Flex>
+                                                                                  <span
+                                                                                      className="ml-1 chip-icon icon ion-md-information"
+                                                                                  />
+                                                                              </Row>
+
+
                                                                           </span>
                                                                       ) : flagValueDifferent ? isMultiVariateOverride ? (
                                                                           <span data-test={`feature-override-${i}`} className="flex-row chip">

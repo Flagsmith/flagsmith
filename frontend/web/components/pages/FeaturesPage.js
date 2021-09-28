@@ -236,7 +236,7 @@ const FeaturesPage = class extends Component {
                                                               ]}
                                                               items={this.filter(projectFlags, this.state.tags)}
                                                               header={(
-                                                                  <Row>
+                                                                  <Row style={{backgroundColor:'#f7f7f7'}}>
                                                                       <TagSelect
                                                                         showUntagged
                                                                         showClearAll
@@ -251,7 +251,7 @@ const FeaturesPage = class extends Component {
                                                                                       selected={this.state.includeArchived}
                                                                                       onClick={() => this.setState({ includeArchived: !this.state.includeArchived })}
                                                                                       className="px-2 py-2 ml-2 mr-2"
-                                                                                      tag={{ label: `archived (${archivedLength})` }}
+                                                                                      tag={{ label: `Archived (${archivedLength})` }}
                                                                                   />
                                                                               </div>
 

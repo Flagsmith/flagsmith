@@ -247,7 +247,7 @@ const controller = {
             store.organisation = user && user.organisations && user.organisations[0];
 
 
-            if (Project.delighted) {
+            if (projectOverrides.delighted) {
                 delighted.survey({
                     email: store.model.email, // customer email (optional)
                     name: `${store.model.first_name} ${store.model.last_name}`, // customer name (optional)
