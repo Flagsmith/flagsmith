@@ -13,35 +13,35 @@ defaults:
         working-directory: frontend
 
 jobs:
-    #run-tests:
-    #    runs-on: ubuntu-latest
-    #    name: Run E2E Tests
-    #    environment: production
+    run-tests:
+        runs-on: ubuntu-latest
+        name: Run E2E Tests
+        environment: production
 
-    #    steps:
-    #        - name: Cloning repo
-    #          uses: actions/checkout@v2
-    #          with:
-    #              fetch-depth: 0
+        steps:
+            - name: Cloning repo
+              uses: actions/checkout@v2
+              with:
+                  fetch-depth: 0
 
-    #        - name: Run E2E Tests
-    #          env:
-    #              E2E_TEST_TOKEN_PROD: ${{ secrets.E2E_TEST_TOKEN }}
-    #              ENV: prod
-    #          run: |
-    #              wget -q https://dl.google.com/linux/chrome/deb/pool/main/g/google-chrome-stable/google-chrome-stable_91.0.4472.114-1_amd64.deb
-    #              sudo apt install --allow-downgrades -y ./google-chrome*.deb -f
-    #              google-chrome --version
-    #              node -v
-    #              npm i
-    #              npm run env
-    #              npm run test
+            - name: Run E2E Tests
+              env:
+                  E2E_TEST_TOKEN_PROD: ${{ secrets.E2E_TEST_TOKEN }}
+                  ENV: prod
+              run: |
+                  wget -q https://dl.google.com/linux/chrome/deb/pool/main/g/google-chrome-stable/google-chrome-stable_91.0.4472.114-1_amd64.deb
+                  sudo apt install --allow-downgrades -y ./google-chrome*.deb -f
+                  google-chrome --version
+                  node -v
+                  npm i
+                  npm run env
+                  npm run test
 
     deploy-production:
         runs-on: ubuntu-latest
         name: Deploy to Production
         environment: production
-        #needs: run-tests
+        needs: run-tests
 
         steps:
             - name: Cloning repo
