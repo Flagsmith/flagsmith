@@ -150,18 +150,17 @@ const FeaturesPage = class extends Component {
         }
     }
 
-    filter = (flags) => {
-        return _.filter(flags, (flag) => {
-            if (!this.state.includeArchived && flag.is_archived) {
-                return false;
-            }
-            if (this.state.tags.includes('') && (!flag.tags || !flag.tags.length)) {
-                return true;
-            }
-            return _.intersection(flag.tags || [], this.state.tags).length;
-        }) || [];
-        return flags;
-    }
+    filter = flags => _.filter(flags, (flag) => {
+        if (!this.state.includeArchived && flag.is_archived) {
+            return false;
+        } if (!this.state.tags.length && this.state.includeArchived) {
+            return true;
+        }
+        if (this.state.tags.includes('') && (!flag.tags || !flag.tags.length)) {
+            return true;
+        }
+        return _.intersection(flag.tags || [], this.state.tags).length;
+    }) || []
 
     render() {
         const { projectId, environmentId } = this.props.match.params;
@@ -234,7 +233,7 @@ const FeaturesPage = class extends Component {
                                                               ]}
                                                               items={this.filter(projectFlags, this.state.tags)}
                                                               header={(
-                                                                  <Row style={{backgroundColor:'#f7f7f7'}}>
+                                                                  <Row style={{ backgroundColor: '#f7f7f7' }}>
                                                                       <TagSelect
                                                                         showUntagged
                                                                         showClearAll
@@ -246,10 +245,10 @@ const FeaturesPage = class extends Component {
                                                                           {!!archivedLength && (
                                                                               <div className="mr-2 mb-2">
                                                                                   <Tag
-                                                                                      selected={this.state.includeArchived}
-                                                                                      onClick={() => this.setState({ includeArchived: !this.state.includeArchived })}
-                                                                                      className="px-2 py-2 ml-2 mr-2"
-                                                                                      tag={{ label: `Archived (${archivedLength})` }}
+                                                                                    selected={this.state.includeArchived}
+                                                                                    onClick={() => this.setState({ includeArchived: !this.state.includeArchived })}
+                                                                                    className="px-2 py-2 ml-2 mr-2"
+                                                                                    tag={{ label: `Archived (${archivedLength})` }}
                                                                                   />
                                                                               </div>
 
