@@ -70,6 +70,7 @@ app.get('/api/project-overrides', (req, res) => {
         { name: 'flagsmithClientAPI', value: process.env.FLAGSMITH_ON_FLAGSMITH_API_URL },
         { name: 'disableInflux', value: !envToBool('ENABLE_INFLUXDB_FEATURES', true) },
         { name: 'flagsmithAnalytics', value: envToBool('ENABLE_FLAG_EVALUATION_ANALYTICS', true) },
+        { name: 'amplitude', value: process.env.AMPLITUDE_API_KEY },
         { name: 'delighted', value: process.env.DELIGHTED_API_KEY },
         { name: 'capterraKey', value: process.env.CAPTERRA_API_KEY },
     ];
