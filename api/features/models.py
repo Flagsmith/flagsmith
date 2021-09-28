@@ -74,10 +74,12 @@ class Feature(CustomLifecycleModelMixin, models.Model):
     type = models.CharField(max_length=50, null=True, blank=True)
     history = HistoricalRecords()
     tags = models.ManyToManyField(Tag, blank=True)
+    is_archived = models.BooleanField(default=False)
 
     class Meta:
         # Note: uniqueness is changed to reference lowercase name in explicit SQL in the migrations
         unique_together = ("name", "project")
+        ordering = ("id",)  # explicit ordering to prevent pagination warnings
 
     @hook(AFTER_CREATE)
     def create_feature_states(self):

@@ -52,6 +52,7 @@ flags_cache = caches[settings.FLAGS_CACHE_LOCATION]
 
 class FeatureViewSet(viewsets.ModelViewSet):
     permission_classes = [IsAuthenticated, FeaturePermissions]
+    filterset_fields = ["is_archived"]
 
     def get_serializer_class(self):
         return {
