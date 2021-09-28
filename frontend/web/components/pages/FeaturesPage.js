@@ -236,7 +236,7 @@ const FeaturesPage = class extends Component {
                                                               ]}
                                                               items={this.filter(projectFlags, this.state.tags)}
                                                               header={(
-                                                                  <Row>
+                                                                  <Row style={{backgroundColor:'#f7f7f7'}}>
                                                                       <TagSelect
                                                                         showUntagged
                                                                         showClearAll
