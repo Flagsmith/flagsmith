@@ -680,11 +680,6 @@ const CreateFlag = class extends Component {
                                                 <FormGroup className="mb-4 mr-3 ml-3">
                                                     <Panel
                                                       title={<h6 className="mb-0">Flag events for last {this.state.period}</h6>}
-                                                      action={(
-                                                          <Button onClick={() => this.changePeriod()} type="button" className="btn--outline">
-                                                              {`Change to ${this.getDisplayPeriod()}`}
-                                                          </Button>
-                                                        )}
                                                     >
                                                         {this.drawChart(influxData)}
                                                     </Panel>
