@@ -24,7 +24,7 @@ from features.models import (
     FeatureStateValue,
 )
 from features.multivariate.models import MultivariateFeatureOption
-from features.value_types import STRING, INTEGER, BOOLEAN
+from features.value_types import BOOLEAN, INTEGER, STRING
 from organisations.models import Organisation, OrganisationRole
 from projects.models import Project
 from projects.tags.models import Tag
@@ -82,6 +82,36 @@ class ProjectFeatureTestCase(TestCase):
             description="Test Tag description",
             project=self.project2,
         )
+
+    def test_default_is_archived_is_false(self):
+        # Given - set up data
+        data = {
+            "name": "test feature",
+        }
+        url = reverse("api-v1:projects:project-features-list", args=[self.project.id])
+
+        # When
+        response = self.client.post(
+            url, data=json.dumps(data), content_type="application/json"
+        ).json()
+
+        # Then
+        assert response["is_archived"] is False
+
+    def test_update_is_archived_works(self):
+        # Given
+        feature = Feature.objects.create(name="test feature", project=self.project)
+        url = reverse(
+            "api-v1:projects:project-features-detail",
+            args=[self.project.id, feature.id],
+        )
+        data = {"name": "test feature", "is_archived": True}
+
+        # When
+        response = self.client.put(url, data=data).json()
+
+        # Then
+        assert response["is_archived"] is True
 
     def test_should_create_feature_states_when_feature_created(self):
         # Given - set up data
@@ -493,6 +523,27 @@ class ProjectFeatureTestCase(TestCase):
 
         feature = response_json["results"][0]
         assert "tags" in feature
+
+    def test_list_features_is_archived_filter(self):
+        # Firstly, let's setup the initial data
+        feature = Feature.objects.create(name="test_feature", project=self.project)
+        archived_feature = Feature.objects.create(
+            name="archived_feature", project=self.project, is_archived=True
+        )
+        base_url = reverse(
+            "api-v1:projects:project-features-list", args=[self.project.id]
+        )
+        # Next, let's test true filter
+        url = f"{base_url}?is_archived=true"
+        response = self.client.get(url)
+        assert len(response.json()["results"]) == 1
+        assert response.json()["results"][0]["id"] == archived_feature.id
+
+        # Finally, let's test false filter
+        url = f"{base_url}?is_archived=false"
+        response = self.client.get(url)
+        assert len(response.json()["results"]) == 1
+        assert response.json()["results"][0]["id"] == feature.id
 
     def test_put_feature_does_not_update_feature_states(self):
         # Given

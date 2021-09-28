@@ -35,6 +35,7 @@ class ListCreateFeatureSerializer(WritableNestedModelSerializer):
             "description",
             "tags",
             "multivariate_options",
+            "is_archived",
         )
         read_only_fields = ("feature_segments", "created_date")
 
