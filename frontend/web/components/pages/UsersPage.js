@@ -10,7 +10,7 @@ const UsersPage = class extends Component {
     constructor(props, context) {
         super(props, context);
         this.state = {
-            search: null,
+            search: null
         };
     }
 
@@ -123,65 +123,66 @@ const UsersPage = class extends Component {
                                                 {!fullReload && (
                                                     <FormGroup>
                                                         <PanelSearch
-                                                          renderSearchWithNoResults
-                                                          id="users-list"
-                                                          title="Users"
-                                                          className="no-pad"
-                                                          icon="ion-md-person"
-                                                          items={identities}
-                                                          paging={identitiesPaging}
-                                                          nextPage={() => AppActions.getIdentitiesPage(environmentId, identitiesPaging.next)}
-                                                          prevPage={() => AppActions.getIdentitiesPage(environmentId, identitiesPaging.previous)}
-                                                          goToPage={page => AppActions.getIdentitiesPage(environmentId, `${Project.api}environments/${environmentId}/identities/?page=${page}`)}
-                                                          renderRow={({ id, identifier }, index) => (permission ? (
-                                                              <Row
-                                                                space className="list-item clickable" key={id}
-                                                              >
-                                                                  <Flex
+                                                            renderSearchWithNoResults
+                                                            id="users-list"
+                                                            title="Users"
+                                                            className="no-pad"
+                                                            icon="ion-md-person"
+                                                            items={identities}
+                                                            paging={identitiesPaging}
+                                                            showExactFilter
+                                                            nextPage={() => AppActions.getIdentitiesPage(environmentId, identitiesPaging.next)}
+                                                            prevPage={() => AppActions.getIdentitiesPage(environmentId, identitiesPaging.previous)}
+                                                            goToPage={page => AppActions.getIdentitiesPage(environmentId, `${Project.api}environments/${environmentId}/identities/?page=${page}`)}
+                                                            renderRow={({ id, identifier }, index) => (permission ? (
+                                                                <Row
+                                                                    space className="list-item clickable" key={id}
                                                                     data-test={`user-item-${index}`}
-                                                                  >
-                                                                      <Link
-                                                                        to={`/project/${this.props.match.params.projectId}/environment/${this.props.match.params.environmentId}/users/${encodeURIComponent(identifier)}/${id}`}
-                                                                      >
-                                                                          <ButtonLink>
-                                                                              {identifier}
+                                                                >
+                                                                    <Flex>
+                                                                        <Link
+                                                                            to={`/project/${this.props.match.params.projectId}/environment/${this.props.match.params.environmentId}/users/${encodeURIComponent(identifier)}/${id}`}
+                                                                        >
+                                                                            <ButtonLink>
+                                                                                {identifier}
 
-                                                                              <span className="ion-ios-arrow-forward ml-3"/>
-                                                                          </ButtonLink>
+                                                                                <span className="ion-ios-arrow-forward ml-3"/>
+                                                                            </ButtonLink>
 
-                                                                      </Link>
-                                                                  </Flex>
+                                                                        </Link>
+                                                                    </Flex>
 
-                                                                  <Column>
-                                                                      <button
-                                                                        id="remove-feature"
-                                                                        className="btn btn--with-icon"
-                                                                        type="button"
-                                                                        onClick={() => this.removeIdentity(id, identifier)}
-                                                                      >
-                                                                          <RemoveIcon/>
-                                                                      </button>
-                                                                  </Column>
-                                                              </Row>
-                                                          ) : (
-                                                              <Row
-                                                                space className="list-item" key={id}
-                                                                data-test={`user-item-${index}`}
-                                                              >
-                                                                  {identifier}
-                                                              </Row>
-                                                          ))}
-                                                          renderNoResults={(
-                                                              <div>
+                                                                    <Column>
+                                                                        <button
+                                                                            id="remove-feature"
+                                                                            className="btn btn--with-icon"
+                                                                            type="button"
+                                                                            onClick={() => this.removeIdentity(id, identifier)}
+                                                                        >
+                                                                            <RemoveIcon/>
+                                                                        </button>
+                                                                    </Column>
+                                                                </Row>
+                                                            ) : (
+                                                                <Row
+                                                                    space className="list-item" key={id}
+                                                                    data-test={`user-item-${index}`}
+                                                                >
+                                                                    {identifier}
+                                                                </Row>
+                                                            ))}
+                                                            renderNoResults={(
+                                                                <div>
                                                                     You have no users in your project{this.state.search ? <span> for <strong>"{this.state.search}"</strong></span> : ''}.
-                                                              </div>
+                                                                </div>
                                                             )}
-                                                          filterRow={(flag, search) => flag.identifier && flag.identifier.indexOf(search) != -1}
-                                                          onChange={(e) => {
-                                                              this.setState({ search: Utils.safeParseEventValue(e) });
-                                                              AppActions.searchIdentities(this.props.match.params.environmentId, Utils.safeParseEventValue(e));
-                                                          }}
-                                                          isLoading={isLoading}
+                                                            filterRow={(flag, search) => flag.identifier && flag.identifier.indexOf(search) != -1}
+                                                            search={this.state.search}
+                                                            onChange={(e) => {
+                                                                this.setState({ search: Utils.safeParseEventValue(e) });
+                                                                AppActions.searchIdentities(this.props.match.params.environmentId, Utils.safeParseEventValue(e));
+                                                            }}
+                                                            isLoading={isLoading}
                                                         />
                                                     </FormGroup>
                                                 )}

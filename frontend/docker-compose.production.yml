@@ -5,8 +5,8 @@ services:
         build:
             context: .
         environment:
-            - API_URL=http://localhost:8000/api/v1/
-            - ASSET_URL=http://localhost:8080/
+            - FLAGSMITH_API_URL=http://localhost:8000/api/v1/
+            - ASSET_STATIC_ASSET_CDN_URLURL=http://localhost:8080/
         ports:
             - '8080:8080'
         volumes:

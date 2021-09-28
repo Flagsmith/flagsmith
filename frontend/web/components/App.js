@@ -143,8 +143,8 @@ const App = class extends Component {
     };
 
     onLogout = () => {
-        if (document.location.href.includes("saml?")) {
-            return
+        if (document.location.href.includes('saml?')) {
+            return;
         }
         this.context.router.history.replace('/');
     };
@@ -361,11 +361,11 @@ const App = class extends Component {
                                                                                 <Link
                                                                                   id="create-org-link" onClick={toggle}
                                                                                   to="/create"
-                                                                                  >
+                                                                                >
                                                                                     <Flex className="text-center">
                                                                                         <Button>Create Organisation <span className="ion-md-add"/></Button>
                                                                                     </Flex>
-                                                                               </Link>
+                                                                                </Link>
                                                                             </div>
                                                                         )}
                                                                         <a

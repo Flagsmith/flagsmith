@@ -3,6 +3,7 @@ import ConfirmRemoveProject from '../modals/ConfirmRemoveProject';
 import ConfirmHideFlags from '../modals/ConfirmHideFlags';
 import EditPermissions from '../EditPermissions';
 import Switch from '../Switch';
+import _data from '../../../common/data/base/_data';
 
 const ProjectSettingsPage = class extends Component {
     static displayName = 'ProjectSettingsPage'
@@ -15,6 +16,14 @@ const ProjectSettingsPage = class extends Component {
         super(props, context);
         this.state = {};
         AppActions.getProject(this.props.match.params.projectId);
+        this.getPermissions();
+    }
+
+    getPermissions = () => {
+        _data.get(`${Project.api}projects/${this.props.match.params.projectId}/user-permissions/`)
+            .then((permissions) => {
+                this.setState({ permissions });
+            });
     }
 
     componentDidMount = () => {
@@ -59,6 +68,7 @@ const ProjectSettingsPage = class extends Component {
 
     render() {
         const { name } = this.state;
+
         return (
             <div className="app-container container">
                 <ProjectProvider id={this.props.match.params.projectId} onRemove={this.onRemove} onSave={this.onSave}>
@@ -96,7 +106,12 @@ const ProjectSettingsPage = class extends Component {
                                     </FormGroup>
                                 </div>
                             )}
-                            <EditPermissions tabClassName="flat-panel" id={this.props.match.params.projectId} level="project"/>
+                            <EditPermissions
+                              onSaveUser={() => {
+                                  this.getPermissions();
+                              }} permissions={this.state.permissions} tabClassName="flat-panel"
+                              id={this.props.match.params.projectId} level="project"
+                            />
 
                             <FormGroup className="mt-4">
                                 <h3>Hide disabled flags from SDKs</h3>
@@ -121,14 +136,14 @@ const ProjectSettingsPage = class extends Component {
                                         </p>
                                     </div>
                                     <div className="col-md-2 text-right">
-                                    <Button
-                                      onClick={() => this.confirmRemove(project, () => {
-                                          deleteProject(this.props.match.params.projectId);
-                                      })}
-                                      className="btn btn--with-icon ml-auto btn--remove"
-                                    >
-                                        <RemoveIcon/>
-                                    </Button>
+                                        <Button
+                                          onClick={() => this.confirmRemove(project, () => {
+                                              deleteProject(this.props.match.params.projectId);
+                                          })}
+                                          className="btn btn--with-icon ml-auto btn--remove"
+                                        >
+                                            <RemoveIcon/>
+                                        </Button>
                                     </div>
                                 </div>
                             </FormGroup>

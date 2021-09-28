@@ -275,7 +275,7 @@ const Aside = class extends Component {
                                                   <div className="aside__footer">
                                                       {hasFeature('demo_feature') && (
                                                       <a
-                                                        style={{ color: getValue('demo_link_color') || '#43424f' }}
+                                                        style={{ color: getValue('demo_feature') || '#43424f' }}
                                                         className="aside__nav-item"
                                                         href="https://docs.flagsmith.com"
                                                       >
