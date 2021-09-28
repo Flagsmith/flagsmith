@@ -1,3 +1,4 @@
+import logging
 import typing
 from collections import defaultdict
 
@@ -5,6 +6,8 @@ from django.conf import settings
 from influxdb_client import InfluxDBClient, Point
 from influxdb_client.client.write_api import SYNCHRONOUS
 from urllib3 import Retry
+
+logger = logging.getLogger(__name__)
 
 url = settings.INFLUXDB_URL
 token = settings.INFLUXDB_TOKEN
@@ -216,6 +219,13 @@ def get_top_organisations(date_range: str, limit: str = ""):
     dataset = {}
     for result in results:
         for record in result.records:
-            org_id = int(record.values["organisation"].partition("-")[0])
-            dataset[org_id] = record.get_value()
+            try:
+                org_id = int(record.values["organisation"].partition("-")[0])
+                dataset[org_id] = record.get_value()
+            except ValueError:
+                logger.warning(
+                    "Bad InfluxDB data found with organisation %s"
+                    % record.values["organisation"].partition("-")[0]
+                )
+
     return dataset
