@@ -9,9 +9,8 @@
 }
 .chip {
 	align-self: flex-start !important;
-	height: 26px;
 	background-color: $input-placeholder-color;
-	padding: 0 10px;
+	padding: 5px 10px;
 	border-radius: 16px;
 	margin-right: $input-padding-x;
 	font-size: 0.75em;
