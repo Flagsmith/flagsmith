@@ -7,7 +7,6 @@ module.exports = global.Project = {
     maintenance: false, // trigger maintenance mode
     cookieDomain: '.flagsmith.com',
     excludeAnalytics: 'nightwatch@solidstategroup.com',
-    delighted: true, // determines whether to shw delighted feedback widget
     demoAccount: {
         email: 'kyle+bullet-train@solidstategroup.com',
         password: 'demo_account',
