@@ -278,7 +278,7 @@ To request removal of your Personal Information from our site or services, conta
             </p>
             <p>
 We totally understand your right to have us stop contacting you. We endeavor to give you the ability to
-                control the way we contact you. You may use the the links at the bottom of each communication to opt-out
+                control the way we contact you. You may use the links at the bottom of each communication to opt-out
                 of further communications.
             </p>
             <p>

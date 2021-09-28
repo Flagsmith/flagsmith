@@ -343,7 +343,7 @@ const CreateFlag = class extends Component {
                           isValid={name && name.length}
                           type="text"
                           title="Archived"
-                          tooltip="Archiving a flag allows you to filter out flags from the admin platform that are no longer relevant.<br/>An archived flag will still return as normal in the the SDK endpoints."
+                          tooltip="Archiving a flag allows you to filter out flags from the Flagsmith dashboard that are no longer relevant.<br/>An archived flag will still return as normal in all SDK endpoints."
                           placeholder="e.g. 'This determines what size the header is' "
                         />
                     </FormGroup>
