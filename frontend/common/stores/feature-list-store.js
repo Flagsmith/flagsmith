@@ -13,8 +13,8 @@ const controller = {
 
             // todo: cache project flags
             return Promise.all([
-                data.get(`${Project.api}projects/${projectId}/features/`),
-                data.get(`${Project.api}environments/${environmentId}/featurestates/`),
+                data.get(`${Project.api}projects/${projectId}/features/?page_size=999`),
+                data.get(`${Project.api}environments/${environmentId}/featurestates/?page_size=999`),
             ]).then(([features, environmentFeatures]) => {
                 if (features.results.length) {
                     createdFirstFeature = true;
