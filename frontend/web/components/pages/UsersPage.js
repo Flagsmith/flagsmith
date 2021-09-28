@@ -130,6 +130,7 @@ const UsersPage = class extends Component {
                                                             icon="ion-md-person"
                                                             items={identities}
                                                             paging={identitiesPaging}
+                                                            showExactFilter
                                                             nextPage={() => AppActions.getIdentitiesPage(environmentId, identitiesPaging.next)}
                                                             prevPage={() => AppActions.getIdentitiesPage(environmentId, identitiesPaging.previous)}
                                                             goToPage={page => AppActions.getIdentitiesPage(environmentId, `${Project.api}environments/${environmentId}/identities/?page=${page}`)}
@@ -176,6 +177,7 @@ const UsersPage = class extends Component {
                                                                 </div>
                                                             )}
                                                             filterRow={(flag, search) => flag.identifier && flag.identifier.indexOf(search) != -1}
+                                                            search={this.state.search}
                                                             onChange={(e) => {
                                                                 this.setState({ search: Utils.safeParseEventValue(e) });
                                                                 AppActions.searchIdentities(this.props.match.params.environmentId, Utils.safeParseEventValue(e));
