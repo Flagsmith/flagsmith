@@ -43,10 +43,11 @@ jobs:
             - name: Test with Chromedriver
               working-directory: frontend
               env:
+                  STATIC_ASSET_CDN_URL: /
                   E2E_TEST_TOKEN_STAGING: ${{ secrets.E2E_TEST_TOKEN }}
               run: |
                   wget -q https://dl.google.com/linux/chrome/deb/pool/main/g/google-chrome-stable/google-chrome-stable_91.0.4472.114-1_amd64.deb
-                  sudo apt install --allow-downgrades -y ./google-chrome*.deb -f 
+                  sudo apt install --allow-downgrades -y ./google-chrome*.deb -f
                   google-chrome --version
                   node -v
                   npm i
