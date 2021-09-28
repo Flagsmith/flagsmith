@@ -69,6 +69,7 @@ module.exports = Object.assign({}, require('./base/_utils'), {
                 enabled: false,
                 hide_from_client: false,
                 description: projectFlag.description,
+                is_archived: projectFlag.is_archived,
             };
         }
         if (identityFlag) {
@@ -80,6 +81,7 @@ module.exports = Object.assign({}, require('./base/_utils'), {
                 hide_from_client: environmentFlag.hide_from_client,
                 enabled: identityFlag.enabled,
                 description: projectFlag.description,
+                is_archived: projectFlag.is_archived,
             };
         }
         return {
@@ -91,6 +93,7 @@ module.exports = Object.assign({}, require('./base/_utils'), {
             multivariate_options: projectFlag.multivariate_options,
             enabled: environmentFlag.enabled,
             description: projectFlag.description,
+            is_archived: projectFlag.is_archived,
         };
     },
 

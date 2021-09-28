@@ -144,7 +144,7 @@ const PanelSearch = class extends Component {
                   {filteredItems && filteredItems.length
                     ? filteredItems.map(renderRow) : (renderNoResults && !search) ? renderNoResults : (
                       <Column>
-                          <div>
+                          <div className="mx-2 mb-2">
                               {'No results '}
                               {search && (
                                 <span>
