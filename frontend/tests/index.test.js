@@ -74,13 +74,11 @@ const sendFailure = (browser, done, request, error) => {
     console.log('Last error:', lastError);
     browser.getLog('browser', (logEntries) => {
         logEntries.forEach((log) => {
-            if (log.level === 'SEVERE') {
-                if (!log.message) return;
-                if (log.message.includes('Warning:')) { // ignore react warnings
-                    return;
-                }
-                console.log(`[${log.level}] ${log.message}`);
+            if (!log.message) return;
+            if (log.message.includes('Warning:')) { // ignore react warnings
+                return;
             }
+            console.log(`[${log.level}] ${log.message}`);
         });
         browser
             .source((result) => {
