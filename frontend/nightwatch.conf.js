@@ -48,7 +48,7 @@ module.exports = {
                 'waitForConditionPollInterval': 500, // sometimes internet is slow so wait.
                 'waitForConditionTimeout': 20000, // sometimes internet is slow so wait.
                 'asyncHookTimeout': 60000,
-                'retryAssertionTimeout': 30000,
+                'retryAssertionTimeout': 31000,
                 before: (browser, done) => {
                     firstTime = false;
                     setTimeout(() => {
