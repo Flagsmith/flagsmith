@@ -650,7 +650,7 @@ class IdentityTestCase(TransactionTestCase):
         assert len(feature_states) == 1
         assert feature_states[0].enabled == enabled_for_segment
 
-    def test_generate_traits_with_persistence(self, dynamo_identity_table):
+    def test_generate_traits_with_persistence(self):
         # Given
         identity = Identity.objects.create(
             identifier="identifier", environment=self.environment
@@ -671,7 +671,7 @@ class IdentityTestCase(TransactionTestCase):
         # and the database matches it
         assert Trait.objects.filter(identity=identity).count() == 3
 
-    def test_generate_traits_without_persistence(self, dynamo_identity_table):
+    def test_generate_traits_without_persistence(self):
         # Given
         identity = Identity.objects.create(
             identifier="identifier", environment=self.environment
