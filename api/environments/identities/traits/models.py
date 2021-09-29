@@ -1,5 +1,6 @@
 import typing
 
+from django.conf import settings
 from django.core.exceptions import ObjectDoesNotExist
 from django.db import models
 from django.utils.encoding import python_2_unicode_compatible
@@ -11,10 +12,12 @@ from environments.models import BOOLEAN, FLOAT, INTEGER, STRING
 
 class TraitQuerySet(models.QuerySet):
     def delete(self, *args, **kwargs):
-        from environments.identities.models import Identity
+        identities_to_update = []
+        if settings.IDENTITIES_TABLE_NAME_DYNAMO:
+            from environments.identities.models import Identity
 
-        # collect all the identities that we need to update
-        identities_to_update = [trait.identity for trait in self]
+            # collect all the identities that we need to update
+            identities_to_update = [trait.identity for trait in self]
         super().delete(*args, **kwargs)
         # update all the identities
         if identities_to_update:
