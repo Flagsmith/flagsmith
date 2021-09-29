@@ -12,6 +12,7 @@ services:
         container_name: flagsmith_postgres
 
     api:
+        image: flagsmith/flagsmith:latest
         environment:
             DJANGO_ALLOWED_HOSTS: '*' # Change this in production
             DATABASE_URL: postgresql://postgres:password@db:5432/flagsmith
