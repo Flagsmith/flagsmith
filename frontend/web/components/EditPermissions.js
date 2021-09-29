@@ -248,7 +248,7 @@ export default class EditPermissions extends PureComponent {
                                                             ) : (
                                                                 <div onClick={onClick} className="flex-row">
                                                                     <span className="mr-3">{
-                                                                        matchingPermissions.admin ? `${Format.camelCase(this.props.level)} Administrator` : 'Regular User'
+                                                                        matchingPermissions && matchingPermissions.admin ? `${Format.camelCase(this.props.level)} Administrator` : 'Regular User'
                                                                     }
                                                                     </span>
                                                                     <ion style={{ fontSize: 24 }} className="icon--primary ion ion-md-settings"/>
