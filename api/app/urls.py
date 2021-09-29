@@ -26,7 +26,7 @@ urlpatterns = [
         name="password_reset_confirm",
     ),
     url(
-        r"^static/project-overrides.js",
+        r"^api/project-overrides",
         views.project_overrides,
         name="project_overrides",
     ),
