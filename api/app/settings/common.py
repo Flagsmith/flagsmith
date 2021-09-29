@@ -9,6 +9,7 @@ https://docs.djangoproject.com/en/1.9/topics/settings/
 For the full list of settings and their values, see
 https://docs.djangoproject.com/en/1.9/ref/settings/
 """
+import logging
 import os
 import sys
 import warnings
@@ -22,6 +23,7 @@ from django.core.management.utils import get_random_secret_key
 from environs import Env
 
 env = Env()
+logger = logging.getLogger(__name__)
 
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -33,10 +35,13 @@ if ENV not in ("local", "dev", "staging", "production"):
         "ENVIRONMENT env variable must be one of local, dev, staging or production"
     )
 
-DEBUG = env("DEBUG", "False").lower() in ("true", "1", "t")
+DEBUG = env("DEBUG", default=False)
 
 # Enables the sending of telemetry data to the central Flagsmith API for usage tracking
 ENABLE_TELEMETRY = env("ENABLE_TELEMETRY", default=True)
+
+# Enables gzip compression
+ENABLE_GZIP_COMPRESSION = env.bool("ENABLE_GZIP_COMPRESSION", default=False)
 
 SECRET_KEY = env("DJANGO_SECRET_KEY", default=get_random_secret_key())
 
@@ -45,15 +50,7 @@ HOSTED_SEATS_LIMIT = env.int("HOSTED_SEATS_LIMIT", default=0)
 # Google Analytics Configuration
 GOOGLE_ANALYTICS_KEY = env("GOOGLE_ANALYTICS_KEY", default="")
 GOOGLE_SERVICE_ACCOUNT = env("GOOGLE_SERVICE_ACCOUNT", default=None)
-if not GOOGLE_SERVICE_ACCOUNT:
-    warnings.warn(
-        "GOOGLE_SERVICE_ACCOUNT not configured, getting organisation usage will not work"
-    )
 GA_TABLE_ID = env("GA_TABLE_ID", default=None)
-if not GA_TABLE_ID:
-    warnings.warn(
-        "GA_TABLE_ID not configured, getting organisation usage will not work"
-    )
 
 INFLUXDB_TOKEN = env.str("INFLUXDB_TOKEN", default="")
 INFLUXDB_BUCKET = env.str("INFLUXDB_BUCKET", default="")
@@ -194,6 +191,10 @@ MIDDLEWARE = [
     "simple_history.middleware.HistoryRequestMiddleware",
 ]
 
+if ENABLE_GZIP_COMPRESSION:
+    # ref: https://docs.djangoproject.com/en/2.2/ref/middleware/#middleware-ordering
+    MIDDLEWARE.insert(1, "django.middleware.gzip.GZipMiddleware")
+
 if GOOGLE_ANALYTICS_KEY:
     MIDDLEWARE.append("app_analytics.middleware.GoogleAnalyticsMiddleware")
 
@@ -305,7 +306,7 @@ EMAIL_BACKEND = env("EMAIL_BACKEND", default="sgbackend.SendGridBackend")
 if EMAIL_BACKEND == "sgbackend.SendGridBackend":
     SENDGRID_API_KEY = env("SENDGRID_API_KEY", default=None)
     if not SENDGRID_API_KEY:
-        warnings.warn(
+        logger.info(
             "`SENDGRID_API_KEY` has not been configured. You will not receive emails."
         )
 elif EMAIL_BACKEND == "django.core.mail.backends.smtp.EmailBackend":
@@ -440,7 +441,7 @@ ALLOW_REGISTRATION_WITHOUT_INVITE = env.bool(
 )
 
 # Django Axes settings
-ENABLE_AXES = env.bool("ENABLE_AXES", default=False)
+ENABLE_AXES = env.bool("ENABLE_AXES", default=True)
 if ENABLE_AXES:
     # must be the first item in the auth backends
     AUTHENTICATION_BACKENDS.insert(0, "axes.backends.AxesBackend")
@@ -463,6 +464,11 @@ ENABLE_ADMIN_ACCESS_USER_PASS = env.bool("ENABLE_ADMIN_ACCESS_USER_PASS", defaul
 # Useful for data sensitive installations that dont want persistent traits.
 DEFAULT_ORG_STORE_TRAITS_VALUE = env.bool("DEFAULT_ORG_STORE_TRAITS_VALUE", True)
 
+# DynamoDB table name for storing environment
+ENVIRONMENTS_TABLE_NAME_DYNAMO = env.str("ENVIRONMENTS_TABLE_NAME_DYNAMO", None)
+
+# DynamoDB table name for storing identities
+IDENTITIES_TABLE_NAME_DYNAMO = env.str("IDENTITIES_TABLE_NAME_DYNAMO", None)
 
 ### Front end environment variables
 API_URL = env("API_URL", default="/api/v1/")

@@ -12,6 +12,14 @@ const returnIfDefined = (value, value2) => {
     }
     return value;
 };
+const valuesEqual = (actualValue, flagValue) => {
+    const nullFalseyA = actualValue == null || actualValue === '' || typeof actualValue === 'undefined';
+    const nullFalseyB = flagValue == null || flagValue === '' || typeof flagValue === 'undefined';
+    if (nullFalseyA && nullFalseyB) {
+        return true;
+    }
+    return actualValue == flagValue;
+};
 const UserPage = class extends Component {
     static displayName = 'UserPage'
 
@@ -70,7 +78,7 @@ const UserPage = class extends Component {
         />);
     }
 
-    editFlag = (projectFlag, environmentFlag, identityFlag) => {
+    editFlag = (projectFlag, environmentFlag, identityFlag, multivariate_feature_state_values) => {
         API.trackEvent(Constants.events.VIEW_USER_FEATURE);
         openModal(`Edit User Feature: ${projectFlag.name}`, <CreateFlagModal
           isEdit
@@ -79,7 +87,10 @@ const UserPage = class extends Component {
           environmentId={this.props.match.params.environmentId}
           projectId={this.props.match.params.projectId}
           projectFlag={projectFlag}
-          identityFlag={identityFlag}
+          identityFlag={{
+              ...identityFlag,
+              multivariate_feature_state_values
+          }}
           environmentFlag={environmentFlag}
         />);
     };
@@ -177,9 +188,9 @@ const UserPage = class extends Component {
 
                                                       const actualEnabled = (actualFlags && !!actualFlags && actualFlags[name] && actualFlags[name].enabled) || false;
                                                       const actualValue = !!actualFlags && actualFlags[name] && actualFlags[name].feature_state_value;
-                                                      const flagEnabledDifferent = type === 'FLAG' && (hasUserOverride ? false
+                                                      const flagEnabledDifferent = (hasUserOverride ? false
                                                           : actualEnabled !== flagEnabled);
-                                                      const flagValueDifferent = type !== 'FLAG' && (hasUserOverride ? false : actualValue !== flagValue);
+                                                      const flagValueDifferent = (hasUserOverride ? false : !valuesEqual(actualValue, flagValue));
                                                       const projectFlag = projectFlags && projectFlags.find(p => p.id === (environmentFlag && environmentFlag.feature));
                                                       const isMultiVariateOverride = flagValueDifferent && projectFlag && projectFlag.multivariate_options && projectFlag.multivariate_options.find((v) => {
                                                           const value = Utils.featureStateToValue(v);
@@ -192,7 +203,7 @@ const UserPage = class extends Component {
                                                             data-test={`user-feature-${i}`}
                                                           >
                                                               <div
-                                                                onClick={() => this.editFlag(_.find(projectFlags, { id }), environmentFlags[id], identityFlag)}
+                                                                onClick={() => this.editFlag(_.find(projectFlags, { id }), environmentFlags[id], actualFlags[name],identityFlags && identityFlags[id] && identityFlags[id].multivariate_feature_state_values)}
                                                                 className="flex flex-1"
                                                               >
                                                                   <Row>
@@ -213,19 +224,25 @@ const UserPage = class extends Component {
                                                                   ) : (
                                                                       flagEnabledDifferent ? (
                                                                           <span data-test={`feature-override-${i}`} className="flex-row chip">
-                                                                              {isMultiVariateOverride ? (
-                                                                                  <span>
-                                                                              This flag is being overridden by a variation defined on your feature, the control value is <strong>{flagEnabled ? 'on' : 'off'}</strong> for this user
-                                                                                  </span>
-                                                                              ) : (
-                                                                                  <span>
-                                                                              This flag is being overridden by segments and would normally be <strong>{flagEnabled ? 'on' : 'off'}</strong> for this user
-                                                                                  </span>
-                                                                              )}
+                                                                              <Row>
+                                                                                  <Flex>
+                                                                                      {isMultiVariateOverride ? (
+                                                                                          <span>
+                                                                                              This flag is being overridden by a variation defined on your feature, the control value is <strong>{flagEnabled ? 'on' : 'off'}</strong> for this user
+                                                                                          </span>
+                                                                                      ) : (
+                                                                                          <span>
+                                                                                              This flag is being overridden by segments and would normally be <strong>{flagEnabled ? 'on' : 'off'}</strong> for this user
+                                                                                          </span>
+                                                                                      )}
 
-                                                                              <span
-                                                                                className="chip-icon icon ion-md-information"
-                                                                              />
+                                                                                  </Flex>
+                                                                                  <span
+                                                                                      className="ml-1 chip-icon icon ion-md-information"
+                                                                                  />
+                                                                              </Row>
+
+
                                                                           </span>
                                                                       ) : flagValueDifferent ? isMultiVariateOverride ? (
                                                                           <span data-test={`feature-override-${i}`} className="flex-row chip">

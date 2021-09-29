@@ -23,29 +23,38 @@ class TagSelect extends PureComponent {
             <Row className="tag-filter mx-2 mt-3">
                 <div className="ml-1">
                     <Row>
-                        {showUntagged && (
-                            <div className="mr-1 mb-2">
-                                <Tag
-                                  key={showUntagged.id}
-                                  selected={this.isSelected(showUntagged)}
-                                  onClick={this.onSelect}
-                                  className="px-2 py-2 mr-2"
-                                  tag={showUntagged}
-                                />
-                            </div>
-                        )}
-                        {projectTags.map(tag => (
-                            <div className="mr-1 mb-2">
-                                <Tag
-                                  key={tag.id}
-                                  selected={this.isSelected(tag)}
-                                  onClick={this.onSelect}
-                                  className="px-2 py-2 mr-2"
-                                  tag={tag}
-                                />
 
-                            </div>
-                        ))}
+                        <Flex>
+                            <Row>
+                                {this.props.children}
+                                {showUntagged && (
+                                    <div className="mr-1 mb-2">
+                                        <Tag
+                                            key={showUntagged.id}
+                                            selected={this.isSelected(showUntagged)}
+                                            onClick={this.onSelect}
+                                            className="px-2 py-2 mr-2"
+                                            tag={showUntagged}
+                                        />
+                                    </div>
+                                )}
+
+                                {projectTags.map(tag => (
+                                    <div className="mr-1 mb-2">
+                                        <Tag
+                                            key={tag.id}
+                                            selected={this.isSelected(tag)}
+                                            onClick={this.onSelect}
+                                            className="px-2 py-2 mr-2"
+                                            tag={tag}
+                                        />
+
+                                    </div>
+                                ))}
+                            </Row>
+
+                        </Flex>
+
 
                         {showClearAll && (
                             <Button
@@ -55,7 +64,7 @@ class TagSelect extends PureComponent {
                                     } else {
                                         this.props.onChange((showUntagged ? [''] : []).concat(projectTags.map(v => v.id)));
                                     }
-                                }} style={{ marginBottom: 10 }} className="btn--link"
+                                }} style={{ marginBottom: 10 }} className="btn--link mr-2"
                             >
                                 Toggle all
                             </Button>

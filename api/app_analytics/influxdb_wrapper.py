@@ -1,9 +1,17 @@
+import logging
 import typing
 from collections import defaultdict
 
 from django.conf import settings
 from influxdb_client import InfluxDBClient, Point
 from influxdb_client.client.write_api import SYNCHRONOUS
+from sentry_sdk import capture_exception
+from urllib3 import Retry
+from urllib3.exceptions import HTTPError
+
+logger = logging.getLogger(__name__)
+
+logger = logging.getLogger(__name__)
 
 url = settings.INFLUXDB_URL
 token = settings.INFLUXDB_TOKEN
@@ -15,7 +23,8 @@ range_bucket_mappings = {
     "7d": settings.INFLUXDB_BUCKET + "_downsampled_15m",
     "30d": settings.INFLUXDB_BUCKET + "_downsampled_1h",
 }
-influxdb_client = InfluxDBClient(url=url, token=token, org=influx_org)
+retries = Retry(connect=3, read=3, redirect=3)
+influxdb_client = InfluxDBClient(url=url, token=token, org=influx_org, retries=retries)
 
 
 class InfluxDBWrapper:
@@ -35,7 +44,10 @@ class InfluxDBWrapper:
         self.records.append(point)
 
     def write(self):
-        self.write_api.write(bucket=settings.INFLUXDB_BUCKET, record=self.records)
+        try:
+            self.write_api.write(bucket=settings.INFLUXDB_BUCKET, record=self.records)
+        except HTTPError as e:
+            capture_exception(e)
 
     @staticmethod
     def influx_query_manager(
@@ -56,8 +68,12 @@ class InfluxDBWrapper:
             f"{extra}"
         )
 
-        result = query_api.query(org=influx_org, query=query)
-        return result
+        try:
+            result = query_api.query(org=influx_org, query=query)
+            return result
+        except HTTPError as e:
+            capture_exception(e)
+            return []
 
 
 def get_events_for_organisation(organisation_id: id, date_range: str = "30d"):
@@ -214,6 +230,13 @@ def get_top_organisations(date_range: str, limit: str = ""):
     dataset = {}
     for result in results:
         for record in result.records:
-            org_id = int(record.values["organisation"].partition("-")[0])
-            dataset[org_id] = record.get_value()
+            try:
+                org_id = int(record.values["organisation"].partition("-")[0])
+                dataset[org_id] = record.get_value()
+            except ValueError:
+                logger.warning(
+                    "Bad InfluxDB data found with organisation %s"
+                    % record.values["organisation"].partition("-")[0]
+                )
+
     return dataset

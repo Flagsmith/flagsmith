@@ -53,6 +53,7 @@ class _EditPermissionsModal extends Component {
       const action = id ? 'put' : 'post';
       _data[action](`${Project.api}${url}${id && '/'}`, this.state.entityPermissions)
           .then(() => {
+              this.props.onSave && this.props.onSave()
               this.close();
           })
           .catch((e) => {
@@ -103,7 +104,7 @@ class _EditPermissionsModal extends Component {
                                           </bold>
                                           <div className="list-item-footer faint">
                                               {
-                                              hasRbacPermission ? 'Full View and Write permissions for the given environment.'
+                                              hasRbacPermission ? `Full View and Write permissions for the given ${Format.camelCase(this.props.level)}.`
                                                   : 'Please upgrade your account to enable role based access.'
                                             }
                                           </div>
@@ -173,6 +174,7 @@ export default class EditPermissions extends PureComponent {
       openModal(`Edit ${Format.camelCase(this.props.level)} Permissions`, <EditPermissionsModal
         name={`${user.first_name} ${user.last_name}`}
         id={this.props.id}
+        onSave={this.props.onSaveUser}
         level={this.props.level}
         user={user}
       />);
@@ -183,6 +185,7 @@ export default class EditPermissions extends PureComponent {
         name={`${group.name}`}
         id={this.props.id}
         isGroup
+        onSave={this.props.onSaveGroup}
         level={this.props.level}
         group={group}
       />);
@@ -221,6 +224,8 @@ export default class EditPermissions extends PureComponent {
                                                             this.editUserPermissions({ id, first_name, last_name, email, role });
                                                         }
                                                     };
+                                                    const matchingPermissions = this.props.permissions && this.props.permissions.find(v => v.user.id === id);
+
                                                     return (
                                                         <Row
                                                           onClick={onClick} space className={`list-item${role === 'ADMIN' ? '' : ' clickable'}`}
@@ -242,7 +247,10 @@ export default class EditPermissions extends PureComponent {
                                                                 </Tooltip>
                                                             ) : (
                                                                 <div onClick={onClick} className="flex-row">
-                                                                    <span className="mr-3">Regular User</span>
+                                                                    <span className="mr-3">{
+                                                                        matchingPermissions.admin ? `${Format.camelCase(this.props.level)} Administrator` : 'Regular User'
+                                                                    }
+                                                                    </span>
                                                                     <ion style={{ fontSize: 24 }} className="icon--primary ion ion-md-settings"/>
                                                                 </div>
                                                             )}

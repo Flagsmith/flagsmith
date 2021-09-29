@@ -74,6 +74,10 @@ const sendFailure = (browser, done, request, error) => {
     console.log('Last error:', lastError);
     browser.getLog('browser', (logEntries) => {
         logEntries.forEach((log) => {
+            if (!log.message) return;
+            if (log.message.includes('Warning:')) { // ignore react warnings
+                return;
+            }
             console.log(`[${log.level}] ${log.message}`);
         });
         browser
@@ -113,60 +117,60 @@ process.on('SIGINT', () => {
 });
 
 module.exports = Object.assign({
-        before: (browser, done) => {
-            if (slackMessage) {
-                slackMessage(`Running tests.${formatCommit()}`, E2E_SLACK_CHANNEL_NAME);
-            }
-            server = fork('./server');
-            server.on('message', () => {
-                clearDown(browser, process.env.PAUSE ? null : done);
-            });
-        },
-        afterEach: (browser, done) => {
-            if (browser.currentTest.results.errors || browser.currentTest.results.failed) {
-                testsFailed = true;
-                if (SLACK_TOKEN && browser.sessionId) {
-                    browser
-                        .useCss()
-                        .pause(5000) // Workaround since waitForElementIsVisible with abortOnFailure set to false doesnt actually work https://github.com/nightwatchjs/nightwatch/issues/1493
-                        .isVisible('#e2e-error', (result) => {
-                            // There is a chance e2e request will not be present if tests failed on another website i.e. mailinator
-                            if (result.status !== -1) {
-                                browser.getText('#e2e-error', (error) => {
-                                    browser.getText('#e2e-request', (request) => {
-                                        sendFailure(browser, done, request, error);
-                                    });
-                                });
-                            } else {
-                                sendFailure(browser, done);
-                            }
-                        });
-                } else {
-                    sendFailure(browser, done);
-                }
-            } else {
-                done();
-            }
-        },
-        after: (browser, done) => {
-            if (!testsFailed) {
-                sendSuccess()
-                    .then(() => exitTests(browser, done));
-                return;
-            }
-
-            exitTests(browser, done);
-        },
+    before: (browser, done) => {
+        if (slackMessage) {
+            slackMessage(`Running tests.${formatCommit()}`, E2E_SLACK_CHANNEL_NAME);
+        }
+        server = fork('./server');
+        server.on('message', () => {
+            clearDown(browser, process.env.PAUSE ? null : done);
+        });
     },
+    afterEach: (browser, done) => {
+        if (browser.currentTest.results.errors || browser.currentTest.results.failed) {
+            testsFailed = true;
+            if (SLACK_TOKEN && browser.sessionId) {
+                browser
+                    .useCss()
+                    .pause(5000) // Workaround since waitForElementIsVisible with abortOnFailure set to false doesnt actually work https://github.com/nightwatchjs/nightwatch/issues/1493
+                    .isVisible('#e2e-error', (result) => {
+                        // There is a chance e2e request will not be present if tests failed on another website i.e. mailinator
+                        if (result.status !== -1) {
+                            browser.getText('#e2e-error', (error) => {
+                                browser.getText('#e2e-request', (request) => {
+                                    sendFailure(browser, done, request, error);
+                                });
+                            });
+                        } else {
+                            sendFailure(browser, done);
+                        }
+                    });
+            } else {
+                sendFailure(browser, done);
+            }
+        } else {
+            done();
+        }
+    },
+    after: (browser, done) => {
+        if (!testsFailed) {
+            sendSuccess()
+                .then(() => exitTests(browser, done));
+            return;
+        }
 
-    require('./initialise.test'), // Register as the demo user
-    require('./features.test'), // Features tests
-    require('./segments.test'), // Segments tests
-    require('./segement-priorities.test'), // Segments tests
-    require('./users.test'), // Users tests
-    require('./project.test'), // Project/environment tests
-    require('./initial-cleanup.test'), // Cleanup initialisation
-    require('./invite.test'), // Invite user tests
-    require('./register-fail.test'), // Registration failure tests
-    require('./login-fail.test'), // Login failure tests
+        exitTests(browser, done);
+    },
+},
+
+require('./initialise.test'), // Register as the demo user
+require('./features.test'), // Features tests
+require('./segments.test'), // Segments tests
+require('./segement-priorities.test'), // Segments tests
+require('./users.test'), // Users tests
+require('./project.test'), // Project/environment tests
+require('./initial-cleanup.test'), // Cleanup initialisation
+require('./invite.test'), // Invite user tests
+require('./register-fail.test'), // Registration failure tests
+require('./login-fail.test'), // Login failure tests
 );

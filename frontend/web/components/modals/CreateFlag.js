@@ -20,7 +20,7 @@ const CreateFlag = class extends Component {
 
     constructor(props, context) {
         super(props, context);
-        const { name, feature_state_value, description, tags, enabled, hide_from_client, multivariate_options } = this.props.isEdit ? Utils.getFlagValue(this.props.projectFlag, this.props.environmentFlag, this.props.identityFlag)
+        const { name, feature_state_value, description, is_archived, tags, enabled, hide_from_client, multivariate_options } = this.props.isEdit ? Utils.getFlagValue(this.props.projectFlag, this.props.environmentFlag, this.props.identityFlag)
             : {
                 multivariate_options: [],
             };
@@ -41,6 +41,7 @@ const CreateFlag = class extends Component {
             allowEditDescription,
             enabledIndentity: false,
             enabledSegment: false,
+            is_archived,
             period: '24h',
         };
     }
@@ -109,7 +110,8 @@ const CreateFlag = class extends Component {
 
     save = (func, isSaving) => {
         const { projectFlag, segmentOverrides, environmentFlag, identity, identityFlag, environmentId } = this.props;
-        const { name, initial_value, description, default_enabled, hide_from_client } = this.state;
+        const { name, initial_value, description, is_archived, default_enabled, hide_from_client } = this.state;
+        const hasMultivariate = this.props.environmentFlag && this.props.environmentFlag.multivariate_feature_state_values && this.props.environmentFlag.multivariate_feature_state_values.length;
         if (identity) {
             !isSaving && name && func({
                 identity,
@@ -117,7 +119,7 @@ const CreateFlag = class extends Component {
                 environmentFlag,
                 identityFlag: Object.assign({}, identityFlag || {}, {
                     multivariate_options: this.state.identityVariations,
-                    feature_state_value: initial_value,
+                    feature_state_value: hasMultivariate ? this.props.environmentFlag.feature_state_value : initial_value,
                     enabled: default_enabled,
                 }),
                 environmentId,
@@ -130,6 +132,7 @@ const CreateFlag = class extends Component {
                 tags: this.state.tags,
                 hide_from_client,
                 description,
+                is_archived,
                 multivariate_options: this.state.multivariate_options,
             }, projectFlag, environmentFlag, segmentOverrides);
         }
@@ -287,6 +290,7 @@ const CreateFlag = class extends Component {
             default_enabled,
             multivariate_options,
             description,
+            is_archived,
             enabledSegment,
             enabledIndentity,
         } = this.state;
@@ -328,6 +332,23 @@ const CreateFlag = class extends Component {
                       placeholder="e.g. 'This determines what size the header is' "
                     />
                 </FormGroup>
+                {this.props.hasFeature('archive_flags') && !identity && (
+                    <FormGroup className="mb-4 mr-3 ml-3" >
+                        <InputGroup
+                          value={description}
+                          component={(
+                              <Switch checked={this.state.is_archived} onChange={is_archived => this.setState({ is_archived })}/>
+                          )}
+                          onChange={e => this.setState({ description: Utils.safeParseEventValue(e) })}
+                          isValid={name && name.length}
+                          type="text"
+                          title="Archived"
+                          tooltip="Archiving a flag allows you to filter out flags from the Flagsmith dashboard that are no longer relevant.<br/>An archived flag will still return as normal in all SDK endpoints."
+                          placeholder="e.g. 'This determines what size the header is' "
+                        />
+                    </FormGroup>
+                )}
+
 
                 {!identity && hasFeature('hide_flag') && (
                     <FormGroup className="mb-4 mr-3 ml-3">
@@ -408,7 +429,7 @@ const CreateFlag = class extends Component {
                               <ValueEditor
                                 data-test="featureValue"
                                 name="featureValue" className="full-width"
-                                value={`${typeof initial_value === 'undefined' ? '' : initial_value}`}
+                                value={`${typeof initial_value === 'undefined' || initial_value === null ? '' : initial_value}`}
                                 onChange={e => this.setState({ initial_value: Utils.getTypedValue(Utils.safeParseEventValue(e)) })}
                                 disabled={hide_from_client}
                                 placeholder="e.g. 'big' "
@@ -514,9 +535,9 @@ const CreateFlag = class extends Component {
                                                                 )}
                                                               action={
                                                                    (
-                                                                        <Button onClick={() => this.changeSegment(this.props.segmentOverrides)} type="button" className={`btn--outline${enabledSegment ? '' : '-red'}`}>
-                                                                            {enabledSegment ? 'Enable All' : 'Disable All'}
-                                                                        </Button>
+                                                                       <Button onClick={() => this.changeSegment(this.props.segmentOverrides)} type="button" className={`btn--outline${enabledSegment ? '' : '-red'}`}>
+                                                                           {enabledSegment ? 'Enable All' : 'Disable All'}
+                                                                       </Button>
                                                                     )
                                                                 }
                                                             >
@@ -558,9 +579,9 @@ const CreateFlag = class extends Component {
                                                             )}
                                                           action={
                                                                (
-                                                                    <Button onClick={() => this.changeIdentity(this.state.userOverrides)} type="button" className={`btn--outline${enabledIndentity ? '' : '-red'}`}>
-                                                                        {enabledIndentity ? 'Enable All' : 'Disable All'}
-                                                                    </Button>
+                                                                   <Button onClick={() => this.changeIdentity(this.state.userOverrides)} type="button" className={`btn--outline${enabledIndentity ? '' : '-red'}`}>
+                                                                       {enabledIndentity ? 'Enable All' : 'Disable All'}
+                                                                   </Button>
                                                                 )
                                                             }
                                                           icon="ion-md-person"
@@ -679,11 +700,6 @@ const CreateFlag = class extends Component {
                                                 <FormGroup className="mb-4 mr-3 ml-3">
                                                     <Panel
                                                       title={<h6 className="mb-0">Flag events for last {this.state.period}</h6>}
-                                                      action={(
-                                                          <Button onClick={() => this.changePeriod()} type="button" className="btn--outline">
-                                                              {`Change to ${this.getDisplayPeriod()}`}
-                                                          </Button>
-                                                        )}
                                                     >
                                                         {this.drawChart(influxData)}
                                                     </Panel>
