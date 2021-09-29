@@ -105,7 +105,6 @@ INSTALLED_APPS = [
     "features",
     "features.multivariate",
     "segments",
-    "app",
     "e2etests",
     "simple_history",
     "drf_yasg2",
