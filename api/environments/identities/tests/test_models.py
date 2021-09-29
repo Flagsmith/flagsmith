@@ -650,7 +650,6 @@ class IdentityTestCase(TransactionTestCase):
         assert len(feature_states) == 1
         assert feature_states[0].enabled == enabled_for_segment
 
-    @mock.patch("environments.identities.models.dynamo_identity_table")
     def test_generate_traits_with_persistence(self, dynamo_identity_table):
         # Given
         identity = Identity.objects.create(
@@ -672,11 +671,6 @@ class IdentityTestCase(TransactionTestCase):
         # and the database matches it
         assert Trait.objects.filter(identity=identity).count() == 3
 
-        # and put_item was called with correct args
-        identity_dict = build_identity_dict(identity)
-        dynamo_identity_table.put_item.assert_called_with(Item=identity_dict)
-
-    @mock.patch("environments.identities.models.dynamo_identity_table")
     def test_generate_traits_without_persistence(self, dynamo_identity_table):
         # Given
         identity = Identity.objects.create(
@@ -700,9 +694,6 @@ class IdentityTestCase(TransactionTestCase):
 
         # but the database has none
         assert Trait.objects.filter(identity=identity).count() == 0
-
-        # and put_item was not called
-        dynamo_identity_table.put_item.assert_not_called()
 
     def test_update_traits(self):
         """
