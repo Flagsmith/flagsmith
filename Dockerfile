@@ -18,14 +18,17 @@ RUN cd frontend && npm run bundledjango
 # Build Django Application
 FROM python:3.8-slim as application
 
+# Install python dependencies
 WORKDIR /app
 COPY api/requirements.txt /app/
 RUN apt-get update && apt-get install -y git && pip install -r requirements.txt --no-cache-dir --compile
 
+# Copy the Django app into the imag
 COPY api /app/
 RUN python /app/manage.py collectstatic --no-input
-COPY --from=build /app/api/static /app/static/
 
+# Copy the compiled front end from the previous Front End build step
+COPY --from=build /app/api/static /app/static/
 
 ARG ACCESS_LOG_LOCATION="/dev/null"
 ENV ACCESS_LOG_LOCATION=${ACCESS_LOG_LOCATION}
