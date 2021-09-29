@@ -16,10 +16,7 @@ services:
         environment:
             DJANGO_ALLOWED_HOSTS: '*' # Change this in production
             DATABASE_URL: postgresql://postgres:password@db:5432/flagsmith
-            FLAGSMITH_API_URL: http://localhost:8000/api/v1/
-            STATIC_ASSET_CDN_URL: http://localhost:8080/
             ENABLE_INFLUXDB_FEATURES: 'false' # set to true to enable InfluxDB
-            FLAGSMITH_ON_FLAGSMITH_API_KEY: 4vfqhypYjcPoGGu8ByrBaj # This is the production Flagsmith API key
             # INFLUXDB_URL: http://influxdb:8086
             # INFLUXDB_BUCKET: flagsmith_api
             # INFLUXDB_ORG: # Add your influx org id here - see readme.md
