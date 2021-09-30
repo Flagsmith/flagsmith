@@ -10,13 +10,23 @@ from audit.models import (
     RelatedObjectType,
 )
 from environments.identities.models import Identity
-from users.serializers import UserListSerializer
+from users.serializers import UserIdsSerializer, UserListSerializer
 
 from .models import Feature, FeatureState, FeatureStateValue
 from .multivariate.serializers import (
     MultivariateFeatureOptionSerializer,
     MultivariateFeatureStateValueSerializer,
 )
+
+
+class FeatureOwnerInputSerializer(UserIdsSerializer):
+    def add_owners(self, feature: Feature):
+        user_ids = self.validated_data["user_ids"]
+        feature.owners.add(*user_ids)
+
+    def remove_users(self, feature: Feature):
+        user_ids = self.validated_data["user_ids"]
+        feature.owners.remove(*user_ids)
 
 
 class ProjectFeatureSerializer(serializers.ModelSerializer):

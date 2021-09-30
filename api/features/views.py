@@ -27,14 +27,12 @@ from environments.permissions.permissions import (
     EnvironmentKeyPermissions,
     NestedEnvironmentPermissions,
 )
-from users.models import FFAdminUser
-from users.serializers import UserIdsSerializer
 
 from .models import Feature, FeatureState
 from .permissions import FeaturePermissions, FeatureStatePermissions
 from .serializers import (
     FeatureInfluxDataSerializer,
-    FeatureSerializer,
+    FeatureOwnerInputSerializer,
     FeatureStateSerializerBasic,
     FeatureStateSerializerCreate,
     FeatureStateSerializerFull,
@@ -66,29 +64,31 @@ class FeatureViewSet(viewsets.ModelViewSet):
         }.get(self.action, ProjectFeatureSerializer)
 
     @swagger_auto_schema(
-        request_body=UserIdsSerializer,
+        request_body=FeatureOwnerInputSerializer,
         responses={200: ProjectFeatureSerializer},
     )
     @action(detail=True, methods=["POST"], url_path="add-owners")
     def add_owners(self, request, *args, **kwargs):
-        feature = self.get_object()
-        try:
-            feature.add_owners_by_id(request.data["user_ids"])
-        except FFAdminUser.DoesNotExist as e:
-            return Response({"detail": str(e)}, status=status.HTTP_400_BAD_REQUEST)
+        serializer = FeatureOwnerInputSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
 
-        return Response(ProjectFeatureSerializer(instance=feature).data)
+        feature = self.get_object()
+        serializer.add_owners(feature)
+        return Response(self.get_serializer(instance=feature).data)
 
     @swagger_auto_schema(
-        request_body=UserIdsSerializer,
+        request_body=FeatureOwnerInputSerializer,
         responses={200: ProjectFeatureSerializer},
     )
     @action(detail=True, methods=["POST"], url_path="remove-owners")
     def remove_owners(self, request, *args, **kwargs):
-        feature = self.get_object()
-        feature.remove_owners_by_id(request.data["user_ids"])
+        serializer = FeatureOwnerInputSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
 
-        return Response(ProjectFeatureSerializer(instance=feature).data)
+        feature = self.get_object()
+        serializer.remove_users(feature)
+
+        return Response(self.get_serializer(instance=feature).data)
 
     def get_queryset(self):
         user_projects = self.request.user.get_permitted_projects(["VIEW_PROJECT"])

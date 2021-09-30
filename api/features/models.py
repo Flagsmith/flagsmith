@@ -96,25 +96,6 @@ class Feature(CustomLifecycleModelMixin, models.Model):
                 enabled=self.default_enabled,
             )
 
-    def add_owners_by_id(self, owner_ids: []):
-        from users.models import FFAdminUser
-
-        owners_to_add = []
-
-        for owner_id in owner_ids:
-            try:
-                user = FFAdminUser.objects.get(id=owner_id)
-            except FFAdminUser.DoesNotExist:
-                # re-raise exception with useful error message
-                raise FFAdminUser.DoesNotExist(
-                    f"Admin User with user_id: {owner_id} does not exist " % owner_id
-                )
-            owners_to_add.append(user)
-        self.owners.add(*owners_to_add)
-
-    def remove_owners_by_id(self, owner_ids: []):
-        self.owners.remove(*owner_ids)
-
     def validate_unique(self, *args, **kwargs):
         """
         Checks unique constraints on the model and raises ``ValidationError``
