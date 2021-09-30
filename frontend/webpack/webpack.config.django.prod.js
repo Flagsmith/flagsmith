@@ -70,6 +70,7 @@ module.exports = {
                 { from: path.join(__dirname, '../web/images'), to: path.join(__dirname, '../../api/static/images') },
                 { from: path.join(__dirname, '../web/static'), to: path.join(__dirname, '../../api/static/static') },
                 { from: path.join(__dirname, '../web/fonts'), to: path.join(__dirname, '../../api/static/fonts') },
+                { from: path.join(__dirname, '../web/javascript'), to: path.join(__dirname, '../../api/static/javascript') },
             ]),
 
         ]).concat(require('./pages').map((page) => {
