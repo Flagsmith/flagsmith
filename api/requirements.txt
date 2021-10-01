@@ -55,7 +55,7 @@ django==2.2.24
     #   djangorestframework-recursive
     #   drf-nested-routers
     #   drf-yasg2
-django-admin-sso==3.0.0
+django-admin-sso==3.1.0
     # via -r requirements.in
 django-axes==5.8.0
     # via -r requirements.in
