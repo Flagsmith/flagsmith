@@ -41,6 +41,14 @@ class InfluxDBWrapper:
                 )
             )
 
+    def __del__(self):
+        # Ensure any queued writes get flushed
+        #
+        # Check the attribute exists - we don't want to pollute any early start
+        # failures with misleading messages
+        if hasattr(self, "write_api") and self.write_api:
+            self.write_api.close()
+
     def add_data_point(self, field_name, field_value, tags=None):
         point = Point(self.name)
         point.field(field_name, field_value)
