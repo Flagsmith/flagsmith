@@ -33,8 +33,11 @@ def track_request_googleanalytics_async(request):
 
 
 @postpone
-def track_request_influxdb_async(request):
-    return track_request_influxdb(request)
+def track_request_influxdb_async(request, influxdb):
+    return track_request_influxdb(request, influxdb)
+
+def get_influxdb_wrapper():
+    return InfluxDBWrapper("api_call")
 
 
 def get_resource_from_uri(request_uri):
@@ -92,7 +95,7 @@ def track_event(category, action, label="", value=""):
     requests.post(GOOGLE_ANALYTICS_COLLECT_URL, data=data)
 
 
-def track_request_influxdb(request):
+def track_request_influxdb(request, influxdb):
     """
     Sends API event data to InfluxDB
 
@@ -115,7 +118,7 @@ def track_request_influxdb(request):
             "project_id": environment.project_id,
         }
 
-        influxdb = InfluxDBWrapper("api_call")
+        #influxdb = InfluxDBWrapper("api_call")
         influxdb.add_data_point("request_count", 1, tags=tags)
         influxdb.write()
 

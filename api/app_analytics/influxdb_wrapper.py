@@ -3,7 +3,7 @@ import typing
 from collections import defaultdict
 
 from django.conf import settings
-from influxdb_client import InfluxDBClient, Point
+from influxdb_client import InfluxDBClient, Point, WriteOptions
 from influxdb_client.client.write_api import SYNCHRONOUS
 from sentry_sdk import capture_exception
 from urllib3 import Retry
@@ -31,7 +31,15 @@ class InfluxDBWrapper:
     def __init__(self, name):
         self.name = name
         self.records = []
-        self.write_api = influxdb_client.write_api(write_options=SYNCHRONOUS)
+        #self.write_api = influxdb_client.write_api(write_options=SYNCHRONOUS)
+        self.write_api = influxdb_client.write_api(
+            write_options = WriteOptions(
+                    batch_size=10,
+                    flush_interval=1200_000, # For testing purposes, want to ensure we don't hit a time based flush
+                    retry_interval=20_000,
+                    max_retries=5
+                )
+            )
 
     def add_data_point(self, field_name, field_value, tags=None):
         point = Point(self.name)
