@@ -15,9 +15,6 @@ def version_info(request):
 def index(request):
     template = loader.get_template("webpack/index.html")
 
-    # if settings.DEBUG:
-    #    template = loader.get_template("index.html")
-
     context = {
         "linkedin_api_key": settings.LINKEDIN_API_KEY,
     }
