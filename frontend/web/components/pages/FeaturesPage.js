@@ -156,7 +156,7 @@ const FeaturesPage = class extends Component {
         } if (!this.state.tags.length && this.state.includeArchived) {
             return true;
         }
-        if (!this.state.length && !flag.is_archived) {
+        if (!this.state.tags.length && !flag.is_archived) {
             return true;
         }
         if (this.state.tags.includes('') && (!flag.tags || !flag.tags.length)) {
