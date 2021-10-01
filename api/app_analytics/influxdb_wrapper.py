@@ -2,6 +2,7 @@ import logging
 import typing
 from collections import defaultdict
 
+from datetime import datetime
 from django.conf import settings
 from influxdb_client import InfluxDBClient, Point, WriteOptions
 from influxdb_client.client.write_api import SYNCHRONOUS
@@ -50,6 +51,7 @@ class InfluxDBWrapper:
     def add_data_point(self, field_name, field_value, tags=None):
         point = Point(self.name)
         point.field(field_name, field_value)
+        point.time(datetime.now())
 
         if tags is not None:
             for tag_key, tag_value in tags.items():
@@ -60,6 +62,8 @@ class InfluxDBWrapper:
     def write(self):
         try:
             self.write_api.write(bucket=settings.INFLUXDB_BUCKET, record=self.records)
+            # We've flushed the records into the Influx writer thread, so clear our local copy
+            self.records = []
         except HTTPError as e:
             capture_exception(e)
 
