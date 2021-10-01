@@ -23,29 +23,32 @@ def index(request):
 
 
 def project_overrides(request):
+    """
+    Build and return the dictionary of front-end relevant environment variables for configuration
+    """
     config_mapping_dict = {
-        "API_URL": "api",
-        "ASSET_URL": "assetURL",
-        "MAINTENANCE_MODE": "maintenance",
-        "PREVENT_SIGNUP": "preventSignup",
-        "DISABLE_INFLUXDB_FEATURES": "disableInflux",
-        "FLAGSMITH_ANALYTICS": "flagsmithAnalytics",
-        "FLAGSMITH_ON_FLAGSMITH_API_URL": "flagsmith",
-        "FLAGSMITH_ON_FLAGSMITH_API_KEY": "flagsmithClientAPI",
-        "GOOGLE_ANALYTICS_API_KEY": "ga",
-        "LINKEDIN_API_KEY": "linkedin_api_key",
-        "CRISP_CHAT_API_KEY": "crispChat",
-        "MIXPANEL_API_KEY": "mixpanel",
-        "SENTRY_API_KEY": "sentry",
-        "AMPLITUDE_API_KEY": "amplitude",
+        "api": "API_URL",
+        "assetURL": "ASSET_URL",
+        "maintenance": "MAINTENANCE_MODE",
+        "preventSignup": "PREVENT_SIGNUP",
+        "disableInflux": "DISABLE_INFLUXDB_FEATURES",
+        "flagsmithAnalytics": "FLAGSMITH_ANALYTICS",
+        "flagsmith": "FLAGSMITH_ON_FLAGSMITH_API_URL",
+        "flagsmithClientAPI": "FLAGSMITH_ON_FLAGSMITH_API_KEY",
+        "ga": "GOOGLE_ANALYTICS_API_KEY",
+        "linkedin_api_key": "LINKEDIN_API_KEY",
+        "crispChat": "CRISP_CHAT_API_KEY",
+        "mixpanel": "MIXPANEL_API_KEY",
+        "sentry": "SENTRY_API_KEY",
+        "amplitude": "AMPLITUDE_API_KEY",
     }
 
     project_overrides = {}
 
     for key, value in config_mapping_dict.items():
-        settings_value = getattr(settings, key, None)
+        settings_value = getattr(settings, value, None)
         if settings_value:
-            project_overrides[value] = settings_value
+            project_overrides[key] = settings_value
 
     return HttpResponse(
         "window.projectOverrides = "
