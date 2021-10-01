@@ -6,7 +6,6 @@ from django.conf import settings
 from influxdb_client import InfluxDBClient, Point, WriteOptions
 from influxdb_client.client.write_api import SYNCHRONOUS
 from sentry_sdk import capture_exception
-from urllib3 import Retry
 from urllib3.exceptions import HTTPError
 
 logger = logging.getLogger(__name__)
@@ -23,8 +22,8 @@ range_bucket_mappings = {
     "7d": settings.INFLUXDB_BUCKET + "_downsampled_15m",
     "30d": settings.INFLUXDB_BUCKET + "_downsampled_1h",
 }
-retries = Retry(connect=3, read=3, redirect=3)
-influxdb_client = InfluxDBClient(url=url, token=token, org=influx_org, retries=retries)
+
+influxdb_client = InfluxDBClient(url=url, token=token, org=influx_org)
 
 
 class InfluxDBWrapper:
