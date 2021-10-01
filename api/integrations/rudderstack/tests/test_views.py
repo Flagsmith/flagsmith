@@ -6,8 +6,11 @@ from django.urls import reverse
 from rest_framework import status
 from rest_framework.test import APIClient
 
+from environments.identities.models import Identity
 from environments.models import Environment
+from features.models import Feature, FeatureState
 from integrations.rudderstack.models import RudderstackConfiguration
+from integrations.rudderstack.rudderstack import RudderstackWrapper
 from organisations.models import Organisation, OrganisationRole
 from projects.models import Project
 from util.tests import Helper
@@ -137,3 +140,30 @@ class RudderstackConfigurationTestCase(TestCase):
         assert not RudderstackConfiguration.objects.filter(
             environment=self.environment
         ).exists()
+
+    def test_rudderstack_wrapper_generate_user_data(self):
+        # Given
+        rudderstack_wrapper = RudderstackWrapper(
+            api_key="123key", base_url="https://api.rudderstack.com/"
+        )
+        organisation = Organisation.objects.create(name="Test Org")
+        project = Project.objects.create(name="Test Project", organisation=organisation)
+        environment = Environment.objects.create(
+            name="Test Environment", project=project
+        )
+        identity = Identity.objects.create(
+            identifier="user123", environment=environment
+        )
+        feature = Feature.objects.create(name="Test Feature", project=project)
+        feature_states = FeatureState.objects.filter(feature=feature)
+
+        # When
+        user_data = rudderstack_wrapper.generate_user_data(
+            identity=identity, feature_states=feature_states
+        )
+
+        # Then
+        assert user_data == {
+            "user_id": identity.identifier,
+            "traits": {feature.name: False},
+        }

@@ -19,7 +19,6 @@ class RudderstackWrapper(AbstractBaseIdentityIntegrationWrapper):
 
     def _identify_user(self, user_data: dict) -> None:
         rudder_analytics.identify(**user_data)
-        logger.debug(f"Sent event to Rudderstack.")
 
     def generate_user_data(
         self, identity: "Identity", feature_states: typing.List["FeatureState"]
