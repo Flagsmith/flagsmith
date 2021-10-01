@@ -31,13 +31,12 @@ class InfluxDBWrapper:
     def __init__(self, name):
         self.name = name
         self.records = []
-        #self.write_api = influxdb_client.write_api(write_options=SYNCHRONOUS)
         self.write_api = influxdb_client.write_api(
             write_options = WriteOptions(
-                    batch_size=10,
-                    flush_interval=1200_000, # For testing purposes, want to ensure we don't hit a time based flush
-                    retry_interval=20_000,
-                    max_retries=5
+                    batch_size=settings.INFLUXDB_BATCH_SIZE,
+                    flush_interval=settings.INFLUXDB_FLUSH_INTERVAL,
+                    retry_interval=settings.INFLUXDB_RETRY_INTERVAL,
+                    max_retries=settings.INFLUXDB_RETRY_MAX
                 )
             )
 

@@ -56,6 +56,11 @@ INFLUXDB_TOKEN = env.str("INFLUXDB_TOKEN", default="")
 INFLUXDB_BUCKET = env.str("INFLUXDB_BUCKET", default="")
 INFLUXDB_URL = env.str("INFLUXDB_URL", default="")
 INFLUXDB_ORG = env.str("INFLUXDB_ORG", default="")
+INFLUXDB_BATCH_SIZE = env.int("INFLUXDB_BATCH_SIZE", default=100)
+INFLUXDB_FLUSH_INTERVAL = env.int("INFLUXDB_FLUSH_INTERVAL", default=2000) # this is ms
+INFLUXDB_RETRY_INTERVAL = env.int("INFLUXDB_RETRY_INTERVAL", default=2000) # also ms
+INFLUXDB_RETRY_MAX = env.int("INFLUXDB_RETRY_MAX", default=5) # Maximum number of retries
+
 
 ALLOWED_HOSTS = env.list("DJANGO_ALLOWED_HOSTS", default=[])
 CSRF_TRUSTED_ORIGINS = env.list("DJANGO_CSRF_TRUSTED_ORIGINS", default=[])
