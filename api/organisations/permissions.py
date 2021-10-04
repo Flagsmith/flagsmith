@@ -1,3 +1,4 @@
+from django.conf import settings
 from rest_framework.exceptions import PermissionDenied
 from rest_framework.permissions import BasePermission
 
@@ -28,6 +29,11 @@ class NestedOrganisationEntityPermission(BasePermission):
 
 class OrganisationPermission(BasePermission):
     def has_permission(self, request, view):
+        if (
+            view.action == "create"
+            and settings.ONLY_SUPERUSERS_CAN_CREATE_ORGANISATIONS
+        ):
+            return request.user.is_superuser
         return True
 
     def has_object_permission(self, request, view, obj):

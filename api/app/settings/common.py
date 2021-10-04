@@ -467,3 +467,8 @@ ENVIRONMENTS_TABLE_NAME_DYNAMO = env.str("ENVIRONMENTS_TABLE_NAME_DYNAMO", None)
 
 # DynamoDB table name for storing identities
 IDENTITIES_TABLE_NAME_DYNAMO = env.str("IDENTITIES_TABLE_NAME_DYNAMO", None)
+
+# Set this to enable create organisation for only superusers
+ONLY_SUPERUSERS_CAN_CREATE_ORGANISATIONS = env.bool(
+    "ONLY_SUPERUSERS_CAN_CREATE_ORGANISATIONS", False
+)
