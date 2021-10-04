@@ -53,6 +53,25 @@ class ProjectTestCase(TestCase):
         get_project_response = self.client.get(url)
         assert get_project_response.status_code == status.HTTP_200_OK
 
+    def test_create_project_returns_403_if_user_is_not_organisation_admin(self):
+        # Given
+        organisation = Organisation.objects.create(
+            name="Test org", only_admin_can_create_project=True
+        )
+
+        project_name = "project1"
+        data = {"name": project_name, "organisation": organisation.id}
+
+        # When
+        response = self.client.post(self.list_url, data=data)
+
+        # Then
+        assert response.status_code == status.HTTP_403_FORBIDDEN
+        assert (
+            response.json()["detail"]
+            == "You do not have permission to perform this action."
+        )
+
     def test_user_can_list_project_permission(self):
         # Given
         url = reverse("api-v1:projects:project-permissions")
