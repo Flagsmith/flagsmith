@@ -3,6 +3,7 @@ from unittest import mock
 import app_analytics
 import pytest
 from app_analytics.track import (
+    get_influxdb_wrapper,
     track_request_googleanalytics,
     track_request_influxdb,
 )
@@ -70,7 +71,7 @@ def test_track_request_sends_data_to_influxdb_for_tracked_uris(
     MockInfluxDBWrapper.return_value = mock_influxdb
 
     # When
-    track_request_influxdb(request)
+    track_request_influxdb(request, get_influxdb_wrapper())
 
     # Then
     call_list = MockInfluxDBWrapper.call_args_list
@@ -81,7 +82,7 @@ def test_track_request_sends_data_to_influxdb_for_tracked_uris(
     )
 
 
-@mock.patch("app_analytics.track.InfluxDBWrapper")
+@mock.patch.object(app_analytics.track.InfluxDBWrapper, "write")
 @mock.patch("app_analytics.track.Environment")
 def test_track_request_does_not_send_data_to_influxdb_for_not_tracked_uris(
     MockEnvironment, MockInfluxDBWrapper
@@ -99,7 +100,7 @@ def test_track_request_does_not_send_data_to_influxdb_for_not_tracked_uris(
     MockInfluxDBWrapper.return_value = mock_influxdb
 
     # When
-    track_request_influxdb(request)
+    track_request_influxdb(request, get_influxdb_wrapper())
 
     # Then
     MockInfluxDBWrapper.assert_not_called()
