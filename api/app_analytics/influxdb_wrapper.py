@@ -1,8 +1,8 @@
 import logging
 import typing
 from collections import defaultdict
-
 from datetime import datetime
+
 from django.conf import settings
 from influxdb_client import InfluxDBClient, Point, WriteOptions
 from influxdb_client.client.write_api import SYNCHRONOUS
@@ -32,13 +32,13 @@ class InfluxDBWrapper:
         self.name = name
         self.records = []
         self.write_api = influxdb_client.write_api(
-            write_options = WriteOptions(
-                    batch_size=settings.INFLUXDB_BATCH_SIZE,
-                    flush_interval=settings.INFLUXDB_FLUSH_INTERVAL,
-                    retry_interval=settings.INFLUXDB_RETRY_INTERVAL,
-                    max_retries=settings.INFLUXDB_RETRY_MAX
-                )
+            write_options=WriteOptions(
+                batch_size=settings.INFLUXDB_BATCH_SIZE,
+                flush_interval=settings.INFLUXDB_FLUSH_INTERVAL,
+                retry_interval=settings.INFLUXDB_RETRY_INTERVAL,
+                max_retries=settings.INFLUXDB_RETRY_MAX,
             )
+        )
 
     def __del__(self):
         # Ensure any queued writes get flushed

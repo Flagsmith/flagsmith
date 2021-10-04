@@ -1,7 +1,7 @@
 from .track import (
+    get_influxdb_wrapper,
     track_request_googleanalytics_async,
     track_request_influxdb_async,
-    get_influxdb_wrapper
 )
 
 
