@@ -25,6 +25,7 @@ RUN python /app/manage.py collectstatic --no-input
 
 # Copy the compiled front end assets from the previous build step
 COPY --from=build /app/api/static /app/static/
+COPY --from=build /app/api/app/templates/webpack /app/app/templates/webpack
 
 ARG ACCESS_LOG_LOCATION="/dev/null"
 ENV ACCESS_LOG_LOCATION=${ACCESS_LOG_LOCATION}
