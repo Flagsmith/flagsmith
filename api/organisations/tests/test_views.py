@@ -75,7 +75,7 @@ class OrganisationTestCase(TestCase):
             == webhook_notification_email
         )
 
-    @override_settings(ONLY_SUPERUSERS_CAN_CREATE_ORGANISATIONS=True)
+    @override_settings(RESTRICT_ORG_CREATE_TO_SUPERUSERS=True)
     def test_create_new_orgnisation_returns_403_with_non_superuser(self):
         # Given
         user = User.objects.create(email="test@example.com")

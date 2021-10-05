@@ -29,10 +29,7 @@ class NestedOrganisationEntityPermission(BasePermission):
 
 class OrganisationPermission(BasePermission):
     def has_permission(self, request, view):
-        if (
-            view.action == "create"
-            and settings.ONLY_SUPERUSERS_CAN_CREATE_ORGANISATIONS
-        ):
+        if view.action == "create" and settings.RESTRICT_ORG_CREATE_TO_SUPERUSERS:
             return request.user.is_superuser
         return True
 
