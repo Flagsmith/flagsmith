@@ -24,7 +24,8 @@ def index(request):
 
 def project_overrides(request):
     """
-    Build and return the dictionary of front-end relevant environment variables for configuration
+    Build and return the dictionary of front-end relevant environment variables for configuration.
+    It gets loaded as a script tag in the head of the browser when the frontend application starts up.
     """
     config_mapping_dict = {
         "api": "API_URL",
