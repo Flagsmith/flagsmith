@@ -25,7 +25,7 @@ django-storages==1.10.1
 django-environ==0.4.5
 django-trench==0.2.3
 djoser==2.0.5
-influxdb-client==1.11.0
+influxdb-client
 django-ordered-model==3.4.1
 django-ses==1.0.3
 django-axes==5.8.0
