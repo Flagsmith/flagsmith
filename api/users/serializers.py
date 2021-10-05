@@ -98,7 +98,15 @@ class InviteListSerializer(serializers.ModelSerializer):
 
 
 class UserIdsSerializer(serializers.Serializer):
-    user_ids = serializers.ListField(serializers.IntegerField)
+    user_ids = serializers.ListField(child=serializers.IntegerField())
+
+    def validate(self, data):
+        if not FFAdminUser.objects.filter(id__in=data["user_ids"]).count() == len(
+            data["user_ids"]
+        ):
+            raise serializers.ValidationError(f"Some users not found")
+
+        return data
 
 
 class UserPermissionGroupSerializerList(serializers.ModelSerializer):
