@@ -75,6 +75,7 @@ class Feature(CustomLifecycleModelMixin, models.Model):
     history = HistoricalRecords()
     tags = models.ManyToManyField(Tag, blank=True)
     is_archived = models.BooleanField(default=False)
+    owners = models.ManyToManyField("users.FFAdminUser", related_name="owned_features")
 
     class Meta:
         # Note: uniqueness is changed to reference lowercase name in explicit SQL in the migrations
