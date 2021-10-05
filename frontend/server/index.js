@@ -25,7 +25,7 @@ const linkedin = process.env.LINKEDIN;
 const app = express();
 const port = process.env.PORT || 8080;
 
-app.get('/api/project-overrides', (req, res) => {
+app.get('/config/project-overrides', (req, res) => {
     const getVariable = ({ name, value }) => {
         if (!value || value === 'undefined') {
             if (typeof value === 'boolean') {
