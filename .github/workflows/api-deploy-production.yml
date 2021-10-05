@@ -14,6 +14,7 @@ jobs:
         name: API Deploy to Production
         container: flagsmith/eb-cli:latest
         environment: production
+        timeout-minutes: 20
 
         steps:
             - name: Cloning repo
