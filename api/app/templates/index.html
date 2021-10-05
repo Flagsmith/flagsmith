@@ -112,18 +112,13 @@
 </head>
 
 <body>
-<div id="app"></div>
-<div id="toast"></div>
-<div id="modal"></div>
-<div id="confirm"></div>
-{{#if isDev}}
-    <!--This is inserted by webpack in production-->
-    <script src="/main.js"></script> {{/if}}
+    <div id="app"></div>
+    <div id="toast"></div>
+    <div id="modal"></div>
+    <div id="confirm"></div>
 
-<div class="e2e" id="e2e-request"></div>
-<div class="e2e" id="e2e-error"></div>
+    <div class="e2e" id="e2e-request"></div>
+    <div class="e2e" id="e2e-error"></div>
+    <!-- JS added here by Webpack -->
 </body>
-{{#if linkedin}}
-<script type="text/javascript"> _linkedin_partner_id = "{{linkedin}}"; window._linkedin_data_partner_ids = window._linkedin_data_partner_ids || []; window._linkedin_data_partner_ids.push(_linkedin_partner_id); </script><script type="text/javascript"> (function(){var s = document.getElementsByTagName("script")[0]; var b = document.createElement("script"); b.type = "text/javascript";b.async = true; b.src = "https://snap.licdn.com/li.lms-analytics/insight.min.js"; s.parentNode.insertBefore(b, s);})(); </script> <noscript> <img height="1" width="1" style="display:none;" alt="" src="https://px.ads.linkedin.com/collect/?pid={{linkedin}}&fmt=gif" /> </noscript>
-{{/if}}
 </html>
