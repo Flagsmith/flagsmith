@@ -56,7 +56,7 @@ class ProjectTestCase(TestCase):
     def test_create_project_returns_403_if_user_is_not_organisation_admin(self):
         # Given
         organisation = Organisation.objects.create(
-            name="Test org", only_admin_can_create_project=True
+            name="Test org", restrict_project_create_to_admin=True
         )
 
         project_name = "project1"

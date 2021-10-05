@@ -79,7 +79,7 @@ class OrganisationTestCase(TestCase):
         url = reverse(
             "api-v1:organisations:organisation-detail", args=[organisation.pk]
         )
-        data = {"name": new_organisation_name, "only_admin_can_create_project": True}
+        data = {"name": new_organisation_name, "restrict_project_create_to_admin": True}
 
         # When
         response = self.client.put(url, data=data)
@@ -88,7 +88,7 @@ class OrganisationTestCase(TestCase):
         organisation.refresh_from_db()
         assert response.status_code == status.HTTP_200_OK
         assert organisation.name == new_organisation_name
-        assert organisation.only_admin_can_create_project == True
+        assert organisation.restrict_project_create_to_admin == True
 
     @override_settings()
     def test_should_invite_users(self):

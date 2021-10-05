@@ -34,7 +34,7 @@ class Organisation(models.Model):
         default=False,
         help_text="Enable this to cease serving flags for this " "organisation.",
     )
-    only_admin_can_create_project = models.BooleanField(default=False)
+    restrict_project_create_to_admin = models.BooleanField(default=False)
     persist_trait_data = models.BooleanField(
         default=settings.DEFAULT_ORG_STORE_TRAITS_VALUE,
         help_text="Disable this if you don't want Flagsmith "

@@ -12,7 +12,7 @@ class Migration(migrations.Migration):
     operations = [
         migrations.AddField(
             model_name="organisation",
-            name="only_admin_can_create_project",
+            name="restrict_project_create_to_admin",
             field=models.BooleanField(default=False),
         ),
     ]

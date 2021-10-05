@@ -40,7 +40,7 @@ class OrganisationSerializerFull(serializers.ModelSerializer):
             "role",
             "persist_trait_data",
             "block_access_to_admin",
-            "only_admin_can_create_project",
+            "restrict_project_create_to_admin",
         )
         read_only_fields = (
             "id",
