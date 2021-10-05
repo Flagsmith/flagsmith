@@ -225,7 +225,7 @@ const HomePage = class extends React.Component {
                                                           </span>
                                                       ) : null}
                                                       <InputGroup
-                                                        title="Email address"
+                                                        title="Email Address / Username"
                                                         data-test="email"
                                                         inputProps={{
                                                             name: 'email',
@@ -383,7 +383,7 @@ const HomePage = class extends React.Component {
                                                       </span>
                                                   ) : null}
                                                   <InputGroup
-                                                    title="Email address"
+                                                    title="Email Address"
                                                     data-test="email"
                                                     inputProps={{
                                                         name: 'email',
