@@ -56,6 +56,13 @@ class OrganisationList(ListView):
                 Q(name__icontains=search_term) | Q(users__email__icontains=search_term)
             )
 
+        if self.request.GET.get("filter_plan"):
+            filter_plan = self.request.GET["filter_plan"]
+            if filter_plan == "free":
+                queryset = queryset.filter(subscription__isnull=True)
+            else:
+                queryset = queryset.filter(subscription__plan__icontains=filter_plan)
+
         if self.request.GET.get("sort_field"):
             sort_field = self.request.GET["sort_field"]
             sort_direction = (

@@ -15,7 +15,7 @@ const AuditLogPage = class extends Component {
     };
 
     componentDidMount() {
-        AppActions.getAuditLog();
+        AppActions.getAuditLog(this.props.match.params.projectId);
         API.trackPage(Constants.pages.AUDIT_LOG);
     }
 
@@ -136,7 +136,7 @@ const AuditLogPage = class extends Component {
                                                       filter={envFilter}
                                                       onChange={this.filterSearch}
                                                       paging={auditLogPaging}
-                                                      goToPage={page => AppActions.getAuditLogPage(environmentId, `${Project.api}audit/?page=${page}`)}
+                                                      goToPage={page => AppActions.getAuditLogPage(this.props.match.params.projectId,`${Project.api}audit/?page=${page}`)}
                                                       renderRow={this.renderRow}
                                                       renderNoResults={(
                                                           <FormGroup className="text-center">

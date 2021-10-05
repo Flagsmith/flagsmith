@@ -16,17 +16,38 @@
       background: $input-bg-dark;
       border: none;
     }
+    &__single-value {
+      color: $input-color-dark;
+    }
     &__indicator-separator {
       display: none;
     }
     &__menu {
       background: $input-bg-dark;
+      color: $input-color-dark;
     }
     &__option {
       background: $dark-bg-0;
       &:hover {
         background: darken($dark-bg-0,2);
       }
+    }
+  }
+}
+.select-sm {
+  .react-select {
+    &__control {
+      height: 30px !important;
+      min-height: 30px !important;
+    }
+    &__value-container {
+      margin-top: -5px;
+    }
+    &__indicator {
+      margin-top: -3px;
+    }
+    &__indicator-separator {
+      display: none;
     }
   }
 }

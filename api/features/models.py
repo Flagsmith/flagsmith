@@ -2,6 +2,7 @@ from __future__ import unicode_literals
 
 import logging
 import typing
+from copy import deepcopy
 
 from django.core.exceptions import (
     NON_FIELD_ERRORS,
@@ -48,6 +49,7 @@ from projects.tags.models import Tag
 logger = logging.getLogger(__name__)
 
 if typing.TYPE_CHECKING:
+    from environments.models import Environment
     from environments.identities.models import Identity
 
 
@@ -72,10 +74,12 @@ class Feature(CustomLifecycleModelMixin, models.Model):
     type = models.CharField(max_length=50, null=True, blank=True)
     history = HistoricalRecords()
     tags = models.ManyToManyField(Tag, blank=True)
+    is_archived = models.BooleanField(default=False)
 
     class Meta:
         # Note: uniqueness is changed to reference lowercase name in explicit SQL in the migrations
         unique_together = ("name", "project")
+        ordering = ("id",)  # explicit ordering to prevent pagination warnings
 
     @hook(AFTER_CREATE)
     def create_feature_states(self):
@@ -182,10 +186,6 @@ class FeatureSegment(OrderedModelBase):
             + str(self.priority)
         )
 
-    # noinspection PyTypeChecker
-    def get_value(self):
-        return get_correctly_typed_value(self.value_type, self.value)
-
     def __lt__(self, other):
         """
         Kind of counter intuitive but since priority 1 is highest, we want to check if priority is GREATER than the
@@ -193,12 +193,24 @@ class FeatureSegment(OrderedModelBase):
         """
         return other and self.priority > other.priority
 
+    def clone(self, environment: "Environment") -> "FeatureSegment":
+        clone = deepcopy(self)
+        clone.id = None
+        clone.environment = environment
+        clone.save()
+        return clone
+
+    # noinspection PyTypeChecker
+    def get_value(self):
+        return get_correctly_typed_value(self.value_type, self.value)
+
 
 @python_2_unicode_compatible
 class FeatureState(LifecycleModel, models.Model):
     feature = models.ForeignKey(
         Feature, related_name="feature_states", on_delete=models.CASCADE
     )
+
     environment = models.ForeignKey(
         "environments.Environment",
         related_name="feature_states",
@@ -280,6 +292,27 @@ class FeatureState(LifecycleModel, models.Model):
         # if we've reached here, then self is just the environment default. In this case, other is higher priority if
         # it has a feature_segment or an identity
         return not (other.feature_segment or other.identity)
+
+    def clone(self, env: "Environment") -> "FeatureState":
+        # Clonning the Identity is not allowed because they are closely tied
+        # to the enviroment
+        assert self.identity is None
+        clone = deepcopy(self)
+        clone.id = None
+        clone.feature_segment = (
+            FeatureSegment.objects.get(
+                environment=env,
+                feature=clone.feature,
+                segment=self.feature_segment.segment,
+            )
+            if self.feature_segment
+            else None
+        )
+        clone.environment = env
+        clone.save()
+        # clone the related objects
+        self.feature_state_value.clone(clone)
+        return clone
 
     def get_feature_state_value(self, identity: "Identity" = None) -> typing.Any:
         feature_state_value = (
@@ -435,3 +468,10 @@ class FeatureStateValue(AbstractBaseFeatureValueModel):
     string_value = models.CharField(null=True, max_length=20000, blank=True)
 
     history = HistoricalRecords()
+
+    def clone(self, feature_state: FeatureState) -> "FeatureStateValue":
+        clone = deepcopy(self)
+        clone.id = None
+        clone.feature_state = feature_state
+        clone.save()
+        return clone

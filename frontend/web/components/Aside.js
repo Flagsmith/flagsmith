@@ -275,7 +275,7 @@ const Aside = class extends Component {
                                                   <div className="aside__footer">
                                                       {hasFeature('demo_feature') && (
                                                       <a
-                                                        style={{ color: getValue('demo_link_color') || '#43424f' }}
+                                                        style={{ color: getValue('demo_feature') || '#43424f' }}
                                                         className="aside__nav-item"
                                                         href="https://docs.flagsmith.com"
                                                       >
@@ -283,26 +283,31 @@ const Aside = class extends Component {
                                                           Super cool demo feature!
                                                       </a>
                                                       )}
-                                                      {AccountStore.getOrganisationRole() === 'ADMIN' && hasRbacPermission ? (
-                                                          <NavLink
-                                                            id="audit-log-link"
-                                                            activeClassName="active"
-                                                            className="aside__nav-item"
-                                                            to={`/project/${this.props.projectId}/environment/${this.props.environmentId}/audit-log`}
-                                                          >
-                                                              <AuditLogIcon className="aside__nav-item--icon"/>
-                                                          Audit Log
-                                                          </NavLink>
-                                                      ) : (
+
+                                                      <Permission level="project" permission="ADMIN" id={this.props.projectId}>
+                                                          {({ permission, isLoading }) => permission && hasRbacPermission && (
+                                                              <NavLink
+                                                                id="audit-log-link"
+                                                                activeClassName="active"
+                                                                className="aside__nav-item"
+                                                                to={`/project/${this.props.projectId}/environment/${this.props.environmentId}/audit-log`}
+                                                              >
+                                                                  <AuditLogIcon className="aside__nav-item--icon"/>
+                                                                  Audit Log
+                                                              </NavLink>
+                                                          )}
+                                                      </Permission>
+
+                                                      {!hasRbacPermission && (
                                                           <Tooltip
                                                             title={(
                                                                 <a href="#" className="aside__nav-item disabled">
                                                                     <AuditLogIcon className="aside__nav-item--icon"/>
-                                                              Audit Log
+                                                                      Audit Log
                                                                 </a>
-                                                          )}
+                                                              )}
                                                           >
-                                                          This feature is available with our scaleup plan
+                                                              This feature is available with our scaleup plan
                                                           </Tooltip>
                                                       )}
                                                       {!!integrations.length && (

@@ -28,7 +28,7 @@ module.exports = Object.assign({}, require('./base/_utils'), {
             return null;
         }
 
-        return Utils.getTypedValue(featureState.boolean_value || featureState.integer_value || featureState.string_value);
+        return Utils.getTypedValue(featureState.integer_value || featureState.string_value || featureState.boolean_value);
     },
     valueToFeatureState(value) {
         const val = Utils.getTypedValue(value);
@@ -69,6 +69,7 @@ module.exports = Object.assign({}, require('./base/_utils'), {
                 enabled: false,
                 hide_from_client: false,
                 description: projectFlag.description,
+                is_archived: projectFlag.is_archived,
             };
         }
         if (identityFlag) {
@@ -80,6 +81,7 @@ module.exports = Object.assign({}, require('./base/_utils'), {
                 hide_from_client: environmentFlag.hide_from_client,
                 enabled: identityFlag.enabled,
                 description: projectFlag.description,
+                is_archived: projectFlag.is_archived,
             };
         }
         return {
@@ -91,20 +93,30 @@ module.exports = Object.assign({}, require('./base/_utils'), {
             multivariate_options: projectFlag.multivariate_options,
             enabled: environmentFlag.enabled,
             description: projectFlag.description,
+            is_archived: projectFlag.is_archived,
         };
     },
 
-    getTypedValue(str) {
+    getTypedValue(str, boolToString) {
+        if (typeof str === 'undefined') {
+            return '';
+        }
         if (typeof str !== 'string') {
             return str;
         }
 
         const isNum = /^\d+$/.test(str);
+        if (isNum && parseInt(str) > Number.MAX_SAFE_INTEGER) {
+            return `${str}`;
+        }
+
 
         if (str == 'true') {
+            if (boolToString) return 'true';
             return true;
         }
         if (str == 'false') {
+            if (boolToString) return 'false';
             return false;
         }
 
@@ -143,6 +155,11 @@ module.exports = Object.assign({}, require('./base/_utils'), {
             perm => !!perm,
         );
         return !!found;
+    },
+    appendImage: (src) => {
+        const img = document.createElement('img');
+        img.src = src;
+        document.body.appendChild(img);
     },
     getPlanPermission: (plan, permission) => {
         let valid = true;

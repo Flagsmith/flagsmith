@@ -1,8 +1,9 @@
 import json
-from unittest import TestCase
+from unittest import TestCase, mock
 
 import pytest
 from django.urls import reverse
+from flag_engine.identities.builders import build_identity_dict
 from rest_framework import status
 from rest_framework.test import APIClient
 

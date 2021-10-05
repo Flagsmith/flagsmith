@@ -21,6 +21,14 @@
     }
 }
 
+.navbar-right nav {
+    display: flex;
+    a {
+        display: flex;
+        align-items: center;
+    }
+}
+
 @media screen and (min-width: 768px) and (max-width: 991px) {
     .container {
         max-width: 748px !important;
@@ -45,6 +53,9 @@
 }
 .dark {
     .navbar {
+        .ion {
+            color: $nav-icon-color-dark;
+        }
         svg {
             path {
                 fill: $nav-icon-color-dark;
@@ -71,6 +82,7 @@
     }
 }
 .nav-link  {
+
     img {
         max-height: 21px;
     }

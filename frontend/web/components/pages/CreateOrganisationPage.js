@@ -1,7 +1,8 @@
 import React, { Component } from 'react';
 import { Link } from 'react-router';
+import ConfigProvider from '../../../common/providers/ConfigProvider';
 
-export default class ExampleOne extends Component {
+class CreateOrganisationPage extends Component {
     static displayName = 'CreateOrganisastionPage'
 
     constructor(props, context) {
@@ -34,6 +35,14 @@ export default class ExampleOne extends Component {
     };
 
     render() {
+        if (this.props.hasFeature('disable_create_org')) {
+            return (
+                <div id="create-org-page" className="container app-container">
+                    This Flagsmith instance is configured to prevent additional organisations from being created. Please contact an administrator.
+                    If you think you are seeing this page by mistake, please check you are invited to the correct organisation.
+                </div>
+            );
+        }
         return (
             <div id="create-org-page" className="container app-container">
                 <h3 className="pt-5">
@@ -47,6 +56,10 @@ export default class ExampleOne extends Component {
                     {({ isSaving }, { selectOrganisation, createOrganisation }) => (
                         <form onSubmit={(e) => {
                             e.preventDefault();
+                            if (projectOverrides.capterraKey) {
+                                const parts = projectOverrides.capterraKey.split(',');
+                                Utils.appendImage(`https://ct.capterra.com/capterra_tracker.gif?vid=${parts[0]}&vkey=${parts[1]}`);
+                            }
                             createOrganisation(this.state.name);
                         }}
                         >
@@ -69,3 +82,5 @@ export default class ExampleOne extends Component {
         );
     }
 }
+
+export default ConfigProvider(CreateOrganisationPage);

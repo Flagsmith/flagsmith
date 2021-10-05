@@ -1,19 +1,21 @@
 # -*- coding: utf-8 -*-
 from __future__ import unicode_literals
 
+import logging
+from copy import deepcopy
+
 from django.conf import settings
 from django.core.cache import caches
 from django.db import models
 from django.utils.encoding import python_2_unicode_compatible
 from django.utils.translation import ugettext_lazy as _
-from django_lifecycle import LifecycleModel, hook, BEFORE_SAVE, AFTER_CREATE
+from django_lifecycle import AFTER_CREATE, BEFORE_SAVE, LifecycleModel, hook
 
 from app.utils import create_hash
 from environments.exceptions import EnvironmentHeaderNotPresentError
 from features.models import FeatureState
 from projects.models import Project
 from util.history.custom_simple_history import NonWritingHistoricalRecords
-import logging
 
 logger = logging.getLogger(__name__)
 
@@ -61,6 +63,28 @@ class Environment(LifecycleModel):
 
     def __str__(self):
         return "Project %s - Environment %s" % (self.project.name, self.name)
+
+    def clone(self, name: str, api_key: str = None) -> "Environment":
+        """
+        Creates a clone of the environment, related objects and returns the
+        cloned object after saving it to the database.
+        # NOTE: clone will not trigger create hooks
+        """
+        clone = deepcopy(self)
+        clone.id = None
+        clone.name = name
+        clone.api_key = api_key if api_key else create_hash()
+        clone.save()
+        for feature_segment in self.feature_segments.all():
+            feature_segment.clone(clone)
+
+        # Since identities are closely tied to the enviroment
+        # it does not make much sense to clone them, hence
+        # only clone feature states without identities
+        for feature_state in self.feature_states.filter(identity=None):
+            feature_state.clone(clone)
+
+        return clone
 
     @staticmethod
     def get_environment_from_request(request):

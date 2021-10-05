@@ -1,6 +1,7 @@
 import React, { Component } from 'react';
 import data from '../../../common/data/base/_data';
 import ChipInput from '../ChipInput';
+import ErrorMessage from '../ErrorMessage';
 
 const CreateUser = class extends Component {
     static displayName = 'CreateUser'
@@ -39,12 +40,15 @@ const CreateUser = class extends Component {
 
     submit = () => {
         const value = this.state.value;
+        this.setState({ error: false });
         Promise.all(value.map(v => data.post(''.concat(Project.api, 'environments/').concat(this.props.environmentId, '/identities/'), {
             environment: this.props.environmentId,
             identifier: v,
         }))).then(() => {
             closeModal();
             AppActions.getIdentities(this.props.environmentId);
+        }).catch(() => {
+            this.setState({ error: true });
         });
     }
 
@@ -65,6 +69,9 @@ const CreateUser = class extends Component {
                       fullWidth
                     />
                 </FormGroup>
+                {this.state.error && (
+                    <ErrorMessage error="Some Identities already exist and were not created"/>
+                )}
                 <FormGroup className="text-right">
                     <Button onClick={this.submit} disabled={!this.state.value || !this.state.value.length} >
                           Create users

@@ -32,7 +32,14 @@ class IdentityViewSet(viewsets.ModelViewSet):
 
         search_query = self.request.query_params.get("q")
         if search_query:
-            queryset = queryset.filter(identifier__icontains=search_query)
+            if search_query.startswith('"') and search_query.endswith('"'):
+                # Quoted searches should do an exact match just like Google
+                queryset = queryset.filter(
+                    identifier__exact=search_query.replace('"', "")
+                )
+            else:
+                # Otherwise do a fuzzy search
+                queryset = queryset.filter(identifier__icontains=search_query)
 
         # change the default order by to avoid performance issues with pagination
         # when environments have small number (<page_size) of records

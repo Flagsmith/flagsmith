@@ -55,6 +55,69 @@ class EnvironmentTestCase(TestCase):
         self.environment.save()
         self.assertFalse(FeatureState.objects.get().enabled)
 
+    def test_clone_does_not_modify_the_original_instance(self):
+        # Given
+        self.environment.save()
+
+        # When
+        clone = self.environment.clone(name="Cloned env")
+
+        # Then
+        self.assertNotEqual(clone.name, self.environment.name)
+        self.assertNotEqual(clone.api_key, self.environment.api_key)
+
+    def test_clone_save_creates_feature_states(self):
+        # Given
+        self.environment.save()
+
+        # When
+        clone = self.environment.clone(name="Cloned env")
+
+        # Then
+        feature_states = FeatureState.objects.filter(environment=clone)
+        assert feature_states.count() == 1
+
+    def test_clone_does_not_modify_source_feature_state(self):
+        # Given
+        self.environment.save()
+        source_feature_state_before_clone = FeatureState.objects.filter(
+            environment=self.environment
+        ).first()
+
+        # When
+        self.environment.clone(name="Cloned env")
+        source_feature_state_after_clone = FeatureState.objects.filter(
+            environment=self.environment
+        ).first()
+
+        # Then
+        assert source_feature_state_before_clone == source_feature_state_after_clone
+
+    def test_clone_does_not_create_identity(self):
+        # Given
+        self.environment.save()
+        Identity.objects.create(
+            environment=self.environment, identifier="test_identity"
+        )
+        # When
+        clone = self.environment.clone(name="Cloned env")
+
+        # Then
+        assert clone.identities.count() == 0
+
+    def test_clone_clones_the_feature_states(self):
+        # Given
+        self.environment.save()
+
+        # Enable the feature in the source environment
+        self.environment.feature_states.update(enabled=True)
+
+        # When
+        clone = self.environment.clone(name="Cloned env")
+
+        # Then
+        assert clone.feature_states.first().enabled is True
+
     @mock.patch("environments.models.environment_cache")
     def test_get_from_cache_stores_environment_in_cache_on_success(self, mock_cache):
         # Given

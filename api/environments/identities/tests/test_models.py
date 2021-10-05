@@ -1,10 +1,19 @@
-from django.test import TransactionTestCase
+from unittest import mock
 
+from django.test import TransactionTestCase
+from flag_engine.identities.builders import build_identity_dict
+
+import environments
 from environments.identities.models import Identity
 from environments.identities.traits.models import Trait
 from environments.models import FLOAT, Environment
-from features.models import Feature, FeatureSegment, FeatureState, FeatureStateValue
-from features.value_types import INTEGER, STRING, BOOLEAN
+from features.models import (
+    Feature,
+    FeatureSegment,
+    FeatureState,
+    FeatureStateValue,
+)
+from features.value_types import BOOLEAN, INTEGER, STRING
 from organisations.models import Organisation
 from projects.models import Project
 from segments.models import (
@@ -667,6 +676,7 @@ class IdentityTestCase(TransactionTestCase):
         identity = Identity.objects.create(
             identifier="identifier", environment=self.environment
         )
+
         trait_data_items = [
             generate_trait_data_item("string_trait", "string_value"),
             generate_trait_data_item("integer_trait", 1),

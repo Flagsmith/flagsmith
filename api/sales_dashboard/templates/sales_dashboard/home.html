@@ -14,6 +14,12 @@
 
       <div class="sort-form">
         <form action="{% url 'sales_dashboard:index' %}" method="get" class="form-inline float-right">
+          <select name="filter_plan" id="filter-plan" class="custom-select m-1">
+            <option value="">Filter Plan</option>
+            <option value="free">Free</option>
+            <option value="start">Start Up</option>
+            <option value="scale">Scale Up</option>
+          </select>
           <select name="sort_field" id="sort-field" class="custom-select m-1">
             <option value="">Sort by...</option>
             <option value="num_users">Seats</option>
@@ -28,17 +34,18 @@
             <option value="ASC">Ascending</option>
             <option value="DESC">Descending</option>
           </select>
-          <button type="submit" class="btn btn-primary m-1">Sort</button>
+          <button type="submit" class="btn btn-primary m-1">Apply</button>
         </form>
       </div>
 
       <div class="table-responsive">
-        <table class="table table-striped table-sm"  data-toggle="table">
+        <table class="table table-striped table-sm" data-toggle="table">
           <thead class="thead-dark">
             <tr>
               <th>ID</th>
               <th>Name</th>
               <th>Plan</th>
+              <th>Users</th>
               <th>Seats</th>
               <th>Projects</th>
               <th>Flags</th>
@@ -50,11 +57,18 @@
           </thead>
           <tbody>
             {% for org in object_list %}
-            <tr>
+            <tr{% if org.over_plan_seats_limit %} class="table-warning"{% endif %}>
               <td>{{org.id}}</td>
               <td><a href="/sales-dashboard/organisations/{{org.id}}">{{org.name}}</a></td>
-              <td>{{org.subscription.plan|default:"Free"}}</td>
+              <td>
+                {% if org.has_subscription %}
+                {{org.subscription.plan}} - {{org.subscription.payment_method}}
+                {% else %}
+                Free
+                {% endif %}
+              </td>
               <td>{{org.num_users}}</td>
+              <td>{{org.subscription.max_seats|default:1}}</td>
               <td>{{org.num_projects}}</td>
               <td>{{org.num_features}}</td>
               <td>{{org.num_segments}}</td>
