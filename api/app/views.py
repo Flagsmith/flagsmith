@@ -50,7 +50,4 @@ def project_overrides(request):
         if settings_value:
             project_overrides[key] = settings_value
 
-    return HttpResponse(
-        "window.projectOverrides = "
-        + json.dumps(project_overrides, indent=4, separators=(",", ":"))
-    )
+    return HttpResponse("window.projectOverrides = " + json.dumps(project_overrides))
