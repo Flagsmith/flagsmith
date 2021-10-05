@@ -1,13 +1,10 @@
 from unittest import mock
 
-import app_analytics
 import pytest
 from app_analytics.track import (
-    get_influxdb_wrapper,
     track_request_googleanalytics,
     track_request_influxdb,
 )
-from django.conf import settings
 
 
 @pytest.mark.parametrize(
@@ -53,10 +50,10 @@ def test_track_request_googleanalytics(
         ("/api/v1/traits/", "traits"),
     ),
 )
-@mock.patch("app_analytics.track.InfluxDBWrapper")
+@mock.patch("app_analytics.track.influxdb_api_call_wrapper")
 @mock.patch("app_analytics.track.Environment")
 def test_track_request_sends_data_to_influxdb_for_tracked_uris(
-    MockEnvironment, MockInfluxDBWrapper, request_uri, expected_resource
+    MockEnvironment, mock_influxdb_api_call_wrapper, request_uri, expected_resource
 ):
     """
     Verify that the correct number of calls are made to InfluxDB for the various uris.
@@ -67,28 +64,29 @@ def test_track_request_sends_data_to_influxdb_for_tracked_uris(
     environment_api_key = "test"
     request.headers = {"X-Environment-Key": environment_api_key}
 
-    mock_influxdb = mock.MagicMock()
-    MockInfluxDBWrapper.return_value = mock_influxdb
-
     # When
-    track_request_influxdb(request, get_influxdb_wrapper())
+    track_request_influxdb(request)
 
     # Then
-    call_list = MockInfluxDBWrapper.call_args_list
+    call_list = mock_influxdb_api_call_wrapper.add_data_point.call_args_list
     assert len(call_list) == 1
     assert (
-        mock_influxdb.add_data_point.call_args_list[0][1]["tags"]["resource"]
+        mock_influxdb_api_call_wrapper.add_data_point.call_args_list[0][1]["tags"][
+            "resource"
+        ]
         == expected_resource
     )
 
 
-@mock.patch.object(app_analytics.track.InfluxDBWrapper, "write")
+@mock.patch("app_analytics.track.influxdb_api_call_wrapper")
 @mock.patch("app_analytics.track.Environment")
 def test_track_request_does_not_send_data_to_influxdb_for_not_tracked_uris(
-    MockEnvironment, MockInfluxDBWrapper
+    MockEnvironment, mock_influxdb_api_call_wrapper
 ):
     """
     Verify that the correct number of calls are made to InfluxDB for the various uris.
+
+    TODO: this filtering should be done at middleware level rather than influxdb logic
     """
     # Given
     request = mock.MagicMock()
@@ -96,11 +94,8 @@ def test_track_request_does_not_send_data_to_influxdb_for_not_tracked_uris(
     environment_api_key = "test"
     request.headers = {"X-Environment-Key": environment_api_key}
 
-    mock_influxdb = mock.MagicMock()
-    MockInfluxDBWrapper.return_value = mock_influxdb
-
     # When
-    track_request_influxdb(request, get_influxdb_wrapper())
+    track_request_influxdb(request)
 
     # Then
-    MockInfluxDBWrapper.assert_not_called()
+    mock_influxdb_api_call_wrapper.write.assert_not_called()

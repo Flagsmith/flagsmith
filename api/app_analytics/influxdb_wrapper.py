@@ -63,7 +63,7 @@ class InfluxDBWrapper:
         try:
             self.write_api.write(bucket=settings.INFLUXDB_BUCKET, record=self.records)
             # We've flushed the records into the Influx writer thread, so clear our local copy
-            self.records = []
+            self.records.clear()
         except HTTPError as e:
             capture_exception(e)
 

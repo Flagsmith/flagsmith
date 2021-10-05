@@ -26,6 +26,9 @@ TRACKED_RESOURCE_ACTIONS = {
     "traits": "traits",
 }
 
+influxdb_api_call_wrapper = InfluxDBWrapper("api_call")
+influx_db_feature_evaluation_wrapper = InfluxDBWrapper("feature_evaluation")
+
 
 @postpone
 def track_request_googleanalytics_async(request):
@@ -33,12 +36,8 @@ def track_request_googleanalytics_async(request):
 
 
 @postpone
-def track_request_influxdb_async(request, influxdb):
-    return track_request_influxdb(request, influxdb)
-
-
-def get_influxdb_wrapper():
-    return InfluxDBWrapper("api_call")
+def track_request_influxdb_async(request):
+    return track_request_influxdb(request)
 
 
 def get_resource_from_uri(request_uri):
@@ -96,7 +95,7 @@ def track_event(category, action, label="", value=""):
     requests.post(GOOGLE_ANALYTICS_COLLECT_URL, data=data)
 
 
-def track_request_influxdb(request, influxdb):
+def track_request_influxdb(request):
     """
     Sends API event data to InfluxDB
 
@@ -119,9 +118,8 @@ def track_request_influxdb(request, influxdb):
             "project_id": environment.project_id,
         }
 
-        # influxdb = InfluxDBWrapper("api_call")
-        influxdb.add_data_point("request_count", 1, tags=tags)
-        influxdb.write()
+        influxdb_api_call_wrapper.add_data_point("request_count", 1, tags=tags)
+        influxdb_api_call_wrapper.write()
 
 
 def track_feature_evaluation_influxdb(environment_id, feature_evaluations):
@@ -131,10 +129,10 @@ def track_feature_evaluation_influxdb(environment_id, feature_evaluations):
     :param environment_id: (int) the id of the environment the feature is being evaluated within
     :param feature_evaluations: (dict) A collection of key id / evaluation counts
     """
-    influxdb = InfluxDBWrapper("feature_evaluation")
-
     for feature_id, evaluation_count in feature_evaluations.items():
         tags = {"feature_id": feature_id, "environment_id": environment_id}
-        influxdb.add_data_point("request_count", evaluation_count, tags=tags)
+        influx_db_feature_evaluation_wrapper.add_data_point(
+            "request_count", evaluation_count, tags=tags
+        )
 
-    influxdb.write()
+    influx_db_feature_evaluation_wrapper.write()
