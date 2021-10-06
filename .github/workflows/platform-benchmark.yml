@@ -1,0 +1,56 @@
+name: Benchmark Flagsmith API
+
+on:
+    - push
+    # todo: reinstate
+    # schedule:
+    #    - cron: '0 4 * * 1-5' # Mon-Fri 4AM UTC
+
+concurrency: 'benchmarks' # Ensure only one of this runs at a time
+
+jobs:
+    run-benchmarks:
+        name: SDK benchmark
+        runs-on: ubuntu-latest
+
+        services:
+            postgres:
+                image: postgres:11.12-alpine
+                env:
+                    POSTGRES_USER: postgres
+                    POSTGRES_PASSWORD: postgres
+                    POSTGRES_DB: flagsmith
+                ports: ['5432:5432']
+                options: --health-cmd pg_isready --health-interval 10s --health-timeout 5s --health-retries 5
+
+        steps:
+            - name: Cloning repo
+              uses: actions/checkout@v2
+              with:
+                  fetch-depth: 0
+
+            - name: Check out Flagsmith/benchmarks-results repo
+              uses: actions/checkout@v2
+              with:
+                  path: benchmarks/results
+                  repository: Flagsmith/benchmark-results
+                  #token: ${{ secrets.FLAGSMITH_BOT_GITHUB_TOKEN }}
+
+            - name: Run the Flagsmith API
+              working-directory: api
+              env:
+                  E2E_TEST_AUTH_TOKEN: some-token
+                  DJANGO_ALLOWED_HOSTS: '*'
+                  DATABASE_URL: postgres://postgres:postgres@localhost:5432/flagsmith
+                  SENDGRID_API_KEY: ${{ secrets.SENDGRID_API_KEY }}
+                  DJANGO_SETTINGS_MODULE: app.settings.test
+                  FE_E2E_TEST_USER_EMAIL: nightwatch@solidstategroup.com
+              run: |
+                  python3.8 -m pip install --upgrade pip
+                  python3.8 -m pip install -r requirements.txt
+                  python3.8 -m pip install git+https://github.com/airspeed-velocity/asv.git
+                  python3.8 manage.py migrate
+                  python3.8 manage.py runserver &
+
+            - name: Install asv
+              run: pip install git+https://github.com/airspeed-velocity/asv.git virtualenv
