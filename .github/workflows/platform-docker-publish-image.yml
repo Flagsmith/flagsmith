@@ -21,7 +21,7 @@ jobs:
             - name: Download features
               run: >
                   curl --location --request GET 'https://api.flagsmith.com/api/v1/flags/' --header 'X-Environment-Key:
-                  ${{ secrets.FLAGSMITH_ENVIRONMENT_KEY }}' > frontend/flags.json
+                  ${{ secrets.FLAGSMITH_ENVIRONMENT_KEY }}' | jq --sort-keys > frontend/flags.json
 
             - name: Commit any feature updates
             - uses: stefanzweifel/git-auto-commit-action@v4
