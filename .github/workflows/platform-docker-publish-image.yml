@@ -18,6 +18,16 @@ jobs:
               with:
                   fetch-depth: 0
 
+            - name: Download features
+              run: >
+                  curl --location --request GET 'https://api.flagsmith.com/api/v1/flags/' --header 'X-Environment-Key:
+                  ${{ secrets.FLAGSMITH_ENVIRONMENT_KEY }}' > frontend/flags.json
+
+            - name: Commit any feature updates
+            - uses: stefanzweifel/git-auto-commit-action@v4
+              with:
+                  commit_message: Updated frontend flags for self hosted installs
+
             - name: Write git info to Docker image
               run: |
                   cd api
