@@ -30,6 +30,11 @@ urlpatterns = [
         views.project_overrides,
         name="project_overrides",
     ),
+    url(
+        r"^config/flags",
+        views.flags,
+        name="flags",
+    ),
     path("", views.index, name="index"),
     # Catch all for subfolder views on the front end
     url(r"^.*/$", views.index, name="index"),

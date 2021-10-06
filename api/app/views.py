@@ -1,4 +1,5 @@
 import json
+import os
 
 from django.conf import settings
 from django.contrib.staticfiles.storage import staticfiles_storage
@@ -52,3 +53,14 @@ def project_overrides(request):
             project_overrides[key] = settings_value
 
     return HttpResponse("window.projectOverrides = " + json.dumps(project_overrides))
+
+
+def flags(request):
+    """
+    Send the static flags.json file back to the browser to control front end feature set
+    """
+    flags_file = open(os.path.join(settings.STATIC_ROOT, "flags.json"))
+    flags = flags_file.read()
+    flags_file.close
+
+    return HttpResponse("window.defaultFlags = " + flags)

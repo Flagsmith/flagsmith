@@ -83,6 +83,15 @@ app.get('/config/project-overrides', (req, res) => {
     `);
 });
 
+app.get('/config/flags', (req, res) => {
+    flagsJson = fs.readFileSync(path.join(__dirname, '../flags.json'));
+
+    res.setHeader('content-type', 'text/javascript');
+    res.send(`window.defaultFlags = 
+        ${flagsJson}
+    `);
+});
+
 // Optionally proxy the API to get around CSRF issues, exposing the API to the world
 // FLAGSMITH_PROXY_API_URL should end with the hostname and not /api/v1/
 // e.g. FLAGSMITH_PROXY_API_URL=http://api.flagsmith.com/
