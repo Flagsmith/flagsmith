@@ -7,13 +7,11 @@ from os.path import dirname
 import django
 from django.utils.timezone import now
 
-from organisations.models import Organisation
-
 os.environ["DJANGO_SETTINGS_MODULE"] = "app.settings.local"
+os.environ["DJANGO_ALLOWED_HOSTS"] = "*"
+os.environ["DEBUG"] = "False"
+os.environ["INFLUXDB_TOKEN"] = ""
 sys.path.append(dirname(dirname(__file__)))
 
 
 django.setup()
-
-
-organisation = Organisation.objects.create(name="Test Org 222")
