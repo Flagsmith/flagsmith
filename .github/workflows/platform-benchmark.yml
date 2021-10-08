@@ -45,7 +45,7 @@ jobs:
               with:
                   path: api/benchmarks/results
                   repository: Flagsmith/benchmark-results
-                  #token: ${{ secrets.FLAGSMITH_BOT_GITHUB_TOKEN }}
+                  token: ${{ secrets.FLAGSMITH_BOT_GITHUB_TOKEN }}
 
             - name: Set up Python 3.8
               uses: actions/setup-python@v2
