@@ -65,10 +65,16 @@ jobs:
               run: asv machine --config benchmarks/asv.conf.json --yes --machine ci-benchmarks
 
             - name: Run asv benchmarks
-              run: asv run --config benchmarks/asv.conf.json --show-stderr --strict
+              run: |
+                  asv run --config benchmarks/asv.conf.json --show-stderr --strict
+                  ls -la benchmarks
+                  ls -la benchmarks/results
 
             - name: Generate HTML report of results
-              run: asv publish --config benchmarks/asv.conf.json
+              run: |
+                  asv publish --config benchmarks/asv.conf.json
+                  ls -la benchmarks
+                  ls -la benchmarks/results
 
             - name: Commit update for benchmark results
               uses: stefanzweifel/git-auto-commit-action@v4
