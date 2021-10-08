@@ -50,13 +50,10 @@ class PerformanceSuite:
         self.client.credentials(
             HTTP_X_ENVIRONMENT_KEY=self.identity.environment.api_key
         )
+
+        # Then
         for test_identity_count in range(400):
             response = self.client.get(url)
-
-        ## Then
-        assert response.status_code == status.HTTP_200_OK
-
-        # and
-        assert len(response.json().get("flags")) == 2
+            assert response.status_code == status.HTTP_200_OK
 
         pass
