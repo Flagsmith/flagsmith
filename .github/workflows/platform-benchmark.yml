@@ -13,6 +13,13 @@ jobs:
         name: SDK benchmark
         runs-on: ubuntu-latest
 
+        env:
+            DJANGO_ALLOWED_HOSTS: '*'
+            DATABASE_URL: postgres://postgres:postgres@localhost:5432/flagsmith
+            SENDGRID_API_KEY: ${{ secrets.SENDGRID_API_KEY }}
+            DJANGO_SETTINGS_MODULE: app.settings.test
+            FE_E2E_TEST_USER_EMAIL: nightwatch@solidstategroup.com
+
         services:
             postgres:
                 image: postgres:11.12-alpine
@@ -32,25 +39,24 @@ jobs:
             - name: Check out Flagsmith/benchmarks-results repo
               uses: actions/checkout@v2
               with:
-                  path: benchmarks/results
+                  path: api/benchmarks/results
                   repository: Flagsmith/benchmark-results
                   #token: ${{ secrets.FLAGSMITH_BOT_GITHUB_TOKEN }}
 
-            - name: Run the Flagsmith API
-              working-directory: api
-              env:
-                  E2E_TEST_AUTH_TOKEN: some-token
-                  DJANGO_ALLOWED_HOSTS: '*'
-                  DATABASE_URL: postgres://postgres:postgres@localhost:5432/flagsmith
-                  SENDGRID_API_KEY: ${{ secrets.SENDGRID_API_KEY }}
-                  DJANGO_SETTINGS_MODULE: app.settings.test
-                  FE_E2E_TEST_USER_EMAIL: nightwatch@solidstategroup.com
+            - name: Set up Python 3.8
+              uses: actions/setup-python@v2
+              with:
+                  python-version: 3.8
+
+            - name: Install python dependencies
               run: |
-                  python3.8 -m pip install --upgrade pip
-                  python3.8 -m pip install -r requirements.txt
-                  python3.8 -m pip install git+https://github.com/airspeed-velocity/asv.git
-                  python3.8 manage.py migrate
-                  python3.8 manage.py runserver &
+                  cd api
+                  python -m pip install -r requirements-dev.txt
+                  python -m pip install -r requirements.txt
 
             - name: Install asv
               run: pip install git+https://github.com/airspeed-velocity/asv.git virtualenv
+
+            - name: Set up Flagsmith
+              run: |
+                  python manage.py migrate

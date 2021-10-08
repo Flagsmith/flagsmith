@@ -1,5 +1,6 @@
-# isort: skip_file
 # Needs to be first to set up django environment
+from .helpers import *  # isort:skip
+
 from django.conf import settings
 from django.urls import reverse
 from rest_framework import status
@@ -11,8 +12,6 @@ from features.models import Feature, FeatureSegment, FeatureState
 from organisations.models import Organisation
 from projects.models import Project
 from segments.models import Segment
-
-from .helpers import *
 
 
 class PerformanceSuite:
