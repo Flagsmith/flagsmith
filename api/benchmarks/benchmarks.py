@@ -45,7 +45,7 @@ class PerformanceSuite:
     def time_keys(self):
         # Given
         base_url = reverse("api-v1:sdk-identities")
-        url = base_url + "?identifier=" + self.identity.identifier
+        # url = base_url + "?identifier=" + self.identity.identifier
 
         # When
         # self.client.credentials(
