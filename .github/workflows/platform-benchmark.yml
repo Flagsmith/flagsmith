@@ -52,7 +52,7 @@ jobs:
               with:
                   python-version: 3.8
 
-            - name: Install python dependencies and setup Flagsmith
+            - name: Install Python dependencies and setup Flagsmith
               run: |
                   python3.8 -m pip install --upgrade pip
                   python3.8 -m pip install -r requirements.txt
