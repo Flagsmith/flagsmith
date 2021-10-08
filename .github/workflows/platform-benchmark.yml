@@ -43,7 +43,7 @@ jobs:
             - name: Check out Flagsmith/benchmarks-results repo
               uses: actions/checkout@v2
               with:
-                  path: benchmarks/results
+                  path: api/benchmarks/results
                   repository: Flagsmith/benchmark-results
                   token: ${{ secrets.FLAGSMITH_BOT_GITHUB_TOKEN }}
 
