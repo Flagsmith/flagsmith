@@ -62,7 +62,7 @@ jobs:
               run: pip install git+https://github.com/airspeed-velocity/asv.git virtualenv
 
             - name: Configure benchmarks
-              run: asv machine --config ee/benchmarks/asv.conf.json --yes --machine ci-benchmarks
+              run: asv machine --config benchmarks/asv.conf.json --yes --machine ci-benchmarks
 
             - name: Run asv benchmarks
               run: asv run --config benchmarks/asv.conf.json --show-stderr --strict
