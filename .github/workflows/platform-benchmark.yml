@@ -1,10 +1,8 @@
 name: Benchmark Flagsmith API
 
 on:
-    - push
-    # todo: reinstate
-    # schedule:
-    #    - cron: '0 4 * * 1-5' # Mon-Fri 4AM UTC
+    pull_request:
+        types: [opened, synchronize, reopened, ready_for_review]
 
 concurrency: 'benchmarks' # Ensure only one of this runs at a time
 

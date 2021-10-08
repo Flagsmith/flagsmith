@@ -41,7 +41,23 @@ class PerformanceSuite:
                 environment=self.environment,
             )
 
-    def time_keys(self):
+    def time_get_environment_flags(self):
+        # Given
+        url = reverse("api-v1:flags")
+
+        # When
+        self.client.credentials(
+            HTTP_X_ENVIRONMENT_KEY=self.identity.environment.api_key
+        )
+
+        # Then
+        for test_flags_count in range(400):
+            response = self.client.get(url)
+            assert response.status_code == status.HTTP_200_OK
+
+        pass
+
+    def time_get_identity_flags(self):
         # Given
         base_url = reverse("api-v1:sdk-identities")
         url = base_url + "?identifier=" + self.identity.identifier
