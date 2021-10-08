@@ -49,10 +49,11 @@ jobs:
                   python-version: 3.8
 
             - name: Install python dependencies
+              working-directory: api
               run: |
-                  cd api
-                  python -m pip install -r requirements-dev.txt
-                  python -m pip install -r requirements.txt
+                  python3.8 -m pip install --upgrade pip
+                  python3.8 -m pip install -r requirements.txt
+                  python3.8 manage.py migrate
 
             - name: Install asv
               run: pip install git+https://github.com/airspeed-velocity/asv.git virtualenv
