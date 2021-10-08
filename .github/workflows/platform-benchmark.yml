@@ -57,6 +57,8 @@ jobs:
                   python3.8 -m pip install --upgrade pip
                   python3.8 -m pip install -r requirements.txt
                   python3.8 manage.py migrate
+                  ls -la benchmarks
+                  ls -la benchmarks/results
 
             - name: Install asv
               run: pip install git+https://github.com/airspeed-velocity/asv.git virtualenv
