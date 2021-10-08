@@ -8,6 +8,10 @@ on:
 
 concurrency: 'benchmarks' # Ensure only one of this runs at a time
 
+defaults:
+    run:
+        working-directory: api
+
 jobs:
     run-benchmarks:
         name: SDK benchmark
@@ -48,8 +52,7 @@ jobs:
               with:
                   python-version: 3.8
 
-            - name: Install python dependencies
-              working-directory: api
+            - name: Install python dependencies and setup Flagsmith
               run: |
                   python3.8 -m pip install --upgrade pip
                   python3.8 -m pip install -r requirements.txt
@@ -58,6 +61,8 @@ jobs:
             - name: Install asv
               run: pip install git+https://github.com/airspeed-velocity/asv.git virtualenv
 
-            - name: Set up Flagsmith
-              run: |
-                  python manage.py migrate
+            - name: Configure benchmarks
+              run: asv machine --config ee/benchmarks/asv.conf.json --yes --machine ci-benchmarks
+
+            - name: Run asv benchmarks
+              run: asv run --config benchmarks/asv.conf.json --show-stderr --strict
