@@ -66,3 +66,16 @@ jobs:
 
             - name: Run asv benchmarks
               run: asv run --config benchmarks/asv.conf.json --show-stderr --strict
+
+            - name: Generate HTML report of results
+              run: asv publish --config ee/benchmarks/asv.conf.json
+
+            - name: Commit update for benchmark results
+              uses: stefanzweifel/git-auto-commit-action@v4
+              with:
+                  repository: benchmarks/results
+                  branch: main
+                  commit_message: 'Save benchmark results'
+                  commit_user_name: Flagsmith Bot
+                  commit_user_email: support@flagsmith.com
+                  commit_author: Flagsmith Bot <support@flagsmith.com>
