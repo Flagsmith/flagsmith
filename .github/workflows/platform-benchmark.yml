@@ -57,8 +57,6 @@ jobs:
                   python3.8 -m pip install --upgrade pip
                   python3.8 -m pip install -r requirements.txt
                   python3.8 manage.py migrate
-                  ls -la benchmarks
-                  ls -la benchmarks/results
 
             - name: Install asv
               run: pip install git+https://github.com/airspeed-velocity/asv.git virtualenv
@@ -67,16 +65,10 @@ jobs:
               run: asv machine --config benchmarks/asv.conf.json --yes --machine ci-benchmarks
 
             - name: Run asv benchmarks
-              run: |
-                  asv run --config benchmarks/asv.conf.json --show-stderr --strict
-                  ls -la benchmarks
-                  ls -la benchmarks/results
+              run: asv run --config benchmarks/asv.conf.json --show-stderr --strict
 
             - name: Generate HTML report of results
-              run: |
-                  asv publish --config benchmarks/asv.conf.json
-                  ls -la benchmarks
-                  ls -la benchmarks/results
+              run: asv publish --config benchmarks/asv.conf.json
 
             - name: Commit update for benchmark results
               uses: stefanzweifel/git-auto-commit-action@v4
