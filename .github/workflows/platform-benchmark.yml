@@ -81,7 +81,7 @@ jobs:
             - name: Commit update for benchmark results
               uses: stefanzweifel/git-auto-commit-action@v4
               with:
-                  repository: benchmarks/results
+                  repository: api/benchmarks/results
                   branch: main
                   commit_message: 'Save benchmark results'
                   commit_user_name: Flagsmith Bot
