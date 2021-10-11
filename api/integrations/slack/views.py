@@ -53,13 +53,11 @@ class SlackConfigurationViewSet(IntegrationCommonViewSet):
                 "code not found in query params",
                 status.HTTP_400_BAD_REQUEST,
             )
-        redirect_uri = (
-            "https://925a4f3b33c5.ngrok.io/api/v1/environments/EFB8G8jY5hYHjYS3xHz56K/integrations/slack/callback/",
-        )
+        redirect_uri = self.reverse_action("slack-oauth-callback", kwargs=kwargs)
 
         env = self.get_environment_from_request()
         validate_state(request.GET.get("state"), request)
-        bot_token = slack.get_bot_token(code, redirect_uri[0])
+        bot_token = slack.get_bot_token(code, redirect_uri)
         conf = SlackConfiguration.objects.filter(project_id=env.project).first()
         if not conf:
             conf = SlackConfiguration(project=env.project)
@@ -67,7 +65,7 @@ class SlackConfigurationViewSet(IntegrationCommonViewSet):
         conf.save()
         return Response("Success")
 
-    @action(detail=False, methods=["POST"], url_path="oauth", permission_classes=[])
+    @action(detail=False, methods=["GET"], url_path="oauth", permission_classes=[])
     def slack_oauth_init(self, request, *args, **kwargs):
         if not settings.SLACK_CLIENT_ID:
             return Response(
@@ -77,21 +75,17 @@ class SlackConfigurationViewSet(IntegrationCommonViewSet):
 
         state = str(uuid.uuid4())[:6]
         request.session["state"] = state
-        callback_uri = self.reverse_action(
-            self.slack_oauth_callback.url_name,
-            args=[self.kwargs["environment_api_key"]],
-        )
-        print(callback_uri)
+        callback_uri = self.reverse_action("slack-oauth-callback", kwargs=kwargs)
         authorize_url_generator = AuthorizeUrlGenerator(
             client_id=settings.SLACK_CLIENT_ID,
-            redirect_uri="https://925a4f3b33c5.ngrok.io/api/v1/environments/EFB8G8jY5hYHjYS3xHz56K/integrations/slack/callback/",
+            redirect_uri=callback_uri,
             scopes=["chat:write", "channels:read", "channels:join"],
         )
         return redirect(authorize_url_generator.generate(state))
 
 
 def validate_state(state, request):
-    state_before = request.session.pop("state")
+    state_before = request.session.pop("state", None)
     if state_before != state:
         raise ValueError(
             "State mismatch upon authorization completion." " Try new request."
