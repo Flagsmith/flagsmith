@@ -40,9 +40,29 @@ const App = class extends Component {
 
     componentDidMount = () => {
         window.addEventListener('scroll', this.handleScroll);
+        if (flagsmith.hasFeature('prevent_fetch')) {
+            AsyncStorage.getItem('dark_mode', (err, res) => {
+                this.setState({ darkMode: res });
+            });
+        }
     };
 
     toggleDarkMode = () => {
+        if (flagsmith.hasFeature('prevent_fetch')) {
+            // if we are preventing fetching flags, dark_mode must be persisted in local storage
+            AsyncStorage.getItem('dark_mode', (err, res) => {
+                if (res) {
+                    document.body.classList.remove('dark');
+                    AsyncStorage.removeItem('dark_mode');
+                    this.setState({ darkMode: false });
+                } else {
+                    document.body.classList.add('dark');
+                    AsyncStorage.setItem('dark_mode', '1');
+                    this.setState({ darkMode: true });
+                }
+            });
+            return;
+        }
         const newValue = !flagsmith.hasFeature('dark_mode');
         flagsmith.setTrait('dark_mode', newValue);
         if (newValue) {
@@ -154,7 +174,8 @@ const App = class extends Component {
     };
 
     render() {
-        if (flagsmith.hasFeature('dark_mode') && !document.body.classList.contains('dark')) {
+        const hasDarkMode = this.state.darkMode || flagsmith.hasFeature('dark_mode');
+        if (hasDarkMode && !document.body.classList.contains('dark')) {
             document.body.classList.add('dark');
         }
         const {
@@ -313,7 +334,7 @@ const App = class extends Component {
                                                         </nav>
                                                         <div style={{ marginRight: 16, marginTop: 0 }} className="dark-mode">
                                                             <Switch
-                                                              checked={flagsmith.hasFeature('dark_mode')} onChange={this.toggleDarkMode} onMarkup="Light"
+                                                              checked={hasDarkMode} onChange={this.toggleDarkMode} onMarkup="Light"
                                                               offMarkup="Dark"
                                                             />
                                                         </div>
