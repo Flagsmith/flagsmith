@@ -139,8 +139,10 @@ global.API = {
                 .set('email', id);
             amplitude.getInstance().identify(identify);
         }
-        flagsmith.identify(id);
-        flagsmith.setTrait('email', id);
+        if (!flagsmith.hasFeature('prevent_fetch')) {
+            flagsmith.identify(id);
+            flagsmith.setTrait('email', id);
+        }
     },
     identify(id, user = {}) {
         if (id === Project.excludeAnalytics) return;
@@ -169,9 +171,11 @@ global.API = {
 
                 amplitude.getInstance().identify(identify);
             }
-            flagsmith.identify(id);
-            flagsmith.setTrait('organisations', user.organisations ? user.organisations.map(o => `"${o.id}"`).join(',') : '');
-            flagsmith.setTrait('email', id);
+            if (!flagsmith.hasFeature('prevent_fetch')) {
+                flagsmith.identify(id);
+                flagsmith.setTrait('organisations', user.organisations ? user.organisations.map(o => `"${o.id}"`).join(',') : '');
+                flagsmith.setTrait('email', id);
+            }
             if (window.$crisp) {
                 $crisp.push(['set', 'user:email', id]);
                 $crisp.push(['set', 'user:nickname', `${user.first_name} ${user.last_name}`]);

@@ -60,7 +60,7 @@
     "extract-text-webpack-plugin": "4.0.0-beta.0",
     "fbjs": "0.8.17",
     "file-loader": "2.0.0",
-    "flagsmith": "1.1.0",
+    "flagsmith": "1.6.10",
     "flux-react-dispatcher": "1.2.5",
     "history": "4.10.1",
     "html-loader": "0.5.5",
