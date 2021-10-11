@@ -293,12 +293,12 @@ const UserPage = class extends Component {
                                                                           <Switch
                                                                             data-test={`user-feature-switch-${i}${actualEnabled ? '-on' : '-off'}`}
                                                                             checked={actualEnabled}
-                                                                            onChange={() => this.confirmToggle(_.find(projectFlags, { id }), environmentFlags[id], (environments) => {
+                                                                            onChange={() => this.confirmToggle(_.find(projectFlags, { id }), actualFlags[name], (environments) => {
                                                                                 toggleFlag({
                                                                                     environmentId: this.props.match.params.environmentId,
                                                                                     identity: this.props.match.params.id,
                                                                                     projectFlag: { id },
-                                                                                    environmentFlag: environmentFlags[id],
+                                                                                    environmentFlag: actualFlags[name],
                                                                                     identityFlag,
                                                                                 });
                                                                             })}
