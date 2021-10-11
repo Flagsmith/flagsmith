@@ -35,7 +35,7 @@ if ENV not in ("local", "dev", "staging", "production"):
         "ENVIRONMENT env variable must be one of local, dev, staging or production"
     )
 
-DEBUG = env("DEBUG", default=False)
+DEBUG = env.bool("DEBUG", default=False)
 
 # Enables the sending of telemetry data to the central Flagsmith API for usage tracking
 ENABLE_TELEMETRY = env("ENABLE_TELEMETRY", default=True)
@@ -105,6 +105,7 @@ INSTALLED_APPS = [
     "features",
     "features.multivariate",
     "segments",
+    "app",
     "e2etests",
     "simple_history",
     "drf_yasg2",
@@ -179,6 +180,7 @@ REST_FRAMEWORK = {
 
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
+    "whitenoise.middleware.WhiteNoiseMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
     "corsheaders.middleware.CorsMiddleware",
     "django.middleware.common.CommonMiddleware",
@@ -263,7 +265,7 @@ USE_TZ = True
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/1.9/howto/static-files/
 
-STATIC_URL = "/static/"
+STATIC_URL = "/"
 STATIC_ROOT = os.path.join(PROJECT_ROOT, "../../static/")
 
 # CORS settings
@@ -467,3 +469,22 @@ ENVIRONMENTS_TABLE_NAME_DYNAMO = env.str("ENVIRONMENTS_TABLE_NAME_DYNAMO", None)
 
 # DynamoDB table name for storing identities
 IDENTITIES_TABLE_NAME_DYNAMO = env.str("IDENTITIES_TABLE_NAME_DYNAMO", None)
+
+### Front end environment variables
+API_URL = env("API_URL", default="/api/v1/")
+ASSET_URL = env("ASSET_URL", default="/")
+MAINTENANCE_MODE = env.bool("MAINTENANCE_MODE", default=False)
+PREVENT_SIGNUP = env.bool("PREVENT_SIGNUP", default=False)
+DISABLE_INFLUXDB_FEATURES = env.bool("DISABLE_INFLUXDB_FEATURES", default=True)
+FLAGSMITH_ANALYTICS = env.bool("FLAGSMITH_ANALYTICS", default=False)
+FLAGSMITH_ON_FLAGSMITH_API_URL = env("FLAGSMITH_ON_FLAGSMITH_API_URL", default=None)
+FLAGSMITH_ON_FLAGSMITH_API_KEY = env("FLAGSMITH_ON_FLAGSMITH_API_KEY", default=None)
+GOOGLE_ANALYTICS_API_KEY = env("GOOGLE_ANALYTICS_API_KEY", default=None)
+LINKEDIN_API_KEY = env("LINKEDIN_API_KEY", default=None)
+CRISP_CHAT_API_KEY = env("CRISP_CHAT_API_KEY", default=None)
+MIXPANEL_API_KEY = env("MIXPANEL_API_KEY", default=None)
+SENTRY_API_KEY = env("SENTRY_API_KEY", default=None)
+AMPLITUDE_API_KEY = env("AMPLITUDE_API_KEY", default=None)
+
+# Set this to enable create organisation for only superusers
+RESTRICT_ORG_CREATE_TO_SUPERUSERS = env.bool("RESTRICT_ORG_CREATE_TO_SUPERUSERS", False)
