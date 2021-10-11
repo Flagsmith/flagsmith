@@ -89,7 +89,7 @@ const UserPage = class extends Component {
           projectFlag={projectFlag}
           identityFlag={{
               ...identityFlag,
-              multivariate_feature_state_values
+              multivariate_feature_state_values,
           }}
           environmentFlag={environmentFlag}
         />);
@@ -203,7 +203,7 @@ const UserPage = class extends Component {
                                                             data-test={`user-feature-${i}`}
                                                           >
                                                               <div
-                                                                onClick={() => this.editFlag(_.find(projectFlags, { id }), environmentFlags[id], actualFlags[name],identityFlags && identityFlags[id] && identityFlags[id].multivariate_feature_state_values)}
+                                                                onClick={() => this.editFlag(_.find(projectFlags, { id }), environmentFlags[id], actualFlags[name], identityFlags && identityFlags[id] && identityFlags[id].multivariate_feature_state_values)}
                                                                 className="flex flex-1"
                                                               >
                                                                   <Row>
@@ -238,7 +238,7 @@ const UserPage = class extends Component {
 
                                                                                   </Flex>
                                                                                   <span
-                                                                                      className="ml-1 chip-icon icon ion-md-information"
+                                                                                    className="ml-1 chip-icon icon ion-md-information"
                                                                                   />
                                                                               </Row>
 
@@ -248,6 +248,7 @@ const UserPage = class extends Component {
                                                                           <span data-test={`feature-override-${i}`} className="flex-row chip">
                                                                               <span>
                                                                               This feature is being overriden by a % variation in the environment, the control value of this feature is  <FeatureValue
+                                                                                includeEmpty
                                                                                 data-test={`user-feature-original-value-${i}`}
                                                                                 value={`${flagValue}`}
                                                                               />
@@ -260,6 +261,7 @@ const UserPage = class extends Component {
                                                                           <span data-test={`feature-override-${i}`} className="flex-row chip">
                                                                               <span>
                                                                               This feature is being overriden by segments and would normally be <FeatureValue
+                                                                                includeEmpty
                                                                                 data-test={`user-feature-original-value-${i}`}
                                                                                 value={`${flagValue}`}
                                                                               /> for this user
@@ -384,6 +386,7 @@ const UserPage = class extends Component {
                                                               <Row>
                                                                   <Column>
                                                                       <FeatureValue
+                                                                        includeEmpty
                                                                         data-test={`user-trait-value-${i}`}
                                                                         value={trait_value}
                                                                       />

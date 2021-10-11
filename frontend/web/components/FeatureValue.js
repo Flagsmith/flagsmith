@@ -13,6 +13,9 @@ const FeatureValue = class extends Component {
             return null;
         }
         const type = typeof Utils.getTypedValue(`${this.props.value}`);
+        if (type === 'string' && this.props.value === '' && !this.props.includeEmpty) {
+            return null;
+        }
         return (
             <span className={`feature-value-container ${type} ${this.props.className || ''}`} onClick={this.props.onClick} data-test={this.props['data-test']}>
                 {type == 'string' && <span className="quot">"</span>}
