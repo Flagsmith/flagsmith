@@ -17,11 +17,11 @@ export default function VariationOptions({ multivariateOptions, select, controlV
                 </div>
             )}
             <Tooltip
-              title={(
-                  <label>{select ? 'Value' : 'Variations'} <span className="icon ion-ios-information-circle"/></label>
+                title={(
+                    <label>{select ? 'Value' : 'Variations'} <span className="icon ion-ios-information-circle"/></label>
                 )}
-              html
-              place="right"
+                html
+                place="right"
             >
                 {Constants.strings.MULTIVARIATE_DESCRIPTION}
             </Tooltip>
@@ -33,12 +33,12 @@ export default function VariationOptions({ multivariateOptions, select, controlV
                                 <FeatureValue value={Utils.getTypedValue(controlValue)}/>
                             </div>
                             <div
-                              onMouseDown={(e) => {
-                                  e.stopPropagation();
-                                  setVariations([]);
-                                  setValue(controlValue);
-                              }}
-                              className={`btn--radio ion ${controlSelected ? 'ion-ios-radio-button-on' : 'ion-ios-radio-button-off'}`}
+                                onMouseDown={(e) => {
+                                    e.stopPropagation();
+                                    setVariations([]);
+                                    setValue(controlValue);
+                                }}
+                                className={`btn--radio ion ${controlSelected ? 'ion-ios-radio-button-on' : 'ion-ios-radio-button-off'}`}
                             />
                         </Row>
                     </div>
@@ -46,13 +46,22 @@ export default function VariationOptions({ multivariateOptions, select, controlV
             )}
             {
                 multivariateOptions.map((m, i) => {
+                    let override;
+
+                    if (variationOverrides) {
+                        if (select) {
+                            // override = variationOverrides[0] && typeof variationOverrides[0].multivariate_feature_option_index === 'number' ? i === variationOverrides[0].multivariate_feature_option_index && variationOverrides[0]
+                            //     : variationOverrides && variationOverrides.find(v => v.multivariate_feature_option === m.id);
+                        } else {
+                            override = variationOverrides.find(v => v.multivariate_feature_option === m.id);
+                        }
+                    }
+
+
                     const theValue = {
                         ...m,
                         ...(override ? { default_percentage_allocation: override.percentage_allocation } : {}),
                     };
-                    let override = select
-                        ? variationOverrides && variationOverrides[0] && typeof variationOverrides[0].multivariate_feature_option_index === 'number' ? i === variationOverrides[0].multivariate_feature_option_index
-&& variationOverrides[0] : variationOverrides && variationOverrides.find(v => v.multivariate_feature_option === m.id) : variationOverrides && variationOverrides.find(v => v.percentage_allocation === 100);
                     return select ? (
                         <div className="panel panel--flat panel-without-heading mb-2">
                             <div className="panel-content">
@@ -61,30 +70,30 @@ export default function VariationOptions({ multivariateOptions, select, controlV
                                         <FeatureValue value={Utils.getTypedValue(Utils.featureStateToValue(theValue))}/>
                                     </div>
                                     <div
-                                      onMouseDown={(e) => {
-                                          e.stopPropagation();
-                                          e.preventDefault();
-                                          setVariations([{
-                                              multivariate_feature_option: m.id,
-                                              multivariate_feature_option_index: i,
-                                              percentage_allocation: 100,
-                                          }]);
-                                          return false;
-                                      }}
-                                      className={`btn--radio ion ${override ? 'ion-ios-radio-button-on' : 'ion-ios-radio-button-off'}`}
+                                        onMouseDown={(e) => {
+                                            e.stopPropagation();
+                                            e.preventDefault();
+                                            setVariations([{
+                                                multivariate_feature_option: m.id,
+                                                multivariate_feature_option_index: i,
+                                                percentage_allocation: 100,
+                                            }]);
+                                            return false;
+                                        }}
+                                        className={`btn--radio ion ${override ? 'ion-ios-radio-button-on' : 'ion-ios-radio-button-off'}`}
                                     />
                                 </Row>
                             </div>
                         </div>
                     ) : (
                         <VariationValue
-                          key={i}
-                          value={theValue}
-                          onChange={(e) => {
-                              updateVariation(i, e, variationOverrides);
-                          }}
-                          weightTitle={weightTitle}
-                          onRemove={() => removeVariation(i)}
+                            key={i}
+                            value={theValue}
+                            onChange={(e) => {
+                                updateVariation(i, e, variationOverrides);
+                            }}
+                            weightTitle={weightTitle}
+                            onRemove={() => removeVariation(i)}
                         />
                     );
                 })
