@@ -374,7 +374,7 @@ class ProjectFeatureTestCase(TestCase):
         )
         url = reverse(
             "api-v1:environments:identity-featurestates-list",
-            args=[self.environment_1.api_key, identity.id],
+            args=[self.environment_1.api_key, identity.identifier],
         )
         data = {"feature": feature.id, "enabled": True}
 
@@ -413,7 +413,7 @@ class ProjectFeatureTestCase(TestCase):
         )
         url = reverse(
             "api-v1:environments:identity-featurestates-detail",
-            args=[self.environment_1.api_key, identity.id, feature_state.id],
+            args=[self.environment_1.api_key, identity.identifier, feature_state.id],
         )
         data = {"feature": feature.id, "enabled": False}
 
@@ -452,7 +452,7 @@ class ProjectFeatureTestCase(TestCase):
         )
         url = reverse(
             "api-v1:environments:identity-featurestates-detail",
-            args=[self.environment_1.api_key, identity.id, feature_state.id],
+            args=[self.environment_1.api_key, identity.identifier, feature_state.id],
         )
 
         # When
