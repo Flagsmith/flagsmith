@@ -120,7 +120,7 @@ class IdentityTestCase(TestCase):
             self.feature_states_detail_url
             % (
                 self.identity.environment.api_key,
-                self.identity.id,
+                self.identity.identifier,
                 feature_state.id,
             ),
             data=self.put_template % True,
