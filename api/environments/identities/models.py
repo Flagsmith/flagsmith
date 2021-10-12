@@ -199,8 +199,9 @@ class Identity(models.Model):
                 identity_dict = build_identity_dict(identity)
                 batch.put_item(Item=identity_dict)
 
-    def send_to_dynamodb(self):
+    @staticmethod
+    def send_to_dynamodb(identity_obj: typing.Any):
         if not dynamo_identity_table:
             return
-        identity_dict = build_identity_dict(self)
+        identity_dict = build_identity_dict(identity_obj)
         dynamo_identity_table.put_item(Item=identity_dict)
