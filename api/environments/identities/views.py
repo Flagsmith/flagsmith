@@ -1,14 +1,17 @@
+import base64
+import json
 from collections import namedtuple
 
 import coreapi
+from boto3.dynamodb.conditions import Key
 from rest_framework import status, viewsets
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.schemas import AutoSchema
 
-from app.pagination import CustomPagination
+from app.pagination import IdentityPagination
 from environments.identities.helpers import identify_integrations
-from environments.identities.models import Identity
+from environments.identities.models import Identity, dynamo_identity_table
 from environments.identities.serializers import IdentitySerializer
 from environments.identities.traits.serializers import TraitSerializerBasic
 from environments.models import Environment
@@ -24,13 +27,7 @@ from util.views import SDKAPIView
 class IdentityViewSet(viewsets.ModelViewSet):
     serializer_class = IdentitySerializer
     permission_classes = [IsAuthenticated, NestedEnvironmentPermissions]
-    pagination_class = CustomPagination
-    lookup_field = "identifier"
-
-    def get_object(self):
-        identifier = self.kwargs["identifier"]
-        environment = self.get_environment_from_request()
-        return Identity.objects.get(environment=environment, identifier=identifier)
+    pagination_class = IdentityPagination
 
     def get_queryset(self):
         environment = self.get_environment_from_request()
@@ -53,6 +50,55 @@ class IdentityViewSet(viewsets.ModelViewSet):
 
         return queryset
 
+    def _get_dynamo_query_kwargs(
+        self,
+        request,
+        environment_api_key,
+        previous_last_evaluated_key,
+        page_size,
+    ):
+        dynamo_query_kwargs = {
+            "IndexName": "environment_api_key-identifier-index",
+            "KeyConditionExpression": Key("environment_api_key").eq(
+                environment_api_key
+            ),
+            "Limit": page_size,
+        }
+        if previous_last_evaluated_key:
+            dynamo_query_kwargs.update(
+                ExclusiveStartKey=json.loads(
+                    base64.b64decode(previous_last_evaluated_key)
+                )
+            )
+        return dynamo_query_kwargs
+
+    def list(self, request, *args, **kwargs):
+        environment = self.get_environment_from_request()
+        if not environment.project.enable_dynamo_db:
+            return super().list(request, *args, **kwargs)
+
+        paginator = self.pagination_class()
+        page_size = paginator.get_page_size(request)
+        previous_last_evaluated_key = self.request.GET.get("last_evaluated_key")
+        dynamo_query_kwargs = self._get_dynamo_query_kwargs(
+            request, environment.api_key, previous_last_evaluated_key, page_size
+        )
+        response = dynamo_identity_table.query(**dynamo_query_kwargs)
+        kwargs = {
+            "count": response["Count"],
+            "previous_last_evaluated_key": previous_last_evaluated_key,
+            "request": request,
+        }
+        last_evaluated_key = response.get("LastEvaluatedKey")
+        if last_evaluated_key:
+            last_evaluated_key = base64.b64encode(
+                json.dumps(last_evaluated_key).encode()
+            )
+            kwargs.update(last_evaluated_key=last_evaluated_key)
+        serializer = IdentitySerializer(data=response["Items"], many=True)
+        serializer.is_valid()
+        return paginator.get_paginated_response_dynamo(serializer.data, **kwargs)
+
     def get_environment_from_request(self):
         """
         Get environment object from URL parameters in request.
@@ -61,10 +107,14 @@ class IdentityViewSet(viewsets.ModelViewSet):
 
     def perform_create(self, serializer):
         environment = self.get_environment_from_request()
+        if environment.project.enable_dynamo_db:
+            return Identity.send_to_dynamodb({**serializer.data, **self.kwargs})
         serializer.save(environment=environment)
 
     def perform_update(self, serializer):
         environment = self.get_environment_from_request()
+        if environment.project.enable_dynamo_db:
+            return Identity.send_to_dynamodb({**serializer.data, **self.kwargs})
         serializer.save(environment=environment)
 
 
