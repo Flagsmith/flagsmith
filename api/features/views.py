@@ -235,15 +235,9 @@ class FeatureStateViewSet(viewsets.ModelViewSet):
             error = {"detail": "Feature does not exist in project"}
             return Response(error, status=status.HTTP_400_BAD_REQUEST)
 
-        # identity_pk = self.kwargs.get("identity_pk")
-
         identity_identifier = self.kwargs.get("identity_identifier")
         if identity_identifier:
             data["identity"] = self.get_identity_from_request(environment).pk
-        # data["identity"] = {
-        #     "identifier": identity_identifier
-        # }  # self.get_identity_from_request(environment)
-
         serializer = self.get_serializer(data=data)
         if serializer.is_valid():
             feature_state = serializer.save()

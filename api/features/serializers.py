@@ -172,19 +172,12 @@ class FeatureStateSerializerFull(serializers.ModelSerializer):
         return obj.get_feature_state_value(identity=self.context.get("identity"))
 
 
-class IdentityFeatureSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Identity
-        fields = ("identifier",)
-
-
 class FeatureStateSerializerBasic(WritableNestedModelSerializer):
 
     feature_state_value = serializers.SerializerMethodField()
     multivariate_feature_state_values = MultivariateFeatureStateValueSerializer(
         many=True, required=False
     )
-    # identity = IdentityFeatureSerializer()
 
     class Meta:
         model = FeatureState
