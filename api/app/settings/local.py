@@ -1,4 +1,9 @@
-from app.settings.common import *
+from app.settings.common import (
+    ALLOWED_HOSTS,
+    INSTALLED_APPS,
+    MIDDLEWARE,
+    SWAGGER_SETTINGS,
+)
 
 ENABLE_AXES = False
 

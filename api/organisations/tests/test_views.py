@@ -6,7 +6,6 @@ import pytest
 from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.core import mail
-from django.test import override_settings
 from django.urls import reverse
 from pytz import UTC
 from rest_framework import status
@@ -182,7 +181,7 @@ class OrganisationTestCase(TestCase):
             frontend_base_url="https://www.example.com",
             organisation=organisation,
         )
-        invite_2 = Invite.objects.create(
+        Invite.objects.create(
             email="test_2@example.com",
             frontend_base_url="https://www.example.com",
             organisation=organisation,

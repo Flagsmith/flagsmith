@@ -137,7 +137,7 @@ class IdentityTestCase(TestCase):
             enabled=False,
             environment=self.environment,
         )
-        identity_feature_two = FeatureState.objects.create(
+        FeatureState.objects.create(
             feature=feature_two,
             identity=self.identity,
             enabled=True,
