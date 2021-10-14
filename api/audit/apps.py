@@ -7,7 +7,4 @@ class AuditConfig(AppConfig):
     name = "audit"
 
     def ready(self):
-        from . import signals
-
-
-a
+        from . import signals  # noqa

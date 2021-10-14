@@ -162,7 +162,7 @@ class AuthIntegrationTestCase(APITestCase):
         # Then success and account inactive
         self.assertIn("key", result.data)
         self.assertIn("is_active", result.data)
-        assert result.data["is_active"] == False
+        assert not result.data["is_active"]
 
         new_user = FFAdminUser.objects.latest("id")
         self.assertEqual(new_user.email, register_data["email"])
