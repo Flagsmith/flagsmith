@@ -51,6 +51,9 @@ jobs:
             - name: Check Formatting
               run: black --check .
 
+            - name: Check flake8 linting
+              run: flake8 .
+
             - name: Run Tests
               env:
                   DATABASE_URL:
