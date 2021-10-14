@@ -114,7 +114,7 @@ class OrganisationTestCase(TestCase):
         organisation.refresh_from_db()
         assert response.status_code == status.HTTP_200_OK
         assert organisation.name == new_organisation_name
-        assert organisation.restrict_project_create_to_admin == True
+        assert organisation.restrict_project_create_to_admin
 
     @override_settings()
     def test_should_invite_users(self):

@@ -125,7 +125,7 @@ class IdentityTestCase(TestCase):
 
         # Then
         assert response.status_code == status.HTTP_200_OK
-        assert feature_state.enabled == True
+        assert feature_state.enabled
 
     def test_should_remove_identity_feature_when_delete(self):
         # Given
