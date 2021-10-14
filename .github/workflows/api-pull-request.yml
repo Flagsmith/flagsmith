@@ -43,6 +43,8 @@ jobs:
               with:
                   python-version: ${{ matrix.python-version }}
 
+            - uses: syphar/restore-pip-download-cache@v1
+
             - name: Install Dependencies
               run: |
                   python -m pip install --upgrade pip
