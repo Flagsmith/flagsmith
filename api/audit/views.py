@@ -1,4 +1,3 @@
-import coreapi
 from django.db.models import Q
 from django.utils.decorators import method_decorator
 from drf_yasg2 import openapi
