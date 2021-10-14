@@ -28,6 +28,12 @@ class IdentityViewSet(viewsets.ModelViewSet):
     serializer_class = IdentitySerializer
     permission_classes = [IsAuthenticated, NestedEnvironmentPermissions]
     pagination_class = IdentityPagination
+    lookup_field = "identifier"
+
+    def get_object(self):
+        identifier = self.kwargs["identifier"]
+        environment = self.get_environment_from_request()
+        return Identity.objects.get(environment=environment, identifier=identifier)
 
     def get_queryset(self):
         environment = self.get_environment_from_request()
