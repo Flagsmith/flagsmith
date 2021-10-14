@@ -66,7 +66,7 @@ class AuthIntegrationTestCase(APITestCase):
         # verify that the user has been emailed with their reset code
         assert len(mail.outbox) == 1
         # get the url and grab the uid and token
-        url = re.findall("http\:\/\/.*", mail.outbox[0].body)[0]
+        url = re.findall(r"http\:\/\/.*", mail.outbox[0].body)[0]
         split_url = url.split("/")
         uid = split_url[-2]
         token = split_url[-1]
