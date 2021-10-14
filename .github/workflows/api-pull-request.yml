@@ -43,7 +43,8 @@ jobs:
               with:
                   python-version: ${{ matrix.python-version }}
 
-            - uses: syphar/restore-pip-download-cache@v1
+            - name: Cache pip download
+              uses: syphar/restore-pip-download-cache@v1
 
             - name: Install Dependencies
               run: |
