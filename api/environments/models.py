@@ -9,13 +9,12 @@ from django.core.cache import caches
 from django.db import models
 from django.utils.encoding import python_2_unicode_compatible
 from django.utils.translation import ugettext_lazy as _
-from django_lifecycle import AFTER_CREATE, BEFORE_SAVE, LifecycleModel, hook
+from django_lifecycle import AFTER_CREATE, LifecycleModel, hook
 
 from app.utils import create_hash
 from environments.exceptions import EnvironmentHeaderNotPresentError
 from features.models import FeatureState
 from projects.models import Project
-from util.history.custom_simple_history import NonWritingHistoricalRecords
 
 logger = logging.getLogger(__name__)
 

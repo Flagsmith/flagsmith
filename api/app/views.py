@@ -1,7 +1,6 @@
 import json
 
 from django.conf import settings
-from django.contrib.staticfiles.storage import staticfiles_storage
 from django.http import HttpResponse, JsonResponse
 from django.template import loader
 
