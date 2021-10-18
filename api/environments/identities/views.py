@@ -127,8 +127,9 @@ class IdentityViewSet(viewsets.ModelViewSet):
     def perform_update(self, serializer):
         environment = self.get_environment_from_request()
         if environment.project.enable_dynamo_db:
-            return Identity.send_to_dynamodb({**serializer.data, **self.kwargs})
-        serializer.save(environment=environment)
+            Identity.send_to_dynamodb({**serializer.data, **self.kwargs})
+        else:
+            serializer.save(environment=environment)
 
 
 class SDKIdentitiesDeprecated(SDKAPIView):
