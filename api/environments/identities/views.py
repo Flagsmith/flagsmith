@@ -33,6 +33,9 @@ class IdentityViewSet(viewsets.ModelViewSet):
     def get_object(self):
         identifier = self.kwargs["identifier"]
         environment = self.get_environment_from_request()
+        if environment.project.enable_dynamo_db:
+            key = {"composite_key": f"{environment.api_key}_{identifier}"}
+            return Identity.get_item_dynamodb(key)
         return Identity.objects.get(environment=environment, identifier=identifier)
 
     def get_queryset(self):
