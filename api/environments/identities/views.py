@@ -1,5 +1,6 @@
 import base64
 import json
+import typing
 from collections import namedtuple
 
 import coreapi
@@ -38,20 +39,49 @@ class IdentityViewSet(viewsets.ModelViewSet):
             return Identity.get_item_dynamodb(key)
         return Identity.objects.get(environment=environment, identifier=identifier)
 
+    def _get_filter_kwargs_dynamo(self, search_query: str = None) -> dict:
+        dynamo_filter_kwargs = {
+            "KeyConditionExpression": Key("environment_api_key").eq(
+                self.kwargs["environment_api_key"]
+            )
+        }
+        if not search_query:
+            return dynamo_filter_kwargs
+
+        if search_query.startswith('"') and search_query.endswith('"'):
+            dynamo_filter_kwargs["KeyConditionExpression"] = dynamo_filter_kwargs[
+                "KeyConditionExpression"
+            ] & Key("identifier").eq(search_query.replace('"', ""))
+        else:
+            dynamo_filter_kwargs["KeyConditionExpression"] = dynamo_filter_kwargs[
+                "KeyConditionExpression"
+            ] & Key("identifier").begins_with(search_query)
+        return dynamo_filter_kwargs
+
+    def _get_filter_kwargs_django(self, search_query: str = None) -> dict:
+        filter_kwargs = {}
+        if not search_query:
+            return filter_kwargs
+        if search_query.startswith('"') and search_query.endswith('"'):
+            filter_kwargs["identifier__exact"] = search_query.replace('"', "")
+        else:
+            filter_kwargs["identifier__icontains"] = search_query
+
+        return filter_kwargs
+
+    def get_search_query_as_kwarg(self):
+        environment = self.get_environment_from_request()
+
+        search_query = self.request.query_params.get("q")
+        if environment.project.enable_dynamo_db:
+            return self._get_filter_kwargs_dynamo(search_query)
+        return self._get_filter_kwargs_django(search_query)
+
     def get_queryset(self):
         environment = self.get_environment_from_request()
         queryset = Identity.objects.filter(environment=environment)
-
-        search_query = self.request.query_params.get("q")
-        if search_query:
-            if search_query.startswith('"') and search_query.endswith('"'):
-                # Quoted searches should do an exact match just like Google
-                queryset = queryset.filter(
-                    identifier__exact=search_query.replace('"', "")
-                )
-            else:
-                # Otherwise do a fuzzy search
-                queryset = queryset.filter(identifier__icontains=search_query)
+        filter_kwargs = self.get_search_query_as_kwarg()
+        queryset = queryset.filter(**filter_kwargs)
 
         # change the default order by to avoid performance issues with pagination
         # when environments have small number (<page_size) of records
@@ -65,13 +95,12 @@ class IdentityViewSet(viewsets.ModelViewSet):
         environment_api_key,
         previous_last_evaluated_key,
         page_size,
-    ):
+    ) -> dict:
+        filter_kwargs = self.get_search_query_as_kwarg()
         dynamo_query_kwargs = {
             "IndexName": "environment_api_key-identifier-index",
-            "KeyConditionExpression": Key("environment_api_key").eq(
-                environment_api_key
-            ),
             "Limit": page_size,
+            **filter_kwargs,
         }
         if previous_last_evaluated_key:
             dynamo_query_kwargs.update(
@@ -84,6 +113,7 @@ class IdentityViewSet(viewsets.ModelViewSet):
     def list(self, request, *args, **kwargs):
         environment = self.get_environment_from_request()
         if not environment.project.enable_dynamo_db:
+
             return super().list(request, *args, **kwargs)
 
         paginator = self.pagination_class()
@@ -92,7 +122,9 @@ class IdentityViewSet(viewsets.ModelViewSet):
         dynamo_query_kwargs = self._get_dynamo_query_kwargs(
             request, environment.api_key, previous_last_evaluated_key, page_size
         )
-        response = dynamo_identity_table.query(**dynamo_query_kwargs)
+        response = Identity.query_dynamodb(**dynamo_query_kwargs)
+        # response = dynamo_identity_table.query(**dynamo_query_kwargs)
+
         kwargs = {
             "count": response["Count"],
             "previous_last_evaluated_key": previous_last_evaluated_key,
