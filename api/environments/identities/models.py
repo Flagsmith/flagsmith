@@ -5,7 +5,10 @@ from django.conf import settings
 from django.db import models
 from django.db.models import Prefetch, Q
 from django.utils.encoding import python_2_unicode_compatible
-from flag_engine.identities.builders import build_identity_dict
+from flag_engine.identities.builders import (
+    build_identity_dict,
+    build_identity_model,
+)
 
 from environments.identities.traits.models import Trait
 from environments.models import Environment
@@ -18,6 +21,16 @@ if settings.IDENTITIES_TABLE_NAME_DYNAMO:
     dynamo_identity_table = boto3.resource("dynamodb").Table(
         settings.IDENTITIES_TABLE_NAME_DYNAMO
     )
+
+
+def is_dynmodb_configured(f):
+    def inner(*args, **kwargs):
+        if not dynamo_identity_table:
+            return
+        else:
+            return f(*args, **kwargs)
+
+    return inner
 
 
 @python_2_unicode_compatible
@@ -191,17 +204,29 @@ class Identity(models.Model):
         return self.get_all_user_traits()
 
     @staticmethod
+    @is_dynmodb_configured
     def bulk_send_to_dynamodb(identities: typing.List["Identity"]):
-        if not dynamo_identity_table:
-            return
         with dynamo_identity_table.batch_writer() as batch:
             for identity in identities:
                 identity_dict = build_identity_dict(identity)
                 batch.put_item(Item=identity_dict)
 
     @staticmethod
+    @is_dynmodb_configured
     def send_to_dynamodb(identity_obj: typing.Any):
-        if not dynamo_identity_table:
-            return
         identity_dict = build_identity_dict(identity_obj)
         dynamo_identity_table.put_item(Item=identity_dict)
+
+    @staticmethod
+    @is_dynmodb_configured
+    def get_item_dynamodb(key: dict):
+        identity_document = dynamo_identity_table.get_item(Key=key)["Item"]
+        return build_identity_model(identity_document)
+
+    @staticmethod
+    @is_dynmodb_configured
+    def delete_in_dynamodb(identity_obj: typing.Any):
+        identity_dict = build_identity_dict(identity_obj)
+        dynamo_identity_table.delete_item(
+            Key={"composite_key": identity_dict["composite_key"]}
+        )
