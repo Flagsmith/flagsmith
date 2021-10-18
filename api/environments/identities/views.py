@@ -125,7 +125,7 @@ class IdentityViewSet(viewsets.ModelViewSet):
         if environment.project.enable_dynamo_db:
             Identity.delete_in_dynamodb(self.kwargs)
         else:
-            return super().delete(instance)
+            return super().perform_destroy(instance)
 
     def perform_update(self, serializer):
         environment = self.get_environment_from_request()
