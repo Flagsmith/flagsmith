@@ -33,7 +33,7 @@ class _EditPermissionsModal extends Component {
                       entityPermissions.group = this.props.group.id;
                   }
 
-                  if (!entityPermissions.admin && !entityPermissions.permissions.length) {
+                  if (!entityPermissions.admin && !(entityPermissions.permissions.find(v => v === (`VIEW_${this.props.parentLevel.toUpperCase()}`)))) {
                       throw 'Error';
                   }
               });
@@ -125,7 +125,7 @@ class _EditPermissionsModal extends Component {
                           <div>
                               The selected {this.props.isGroup ? 'group' : 'user'} does not have permission to view this {this.props.parentLevel}. Please adjust their permissions in <a onClick={() => {
                               this.props.push(this.props.parentSettingsLink);
-                              closeModal()
+                              closeModal();
                           }}
                               ><strong>{this.props.parentLevel} settings</strong>
                               </a>.
