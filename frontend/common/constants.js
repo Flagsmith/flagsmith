@@ -121,6 +121,7 @@ const Constants = {
         ENVIRONMENT_OVERRIDE_DESCRIPTION: name => `Features are created once per project<br/>but their <strong>value</strong> and <strong>enabled state</strong> are set per environment.<br/>Saving this feature will override the <strong>${name}</strong> environment.`,
         IDENTITY_OVERRIDES_DESCRIPTION: 'See which identities have specific overridden values for this feature.<br/>Identity overrides take priority over segment overrides and environment values.',
         REMOTE_CONFIG_DESCRIPTION: 'Features can have values as well as being simply on or off, E.g. a font size for a banner or an environment variable for a server.',
+        REMOTE_CONFIG_DESCRIPTION_VARIATION: 'Features can have values as well as being simply on or off, E.g. a font size for a banner or an environment variable for a server.<br/>Variation values are set per project, the environment weight is per environment.',
         FEATURE_FLAG_DESCRIPTION: 'A feature that you can turn on or off per environment or user. E.g. instant messaging for a mobile app or an endpoint for an API.',
         AUDIT_WEBHOOKS_DESCRIPTION: 'Receive a webhook for when an audit log is recieved.',
         WEBHOOKS_DESCRIPTION: 'Receive a webhook for when feature values are changed.',
