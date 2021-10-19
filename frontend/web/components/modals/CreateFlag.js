@@ -52,6 +52,23 @@ const CreateFlag = class extends Component {
     }
 
 
+    componentDidUpdate(prevProps, prevState, snapshot) {
+        if (!this.props.identity && this.props.environmentVariations !== prevProps.environmentVariations) {
+            if (this.props.environmentVariations && this.props.environmentVariations.length) {
+                this.setState({
+                    multivariate_options: this.state.multivariate_options && this.state.multivariate_options.map((v) => {
+                        const matchingVariation = this.props.environmentVariations.find(e => e.multivariate_feature_option === v.id);
+                        return {
+                            ...v,
+                            default_percentage_allocation: matchingVariation && matchingVariation.percentage_allocation || 0,
+                        };
+                    }),
+                });
+            }
+        }
+    }
+
+
     componentDidMount = () => {
         if (!this.props.isEdit && !E2E) {
             this.focusTimeout = setTimeout(() => {

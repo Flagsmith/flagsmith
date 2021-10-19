@@ -6,6 +6,29 @@ let createdFirstFeature = false;
 
 const controller = {
 
+    createFlag(projectId, environmentId, flag, segmentOverrides) {
+        store.saving();
+        API.trackEvent(Constants.events.CREATE_FEATURE);
+        if ((!createdFirstFeature && !flagsmith.getTrait('first_feature')) && AccountStore.model.organisations.length === 1 && OrganisationStore.model.projects.length === 1 && (!store.model.features || !store.model.features.length)) {
+            createdFirstFeature = true;
+            flagsmith.setTrait('first_feature', 'true');
+            API.trackEvent(Constants.events.CREATE_FIRST_FEATURE);
+        }
+        data.post(`${Project.api}projects/${projectId}/features/`, Object.assign({}, flag, { project: projectId, type: flag.multivariate_options && flag.multivariate_options.length ? 'MULTIVARIATE' : 'STANDARD',
+        }))
+            .then(res => Promise.all([
+                data.get(`${Project.api}projects/${projectId}/features/`),
+                data.get(`${Project.api}environments/${environmentId}/featurestates/`),
+            ]).then(([features, environmentFeatures]) => {
+                store.model = {
+                    features: features.results,
+                    keyedEnvironmentFeatures: environmentFeatures && _.keyBy(environmentFeatures.results, 'feature'),
+                };
+                store.model.lastSaved = new Date().valueOf();
+                store.saved();
+            }))
+            .catch(e => API.ajaxHandler(store, e));
+    },
     getFeatures: (projectId, environmentId, force) => {
         if (!store.model || store.envId != environmentId || force) { // todo: change logic a bit
             store.loading();
@@ -29,29 +52,6 @@ const controller = {
                 API.ajaxHandler(store, e);
             });
         }
-    },
-    createFlag(projectId, environmentId, flag, segmentOverrides) {
-        store.saving();
-        API.trackEvent(Constants.events.CREATE_FEATURE);
-        if ((!createdFirstFeature && !flagsmith.getTrait('first_feature')) && AccountStore.model.organisations.length === 1 && OrganisationStore.model.projects.length === 1 && (!store.model.features || !store.model.features.length)) {
-            createdFirstFeature = true;
-            flagsmith.setTrait('first_feature', 'true');
-            API.trackEvent(Constants.events.CREATE_FIRST_FEATURE);
-        }
-        data.post(`${Project.api}projects/${projectId}/features/`, Object.assign({}, flag, { project: projectId, type: flag.multivariate_options && flag.multivariate_options.length ? 'MULTIVARIATE' : 'STANDARD',
-        }))
-            .then(res => Promise.all([
-                data.get(`${Project.api}projects/${projectId}/features/`),
-                data.get(`${Project.api}environments/${environmentId}/featurestates/`),
-            ]).then(([features, environmentFeatures]) => {
-                store.model = {
-                    features: features.results,
-                    keyedEnvironmentFeatures: environmentFeatures && _.keyBy(environmentFeatures.results, 'feature'),
-                };
-                store.model.lastSaved = new Date().valueOf();
-                store.saved();
-            }))
-            .catch(e => API.ajaxHandler(store, e));
     },
     parseFlag(flag) {
         return {
