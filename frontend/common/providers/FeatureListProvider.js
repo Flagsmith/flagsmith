@@ -88,7 +88,6 @@ const FeatureListProvider = class extends Component {
         AppActions.removeFlag(projectId, flag);
     };
 
-
     render() {
         return (
             this.props.children(
