@@ -4,5 +4,5 @@ max-complexity = 10
 exclude = .git,__pycache__,*/migrations/*
 
 per-file-ignores = 
-    api/app/settings/local.py: F403, F405
-    api/app/settings/production.py: F403, F405
+    app/settings/local.py: F403, F405
+    app/settings/production.py: F403, F405
