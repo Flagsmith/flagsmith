@@ -115,11 +115,9 @@ const controller = {
         if (environmentFlag) {
             prom = data.get(`${Project.api}environments/${environmentId}/featurestates/${environmentFlag.id}/`)
                 .then((environmentFeatureStates) => {
-                    debugger;
                     environmentFlag.multivariate_feature_state_values && environmentFlag.multivariate_feature_state_values.map((v) => {
                         const matching = environmentFeatureStates.multivariate_feature_state_values && environmentFeatureStates.multivariate_feature_state_values.find(e => e.multivariate_feature_option === v.multivariate_feature_option);
                         if (matching && !v.id) {
-                            debugger;
                             v.id = matching.id;
                         }
                     });
