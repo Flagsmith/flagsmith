@@ -25,7 +25,7 @@ def test_CustomUserCreateSerializer_does_case_insensitive_lookup_with_email(db):
     serializer = CustomUserCreateSerializer(data=user_dict)
 
     # When
-    assert serializer.is_valid() == False
+    assert serializer.is_valid() is False
     assert (
         serializer.errors["email"][0].title()
         == "Feature Flag Admin User With This Email Already Exists."
