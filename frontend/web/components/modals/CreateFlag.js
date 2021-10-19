@@ -480,15 +480,18 @@ const CreateFlag = class extends Component {
                 {!identity && (
                     <div>
                         <FormGroup className="ml-3 mb-4 mr-3">
-                            <VariationOptions
-                              disabled={!!identity}
-                              controlValue={controlValue}
-                              variationOverrides={environmentVariations}
-                              updateVariation={this.updateVariation}
-                              weightTitle={isEdit ? 'Environment Weight %' : 'Default Weight %'}
-                              multivariateOptions={multivariate_options}
-                              removeVariation={this.removeVariation}
-                            />
+                            {!!environmentVariations && (
+                                <VariationOptions
+                                    disabled={!!identity}
+                                    controlValue={controlValue}
+                                    variationOverrides={environmentVariations}
+                                    updateVariation={this.updateVariation}
+                                    weightTitle={isEdit ? 'Environment Weight %' : 'Default Weight %'}
+                                    multivariateOptions={multivariate_options}
+                                    removeVariation={this.removeVariation}
+                                />
+                            )}
+
                         </FormGroup>
                         <AddVariationButton onClick={this.addVariation}/>
                     </div>
