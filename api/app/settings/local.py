@@ -1,5 +1,3 @@
-import os
-
 from app.settings.common import *
 
 ENABLE_AXES = False

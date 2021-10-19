@@ -2,7 +2,6 @@ from unittest import TestCase, mock
 
 import pytest
 
-import segments
 from environments.identities.models import Identity
 from environments.models import Environment
 from organisations.models import Organisation

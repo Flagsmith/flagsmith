@@ -220,7 +220,7 @@ def get_top_organisations(date_range: str, limit: str = ""):
         filters='|> filter(fn:(r) => r._measurement == "api_call") \
                     |> filter(fn: (r) => r["_field"] == "request_count")',
         drop_columns='"_start", "_stop", "_time"',
-        extra=f'|> group(columns: ["organisation"]) \
+        extra='|> group(columns: ["organisation"]) \
               |> sum() \
               |> group() \
               |> sort(columns: ["_value"], desc: true) '

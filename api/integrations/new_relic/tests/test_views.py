@@ -57,7 +57,7 @@ class NewRelicConfigurationTestCase(TestCase):
 
     def test_should_return_BadRequest_when_duplicate_new_relic_config_is_posted(self):
         # Given
-        config = NewRelicConfiguration.objects.create(
+        NewRelicConfiguration.objects.create(
             base_url="http://test.com",
             api_key="key-123",
             app_id="app-123",

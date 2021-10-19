@@ -1,21 +1,16 @@
 import logging
 
-from django.core.exceptions import ObjectDoesNotExist
 from django.utils.decorators import method_decorator
 from drf_yasg2 import openapi
 from drf_yasg2.utils import swagger_auto_schema
-from rest_framework import status, viewsets
+from rest_framework import viewsets
 from rest_framework.generics import get_object_or_404
-from rest_framework.permissions import AllowAny, IsAuthenticated
-from rest_framework.response import Response
+from rest_framework.permissions import IsAuthenticated
 
-from environments.exceptions import EnvironmentHeaderNotPresentError
 from environments.identities.models import Identity
-from environments.models import Environment
-from util.views import SDKAPIView
 
-from .serializers import SegmentSerializer
 from .permissions import SegmentPermissions
+from .serializers import SegmentSerializer
 
 logger = logging.getLogger()
 

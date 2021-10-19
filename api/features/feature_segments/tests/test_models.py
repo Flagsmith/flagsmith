@@ -4,13 +4,7 @@ from django.test import TestCase
 from environments.identities.models import Identity
 from environments.identities.traits.models import Trait
 from environments.models import STRING, Environment
-from features.models import (
-    Feature,
-    FeatureSegment,
-    FeatureState,
-    FeatureStateValue,
-)
-from features.utils import BOOLEAN, INTEGER
+from features.models import Feature, FeatureSegment
 from organisations.models import Organisation
 from projects.models import Project
 from segments.models import EQUAL, Condition, Segment, SegmentRule

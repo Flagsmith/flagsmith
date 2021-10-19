@@ -1,14 +1,12 @@
-import hashlib
 import itertools
-import typing
 from unittest import mock
 from unittest.case import TestCase
 
 import pytest
 
 from environments.identities.helpers import (
-    identify_integrations,
     get_hashed_percentage_for_object_ids,
+    identify_integrations,
 )
 from environments.identities.models import Identity
 from environments.models import Environment

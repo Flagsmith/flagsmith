@@ -7,11 +7,7 @@ from django.test import TestCase
 
 from environments.identities.models import Identity
 from environments.models import Environment
-from features.models import (
-    Feature,
-    FeatureSegment,
-    FeatureState,
-)
+from features.models import Feature, FeatureSegment, FeatureState
 from organisations.models import Organisation
 from projects.models import Project
 from projects.tags.models import Tag
@@ -108,7 +104,7 @@ class FeatureTestCase(TestCase):
             assert feature_state.get_feature_state_value() == initial_value
 
     def test_updating_feature_state_should_trigger_webhook(self):
-        feature = Feature.objects.create(name="Test Feature", project=self.project)
+        Feature.objects.create(name="Test Feature", project=self.project)
         # TODO: implement webhook test method
 
     def test_cannot_create_feature_with_same_case_insensitive_name(self):
@@ -300,7 +296,7 @@ class FeatureStateTest(TestCase):
 
         # When
         with pytest.raises(ValueError):
-            result = feature_state_env_1 > feature_state_env_2
+            feature_state_env_1 > feature_state_env_2
 
         # Then - exception raised
 
@@ -316,7 +312,7 @@ class FeatureStateTest(TestCase):
 
         # When
         with pytest.raises(ValueError):
-            result = feature_state_env_1 > feature_state_env_2
+            feature_state_env_1 > feature_state_env_2
 
         # Then - exception raised
 
@@ -338,7 +334,7 @@ class FeatureStateTest(TestCase):
 
         # When
         with pytest.raises(ValueError):
-            result = feature_state_identity_1 > feature_state_identity_2
+            feature_state_identity_1 > feature_state_identity_2
 
         # Then - exception raised
 

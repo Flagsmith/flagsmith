@@ -1,4 +1,3 @@
-import hashlib
 import typing
 
 import boto3

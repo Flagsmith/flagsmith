@@ -1,11 +1,8 @@
 # -*- coding: utf-8 -*-
 from __future__ import unicode_literals
 
-from django.conf import settings
 from django.contrib import admin
 
-from .identities.traits.admin import TraitAdmin
-from .identities.traits.models import Trait
 from .models import Environment, Webhook
 
 

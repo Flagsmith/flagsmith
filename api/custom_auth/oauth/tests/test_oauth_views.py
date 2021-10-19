@@ -15,7 +15,7 @@ def test_cannot_register_with_google_without_invite_if_registration_disabled(
     mock_get_user_info, db
 ):
     # Given
-    url = reverse(f"api-v1:custom_auth:oauth:google-oauth-login")
+    url = reverse("api-v1:custom_auth:oauth:google-oauth-login")
     client = APIClient()
 
     email = "test@example.com"
@@ -34,7 +34,7 @@ def test_cannot_register_with_github_without_invite_if_registration_disabled(
     MockGithubUser, db
 ):
     # Given
-    url = reverse(f"api-v1:custom_auth:oauth:github-oauth-login")
+    url = reverse("api-v1:custom_auth:oauth:github-oauth-login")
     client = APIClient()
 
     email = "test@example.com"
@@ -55,7 +55,7 @@ def test_can_register_with_google_with_invite_if_registration_disabled(
     mock_get_user_info, db
 ):
     # Given
-    url = reverse(f"api-v1:custom_auth:oauth:google-oauth-login")
+    url = reverse("api-v1:custom_auth:oauth:google-oauth-login")
     client = APIClient()
 
     email = "test@example.com"
@@ -76,7 +76,7 @@ def test_can_register_with_github_with_invite_if_registration_disabled(
     MockGithubUser, db
 ):
     # Given
-    url = reverse(f"api-v1:custom_auth:oauth:github-oauth-login")
+    url = reverse("api-v1:custom_auth:oauth:github-oauth-login")
     client = APIClient()
 
     email = "test@example.com"
@@ -99,7 +99,7 @@ def test_can_login_with_google_if_registration_disabled(
     mock_get_user_info, db, django_user_model
 ):
     # Given
-    url = reverse(f"api-v1:custom_auth:oauth:google-oauth-login")
+    url = reverse("api-v1:custom_auth:oauth:google-oauth-login")
     client = APIClient()
 
     email = "test@example.com"
@@ -120,7 +120,7 @@ def test_can_login_with_github_if_registration_disabled(
     MockGithubUser, db, django_user_model
 ):
     # Given
-    url = reverse(f"api-v1:custom_auth:oauth:github-oauth-login")
+    url = reverse("api-v1:custom_auth:oauth:github-oauth-login")
     client = APIClient()
 
     email = "test@example.com"

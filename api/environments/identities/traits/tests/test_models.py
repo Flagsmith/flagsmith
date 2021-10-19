@@ -1,7 +1,4 @@
-from unittest import mock
-
 import pytest
-from flag_engine.identities.builders import build_identity_dict
 
 from environments.identities.traits.models import Trait
 

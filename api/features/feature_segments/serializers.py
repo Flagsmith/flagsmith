@@ -1,7 +1,6 @@
 from rest_framework import serializers
 
 from features.models import FeatureSegment
-from features.value_types import STRING
 
 
 class FeatureSegmentCreateSerializer(serializers.ModelSerializer):

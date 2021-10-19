@@ -3,10 +3,6 @@ import pytest
 from environments.identities.models import Identity
 from environments.identities.traits.models import Trait
 from environments.models import Environment
-from features.feature_types import MULTIVARIATE
-from features.models import Feature
-from features.multivariate.models import MultivariateFeatureOption
-from features.value_types import INTEGER, STRING
 from organisations.models import Organisation
 from projects.models import Project
 

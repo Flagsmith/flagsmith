@@ -53,7 +53,7 @@ class DatadogConfigurationTestCase(TestCase):
 
     def test_should_return_BadRequest_when_duplicate_datadog_config_is_posted(self):
         # Given
-        config = DataDogConfiguration.objects.create(
+        DataDogConfiguration.objects.create(
             base_url="http://test.com", api_key="api_123", project=self.project
         )
         data = {"base_url": "http://test.com", "api_key": "abc-123"}
