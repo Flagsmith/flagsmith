@@ -45,14 +45,10 @@ export default function VariationOptions({ multivariateOptions, select, controlV
                 </div>
             )}
             {
-                multivariateOptions.map((m, i) => {
-                    const theValue = {
-                        ...m,
-                        ...(override ? { default_percentage_allocation: override.percentage_allocation } : {}),
-                    };
+                multivariateOptions.map((theValue, i) => {
                     let override = select
                         ? variationOverrides && variationOverrides[0] && typeof variationOverrides[0].multivariate_feature_option_index === 'number' ? i === variationOverrides[0].multivariate_feature_option_index
-&& variationOverrides[0] : variationOverrides && variationOverrides.find(v => v.multivariate_feature_option === m.id) : variationOverrides && variationOverrides.find(v => v.percentage_allocation === 100);
+&& variationOverrides[0] : variationOverrides && variationOverrides.find(v => v.multivariate_feature_option === theValue.id) : variationOverrides && variationOverrides.find(v => v.percentage_allocation === 100);
                     return select ? (
                         <div className="panel panel--flat panel-without-heading mb-2">
                             <div className="panel-content">
@@ -65,7 +61,7 @@ export default function VariationOptions({ multivariateOptions, select, controlV
                                           e.stopPropagation();
                                           e.preventDefault();
                                           setVariations([{
-                                              multivariate_feature_option: m.id,
+                                              multivariate_feature_option: theValue.id,
                                               multivariate_feature_option_index: i,
                                               percentage_allocation: 100,
                                           }]);

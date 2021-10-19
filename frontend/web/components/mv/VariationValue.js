@@ -17,7 +17,7 @@ const VariationValue = ({
                           <ValueEditor
                             data-test="featureValue"
                             name="featureValue" className="full-width"
-                            value={Utils.getTypedValue(Utils.featureStateToValue(value)) + ""}
+                            value={Utils.getTypedValue(Utils.featureStateToValue(value))}
                             onChange={(e) => {
                                 onChange({
                                     ...value,
@@ -27,7 +27,7 @@ const VariationValue = ({
                             placeholder="e.g. 'big' "
                           />
 )}
-                      tooltip={Constants.strings.REMOTE_CONFIG_DESCRIPTION}
+                      tooltip={Constants.strings.REMOTE_CONFIG_DESCRIPTION_VARIATION}
                       title="Value"
                     />
                 </div>

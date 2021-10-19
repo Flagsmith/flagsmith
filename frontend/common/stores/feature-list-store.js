@@ -113,11 +113,20 @@ const controller = {
         store.saving();
         API.trackEvent(Constants.events.EDIT_FEATURE);
         if (environmentFlag) {
-            prom = data.put(`${Project.api}environments/${environmentId}/featurestates/${environmentFlag.id}/`, Object.assign({}, environmentFlag, {
-                feature_state_value: flag.initial_value,
-                hide_from_client: flag.hide_from_client,
-                enabled: flag.default_enabled,
-            }));
+            prom = data.get(`${Project.api}environments/${environmentId}/featurestates/${environmentFlag.id}/`)
+                .then((environmentFeatureStates) => {
+                    environmentFlag.multivariate_feature_state_values && environmentFlag.multivariate_feature_state_values.map((v) => {
+                        const matching = environmentFeatureStates.multivariate_feature_state_values && environmentFeatureStates.multivariate_feature_state_values.find(e => e.multivariate_feature_option === v.multivariate_feature_option);
+                        if (matching && !v.id) {
+                            v.id = matching.id;
+                        }
+                    });
+                    return data.put(`${Project.api}environments/${environmentId}/featurestates/${environmentFlag.id}/`, Object.assign({}, environmentFlag, {
+                        feature_state_value: flag.initial_value,
+                        hide_from_client: flag.hide_from_client,
+                        enabled: flag.default_enabled,
+                    }));
+                });
         } else {
             prom = data.post(`${Project.api}environments/${environmentId}/featurestates/`, Object.assign({}, flag, {
                 enabled: false,
