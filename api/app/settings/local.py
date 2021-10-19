@@ -1,4 +1,4 @@
-from app.settings.common import *  # noqa
+from app.settings.common import *
 
 ENABLE_AXES = False
 
