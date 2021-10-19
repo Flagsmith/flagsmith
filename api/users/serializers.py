@@ -104,7 +104,7 @@ class UserIdsSerializer(serializers.Serializer):
         if not FFAdminUser.objects.filter(id__in=data["user_ids"]).count() == len(
             data["user_ids"]
         ):
-            raise serializers.ValidationError(f"Some users not found")
+            raise serializers.ValidationError("Some users not found")
 
         return data
 

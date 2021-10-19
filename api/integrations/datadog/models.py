@@ -1,8 +1,8 @@
+import logging
+
 from django.db import models
 
-from integrations.common.models import IntegrationsModel
 from projects.models import Project
-import logging
 
 logger = logging.getLogger(__name__)
 
