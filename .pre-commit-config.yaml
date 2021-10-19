@@ -16,3 +16,6 @@ repos:
     rev: '4.0.1'
     hooks:
     -   id: flake8
+        name: flake8
+        entry: flake8
+        args: [--config=api/.flake8, api/]
