@@ -95,6 +95,49 @@ class IdentityViewSetDyanmoTestCase(TestCase):
         )
 
     @mock.patch("environments.identities.models.dynamo_identity_table")
+    def test_identity_list_pagination(self, dynamo_identity_table):
+        # Firstly, let's setup the data
+        identity_item_key = {
+            k: v
+            for k, v in self.identity_dict.items()
+            if k in ["composite_key", "environment_api_key", "identifier"]
+        }
+        dynamo_identity_table.query.return_value = {
+            "Items": [self.identity_dict],
+            "Count": 1,
+            "LastEvaluatedKey": identity_item_key,
+        }
+        url = reverse(
+            "api-v1:environments:environment-identities-list",
+            args=[self.environment.api_key],
+        )
+
+        response = self.client.get(url)
+        # Test the response
+        assert response.status_code == 200
+        response = response.json()
+        assert response["previous"] is None
+
+        # Fetch the next url from the response since LastEvaluatedKey was part of the response from dynamodb
+        next_url = response["next"]
+
+        # Make the call using the next url
+        response = self.client.get(next_url)
+
+        # And verify that .query was called with correct arguments
+        dynamo_identity_table.query.assert_called_with(
+            IndexName="environment_api_key-identifier-index",
+            Limit=999,
+            KeyConditionExpression=Key("environment_api_key").eq(
+                self.environment.api_key
+            ),
+            ExclusiveStartKey=identity_item_key,
+        )
+
+        # And response does have previous url
+        assert response.json()["previous"] is not None
+
+    @mock.patch("environments.identities.models.dynamo_identity_table")
     def test_get_identities_list_calls_query_with_correct_arguments(
         self, dynamo_identity_table
     ):
