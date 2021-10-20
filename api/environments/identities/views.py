@@ -1,9 +1,9 @@
 import base64
 import json
 from collections import namedtuple
-
+import typing
 import coreapi
-from boto3.dynamodb.conditions import Key
+from boto3.dynamodb.conditions import Key, Equals, BeginsWith
 from rest_framework import status, viewsets
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
@@ -38,29 +38,20 @@ class IdentityViewSet(viewsets.ModelViewSet):
             return Identity.get_item_dynamodb(key)
         return Identity.objects.get(environment=environment, identifier=identifier)
 
-    def _get_filter_kwargs_dynamo(self, search_query: str = None) -> dict:
-        dynamo_filter_kwargs = {
-            "KeyConditionExpression": Key("environment_api_key").eq(
-                self.kwargs["environment_api_key"]
-            )
-        }
+    @staticmethod
+    def _get_search_expression_dynamo(
+        search_query: str,
+    ) -> typing.Union[None, Equals, BeginsWith]:
         if not search_query:
-            return dynamo_filter_kwargs
-
+            return {}
         if search_query.startswith('"') and search_query.endswith('"'):
-            dynamo_filter_kwargs["KeyConditionExpression"] = dynamo_filter_kwargs[
-                "KeyConditionExpression"
-            ] & Key("identifier").eq(search_query.replace('"', ""))
+            return Key("identifier").eq(search_query.replace('"', ""))
         else:
-            dynamo_filter_kwargs["KeyConditionExpression"] = dynamo_filter_kwargs[
-                "KeyConditionExpression"
-            ] & Key("identifier").begins_with(search_query)
-        return dynamo_filter_kwargs
+            return Key("identifier").begins_with(search_query)
 
-    def _get_filter_kwargs_django(self, search_query: str = None) -> dict:
+    @staticmethod
+    def _get_search_kwargs_django(search_query) -> dict:
         filter_kwargs = {}
-        if not search_query:
-            return filter_kwargs
         if search_query.startswith('"') and search_query.endswith('"'):
             filter_kwargs["identifier__exact"] = search_query.replace('"', "")
         else:
@@ -68,18 +59,12 @@ class IdentityViewSet(viewsets.ModelViewSet):
 
         return filter_kwargs
 
-    def get_search_query_as_kwarg(self):
+    def get_queryset(self):
         environment = self.get_environment_from_request()
 
         search_query = self.request.query_params.get("q")
-        if environment.project.enable_dynamo_db:
-            return self._get_filter_kwargs_dynamo(search_query)
-        return self._get_filter_kwargs_django(search_query)
-
-    def get_queryset(self):
-        environment = self.get_environment_from_request()
         queryset = Identity.objects.filter(environment=environment)
-        filter_kwargs = self.get_search_query_as_kwarg()
+        filter_kwargs = self._get_search_kwargs_django(search_query)
         queryset = queryset.filter(**filter_kwargs)
 
         # change the default order by to avoid performance issues with pagination
@@ -95,11 +80,20 @@ class IdentityViewSet(viewsets.ModelViewSet):
         previous_last_evaluated_key,
         page_size,
     ) -> dict:
-        filter_kwargs = self.get_search_query_as_kwarg()
+        search_query = self.request.query_params.get("q")
+
+        filter_expression = Key("environment_api_key").eq(
+            self.kwargs["environment_api_key"]
+        )
+        if search_query:
+            filter_expression = filter_expression & self._get_search_expression_dynamo(
+                search_query
+            )
+
         dynamo_query_kwargs = {
             "IndexName": "environment_api_key-identifier-index",
             "Limit": page_size,
-            **filter_kwargs,
+            "KeyConditionExpression": filter_expression,
         }
         if previous_last_evaluated_key:
             dynamo_query_kwargs.update(
@@ -121,7 +115,7 @@ class IdentityViewSet(viewsets.ModelViewSet):
         dynamo_query_kwargs = self._get_dynamo_query_kwargs(
             request, environment.api_key, previous_last_evaluated_key, page_size
         )
-        response = Identity.query_dynamodb(**dynamo_query_kwargs)
+        response = Identity.query_items_dynamodb(**dynamo_query_kwargs)
 
         pagination_kwargs = {
             "count": response["Count"],
@@ -149,7 +143,7 @@ class IdentityViewSet(viewsets.ModelViewSet):
     def perform_create(self, serializer):
         environment = self.get_environment_from_request()
         if environment.project.enable_dynamo_db:
-            return Identity.send_to_dynamodb({**serializer.data, **self.kwargs})
+            return Identity.put_item_dynamodb({**serializer.data, **self.kwargs})
         serializer.save(environment=environment)
 
     def perform_destroy(self, instance):
@@ -162,7 +156,7 @@ class IdentityViewSet(viewsets.ModelViewSet):
     def perform_update(self, serializer):
         environment = self.get_environment_from_request()
         if environment.project.enable_dynamo_db:
-            Identity.send_to_dynamodb({**serializer.data, **self.kwargs})
+            Identity.put_item_dynamodb({**serializer.data, **self.kwargs})
         else:
             serializer.save(environment=environment)
 

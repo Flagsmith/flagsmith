@@ -213,12 +213,12 @@ class Identity(models.Model):
 
     @staticmethod
     @is_dynmodb_configured
-    def query_dynamodb(*args, **kwargs):
+    def query_items_dynamodb(*args, **kwargs):
         return dynamo_identity_table.query(*args, **kwargs)
 
     @staticmethod
     @is_dynmodb_configured
-    def send_to_dynamodb(identity_obj: typing.Any):
+    def put_item_dynamodb(identity_obj: typing.Any):
         identity_dict = build_identity_dict(identity_obj)
         dynamo_identity_table.put_item(Item=identity_dict)
 
