@@ -1,6 +1,5 @@
 import base64
 import json
-import typing
 from collections import namedtuple
 
 import coreapi
@@ -12,7 +11,7 @@ from rest_framework.schemas import AutoSchema
 
 from app.pagination import IdentityPagination
 from environments.identities.helpers import identify_integrations
-from environments.identities.models import Identity, dynamo_identity_table
+from environments.identities.models import Identity
 from environments.identities.serializers import IdentitySerializer
 from environments.identities.traits.serializers import TraitSerializerBasic
 from environments.models import Environment
@@ -113,19 +112,18 @@ class IdentityViewSet(viewsets.ModelViewSet):
     def list(self, request, *args, **kwargs):
         environment = self.get_environment_from_request()
         if not environment.project.enable_dynamo_db:
-
             return super().list(request, *args, **kwargs)
 
         paginator = self.pagination_class()
         page_size = paginator.get_page_size(request)
+
         previous_last_evaluated_key = self.request.GET.get("last_evaluated_key")
         dynamo_query_kwargs = self._get_dynamo_query_kwargs(
             request, environment.api_key, previous_last_evaluated_key, page_size
         )
         response = Identity.query_dynamodb(**dynamo_query_kwargs)
-        # response = dynamo_identity_table.query(**dynamo_query_kwargs)
 
-        kwargs = {
+        pagination_kwargs = {
             "count": response["Count"],
             "previous_last_evaluated_key": previous_last_evaluated_key,
             "request": request,
@@ -135,10 +133,12 @@ class IdentityViewSet(viewsets.ModelViewSet):
             last_evaluated_key = base64.b64encode(
                 json.dumps(last_evaluated_key).encode()
             )
-            kwargs.update(last_evaluated_key=last_evaluated_key)
+            pagination_kwargs.update(last_evaluated_key=last_evaluated_key)
         serializer = IdentitySerializer(data=response["Items"], many=True)
         serializer.is_valid()
-        return paginator.get_paginated_response_dynamo(serializer.data, **kwargs)
+        return paginator.get_paginated_response_dynamo(
+            serializer.data, **pagination_kwargs
+        )
 
     def get_environment_from_request(self):
         """

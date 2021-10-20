@@ -13,7 +13,7 @@ class CustomPagination(PageNumberPagination):
 
 
 class IdentityPagination(CustomPagination):
-    def get_paginated_response_dynamo(self, data, count=None, *args, **kwargs):
+    def get_paginated_response_dynamo(self, data, count, **kwargs):
         url = kwargs.get("request").build_absolute_uri()
 
         next_url = replace_query_param(
