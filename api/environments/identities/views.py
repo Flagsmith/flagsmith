@@ -41,16 +41,14 @@ class IdentityViewSet(viewsets.ModelViewSet):
     @staticmethod
     def _get_search_expression_dynamo(
         search_query: str,
-    ) -> typing.Union[None, Equals, BeginsWith]:
-        if not search_query:
-            return {}
+    ) -> typing.Union[Equals, BeginsWith]:
         if search_query.startswith('"') and search_query.endswith('"'):
             return Key("identifier").eq(search_query.replace('"', ""))
         else:
             return Key("identifier").begins_with(search_query)
 
     @staticmethod
-    def _get_search_kwargs_django(search_query) -> dict:
+    def _get_search_kwargs_django(search_query: str) -> dict:
         filter_kwargs = {}
         if search_query.startswith('"') and search_query.endswith('"'):
             filter_kwargs["identifier__exact"] = search_query.replace('"', "")
@@ -64,9 +62,10 @@ class IdentityViewSet(viewsets.ModelViewSet):
 
         search_query = self.request.query_params.get("q")
         queryset = Identity.objects.filter(environment=environment)
-        filter_kwargs = self._get_search_kwargs_django(search_query)
-        queryset = queryset.filter(**filter_kwargs)
 
+        if search_query:
+            filter_kwargs = self._get_search_kwargs_django(search_query)
+            queryset = queryset.filter(**filter_kwargs)
         # change the default order by to avoid performance issues with pagination
         # when environments have small number (<page_size) of records
         queryset = queryset.order_by("created_date")
@@ -76,9 +75,9 @@ class IdentityViewSet(viewsets.ModelViewSet):
     def _get_dynamo_query_kwargs(
         self,
         request,
-        environment_api_key,
-        previous_last_evaluated_key,
-        page_size,
+        environment_api_key: str,
+        previous_last_evaluated_key: str,
+        page_size: int,
     ) -> dict:
         search_query = self.request.query_params.get("q")
 
