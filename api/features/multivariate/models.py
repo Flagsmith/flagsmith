@@ -56,6 +56,9 @@ class MultivariateFeatureStateValue(LifecycleModelMixin, models.Model):
         validators=[MinValueValidator(0), MaxValueValidator(100)],
     )
 
+    class Meta:
+        unique_together = ("feature_state", "multivariate_feature_option")
+
     @hook(BEFORE_SAVE)
     def validate_percentage_allocations(self):
         # TODO: add tests
