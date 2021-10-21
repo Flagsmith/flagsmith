@@ -230,8 +230,5 @@ class Identity(models.Model):
 
     @staticmethod
     @is_dynmodb_configured
-    def delete_in_dynamodb(identity_obj: typing.Any):
-        identity_dict = build_identity_dict(identity_obj)
-        dynamo_identity_table.delete_item(
-            Key={"composite_key": identity_dict["composite_key"]}
-        )
+    def delete_in_dynamodb(composite_key: str):
+        dynamo_identity_table.delete_item(Key={"composite_key": composite_key})

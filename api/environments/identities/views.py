@@ -148,7 +148,7 @@ class IdentityViewSet(viewsets.ModelViewSet):
     def perform_destroy(self, instance):
         environment = self.get_environment_from_request()
         if environment.project.enable_dynamo_db:
-            Identity.delete_in_dynamodb(self.kwargs)
+            Identity.delete_in_dynamodb(instance.composite_key)
         else:
             return super().perform_destroy(instance)
 
