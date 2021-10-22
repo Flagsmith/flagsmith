@@ -640,14 +640,14 @@ const CreateFlag = class extends Component {
                                                           renderRow={({ id, feature_state_value, enabled, identity }) => (
                                                               <Row
                                                                 onClick={() => {
-                                                                    window.open(`${document.location.origin}/project/${this.props.projectId}/environment/${this.props.environmentId}/users/${identity.identifier}/${identity.id}`, '_blank');
+                                                                    window.open(`${document.location.origin}/project/${this.props.projectId}/environment/${this.props.environmentId}/users/${identity.identifier}/${identity.id}?flag=${projectFlag.name}`, '_blank');
                                                                 }} space className="list-item cursor-pointer"
                                                                 key={id}
                                                               >
                                                                   <Flex>
                                                                       {identity.identifier}
                                                                   </Flex>
-                                                                  <Switch checked={enabled}/>
+                                                                  <Switch disabled checked={enabled}/>
                                                                   <div className="ml-2">
                                                                       {feature_state_value && (
                                                                       <FeatureValue
@@ -659,11 +659,11 @@ const CreateFlag = class extends Component {
 
                                                                   <a
                                                                     target="_blank"
-                                                                    href={`/project/${this.props.projectId}/environment/${this.props.environmentId}/users/${identity.identifier}/${identity.id}`}
+                                                                    href={`/project/${this.props.projectId}/environment/${this.props.environmentId}/users/${identity.identifier}/${identity.id}?flag=${projectFlag.name}`}
                                                                     className="ml-2 btn btn-link btn--link" onClick={() => {
                                                                     }}
                                                                   >
-                                                                        View user
+                                                                        Edit
                                                                   </a>
                                                               </Row>
                                                           )}

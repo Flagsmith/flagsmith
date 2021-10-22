@@ -12,6 +12,9 @@
 .clearfix { display: block; }
 /* close commented backslash hack */
 
+.standard-case {
+    text-transform: none !important;
+}
 .float-right{
     float:right;
 }

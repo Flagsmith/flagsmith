@@ -25,7 +25,9 @@ const UserPage = class extends Component {
 
     constructor(props, context) {
         super(props, context);
-        this.state = {};
+        this.state = {
+            preselect: Utils.fromParam().flag,
+        };
     }
 
     componentDidMount() {
@@ -80,7 +82,7 @@ const UserPage = class extends Component {
 
     editFlag = (projectFlag, environmentFlag, identityFlag, multivariate_feature_state_values) => {
         API.trackEvent(Constants.events.VIEW_USER_FEATURE);
-        openModal(`Edit User Feature: ${projectFlag.name}`, <CreateFlagModal
+        openModal(<span>Edit User Feature: <span className="standard-case">{projectFlag.name}</span></span>, <CreateFlagModal
           isEdit
           identity={this.props.match.params.id}
           identityName={decodeURIComponent(this.props.match.params.identity)}
@@ -197,13 +199,19 @@ const UserPage = class extends Component {
                                                           return value === actualValue;
                                                       });
                                                       const flagDifferent = flagEnabledDifferent || flagValueDifferent;
+                                                      const onClick = () => this.editFlag(_.find(projectFlags, { id }), environmentFlags[id], actualFlags[name], identityFlags && identityFlags[id] && identityFlags[id].multivariate_feature_state_values);
+
+                                                      if (name === this.state.preselect) {
+                                                          this.state.preselect = null
+                                                          onClick()
+                                                      }
                                                       return (
                                                           <Row
                                                             className={`list-item clickable ${flagDifferent && 'flag-different'}`} key={id} space
                                                             data-test={`user-feature-${i}`}
                                                           >
                                                               <div
-                                                                onClick={() => this.editFlag(_.find(projectFlags, { id }), environmentFlags[id], actualFlags[name], identityFlags && identityFlags[id] && identityFlags[id].multivariate_feature_state_values)}
+                                                                onClick={onClick}
                                                                 className="flex flex-1"
                                                               >
                                                                   <Row>

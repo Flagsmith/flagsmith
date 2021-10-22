@@ -2,8 +2,15 @@
 
 $switch-height: 28px;
 $switch-width: 60px;
+.rc-switch:disabled {
+  opacity: 0.5;
+  .rc-switch-checked {
+    opacity: 0.5;
+  }
+}
 .dark {
   .rc-switch {
+
     &:after {
       background: $panel-heading-bg-dark;
     }

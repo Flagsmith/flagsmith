@@ -144,7 +144,9 @@ class _EditPermissionsModal extends Component {
                                           <div className="list-item-footer faint">
                                               {
                                               hasRbacPermission ? `Full View and Write permissions for the given ${Format.camelCase(this.props.level)}.`
-                                                  : 'Please upgrade your account to enable role based access.'
+                                                  : <span>
+                                                      Role-based access is not available in our Open Source version. Please contact <a href="mailto:sales@flagsmith.com">sales@flagsmith.com</a> for more information on our licensing options.
+                                                  </span>
                                             }
                                           </div>
                                       </Flex>
