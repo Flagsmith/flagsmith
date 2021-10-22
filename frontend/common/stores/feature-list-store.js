@@ -115,12 +115,15 @@ const controller = {
         if (environmentFlag) {
             prom = data.get(`${Project.api}environments/${environmentId}/featurestates/${environmentFlag.id}/`)
                 .then((environmentFeatureStates) => {
-                    environmentFlag.multivariate_feature_state_values && environmentFlag.multivariate_feature_state_values.map((v) => {
-                        const matching = environmentFeatureStates.multivariate_feature_state_values && environmentFeatureStates.multivariate_feature_state_values.find(e => e.multivariate_feature_option === v.multivariate_feature_option);
-                        if (matching && !v.id) {
-                            v.id = matching.id;
+                    const multivariate_feature_state_values = environmentFeatureStates.multivariate_feature_state_values && environmentFeatureStates.multivariate_feature_state_values.map((v) => {
+                        const matching = flag.multivariate_options.find(m => m.id === v.multivariate_feature_option);
+                        if (!matching) { // multivariate is new, meaning the value is already correct from the default allocation
+                            return v;
                         }
+                        // multivariate is existing, override the existing with the new value
+                        return { ...v, percentage_allocation: matching.default_percentage_allocation };
                     });
+                    environmentFlag.multivariate_feature_state_values = multivariate_feature_state_values;
                     return data.put(`${Project.api}environments/${environmentId}/featurestates/${environmentFlag.id}/`, Object.assign({}, environmentFlag, {
                         feature_state_value: flag.initial_value,
                         hide_from_client: flag.hide_from_client,
