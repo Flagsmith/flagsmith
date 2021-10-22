@@ -194,8 +194,8 @@ const SegmentsPage = class extends Component {
                                                                       <button
                                                                         disabled={!permission}
                                                                         data-test={`remove-segment-btn-${i}`}
-                                                                        onClick={() => this.confirmRemove(segments[i], () => {
-                                                                            removeSegment(this.props.match.params.projectId, segments[i].id);
+                                                                        onClick={() => this.confirmRemove(_.find(segments, { id }), () => {
+                                                                            removeSegment(this.props.match.params.projectId, id);
                                                                         })}
                                                                         className="btn btn--with-icon"
                                                                       >
