@@ -86,12 +86,12 @@
     margin-bottom:1rem;
 }
 
-label {
+label, .icon-primary {
     color: $header-color;
     font-weight: 500;
 }
 .dark {
-    label {
+    label,.icon-primary {
         color: $header-color-dark;
     }
 }

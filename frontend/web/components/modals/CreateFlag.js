@@ -12,6 +12,7 @@ import ValueEditor from '../ValueEditor';
 import VariationValue from '../mv/VariationValue';
 import AddVariationButton from '../mv/AddVariationButton';
 import VariationOptions from '../mv/VariationOptions';
+import FlagOwners from '../FlagOwners';
 
 const FEATURE_ID_MAXLENGTH = Constants.forms.maxLength.FEATURE_ID;
 
@@ -333,6 +334,16 @@ const CreateFlag = class extends Component {
                             )}
                         />
                     </FormGroup>
+                )}
+                {!identity && (
+                    <Permission level="project" permission="ADMIN" id={this.props.projectId}>
+                        {({ permission: projectAdmin }) => projectAdmin && this.props.hasFeature('flag_owners') && (
+                            <FormGroup className="mb-4 mr-3 ml-3" >
+                                <FlagOwners projectId={this.props.projectId} id={projectFlag.id}/>
+                            </FormGroup>
+
+                        )}
+                    </Permission>
                 )}
                 <FormGroup className="mb-4 mr-3 ml-3" >
                     <InputGroup
