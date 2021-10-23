@@ -3,7 +3,9 @@ import data from '../../common/data/base/_data';
 const ForgotPassword = class extends React.Component {
     constructor(props, context) {
         super(props, context);
-        this.state = {};
+        this.state = {
+            email: props.initialValue
+        };
     }
 
     handleSubmit = (e) => {
@@ -30,6 +32,7 @@ const ForgotPassword = class extends React.Component {
                       inputProps={{ className: 'full-width mb-2' }}
                       title="Email Address"
                       placeholder="email" type="email"
+                      value={this.state.email}
                       onChange={e => this.setState({ email: Utils.safeParseEventValue(e) })}
                     />
 

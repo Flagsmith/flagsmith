@@ -19,6 +19,16 @@ const HomePage = class extends React.Component {
         this.state = {};
     }
 
+    componentDidUpdate(prevProps, prevState, snapshot) {
+        if (this.props.location.pathname !== prevProps.location.pathname) {
+            const emailField = document.querySelector('input[type="text"]');
+            if (emailField) {
+                emailField.focus();
+                emailField.value = emailField.value;
+            }
+        }
+    }
+
     componentDidMount() {
         if (document.location.href.includes('oauth')) {
             const parts = location.href.split('oauth/');
@@ -35,6 +45,12 @@ const HomePage = class extends React.Component {
                 });
             }
         }
+        const emailField = document.querySelector('input[type="text"]');
+        if (emailField) {
+            emailField.focus();
+            emailField.value = emailField.value;
+        }
+
         if (document.location.href.includes('saml')) {
             const access_token = Utils.fromParam().code;
             if (access_token) {
@@ -59,7 +75,7 @@ const HomePage = class extends React.Component {
 
     showForgotPassword = (e) => {
         e.preventDefault();
-        openModal('Forgot password', <ForgotPasswordModal onComplete={() => {
+        openModal('Forgot password', <ForgotPasswordModal initialValue={this.state.email} onComplete={() => {
             toast('Please check your email to reset your password.');
         }}
         />, null, { className: 'alert fade expand' });
@@ -173,113 +189,118 @@ const HomePage = class extends React.Component {
                           {!disableSignup && (
                           <div className="signup-form" id="sign-up">
                               {!isSignup ? (
-                                  <Card>
-                                      <AccountProvider>
-                                          {({ isLoading, isSaving, error }, { login }) => (
-                                              <form
-                                                id="form" name="form" onSubmit={(e) => {
-                                                    Utils.preventDefault(e);
-                                                    login({ email, password });
-                                                }}
-                                              >
-                                                  {!!oauths.length && (
-                                                  <Row style={{ justifyContent: 'center' }}>
-                                                      {oauths}
-                                                  </Row>
-                                                  )}
+                                  <React.Fragment>
+                                      <Card>
+                                          <AccountProvider>
+                                              {({ isLoading, isSaving, error }, { login }) => (
+                                                  <form
+                                                    id="form" name="form" onSubmit={(e) => {
+                                                        Utils.preventDefault(e);
+                                                        login({ email, password });
+                                                    }}
+                                                  >
+                                                      {!!oauths.length && (
+                                                          <Row style={{ justifyContent: 'center' }}>
+                                                              {oauths}
+                                                          </Row>
+                                                      )}
 
-                                                  {isInvite
-                                                && (
-                                                <div className="notification flex-row">
-                                                    <span
-                                                      className="notification__icon ion-md-information-circle-outline mb-3"
-                                                    />
-                                                    <p className="notification__text pl-3">Login to accept your invite</p>
-                                                </div>
-                                                )
-                                                }
-                                                  <fieldset id="details">
-                                                      {error && error.email ? (
-                                                          <span
-                                                            id="email-error"
-                                                            className="text-danger"
-                                                          >
-                                                              {error.email}
-                                                          </span>
-                                                      ) : null}
-                                                      <InputGroup
-                                                        title="Email Address / Username"
-                                                        data-test="email"
-                                                        inputProps={{
-                                                            name: 'email',
-                                                            className: 'full-width',
-                                                            error: error && error.email,
-                                                        }}
-                                                        onChange={(e) => {
-                                                            this.setState({ email: Utils.safeParseEventValue(e) });
-                                                        }}
-                                                        className="input-default full-width mb-3 "
-                                                        type="text"
-                                                        name="email" id="email"
-                                                      />
-                                                      {error && error.password ? (
-                                                          <span
-                                                            id="password-error"
-                                                            className="text-danger"
-                                                          >
-                                                              {error.password}
-                                                          </span>
-                                                      ) : null}
-                                                      <InputGroup
-                                                        title="Password"
-                                                        inputProps={{
-                                                            name: 'password',
-                                                            className: 'full-width',
-                                                            error: error && error.password,
-                                                        }}
-                                                        onChange={(e) => {
-                                                            this.setState({ password: Utils.safeParseEventValue(e) });
-                                                        }}
-                                                        className="input-default full-width mb-3"
-                                                        type="password"
-                                                        name="password"
-                                                        data-test="password"
-                                                        id="password"
-                                                      />
-                                                      <div className="form-cta">
-
-                                                          <Button
-                                                            id="login-btn"
-                                                            disabled={isLoading || isSaving}
-                                                            type="submit"
-                                                            className="mt-3 px-4 full-width"
-                                                          >Login
-                                                          </Button>
-
-                                                          <div>
-                                                              <Link to={`/signup${redirect}`} className="float-left">
-                                                                  <ButtonLink className="pt-4 pb-3 mt-2" buttonText=" Not got an account?" />
-                                                              </Link>
-                                                              <Link
-                                                                className="float-right"
-                                                                to={`/password-recovery${redirect}`}
-                                                                onClick={this.showForgotPassword}
-                                                              >
-                                                                  <ButtonLink className="pt-4 pb-3 mt-2" buttonText="Forgot password?" />
-                                                              </Link>
+                                                      {isInvite
+                                                      && (
+                                                          <div className="notification flex-row">
+                                                              <span
+                                                                className="notification__icon ion-md-information-circle-outline mb-3"
+                                                              />
+                                                              <p className="notification__text pl-3">Login to accept your invite</p>
                                                           </div>
-                                                      </div>
-                                                  </fieldset>
-                                                  {error && (
-                                                  <div id="error-alert" className="alert mt-3 alert-danger">
-                                                      {typeof AccountStore.error === 'string' ? AccountStore.error : 'Please check your details and try again'}
-                                                  </div>
-                                                  )}
+                                                      )
+                                                      }
+                                                      <fieldset id="details">
+                                                          {error && error.email ? (
+                                                              <span
+                                                                id="email-error"
+                                                                className="text-danger"
+                                                              >
+                                                                  {error.email}
+                                                              </span>
+                                                          ) : null}
+                                                          <InputGroup
+                                                            title="Email Address / Username"
+                                                            data-test="email"
+                                                            inputProps={{
+                                                                name: 'email',
+                                                                className: 'full-width',
+                                                                error: error && error.email,
+                                                            }}
+                                                            onChange={(e) => {
+                                                                this.setState({ email: Utils.safeParseEventValue(e) });
+                                                            }}
+                                                            className="input-default full-width mb-3 "
+                                                            type="email"
+                                                            name="email" id="email"
+                                                          />
+                                                          {error && error.password ? (
+                                                              <span
+                                                                id="password-error"
+                                                                className="text-danger"
+                                                              >
+                                                                  {error.password}
+                                                              </span>
+                                                          ) : null}
+                                                          <InputGroup
+                                                            title="Password"
+                                                            inputProps={{
+                                                                name: 'password',
+                                                                className: 'full-width',
+                                                                error: error && error.password,
+                                                            }}
+                                                            onChange={(e) => {
+                                                                this.setState({ password: Utils.safeParseEventValue(e) });
+                                                            }}
+                                                            rightComponent={(
+                                                                <Link
+                                                                    className="float-right"
+                                                                    to={`/password-recovery${redirect}`}
+                                                                    onClick={this.showForgotPassword}
+                                                                >
+                                                                    <ButtonLink buttonText="Forgot password?" />
+                                                                </Link>
+                                                            )}
+                                                            className="input-default full-width mb-3"
+                                                            type="password"
+                                                            name="password"
+                                                            data-test="password"
+                                                            id="password"
+                                                          />
+                                                          <div className="form-cta">
 
-                                              </form>
-                                          )}
-                                      </AccountProvider>
-                                  </Card>
+                                                              <Button
+                                                                id="login-btn"
+                                                                disabled={isLoading || isSaving}
+                                                                type="submit"
+                                                                className="mt-3 px-4 full-width"
+                                                              >Login
+                                                              </Button>
+                                                          </div>
+                                                      </fieldset>
+                                                      {error && (
+                                                          <div id="error-alert" className="alert mt-3 alert-danger">
+                                                              {typeof AccountStore.error === 'string' ? AccountStore.error : 'Please check your details and try again'}
+                                                          </div>
+                                                      )}
+
+                                                  </form>
+                                              )}
+                                          </AccountProvider>
+                                      </Card>
+
+                                      <Row className="justify-content-center mt-2">
+                                          Not got an account?{' '}
+                                          <Link id="existing-member-btn" to={`/signup${redirect}`}>
+                                              <ButtonLink className="ml-1" buttonText=" Sign up" />
+                                          </Link>
+                                      </Row>
+                                  </React.Fragment>
                               ) : (
                                   <React.Fragment>
 
@@ -319,7 +340,7 @@ const HomePage = class extends React.Component {
                                                   <span
                                                     className="notification__icon ion-md-information-circle-outline mb-3"
                                                   />
-                                                  <p className="notification__text pl-3">Sign up to accept your
+                                                  <p className="notification__text pl-3">Create an account to accept your
                                                         invite
                                                   </p>
                                               </div>
@@ -377,7 +398,7 @@ const HomePage = class extends React.Component {
                                                         this.setState({ email: Utils.safeParseEventValue(e) });
                                                     }}
                                                     className="input-default full-width"
-                                                    type="text"
+                                                    type="email"
                                                     name="email"
                                                     id="email"
                                                   />
@@ -414,18 +435,22 @@ const HomePage = class extends React.Component {
                                                         className="px-4 mt-3 full-width"
                                                         type="submit"
                                                       >
-                                                          Sign Up
+                                                          Create Account
                                                       </Button>
-                                                      <Link id="existing-member-btn" to={`/login${redirect}`}>
-                                                          <ButtonLink
-                                                            className="mt-4 pb-3 pt-2"
-                                                            buttonText="Already a member?"
-                                                          />
-                                                      </Link>
                                                   </div>
                                               </fieldset>
                                           </form>
                                       </Card>
+                                      <Row className="justify-content-center mt-2">
+                                          Have an account?{' '}
+                                          <Link id="existing-member-btn" to={`/login${redirect}`}>
+                                              <ButtonLink
+                                                className="ml-1"
+                                                buttonText="Log in"
+                                              />
+                                          </Link>
+                                      </Row>
+
 
                                   </React.Fragment>
                               )}
