@@ -360,7 +360,7 @@ const CreateFlag = class extends Component {
                       placeholder="e.g. 'This determines what size the header is' "
                     />
                 </FormGroup>
-                {this.props.hasFeature('archive_flags') && !identity && (
+                {!identity && (
                     <FormGroup className="mb-4 mr-3 ml-3" >
                         <InputGroup
                           value={description}
