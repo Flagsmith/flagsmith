@@ -38,10 +38,12 @@ class Project(models.Model):
         segments = project_segments_cache.get(self.id)
 
         if not segments:
-            # this is optimised to account for rules nested two levels deep, anything past that
+            # this is optimised to account for rules nested one levels deep
+            # (since we don't support anything above that from the UI at the moment) anything past that
             # will require additional queries / thought on how to optimise
             segments = self.segments.all().prefetch_related(
-                "rules", "rules__conditions", "rules__rules", "rules__rules__rules"
+                "rules__conditions",
+                "rules__rules__conditions",
             )
             project_segments_cache.set(
                 self.id, segments, timeout=settings.CACHE_PROJECT_SEGMENTS_SECONDS

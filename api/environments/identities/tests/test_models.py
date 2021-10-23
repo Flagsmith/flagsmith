@@ -799,13 +799,23 @@ class IdentityTestCase(TransactionTestCase):
         rule_two = SegmentRule.objects.create(
             segment=segment, type=SegmentRule.ALL_RULE
         )
+
         Condition.objects.create(
             rule=rule_two, operator=GREATER_THAN_INCLUSIVE, property="bar", value=10
         )
         Condition.objects.create(
             rule=rule_two, operator=LESS_THAN_INCLUSIVE, property="bar", value=20
         )
-
+        # A nested rule with multiple conditions to test the number of queries
+        nested_rule = SegmentRule.objects.create(
+            rule=rule_two, type=SegmentRule.ANY_RULE
+        )
+        Condition.objects.create(
+            rule=nested_rule, operator=LESS_THAN_INCLUSIVE, property="bar", value=20
+        )
+        Condition.objects.create(
+            rule=nested_rule, operator=GREATER_THAN_INCLUSIVE, property="bar", value=10
+        )
         # and an identity with traits that match the segment
         identity = Identity.objects.create(
             identifier="identity-1", environment=self.environment
@@ -819,7 +829,7 @@ class IdentityTestCase(TransactionTestCase):
 
         # When
         # we get the matching segments for an identity
-        with self.assertNumQueries(5):
+        with self.assertNumQueries(7):
             segments = identity.get_segments()
 
         # Then
