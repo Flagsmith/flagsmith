@@ -35,6 +35,13 @@ class CreateOrganisationPage extends Component {
     };
 
     render() {
+        if (projectOverrides.superUserCreateOnly && !AccountStore.model.is_superuser) {
+            return (
+                <div className="text-center alert">
+                    Your Flagsmith instance is setup to only allow super users to create an organisation, please contact your administrator.
+                </div>
+            );
+        }
         if (this.props.hasFeature('disable_create_org')) {
             return (
                 <div id="create-org-page" className="container app-container">
