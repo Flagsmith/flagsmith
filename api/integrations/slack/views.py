@@ -14,8 +14,7 @@ from integrations.slack.serializers import (
     SlackChannelListSerializer,
     SlackEnvironmentSerializer,
 )
-
-from . import slack
+from integrations.slack.slack import get_bot_token, get_channels_data
 
 
 class SlackConfigurationViewSet(IntegrationCommonViewSet):
@@ -39,11 +38,12 @@ class SlackConfigurationViewSet(IntegrationCommonViewSet):
                 status.HTTP_400_BAD_REQUEST,
             )
         slack_token = config.api_token
-        serializer = self.get_serializer(
-            data=slack.get_channels_data(slack_token), many=True
-        )
+        serializer = self.get_serializer(data=get_channels_data(slack_token), many=True)
         serializer.is_valid()
         return Response(serializer.data)
+
+    def get_slack_callback_url(self, **kwargs):
+        return self.reverse_action("slack-oauth-callback", kwargs=kwargs)
 
     @action(detail=False, methods=["GET"], url_path="callback", permission_classes=[])
     def slack_oauth_callback(self, request, *args, **kwargs):
@@ -53,19 +53,19 @@ class SlackConfigurationViewSet(IntegrationCommonViewSet):
                 "code not found in query params",
                 status.HTTP_400_BAD_REQUEST,
             )
-        redirect_uri = self.reverse_action("slack-oauth-callback", kwargs=kwargs)
 
         env = self.get_environment_from_request()
         validate_state(request.GET.get("state"), request)
-        bot_token = slack.get_bot_token(code, redirect_uri)
+        bot_token = get_bot_token(code, self.get_slack_callback_url(**kwargs))
         conf = SlackConfiguration.objects.filter(project_id=env.project).first()
         if not conf:
             conf = SlackConfiguration(project=env.project)
         conf.api_token = bot_token
         conf.save()
+        # TODO: where should we redirect? after successful auth
         return Response("Success")
 
-    @action(detail=False, methods=["GET"], url_path="oauth", permission_classes=[])
+    @action(detail=False, methods=["GET"], url_path="oauth")
     def slack_oauth_init(self, request, *args, **kwargs):
         if not settings.SLACK_CLIENT_ID:
             return Response(
@@ -75,10 +75,9 @@ class SlackConfigurationViewSet(IntegrationCommonViewSet):
 
         state = str(uuid.uuid4())[:6]
         request.session["state"] = state
-        callback_uri = self.reverse_action("slack-oauth-callback", kwargs=kwargs)
         authorize_url_generator = AuthorizeUrlGenerator(
             client_id=settings.SLACK_CLIENT_ID,
-            redirect_uri=callback_uri,
+            redirect_uri=self.get_slack_callback_url(**kwargs),
             scopes=["chat:write", "channels:read", "channels:join"],
         )
         return redirect(authorize_url_generator.generate(state))
@@ -88,6 +87,6 @@ def validate_state(state, request):
     state_before = request.session.pop("state", None)
     if state_before != state:
         raise ValueError(
-            "State mismatch upon authorization completion." " Try new request."
+            "State mismatch upon authorization completion. Try new request."
         )
     return True
