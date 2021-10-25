@@ -16,7 +16,7 @@ def slack_project_config(django_client, environment, environment_api_key):
     )
     with mock.patch("integrations.slack.views.get_bot_token", return_value=bot_token):
         with mock.patch("integrations.slack.views.validate_state", return_value=True):
-            response = django_client.get(f"{url}?state=state&code=code")
+            django_client.get(f"{url}?state=state&code=code")
 
 
 @pytest.fixture
