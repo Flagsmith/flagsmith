@@ -14,17 +14,20 @@ class SlackEnvironmentSerializer(serializers.ModelSerializer):
         fields = ("id", "channel_id", "enabled")
 
     def create(self, validated_data):
-        data = deepcopy(validated_data)
         try:
-            config = SlackConfiguration.objects.get(project=data["environment"].project)
+            config = SlackConfiguration.objects.get(
+                project=validated_data["environment"].project
+            )
         except ObjectDoesNotExist:
             raise serializers.ValidationError(
                 "Slack api token not found. Please generate the token using oauth"
             )
 
-        data.update({"slack_configuration": config})
         join_channel(config.api_token, validated_data["channel_id"])
-        return SlackEnvironment.objects.create(**data)
+
+        return SlackEnvironment.objects.create(
+            **{**validated_data, "slack_configuration": config}
+        )
 
     def update(self, instance, validated_data):
         join_channel(

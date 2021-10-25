@@ -71,7 +71,7 @@ def test_get_channels_returns_200_when_slack_project_config_exists(
     assert response.json() == channels_data
 
 
-def test_posting_env_config_return_400_when_slack_api_token_does_not_exists(
+def test_posting_env_config_return_400_when_slack_project_config_does_not_exists(
     admin_client, environment, environment_api_key
 ):
     # Given

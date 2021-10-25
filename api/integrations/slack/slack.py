@@ -13,7 +13,6 @@ class SlackWrapper(AbstractBaseEventIntegrationWrapper):
         self.channel_id = channel_id
 
     def _track_event(self, event: dict) -> None:
-        print(f"Sending event {event} to slack")
         self.client.chat_postMessage(channel=self.channel_id, text=event["text"])
 
     @staticmethod

@@ -17,7 +17,7 @@ class SlackEnvironment(models.Model):
     )
     channel_id = models.CharField(
         max_length=50,
-        help_text="An id of the slack channel to post messages to",
+        help_text="Id of the slack channel to post messages to",
         blank=False,
         null=False,
     )

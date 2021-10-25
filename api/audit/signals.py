@@ -145,15 +145,15 @@ def send_audit_log_event_to_slack(sender, instance, **kwargs):
         "name": "Slack",
         "attr": "slack_config",
     }
-    slack_config = _send_audit_log_event_verification(instance, integration)
-    if not slack_config:
+    slack_project_config = _send_audit_log_event_verification(instance, integration)
+    if not slack_project_config:
         return
-    env_config = slack_config.env_config.filter(
+    env_config = slack_project_config.env_config.filter(
         environment=instance.environment, enabled=True
     ).first()
     if not env_config:
         return
     slack = SlackWrapper(
-        api_token=slack_config.api_token, channel_id=env_config.channel_id
+        api_token=slack_project_config.api_token, channel_id=env_config.channel_id
     )
     _track_event_async(instance, slack)

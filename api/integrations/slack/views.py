@@ -42,7 +42,7 @@ class SlackConfigurationViewSet(IntegrationCommonViewSet):
         serializer.is_valid()
         return Response(serializer.data)
 
-    def get_slack_callback_url(self, **kwargs):
+    def _get_slack_callback_url(self, **kwargs):
         return self.reverse_action("slack-oauth-callback", kwargs=kwargs)
 
     @action(detail=False, methods=["GET"], url_path="callback", permission_classes=[])
@@ -56,7 +56,7 @@ class SlackConfigurationViewSet(IntegrationCommonViewSet):
 
         env = self.get_environment_from_request()
         validate_state(request.GET.get("state"), request)
-        bot_token = get_bot_token(code, self.get_slack_callback_url(**kwargs))
+        bot_token = get_bot_token(code, self._get_slack_callback_url(**kwargs))
         conf = SlackConfiguration.objects.filter(project_id=env.project).first()
         if not conf:
             conf = SlackConfiguration(project=env.project)
@@ -77,7 +77,7 @@ class SlackConfigurationViewSet(IntegrationCommonViewSet):
         request.session["state"] = state
         authorize_url_generator = AuthorizeUrlGenerator(
             client_id=settings.SLACK_CLIENT_ID,
-            redirect_uri=self.get_slack_callback_url(**kwargs),
+            redirect_uri=self._get_slack_callback_url(**kwargs),
             scopes=["chat:write", "channels:read", "channels:join"],
         )
         return redirect(authorize_url_generator.generate(state))
