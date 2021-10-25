@@ -1,3 +1,5 @@
+import typing
+
 from django.conf import settings
 from slack_sdk import WebClient
 from slack_sdk.http_retry.builtin_handlers import RateLimitErrorRetryHandler
@@ -45,7 +47,7 @@ def get_client(api_token: str = None) -> WebClient:
     return client
 
 
-def get_channels_data(api_token: str) -> dict:
+def get_channels_data(api_token: str) -> typing.List[typing.Mapping[str, str]]:
     """
     Returns a dictionary with channel_name and channel_id of non archived
     public channels.
