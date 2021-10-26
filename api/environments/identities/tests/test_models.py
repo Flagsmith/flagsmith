@@ -17,6 +17,7 @@ from segments.models import (
     GREATER_THAN,
     GREATER_THAN_INCLUSIVE,
     LESS_THAN_INCLUSIVE,
+    NOT_EQUAL,
     Condition,
     Segment,
     SegmentRule,
@@ -799,23 +800,26 @@ class IdentityTestCase(TransactionTestCase):
         rule_two = SegmentRule.objects.create(
             segment=segment, type=SegmentRule.ALL_RULE
         )
-
         Condition.objects.create(
             rule=rule_two, operator=GREATER_THAN_INCLUSIVE, property="bar", value=10
         )
         Condition.objects.create(
             rule=rule_two, operator=LESS_THAN_INCLUSIVE, property="bar", value=20
         )
-        # A nested rule with multiple conditions to test the number of queries
-        nested_rule = SegmentRule.objects.create(
-            rule=rule_two, type=SegmentRule.ANY_RULE
-        )
-        Condition.objects.create(
-            rule=nested_rule, operator=LESS_THAN_INCLUSIVE, property="bar", value=20
-        )
-        Condition.objects.create(
-            rule=nested_rule, operator=GREATER_THAN_INCLUSIVE, property="bar", value=10
-        )
+
+        # And nested rules to test the number of queries
+        for i in range(50):
+            property_name = "foo"
+            nested_rule = SegmentRule.objects.create(
+                rule=rule_two, type=SegmentRule.ALL_RULE
+            )
+            Condition.objects.create(
+                rule=nested_rule,
+                operator=NOT_EQUAL,
+                property=property_name,
+                value="some_other_value",
+            )
+
         # and an identity with traits that match the segment
         identity = Identity.objects.create(
             identifier="identity-1", environment=self.environment
@@ -833,5 +837,6 @@ class IdentityTestCase(TransactionTestCase):
             segments = identity.get_segments()
 
         # Then
-        # the number of queries are what we expect (see above context manager) and the segment is returned
+        # the number of queries are what we expect (see above context manager) and
+        # the segment is returned
         assert len(segments) == 1 and segments[0] == segment
