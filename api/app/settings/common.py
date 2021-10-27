@@ -319,7 +319,8 @@ elif EMAIL_BACKEND == "django.core.mail.backends.smtp.EmailBackend":
 SWAGGER_SETTINGS = {
     "SHOW_REQUEST_HEADERS": True,
     "SECURITY_DEFINITIONS": {
-        "api_key": {"type": "apiKey", "in": "header", "name": "Authorization"}
+        "Private": {"type": "apiKey", "in": "header", "name": "Authorization", "description": "Every time you create a new Project Environment, an environment API key is automatically generated for you. This is all you need to pass in to get access to Flags etc. <br />Example value: <br />Token 884b1b4c6b4ddd112e7a0a139f09eb85e8c254ff" },
+        "Public": {"type": "apiKey", "in": "header", "name": "X-Environment-Key", "description": "Things like creating new flags, environments, toggle flags or indeed anything that is possible from the administrative front end. <br />Example value: <br />FFnVjhp7xvkT5oTLq4q788" }
     },
 }
 
