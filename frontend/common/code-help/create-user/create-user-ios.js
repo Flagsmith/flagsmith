@@ -9,7 +9,6 @@ func application(_ application: UIApplication,
   Flagsmith.shared.apiKey = "${envId}"
 
   // This will create a user in the dashboard if they don't already exist
-
   // Check for a feature
   Flagsmith.shared
   .hasFeatureFlag(withID: "${FEATURE_NAME}", forIdentity: "${USER_ID}") { (result) in
