@@ -24,7 +24,7 @@ class SlackEnvironmentSerializer(serializers.ModelSerializer):
         join_channel(config.api_token, validated_data["channel_id"])
 
         return SlackEnvironment.objects.create(
-            **{**validated_data, "slack_configuration": config}
+            **validated_data, slack_configuration=config
         )
 
     def update(self, instance, validated_data):

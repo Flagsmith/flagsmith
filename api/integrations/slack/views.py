@@ -30,6 +30,7 @@ class SlackConfigurationViewSet(IntegrationCommonViewSet):
     )
     def get_channels(self, request, *args, **kwargs):
         env = self.get_environment_from_request()
+
         try:
             config = SlackConfiguration.objects.get(project=env.project)
         except ObjectDoesNotExist:
@@ -57,11 +58,11 @@ class SlackConfigurationViewSet(IntegrationCommonViewSet):
         env = self.get_environment_from_request()
         validate_state(request.GET.get("state"), request)
         bot_token = get_bot_token(code, self._get_slack_callback_url(**kwargs))
-        conf = SlackConfiguration.objects.filter(project_id=env.project).first()
-        if not conf:
-            conf = SlackConfiguration(project=env.project)
-        conf.api_token = bot_token
-        conf.save()
+
+        SlackConfiguration.objects.update_or_create(
+            project=env.project, defaults={"api_token": bot_token}
+        )
+
         # TODO: where should we redirect? after successful auth
         return Response("Success")
 

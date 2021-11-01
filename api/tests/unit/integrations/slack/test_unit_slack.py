@@ -3,7 +3,7 @@ from unittest import mock
 from integrations.slack.slack import get_channels_data
 
 
-def test_get_channels_data_repsonse_structure():
+def test_get_channels_data_response_structure():
     # Given
     api_token = "test_token"
     response_data = {
@@ -28,10 +28,10 @@ def test_get_channels_data_repsonse_structure():
     # When
     with mock.patch("integrations.slack.slack.get_client") as client:
         client.return_value.conversations_list.return_value = response_data
-        response = get_channels_data(api_token)
+        channels = get_channels_data(api_token)
 
     # Then
-    assert response == [
+    assert channels == [
         {"channel_name": "channel1", "channel_id": "id1"},
         {"channel_name": "channel2", "channel_id": "id2"},
     ]

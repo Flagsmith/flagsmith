@@ -54,9 +54,9 @@ def get_channels_data(api_token: str) -> typing.List[typing.Mapping[str, str]]:
 
     client = get_client(api_token)
     response = client.conversations_list(exclude_archived=True)
-    conversations = response["channels"]
+    channels = response["channels"]
     channel_data = [
         {"channel_name": channel["name"], "channel_id": channel["id"]}
-        for channel in conversations
+        for channel in channels
     ]
     return channel_data
