@@ -2,8 +2,8 @@ from django.conf.urls import include
 from django.urls import path
 from rest_framework_nested import routers
 
-from features.views import SimpleFeatureStateViewSet
 from features.feature_segments.views import FeatureSegmentViewSet
+from features.views import SimpleFeatureStateViewSet
 
 router = routers.DefaultRouter()
 router.register(r"featurestates", SimpleFeatureStateViewSet, basename="featurestates")

@@ -1,6 +1,6 @@
 import typing
 
-from features.value_types import INTEGER, BOOLEAN
+from features.value_types import BOOLEAN, INTEGER
 
 
 def get_correctly_typed_value(value_type: str, string_value: str) -> typing.Any:

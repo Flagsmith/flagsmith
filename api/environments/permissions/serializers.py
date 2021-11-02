@@ -3,7 +3,10 @@ from environments.permissions.models import (
     UserPermissionGroupEnvironmentPermission,
 )
 from permissions.serializers import CreateUpdateUserPermissionSerializerABC
-from users.serializers import UserListSerializer, UserPermissionGroupSerializerDetail
+from users.serializers import (
+    UserListSerializer,
+    UserPermissionGroupSerializerDetail,
+)
 
 
 class CreateUpdateUserEnvironmentPermissionSerializer(
