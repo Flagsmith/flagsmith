@@ -105,7 +105,7 @@ drf-yasg2==1.19.3
     # via -r requirements.in
 environs==9.2.0
     # via -r requirements.in
-git+https://github.com/Flagsmith/flagsmith-engine.git@main
+flagsmith-flag-engine @ git+https://github.com/Flagsmith/flagsmith-engine.git@1037c7a0ab6f49e18286443f4f089fff199d4933
     # via -r requirements.in
 future==0.18.2
     # via django-ses
