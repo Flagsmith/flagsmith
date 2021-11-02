@@ -3,6 +3,7 @@ import json
 from django.conf import settings
 from django.http import HttpResponse, JsonResponse
 from django.template import loader
+from django.template.exceptions import TemplateDoesNotExist
 
 from . import utils
 
@@ -12,13 +13,20 @@ def version_info(request):
 
 
 def index(request):
-    template = loader.get_template("webpack/index.html")
+    """
+    If running without the front end assets (e.g. on elastic beanstalk), we don't want to throw a 500. In that case,
+    just reply with 200
+    """
+    try:
+        template = loader.get_template("webpack/index.html")
 
-    context = {
-        "linkedin_api_key": settings.LINKEDIN_API_KEY,
-    }
+        context = {
+            "linkedin_api_key": settings.LINKEDIN_API_KEY,
+        }
 
-    return HttpResponse(template.render(context, request))
+        return HttpResponse(template.render(context, request))
+    except TemplateDoesNotExist as e:
+        return HttpResponse(status=200)
 
 
 def project_overrides(request):
