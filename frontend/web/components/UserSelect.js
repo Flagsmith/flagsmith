@@ -22,6 +22,7 @@ class TheComponent extends Component {
               className="inline-modal--tags"
             >
                 <Input
+                  disabled={this.props.disabled}
                   value={this.state.filter} onChange={e => this.setState({ filter: Utils.safeParseEventValue(e) })} className="full-width mb-2"
                   placeholder="Type or choose a user"
                 />
