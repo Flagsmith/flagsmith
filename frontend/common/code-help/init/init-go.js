@@ -4,9 +4,9 @@ module.exports = (envId, {
     FEATURE_NAME,
     FEATURE_FUNCTION,
     FEATURE_NAME_ALT
-}) => `bt := bullettrain.DefaultClient("${envId}")
+}) => `fs := flagsmith.DefaultClient("${envId}")
 // Check for a feature
-enabled, err := bt.FeatureEnabled("${FEATURE_NAME}")
+enabled, err := fs.FeatureEnabled("${FEATURE_NAME}")
 if err != nil {
     log.Fatal(err)
 } else {
@@ -16,7 +16,7 @@ if err != nil {
 }
 
 // Or, use the value of a feature
-feature_value, err := bt.GetValue("${FEATURE_NAME_ALT}")
+feature_value, err := fs.GetValue("${FEATURE_NAME_ALT}")
 if err != nil {
     log.Fatal(err)
 } else {
