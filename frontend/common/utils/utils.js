@@ -173,6 +173,10 @@ module.exports = Object.assign({}, require('./base/_utils'), {
             return true;
         }
         switch (permission) {
+            case 'FLAG_OWNERS': {
+                valid = true;
+                break;
+            }
             case '2FA': {
                 valid = !plan.includes('side-project');
                 break;

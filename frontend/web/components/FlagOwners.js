@@ -2,6 +2,7 @@ import React, { Component } from 'react';
 import { ListItem } from '@material-ui/core';
 import data from '../../common/data/base/_data';
 import UserSelect from './UserSelect';
+import AuditLogIcon from './svg/AuditLogIcon';
 
 class TheComponent extends Component {
     state = {};
@@ -35,13 +36,19 @@ class TheComponent extends Component {
     getOwners = (users, owners) => users.filter(v => owners.includes(v.id))
 
     render() {
+        const hasPermission = !this.props.hasFeature('plan_based_access') || Utils.getPlansPermission(AccountStore.getPlans(), 'FLAG_OWNERS');
+
         return (
             <OrganisationProvider>
                 {({ isLoading, name, error, projects, usage, users, invites, influx_data, inviteLinks }) => {
                     const ownerUsers = this.getOwners(users, this.state.owners || []);
-                    return (
+                    const res = (
                         <div>
-                            <Row className="clickable" onClick={() => this.setState({ showUsers: true })}>
+                            <Row
+                              className="clickable" onClick={() => {
+                                  if (hasPermission) this.setState({ showUsers: true });
+                              }}
+                            >
                                 <label className="cols-sm-2 control-label">Assignees</label>
                                 <span
                                   style={{
@@ -50,7 +57,7 @@ class TheComponent extends Component {
                                 />
                             </Row>
                             <Row>
-                                {ownerUsers.map(u => (
+                                {hasPermission && ownerUsers.map(u => (
                                     <Row onClick={() => this.removeOwner(u.id)} className="chip chip--active">
                                         <span className="font-weight-bold">
                                             {u.first_name} {u.last_name}
@@ -75,10 +82,17 @@ class TheComponent extends Component {
 
                         </div>
                     );
+                    return hasPermission ? res : (
+                        <Tooltip
+                          title={res}
+                        >
+                            The add flag assignees feature is available with our startup plan
+                        </Tooltip>
+                    );
                 }}
             </OrganisationProvider>
         );
     }
 }
 
-export default hot(module)(TheComponent);
+export default hot(module)(ConfigProvider(TheComponent));
