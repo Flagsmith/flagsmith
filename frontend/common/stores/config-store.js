@@ -58,7 +58,7 @@ if (hasDefaultFlags) {
 flagsmith.init({
     environmentID: Project.flagsmith,
     onChange: controller.loaded,
-    preventFetch: !!flags.prevent_fetch, // if we set prevent_fetch on defaultFlags, users will not be identified
+    preventFetch: !!flags.prevent_fetch && !!flags.prevent_fetch.enabled, // if we set prevent_fetch on defaultFlags, users will not be identified
     defaultFlags: hasDefaultFlags && flags,
     api: Project.flagsmithClientAPI,
     enableAnalytics: projectOverrides.flagsmithAnalytics,
