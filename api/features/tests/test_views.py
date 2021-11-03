@@ -24,7 +24,7 @@ from features.models import (
     FeatureStateValue,
 )
 from features.multivariate.models import MultivariateFeatureOption
-from features.value_types import BOOLEAN, INTEGER, STRING
+from features.value_types import STRING
 from organisations.models import Organisation, OrganisationRole
 from projects.models import Project
 from projects.tags.models import Tag
@@ -418,9 +418,7 @@ class ProjectFeatureTestCase(TestCase):
         data = {"feature": feature.id, "enabled": False}
 
         # When
-        res = self.client.put(
-            url, data=json.dumps(data), content_type="application/json"
-        )
+        self.client.put(url, data=json.dumps(data), content_type="application/json")
 
         # Then
         assert (
@@ -458,7 +456,7 @@ class ProjectFeatureTestCase(TestCase):
         )
 
         # When
-        res = self.client.delete(url)
+        self.client.delete(url)
 
         # Then
         assert (
@@ -799,15 +797,13 @@ class FeatureStateViewSetTestCase(TestCase):
 
     def test_can_filter_feature_states_to_show_identity_overrides_only(self):
         # Given
-        feature_state = FeatureState.objects.get(
-            environment=self.environment, feature=self.feature
-        )
+        FeatureState.objects.get(environment=self.environment, feature=self.feature)
 
         identifier = "test-identity"
         identity = Identity.objects.create(
             identifier=identifier, environment=self.environment
         )
-        identity_feature_state = FeatureState.objects.create(
+        FeatureState.objects.create(
             environment=self.environment, feature=self.feature, identity=identity
         )
 

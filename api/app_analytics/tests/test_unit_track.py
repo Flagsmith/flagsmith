@@ -1,12 +1,10 @@
 from unittest import mock
 
-import app_analytics
 import pytest
 from app_analytics.track import (
     track_request_googleanalytics,
     track_request_influxdb,
 )
-from django.conf import settings
 
 
 @pytest.mark.parametrize(

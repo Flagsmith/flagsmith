@@ -64,8 +64,9 @@ class UserManager(BaseUserManager):
 
         return self._create_user(email, password, **extra_fields)
 
-    def get_by_natural_key(self, username):
-        return self.get(email__iexact=username)
+    def get_by_natural_key(self, email):
+        # Used to allow case insensitive login
+        return self.get(email__iexact=email)
 
 
 @python_2_unicode_compatible

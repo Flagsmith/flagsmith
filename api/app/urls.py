@@ -1,7 +1,6 @@
 from django.conf import settings
 from django.conf.urls import include, url
 from django.contrib import admin
-from django.contrib.staticfiles.views import serve
 from django.urls import path
 
 from users.views import password_reset_redirect

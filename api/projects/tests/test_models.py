@@ -2,12 +2,6 @@ from unittest import mock
 
 import pytest
 from django.conf import settings
-from django.db.models import QuerySet
-from django.test import TransactionTestCase
-
-from organisations.models import Organisation
-from projects.models import Project
-from segments.models import EQUAL, Condition, Segment, SegmentRule
 
 
 @pytest.mark.django_db()

@@ -375,7 +375,7 @@ const App = class extends Component {
                                                                               }}
                                                                             />
                                                                         )}
-                                                                        {!this.props.hasFeature('disable_create_org') && (
+                                                                        {!this.props.hasFeature('disable_create_org') && (!projectOverrides.superUserCreateOnly || (projectOverrides.superUserCreateOnly && AccountStore.model.is_superuser)) && (
                                                                             <div className="pl-3 pr-3 mt-2 mb-2">
                                                                                 <Link
                                                                                   id="create-org-link" onClick={toggle}

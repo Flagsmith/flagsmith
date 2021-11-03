@@ -1,5 +1,4 @@
 import hashlib
-import itertools
 import typing
 
 from integrations.amplitude.amplitude import AmplitudeWrapper

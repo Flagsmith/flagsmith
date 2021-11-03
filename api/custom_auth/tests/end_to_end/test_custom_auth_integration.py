@@ -66,7 +66,7 @@ class AuthIntegrationTestCase(APITestCase):
         # verify that the user has been emailed with their reset code
         assert len(mail.outbox) == 1
         # get the url and grab the uid and token
-        url = re.findall("http\:\/\/.*", mail.outbox[0].body)[0]
+        url = re.findall(r"http\:\/\/.*", mail.outbox[0].body)[0]
         split_url = url.split("/")
         uid = split_url[-2]
         token = split_url[-1]
@@ -162,7 +162,7 @@ class AuthIntegrationTestCase(APITestCase):
         # Then success and account inactive
         self.assertIn("key", result.data)
         self.assertIn("is_active", result.data)
-        assert result.data["is_active"] == False
+        assert not result.data["is_active"]
 
         new_user = FFAdminUser.objects.latest("id")
         self.assertEqual(new_user.email, register_data["email"])
@@ -184,7 +184,7 @@ class AuthIntegrationTestCase(APITestCase):
         # and extract uid and token for account activation
         assert len(mail.outbox) == 1
         # get the url and grab the uid and token
-        url = re.findall("http\:\/\/.*", mail.outbox[0].body)[0]
+        url = re.findall(r"http\:\/\/.*", mail.outbox[0].body)[0]
         split_url = url.split("/")
         uid = split_url[-2]
         token = split_url[-1]

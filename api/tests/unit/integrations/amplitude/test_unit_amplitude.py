@@ -32,9 +32,7 @@ def test_amplitude_when_generate_user_data_with_correct_values_then_success():
 
     organisation = Organisation.objects.create(name="Test Org")
     project = Project.objects.create(name="Test Project", organisation=organisation)
-    environment_one = Environment.objects.create(
-        name="Test Environment 1", project=project
-    )
+    Environment.objects.create(name="Test Environment 1", project=project)
     feature = Feature.objects.create(name="Test Feature", project=project)
     feature_states = FeatureState.objects.filter(feature=feature)
 

@@ -185,7 +185,8 @@ const PanelSearch = class extends Component {
                 {this.props.searchPanel}
                 <div id={this.props.id} className="search-list" style={isLoading ? { opacity: 0.5 } : {}}>
                     {this.props.header}
-                    {filteredItems && filteredItems.length
+                    {this.props.isLoading && <div className="text-center"><Loader/></div> }
+                    {!this.props.isLoading && filteredItems && filteredItems.length
                         ? filteredItems.map(renderRow) : (renderNoResults && !search) ? renderNoResults : (
                             <Column>
                                 <div className="mx-2 mb-2">

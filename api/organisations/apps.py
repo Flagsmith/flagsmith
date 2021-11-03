@@ -9,4 +9,4 @@ class OrganisationsConfig(AppConfig):
 
     def ready(self):
         # noinspection PyUnresolvedReferences
-        import organisations.signals
+        import organisations.signals  # noqa
