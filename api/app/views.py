@@ -1,10 +1,14 @@
 import json
+import logging
 
 from django.conf import settings
 from django.http import HttpResponse, JsonResponse
 from django.template import loader
+from django.template.exceptions import TemplateDoesNotExist
 
 from . import utils
+
+logger = logging.getLogger(__name__)
 
 
 def version_info(request):
@@ -12,13 +16,17 @@ def version_info(request):
 
 
 def index(request):
-    template = loader.get_template("webpack/index.html")
-
-    context = {
-        "linkedin_api_key": settings.LINKEDIN_API_KEY,
-    }
-
-    return HttpResponse(template.render(context, request))
+    try:
+        template = loader.get_template("webpack/index.html")
+        context = {
+            "linkedin_api_key": settings.LINKEDIN_API_KEY,
+        }
+        return HttpResponse(template.render(context, request))
+    except TemplateDoesNotExist:
+        # If running without the front end assets (e.g. on elastic beanstalk),
+        # we don't want to throw a 500. In that case, just reply with 200.
+        logger.warning("FE assets do not exist, ignoring and returning HTTP 200.")
+        return HttpResponse()
 
 
 def project_overrides(request):
