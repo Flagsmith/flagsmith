@@ -5,7 +5,11 @@ from django.template.loader import get_template
 from django.utils import timezone
 
 from app.utils import create_hash
-from organisations.models import Organisation, organisation_roles, OrganisationRole
+from organisations.models import (
+    Organisation,
+    OrganisationRole,
+    organisation_roles,
+)
 from users.models import FFAdminUser
 
 

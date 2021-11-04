@@ -49,8 +49,8 @@ from projects.tags.models import Tag
 logger = logging.getLogger(__name__)
 
 if typing.TYPE_CHECKING:
-    from environments.models import Environment
     from environments.identities.models import Identity
+    from environments.models import Environment
 
 
 @python_2_unicode_compatible

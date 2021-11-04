@@ -4,13 +4,13 @@ from rest_framework import mixins, viewsets
 from rest_framework.decorators import action
 from rest_framework.response import Response
 
-from features.models import FeatureSegment
 from features.feature_segments.serializers import (
-    FeatureSegmentCreateSerializer,
-    FeatureSegmentQuerySerializer,
-    FeatureSegmentListSerializer,
     FeatureSegmentChangePrioritiesSerializer,
+    FeatureSegmentCreateSerializer,
+    FeatureSegmentListSerializer,
+    FeatureSegmentQuerySerializer,
 )
+from features.models import FeatureSegment
 
 
 @method_decorator(

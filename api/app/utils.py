@@ -1,5 +1,6 @@
-import shortuuid
 import pathlib
+
+import shortuuid
 
 
 def create_hash():

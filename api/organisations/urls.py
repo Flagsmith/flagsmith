@@ -2,10 +2,10 @@ from django.conf.urls import include, url
 from rest_framework_nested import routers
 
 from organisations.views import OrganisationWebhookViewSet
-from .invites.views import InviteViewSet, InviteLinkViewSet
 from users.views import FFAdminUserViewSet, UserPermissionGroupViewSet
 
 from . import views
+from .invites.views import InviteLinkViewSet, InviteViewSet
 
 router = routers.DefaultRouter()
 router.register(r"", views.OrganisationViewSet, basename="organisation")

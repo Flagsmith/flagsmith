@@ -1,3 +1,5 @@
+import logging
+
 from django.dispatch import receiver
 from simple_history.signals import post_create_historical_record
 
@@ -6,7 +8,6 @@ from audit.models import (
     AuditLog,
     RelatedObjectType,
 )
-import logging
 
 # noinspection PyUnresolvedReferences
 from .models import HistoricalFeatureSegment

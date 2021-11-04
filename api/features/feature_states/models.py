@@ -2,7 +2,12 @@ import typing
 
 from django.db import models
 
-from features.value_types import INTEGER, STRING, BOOLEAN, FEATURE_STATE_VALUE_TYPES
+from features.value_types import (
+    BOOLEAN,
+    FEATURE_STATE_VALUE_TYPES,
+    INTEGER,
+    STRING,
+)
 
 
 class AbstractBaseFeatureValueModel(models.Model):

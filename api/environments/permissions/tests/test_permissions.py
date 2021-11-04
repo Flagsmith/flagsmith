@@ -2,15 +2,19 @@ from unittest import TestCase, mock
 
 import pytest
 
-from environments.models import Environment
 from environments.identities.models import Identity
+from environments.models import Environment
 from environments.permissions.models import UserEnvironmentPermission
 from environments.permissions.permissions import (
     EnvironmentPermissions,
     NestedEnvironmentPermissions,
 )
 from organisations.models import Organisation, OrganisationRole
-from projects.models import Project, UserProjectPermission, ProjectPermissionModel
+from projects.models import (
+    Project,
+    ProjectPermissionModel,
+    UserProjectPermission,
+)
 from users.models import FFAdminUser
 
 mock_view = mock.MagicMock()

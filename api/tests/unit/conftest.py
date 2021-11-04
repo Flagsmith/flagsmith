@@ -1,8 +1,8 @@
 import pytest
 
-from projects.models import Project
-from organisations.models import Organisation
 from environments.models import Environment
+from organisations.models import Organisation
+from projects.models import Project
 from users.models import FFAdminUser
 
 

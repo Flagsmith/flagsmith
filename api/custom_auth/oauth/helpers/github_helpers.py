@@ -1,5 +1,6 @@
-from custom_auth.oauth.exceptions import GithubError
 import logging
+
+from custom_auth.oauth.exceptions import GithubError
 
 logger = logging.getLogger(__name__)
 

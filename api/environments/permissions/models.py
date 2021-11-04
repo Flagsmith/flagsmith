@@ -2,7 +2,7 @@ from django.db import models
 
 from environments.models import Environment
 from environments.permissions.managers import EnvironmentPermissionManager
-from permissions.models import PermissionModel, BasePermissionModelABC
+from permissions.models import BasePermissionModelABC, PermissionModel
 
 
 class EnvironmentPermissionModel(PermissionModel):

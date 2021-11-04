@@ -1,4 +1,4 @@
-from integrations.new_relic.new_relic import NewRelicWrapper, EVENTS_API_URI
+from integrations.new_relic.new_relic import EVENTS_API_URI, NewRelicWrapper
 
 
 def test_new_relic_initialized_correctly():
