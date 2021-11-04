@@ -1,10 +1,9 @@
 from unittest import mock
 
 import pytest
+from core.middleware.admin import AdminWhitelistMiddleware
 from django.core.exceptions import PermissionDenied
 from django.test import override_settings
-
-from core.middleware.admin import AdminWhitelistMiddleware
 
 allowed_ip_address = "10.0.0.1"
 not_allowed_ip_address = "11.0.0.1"
