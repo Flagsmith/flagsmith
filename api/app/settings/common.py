@@ -271,7 +271,11 @@ STATIC_ROOT = os.path.join(PROJECT_ROOT, "../../static/")
 # CORS settings
 
 CORS_ORIGIN_ALLOW_ALL = True
-CORS_ALLOW_HEADERS = default_headers + ("X-Environment-Key", "X-E2E-Test-Auth-Token")
+CORS_ALLOW_HEADERS = default_headers + (
+    "X-Environment-Key",
+    "X-E2E-Test-Auth-Token",
+    "sentry-trace",
+)
 
 DEFAULT_FROM_EMAIL = env("SENDER_EMAIL", default="noreply@flagsmith.com")
 EMAIL_CONFIGURATION = {
