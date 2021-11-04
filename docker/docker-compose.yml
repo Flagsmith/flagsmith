@@ -18,10 +18,11 @@ services:
             DATABASE_URL: postgresql://postgres:password@db:5432/flagsmith
             ENABLE_INFLUXDB_FEATURES: 'false' # set to true to enable InfluxDB
             EMAIL_BACKEND: django.core.mail.backends.smtp.EmailBackend
+            # For more info on configuring InfluxDB - https://docs.flagsmith.com/deployment/overview#influxdb
             # INFLUXDB_URL: http://influxdb:8086
             # INFLUXDB_BUCKET: flagsmith_api
-            # INFLUXDB_ORG: # Add your influx org id here - see readme.md
-            # INFLUXDB_TOKEN: # Add your influx token here - see readme.md
+            # INFLUXDB_ORG: # Add your influx org id here
+            # INFLUXDB_TOKEN: # Add your influx token here
         ports:
             - '8000:8000'
         depends_on:
