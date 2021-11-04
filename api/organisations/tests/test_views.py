@@ -396,6 +396,34 @@ class OrganisationTestCase(TestCase):
         # THEN
         assert response.status_code == status.HTTP_204_NO_CONTENT
 
+    @mock.patch("organisations.views.get_hosted_page_url_for_existing_subscription")
+    def test_get_hosted_page(self, mock_get_hosted_page):
+        # Given
+        organisation = Organisation.objects.create(name="Test organisation")
+        self.user.add_organisation(organisation, OrganisationRole.ADMIN)
+
+        subscription = Subscription.objects.create(
+            subscription_id="sub-id", organisation=organisation
+        )
+
+        url = reverse(
+            "api-v1:organisations:organisation-get-hosted-page-url",
+            args=[organisation.id],
+        )
+
+        expected_url = "https://some.url.com/hosted/page"
+        mock_get_hosted_page.return_value = expected_url
+
+        # When
+        response = self.client.get(url)
+
+        # Then
+        assert response.status_code == status.HTTP_200_OK
+        assert response.json()["url"] == expected_url
+        mock_get_hosted_page.assert_called_once_with(
+            subscription_id=subscription.subscription_id
+        )
+
 
 @pytest.mark.django_db
 class ChargeBeeWebhookTestCase(TestCase):
