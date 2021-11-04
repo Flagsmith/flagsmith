@@ -423,6 +423,7 @@ const OrganisationSettingsPage = class extends Component {
                                                                           <Input
                                                                             style={{ width: 450 }}
                                                                             value={`${document.location.origin}/invite/${inviteLinks.find(f => f.role === this.state.role).hash}`}
+                                                                            data-test="invite-link"
                                                                             inputClassName="input input--wide"
                                                                             className="full-width"
                                                                             type="text"
