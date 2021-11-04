@@ -87,17 +87,22 @@ const OrganisationSettingsPage = class extends Component {
     }
 
     save = (e) => {
-        e.preventDefault();
-        const { name, webhook_notification_email } = this.state;
-        if (AccountStore.isSaving || (!name && webhook_notification_email === undefined)) {
+        e && e.preventDefault();
+        const { name, webhook_notification_email, restrict_project_create_to_admin } = this.state;
+        if (AccountStore.isSaving) {
             return;
         }
 
         const org = AccountStore.getOrganisation();
         AppActions.editOrganisation({
             name: name || org.name,
+            restrict_project_create_to_admin: typeof restrict_project_create_to_admin === 'boolean' ? restrict_project_create_to_admin : undefined,
             webhook_notification_email: webhook_notification_email !== undefined ? webhook_notification_email : org.webhook_notification_email,
         });
+    }
+
+    setAdminCanCreateProject = (restrict_project_create_to_admin) => {
+        this.setState({ restrict_project_create_to_admin }, this.save);
     }
 
     saveDisabled = () => {
@@ -421,6 +426,7 @@ const OrganisationSettingsPage = class extends Component {
                                                                           <Input
                                                                             style={{ width: 450 }}
                                                                             value={`${document.location.origin}/invite/${inviteLinks.find(f => f.role === this.state.role).hash}`}
+                                                                            data-test="invite-link"
                                                                             inputClassName="input input--wide"
                                                                             className="full-width"
                                                                             type="text"
@@ -704,6 +710,31 @@ const OrganisationSettingsPage = class extends Component {
                                     />
                                 )}
                             </FormGroup>
+                            {this.props.hasFeature('restrict_project_create_to_admin') && (
+                                <FormGroup className="mt-5">
+                                    <Row>
+                                        <Column>
+                                            <h3>Admin Settings</h3>
+                                            <Row>
+                                                Only allow organisation admins to create projects
+                                                <Switch
+                                                  checked={organisation.restrict_project_create_to_admin} onChange={() => this.setAdminCanCreateProject(!organisation.restrict_project_create_to_admin)}
+                                                />
+                                            </Row>
+                                        </Column>
+                                        <Button
+                                          id="delete-org-btn"
+                                          onClick={() => this.confirmRemove(organisation, () => {
+                                              deleteOrganisation();
+                                          })}
+                                          className="btn btn--with-icon ml-auto btn--remove"
+                                        >
+                                            <RemoveIcon/>
+                                        </Button>
+                                    </Row>
+
+                                </FormGroup>
+                            )}
                             <FormGroup className="mt-5">
                                 <Row>
                                     <Column>

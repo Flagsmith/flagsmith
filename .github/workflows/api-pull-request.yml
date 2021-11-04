@@ -43,13 +43,22 @@ jobs:
               with:
                   python-version: ${{ matrix.python-version }}
 
+            - name: Cache pip download
+              uses: syphar/restore-pip-download-cache@v1
+
             - name: Install Dependencies
               run: |
                   python -m pip install --upgrade pip
                   pip install -r requirements-dev.txt
 
-            - name: Check Formatting
+            - name: Check black formatting
               run: black --check .
+
+            - name: Check flake8 linting
+              run: flake8 .
+
+            - name: Check isort imports
+              run: isort --check .
 
             - name: Run Tests
               env:

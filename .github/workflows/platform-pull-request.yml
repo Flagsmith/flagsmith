@@ -43,6 +43,7 @@ jobs:
                   SENDGRID_API_KEY: ${{ secrets.SENDGRID_API_KEY }}
                   DJANGO_SETTINGS_MODULE: app.settings.test
                   FE_E2E_TEST_USER_EMAIL: nightwatch@solidstategroup.com
+                  SENTRY_SDK_DSN: ${{ secrets.SENTRY_SDK_DSN }}
               run: |
                   python3.8 -m pip install --upgrade pip
                   python3.8 -m pip install -r requirements.txt

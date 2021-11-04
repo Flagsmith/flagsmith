@@ -32,7 +32,7 @@ from .models import Feature, FeatureState
 from .permissions import FeaturePermissions, FeatureStatePermissions
 from .serializers import (
     FeatureInfluxDataSerializer,
-    FeatureSerializer,
+    FeatureOwnerInputSerializer,
     FeatureStateSerializerBasic,
     FeatureStateSerializerCreate,
     FeatureStateSerializerFull,
@@ -40,6 +40,7 @@ from .serializers import (
     FeatureStateValueSerializer,
     GetInfluxDataQuerySerializer,
     ListCreateFeatureSerializer,
+    ProjectFeatureSerializer,
     UpdateFeatureSerializer,
     WritableNestedFeatureStateSerializer,
 )
@@ -60,7 +61,34 @@ class FeatureViewSet(viewsets.ModelViewSet):
             "create": ListCreateFeatureSerializer,
             "update": UpdateFeatureSerializer,
             "partial_update": UpdateFeatureSerializer,
-        }.get(self.action, FeatureSerializer)
+        }.get(self.action, ProjectFeatureSerializer)
+
+    @swagger_auto_schema(
+        request_body=FeatureOwnerInputSerializer,
+        responses={200: ProjectFeatureSerializer},
+    )
+    @action(detail=True, methods=["POST"], url_path="add-owners")
+    def add_owners(self, request, *args, **kwargs):
+        serializer = FeatureOwnerInputSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+
+        feature = self.get_object()
+        serializer.add_owners(feature)
+        return Response(self.get_serializer(instance=feature).data)
+
+    @swagger_auto_schema(
+        request_body=FeatureOwnerInputSerializer,
+        responses={200: ProjectFeatureSerializer},
+    )
+    @action(detail=True, methods=["POST"], url_path="remove-owners")
+    def remove_owners(self, request, *args, **kwargs):
+        serializer = FeatureOwnerInputSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+
+        feature = self.get_object()
+        serializer.remove_users(feature)
+
+        return Response(self.get_serializer(instance=feature).data)
 
     def get_queryset(self):
         user_projects = self.request.user.get_permitted_projects(["VIEW_PROJECT"])
@@ -68,7 +96,9 @@ class FeatureViewSet(viewsets.ModelViewSet):
         return project.features.all().prefetch_related("multivariate_options")
 
     def perform_create(self, serializer):
-        serializer.save(project_id=self.kwargs.get("project_pk"))
+        serializer.save(
+            project_id=self.kwargs.get("project_pk"), user=self.request.user
+        )
 
     def perform_update(self, serializer):
         serializer.save(project_id=self.kwargs.get("project_pk"))

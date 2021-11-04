@@ -1,5 +1,3 @@
-# -*- coding: utf-8 -*-
-import hashlib
 import re
 import typing
 
@@ -7,7 +5,9 @@ from django.core.exceptions import ValidationError
 from django.db import models
 from django.utils.encoding import python_2_unicode_compatible
 
-from environments.identities.helpers import get_hashed_percentage_for_object_ids
+from environments.identities.helpers import (
+    get_hashed_percentage_for_object_ids,
+)
 from environments.identities.models import Identity
 from environments.identities.traits.models import Trait
 from environments.models import BOOLEAN, FLOAT, INTEGER

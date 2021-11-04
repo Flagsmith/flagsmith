@@ -25,7 +25,7 @@ const linkedin = process.env.LINKEDIN;
 const app = express();
 const port = process.env.PORT || 8080;
 
-app.get('/api/project-overrides', (req, res) => {
+app.get('/config/project-overrides', (req, res) => {
     const getVariable = ({ name, value }) => {
         if (!value || value === 'undefined') {
             if (typeof value === 'boolean') {
@@ -58,6 +58,7 @@ app.get('/api/project-overrides', (req, res) => {
 
     const values = [
         { name: 'preventSignup', value: !envToBool('ALLOW_SIGNUPS', true) },
+        { name: 'superUserCreateOnly', value: envToBool('ONLY_SUPERUSERS_CAN_CREATE_ORGANISATIONS', false) },
         { name: 'flagsmith', value: process.env.FLAGSMITH_ON_FLAGSMITH_API_KEY },
         { name: 'ga', value: process.env.GOOGLE_ANALYTICS_API_KEY },
         { name: 'crispChat', value: process.env.CRISP_WEBSITE_ID },

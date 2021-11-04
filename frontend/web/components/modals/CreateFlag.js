@@ -12,6 +12,7 @@ import ValueEditor from '../ValueEditor';
 import VariationValue from '../mv/VariationValue';
 import AddVariationButton from '../mv/AddVariationButton';
 import VariationOptions from '../mv/VariationOptions';
+import FlagOwners from '../FlagOwners';
 
 const FEATURE_ID_MAXLENGTH = Constants.forms.maxLength.FEATURE_ID;
 
@@ -49,6 +50,23 @@ const CreateFlag = class extends Component {
 
     close() {
         closeModal();
+    }
+
+
+    componentDidUpdate(prevProps, prevState, snapshot) {
+        if (!this.props.identity && this.props.environmentVariations !== prevProps.environmentVariations) {
+            if (this.props.environmentVariations && this.props.environmentVariations.length) {
+                this.setState({
+                    multivariate_options: this.state.multivariate_options && this.state.multivariate_options.map((v) => {
+                        const matchingVariation = this.props.environmentVariations.find(e => e.multivariate_feature_option === v.id);
+                        return {
+                            ...v,
+                            default_percentage_allocation: matchingVariation && matchingVariation.percentage_allocation || 0,
+                        };
+                    }),
+                });
+            }
+        }
     }
 
 
@@ -317,6 +335,16 @@ const CreateFlag = class extends Component {
                         />
                     </FormGroup>
                 )}
+                {!identity && projectFlag && (
+                    <Permission level="project" permission="ADMIN" id={this.props.projectId}>
+                        {({ permission: projectAdmin }) => projectAdmin && this.props.hasFeature('flag_owners') && (
+                            <FormGroup className="mb-4 mr-3 ml-3" >
+                                <FlagOwners projectId={this.props.projectId} id={projectFlag.id}/>
+                            </FormGroup>
+
+                        )}
+                    </Permission>
+                )}
                 <FormGroup className="mb-4 mr-3 ml-3" >
                     <InputGroup
                       value={description}
@@ -332,7 +360,7 @@ const CreateFlag = class extends Component {
                       placeholder="e.g. 'This determines what size the header is' "
                     />
                 </FormGroup>
-                {this.props.hasFeature('archive_flags') && !identity && (
+                {!identity && (
                     <FormGroup className="mb-4 mr-3 ml-3" >
                         <InputGroup
                           value={description}
@@ -463,15 +491,18 @@ const CreateFlag = class extends Component {
                 {!identity && (
                     <div>
                         <FormGroup className="ml-3 mb-4 mr-3">
-                            <VariationOptions
-                              disabled={!!identity}
-                              controlValue={controlValue}
-                              variationOverrides={environmentVariations}
-                              updateVariation={this.updateVariation}
-                              weightTitle={isEdit ? 'Environment Weight %' : 'Default Weight %'}
-                              multivariateOptions={multivariate_options}
-                              removeVariation={this.removeVariation}
-                            />
+                            {(!!environmentVariations || !isEdit) && (
+                                <VariationOptions
+                                  disabled={!!identity}
+                                  controlValue={controlValue}
+                                  variationOverrides={environmentVariations}
+                                  updateVariation={this.updateVariation}
+                                  weightTitle={isEdit ? 'Environment Weight %' : 'Default Weight %'}
+                                  multivariateOptions={multivariate_options}
+                                  removeVariation={this.removeVariation}
+                                />
+                            )}
+
                         </FormGroup>
                         <AddVariationButton onClick={this.addVariation}/>
                     </div>
@@ -620,14 +651,14 @@ const CreateFlag = class extends Component {
                                                           renderRow={({ id, feature_state_value, enabled, identity }) => (
                                                               <Row
                                                                 onClick={() => {
-                                                                    window.open(`${document.location.origin}/project/${this.props.projectId}/environment/${this.props.environmentId}/users/${identity.identifier}/${identity.id}`, '_blank');
+                                                                    window.open(`${document.location.origin}/project/${this.props.projectId}/environment/${this.props.environmentId}/users/${identity.identifier}/${identity.id}?flag=${projectFlag.name}`, '_blank');
                                                                 }} space className="list-item cursor-pointer"
                                                                 key={id}
                                                               >
                                                                   <Flex>
                                                                       {identity.identifier}
                                                                   </Flex>
-                                                                  <Switch checked={enabled}/>
+                                                                  <Switch disabled checked={enabled}/>
                                                                   <div className="ml-2">
                                                                       {feature_state_value && (
                                                                       <FeatureValue
@@ -639,11 +670,11 @@ const CreateFlag = class extends Component {
 
                                                                   <a
                                                                     target="_blank"
-                                                                    href={`/project/${this.props.projectId}/environment/${this.props.environmentId}/users/${identity.identifier}/${identity.id}`}
+                                                                    href={`/project/${this.props.projectId}/environment/${this.props.environmentId}/users/${identity.identifier}/${identity.id}?flag=${projectFlag.name}`}
                                                                     className="ml-2 btn btn-link btn--link" onClick={() => {
                                                                     }}
                                                                   >
-                                                                        View user
+                                                                        Edit
                                                                   </a>
                                                               </Row>
                                                           )}

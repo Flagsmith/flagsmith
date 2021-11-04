@@ -50,8 +50,12 @@ class OrganisationTestCase(TestCase):
         org_data = response_json["results"][0]
         assert "persist_trait_data" in org_data
 
-    def test_should_create_new_organisation(self):
+    def test_non_superuser_can_create_new_organisation_by_default(self):
         # Given
+        user = User.objects.create(email="test@example.com")
+        client = APIClient()
+        client.force_authenticate(user=user)
+
         org_name = "Test create org"
         webhook_notification_email = "test@email.com"
         url = reverse("api-v1:organisations:organisation-list")
@@ -61,7 +65,7 @@ class OrganisationTestCase(TestCase):
         }
 
         # When
-        response = self.client.post(url, data=data)
+        response = client.post(url, data=data)
 
         # Then
         assert response.status_code == status.HTTP_201_CREATED
@@ -70,7 +74,29 @@ class OrganisationTestCase(TestCase):
             == webhook_notification_email
         )
 
-    def test_should_update_organisation_name(self):
+    @override_settings(RESTRICT_ORG_CREATE_TO_SUPERUSERS=True)
+    def test_create_new_orgnisation_returns_403_with_non_superuser(self):
+        # Given
+        user = User.objects.create(email="test@example.com")
+        client = APIClient()
+        client.force_authenticate(user=user)
+
+        org_name = "Test create org"
+        url = reverse("api-v1:organisations:organisation-list")
+        data = {
+            "name": org_name,
+        }
+
+        # When
+        response = client.post(url, data=data)
+        # Then
+        assert response.status_code == status.HTTP_403_FORBIDDEN
+        assert (
+            "You do not have permission to perform this action."
+            == response.json()["detail"]
+        )
+
+    def test_should_update_organisation_data(self):
         # Given
         original_organisation_name = "test org"
         new_organisation_name = "new test org"
@@ -79,7 +105,7 @@ class OrganisationTestCase(TestCase):
         url = reverse(
             "api-v1:organisations:organisation-detail", args=[organisation.pk]
         )
-        data = {"name": new_organisation_name}
+        data = {"name": new_organisation_name, "restrict_project_create_to_admin": True}
 
         # When
         response = self.client.put(url, data=data)
@@ -88,6 +114,7 @@ class OrganisationTestCase(TestCase):
         organisation.refresh_from_db()
         assert response.status_code == status.HTTP_200_OK
         assert organisation.name == new_organisation_name
+        assert organisation.restrict_project_create_to_admin
 
     @override_settings()
     def test_should_invite_users(self):
@@ -154,7 +181,7 @@ class OrganisationTestCase(TestCase):
             frontend_base_url="https://www.example.com",
             organisation=organisation,
         )
-        invite_2 = Invite.objects.create(
+        Invite.objects.create(
             email="test_2@example.com",
             frontend_base_url="https://www.example.com",
             organisation=organisation,

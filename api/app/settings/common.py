@@ -35,7 +35,7 @@ if ENV not in ("local", "dev", "staging", "production"):
         "ENVIRONMENT env variable must be one of local, dev, staging or production"
     )
 
-DEBUG = env("DEBUG", default=False)
+DEBUG = env.bool("DEBUG", default=False)
 
 # Enables the sending of telemetry data to the central Flagsmith API for usage tracking
 ENABLE_TELEMETRY = env("ENABLE_TELEMETRY", default=True)
@@ -105,6 +105,7 @@ INSTALLED_APPS = [
     "features",
     "features.multivariate",
     "segments",
+    "app",
     "e2etests",
     "simple_history",
     "drf_yasg2",
@@ -179,6 +180,7 @@ REST_FRAMEWORK = {
 
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
+    "whitenoise.middleware.WhiteNoiseMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
     "corsheaders.middleware.CorsMiddleware",
     "django.middleware.common.CommonMiddleware",
@@ -263,13 +265,17 @@ USE_TZ = True
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/1.9/howto/static-files/
 
-STATIC_URL = "/static/"
+STATIC_URL = "/"
 STATIC_ROOT = os.path.join(PROJECT_ROOT, "../../static/")
 
 # CORS settings
 
 CORS_ORIGIN_ALLOW_ALL = True
-CORS_ALLOW_HEADERS = default_headers + ("X-Environment-Key", "X-E2E-Test-Auth-Token")
+CORS_ALLOW_HEADERS = default_headers + (
+    "X-Environment-Key",
+    "X-E2E-Test-Auth-Token",
+    "sentry-trace",
+)
 
 DEFAULT_FROM_EMAIL = env("SENDER_EMAIL", default="noreply@flagsmith.com")
 EMAIL_CONFIGURATION = {
@@ -317,9 +323,21 @@ elif EMAIL_BACKEND == "django.core.mail.backends.smtp.EmailBackend":
 SWAGGER_SETTINGS = {
     "SHOW_REQUEST_HEADERS": True,
     "SECURITY_DEFINITIONS": {
-        "api_key": {"type": "apiKey", "in": "header", "name": "Authorization"}
+        "Private": {
+            "type": "apiKey",
+            "in": "header",
+            "name": "Authorization",
+            "description": "Every time you create a new Project Environment, an environment API key is automatically generated for you. This is all you need to pass in to get access to Flags etc. <br />Example value: <br />Token 884b1b4c6b4ddd112e7a0a139f09eb85e8c254ff",  # noqa
+        },
+        "Public": {
+            "type": "apiKey",
+            "in": "header",
+            "name": "X-Environment-Key",
+            "description": "Things like creating new flags, environments, toggle flags or indeed anything that is possible from the administrative front end. <br />Example value: <br />FFnVjhp7xvkT5oTLq4q788",  # noqa
+        },
     },
 }
+
 
 LOGIN_URL = "/admin/login/"
 LOGOUT_URL = "/admin/logout/"
@@ -467,3 +485,22 @@ ENVIRONMENTS_TABLE_NAME_DYNAMO = env.str("ENVIRONMENTS_TABLE_NAME_DYNAMO", None)
 
 # DynamoDB table name for storing identities
 IDENTITIES_TABLE_NAME_DYNAMO = env.str("IDENTITIES_TABLE_NAME_DYNAMO", None)
+
+# Front end environment variables
+API_URL = env("API_URL", default="/api/v1/")
+ASSET_URL = env("ASSET_URL", default="/")
+MAINTENANCE_MODE = env.bool("MAINTENANCE_MODE", default=False)
+PREVENT_SIGNUP = env.bool("PREVENT_SIGNUP", default=False)
+DISABLE_INFLUXDB_FEATURES = env.bool("DISABLE_INFLUXDB_FEATURES", default=True)
+FLAGSMITH_ANALYTICS = env.bool("FLAGSMITH_ANALYTICS", default=False)
+FLAGSMITH_ON_FLAGSMITH_API_URL = env("FLAGSMITH_ON_FLAGSMITH_API_URL", default=None)
+FLAGSMITH_ON_FLAGSMITH_API_KEY = env("FLAGSMITH_ON_FLAGSMITH_API_KEY", default=None)
+GOOGLE_ANALYTICS_API_KEY = env("GOOGLE_ANALYTICS_API_KEY", default=None)
+LINKEDIN_API_KEY = env("LINKEDIN_API_KEY", default=None)
+CRISP_CHAT_API_KEY = env("CRISP_CHAT_API_KEY", default=None)
+MIXPANEL_API_KEY = env("MIXPANEL_API_KEY", default=None)
+SENTRY_API_KEY = env("SENTRY_API_KEY", default=None)
+AMPLITUDE_API_KEY = env("AMPLITUDE_API_KEY", default=None)
+
+# Set this to enable create organisation for only superusers
+RESTRICT_ORG_CREATE_TO_SUPERUSERS = env.bool("RESTRICT_ORG_CREATE_TO_SUPERUSERS", False)

@@ -16,21 +16,48 @@ class _EditPermissionsModal extends Component {
   constructor(props) {
       super(props);
       AppActions.getAvailablePermissions();
-      const url = props.isGroup ? `${props.level}s/${props.id}/user-group-permissions/` : `${props.level}s/${props.id}/user-permissions/`;
-      _data.get(`${Project.api}${url}`)
-          .then((results) => {
-              let entityPermissions = props.isGroup ? _.find(results, r => r.group.id === props.group.id) : _.find(results, r => r.user.id === props.user.id);
-              if (!entityPermissions) {
-                  entityPermissions = { admin: false, permissions: [] };
-              }
-              if (this.props.user) {
-                  entityPermissions.user = this.props.user.id;
-              }
-              if (this.props.group) {
-                  entityPermissions.group = this.props.group.id;
-              }
-              this.setState({ entityPermissions });
-          });
+      let parentGet = Promise.resolve();
+      if (this.props.parentLevel) {
+          const parentUrl = props.isGroup ? `${props.parentLevel}s/${props.parentId}/user-group-permissions/` : `${props.parentLevel}s/${props.parentId}/user-permissions/`;
+
+          parentGet = _data.get(`${Project.api}${parentUrl}`)
+              .then((results) => {
+                  let entityPermissions = props.isGroup ? _.find(results, r => r.group.id === props.group.id) : _.find(results, r => r.user.id === props.user.id);
+                  if (!entityPermissions) {
+                      entityPermissions = { admin: false, permissions: [] };
+                  }
+                  if (this.props.user) {
+                      entityPermissions.user = this.props.user.id;
+                  }
+                  if (this.props.group) {
+                      entityPermissions.group = this.props.group.id;
+                  }
+
+                  if (!entityPermissions.admin && !(entityPermissions.permissions.find(v => v === (`VIEW_${this.props.parentLevel.toUpperCase()}`)))) {
+                      throw 'Error';
+                  }
+              });
+      }
+      parentGet.then(() => {
+          const url = props.isGroup ? `${props.level}s/${props.id}/user-group-permissions/` : `${props.level}s/${props.id}/user-permissions/`;
+          _data.get(`${Project.api}${url}`)
+              .then((results) => {
+                  let entityPermissions = props.isGroup ? _.find(results, r => r.group.id === props.group.id) : _.find(results, r => r.user.id === props.user.id);
+                  if (!entityPermissions) {
+                      entityPermissions = { admin: false, permissions: [] };
+                  }
+                  if (this.props.user) {
+                      entityPermissions.user = this.props.user.id;
+                  }
+                  if (this.props.group) {
+                      entityPermissions.group = this.props.group.id;
+                  }
+                  this.setState({ entityPermissions });
+              });
+      }).catch(() => {
+          this.setState({ parentError: true });
+      });
+
       this.state = {};
   }
 
@@ -53,7 +80,7 @@ class _EditPermissionsModal extends Component {
       const action = id ? 'put' : 'post';
       _data[action](`${Project.api}${url}${id && '/'}`, this.state.entityPermissions)
           .then(() => {
-              this.props.onSave && this.props.onSave()
+              this.props.onSave && this.props.onSave();
               this.close();
           })
           .catch((e) => {
@@ -93,6 +120,18 @@ class _EditPermissionsModal extends Component {
           <AvailablePermissionsProvider level={level}>
               {(props) => {
                   const { permissions, isLoading } = props;
+                  if (this.state.parentError) {
+                      return (
+                          <div>
+                              The selected {this.props.isGroup ? 'group' : 'user'} does not have permission to view this {this.props.parentLevel}. Please adjust their permissions in <a onClick={() => {
+                              this.props.push(this.props.parentSettingsLink);
+                              closeModal();
+                          }}
+                              ><strong>{this.props.parentLevel} settings</strong>
+                              </a>.
+                          </div>
+                      );
+                  }
                   return (isLoading || !permissions || !entityPermissions ? <div className="text-center"><Loader/></div>
                       : (
                           <div>
@@ -105,7 +144,9 @@ class _EditPermissionsModal extends Component {
                                           <div className="list-item-footer faint">
                                               {
                                               hasRbacPermission ? `Full View and Write permissions for the given ${Format.camelCase(this.props.level)}.`
-                                                  : 'Please upgrade your account to enable role based access.'
+                                                  : <span>
+                                                      Role-based access is not available in our Open Source version. Please contact <a href="mailto:sales@flagsmith.com">sales@flagsmith.com</a> for more information on our licensing options.
+                                                  </span>
                                             }
                                           </div>
                                       </Flex>
@@ -164,11 +205,15 @@ export default class EditPermissions extends PureComponent {
 
   static propTypes = {};
 
-  constructor(props) {
-      super(props);
-      this.state = { tab: 0 };
-      AppActions.getGroups(AccountStore.getOrganisation().id);
-  }
+    static contextTypes = {
+        router: propTypes.object.isRequired,
+    };
+
+    constructor(props) {
+        super(props);
+        this.state = { tab: 0 };
+        AppActions.getGroups(AccountStore.getOrganisation().id);
+    }
 
   editUserPermissions = (user) => {
       openModal(`Edit ${Format.camelCase(this.props.level)} Permissions`, <EditPermissionsModal
@@ -176,7 +221,11 @@ export default class EditPermissions extends PureComponent {
         id={this.props.id}
         onSave={this.props.onSaveUser}
         level={this.props.level}
+        parentId={this.props.parentId}
+        parentLevel={this.props.parentLevel}
+        parentSettingsLink={this.props.parentSettingsLink}
         user={user}
+        push={this.context.router.history.push}
       />);
   }
 
@@ -187,7 +236,11 @@ export default class EditPermissions extends PureComponent {
         isGroup
         onSave={this.props.onSaveGroup}
         level={this.props.level}
+        parentId={this.props.parentId}
+        parentLevel={this.props.parentLevel}
+        parentSettingsLink={this.props.parentSettingsLink}
         group={group}
+        push={this.context.router.history.push}
       />);
   }
 
@@ -248,7 +301,7 @@ export default class EditPermissions extends PureComponent {
                                                             ) : (
                                                                 <div onClick={onClick} className="flex-row">
                                                                     <span className="mr-3">{
-                                                                        matchingPermissions.admin ? `${Format.camelCase(this.props.level)} Administrator` : 'Regular User'
+                                                                        matchingPermissions && matchingPermissions.admin ? `${Format.camelCase(this.props.level)} Administrator` : 'Regular User'
                                                                     }
                                                                     </span>
                                                                     <ion style={{ fontSize: 24 }} className="icon--primary ion ion-md-settings"/>

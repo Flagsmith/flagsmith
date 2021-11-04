@@ -1,9 +1,9 @@
 import json
+import logging
 
 import requests
 
 from integrations.common.wrapper import AbstractBaseEventIntegrationWrapper
-import logging
 
 logger = logging.getLogger(__name__)
 

@@ -1,4 +1,3 @@
-import hashlib
 import typing
 
 import boto3
@@ -159,7 +158,6 @@ class Identity(models.Model):
         """
         current_traits = self.get_all_user_traits()
 
-        new_traits = []
         keys_to_delete = []
 
         for trait_data_item in trait_data_items:
@@ -180,12 +178,9 @@ class Identity(models.Model):
                     setattr(current_trait, attr, value)
                 current_trait.save()
             else:
-                # create a new trait and append it to the list of new traits
-                new_traits.append(
-                    Trait.objects.create(
-                        trait_key=trait_key, identity=self, **trait_value_data
-                    )
-                )
+                # use update_or_create to avoid race condition
+                kwargs = {"trait_key": trait_key, "identity": self}
+                Trait.objects.update_or_create(defaults=trait_value_data, **kwargs)
 
         # delete the traits that had their keys set to None
         if keys_to_delete:
