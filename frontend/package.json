@@ -5,7 +5,7 @@
   "main": "index.js",
   "scripts": {
     "kill": "kill -9 $(lsof -ti tcp:4444)",
-    "test:bundle": "cross-env ASSET_URL=/ E2E=1 npm run bundle",
+    "test:bundle": "cross-env STATIC_ASSET_CDN_URL=/ E2E=1 npm run bundle",
     "test:init": "cross-env NODE_ENV=production E2E=true nightwatch e2e/initialise.js",
     "test:local": "npm run test:init && cross-env NODE_ENV=production E2E=true nightwatch",
     "test": "npm run test:bundle && npm run test:init && cross-env NODE_ENV=production E2E=true nightwatch",

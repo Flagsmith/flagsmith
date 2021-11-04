@@ -276,6 +276,7 @@ const OrganisationSettingsPage = class extends Component {
                                                 <Column className="m-l-0">
                                                     <Input
                                                       ref={e => this.input = e}
+                                                      data-test="organisation-name"
                                                       value={this.state.name || organisation.name}
                                                       onChange={e => this.setState({ name: Utils.safeParseEventValue(e) })}
                                                       isValid={name && name.length}

@@ -10,6 +10,7 @@ const helpers = require('../helpers');
 
 const byId = helpers.byTestID;
 let inviteLink;
+let organistationName;
 module.exports = {
     '[Invite Tests] - Login': function (browser) {
         testHelpers.login(browser, url, email, password, true);
@@ -17,6 +18,10 @@ module.exports = {
     '[Invite Tests] - Invite user': function (browser) {
         browser.pause(200);
         browser.url(`${url}/organisation-settings`);
+        browser.waitForElementVisible(byId('organisation-name'))
+            .getValue(byId('organisation-name'), (result) => {
+                organistationName = result.value;
+            });
         browser.waitForElementVisible(byId('invite-link'))
             .getValue(byId('invite-link'), (result) => {
                 inviteLink = result.value;
@@ -35,7 +40,7 @@ module.exports = {
             .click(byId('signup-btn'));
         browser
             .useXpath()
-            .waitForElementPresent(`//div[contains(@class, "org-nav")]//a[contains(text(),"${`Bullet Train Org${append}`}")]`);
+            .waitForElementPresent(`//div[contains(@class, "org-nav")]//a[contains(text(),"${`${organistationName}`}")]`);
     },
     '[Invite Tests] - Finish': function (browser) {
         browser
