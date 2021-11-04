@@ -100,6 +100,7 @@ class Subscription(models.Model):
     subscription_date = models.DateTimeField(blank=True, null=True)
     plan = models.CharField(max_length=20, null=True, blank=True)
     max_seats = models.IntegerField(default=1)
+    max_api_calls = models.BigIntegerField(default=50000)
     cancellation_date = models.DateTimeField(blank=True, null=True)
     customer_id = models.CharField(max_length=100, blank=True, null=True)
 
