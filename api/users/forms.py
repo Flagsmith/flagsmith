@@ -8,7 +8,7 @@ from users.models import FFAdminUser
 
 
 class CustomUserAdminForm(UserChangeForm):
-    username = fields.CharField(required=False, widget=HiddenInput)
+    username = fields.CharField(required=False, widget=HiddenInput, empty_value=None)
 
 
 class InitConfigForm(forms.Form):
