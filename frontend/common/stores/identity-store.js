@@ -34,8 +34,8 @@ const controller = {
             }))
             : data.post(`${Project.api}environments/${environmentId}/identities/${identity}/featurestates/`, {
                 feature: projectFlag.id,
-                enabled: !environmentFlag.enabled,
-                value: environmentFlag.value,
+                enabled: !environmentFlag || !environmentFlag.enabled,
+                value: environmentFlag ? environmentFlag.value : undefined,
             });
 
         prom.then((res) => {
