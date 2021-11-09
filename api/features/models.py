@@ -68,14 +68,18 @@ class Feature(CustomLifecycleModelMixin, models.Model):
         ),
         on_delete=models.CASCADE,
     )
-    initial_value = models.CharField(max_length=20000, null=True, default=None)
+    initial_value = models.CharField(
+        max_length=20000, null=True, default=None, blank=True
+    )
     description = models.TextField(null=True, blank=True)
     default_enabled = models.BooleanField(default=False)
     type = models.CharField(max_length=50, null=True, blank=True)
     history = HistoricalRecords()
     tags = models.ManyToManyField(Tag, blank=True)
     is_archived = models.BooleanField(default=False)
-    owners = models.ManyToManyField("users.FFAdminUser", related_name="owned_features")
+    owners = models.ManyToManyField(
+        "users.FFAdminUser", related_name="owned_features", blank=True
+    )
 
     class Meta:
         # Note: uniqueness is changed to reference lowercase name in explicit SQL in the migrations
