@@ -27,6 +27,10 @@ class Project(models.Model):
         default=False,
         help_text="If true will exclude flags from SDK which are " "disabled",
     )
+    enable_dynamo_db = models.BooleanField(
+        default=False,
+        help_text="If true will sync environment data with dynamodb for global API",
+    )
 
     class Meta:
         ordering = ["id"]
