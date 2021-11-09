@@ -15,7 +15,7 @@ class Migration(migrations.Migration):
             name="enable_dynamo_db",
             field=models.BooleanField(
                 default=False,
-                help_text="If true will fetch identity data(shown in the dashboard) from dynamodb",
+                help_text="If true will sync environment data with dynamodb and use dynamodb for identity data(shown in the dashboard)",
             ),
         ),
     ]
