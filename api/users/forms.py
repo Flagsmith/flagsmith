@@ -10,6 +10,10 @@ from users.models import FFAdminUser
 class CustomUserAdminForm(UserChangeForm):
     username = fields.CharField(required=False, widget=HiddenInput, empty_value=None)
 
+    class Meta:
+        model = FFAdminUser
+        fields = UserChangeForm.Meta.fields
+
 
 class InitConfigForm(forms.Form):
     username = forms.CharField(max_length=200)
