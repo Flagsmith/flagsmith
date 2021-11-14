@@ -38,8 +38,35 @@ def project(admin_client, organisation):
 
 
 @pytest.fixture()
+def dynamo_enabled_project(admin_client, organisation):
+    project_data = {
+        "name": "Test Project",
+        "organisation": organisation,
+        "enable_dynamo_db": True,
+    }
+    url = reverse("api-v1:projects:project-list")
+    response = admin_client.post(url, data=project_data)
+    return response.json()["id"]
+
+
+@pytest.fixture()
 def environment_api_key():
     return create_hash()
+
+
+@pytest.fixture()
+def dynamo_enabled_environment(
+    admin_client, dynamo_enabled_project, environment_api_key
+) -> int:
+    environment_data = {
+        "name": "Test Environment",
+        "api_key": environment_api_key,
+        "project": dynamo_enabled_project,
+    }
+    url = reverse("api-v1:environments:environment-list")
+
+    response = admin_client.post(url, data=environment_data)
+    return response.json()["id"]
 
 
 @pytest.fixture()
