@@ -73,14 +73,16 @@ class IdentityViewSet(viewsets.ModelViewSet):
 
         return queryset
 
+    def get_queryset_dynamodb(self, page_size):
+        dynamo_query_kwargs = self._get_dynamo_query_kwargs(page_size)
+        return Identity.query_items_dynamodb(**dynamo_query_kwargs)
+
     def _get_dynamo_query_kwargs(
         self,
-        request,
-        environment_api_key: str,
-        previous_last_evaluated_key: str,
         page_size: int,
     ) -> dict:
         search_query = self.request.query_params.get("q")
+        previous_last_evaluated_key = self.request.GET.get("last_evaluated_key")
 
         filter_expression = Key("environment_api_key").eq(
             self.kwargs["environment_api_key"]
@@ -103,36 +105,21 @@ class IdentityViewSet(viewsets.ModelViewSet):
             )
         return dynamo_query_kwargs
 
+    def _get_list_response_from_dynamo(self, request):
+        paginator = self.pagination_class()
+        page_size = paginator.get_page_size(request)
+        dynamo_query_set = self.get_queryset_dynamodb(page_size)
+        paginator.set_pagination_state_dynamo(dynamo_query_set, request)
+
+        serializer = IdentitySerializer(data=dynamo_query_set["Items"], many=True)
+        serializer.is_valid()
+        return paginator.get_paginated_response_dynamo(serializer.data)
+
     def list(self, request, *args, **kwargs):
         environment = self.get_environment_from_request()
         if not environment.project.enable_dynamo_db:
             return super().list(request, *args, **kwargs)
-
-        paginator = self.pagination_class()
-        page_size = paginator.get_page_size(request)
-
-        previous_last_evaluated_key = self.request.GET.get("last_evaluated_key")
-        dynamo_query_kwargs = self._get_dynamo_query_kwargs(
-            request, environment.api_key, previous_last_evaluated_key, page_size
-        )
-        response = Identity.query_items_dynamodb(**dynamo_query_kwargs)
-
-        pagination_kwargs = {
-            "count": response["Count"],
-            "previous_last_evaluated_key": previous_last_evaluated_key,
-            "request": request,
-        }
-        last_evaluated_key = response.get("LastEvaluatedKey")
-        if last_evaluated_key:
-            last_evaluated_key = base64.b64encode(
-                json.dumps(last_evaluated_key).encode()
-            )
-            pagination_kwargs.update(last_evaluated_key=last_evaluated_key)
-        serializer = IdentitySerializer(data=response["Items"], many=True)
-        serializer.is_valid()
-        return paginator.get_paginated_response_dynamo(
-            serializer.data, **pagination_kwargs
-        )
+        return self._get_list_response_from_dynamo(request)
 
     def get_environment_from_request(self):
         """
