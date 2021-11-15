@@ -143,22 +143,23 @@ class IdentityViewSet(viewsets.ModelViewSet):
     def perform_create(self, serializer):
         environment = self.get_environment_from_request()
         if environment.project.enable_dynamo_db:
-            return Identity.put_item_dynamodb({**serializer.data, **self.kwargs})
+            Identity.put_item_dynamodb({**serializer.data, **self.kwargs})
+            return
         serializer.save(environment=environment)
 
     def perform_destroy(self, instance):
         environment = self.get_environment_from_request()
         if environment.project.enable_dynamo_db:
             Identity.delete_in_dynamodb(instance.composite_key)
-        else:
-            return super().perform_destroy(instance)
+            return
+        super().perform_destroy(instance)
 
     def perform_update(self, serializer):
         environment = self.get_environment_from_request()
         if environment.project.enable_dynamo_db:
             Identity.put_item_dynamodb({**serializer.data, **self.kwargs})
-        else:
-            serializer.save(environment=environment)
+            return
+        serializer.save(environment=environment)
 
 
 class SDKIdentitiesDeprecated(SDKAPIView):

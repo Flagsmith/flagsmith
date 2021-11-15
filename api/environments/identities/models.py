@@ -23,12 +23,11 @@ if settings.IDENTITIES_TABLE_NAME_DYNAMO:
     )
 
 
-def is_dynmodb_configured(f):
+def is_dynamodb_configured(f):
     def inner(*args, **kwargs):
         if not dynamo_identity_table:
             return
-        else:
-            return f(*args, **kwargs)
+        return f(*args, **kwargs)
 
     return inner
 
@@ -204,7 +203,7 @@ class Identity(models.Model):
         return self.get_all_user_traits()
 
     @staticmethod
-    @is_dynmodb_configured
+    @is_dynamodb_configured
     def bulk_send_to_dynamodb(identities: typing.List["Identity"]):
         with dynamo_identity_table.batch_writer() as batch:
             for identity in identities:
@@ -212,23 +211,23 @@ class Identity(models.Model):
                 batch.put_item(Item=identity_dict)
 
     @staticmethod
-    @is_dynmodb_configured
+    @is_dynamodb_configured
     def query_items_dynamodb(*args, **kwargs):
         return dynamo_identity_table.query(*args, **kwargs)
 
     @staticmethod
-    @is_dynmodb_configured
+    @is_dynamodb_configured
     def put_item_dynamodb(identity_obj: typing.Any):
         identity_dict = build_identity_dict(identity_obj)
         dynamo_identity_table.put_item(Item=identity_dict)
 
     @staticmethod
-    @is_dynmodb_configured
+    @is_dynamodb_configured
     def get_item_dynamodb(key: dict):
         identity_document = dynamo_identity_table.get_item(Key=key)["Item"]
         return build_identity_model(identity_document)
 
     @staticmethod
-    @is_dynmodb_configured
+    @is_dynamodb_configured
     def delete_in_dynamodb(composite_key: str):
         dynamo_identity_table.delete_item(Key={"composite_key": composite_key})
