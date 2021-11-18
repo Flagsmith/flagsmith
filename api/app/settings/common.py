@@ -461,13 +461,18 @@ ENABLE_AXES = env.bool("ENABLE_AXES", default=True)
 if ENABLE_AXES:
     # must be the first item in the auth backends
     AUTHENTICATION_BACKENDS.insert(0, "axes.backends.AxesBackend")
+
     # must be the last item in the middleware stack
     MIDDLEWARE.append("core.middleware.axes.AxesMiddleware")
+
     AXES_COOLOFF_TIME = timedelta(minutes=env.int("AXES_COOLOFF_TIME", 15))
     AXES_BLACKLISTED_URLS = [
         "/admin/login/?next=/admin",
         "/admin/",
     ]
+    AXES_ONLY_USER_FAILURES = env.bool("AXES_ONLY_USER_FAILURES", True)
+    AXES_FAILURE_LIMIT = env.int("AXES_FAILURE_LIMIT", 10)
+
 
 # Sentry tracking
 SENTRY_SDK_DSN = env("SENTRY_SDK_DSN", default=None)
