@@ -16,6 +16,8 @@ from integrations.slack.serializers import (
 )
 from integrations.slack.slack import get_bot_token, get_channels_data
 
+from .exceptions import InValidStateError
+
 
 class SlackConfigurationViewSet(IntegrationCommonViewSet):
     serializer_class = SlackEnvironmentSerializer
@@ -54,7 +56,6 @@ class SlackConfigurationViewSet(IntegrationCommonViewSet):
                 "code not found in query params",
                 status.HTTP_400_BAD_REQUEST,
             )
-
         env = self.get_environment_from_request()
         validate_state(request.GET.get("state"), request)
         bot_token = get_bot_token(code, self._get_slack_callback_url(**kwargs))
@@ -87,7 +88,5 @@ class SlackConfigurationViewSet(IntegrationCommonViewSet):
 def validate_state(state, request):
     state_before = request.session.pop("state", None)
     if state_before != state:
-        raise ValueError(
-            "State mismatch upon authorization completion. Try new request."
-        )
+        raise InValidStateError()
     return True

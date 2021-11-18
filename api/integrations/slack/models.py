@@ -1,6 +1,9 @@
 from django.db import models
+from django_lifecycle import BEFORE_SAVE, LifecycleModel, hook
 
 from projects.models import Project
+
+from .slack import join_channel
 
 
 class SlackConfiguration(models.Model):
@@ -11,7 +14,7 @@ class SlackConfiguration(models.Model):
     created_date = models.DateTimeField("DateCreated", auto_now_add=True)
 
 
-class SlackEnvironment(models.Model):
+class SlackEnvironment(LifecycleModel):
     slack_configuration = models.ForeignKey(
         SlackConfiguration, related_name="env_config", on_delete=models.CASCADE
     )
@@ -29,6 +32,10 @@ class SlackEnvironment(models.Model):
         on_delete=models.CASCADE,
     )
     enabled = models.BooleanField(default=True)
+
+    @hook(BEFORE_SAVE)
+    def join_channel(self):
+        join_channel(self.slack_configuration.api_token, self.channel_id)
 
     class Meta:
         unique_together = ("slack_configuration", "environment")
