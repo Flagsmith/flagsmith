@@ -316,7 +316,7 @@ class OrganisationTestCase(TestCase):
             f'|> filter(fn:(r) => r._measurement == "api_call")         '
             f'|> filter(fn: (r) => r["_field"] == "request_count")         '
             f'|> filter(fn: (r) => r["organisation_id"] == "{organisation.id}") '
-            f'|> drop(columns: ["organisation", "project", "project_id"])'
+            f'|> drop(columns: ["organisation", "project", "project_id", "environment", "environment_id"])'
             f"|> sum()"
         )
 
