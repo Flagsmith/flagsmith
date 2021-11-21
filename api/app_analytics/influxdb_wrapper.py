@@ -56,7 +56,8 @@ class InfluxDBWrapper:
     def influx_query_manager(
         date_range: str = "30d",
         date_stop: str = "now()",
-        drop_columns: str = "'organisation', 'organisation_id', 'type', 'project', 'project_id', 'environment', 'environment_id'",
+        drop_columns: str = "'organisation', 'organisation_id', 'type', 'project', 'project_id', 'environment', \
+            'environment_id'",
         filters: str = "|> filter(fn:(r) => r._measurement == 'api_call')",
         extra: str = "",
         bucket: str = read_bucket,
@@ -114,7 +115,8 @@ def get_event_list_for_organisation(organisation_id: int):
     results = InfluxDBWrapper.influx_query_manager(
         filters=f'|> filter(fn:(r) => r._measurement == "api_call") \
                   |> filter(fn: (r) => r["organisation_id"] == "{organisation_id}")',
-        drop_columns='"organisation", "organisation_id", "type", "project", "project_id", "environment", "environment_id"',
+        drop_columns='"organisation", "organisation_id", "type", "project", "project_id", \
+            "environment", "environment_id"',
         extra="|> aggregateWindow(every: 24h, fn: sum)",
     )
     dataset = defaultdict(list)
@@ -138,7 +140,8 @@ def get_multiple_event_list_for_organisation(organisation_id: int):
     results = InfluxDBWrapper.influx_query_manager(
         filters=f'|> filter(fn:(r) => r._measurement == "api_call") \
                   |> filter(fn: (r) => r["organisation_id"] == "{organisation_id}")',
-        drop_columns='"organisation", "organisation_id", "type", "project", "project_id", "environment", "environment_id"',
+        drop_columns='"organisation", "organisation_id", "type", "project", "project_id", "environment", \
+            "environment_id"',
         extra="|> aggregateWindow(every: 24h, fn: sum)",
     )
     if not results:
@@ -184,7 +187,8 @@ def get_multiple_event_list_for_feature(
                   |> filter(fn: (r) => r["_field"] == "request_count") \
                   |> filter(fn: (r) => r["environment_id"] == "{environment_id}") \
                   |> filter(fn: (r) => r["feature_id"] == "{feature_name}")',
-        drop_columns='"organisation", "organisation_id", "type", "project", "project_id", "environment", "environment_id"',
+        drop_columns='"organisation", "organisation_id", "type", "project", "project_id", "environment", \
+            "environment_id"',
         extra=f'|> aggregateWindow(every: {period}, fn: sum, createEmpty: false) \
                    |> yield(name: "sum")',
     )
