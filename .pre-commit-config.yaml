@@ -15,4 +15,5 @@ repos:
     hooks:
     -   id: flake8
         name: flake8
-        entry: bash -c "cd api && git diff --staged -- "$@" | flake8 --diff"
+        entry: bash -c 'git diff --staged -- "$@" | flake8 --diff' --
+

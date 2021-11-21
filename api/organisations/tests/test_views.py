@@ -289,6 +289,7 @@ class OrganisationTestCase(TestCase):
     def test_user_can_get_projects_for_an_organisation(self):
         # Given
         organisation = Organisation.objects.create(name="Test org")
+
         self.user.add_organisation(organisation, OrganisationRole.USER)
         url = reverse(
             "api-v1:organisations:organisation-projects", args=[organisation.pk]
