@@ -41,7 +41,7 @@ coreschema==0.0.4
     #   drf-yasg2
 cryptography==36.0.0
     # via social-auth-core
-dataclasses==0.8
+dataclasses==0.6
     # via flagsmith-flag-engine
 defusedxml==0.7.1
     # via

@@ -24,7 +24,7 @@ click==8.0.3
     # via
     #   black
     #   pip-tools
-dataclasses==0.8
+dataclasses==0.6
     # via black
 distlib==0.3.3
     # via virtualenv
