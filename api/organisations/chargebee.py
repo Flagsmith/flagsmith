@@ -75,3 +75,9 @@ def get_customer_id_from_subscription_id(subscription_id):
     subscription_response = chargebee.Subscription.retrieve(subscription_id)
     if hasattr(subscription_response, "customer"):
         return subscription_response.customer.id
+
+
+def get_hosted_page_url_for_existing_subscription(subscription_id: str) -> str:
+    params = {"subscription": {"id": subscription_id}}
+    checkout_existing_response = chargebee.HostedPage.checkout_existing(params=params)
+    return checkout_existing_response.hosted_page.url
