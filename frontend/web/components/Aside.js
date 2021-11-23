@@ -178,7 +178,7 @@ const Aside = class extends Component {
                                                   </Permission>
 
                                                   <NavLink
-                                                    to={`/project/${project.id}/environment/${this.props.environmentId || (ProjectStore.model&&ProjectStore.model.environments[0].api_key)}/segments`}
+                                                    to={`/project/${project.id}/environment/${(this.props.environmentId !== "create" && this.props.environmentId) || (ProjectStore.model&&ProjectStore.model.environments[0].api_key)}/segments`}
 
                                                     id="segments-link"
                                                     className="aside__nav-item"
