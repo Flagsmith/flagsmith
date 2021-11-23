@@ -27,15 +27,17 @@ $bt-brand-primary: #7B51FB;
 $bt-brand-primary-light: lighten($bt-brand-primary,40);
 $bt-brand-primary-lighter: lighten($bt-brand-primary,70);
 
-$bt-brand-primary-dark: #17103a;
+$bt-brand-primary-dark: #1E0D26;
+$bt-brand-primary-dark-alt: #17103A;
 $bt-brand-primary-dark-desaturated: #202040;
 $bt-brand-primary-dark-desaturated-light: #38386d;
 $bt-brand-primary-dark-desaturated-lighter: #5d60cc;
 $bt-brand-primary-dark-desaturated-lighter-dark: #131216;
 
 
-$bt-brand-faint: #eff0ef;
-$bt-brand-faint-alt: #eff0ef;
+$bt-brand-faint: #F8F8F7;
+$bt-brand-faint-alt: #F5F1ED;
+$bt-brand-faint-alt-darken: #DFD8CC;
 $bt-brand-faint-alt-dark: #1b1924;
 $bt-brand-faint-hover: #eee7f6;
 $bt-brand-faint-hover-dark: #242230;
@@ -58,7 +60,7 @@ $body-text-faint: #717186;
 $body-text-faint-dark: darken(#e3e3e3,10);
 $body-text: #43424f;
 $body-text-dark: $dark-color;
-$header-color: #38386d; // for headers and labels
+$header-color: #1E0D26; // for headers and labels
 $header-color-dark: #d2d2d2; // for headers and labels
 $bt-link-color: $bt-brand-primary-dark; // for headers and labels
 $bt-link-color-dark: $dark-highlight-color; // for headers and labels
@@ -110,14 +112,14 @@ $bt-gradient-end: #fff;
 
 //Panel
 $panel-heading-height: 50px;
-$panel-bg: #fff;
+$panel-bg: white;
 $panel-bg-dark: $dark-bg-10;
 $panel-bg-darker: $dark-bg-5;
-$panel-heading-bg: #f7f7f7;
+$panel-heading-bg: $bt-brand-primary-dark;
 $panel-heading-bg-dark: $dark-bg-10;
-$panel-heading-color: $header-color;
+$panel-heading-color: white;
 $panel-heading-color-dark: $header-color-dark;
-$panel-heading-border: 1px solid #f1f1f1;
+$panel-heading-border: 1px solid $bt-brand-primary-dark;
 $panel-heading-border-dark: 1px solid transparent;
 
 
@@ -132,9 +134,8 @@ $bt-switch-dark: $dark-bg-0;
 $panel-grey-background-dark: $dark-bg-0;
 $panel-grey-background: #f7f7f7;
 //
-$panel-icon-color: $bt-brand-primary;
-$panel-icon-color: $bt-brand-primary-dark-desaturated-light;
-$panel-icon-border-color: #ddd;
+$panel-icon-color: $bt-brand-primary-dark;
+$panel-icon-border-color: #fff;
 $panel-icon-background-color: #fff;
 
 $panel-icon-border-color-dark: $dark-bg-20;
@@ -243,6 +244,8 @@ $aside-base-background-dark: $dark-bg-0;
 $aside-logo: $bt-brand-primary-dark-desaturated-lighter;
 // active project and environment
 $aside-base-highlight: $bt-brand-primary-dark-desaturated-lighter;
+$aside-base-highlight-alt: $bt-brand-faint-alt-darken;
+$aside-base-highlight-alt-color: white;
 $aside-base-highlight-dark: $bt-brand-primary-dark-desaturated-lighter;
 $aside-base-highlight-color: white;
 $aside-base-highlight-color-dark: white;
@@ -254,7 +257,7 @@ $aside-base-link-color-dark: $body-text-faint-dark;
 // Environment link
 $aside-nav-color:$body-text;
 $aside-nav-color-dark:$body-text-dark;
-$aside-nav-inactive-color:transparentize($body-text, 0.25);
+$aside-nav-inactive-color:transparentize($header-color,0.0);
 $aside-nav-inactive-color-dark:transparentize($body-text-dark, 0.25);
 $aside-nav-inactive-hover-color:transparentize($header-color, 0.25);
 $aside-nav-inactive-hover-color-dark:transparentize($header-color-dark, 0.25);
@@ -281,7 +284,7 @@ $aside-project-link-active-box-shadow: none;
 // Backgrounds
 $aside-bg:$aside-base-background;  // left aside menu
 $aside-bg-dark:$aside-base-background-dark;  // left aside menu
-$aside-left-bg:$bt-brand-primary-dark; // main aside menu
+$aside-left-bg:$bt-brand-primary-dark-alt; // main aside menu
 $aside-left-bg-dark:$dark-bg-5; // main aside menu
 $aside-left-color:white; // main aside menu
 $aside-left-color-dark:white; // main aside menu
@@ -305,9 +308,9 @@ $aside-project-link-color-active-dark:$aside-base-highlight-color-dark;
 // Active environment link
 $aside-nav-active:$aside-base-highlight;
 $aside-nav-active-dark:$aside-base-highlight-dark;
-$aside-nav-active-color:$aside-base-highlight-color;
+$aside-nav-active-color:$aside-base-highlight-alt-color;
 $aside-nav-active-color-dark:$aside-base-highlight-color-dark;
-$aside-nav-collapse-border:$aside-base-highlight;
+$aside-nav-collapse-border:$aside-base-highlight-alt;
 $aside-nav-collapse-border-dark:$aside-base-highlight-dark;
 
 

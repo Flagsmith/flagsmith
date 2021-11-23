@@ -21,7 +21,7 @@ const HomePage = class extends React.Component {
 
     componentDidUpdate(prevProps, prevState, snapshot) {
         if (this.props.location.pathname !== prevProps.location.pathname) {
-            const emailField = document.querySelector('input[type="text"]');
+            const emailField = document.querySelector('input[name="firstName"]') || document.querySelector('input[name="email"]');
             if (emailField) {
                 emailField.focus();
                 emailField.value = emailField.value;
@@ -45,11 +45,14 @@ const HomePage = class extends React.Component {
                 });
             }
         }
-        const emailField = document.querySelector('input[type="text"]');
-        if (emailField) {
-            emailField.focus();
-            emailField.value = emailField.value;
-        }
+        setTimeout(()=>{
+            const emailField = document.querySelector('input[name="firstName"]') || document.querySelector('input[name="email"]');
+            if (emailField) {
+                emailField.focus();
+                emailField.value = emailField.value;
+            }
+        },1000)
+
 
         if (document.location.href.includes('saml')) {
             const access_token = Utils.fromParam().code;
@@ -75,9 +78,10 @@ const HomePage = class extends React.Component {
 
     showForgotPassword = (e) => {
         e.preventDefault();
-        openModal('Forgot password', <ForgotPasswordModal initialValue={this.state.email} onComplete={() => {
-            toast('Please check your email to reset your password.');
-        }}
+        openModal('Forgot password', <ForgotPasswordModal
+          initialValue={this.state.email} onComplete={() => {
+              toast('Please check your email to reset your password.');
+          }}
         />, null, { className: 'alert fade expand' });
     }
 
@@ -101,7 +105,7 @@ const HomePage = class extends React.Component {
         if (this.props.getValue('oauth_google')) {
             oauths.push((
                 <a
-                  key="github" className="btn btn__oauth btn__oauth--google" onClick={() => {
+                  key="google" className="btn btn__oauth btn__oauth--google" onClick={() => {
                       Google.login().then((res) => {
                           if (res) {
                               document.location = `${document.location.origin}/oauth/google?code=${res}`;
@@ -259,9 +263,9 @@ const HomePage = class extends React.Component {
                                                             }}
                                                             rightComponent={(
                                                                 <Link
-                                                                    className="float-right"
-                                                                    to={`/password-recovery${redirect}`}
-                                                                    onClick={this.showForgotPassword}
+                                                                  className="float-right"
+                                                                  to={`/password-recovery${redirect}`}
+                                                                  onClick={this.showForgotPassword}
                                                                 >
                                                                     <ButtonLink buttonText="Forgot password?" />
                                                                 </Link>
@@ -300,6 +304,9 @@ const HomePage = class extends React.Component {
                                               <ButtonLink className="ml-1" buttonText=" Sign up" />
                                           </Link>
                                       </Row>
+                                      <div className="mt-5 text-center text-small text-muted">
+                                          By signing up you agree to our <a style={{opacity:0.8}} target="_blank" className="text-small" href="https://flagsmith.com/terms-of-service/">Terms of Service</a> and <a style={{opacity:0.8}} target="_blank" className="text-small" href="https://flagsmith.com/privacy-policy/">Privacy Policy</a>
+                                      </div>
                                   </React.Fragment>
                               ) : (
                                   <React.Fragment>

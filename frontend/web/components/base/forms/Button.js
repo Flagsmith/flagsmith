@@ -44,9 +44,15 @@ export const ButtonLink = class extends PureComponent {
     static displayName = 'ButtonLink';
 
     render() {
+        const {buttonText, ...rest} = this.props;
         return (
-            <Button {...this.props} className={`btn--link ${this.props.className || ''}`}>
-                <a className="btn--link" target={this.props.target} href={this.props.href}>{this.props.buttonText}{this.props.children}</a>
+            <Button {...rest} className={`btn--link ${this.props.className || ''}`}>
+                {this.props.href ? (
+                    <a className="btn--link" target={this.props.target} href={this.props.href}>{this.props.buttonText}{this.props.children}</a>
+                ) : (
+
+                    <span className="btn--link">{this.props.buttonText}{this.props.children}</span>
+                )}
             </Button>
         );
     }

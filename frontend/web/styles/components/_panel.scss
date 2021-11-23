@@ -21,12 +21,14 @@
 }
 
 .panel {
+	border: none !important;
 
 	&.no-pad {
 		.panel-content{
 			padding: 0;
 		}
 	}
+	box-shadow: 0 10px 30px rgba(30,13,38,.1),0 5px 10px rgba(30,13,38,.1) !important;
 	.no-results {
 		text-align: center;
 		line-height: 44px;
@@ -35,7 +37,7 @@
 	-webkit-tap-highlight-color: rgba(0, 0, 0, 0);
 	border-radius: $border-radius-default;
 	.panel-heading {
-		h1, h2, h3 {
+		h1, h2, h3, h4, h5, h6 {
 			color: $panel-heading-color;
 			margin: 0;
 		}
@@ -57,7 +59,7 @@
 		color: $panel-heading-color;
 
 		.title {
-			color: $header-color;
+			color: $panel-heading-color;
 			font-family: $font-family-header;
 			.subtitle {
 				color: $body-text-faint;
@@ -93,6 +95,12 @@
 		//color: $panel-heading-color;
 	}
 
+	.icon {
+		color:$panel-icon-color;
+		&.ion-ios-information-circle {
+			color: $panel-icon-background-color;
+		}
+	}
 	.panel-icon {
 		display: inline-block;
 		@include flexbox();
@@ -102,7 +110,7 @@
 		border-radius: 16px;
 		justify-content: center;
 		background-color: $panel-icon-background-color;
-		border: 1px solid $panel-icon-border-color;
+		border: none;
 		margin-right: $input-padding-x/2;
 		.icon {
 			display: inline-block;
