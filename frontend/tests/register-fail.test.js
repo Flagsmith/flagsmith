@@ -17,14 +17,6 @@ module.exports = {
         browser.expect.element('#error-alert').to.be.visible;
         browser.expect.element('#email-error').to.be.visible;
     },
-    'Registration should fail with invalid email address': function (browser) {
-        fillOutForm(browser)
-            .waitAndSet('[name="email"]', 'crap-email')
-            .click('button[name="signup-btn"]');
-
-        browser.expect.element('#error-alert').to.be.visible;
-        browser.expect.element('#email-error').to.be.visible;
-    },
     'Registration should fail with password too short error': function (browser) {
         fillOutForm(browser)
             .waitAndSet('[name="password"]', 'abc123')
