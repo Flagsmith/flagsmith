@@ -24,7 +24,7 @@ class Integration extends Component {
         const showAdd = !(!perEnvironment && activeIntegrations && activeIntegrations.length);
         return (
             <Panel
-              className="no-pad m-4"
+              className="no-pad panel--transparent m-4"
               title={(
                   <Row style={{ flexWrap: 'noWrap' }}>
                       <Flex>
@@ -39,7 +39,7 @@ class Integration extends Component {
                         className="btn-lg btn-primary ml-4" id="show-create-segment-btn" data-test="show-create-segment-btn"
                         onClick={this.add}
                       >
-                          <span className="icon ion-ios-apps"/>
+                          <span className="icon ion-ios-apps text-white"/>
                           {' '}
                           Add integration
                       </Button>

@@ -99,7 +99,9 @@ label, .icon-primary {
     border-radius: $default-border-radius;
 }
 
-
+.control-label {
+    display: block;
+}
 
 .__react_component_tooltip {
     z-index: 99999999 !important;

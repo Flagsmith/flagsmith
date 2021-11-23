@@ -20,7 +20,7 @@ import FeaturesIcon from './svg/FeaturesIcon';
 import UsersIcon from './svg/UsersIcon';
 import SegmentsIcon from './svg/SegmentsIcon';
 import EnvironmentSettingsIcon from './svg/EnvironmentSettingsIcon';
-
+import ProjectStore from '../../common/stores/project-store'
 const Aside = class extends Component {
   static displayName = 'Aside';
 
@@ -176,6 +176,16 @@ const Aside = class extends Component {
                                                       </NavLink>
                                                       )}
                                                   </Permission>
+
+                                                  <NavLink
+                                                    to={`/project/${project.id}/environment/${this.props.environmentId || (ProjectStore.model&&ProjectStore.model.environments[0].api_key)}/segments`}
+
+                                                    id="segments-link"
+                                                    className="aside__nav-item"
+                                                  >
+                                                      <SegmentsIcon className="aside__nav-item--icon"/>
+                                                      Segments
+                                                  </NavLink>
                                                   <Permission level="project" permission="CREATE_ENVIRONMENT" id={this.props.projectId}>
                                                       {({ permission, isLoading }) => permission && (
 
@@ -229,15 +239,6 @@ const Aside = class extends Component {
                                                                                           className="aside__environment-list-item--icon"
                                                                                         />
                                                                                         Users
-                                                                                    </NavLink>
-                                                                                    <NavLink
-                                                                                      to={`/project/${project.id}/environment/${this.props.environmentId}/segments`}
-
-                                                                                      id="segments-link"
-                                                                                      className="aside__environment-list-item"
-                                                                                    >
-                                                                                        <SegmentsIcon className="aside__environment-list-item--icon"/>
-                                                                                      Segments
                                                                                     </NavLink>
                                                                                     {environmentAdmin && (
                                                                                     <NavLink

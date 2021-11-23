@@ -3,11 +3,20 @@
     border: none !important;
   }
   &__control {
+    background: $input-bg-dark;
     height: $input-height !important;
     border-radius: $border-radius-default !important;
   }
   &__value-container {
     padding: 0px 8px;
+  }
+  &__option {
+    color: $body-text !important;
+    background: white !important;
+    &:hover {
+      background: $bt-brand-primary !important;
+      color: white !important;
+    }
   }
 }
 .dark {
@@ -27,9 +36,9 @@
       color: $input-color-dark;
     }
     &__option {
-      background: $dark-bg-0;
+      background: $dark-bg-0 !important;
       &:hover {
-        background: darken($dark-bg-0,2);
+        background: darken($dark-bg-0,2) !important;
       }
     }
   }
@@ -37,14 +46,15 @@
 .select-sm {
   .react-select {
     &__control {
-      height: 30px !important;
-      min-height: 30px !important;
+      border: none;
+      height: 24px !important;
+      min-height: 24px !important;
     }
     &__value-container {
-      margin-top: -5px;
+      margin-top: -7px;
     }
     &__indicator {
-      margin-top: -3px;
+      margin-top: -6px;
     }
     &__indicator-separator {
       display: none;

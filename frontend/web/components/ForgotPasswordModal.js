@@ -3,7 +3,19 @@ import data from '../../common/data/base/_data';
 const ForgotPassword = class extends React.Component {
     constructor(props, context) {
         super(props, context);
-        this.state = {};
+        this.state = {
+            email: props.initialValue,
+        };
+    }
+
+    componentDidMount() {
+        setTimeout(() => {
+            const emailField = document.querySelector('input[name="forgotPasswordEmail"]');
+            if (emailField) {
+                emailField.focus();
+                emailField.value = emailField.value;
+            }
+        }, 1000);
     }
 
     handleSubmit = (e) => {
@@ -27,9 +39,11 @@ const ForgotPassword = class extends React.Component {
                 <p>Please enter your email address</p>
                 <form onSubmit={this.handleSubmit}>
                     <InputGroup
-                      inputProps={{ className: 'full-width mb-2' }}
+                      inputProps={{ className: 'full-width mb-2',
+                          name: 'forgotPasswordEmail' }}
                       title="Email Address"
                       placeholder="email" type="email"
+                      value={this.state.email}
                       onChange={e => this.setState({ email: Utils.safeParseEventValue(e) })}
                     />
 

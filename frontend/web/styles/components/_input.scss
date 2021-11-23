@@ -122,3 +122,17 @@ textarea {
 	color: $body-text-dark;
 	border-bottom-color: $dark-bg-5;
 }
+
+.input-container.password {
+	input {
+		padding-right: 38px;
+
+	}
+}
+
+.input-icon-right {
+	position: absolute;
+	font-size: 24px;
+	right:10px;
+	top:8px;
+}

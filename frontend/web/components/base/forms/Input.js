@@ -24,7 +24,7 @@ const Input = class extends React.Component {
 
     constructor(props, context) {
         super(props, context);
-        this.state = { shouldValidate: false };
+        this.state = { shouldValidate: false, type: this.props.type };
     }
 
     onFocus = (e) => {
@@ -65,6 +65,7 @@ const Input = class extends React.Component {
 
         const className = cn({
             'input-container': true,
+            'password': this.props.type === 'password',
             'focused': this.state.isFocused,
             'invalid': this.state.shouldValidate && !isValid,
         }, this.props.className);
@@ -82,6 +83,7 @@ const Input = class extends React.Component {
                       ref={c => this.input = c}
                       {...rest}
                       mask={this.props.mask}
+                      type={this.state.type}
                       formatCharacters={maskedCharacters}
                       onKeyDown={this.onKeyDown}
                       onFocus={this.onFocus}
@@ -94,10 +96,15 @@ const Input = class extends React.Component {
                       ref={c => this.input = c}
                       {...rest} onFocus={this.onFocus}
                       onKeyDown={this.onKeyDown}
+                      type={this.state.type}
+
                       onBlur={this.onBlur}
                       value={this.props.value}
                       className={innerClassName}
                     />
+                )}
+                {this.props.type === 'password' && (
+                    <span onClick={() => this.setState({ type: this.state.type === 'password' ? 'text' : 'password' })} className={`input-icon-right icon ion ${this.state.type === 'text' ? 'ion-ios-eye-off' : 'ion-ios-eye'}`}/>
                 )}
             </div>
         );

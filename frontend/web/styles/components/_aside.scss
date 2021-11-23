@@ -72,6 +72,10 @@ $animation-timing-function: ease-in-out;
             }
 
             &.active {
+
+                .collapsible__header {
+                    color:$aside-nav-color-dark;
+                }
                 &__header {
                     color: $aside-nav-color-dark;
                     svg {
@@ -261,6 +265,9 @@ $animation-timing-function: ease-in-out;
         }
 
         &.active {
+            .collapsible__header {
+                color:$aside-nav-color-active;
+            }
             &__header {
                 color: $aside-nav-color;
                 svg {
@@ -422,7 +429,6 @@ $animation-timing-function: ease-in-out;
     }
 	&__environments-wrapper {
 		height: 55vh;
-		overflow-y: auto;
         @include customScroll;
     }
     &__environment-list-item {
