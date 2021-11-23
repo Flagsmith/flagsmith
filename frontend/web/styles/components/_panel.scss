@@ -24,8 +24,9 @@
 	border: none !important;
 
 	&.no-pad {
+		padding: 0 !important;
 		.panel-content{
-			padding: 0;
+			padding: 0 !important;
 		}
 	}
 	box-shadow: 0 10px 30px rgba(30,13,38,.1),0 5px 10px rgba(30,13,38,.1) !important;
