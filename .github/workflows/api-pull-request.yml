@@ -55,7 +55,7 @@ jobs:
               run: black --check .
 
             - name: Check flake8 linting
-              run: flake8 .
+              run: flake8 --config=../.flake8 .
 
             - name: Check isort imports
               run: isort --check .

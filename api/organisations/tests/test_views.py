@@ -289,6 +289,7 @@ class OrganisationTestCase(TestCase):
     def test_user_can_get_projects_for_an_organisation(self):
         # Given
         organisation = Organisation.objects.create(name="Test org")
+
         self.user.add_organisation(organisation, OrganisationRole.USER)
         url = reverse(
             "api-v1:organisations:organisation-projects", args=[organisation.pk]
@@ -316,7 +317,8 @@ class OrganisationTestCase(TestCase):
             f'|> filter(fn:(r) => r._measurement == "api_call")         '
             f'|> filter(fn: (r) => r["_field"] == "request_count")         '
             f'|> filter(fn: (r) => r["organisation_id"] == "{organisation.id}") '
-            f'|> drop(columns: ["organisation", "project", "project_id"])'
+            f'|> drop(columns: ["organisation", "project", "project_id", '
+            f'"environment", "environment_id"])'
             f"|> sum()"
         )
 
