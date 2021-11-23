@@ -98,6 +98,9 @@
 
 	.icon {
 		color:$panel-icon-color;
+		&.text-white {
+			color: white;
+		}
 		&.ion-ios-information-circle {
 			color: $panel-icon-background-color;
 		}
