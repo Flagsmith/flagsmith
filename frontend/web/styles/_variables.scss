@@ -256,6 +256,7 @@ $aside-base-link-color: $body-text-faint;
 $aside-base-link-color-dark: $body-text-faint-dark;
 // Environment link
 $aside-nav-color:$body-text;
+$aside-nav-color-active:transparentize($header-color,0.0);
 $aside-nav-color-dark:$body-text-dark;
 $aside-nav-inactive-color:transparentize($header-color,0.0);
 $aside-nav-inactive-color-dark:transparentize($body-text-dark, 0.25);

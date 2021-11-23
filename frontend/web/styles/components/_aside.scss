@@ -261,6 +261,9 @@ $animation-timing-function: ease-in-out;
         }
 
         &.active {
+            .collapsible__header {
+                color:$aside-nav-color-active;
+            }
             &__header {
                 color: $aside-nav-color;
                 svg {
