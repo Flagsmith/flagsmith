@@ -42,9 +42,7 @@ coreschema==0.0.4
 cryptography==36.0.0
     # via social-auth-core
 dataclasses==0.8
-    # via
-    #   -r requirements.in
-    #   flagsmith-flag-engine
+    # via flagsmith-flag-engine
 defusedxml==0.7.1
     # via
     #   python3-openid

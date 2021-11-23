@@ -33,6 +33,5 @@ analytics-python
 django-lifecycle
 drf-writable-nested
 django-filter
-dataclasses
 flagsmith-flag-engine
 boto3
