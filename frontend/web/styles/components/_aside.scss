@@ -72,6 +72,10 @@ $animation-timing-function: ease-in-out;
             }
 
             &.active {
+
+                .collapsible__header {
+                    color:$aside-nav-color-dark;
+                }
                 &__header {
                     color: $aside-nav-color-dark;
                     svg {
