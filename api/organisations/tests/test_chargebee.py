@@ -2,10 +2,12 @@ from datetime import datetime
 from unittest import TestCase, mock
 
 import pytest
+from _pytest.monkeypatch import MonkeyPatch
 from pytz import UTC
 
 from organisations.chargebee import (
     get_customer_id_from_subscription_id,
+    get_hosted_page_url_for_existing_subscription,
     get_max_seats_for_plan,
     get_portal_url,
     get_subscription_data_from_hosted_page,
@@ -103,13 +105,18 @@ class MockChargeBeePortalSession:
 
 @pytest.mark.django_db
 class ChargeBeeTestCase(TestCase):
-    @mock.patch("organisations.chargebee.chargebee")
-    def test_get_max_seats_for_plan_returns_max_seats_for_plan(self, mock_cb):
+    def setUp(self) -> None:
+        monkeypatch = MonkeyPatch()
+        self.mock_cb = mock.MagicMock()
+
+        monkeypatch.setattr("organisations.chargebee.chargebee", self.mock_cb)
+
+    def test_get_max_seats_for_plan_returns_max_seats_for_plan(self):
         # Given
         plan_id = "startup"
         expected_max_seats = 3
 
-        mock_cb.Plan.retrieve.return_value = MockChargeBeePlanResponse(
+        self.mock_cb.Plan.retrieve.return_value = MockChargeBeePlanResponse(
             expected_max_seats
         )
 
@@ -119,10 +126,7 @@ class ChargeBeeTestCase(TestCase):
         # Then
         assert max_seats == expected_max_seats
 
-    @mock.patch("organisations.chargebee.chargebee")
-    def test_get_subscription_data_from_hosted_page_returns_expected_values(
-        self, mock_cb
-    ):
+    def test_get_subscription_data_from_hosted_page_returns_expected_values(self):
         # Given
         subscription_id = "abc123"
         plan_id = "startup"
@@ -130,13 +134,13 @@ class ChargeBeeTestCase(TestCase):
         created_at = datetime.now(tz=UTC)
         customer_id = "customer-id"
 
-        mock_cb.HostedPage.retrieve.return_value = MockChargeBeeHostedPageResponse(
+        self.mock_cb.HostedPage.retrieve.return_value = MockChargeBeeHostedPageResponse(
             subscription_id=subscription_id,
             plan_id=plan_id,
             created_at=created_at,
             customer_id=customer_id,
         )
-        mock_cb.Plan.retrieve.return_value = MockChargeBeePlanResponse(
+        self.mock_cb.Plan.retrieve.return_value = MockChargeBeePlanResponse(
             expected_max_seats
         )
 
@@ -150,13 +154,12 @@ class ChargeBeeTestCase(TestCase):
         assert subscription_data["subscription_date"] == created_at
         assert subscription_data["customer_id"] == customer_id
 
-    @mock.patch("organisations.chargebee.chargebee")
-    def test_get_portal_url(self, mock_cb):
+    def test_get_portal_url(self):
         # Given
         access_url = "https://test.url.com"
 
-        mock_cb.PortalSession.create.return_value = MockChargeBeePortalSessionResponse(
-            access_url
+        self.mock_cb.PortalSession.create.return_value = (
+            MockChargeBeePortalSessionResponse(access_url)
         )
 
         # When
@@ -165,12 +168,11 @@ class ChargeBeeTestCase(TestCase):
         # Then
         assert portal_url == access_url
 
-    @mock.patch("organisations.chargebee.chargebee")
-    def test_get_customer_id_from_subscription(self, mock_cb):
+    def test_get_customer_id_from_subscription(self):
         # Given
         expected_customer_id = "customer-id"
-        mock_cb.Subscription.retrieve.return_value = MockChargeBeeSubscriptionResponse(
-            customer_id=expected_customer_id
+        self.mock_cb.Subscription.retrieve.return_value = (
+            MockChargeBeeSubscriptionResponse(customer_id=expected_customer_id)
         )
 
         # When
@@ -178,3 +180,16 @@ class ChargeBeeTestCase(TestCase):
 
         # Then
         assert customer_id == expected_customer_id
+
+    def test_get_hosted_page_url_for_existing_subscription(self):
+        # Given
+        subscription_id = "test-id"
+
+        # When
+        response = get_hosted_page_url_for_existing_subscription(subscription_id)
+
+        # Then
+        assert response
+        self.mock_cb.HostedPage.checkout_existing.assert_called_once_with(
+            params={"subscription": {"id": subscription_id}}
+        )

@@ -13,7 +13,7 @@ logger = logging.getLogger(__name__)
 
 class SegmentWrapper(AbstractBaseIdentityIntegrationWrapper):
     def __init__(self, api_key: str):
-        self.analytics = SegmentClient(write_key=api_key)
+        self.analytics = SegmentClient(write_key=api_key, sync_mode=True)
 
     def _identify_user(self, data: dict) -> None:
         self.analytics.identify(**data)

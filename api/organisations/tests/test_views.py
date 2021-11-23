@@ -289,6 +289,7 @@ class OrganisationTestCase(TestCase):
     def test_user_can_get_projects_for_an_organisation(self):
         # Given
         organisation = Organisation.objects.create(name="Test org")
+
         self.user.add_organisation(organisation, OrganisationRole.USER)
         url = reverse(
             "api-v1:organisations:organisation-projects", args=[organisation.pk]
@@ -316,7 +317,8 @@ class OrganisationTestCase(TestCase):
             f'|> filter(fn:(r) => r._measurement == "api_call")         '
             f'|> filter(fn: (r) => r["_field"] == "request_count")         '
             f'|> filter(fn: (r) => r["organisation_id"] == "{organisation.id}") '
-            f'|> drop(columns: ["organisation", "project", "project_id"])'
+            f'|> drop(columns: ["organisation", "project", "project_id", '
+            f'"environment", "environment_id"])'
             f"|> sum()"
         )
 
@@ -395,6 +397,34 @@ class OrganisationTestCase(TestCase):
 
         # THEN
         assert response.status_code == status.HTTP_204_NO_CONTENT
+
+    @mock.patch("organisations.views.get_hosted_page_url_for_existing_subscription")
+    def test_get_hosted_page(self, mock_get_hosted_page):
+        # Given
+        organisation = Organisation.objects.create(name="Test organisation")
+        self.user.add_organisation(organisation, OrganisationRole.ADMIN)
+
+        subscription = Subscription.objects.create(
+            subscription_id="sub-id", organisation=organisation
+        )
+
+        url = reverse(
+            "api-v1:organisations:organisation-get-hosted-page-url",
+            args=[organisation.id],
+        )
+
+        expected_url = "https://some.url.com/hosted/page"
+        mock_get_hosted_page.return_value = expected_url
+
+        # When
+        response = self.client.get(url)
+
+        # Then
+        assert response.status_code == status.HTTP_200_OK
+        assert response.json()["url"] == expected_url
+        mock_get_hosted_page.assert_called_once_with(
+            subscription_id=subscription.subscription_id
+        )
 
 
 @pytest.mark.django_db
