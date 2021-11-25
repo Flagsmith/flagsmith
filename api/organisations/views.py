@@ -18,9 +18,6 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.throttling import ScopedRateThrottle
 
-from organisations.chargebee import (
-    get_hosted_page_url_for_existing_subscription,
-)
 from organisations.exceptions import OrganisationHasNoSubscription
 from organisations.models import (
     OrganisationRole,
@@ -32,6 +29,7 @@ from organisations.permissions import (
     OrganisationPermission,
 )
 from organisations.serializers import (
+    GetHostedPageForSubscriptionUpgradeSerializer,
     InfluxDataSerializer,
     MultiInvitesSerializer,
     OrganisationSerializerFull,
@@ -59,6 +57,8 @@ class OrganisationViewSet(viewsets.ModelViewSet):
             return PortalUrlSerializer
         elif self.action == "get_influx_data":
             return InfluxDataSerializer
+        elif self.action == "get_hosted_page_url_for_subscription_upgrade":
+            return GetHostedPageForSubscriptionUpgradeSerializer
         return OrganisationSerializerFull
 
     def get_serializer_context(self):
@@ -156,15 +156,24 @@ class OrganisationViewSet(viewsets.ModelViewSet):
         serializer.is_valid(raise_exception=True)
         return Response(serializer.data)
 
-    @action(detail=True, methods=["GET"], url_path="hosted-page-url")
-    def get_hosted_page_url(self, request, pk):
+    @action(
+        detail=True,
+        methods=["POST"],
+        url_path="get-hosted-page-url-for-subscription-upgrade",
+    )
+    def get_hosted_page_url_for_subscription_upgrade(self, request, pk):
         organisation = self.get_object()
         if not organisation.has_subscription():
             raise OrganisationHasNoSubscription()
-        hosted_page_url = get_hosted_page_url_for_existing_subscription(
-            subscription_id=organisation.subscription.subscription_id
+        serializer = self.get_serializer(
+            data={
+                "subscription_id": organisation.subscription.subscription_id,
+                **request.data,
+            }
         )
-        return Response({"url": hosted_page_url})
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+        return Response(serializer.data)
 
     @action(detail=True, methods=["GET"], url_path="influx-data")
     def get_influx_data(self, request, pk):
