@@ -3,7 +3,10 @@ import logging
 from django.conf import settings
 from rest_framework import serializers
 
-from organisations.chargebee import get_subscription_data_from_hosted_page
+from organisations.chargebee import (
+    get_hosted_page_url_for_subscription_upgrade,
+    get_subscription_data_from_hosted_page,
+)
 from organisations.invites.models import Invite
 from users.models import FFAdminUser
 
@@ -205,3 +208,15 @@ class OrganisationWebhookSerializer(serializers.ModelSerializer):
 class InfluxDataSerializer(serializers.Serializer):
     # todo this have to be changed after moving influxdb_wrapper to marshmallow
     events_list = serializers.ListSerializer(child=serializers.DictField())
+
+
+class GetHostedPageForSubscriptionUpgradeSerializer(serializers.Serializer):
+    plan_id = serializers.CharField(write_only=True)
+    subscription_id = serializers.CharField(write_only=True)
+
+    url = serializers.URLField(read_only=True)
+
+    def save(self, **kwargs):
+        url = get_hosted_page_url_for_subscription_upgrade(**self.validated_data)
+        self.validated_data["url"] = url
+        return self.validated_data

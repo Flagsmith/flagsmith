@@ -398,8 +398,12 @@ class OrganisationTestCase(TestCase):
         # THEN
         assert response.status_code == status.HTTP_204_NO_CONTENT
 
-    @mock.patch("organisations.views.get_hosted_page_url_for_existing_subscription")
-    def test_get_hosted_page(self, mock_get_hosted_page):
+    @mock.patch(
+        "organisations.serializers.get_hosted_page_url_for_subscription_upgrade"
+    )
+    def test_get_hosted_page_url_for_subscription_upgrade(
+        self, mock_get_hosted_page_url
+    ):
         # Given
         organisation = Organisation.objects.create(name="Test organisation")
         self.user.add_organisation(organisation, OrganisationRole.ADMIN)
@@ -409,21 +413,25 @@ class OrganisationTestCase(TestCase):
         )
 
         url = reverse(
-            "api-v1:organisations:organisation-get-hosted-page-url",
+            "api-v1:organisations:organisation-get-hosted-page-url-for-subscription-upgrade",
             args=[organisation.id],
         )
 
         expected_url = "https://some.url.com/hosted/page"
-        mock_get_hosted_page.return_value = expected_url
+        mock_get_hosted_page_url.return_value = expected_url
+
+        plan_id = "plan-id"
 
         # When
-        response = self.client.get(url)
+        response = self.client.post(
+            url, data=json.dumps({"plan_id": plan_id}), content_type="application/json"
+        )
 
         # Then
         assert response.status_code == status.HTTP_200_OK
         assert response.json()["url"] == expected_url
-        mock_get_hosted_page.assert_called_once_with(
-            subscription_id=subscription.subscription_id
+        mock_get_hosted_page_url.assert_called_once_with(
+            subscription_id=subscription.subscription_id, plan_id=plan_id
         )
 
 
