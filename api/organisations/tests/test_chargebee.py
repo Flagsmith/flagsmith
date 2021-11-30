@@ -1,13 +1,12 @@
 from datetime import datetime
 from unittest import TestCase, mock
 
-import pytest
 from _pytest.monkeypatch import MonkeyPatch
 from pytz import UTC
 
 from organisations.chargebee import (
     get_customer_id_from_subscription_id,
-    get_hosted_page_url_for_existing_subscription,
+    get_hosted_page_url_for_subscription_upgrade,
     get_max_seats_for_plan,
     get_portal_url,
     get_subscription_data_from_hosted_page,
@@ -103,7 +102,6 @@ class MockChargeBeePortalSession:
         self.access_url = access_url
 
 
-@pytest.mark.django_db
 class ChargeBeeTestCase(TestCase):
     def setUp(self) -> None:
         monkeypatch = MonkeyPatch()
@@ -181,15 +179,22 @@ class ChargeBeeTestCase(TestCase):
         # Then
         assert customer_id == expected_customer_id
 
-    def test_get_hosted_page_url_for_existing_subscription(self):
+    def test_get_hosted_page_url_for_subscription_upgrade(self):
         # Given
         subscription_id = "test-id"
+        plan_id = "plan-id"
+        url = "https://some.url.com/some/page/"
+        self.mock_cb.HostedPage.checkout_existing.return_value = mock.MagicMock(
+            hosted_page=mock.MagicMock(url=url)
+        )
 
         # When
-        response = get_hosted_page_url_for_existing_subscription(subscription_id)
+        response = get_hosted_page_url_for_subscription_upgrade(
+            subscription_id, plan_id
+        )
 
         # Then
-        assert response
+        assert response == url
         self.mock_cb.HostedPage.checkout_existing.assert_called_once_with(
-            params={"subscription": {"id": subscription_id}}
+            {"subscription": {"id": subscription_id, "plan_id": plan_id}}
         )
