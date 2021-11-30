@@ -4,6 +4,7 @@ pep8
 autopep8
 pytest
 pytest-django
+pytest-mock
 django-test-migrations
 black
 pip-tools
