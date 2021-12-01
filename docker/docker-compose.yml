@@ -16,7 +16,7 @@ services:
         environment:
             DJANGO_ALLOWED_HOSTS: '*' # Change this in production
             DATABASE_URL: postgresql://postgres:password@db:5432/flagsmith
-            ENABLE_INFLUXDB_FEATURES: 'false' # set to true to enable InfluxDB
+            DISABLE_INFLUXDB_FEATURES: true # set to false to enable InfluxDB 
             EMAIL_BACKEND: django.core.mail.backends.smtp.EmailBackend
             # For more info on configuring InfluxDB - https://docs.flagsmith.com/deployment/overview#influxdb
             # INFLUXDB_URL: http://influxdb:8086
