@@ -1,12 +1,16 @@
+import base64
+import json
+import typing
 from collections import namedtuple
 
 import coreapi
+from boto3.dynamodb.conditions import BeginsWith, Equals, Key
 from rest_framework import status, viewsets
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.schemas import AutoSchema
 
-from app.pagination import CustomPagination
+from app.pagination import CustomPagination, IdentityPagination
 from environments.identities.helpers import identify_integrations
 from environments.identities.models import Identity
 from environments.identities.serializers import IdentitySerializer
@@ -19,6 +23,130 @@ from environments.sdk.serializers import (
 )
 from features.serializers import FeatureStateSerializerFull
 from util.views import SDKAPIView
+
+
+class EdgeIdentityViewSet(viewsets.ModelViewSet):
+    serializer_class = IdentitySerializer
+    permission_classes = [IsAuthenticated, NestedEnvironmentPermissions]
+    pagination_class = IdentityPagination
+    lookup_field = "identifier"
+
+    def get_object(self):
+        identifier = self.kwargs["identifier"]
+        environment = self.get_environment_from_request()
+        if environment.project.enable_dynamo_db:
+            key = {"composite_key": f"{environment.api_key}_{identifier}"}
+            return Identity.get_item_dynamodb(key)
+        return Identity.objects.get(environment=environment, identifier=identifier)
+
+    @staticmethod
+    def _get_search_expression_dynamo(
+        search_query: str,
+    ) -> typing.Union[Equals, BeginsWith]:
+        if search_query.startswith('"') and search_query.endswith('"'):
+            return Key("identifier").eq(search_query.replace('"', ""))
+        else:
+            return Key("identifier").begins_with(search_query)
+
+    @staticmethod
+    def _get_search_kwargs_django(search_query: str) -> dict:
+        filter_kwargs = {}
+        if search_query.startswith('"') and search_query.endswith('"'):
+            filter_kwargs["identifier__exact"] = search_query.replace('"', "")
+        else:
+            filter_kwargs["identifier__icontains"] = search_query
+
+        return filter_kwargs
+
+    def get_queryset(self):
+        environment = self.get_environment_from_request()
+
+        search_query = self.request.query_params.get("q")
+        queryset = Identity.objects.filter(environment=environment)
+
+        if search_query:
+            filter_kwargs = self._get_search_kwargs_django(search_query)
+            queryset = queryset.filter(**filter_kwargs)
+        # change the default order by to avoid performance issues with pagination
+        # when environments have small number (<page_size) of records
+        queryset = queryset.order_by("created_date")
+
+        return queryset
+
+    def get_queryset_dynamodb(self, page_size):
+        dynamo_query_kwargs = self._get_dynamo_query_kwargs(page_size)
+        return Identity.query_items_dynamodb(**dynamo_query_kwargs)
+
+    def _get_dynamo_query_kwargs(
+        self,
+        page_size: int,
+    ) -> dict:
+        search_query = self.request.query_params.get("q")
+        previous_last_evaluated_key = self.request.GET.get("last_evaluated_key")
+
+        filter_expression = Key("environment_api_key").eq(
+            self.kwargs["environment_api_key"]
+        )
+        if search_query:
+            filter_expression = filter_expression & self._get_search_expression_dynamo(
+                search_query
+            )
+
+        dynamo_query_kwargs = {
+            "IndexName": "environment_api_key-identifier-index",
+            "Limit": page_size,
+            "KeyConditionExpression": filter_expression,
+        }
+        if previous_last_evaluated_key:
+            dynamo_query_kwargs.update(
+                ExclusiveStartKey=json.loads(
+                    base64.b64decode(previous_last_evaluated_key)
+                )
+            )
+        return dynamo_query_kwargs
+
+    def _get_list_response_from_dynamo(self, request):
+        paginator = self.pagination_class()
+        page_size = paginator.get_page_size(request)
+        dynamo_query_set = self.get_queryset_dynamodb(page_size)
+        paginator.set_pagination_state_dynamo(dynamo_query_set, request)
+
+        serializer = IdentitySerializer(data=dynamo_query_set["Items"], many=True)
+        serializer.is_valid()
+        return paginator.get_paginated_response_dynamo(serializer.data)
+
+    def list(self, request, *args, **kwargs):
+        environment = self.get_environment_from_request()
+        if not environment.project.enable_dynamo_db:
+            return super().list(request, *args, **kwargs)
+        return self._get_list_response_from_dynamo(request)
+
+    def get_environment_from_request(self):
+        """
+        Get environment object from URL parameters in request.
+        """
+        return Environment.objects.get(api_key=self.kwargs["environment_api_key"])
+
+    def perform_create(self, serializer):
+        environment = self.get_environment_from_request()
+        if environment.project.enable_dynamo_db:
+            Identity.put_item_dynamodb({**serializer.data, **self.kwargs})
+            return
+        serializer.save(environment=environment)
+
+    def perform_destroy(self, instance):
+        environment = self.get_environment_from_request()
+        if environment.project.enable_dynamo_db:
+            Identity.delete_in_dynamodb(instance.composite_key)
+            return
+        super().perform_destroy(instance)
+
+    def perform_update(self, serializer):
+        environment = self.get_environment_from_request()
+        if environment.project.enable_dynamo_db:
+            Identity.put_item_dynamodb({**serializer.data, **self.kwargs})
+            return
+        serializer.save(environment=environment)
 
 
 class IdentityViewSet(viewsets.ModelViewSet):
