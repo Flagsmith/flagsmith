@@ -51,11 +51,14 @@ def project_overrides(request):
         "amplitude": "AMPLITUDE_API_KEY",
     }
 
-    project_overrides = {}
+    override_data = {}
 
     for key, value in config_mapping_dict.items():
         settings_value = getattr(settings, value, None)
         if settings_value:
-            project_overrides[key] = settings_value
+            override_data[key] = settings_value
 
-    return HttpResponse("window.projectOverrides = " + json.dumps(project_overrides))
+    return HttpResponse(
+        content="window.projectOverrides = " + json.dumps(override_data),
+        content_type="application/javascript",
+    )
