@@ -4,7 +4,7 @@
 
 version: '3'
 services:
-    db:
+    postgres:
         image: postgres:11.12-alpine
         environment:
             POSTGRES_PASSWORD: password
@@ -51,9 +51,10 @@ services:
         ports:
             - '8000:8000'
         depends_on:
-            - db
+            - postgres
+            # - influxdb
         links:
-            - db:db
+            - postgres
             # - influxdb:influxdb
 
     # InfluxDB requires additional setup - please see https://docs.flagsmith.com/deployment-overview/#influxdb
