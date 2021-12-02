@@ -7,7 +7,7 @@ on:
 jobs:
     run-e2e-tests:
         if: github.event.pull_request.draft == false
-        runs-on: ubuntu-20.04
+        runs-on: ubuntu-latest
         name: Full E2E tests
 
         services:
