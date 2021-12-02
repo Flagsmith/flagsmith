@@ -14,6 +14,11 @@ services:
     flagsmith:
         image: flagsmith/flagsmith:latest
         environment:
+            # All environments variables are available here:
+            # API: https://docs.flagsmith.com/deployment/locally-api#environment-variables
+            # UI: https://docs.flagsmith.com/deployment/locally-frontend#environment-variables
+        
+        
             DJANGO_ALLOWED_HOSTS: '*' # Change this in production
             DATABASE_URL: postgresql://postgres:password@db:5432/flagsmith
             DISABLE_INFLUXDB_FEATURES: true # set to false to enable InfluxDB 
