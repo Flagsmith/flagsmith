@@ -43,7 +43,7 @@ services:
             # EMAIL_USE_TLS: True # optional
             
             # ENABLE_ADMIN_ACCESS_USER_PASS: True # set to True to enable access to the /admin/ Django backend via your username and password
-            # ALLOW_REGISTRATION_WITHOUT_INVITE: True # Determines whether users can register without an invite. Defaults to True. Set to False or 0 to disable. Note that if disabled, new users must be invited via email.
+            # ALLOW_REGISTRATION_WITHOUT_INVITE: True
                 
             
             
