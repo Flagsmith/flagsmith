@@ -44,13 +44,7 @@ services:
             
             # ENABLE_ADMIN_ACCESS_USER_PASS: True # set to True to enable access to the /admin/ Django backend via your username and password
             # ALLOW_REGISTRATION_WITHOUT_INVITE: True # Determines whether users can register without an invite. Defaults to True. Set to False or 0 to disable. Note that if disabled, new users must be invited via email.
-            
-            
-            # For more info on configuring flagsmith on flagsmith - https://docs.flagsmith.com/deployment/overview#running-flagsmith-on-flagsmith
-            #
-            # FLAGSMITH_ON_FLAGSMITH_API_URL: https://api.flagsmith.com/api/v1/flags/
-            # FLAGSMITH_ON_FLAGSMITH_API_KEY: 4vfqhypYjcPoGGu8ByrBaj
-            
+                
             
             
         ports:
