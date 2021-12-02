@@ -35,7 +35,6 @@ services:
         environment:
             E2E_TEST_TOKEN_DEV: some-token
             ENABLE_INFLUXDB_FEATURES: 'false'
-            EMAIL_BACKEND: django.core.mail.backends.smtp.EmailBackend
         ports:
             - '8080:8080'
         volumes:
