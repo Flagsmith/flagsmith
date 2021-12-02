@@ -78,7 +78,7 @@ app.get('/config/project-overrides', (req, res) => {
     ];
     const output = values.map(getVariable).join('');
 
-    res.setHeader('content-type', 'text/javascript');
+    res.setHeader('content-type', 'application/javascript');
     res.send(`window.projectOverrides = {
         ${output}
     };
