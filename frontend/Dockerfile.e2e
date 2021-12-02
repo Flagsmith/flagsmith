@@ -1,13 +1,13 @@
-FROM node:12 AS production
+FROM node:12
 
-RUN mkdir /srv/bt && chown node:node /srv/bt
+RUN mkdir /srv/flagsmith && chown node:node /srv/flagsmith
 
 RUN apt-get update
 RUN wget https://dl.google.com/linux/chrome/deb/pool/main/g/google-chrome-stable/google-chrome-stable_91.0.4472.114-1_amd64.deb
 RUN apt install -y ./google-chrome*.deb -f
 RUN apt-get clean
 
-WORKDIR /srv/bt
+WORKDIR /srv/flagsmith
 
 COPY --chown=node:node . .
 
