@@ -5,7 +5,10 @@ from django.conf import settings
 from django.db import models
 from django.db.models import Prefetch, Q
 from django.utils.encoding import python_2_unicode_compatible
-from flag_engine.identities.builders import build_identity_dict
+from flag_engine.identities.builders import (
+    build_identity_dict,
+    build_identity_model,
+)
 
 from environments.identities.traits.models import Trait
 from environments.models import Environment
@@ -189,6 +192,24 @@ class Identity(models.Model):
         # return the full list of traits for this identity by refreshing from the db
         # TODO: handle this in the above logic to avoid a second hit to the DB
         return self.get_all_user_traits()
+
+    @staticmethod
+    def query_items_dynamodb(*args, **kwargs):
+        return dynamo_identity_table.query(*args, **kwargs)
+
+    @staticmethod
+    def put_item_dynamodb(identity_obj: typing.Any):
+        identity_dict = build_identity_dict(identity_obj)
+        dynamo_identity_table.put_item(Item=identity_dict)
+
+    @staticmethod
+    def get_item_dynamodb(key: dict):
+        identity_document = dynamo_identity_table.get_item(Key=key)["Item"]
+        return build_identity_model(identity_document)
+
+    @staticmethod
+    def delete_in_dynamodb(composite_key: str):
+        dynamo_identity_table.delete_item(Key={"composite_key": composite_key})
 
     @staticmethod
     def bulk_send_to_dynamodb(identities: typing.List["Identity"]):

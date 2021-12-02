@@ -13,7 +13,10 @@ from rest_framework.schemas import AutoSchema
 from app.pagination import CustomPagination, IdentityPagination
 from environments.identities.helpers import identify_integrations
 from environments.identities.models import Identity
-from environments.identities.serializers import IdentitySerializer
+from environments.identities.serializers import (
+    EdgeIdentitySerializer,
+    IdentitySerializer,
+)
 from environments.identities.traits.serializers import TraitSerializerBasic
 from environments.models import Environment
 from environments.permissions.permissions import NestedEnvironmentPermissions
@@ -26,18 +29,10 @@ from util.views import SDKAPIView
 
 
 class EdgeIdentityViewSet(viewsets.ModelViewSet):
-    serializer_class = IdentitySerializer
+    serializer_class = EdgeIdentitySerializer
     permission_classes = [IsAuthenticated, NestedEnvironmentPermissions]
     pagination_class = IdentityPagination
-    lookup_field = "identifier"
-
-    def get_object(self):
-        identifier = self.kwargs["identifier"]
-        environment = self.get_environment_from_request()
-        if environment.project.enable_dynamo_db:
-            key = {"composite_key": f"{environment.api_key}_{identifier}"}
-            return Identity.get_item_dynamodb(key)
-        return Identity.objects.get(environment=environment, identifier=identifier)
+    lookup_field = "identity_uuid"
 
     @staticmethod
     def _get_search_expression_dynamo(
@@ -48,34 +43,27 @@ class EdgeIdentityViewSet(viewsets.ModelViewSet):
         else:
             return Key("identifier").begins_with(search_query)
 
-    @staticmethod
-    def _get_search_kwargs_django(search_query: str) -> dict:
-        filter_kwargs = {}
-        if search_query.startswith('"') and search_query.endswith('"'):
-            filter_kwargs["identifier__exact"] = search_query.replace('"', "")
-        else:
-            filter_kwargs["identifier__icontains"] = search_query
+    def get_object(self):
+        return self.get_queryset_dynamodb(1)["Items"][0]
 
-        return filter_kwargs
-
-    def get_queryset(self):
-        environment = self.get_environment_from_request()
-
-        search_query = self.request.query_params.get("q")
-        queryset = Identity.objects.filter(environment=environment)
-
-        if search_query:
-            filter_kwargs = self._get_search_kwargs_django(search_query)
-            queryset = queryset.filter(**filter_kwargs)
-        # change the default order by to avoid performance issues with pagination
-        # when environments have small number (<page_size) of records
-        queryset = queryset.order_by("created_date")
-
-        return queryset
+    def retrieve(self, request, *args, **kwargs):
+        serializer = IdentitySerializer(data=self.get_object())
+        serializer.is_valid()
+        return Response(serializer.data)
 
     def get_queryset_dynamodb(self, page_size):
         dynamo_query_kwargs = self._get_dynamo_query_kwargs(page_size)
         return Identity.query_items_dynamodb(**dynamo_query_kwargs)
+
+    @property
+    def _base_filter_expression(self):
+        return Key("environment_api_key").eq(self.kwargs["environment_api_key"])
+
+    @property
+    def _uuid_filter_expression(self):
+        return self._base_filter_expression & Key("identity_uuid").eq(
+            self.kwargs["identity_uuid"]
+        )
 
     def _get_dynamo_query_kwargs(
         self,
@@ -84,16 +72,19 @@ class EdgeIdentityViewSet(viewsets.ModelViewSet):
         search_query = self.request.query_params.get("q")
         previous_last_evaluated_key = self.request.GET.get("last_evaluated_key")
 
-        filter_expression = Key("environment_api_key").eq(
-            self.kwargs["environment_api_key"]
-        )
+        filter_expression = self._base_filter_expression
+        index_name = "environment_api_key-identifier-index"
+        # TODO: make index name a constant
         if search_query:
             filter_expression = filter_expression & self._get_search_expression_dynamo(
                 search_query
             )
+        if self.kwargs.get("identity_uuid"):
+            filter_expression = filter_expression & self._uuid_filter_expression
+            index_name = "environment_api_key-identity_uuid-index"
 
         dynamo_query_kwargs = {
-            "IndexName": "environment_api_key-identifier-index",
+            "IndexName": index_name,
             "Limit": page_size,
             "KeyConditionExpression": filter_expression,
         }
@@ -105,7 +96,7 @@ class EdgeIdentityViewSet(viewsets.ModelViewSet):
             )
         return dynamo_query_kwargs
 
-    def _get_list_response_from_dynamo(self, request):
+    def list(self, request, *args, **kwargs):
         paginator = self.pagination_class()
         page_size = paginator.get_page_size(request)
         dynamo_query_set = self.get_queryset_dynamodb(page_size)
@@ -115,38 +106,19 @@ class EdgeIdentityViewSet(viewsets.ModelViewSet):
         serializer.is_valid()
         return paginator.get_paginated_response_dynamo(serializer.data)
 
-    def list(self, request, *args, **kwargs):
-        environment = self.get_environment_from_request()
-        if not environment.project.enable_dynamo_db:
-            return super().list(request, *args, **kwargs)
-        return self._get_list_response_from_dynamo(request)
-
     def get_environment_from_request(self):
         """
         Get environment object from URL parameters in request.
         """
         return Environment.objects.get(api_key=self.kwargs["environment_api_key"])
 
-    def perform_create(self, serializer):
-        environment = self.get_environment_from_request()
-        if environment.project.enable_dynamo_db:
-            Identity.put_item_dynamodb({**serializer.data, **self.kwargs})
-            return
-        serializer.save(environment=environment)
+    def create(self, serializer):
+        Identity.put_item_dynamodb({**serializer.data, **self.kwargs})
 
-    def perform_destroy(self, instance):
-        environment = self.get_environment_from_request()
-        if environment.project.enable_dynamo_db:
-            Identity.delete_in_dynamodb(instance.composite_key)
-            return
-        super().perform_destroy(instance)
-
-    def perform_update(self, serializer):
-        environment = self.get_environment_from_request()
-        if environment.project.enable_dynamo_db:
-            Identity.put_item_dynamodb({**serializer.data, **self.kwargs})
-            return
-        serializer.save(environment=environment)
+    def destroy(self, request, *args, **kwargs):
+        identity = self.get_object()
+        Identity.delete_in_dynamodb(identity["composite_key"])
+        return Response(status=status.HTTP_204_NO_CONTENT)
 
 
 class IdentityViewSet(viewsets.ModelViewSet):
