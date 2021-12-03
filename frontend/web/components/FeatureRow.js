@@ -3,7 +3,8 @@ import TagValues from './TagValues';
 import HistoryIcon from './HistoryIcon';
 import ConfirmToggleFeature from './modals/ConfirmToggleFeature';
 import ConfirmRemoveFeature from './modals/ConfirmRemoveFeature';
-import CreateFlagModal from './modals/CreateFlag'; // we need this to make JSX compile
+import CreateFlagModal from './modals/CreateFlag';
+import TagStore from '../../common/stores/tags-store'; // we need this to make JSX compile
 
 
 class TheComponent extends Component {
@@ -45,9 +46,10 @@ class TheComponent extends Component {
 
 
     render() {
-        const { projectId, isProtected, projectFlag, permission, environmentFlags } = this.props;
+        const { projectId, projectFlag, permission, environmentFlags } = this.props;
         const { name, id, enabled, created_date, description, type } = this.props.projectFlag;
         const readOnly = flagsmith.hasFeature('read_only_mode');
+        const isProtected = TagStore.hasProtectedTag(projectFlag, parseInt(projectId));
 
         return (
             <Row

@@ -224,7 +224,7 @@ const FeaturesPage = class extends Component {
                                                                         permission={permission}
                                                                         environmentId={environmentId}
                                                                         projectId={projectId}
-                                                                        index={i} canDelete={permission} isProtected={isProtected}
+                                                                        index={i} canDelete={permission}
                                                                         projectFlag={projectFlag}
                                                                       />
                                                                   );
