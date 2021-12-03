@@ -20,7 +20,8 @@ import FeaturesIcon from './svg/FeaturesIcon';
 import UsersIcon from './svg/UsersIcon';
 import SegmentsIcon from './svg/SegmentsIcon';
 import EnvironmentSettingsIcon from './svg/EnvironmentSettingsIcon';
-import ProjectStore from '../../common/stores/project-store'
+import ProjectStore from '../../common/stores/project-store';
+
 const Aside = class extends Component {
   static displayName = 'Aside';
 
@@ -178,7 +179,7 @@ const Aside = class extends Component {
                                                   </Permission>
 
                                                   <NavLink
-                                                    to={`/project/${project.id}/environment/${(this.props.environmentId !== "create" && this.props.environmentId) || (ProjectStore.model&&ProjectStore.model.environments[0].api_key)}/segments`}
+                                                    to={`/project/${project.id}/environment/${(this.props.environmentId !== 'create' && this.props.environmentId) || (ProjectStore.model && ProjectStore.model.environments[0].api_key)}/segments`}
 
                                                     id="segments-link"
                                                     className="aside__nav-item"
@@ -284,6 +285,18 @@ const Aside = class extends Component {
                                                                                         />
                                                                                         Users
                                                                                     </NavLink>
+                                                                                    {this.props.hasFeature('compare_environments') && (
+                                                                                        <NavLink
+                                                                                            id="integrations-link"
+                                                                                            activeClassName="active"
+                                                                                            className="aside__environment-list-item"
+                                                                                            to={`/project/${this.props.projectId}/environment/${this.props.environmentId}/compare`}
+                                                                                            exact
+                                                                                        >
+                                                                                            <span className="icon ion-ios-git-pull-request aside__environment-list-item--icon"/>
+                                                                                            Compare
+                                                                                        </NavLink>
+                                                                                    )}
                                                                                     {environmentAdmin && (
                                                                                     <NavLink
                                                                                       id="env-settings-link"
