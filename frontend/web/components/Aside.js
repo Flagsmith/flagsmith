@@ -20,7 +20,8 @@ import FeaturesIcon from './svg/FeaturesIcon';
 import UsersIcon from './svg/UsersIcon';
 import SegmentsIcon from './svg/SegmentsIcon';
 import EnvironmentSettingsIcon from './svg/EnvironmentSettingsIcon';
-import ProjectStore from '../../common/stores/project-store'
+import ProjectStore from '../../common/stores/project-store';
+
 const Aside = class extends Component {
   static displayName = 'Aside';
 
@@ -178,7 +179,7 @@ const Aside = class extends Component {
                                                   </Permission>
 
                                                   <NavLink
-                                                    to={`/project/${project.id}/environment/${(this.props.environmentId !== "create" && this.props.environmentId) || (ProjectStore.model&&ProjectStore.model.environments[0].api_key)}/segments`}
+                                                    to={`/project/${project.id}/environment/${(this.props.environmentId !== 'create' && this.props.environmentId) || (ProjectStore.model && ProjectStore.model.environments[0].api_key)}/segments`}
 
                                                     id="segments-link"
                                                     className="aside__nav-item"
@@ -190,10 +191,10 @@ const Aside = class extends Component {
                                                   <Permission level="project" permission="ADMIN" id={this.props.projectId}>
                                                       {({ permission, isLoading }) => permission && hasRbacPermission && (
                                                           <NavLink
-                                                              id="audit-log-link"
-                                                              activeClassName="active"
-                                                              className="aside__nav-item"
-                                                              to={`/project/${this.props.projectId}/environment/${this.props.environmentId}/audit-log`}
+                                                            id="audit-log-link"
+                                                            activeClassName="active"
+                                                            className="aside__nav-item"
+                                                            to={`/project/${this.props.projectId}/environment/${this.props.environmentId}/audit-log`}
                                                           >
                                                               <AuditLogIcon className="aside__nav-item--icon"/>
                                                               Audit Log
@@ -203,11 +204,11 @@ const Aside = class extends Component {
 
                                                   {!hasRbacPermission && (
                                                       <Tooltip
-                                                          title={(
-                                                              <a href="#" className="aside__nav-item disabled">
-                                                                  <AuditLogIcon className="aside__nav-item--icon"/>
+                                                        title={(
+                                                            <a href="#" className="aside__nav-item disabled">
+                                                                <AuditLogIcon className="aside__nav-item--icon"/>
                                                                   Audit Log
-                                                              </a>
+                                                            </a>
                                                           )}
                                                       >
                                                           This feature is available with our scaleup plan
@@ -217,11 +218,11 @@ const Aside = class extends Component {
                                                       <Permission level="project" permission="CREATE_ENVIRONMENT" id={this.props.projectId}>
                                                           {({ permission, isLoading }) => permission && (
                                                               <NavLink
-                                                                  id="integrations-link"
-                                                                  activeClassName="active"
-                                                                  className="aside__nav-item"
-                                                                  to={`/project/${this.props.projectId}/integrations`}
-                                                                  exact
+                                                                id="integrations-link"
+                                                                activeClassName="active"
+                                                                className="aside__nav-item"
+                                                                to={`/project/${this.props.projectId}/integrations`}
+                                                                exact
                                                               >
                                                                   <i className="icon mr-2 ion-ios-apps aside__nav-item--icon"/>
                                                                   Integrations
@@ -273,6 +274,18 @@ const Aside = class extends Component {
                                                                                         <FeaturesIcon className="aside__environment-list-item--icon"/>
                                                                                         Features
                                                                                     </NavLink>
+                                                                                    {this.props.hasFeature('compare_environments') && (
+                                                                                        <NavLink
+                                                                                            id="integrations-link"
+                                                                                            activeClassName="active"
+                                                                                            className="aside__environment-list-item"
+                                                                                            to={`/project/${this.props.projectId}/environment/${this.props.environmentId}/compare`}
+                                                                                            exact
+                                                                                        >
+                                                                                            <span className="icon ion-ios-git-pull-request aside__environment-list-item--icon"/>
+                                                                                            Compare
+                                                                                        </NavLink>
+                                                                                    )}
                                                                                     <NavLink
                                                                                       id="users-link"
                                                                                       className="aside__environment-list-item"

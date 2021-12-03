@@ -10,6 +10,7 @@ import TagValues from '../TagValues';
 import withAuditWebhooks from '../../../common/providers/withAuditWebhooks';
 import TagStore from '../../../common/stores/tags-store';
 import { Tag } from '../AddEditTags';
+import FeatureRow from '../FeatureRow';
 
 const FeaturesPage = class extends Component {
     static displayName = 'FeaturesPage';
@@ -74,20 +75,6 @@ const FeaturesPage = class extends Component {
         });
     }
 
-    editFlag = (projectFlag, environmentFlag) => {
-        API.trackEvent(Constants.events.VIEW_FEATURE);
-        openModal(`Edit Feature: ${projectFlag.name}`, <CreateFlagModal
-          isEdit
-          router={this.context.router}
-          environmentId={this.props.match.params.environmentId}
-          projectId={this.props.match.params.projectId}
-          projectFlag={projectFlag}
-          environmentFlag={environmentFlag}
-          flagId={environmentFlag.id}
-        />, null, { className: 'side-modal fade' });
-    };
-
-
     componentWillReceiveProps(newProps) {
         if (newProps.match.params.environmentId != this.props.match.params.environmentId) {
             AppActions.getFeatures(newProps.match.params.projectId, newProps.match.params.environmentId);
@@ -100,45 +87,6 @@ const FeaturesPage = class extends Component {
 
     editIdentity = (id, envFlags) => {
         openModal(<EditIdentityModal id={id} envFlags={envFlags}/>);
-    }
-
-    confirmToggle = (projectFlag, environmentFlag, cb) => {
-        openModal('Toggle Feature', <ConfirmToggleFeature
-          environmentId={this.props.match.params.environmentId}
-          projectFlag={projectFlag} environmentFlag={environmentFlag}
-          cb={cb}
-        />);
-    }
-
-    confirmRemove = (projectFlag, cb) => {
-        openModal('Remove Feature', <ConfirmRemoveFeature
-          environmentId={this.props.match.params.environmentId}
-          projectFlag={projectFlag}
-          cb={cb}
-        />);
-    }
-
-    createFeaturePermission(el) {
-        return (
-            <Permission level="project" permission="CREATE_FEATURE" id={this.props.match.params.projectId}>
-                {({ permission, isLoading }) => (permission ? (
-                    el(permission)
-                ) : this.renderWithPermission(permission, Constants.projectPermissions('Create Feature'), el(permission)))}
-            </Permission>
-        );
-    }
-
-    renderWithPermission(permission, name, el) {
-        return permission ? (
-            el
-        ) : (
-            <Tooltip
-              title={<div>{el}</div>}
-              place="right"
-              html
-            >{name}
-            </Tooltip>
-        );
     }
 
     onError = (error) => {
@@ -164,6 +112,16 @@ const FeaturesPage = class extends Component {
         }
         return _.intersection(flag.tags || [], this.state.tags).length;
     }) || []
+
+    createFeaturePermission(el) {
+        return (
+            <Permission level="project" permission="CREATE_FEATURE" id={this.props.match.params.projectId}>
+                {({ permission, isLoading }) => (permission ? (
+                    el(permission)
+                ) : Utils.renderWithPermission(permission, Constants.projectPermissions('Create Feature'), el(permission)))}
+            </Permission>
+        );
+    }
 
     render() {
         const { projectId, environmentId } = this.props.match.params;
@@ -260,109 +218,16 @@ const FeaturesPage = class extends Component {
                                                                   </Row>
                                                                 )}
                                                               renderRow={(projectFlag, i) => {
-                                                                  const { name, id, enabled, created_date, description, type } = projectFlag;
                                                                   const isProtected = TagStore.hasProtectedTag(projectFlag, parseInt(projectId));
                                                                   return (
-                                                                      <Row
-                                                                        style={{ flexWrap: 'nowrap' }}
-                                                                        className={permission ? 'list-item clickable' : 'list-item'} key={id} space
-                                                                        data-test={`feature-item-${i}`}
-                                                                      >
-                                                                          <div
-                                                                            style={{ overflow: 'hidden' }}
-                                                                            className="flex flex-1"
-                                                                            onClick={() => !readOnly && permission && this.editFlag(projectFlag, environmentFlags[id])}
-                                                                          >
-                                                                              <div>
-                                                                                  <ButtonLink>
-                                                                                      {name}
-                                                                                  </ButtonLink>
-                                                                              </div>
-                                                                              <div className="list-item-footer faint">
-                                                                                  <Row>
-                                                                                      {(
-                                                                                          <TagValues projectId={projectId} value={projectFlag.tags}/>
-                                                                                        )}
-                                                                                      <div>
-                                                                                            Created {moment(created_date).format('Do MMM YYYY HH:mma')}{' - '}
-                                                                                          {description || 'No description'}
-                                                                                      </div>
-                                                                                  </Row>
-                                                                              </div>
-                                                                          </div>
-                                                                          <Row>
-                                                                              {
-                                                                                    this.renderWithPermission(permission, Constants.environmentPermissions('Admin'), (
-                                                                                        <Row style={{
-                                                                                            marginTop: 5,
-                                                                                            marginBottom: 5,
-                                                                                            marginRight: 15,
-                                                                                        }}
-                                                                                        >
-                                                                                            <Column>
-                                                                                                <FeatureValue
-                                                                                                  onClick={() => permission && !readOnly && this.editFlag(projectFlag, environmentFlags[id])}
-                                                                                                  value={environmentFlags[id] && environmentFlags[id].feature_state_value}
-                                                                                                  data-test={`feature-value-${i}`}
-                                                                                                />
-                                                                                            </Column>
-                                                                                            <Column>
-                                                                                                <Switch
-                                                                                                  disabled={!permission || readOnly}
-                                                                                                  data-test={`feature-switch-${i}${environmentFlags[id] && environmentFlags[id].enabled ? '-on' : '-off'}`}
-                                                                                                  checked={environmentFlags[id] && environmentFlags[id].enabled}
-                                                                                                  onChange={() => this.confirmToggle(projectFlag, environmentFlags[id], (environments) => {
-                                                                                                      toggleFlag(_.findIndex(projectFlags, { id }), environments);
-                                                                                                  })}
-                                                                                                />
-                                                                                            </Column>
-                                                                                        </Row>
-                                                                                    ))
-                                                                                }
-
-                                                                              {AccountStore.getOrganisationRole() === 'ADMIN' && (
-                                                                              <Tooltip
-                                                                                html
-                                                                                title={(
-                                                                                    <button
-                                                                                      onClick={() => {
-                                                                                          this.context.router.history.push(`/project/${projectId}/environment/${environmentId}/audit-log?env=${environmentId}&search=${projectFlag.name}`);
-                                                                                      }}
-                                                                                      className="btn btn--with-icon"
-                                                                                      data-test={`feature-history-${i}`}
-                                                                                    >
-                                                                                        <HistoryIcon/>
-                                                                                    </button>
-                                                                                        )}
-                                                                              >
-                                                                                        Feature history
-                                                                              </Tooltip>
-                                                                              )}
-                                                                              <Permission level="project" permission="DELETE_FEATURE" id={this.props.match.params.projectId}>
-                                                                                  {({ permission: removeFeaturePermission }) => this.renderWithPermission(removeFeaturePermission, Constants.projectPermissions('Delete Feature'), (
-                                                                                      <Column>
-                                                                                          <Tooltip
-                                                                                            html
-                                                                                            title={(
-                                                                                                <button
-                                                                                                  disabled={!removeFeaturePermission || readOnly || isProtected}
-                                                                                                  onClick={() => this.confirmRemove(projectFlag, () => {
-                                                                                                      removeFlag(this.props.match.params.projectId, projectFlag);
-                                                                                                  })}
-                                                                                                  className="btn btn--with-icon"
-                                                                                                  data-test={`remove-feature-btn-${i}`}
-                                                                                                >
-                                                                                                    <RemoveIcon/>
-                                                                                                </button>
-                                                                                                )}
-                                                                                          >
-                                                                                              {isProtected ? "<span>This feature has tagged as <bold>protected</bold>, <bold>permanent</bold>, <bold>do not delete</bold>, or <bold>read only</bold>. Please remove the tag before attempting to delete this flag.</span>" : 'Remove feature'}
-                                                                                          </Tooltip>
-                                                                                      </Column>
-                                                                                  ))}
-                                                                              </Permission>
-                                                                          </Row>
-                                                                      </Row>
+                                                                      <FeatureRow
+                                                                        environmentFlags={environmentFlags}
+                                                                        permission={permission}
+                                                                        environmentId={environmentId}
+                                                                        projectId={projectId}
+                                                                        index={i} canDelete={permission} isProtected={isProtected}
+                                                                        projectFlag={projectFlag}
+                                                                      />
                                                                   );
                                                               }}
                                                               filterRow={({ name }, search) => name.toLowerCase().indexOf(search) > -1}
