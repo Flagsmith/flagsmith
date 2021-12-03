@@ -198,8 +198,7 @@ class Identity(models.Model):
         return dynamo_identity_table.query(*args, **kwargs)
 
     @staticmethod
-    def put_item_dynamodb(identity_obj: typing.Any):
-        identity_dict = build_identity_dict(identity_obj)
+    def put_item_dynamodb(identity_dict: dict):
         dynamo_identity_table.put_item(Item=identity_dict)
 
     @staticmethod

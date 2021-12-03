@@ -1,4 +1,5 @@
 import urllib
+import uuid
 from unittest import mock
 
 from boto3.dynamodb.conditions import Key
@@ -11,18 +12,17 @@ def test_get_identity_calls_get_item(
 ):
     # Given
     identifier = "test_user123"
+    identity_uuid = str(uuid.uuid4())
     identity_dict = {
         "composite_key": f"{environment_api_key}_{identifier}",
         "environment_api_key": environment_api_key,
-        "id": 0,
         "identifier": identifier,
-        "created_date": "2021-09-29T13:28:20.839914+00:00",
+        "identity_uuid": identity_uuid,
     }
     url = reverse(
         "api-v1:environments:environment-edge-identities-detail",
-        args=[environment_api_key, identifier],
+        args=[environment_api_key, identity_uuid],
     )
-
     # When
     with mock.patch(
         "environments.identities.models.dynamo_identity_table"
@@ -35,7 +35,43 @@ def test_get_identity_calls_get_item(
         response = admin_client.get(url)
     # Then
     assert response.status_code == status.HTTP_200_OK
+    assert response.json()["identity_uuid"] == identity_uuid
+    dynamo_identity_table.query.assert_called_with(
+        IndexName="identity_uuid-index",
+        Limit=1,
+        KeyConditionExpression=Key("environment_api_key").eq(environment_api_key)
+        & Key("identity_uuid").eq(identity_uuid),
+    )
+
+
+def test_create_identity_calls_put_item(
+    mocker, admin_client, dynamo_enabled_environment, environment_api_key
+):
+    # Given
+    identifier = "test_user123"
+
+    url = reverse(
+        "api-v1:environments:environment-edge-identities-list",
+        args=[environment_api_key],
+    )
+    dynamo_identity_table = mocker.patch(
+        "environments.identities.models.dynamo_identity_table"
+    )
+    response = admin_client.post(url, data={"identifier": identifier})
+
+    # Then, let's verify the function call
+    # test that we only made one function call
+    assert len(dynamo_identity_table.mock_calls) == 1
+    name, args, kwargs = dynamo_identity_table.mock_calls[0]
+    # With correct arguments
+    assert name == "put_item"
+    assert kwargs["Item"]["environment_api_key"] == environment_api_key
+    assert kwargs["Item"]["identifier"] == identifier
+
+    # Next, let's verify the response
+    assert response.status_code == status.HTTP_201_CREATED
     assert response.json()["identifier"] == identifier
+    assert response.json()["identity_uuid"] is not None
 
 
 def test_delete_identity_calls_delete_item(

@@ -1,3 +1,5 @@
+from flag_engine.identities.builders import build_identity_dict
+from flag_engine.identities.models import IdentityModel as EngineIdentity
 from rest_framework import serializers
 from rest_framework.exceptions import ValidationError
 
@@ -27,10 +29,21 @@ class IdentitySerializerFull(serializers.ModelSerializer):
 
 
 class EdgeIdentitySerializer(serializers.ModelSerializer):
+    identity_uuid = serializers.CharField(required=False)
+
     class Meta:
         model = Identity
-        fields = ("identifier", "environment")
-        read_only_fields = "environment"
+        fields = ("identifier", "environment", "identity_uuid")
+        read_only_fields = ("environment", "identity_uuid")
+
+    def save(self, **kwargs):
+        identifier = self.validated_data.get("identifier")
+        environment_api_key = self.context["view"].kwargs["environment_api_key"]
+        self.instance = EngineIdentity(
+            identifier=identifier, environment_api_key=environment_api_key
+        )
+        Identity.put_item_dynamodb(build_identity_dict(self.instance))
+        return self.instance
 
 
 class EdgeIdentitySerializerFeatureStateSerializer(EdgeIdentitySerializer):
@@ -58,6 +71,7 @@ class IdentitySerializer(serializers.ModelSerializer):
     def save(self, **kwargs):
         environment = kwargs.get("environment")
         identifier = self.validated_data.get("identifier")
+
         if Identity.objects.filter(
             environment=environment, identifier=identifier
         ).exists():

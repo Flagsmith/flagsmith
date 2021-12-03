@@ -46,11 +46,6 @@ class EdgeIdentityViewSet(viewsets.ModelViewSet):
     def get_object(self):
         return self.get_queryset_dynamodb(1)["Items"][0]
 
-    def retrieve(self, request, *args, **kwargs):
-        serializer = IdentitySerializer(data=self.get_object())
-        serializer.is_valid()
-        return Response(serializer.data)
-
     def get_queryset_dynamodb(self, page_size):
         dynamo_query_kwargs = self._get_dynamo_query_kwargs(page_size)
         return Identity.query_items_dynamodb(**dynamo_query_kwargs)
@@ -61,9 +56,7 @@ class EdgeIdentityViewSet(viewsets.ModelViewSet):
 
     @property
     def _uuid_filter_expression(self):
-        return self._base_filter_expression & Key("identity_uuid").eq(
-            self.kwargs["identity_uuid"]
-        )
+        return Key("identity_uuid").eq(self.kwargs["identity_uuid"])
 
     def _get_dynamo_query_kwargs(
         self,
@@ -81,7 +74,7 @@ class EdgeIdentityViewSet(viewsets.ModelViewSet):
             )
         if self.kwargs.get("identity_uuid"):
             filter_expression = filter_expression & self._uuid_filter_expression
-            index_name = "environment_api_key-identity_uuid-index"
+            index_name = "identity_uuid-index"
 
         dynamo_query_kwargs = {
             "IndexName": index_name,
@@ -112,13 +105,8 @@ class EdgeIdentityViewSet(viewsets.ModelViewSet):
         """
         return Environment.objects.get(api_key=self.kwargs["environment_api_key"])
 
-    def create(self, serializer):
-        Identity.put_item_dynamodb({**serializer.data, **self.kwargs})
-
-    def destroy(self, request, *args, **kwargs):
-        identity = self.get_object()
-        Identity.delete_in_dynamodb(identity["composite_key"])
-        return Response(status=status.HTTP_204_NO_CONTENT)
+    def perform_destroy(self, instance):
+        Identity.delete_in_dynamodb(instance["composite_key"])
 
 
 class IdentityViewSet(viewsets.ModelViewSet):
