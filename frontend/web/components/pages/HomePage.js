@@ -267,7 +267,7 @@ const HomePage = class extends React.Component {
                                                                   to={`/password-recovery${redirect}`}
                                                                   onClick={this.showForgotPassword}
                                                                 >
-                                                                    <ButtonLink buttonText="Forgot password?" />
+                                                                    <ButtonLink type="button" buttonText="Forgot password?" />
                                                                 </Link>
                                                             )}
                                                             className="input-default full-width mb-3"
