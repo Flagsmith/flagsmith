@@ -261,6 +261,7 @@ const FeaturesPage = class extends Component {
                                                                 )}
                                                               renderRow={(projectFlag, i) => {
                                                                   const { name, id, enabled, created_date, description, type } = projectFlag;
+                                                                  const isProtected = TagStore.hasProtectedTag(projectFlag, parseInt(projectId));
                                                                   return (
                                                                       <Row
                                                                         style={{ flexWrap: 'nowrap' }}
@@ -344,7 +345,7 @@ const FeaturesPage = class extends Component {
                                                                                             html
                                                                                             title={(
                                                                                                 <button
-                                                                                                  disabled={!removeFeaturePermission || readOnly}
+                                                                                                  disabled={!removeFeaturePermission || readOnly || isProtected}
                                                                                                   onClick={() => this.confirmRemove(projectFlag, () => {
                                                                                                       removeFlag(this.props.match.params.projectId, projectFlag);
                                                                                                   })}
@@ -355,7 +356,7 @@ const FeaturesPage = class extends Component {
                                                                                                 </button>
                                                                                                 )}
                                                                                           >
-                                                                                                Remove feature
+                                                                                              {isProtected ? "<span>This feature has tagged as <bold>protected</bold>, <bold>permanent</bold>, <bold>do not delete</bold>, or <bold>read only</bold>. Please remove the tag before attempting to delete this flag.</span>" : 'Remove feature'}
                                                                                           </Tooltip>
                                                                                       </Column>
                                                                                   ))}
