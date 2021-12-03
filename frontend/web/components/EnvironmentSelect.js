@@ -16,16 +16,18 @@ const EnvironmentSelect = class extends Component {
                     const selectedEnv = this.props.value && _.find(project.environments, { api_key: this.props.value });
                     if (this.props.readOnly) {
                         return (
-                          <div className="mb-2">
-                              {selectedEnv.name}
-                          </div>
-                        )
+                            <div className="mb-2">
+                                {selectedEnv && selectedEnv.name}
+                            </div>
+                        );
                     }
                     return (
                         <div>
                             <Select
                               onChange={env => this.props.onChange(env.value)}
-                              options={project.environments.map(env => ({ label: env.name, value: env.api_key }))}
+                              options={project.environments && project.environments.map(env => ({ label: env.name, value: env.api_key })).filter(v => {
+                                  return v.value !== this.props.ignoreAPIKey
+                              })}
                               value={selectedEnv ? {
                                   label: selectedEnv.name,
                                   value: selectedEnv.api_key,
