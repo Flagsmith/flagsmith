@@ -46,7 +46,7 @@ class TheComponent extends Component {
 
 
     render() {
-        const { projectId, projectFlag, permission, environmentFlags } = this.props;
+        const { projectId, projectFlag, permission, environmentFlags,projectFlags, removeFlag, toggleFlag } = this.props;
         const { name, id, enabled, created_date, description, type } = this.props.projectFlag;
         const readOnly = flagsmith.hasFeature('read_only_mode');
         const isProtected = TagStore.hasProtectedTag(projectFlag, parseInt(projectId));

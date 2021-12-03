@@ -217,18 +217,20 @@ const FeaturesPage = class extends Component {
                                                                       </TagSelect>
                                                                   </Row>
                                                                 )}
-                                                              renderRow={(projectFlag, i) => {
-                                                                  return (
-                                                                      <FeatureRow
-                                                                        environmentFlags={environmentFlags}
-                                                                        permission={permission}
-                                                                        environmentId={environmentId}
-                                                                        projectId={projectId}
-                                                                        index={i} canDelete={permission}
-                                                                        projectFlag={projectFlag}
-                                                                      />
-                                                                  );
-                                                              }}
+                                                              renderRow={(projectFlag, i) => (
+                                                                  <FeatureRow
+                                                                    environmentFlags={environmentFlags}
+                                                                    projectFlags={projectFlags}
+                                                                    permission={permission}
+                                                                    environmentId={environmentId}
+                                                                    projectId={projectId}
+                                                                    index={i} canDelete={permission}
+                                                                    toggleFlag={toggleFlag}
+                                                                    editFlag={editFlag}
+                                                                    removeFlag={removeFlag}
+                                                                    projectFlag={projectFlag}
+                                                                  />
+                                                              )}
                                                               filterRow={({ name }, search) => name.toLowerCase().indexOf(search) > -1}
                                                             />
                                                         </FormGroup>

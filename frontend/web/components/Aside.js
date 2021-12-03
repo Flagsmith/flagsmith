@@ -274,6 +274,17 @@ const Aside = class extends Component {
                                                                                         <FeaturesIcon className="aside__environment-list-item--icon"/>
                                                                                         Features
                                                                                     </NavLink>
+                                                                                    <NavLink
+                                                                                      id="users-link"
+                                                                                      className="aside__environment-list-item"
+                                                                                      exact
+                                                                                      to={`/project/${project.id}/environment/${environment.api_key}/users`}
+                                                                                    >
+                                                                                        <UsersIcon
+                                                                                          className="aside__environment-list-item--icon"
+                                                                                        />
+                                                                                        Users
+                                                                                    </NavLink>
                                                                                     {this.props.hasFeature('compare_environments') && (
                                                                                         <NavLink
                                                                                             id="integrations-link"
@@ -286,17 +297,6 @@ const Aside = class extends Component {
                                                                                             Compare
                                                                                         </NavLink>
                                                                                     )}
-                                                                                    <NavLink
-                                                                                      id="users-link"
-                                                                                      className="aside__environment-list-item"
-                                                                                      exact
-                                                                                      to={`/project/${project.id}/environment/${environment.api_key}/users`}
-                                                                                    >
-                                                                                        <UsersIcon
-                                                                                          className="aside__environment-list-item--icon"
-                                                                                        />
-                                                                                        Users
-                                                                                    </NavLink>
                                                                                     {environmentAdmin && (
                                                                                     <NavLink
                                                                                       id="env-settings-link"
