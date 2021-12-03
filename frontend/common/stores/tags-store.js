@@ -54,6 +54,19 @@ const store = Object.assign({}, BaseStore, {
     id: 'tags',
     model: {},
     getTags: projectId => store.model[projectId],
+    hasProtectedTag: (projectFlag, projectId) => {
+        const tags = projectFlag && projectFlag.tags;
+        if (tags && store.model) {
+
+            return tags.find((id) => {
+                const tag = store.model[projectId] && store.model[projectId].find(tag => tag.id === id);
+                if (tag) {
+                    const label = tag.label.toLowerCase().replace(/[ _]/g, '');
+                    return label === 'protected' || 'donotdelete' || label === 'permanent';
+                }
+            });
+        }
+    },
 });
 
 
