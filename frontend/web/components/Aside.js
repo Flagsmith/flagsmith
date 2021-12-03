@@ -186,6 +186,50 @@ const Aside = class extends Component {
                                                       <SegmentsIcon className="aside__nav-item--icon"/>
                                                       Segments
                                                   </NavLink>
+
+                                                  <Permission level="project" permission="ADMIN" id={this.props.projectId}>
+                                                      {({ permission, isLoading }) => permission && hasRbacPermission && (
+                                                          <NavLink
+                                                              id="audit-log-link"
+                                                              activeClassName="active"
+                                                              className="aside__nav-item"
+                                                              to={`/project/${this.props.projectId}/environment/${this.props.environmentId}/audit-log`}
+                                                          >
+                                                              <AuditLogIcon className="aside__nav-item--icon"/>
+                                                              Audit Log
+                                                          </NavLink>
+                                                      )}
+                                                  </Permission>
+
+                                                  {!hasRbacPermission && (
+                                                      <Tooltip
+                                                          title={(
+                                                              <a href="#" className="aside__nav-item disabled">
+                                                                  <AuditLogIcon className="aside__nav-item--icon"/>
+                                                                  Audit Log
+                                                              </a>
+                                                          )}
+                                                      >
+                                                          This feature is available with our scaleup plan
+                                                      </Tooltip>
+                                                  )}
+                                                  {!!integrations.length && (
+                                                      <Permission level="project" permission="CREATE_ENVIRONMENT" id={this.props.projectId}>
+                                                          {({ permission, isLoading }) => permission && (
+                                                              <NavLink
+                                                                  id="integrations-link"
+                                                                  activeClassName="active"
+                                                                  className="aside__nav-item"
+                                                                  to={`/project/${this.props.projectId}/integrations`}
+                                                                  exact
+                                                              >
+                                                                  <i className="icon mr-2 ion-ios-apps aside__nav-item--icon"/>
+                                                                  Integrations
+                                                              </NavLink>
+
+                                                          )}
+                                                      </Permission>
+                                                  )}
                                                   <Permission level="project" permission="CREATE_ENVIRONMENT" id={this.props.projectId}>
                                                       {({ permission, isLoading }) => permission && (
 
@@ -285,49 +329,6 @@ const Aside = class extends Component {
                                                       </a>
                                                       )}
 
-                                                      <Permission level="project" permission="ADMIN" id={this.props.projectId}>
-                                                          {({ permission, isLoading }) => permission && hasRbacPermission && (
-                                                              <NavLink
-                                                                id="audit-log-link"
-                                                                activeClassName="active"
-                                                                className="aside__nav-item"
-                                                                to={`/project/${this.props.projectId}/environment/${this.props.environmentId}/audit-log`}
-                                                              >
-                                                                  <AuditLogIcon className="aside__nav-item--icon"/>
-                                                                  Audit Log
-                                                              </NavLink>
-                                                          )}
-                                                      </Permission>
-
-                                                      {!hasRbacPermission && (
-                                                          <Tooltip
-                                                            title={(
-                                                                <a href="#" className="aside__nav-item disabled">
-                                                                    <AuditLogIcon className="aside__nav-item--icon"/>
-                                                                      Audit Log
-                                                                </a>
-                                                              )}
-                                                          >
-                                                              This feature is available with our scaleup plan
-                                                          </Tooltip>
-                                                      )}
-                                                      {!!integrations.length && (
-                                                      <Permission level="project" permission="CREATE_ENVIRONMENT" id={this.props.projectId}>
-                                                          {({ permission, isLoading }) => permission && (
-                                                          <NavLink
-                                                            id="integrations-link"
-                                                            activeClassName="active"
-                                                            className="aside__nav-item"
-                                                            to={`/project/${this.props.projectId}/integrations`}
-                                                            exact
-                                                          >
-                                                            <i className="icon mr-2 ion-ios-apps aside__nav-item--icon"/>
-                                                            Integrations
-                                                          </NavLink>
-
-                                                          )}
-                                                      </Permission>
-                                                      )}
 
                                                       {E2E && AccountStore.getOrganisationRole() === 'ADMIN' && (
                                                       <NavLink
