@@ -1,14 +1,13 @@
 import typing
 
 import boto3
+from boto3.dynamodb.conditions import Key
 from django.conf import settings
+from django.core.exceptions import ObjectDoesNotExist
 from django.db import models
 from django.db.models import Prefetch, Q
 from django.utils.encoding import python_2_unicode_compatible
-from flag_engine.identities.builders import (
-    build_identity_dict,
-    build_identity_model,
-)
+from flag_engine.identities.builders import build_identity_dict
 
 from environments.identities.traits.models import Trait
 from environments.models import Environment
@@ -22,6 +21,81 @@ if settings.IDENTITIES_TABLE_NAME_DYNAMO:
         settings.IDENTITIES_TABLE_NAME_DYNAMO
     )
 
+dynamo_identifier_search_functions = {
+    "EQUAL": lambda identifier: Key("identifier").eq(identifier),
+    "BEGINS_WITH": lambda identifier: Key("identifier").begins_with(identifier),
+}
+
+
+class DynamoIdentityManager(models.Manager):
+    @staticmethod
+    def query_items_dynamodb(*args, **kwargs):
+        return dynamo_identity_table.query(*args, **kwargs)
+
+    @staticmethod
+    def put_item(identity_dict: dict):
+        dynamo_identity_table.put_item(Item=identity_dict)
+
+    @staticmethod
+    def delete_item(composite_key: str):
+        dynamo_identity_table.delete_item(Key={"composite_key": composite_key})
+
+    def get_item_from_uuid(self, environment_api_key: str, uuid: str):
+        filter_expression = Key("environment_api_key").eq(environment_api_key) & Key(
+            "identity_uuid"
+        ).eq(uuid)
+        query_kwargs = {
+            "IndexName": "identity_uuid-index",
+            "Limit": 1,
+            "KeyConditionExpression": filter_expression,
+        }
+        try:
+            return self.query_items_dynamodb(**query_kwargs)["Items"][0]
+        except KeyError:
+            raise ObjectDoesNotExist
+
+    def get_all_items(
+        self, environment_api_key: str, limit: int, start_key: dict = None
+    ):
+        filter_expression = Key("environment_api_key").eq(environment_api_key)
+        query_kwargs = {
+            "IndexName": "environment_api_key-identifier-index",
+            "Limit": limit,
+            "KeyConditionExpression": filter_expression,
+        }
+        if start_key:
+            query_kwargs.update(ExclusiveStartKey=start_key)
+        return self.query_items_dynamodb(**query_kwargs)
+
+    def search_items_with_identifier(
+        self,
+        environment_api_key: str,
+        identifier: str,
+        search_function: typing.Callable,
+        limit: int,
+        start_key: dict = None,
+    ):
+        filter_expression = Key("environment_api_key").eq(
+            environment_api_key
+        ) & search_function(identifier)
+        query_kwargs = {
+            "IndexName": "environment_api_key-identifier-index",
+            "Limit": limit,
+            "KeyConditionExpression": filter_expression,
+        }
+        if start_key:
+            query_kwargs.update(ExclusiveStartKey=start_key)
+        return self.query_items_dynamodb(**query_kwargs)
+
+    # def search_items_with_identifier_begins_with(
+    #     self,
+    #     environment_api_key: str,
+    #     identifier: str,
+    #     limit: int,
+    #     start_key: dict = None,
+    # ):
+    #     pass
+
 
 @python_2_unicode_compatible
 class Identity(models.Model):
@@ -30,6 +104,7 @@ class Identity(models.Model):
     environment = models.ForeignKey(
         Environment, related_name="identities", on_delete=models.CASCADE
     )
+    dynamodb = DynamoIdentityManager()
 
     class Meta:
         verbose_name_plural = "Identities"
@@ -192,23 +267,6 @@ class Identity(models.Model):
         # return the full list of traits for this identity by refreshing from the db
         # TODO: handle this in the above logic to avoid a second hit to the DB
         return self.get_all_user_traits()
-
-    @staticmethod
-    def query_items_dynamodb(*args, **kwargs):
-        return dynamo_identity_table.query(*args, **kwargs)
-
-    @staticmethod
-    def put_item_dynamodb(identity_dict: dict):
-        dynamo_identity_table.put_item(Item=identity_dict)
-
-    @staticmethod
-    def get_item_dynamodb(key: dict):
-        identity_document = dynamo_identity_table.get_item(Key=key)["Item"]
-        return build_identity_model(identity_document)
-
-    @staticmethod
-    def delete_in_dynamodb(composite_key: str):
-        dynamo_identity_table.delete_item(Key={"composite_key": composite_key})
 
     @staticmethod
     def bulk_send_to_dynamodb(identities: typing.List["Identity"]):

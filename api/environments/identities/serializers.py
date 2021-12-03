@@ -42,7 +42,7 @@ class EdgeIdentitySerializer(serializers.ModelSerializer):
         self.instance = EngineIdentity(
             identifier=identifier, environment_api_key=environment_api_key
         )
-        Identity.put_item_dynamodb(build_identity_dict(self.instance))
+        Identity.dynamodb.put_item(build_identity_dict(self.instance))
         return self.instance
 
 

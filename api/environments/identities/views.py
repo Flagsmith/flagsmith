@@ -12,7 +12,10 @@ from rest_framework.schemas import AutoSchema
 
 from app.pagination import CustomPagination, IdentityPagination
 from environments.identities.helpers import identify_integrations
-from environments.identities.models import Identity
+from environments.identities.models import (
+    Identity,
+    dynamo_identifier_search_functions,
+)
 from environments.identities.serializers import (
     EdgeIdentitySerializer,
     IdentitySerializer,
@@ -35,59 +38,43 @@ class EdgeIdentityViewSet(viewsets.ModelViewSet):
     lookup_field = "identity_uuid"
 
     @staticmethod
-    def _get_search_expression_dynamo(
+    def _get_search_function_and_value(
         search_query: str,
-    ) -> typing.Union[Equals, BeginsWith]:
+    ) -> typing.Tuple[typing.Callable, str]:
         if search_query.startswith('"') and search_query.endswith('"'):
-            return Key("identifier").eq(search_query.replace('"', ""))
+            return dynamo_identifier_search_functions["EQUAL"], search_query.replace(
+                '"', ""
+            )
         else:
-            return Key("identifier").begins_with(search_query)
+            return dynamo_identifier_search_functions["BEGINS_WITH"], search_query
 
     def get_object(self):
-        return self.get_queryset_dynamodb(1)["Items"][0]
+        return Identity.dynamodb.get_item_from_uuid(
+            self.kwargs["environment_api_key"], self.kwargs["identity_uuid"]
+        )
 
     def get_queryset_dynamodb(self, page_size):
-        dynamo_query_kwargs = self._get_dynamo_query_kwargs(page_size)
-        return Identity.query_items_dynamodb(**dynamo_query_kwargs)
 
-    @property
-    def _base_filter_expression(self):
-        return Key("environment_api_key").eq(self.kwargs["environment_api_key"])
-
-    @property
-    def _uuid_filter_expression(self):
-        return Key("identity_uuid").eq(self.kwargs["identity_uuid"])
-
-    def _get_dynamo_query_kwargs(
-        self,
-        page_size: int,
-    ) -> dict:
-        search_query = self.request.query_params.get("q")
         previous_last_evaluated_key = self.request.GET.get("last_evaluated_key")
-
-        filter_expression = self._base_filter_expression
-        index_name = "environment_api_key-identifier-index"
-        # TODO: make index name a constant
-        if search_query:
-            filter_expression = filter_expression & self._get_search_expression_dynamo(
-                search_query
-            )
-        if self.kwargs.get("identity_uuid"):
-            filter_expression = filter_expression & self._uuid_filter_expression
-            index_name = "identity_uuid-index"
-
-        dynamo_query_kwargs = {
-            "IndexName": index_name,
-            "Limit": page_size,
-            "KeyConditionExpression": filter_expression,
-        }
+        search_query = self.request.query_params.get("q")
+        start_key = None
         if previous_last_evaluated_key:
-            dynamo_query_kwargs.update(
-                ExclusiveStartKey=json.loads(
-                    base64.b64decode(previous_last_evaluated_key)
-                )
+            start_key = json.loads(base64.b64decode(previous_last_evaluated_key))
+
+        if not search_query:
+            return Identity.dynamodb.get_all_items(
+                self.kwargs["environment_api_key"], page_size, start_key
             )
-        return dynamo_query_kwargs
+        search_func, search_identifier = self._get_search_function_and_value(
+            search_query
+        )
+        return Identity.dynamodb.search_items_with_identifier(
+            self.kwargs["environment_api_key"],
+            search_identifier,
+            search_func,
+            page_size,
+            start_key,
+        )
 
     def list(self, request, *args, **kwargs):
         paginator = self.pagination_class()
@@ -106,7 +93,7 @@ class EdgeIdentityViewSet(viewsets.ModelViewSet):
         return Environment.objects.get(api_key=self.kwargs["environment_api_key"])
 
     def perform_destroy(self, instance):
-        Identity.delete_in_dynamodb(instance["composite_key"])
+        Identity.dynamodb.delete_item(instance["composite_key"])
 
 
 class IdentityViewSet(viewsets.ModelViewSet):
