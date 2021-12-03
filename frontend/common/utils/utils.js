@@ -1,3 +1,4 @@
+const React = require('react');
 module.exports = Object.assign({}, require('./base/_utils'), {
     numberWithCommas(x) {
         return x.toString()
@@ -10,6 +11,21 @@ module.exports = Object.assign({}, require('./base/_utils'), {
         p.appendChild(text);
         return p.innerHTML;
     },
+
+
+    renderWithPermission(permission, name, el) {
+        return permission ? (
+            el
+        ) : (
+            <Tooltip
+                title={<div>{el}</div>}
+                place="right"
+                html
+            >{name}
+            </Tooltip>
+        );
+    },
+
 
     calculateControl(multivariateOptions, variations) {
         if (!multivariateOptions || !multivariateOptions.length) {
