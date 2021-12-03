@@ -191,10 +191,10 @@ const Aside = class extends Component {
                                                   <Permission level="project" permission="ADMIN" id={this.props.projectId}>
                                                       {({ permission, isLoading }) => permission && hasRbacPermission && (
                                                           <NavLink
-                                                            id="audit-log-link"
-                                                            activeClassName="active"
-                                                            className="aside__nav-item"
-                                                            to={`/project/${this.props.projectId}/environment/${this.props.environmentId}/audit-log`}
+                                                              id="audit-log-link"
+                                                              activeClassName="active"
+                                                              className="aside__nav-item"
+                                                              to={`/project/${this.props.projectId}/environment/${this.props.environmentId}/audit-log`}
                                                           >
                                                               <AuditLogIcon className="aside__nav-item--icon"/>
                                                               Audit Log
@@ -204,11 +204,11 @@ const Aside = class extends Component {
 
                                                   {!hasRbacPermission && (
                                                       <Tooltip
-                                                        title={(
-                                                            <a href="#" className="aside__nav-item disabled">
-                                                                <AuditLogIcon className="aside__nav-item--icon"/>
+                                                          title={(
+                                                              <a href="#" className="aside__nav-item disabled">
+                                                                  <AuditLogIcon className="aside__nav-item--icon"/>
                                                                   Audit Log
-                                                            </a>
+                                                              </a>
                                                           )}
                                                       >
                                                           This feature is available with our scaleup plan
@@ -218,11 +218,11 @@ const Aside = class extends Component {
                                                       <Permission level="project" permission="CREATE_ENVIRONMENT" id={this.props.projectId}>
                                                           {({ permission, isLoading }) => permission && (
                                                               <NavLink
-                                                                id="integrations-link"
-                                                                activeClassName="active"
-                                                                className="aside__nav-item"
-                                                                to={`/project/${this.props.projectId}/integrations`}
-                                                                exact
+                                                                  id="integrations-link"
+                                                                  activeClassName="active"
+                                                                  className="aside__nav-item"
+                                                                  to={`/project/${this.props.projectId}/integrations`}
+                                                                  exact
                                                               >
                                                                   <i className="icon mr-2 ion-ios-apps aside__nav-item--icon"/>
                                                                   Integrations

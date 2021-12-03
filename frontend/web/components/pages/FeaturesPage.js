@@ -218,7 +218,6 @@ const FeaturesPage = class extends Component {
                                                                   </Row>
                                                                 )}
                                                               renderRow={(projectFlag, i) => {
-                                                                  const isProtected = TagStore.hasProtectedTag(projectFlag, parseInt(projectId));
                                                                   return (
                                                                       <FeatureRow
                                                                         environmentFlags={environmentFlags}
