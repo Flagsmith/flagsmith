@@ -89,7 +89,7 @@ const HomePage = class extends React.Component {
         const { email, password, organisation_name, first_name, last_name } = this.state;
         const redirect = Utils.fromParam().redirect ? `?redirect=${Utils.fromParam().redirect}` : '';
         const isInvite = document.location.href.indexOf('invite') != -1;
-        const isSignup = (isInvite && document.location.href.indexOf('login') === -1) || document.location.href.indexOf('signup') != -1;
+        const isSignup = !projectOverrides.preventSignup && ((isInvite && document.location.href.indexOf('login') === -1) || document.location.href.indexOf('signup') != -1);
         const disableSignup = Project.preventSignup && !isInvite && isSignup;
         const oauths = [];
         if (this.props.getValue('oauth_github')) {
@@ -298,15 +298,21 @@ const HomePage = class extends React.Component {
                                           </AccountProvider>
                                       </Card>
 
-                                      <Row className="justify-content-center mt-2">
-                                          Not got an account?{' '}
-                                          <Link id="existing-member-btn" to={`/signup${redirect}`}>
-                                              <ButtonLink className="ml-1" buttonText=" Sign up" />
-                                          </Link>
-                                      </Row>
-                                      <div className="mt-5 text-center text-small text-muted">
-                                          By signing up you agree to our <a style={{opacity:0.8}} target="_blank" className="text-small" href="https://flagsmith.com/terms-of-service/">Terms of Service</a> and <a style={{opacity:0.8}} target="_blank" className="text-small" href="https://flagsmith.com/privacy-policy/">Privacy Policy</a>
-                                      </div>
+                                      {!projectOverrides.preventSignup && (
+
+                                          <div>
+                                              <Row className="justify-content-center mt-2">
+                                                  Not got an account?{' '}
+                                                  <Link id="existing-member-btn" to={`/signup${redirect}`}>
+                                                      <ButtonLink className="ml-1" buttonText=" Sign up" />
+                                                  </Link>
+                                              </Row>
+                                              <div className="mt-5 text-center text-small text-muted">
+                                                  By signing up you agree to our <a style={{opacity:0.8}} target="_blank" className="text-small" href="https://flagsmith.com/terms-of-service/">Terms of Service</a> and <a style={{opacity:0.8}} target="_blank" className="text-small" href="https://flagsmith.com/privacy-policy/">Privacy Policy</a>
+                                              </div>
+                                          </div>
+
+                                      )}
                                   </React.Fragment>
                               ) : (
                                   <React.Fragment>
