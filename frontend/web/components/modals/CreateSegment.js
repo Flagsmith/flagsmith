@@ -145,29 +145,6 @@ const CreateSegment = class extends Component {
                         ))}
                     </FormGroup>
                     <Row className="justify-content-center">
-                        {!readOnly && this.props.hasFeature('not_operator') && (
-                            <div
-                                onClick={() => this.addRule('NOT')} style={{ marginTop: 20 }}
-                                className="text-center"
-                            >
-                                {
-                                    this.props.getValue('not_operator') ? (
-                                        <Tooltip title={(
-                                            <ButtonOutline className="mr-2 btn--outline-danger" data-test="add-rule" type="button">
-                                                Add AND NOT Condition
-                                            </ButtonOutline>
-                                        )}
-                                        >
-                                            {`Note: If using clientside evaluations on your SDK, this feature is only supported by the following SDKs: ${JSON.parse(flagsmith.getValue('not_operator'))}`}
-                                        </Tooltip>
-                                    ) : (
-                                        <ButtonOutline className="mr-2 btn--outline-danger" data-test="add-rule" type="button">
-                                            Add AND NOT Condition
-                                        </ButtonOutline>
-                                    )
-                                }
-                            </div>
-                        )}
                         {!readOnly && (
                         <div
                           onClick={this.addRule} style={{ marginTop: 20 }}
@@ -177,6 +154,29 @@ const CreateSegment = class extends Component {
                               Add AND Condition
                             </ButtonOutline>
                         </div>
+                        )}
+                        {!readOnly && this.props.hasFeature('not_operator') && (
+                            <div
+                                onClick={() => this.addRule('NOT')} style={{ marginTop: 20 }}
+                                className="text-center"
+                            >
+                                {
+                                    this.props.getValue('not_operator') ? (
+                                        <Tooltip title={(
+                                            <ButtonOutline className="ml-2 btn--outline-danger" data-test="add-rule" type="button">
+                                                Add AND NOT Condition
+                                            </ButtonOutline>
+                                        )}
+                                        >
+                                            {`Note: If using clientside evaluations on your SDK, this feature is only supported by the following SDKs: ${JSON.parse(flagsmith.getValue('not_operator'))}`}
+                                        </Tooltip>
+                                    ) : (
+                                        <ButtonOutline className="ml-2 btn--outline-danger" data-test="add-rule" type="button">
+                                            Add AND NOT Condition
+                                        </ButtonOutline>
+                                    )
+                                }
+                            </div>
                         )}
                     </Row>
                 </div>
