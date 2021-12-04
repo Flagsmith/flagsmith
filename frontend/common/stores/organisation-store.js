@@ -14,13 +14,12 @@ const controller = {
                 data.get(`${Project.api}organisations/${id}/users/`),
             ].concat(AccountStore.getOrganisationRole(id) === 'ADMIN' ? [
                 data.get(`${Project.api}organisations/${id}/invites/`),
-                data.get(`${Project.api}organisations/${id}/hosted-page-url/`).catch(() => ''),
             ] : [])).then((res) => {
                 if (id === store.id) {
                     // eslint-disable-next-line prefer-const
-                    let [projects, users, invites, hostedPage] = res;
+                    let [projects, users, invites] = res;
                     // projects = projects.results;
-                    store.model = { ...store.model, users, invites: invites && invites.results, hostedPage: hostedPage && hostedPage.url };
+                    store.model = { ...store.model, users, invites: invites && invites.results };
 
                     if (AccountStore.getOrganisationRole(id) === 'ADMIN' && flagsmith.hasFeature('usage_chart')) {
                         data.get(`${Project.api}organisations/${id}/usage/`).then((usage) => {
