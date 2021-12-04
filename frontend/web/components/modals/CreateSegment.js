@@ -147,7 +147,7 @@ const CreateSegment = class extends Component {
                     <Row className="justify-content-center">
                         {!readOnly && (
                         <div
-                          onClick={this.addRule} style={{ marginTop: 20 }}
+                          onClick={() => this.addRule('ANY')} style={{ marginTop: 20 }}
                           className="text-center"
                         >
                             <ButtonOutline data-test="add-rule" type="button">
@@ -157,8 +157,8 @@ const CreateSegment = class extends Component {
                         )}
                         {!readOnly && this.props.hasFeature('not_operator') && (
                             <div
-                                onClick={() => this.addRule('NOT')} style={{ marginTop: 20 }}
-                                className="text-center"
+                              onClick={() => this.addRule('NOT')} style={{ marginTop: 20 }}
+                              className="text-center"
                             >
                                 {
                                     this.props.getValue('not_operator') ? (
