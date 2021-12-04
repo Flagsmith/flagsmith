@@ -61,7 +61,7 @@ const store = Object.assign({}, BaseStore, {
                 const tag = store.model[projectId] && store.model[projectId].find(tag => tag.id === id);
                 if (tag) {
                     const label = tag.label.toLowerCase().replace(/[ _]/g, '');
-                    return label === 'protected' || 'donotdelete' || label === 'permanent';
+                    return label === 'protected' || label === 'donotdelete' || label === 'permanent';
                 }
             });
         }
