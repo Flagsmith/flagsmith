@@ -205,6 +205,10 @@ module.exports = Object.assign({}, require('./base/_utils'), {
                 valid = !plan.includes('side-project') && !plan.includes('startup');
                 break;
             }
+            case 'FORCE_2FA': {
+                valid = !plan.includes('side-project') && !plan.includes('startup');
+                break;
+            }
             default:
                 valid = true;
                 break;
