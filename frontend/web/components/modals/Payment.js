@@ -1,18 +1,19 @@
 import React, { Component } from 'react';
 import makeAsyncScriptLoader from 'react-async-script';
 import { ContactForm } from '../ContactForm';
-import OrganisationStore from '../../../common/stores/organisation-store';
-
+import _data from '../../../common/data/base/_data';
 
 const PaymentButton = (props) => {
-    const hostedPage = OrganisationStore.model.hostedPage;
-    if (hostedPage && flagsmith.hasFeature('upgrade_subscription')) {
+    const activeSubscription = AccountStore.getOrganisationPlan(AccountStore.getOrganisation().id);
+    if (flagsmith.hasFeature('upgrade_subscription') && activeSubscription) {
         return (
             <a
               onClick={() => {
                   Chargebee.getInstance().openCheckout({
                       hostedPage() {
-                          return Promise.resolve({ url: hostedPage });
+                          return _data.post(`${Project.api}organisations/${AccountStore.getOrganisation().id}/get-hosted-page-url-for-subscription-upgrade/`, {
+                              plan_id: props['data-cb-plan-id'],
+                          });
                       },
                       success: (res) => {
                           AppActions.updateSubscription(res);
