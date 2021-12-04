@@ -325,6 +325,14 @@ const store = Object.assign({}, BaseStore, {
     getOrganisation() {
         return store.organisation;
     },
+    getOrganisationPlan(id) {
+        const organisations = store.getOrganisations();
+        const organisation = organisations && organisations.find(v => v.id === id);
+        if (organisation) {
+            return !!organisation.subscription;
+        }
+        return null;
+    },
     isAdmin() {
         const id = store.organisation && store.organisation.id;
         return id && store.getOrganisationRole(id) === 'ADMIN';

@@ -48,6 +48,11 @@ a, .btn, button{
             &:hover {
                 background-color: darken($body-bg-dark,2);
             }
+
+            &-danger {
+                border-color: $alert-danger-bg !important;
+                color: $alert-danger-bg !important;
+            }
         }
         &--with-icon {
             background: none !important;
@@ -128,6 +133,11 @@ a, .btn, button{
         line-height: 37px;
         &:hover {
             background-color: white;
+        }
+
+        &-danger {
+            border-color: $alert-danger-bg !important;
+            color: $alert-danger-bg !important;
         }
     }
 
