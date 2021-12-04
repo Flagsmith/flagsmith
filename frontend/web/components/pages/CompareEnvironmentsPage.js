@@ -86,7 +86,7 @@ class TheComponent extends Component {
                     Compare Environments
                 </h3>
                 <p>
-                    Compare feature flag and segment override changes across environments.
+                    Compare feature flag changes across environments.
                 </p>
                 <Row>
                     <Row>
