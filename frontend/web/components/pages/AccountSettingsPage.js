@@ -74,163 +74,184 @@ class TheComponent extends Component {
           passwordError,
           email,
       } } = this;
-      const has2fPermission = !this.props.hasFeature('plan_based_access') || Utils.getPlansPermission(AccountStore.getPlans(), '2FA');
+
       return (
-          <div className="app-container container">
-              <h3>
-                Your Account
-              </h3>
-              <div className="row mt-5">
-                  <div className="col-md-4 col-lg-3 col-sm-12">
-                      <h5>Your details</h5>
-                  </div>
+          <AccountProvider>
+              {({ isSaving, user }, { enableTwoFactor, disableTwoFactor, confirmTwoFactor }) => {
+                  const forced2Factor = AccountStore.forced2Factor();
+                  const has2fPermission = !this.props.hasFeature('plan_based_access') || Utils.getPlansPermission(AccountStore.getPlans(), '2FA');
 
-                  <div className="col-md-6">
-                      <form className="mb-5" onSubmit={this.save}>
-                          <InputGroup
-                            className="mt-2"
-                            title="Email Address"
-                            data-test="firstName"
-                            inputProps={{
-                                className: 'full-width',
-                                name: 'groupName',
-                                readOnly: true,
-                            }}
-                            value={email}
-                            onChange={e => this.setState({ first_name: Utils.safeParseEventValue(e) })}
-                            type="text"
-                            name="Email Address"
-                          />
-                          <InputGroup
-                            className="mt-2"
-                            title="First Name"
-                            data-test="firstName"
-                            inputProps={{
-                                className: 'full-width',
-                                name: 'groupName',
-                            }}
-                            value={first_name}
-                            onChange={e => this.setState({ first_name: Utils.safeParseEventValue(e) })}
-                            isValid={first_name && first_name.length}
-                            type="text"
-                            name="First Name*"
-                          />
-                          <InputGroup
-                            className="mt-2"
-                            title="Last Name"
-                            data-test="lastName"
-                            inputProps={{
-                                className: 'full-width',
-                                name: 'groupName',
-                            }}
-                            value={last_name}
-                            onChange={e => this.setState({ last_name: Utils.safeParseEventValue(e) })}
-                            isValid={last_name && last_name.length}
-                            type="text"
-                            name="Last Name*"
-                          />
-                          {error && (
-                          <ErrorMessage>
-                              {error}
-                          </ErrorMessage>
-                          )}
-                          <div className="text-right mt-2">
-                              <Button type="submit" disabled={isSaving || !first_name || !last_name}>
-                        Save Details
-                              </Button>
-                          </div>
+                  return forced2Factor ? (
+                      <div className="app-container container">
+                          <h3>
+                              Two-Factor Authentication
+                          </h3>
+                          <p>
+                              One of your organisations has enfoced Two-Factor Authentication, please enable it to continue.
+                          </p>
+                          <TwoFactor/>
+                      </div>
+                  ) : (
 
-                      </form>
-                  </div>
-              </div>
-              {AccountStore.model.auth_type === 'EMAIL' && (
-              <div className="row">
-                  <div className="col-md-4 col-lg-3 col-sm-12">
-                      <h5>Change password</h5>
-                  </div>
-                  <div className="col-md-6">
-                      <form className="mb-5" onSubmit={this.savePassword}>
-                          <InputGroup
-                            className="mt-2"
-                            title="Current Password"
-                            data-test="currentPassword"
-                            inputProps={{
-                                className: 'full-width',
-                                name: 'groupName',
-                            }}
-                            value={current_password}
-                            onChange={e => this.setState({ current_password: Utils.safeParseEventValue(e) })}
-                            isValid={current_password && current_password.length}
-                            type="password"
-                            name="Current Password*"
-                          />
-                          <InputGroup
-                            className="mt-2"
-                            title="New Password"
-                            data-test="newPassword"
-                            inputProps={{
-                                className: 'full-width',
-                                name: 'groupName',
-                            }}
-                            value={new_password1}
-                            onChange={e => this.setState({ new_password1: Utils.safeParseEventValue(e) })}
-                            isValid={new_password1 && new_password1.length}
-                            type="password"
-                            name="New Password*"
-                          />
-                          <InputGroup
-                            className="mt-2"
-                            title="Confirm New Password"
-                            data-test="newPassword"
-                            inputProps={{
-                                className: 'full-width',
-                                name: 'groupName',
-                            }}
-                            value={new_password2}
-                            onChange={e => this.setState({ new_password2: Utils.safeParseEventValue(e) })}
-                            isValid={new_password2 && new_password2.length}
-                            type="password"
-                            name="Confirm New Password*"
-                          />
-                          {passwordError && (
-                          <ErrorMessage>
-                              {passwordError}
-                          </ErrorMessage>
+                      <div className="app-container container">
+                          <h3>
+                              Your Account
+                          </h3>
+                          <div className="row mt-5">
+                              <div className="col-md-4 col-lg-3 col-sm-12">
+                                  <h5>Your details</h5>
+                              </div>
+
+                              <div className="col-md-6">
+                                  <form className="mb-5" onSubmit={this.save}>
+                                      <InputGroup
+                                        className="mt-2"
+                                        title="Email Address"
+                                        data-test="firstName"
+                                        inputProps={{
+                                            className: 'full-width',
+                                            name: 'groupName',
+                                            readOnly: true,
+                                        }}
+                                        value={email}
+                                        onChange={e => this.setState({ first_name: Utils.safeParseEventValue(e) })}
+                                        type="text"
+                                        name="Email Address"
+                                      />
+                                      <InputGroup
+                                        className="mt-2"
+                                        title="First Name"
+                                        data-test="firstName"
+                                        inputProps={{
+                                            className: 'full-width',
+                                            name: 'groupName',
+                                        }}
+                                        value={first_name}
+                                        onChange={e => this.setState({ first_name: Utils.safeParseEventValue(e) })}
+                                        isValid={first_name && first_name.length}
+                                        type="text"
+                                        name="First Name*"
+                                      />
+                                      <InputGroup
+                                        className="mt-2"
+                                        title="Last Name"
+                                        data-test="lastName"
+                                        inputProps={{
+                                            className: 'full-width',
+                                            name: 'groupName',
+                                        }}
+                                        value={last_name}
+                                        onChange={e => this.setState({ last_name: Utils.safeParseEventValue(e) })}
+                                        isValid={last_name && last_name.length}
+                                        type="text"
+                                        name="Last Name*"
+                                      />
+                                      {error && (
+                                          <ErrorMessage>
+                                              {error}
+                                          </ErrorMessage>
+                                      )}
+                                      <div className="text-right mt-2">
+                                          <Button type="submit" disabled={isSaving || !first_name || !last_name}>
+                                              Save Details
+                                          </Button>
+                                      </div>
+
+                                  </form>
+                              </div>
+                          </div>
+                          {AccountStore.model.auth_type === 'EMAIL' && (
+                              <div className="row">
+                                  <div className="col-md-4 col-lg-3 col-sm-12">
+                                      <h5>Change password</h5>
+                                  </div>
+                                  <div className="col-md-6">
+                                      <form className="mb-5" onSubmit={this.savePassword}>
+                                          <InputGroup
+                                            className="mt-2"
+                                            title="Current Password"
+                                            data-test="currentPassword"
+                                            inputProps={{
+                                                className: 'full-width',
+                                                name: 'groupName',
+                                            }}
+                                            value={current_password}
+                                            onChange={e => this.setState({ current_password: Utils.safeParseEventValue(e) })}
+                                            isValid={current_password && current_password.length}
+                                            type="password"
+                                            name="Current Password*"
+                                          />
+                                          <InputGroup
+                                            className="mt-2"
+                                            title="New Password"
+                                            data-test="newPassword"
+                                            inputProps={{
+                                                className: 'full-width',
+                                                name: 'groupName',
+                                            }}
+                                            value={new_password1}
+                                            onChange={e => this.setState({ new_password1: Utils.safeParseEventValue(e) })}
+                                            isValid={new_password1 && new_password1.length}
+                                            type="password"
+                                            name="New Password*"
+                                          />
+                                          <InputGroup
+                                            className="mt-2"
+                                            title="Confirm New Password"
+                                            data-test="newPassword"
+                                            inputProps={{
+                                                className: 'full-width',
+                                                name: 'groupName',
+                                            }}
+                                            value={new_password2}
+                                            onChange={e => this.setState({ new_password2: Utils.safeParseEventValue(e) })}
+                                            isValid={new_password2 && new_password2.length}
+                                            type="password"
+                                            name="Confirm New Password*"
+                                          />
+                                          {passwordError && (
+                                              <ErrorMessage>
+                                                  {passwordError}
+                                              </ErrorMessage>
+                                          )}
+                                          <div className="text-right mt-2">
+                                              <Button type="submit" disabled={isSaving || !new_password2 || !new_password1 || !current_password || (new_password1 !== new_password2)}>
+                                                  Save Password
+                                              </Button>
+                                          </div>
+                                      </form>
+                                  </div>
+                              </div>
                           )}
-                          <div className="text-right mt-2">
-                              <Button type="submit" disabled={isSaving || !new_password2 || !new_password1 || !current_password || (new_password1 !== new_password2)}>
-                                Save Password
-                              </Button>
+                          <div className="row">
+                              <div className="col-md-4 col-lg-3 col-sm-12">
+                                  <h5>Two-Factor Authentication</h5>
+                                  <p>
+                                      Increase your account's security by enabling Two-Factor Authentication (2FA).
+                                  </p>
+                              </div>
+                              <div className="col-md-6">
+                                  {has2fPermission ? <TwoFactor/> : (
+                                      <div className="text-right">
+                                          <button
+                                            type="button" className="btn btn-primary text-center ml-auto mt-2 mb-2"
+                                            onClick={() => {
+                                                openModal('Payment plans', <PaymentModal
+                                                  viewOnly={false}
+                                                />, null, { large: true });
+                                            }}
+                                          >
+                                              Manage payment plan
+                                          </button>
+                                      </div>
+                                  )}
+                              </div>
                           </div>
-                      </form>
-                  </div>
-              </div>
-              )}
-              <div className="row">
-                  <div className="col-md-4 col-lg-3 col-sm-12">
-                      <h5>Two-Factor Authentication</h5>
-                      <p>
-                      Increase your account's security by enabling Two-Factor Authentication (2FA).
-                      </p>
-                  </div>
-                  <div className="col-md-6">
-                      {has2fPermission ? <TwoFactor/> : (
-                          <div className="text-right">
-                              <button
-                                type="button" className="btn btn-primary text-center ml-auto mt-2 mb-2"
-                                onClick={() => {
-                                    openModal('Payment plans', <PaymentModal
-                                      viewOnly={false}
-                                    />, null, { large: true });
-                                }}
-                              >
-                                Manage payment plan
-                              </button>
-                          </div>
-                      )}
-                  </div>
-              </div>
-          </div>
+                      </div>
+                  );
+              }}
+
+          </AccountProvider>
       );
   }
 }
