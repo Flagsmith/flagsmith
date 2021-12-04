@@ -122,13 +122,16 @@ class TheComponent extends Component {
                                                     <strong>
                                                         {p.projectFlag.name}
                                                     </strong>
-                                                    )}
+                                                )}
                                                 >
                                                     {p.projectFlag.description}
                                                 </Tooltip>
                                             </div>
                                             <Flex className="mr-2">
-                                                <Permission level="environment" permission="ADMIN" id={this.props.match.params.environmentId}>
+                                                <Permission
+                                                  level="environment" permission="ADMIN"
+                                                  id={this.props.match.params.environmentId}
+                                                >
                                                     {({ permission, isLoading }) => (
                                                         <FeatureRow
                                                           condensed
@@ -150,7 +153,10 @@ class TheComponent extends Component {
                                                 </Permission>
                                             </Flex>
                                             <Flex className="ml-2">
-                                                <Permission level="environment" permission="ADMIN" id={this.props.match.params.environmentId}>
+                                                <Permission
+                                                  level="environment" permission="ADMIN"
+                                                  id={this.props.match.params.environmentId}
+                                                >
                                                     {({ permission, isLoading }) => (
                                                         <FeatureRow
                                                           condensed
@@ -194,7 +200,7 @@ class TheComponent extends Component {
                                                         (
                                                             <Row>
                                                                 <span style={{ width: featureNameWidth }}>
-                                                                    Differences
+                                                                    Changed Flags
                                                                 </span>
                                                             </Row>
                                                         )
@@ -226,13 +232,17 @@ class TheComponent extends Component {
                                                   items={this.state.changes}
                                                   renderRow={(p, i) => renderRow(p, i, !p.enabledChanged, !p.valueChanged)}
                                                 />
+                                            </div>
+                                        )}
+                                        {!this.state.isLoading && (this.state.same && !!this.state.same.length) && (
+                                            <div style={{ minWidth: 800 }}>
                                                 <div className="mt-4">
                                                     <PanelSearch
                                                       title={
                                                             (
                                                                 <Row>
                                                                     <span style={{ width: featureNameWidth }}>
-                                                                        Unchanged
+                                                                        Unchanged Flags
                                                                     </span>
                                                                 </Row>
                                                             )
@@ -269,7 +279,8 @@ class TheComponent extends Component {
                                         )}
                                     </div>
                                 );
-                            }}
+                            }
+                            }
                         </FeatureListProvider>
                     )
                         : ''
