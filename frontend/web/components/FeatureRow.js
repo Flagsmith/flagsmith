@@ -51,6 +51,30 @@ class TheComponent extends Component {
         const readOnly = flagsmith.hasFeature('read_only_mode');
         const isProtected = TagStore.hasProtectedTag(projectFlag, parseInt(projectId));
 
+        if (this.props.condensed) {
+            return (
+                <Row>
+                    <div className={`mr-2 ${this.props.fadeEnabled && 'faded'}`}>
+                        <Switch
+                          disabled={!permission || readOnly}
+                          data-test={`feature-switch-${this.props.index}${environmentFlags[id] && environmentFlags[id].enabled ? '-on' : '-off'}`}
+                          checked={environmentFlags[id] && environmentFlags[id].enabled}
+                          onChange={() => this.confirmToggle(projectFlag, environmentFlags[id], (environments) => {
+                              toggleFlag(_.findIndex(projectFlags, { id }), environments,null, this.props.environmentFlags);
+                          })}
+                        />
+                    </div>
+                    <div className={`mr-2 clickable ${this.props.fadeValue && 'faded'}`}>
+                        <FeatureValue
+                          onClick={() => permission && !readOnly && this.editFlag(projectFlag, environmentFlags[id])}
+                          value={environmentFlags[id] && environmentFlags[id].feature_state_value}
+                          data-test={`feature-value-${this.props.index}`}
+                        />
+                    </div>
+                </Row>
+            );
+        }
+
         return (
             <Row
               style={{ flexWrap: 'nowrap' }}

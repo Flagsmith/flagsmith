@@ -223,12 +223,13 @@ const AppActions = Object.assign({}, require('./base/_app-actions'), {
             name,
         });
     },
-    toggleFlag(index, environments, comment) {
+    toggleFlag(index, environments, comment, environmentFlags) {
         Dispatcher.handleViewAction({
             actionType: Actions.TOGGLE_FLAG,
             index,
             environments,
             comment,
+            environmentFlags,
         });
     },
     editUserFlag(params) {
