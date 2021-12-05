@@ -20,7 +20,7 @@
   },
   "engines": {
     "node": "16.x",
-    "npm": "7.x"
+    "npm": "8.x"
   },
   "dependencies": {
     "@babel/core": "7.1.2",
