@@ -38,7 +38,7 @@ module.exports = {
     globals_path: '',
 
     webdriver: {},
-    'test_workers': { 'enabled': true, 'workers': 'auto' },
+    'test_workers': { 'enabled': true, 'workers': 5 },
     parallel_process_delay: process.env.E2E_PARALLEL_PROCESS_DELAY
         ? parseInt(process.env.E2E_PARALLEL_PROCESS_DELAY)
         : 50,

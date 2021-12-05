@@ -59,7 +59,7 @@ const testHelpers = {
     toggleFeature(browser, index, toValue) {
         browser
             .waitForElementNotPresent('#confirm-remove-feature-modal')
-            .pause(400) // Additional wait here as it seems rc-switch can be unresponsive for a while
+            .pause(50) // Additional wait here as it seems rc-switch can be unresponsive for a while
             .waitAndClick(byId(`feature-switch-${index}${toValue ? '-off' : 'on'}`))
             .waitForElementPresent('#confirm-toggle-feature-modal')
             .waitAndClick('#confirm-toggle-feature-btn')
@@ -99,8 +99,7 @@ const testHelpers = {
             .waitForElementVisible(byId(`feature-item-${index}`));
     },
     saveFeature(browser) {
-        browser.pause(400);
-        browser.click('#update-feature-btn')
+        browser.waitAndClick('#update-feature-btn')
             .waitForElementNotPresent('#create-feature-modal');
     },
     gotoSegments(browser) {
