@@ -222,6 +222,7 @@ var store = Object.assign({}, BaseStore, {
     getProjects() {
         return store.model && store.model.projects;
     },
+
     getUsers: () => store.model && store.model.users,
     getInvites: () => store.model && store.model.invites,
     getInflux() {

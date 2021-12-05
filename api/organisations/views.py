@@ -18,6 +18,7 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.throttling import ScopedRateThrottle
 
+from organisations.exceptions import OrganisationHasNoSubscription
 from organisations.models import (
     OrganisationRole,
     OrganisationWebhook,
@@ -28,6 +29,7 @@ from organisations.permissions import (
     OrganisationPermission,
 )
 from organisations.serializers import (
+    GetHostedPageForSubscriptionUpgradeSerializer,
     InfluxDataSerializer,
     MultiInvitesSerializer,
     OrganisationSerializerFull,
@@ -55,6 +57,8 @@ class OrganisationViewSet(viewsets.ModelViewSet):
             return PortalUrlSerializer
         elif self.action == "get_influx_data":
             return InfluxDataSerializer
+        elif self.action == "get_hosted_page_url_for_subscription_upgrade":
+            return GetHostedPageForSubscriptionUpgradeSerializer
         return OrganisationSerializerFull
 
     def get_serializer_context(self):
@@ -144,15 +148,31 @@ class OrganisationViewSet(viewsets.ModelViewSet):
     def get_portal_url(self, request, pk):
         organisation = self.get_object()
         if not organisation.has_subscription():
-            return Response(
-                {"detail": "Organisation has no subscription"},
-                status=status.HTTP_400_BAD_REQUEST,
-            )
+            raise OrganisationHasNoSubscription()
         redirect_url = get_current_site(request)
         serializer = self.get_serializer(
             data={"url": organisation.subscription.get_portal_url(redirect_url)}
         )
         serializer.is_valid(raise_exception=True)
+        return Response(serializer.data)
+
+    @action(
+        detail=True,
+        methods=["POST"],
+        url_path="get-hosted-page-url-for-subscription-upgrade",
+    )
+    def get_hosted_page_url_for_subscription_upgrade(self, request, pk):
+        organisation = self.get_object()
+        if not organisation.has_subscription():
+            raise OrganisationHasNoSubscription()
+        serializer = self.get_serializer(
+            data={
+                "subscription_id": organisation.subscription.subscription_id,
+                **request.data,
+            }
+        )
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
         return Response(serializer.data)
 
     @action(detail=True, methods=["GET"], url_path="influx-data")

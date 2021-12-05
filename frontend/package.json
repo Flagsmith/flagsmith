@@ -19,8 +19,8 @@
     "bundledev": "node node_modules/.bin/webpack -p --progress --config ./webpack/webpack.config.dev.js"
   },
   "engines": {
-    "node": "12.x",
-    "npm": "6.13.4"
+    "node": "16.x",
+    "npm": "7.x"
   },
   "dependencies": {
     "@babel/core": "7.1.2",
@@ -34,6 +34,7 @@
     "@material-ui/core": "3.9.0",
     "amplitude-js": "^7.3.3",
     "animejs": "3.0.1",
+    "array-find-index": "^1.0.2",
     "babel-eslint": "10.0.1",
     "babel-loader": "8.2.2",
     "babel-plugin-transform-object-rest-spread": "7.0.0-beta.3",
@@ -74,7 +75,7 @@
     "material-ui-chip-input": "1.1.0",
     "moment": "2.22.2",
     "node-fetch": "2.6.1",
-    "node-sass": "4.14.1",
+    "node-sass": "6.0.1",
     "polyfill-react-native": "1.0.5",
     "postcss-loader": "3.0.0",
     "prettier": "1.19.1",
@@ -98,7 +99,7 @@
     "react-virtualized-auto-sizer": "1.0.2",
     "react-window": "1",
     "recharts": "^1.8.5",
-    "sass-loader": "7.3.1",
+    "sass-loader": "10.2.0",
     "slackbots": "1.2.0",
     "ssg-node-express": "4.16.4",
     "style-loader": "0.23.1",
@@ -112,7 +113,7 @@
   },
   "devDependencies": {
     "chai": "4.2.0",
-    "chromedriver": "94.0.0",
+    "chromedriver": "96.0.0",
     "nightwatch": "1.7.8",
     "node-slack-upload": "2.0.0",
     "nodemon": "1.18.11",

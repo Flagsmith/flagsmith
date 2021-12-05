@@ -337,7 +337,7 @@ const CreateFlag = class extends Component {
                 )}
                 {!identity && projectFlag && (
                     <Permission level="project" permission="ADMIN" id={this.props.projectId}>
-                        {({ permission: projectAdmin }) => projectAdmin && this.props.hasFeature('flag_owners') && (
+                        {({ permission: projectAdmin }) => projectAdmin && (
                             <FormGroup className="mb-4 mr-3 ml-3" >
                                 <FlagOwners projectId={this.props.projectId} id={projectFlag.id}/>
                             </FormGroup>

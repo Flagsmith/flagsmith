@@ -44,10 +44,10 @@ const CreateSegment = class extends Component {
         });
     }
 
-    addRule = () => {
+    addRule = (type = 'ANY') => {
         const rules = this.state.rules;
         rules[0].rules = rules[0].rules.concat({
-            type: 'ANY',
+            type,
             conditions: [
                 { ...Constants.defaultRule },
             ],
@@ -127,7 +127,7 @@ const CreateSegment = class extends Component {
                                 {i > 0 && (
                                     <Row className="and-divider">
                                         <Flex className="and-divider__line"/>
-                                        AND
+                                        {rule.type === 'ANY' ? 'AND' : 'AND NOT'}
                                         <Flex className="and-divider__line"/>
                                     </Row>
                                 )}
@@ -144,16 +144,41 @@ const CreateSegment = class extends Component {
                             </div>
                         ))}
                     </FormGroup>
-                    {!readOnly && (
-                    <div
-                      onClick={this.addRule} style={{ marginTop: 20 }}
-                      className="text-center"
-                    >
-                        <ButtonOutline data-test="add-rule" type="button">
+                    <Row className="justify-content-center">
+                        {!readOnly && (
+                        <div
+                          onClick={() => this.addRule('ANY')} style={{ marginTop: 20 }}
+                          className="text-center"
+                        >
+                            <ButtonOutline data-test="add-rule" type="button">
                               Add AND Condition
-                        </ButtonOutline>
-                    </div>
-                    )}
+                            </ButtonOutline>
+                        </div>
+                        )}
+                        {!readOnly && this.props.hasFeature('not_operator') && (
+                            <div
+                              onClick={() => this.addRule('NOT')} style={{ marginTop: 20 }}
+                              className="text-center"
+                            >
+                                {
+                                    this.props.getValue('not_operator') ? (
+                                        <Tooltip title={(
+                                            <ButtonOutline className="ml-2 btn--outline-danger" data-test="add-rule" type="button">
+                                                Add AND NOT Condition
+                                            </ButtonOutline>
+                                        )}
+                                        >
+                                            {`Note: If using clientside evaluations on your SDK, this feature is only supported by the following SDKs: ${JSON.parse(flagsmith.getValue('not_operator'))}`}
+                                        </Tooltip>
+                                    ) : (
+                                        <ButtonOutline className="ml-2 btn--outline-danger" data-test="add-rule" type="button">
+                                            Add AND NOT Condition
+                                        </ButtonOutline>
+                                    )
+                                }
+                            </div>
+                        )}
+                    </Row>
                 </div>
             </div>
         );

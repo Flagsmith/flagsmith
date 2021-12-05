@@ -1,4 +1,5 @@
 import logging
+import typing
 
 import boto3
 from django.conf import settings
@@ -8,6 +9,7 @@ from flag_engine.environments.builders import build_environment_dict
 
 from audit.models import AuditLog, RelatedObjectType
 from audit.serializers import AuditLogSerializer
+from environments.models import Environment
 from integrations.datadog.datadog import DataDogWrapper
 from integrations.new_relic.new_relic import NewRelicWrapper
 from webhooks.webhooks import WebhookEventType, call_organisation_webhooks
@@ -115,7 +117,19 @@ if settings.ENVIRONMENTS_TABLE_NAME_DYNAMO:
 
 
 @receiver(post_save, sender=AuditLog)
-def send_env_to_dynamodb(sender, instance, **kwargs):
-    if instance.environment and dynamo_env_table:
-        env_dict = build_environment_dict(instance.environment)
-        dynamo_env_table.put_item(Item=env_dict)
+def send_environments_to_dynamodb(sender, instance, **kwargs):
+    environment = instance.environment
+    project = instance.project or getattr(environment, "project", None)
+    if not (project and project.enable_dynamo_db and dynamo_env_table):
+        return
+
+    if environment:
+        dynamo_env_table.put_item(Item=build_environment_dict(environment))
+    else:
+        _write_multiple_environments_to_dynamo(project.environments.all())
+
+
+def _write_multiple_environments_to_dynamo(environments: typing.Iterable[Environment]):
+    with dynamo_env_table.batch_writer() as writer:
+        for environment in environments:
+            writer.put_item(Item=build_environment_dict(environment))

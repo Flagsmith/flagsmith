@@ -24,6 +24,7 @@ import NotFoundPage from './components/pages/NotFoundPage';
 import PricingPage from './components/pages/PricingPage';
 import TermsPoliciesPage from './components/pages/TermsPoliciesPage';
 import AuditLogPage from './components/pages/AuditLogPage';
+import CompareEnvironmentsPage from './components/pages/CompareEnvironmentsPage';
 
 export default (
     <App>
@@ -52,6 +53,7 @@ export default (
             <Route path="/project/:projectId/environment/:environmentId/users/:identity/:id" exact component={UserPage}/>
             <Route path="/project/:projectId/environment/create" exact component={CreateEnvironmentPage}/>
             <Route path="/project/:projectId/environment/:environmentId/project-settings" exact component={ProjectSettingsPage}/>
+            <Route path="/project/:projectId/environment/:environmentId/compare" exact component={CompareEnvironmentsPage}/>
             <Route path="/project/:projectId/settings" exact component={ProjectSettingsPage}/>
             <Route path="/project/:projectId/environment/:environmentId/segments" exact component={SegmentsPage}/>
             <Route path="/project/:projectId/environment/:environmentId/organisation-settings" exact component={OrganisationSettingsPage}/>
