@@ -1,5 +1,5 @@
 import React, { Component } from 'react';
-import { BarChart, ResponsiveContainer, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend } from 'recharts';
+import { BarChart, ResponsiveContainer, Bar, XAxis, YAxis, CartesianGrid, Tooltip as _Tooltip, Legend } from 'recharts';
 import CreateProjectModal from '../modals/CreateProject';
 import InviteUsersModal from '../modals/InviteUsers';
 import UserGroupList from '../UserGroupList';
@@ -88,6 +88,21 @@ const OrganisationSettingsPage = class extends Component {
 
     save = (e) => {
         e && e.preventDefault();
+        const { name, webhook_notification_email, restrict_project_create_to_admin, force_2fa } = this.state;
+        if (AccountStore.isSaving) {
+            return;
+        }
+
+        const org = AccountStore.getOrganisation();
+        AppActions.editOrganisation({
+            name: name || org.name,
+            force_2fa,
+            restrict_project_create_to_admin: typeof restrict_project_create_to_admin === 'boolean' ? restrict_project_create_to_admin : undefined,
+            webhook_notification_email: webhook_notification_email !== undefined ? webhook_notification_email : org.webhook_notification_email,
+        });
+    }
+
+    save2FA = (force_2fa) => {
         const { name, webhook_notification_email, restrict_project_create_to_admin } = this.state;
         if (AccountStore.isSaving) {
             return;
@@ -96,6 +111,7 @@ const OrganisationSettingsPage = class extends Component {
         const org = AccountStore.getOrganisation();
         AppActions.editOrganisation({
             name: name || org.name,
+            force_2fa,
             restrict_project_create_to_admin: typeof restrict_project_create_to_admin === 'boolean' ? restrict_project_create_to_admin : undefined,
             webhook_notification_email: webhook_notification_email !== undefined ? webhook_notification_email : org.webhook_notification_email,
         });
@@ -236,7 +252,7 @@ const OrganisationSettingsPage = class extends Component {
                             <CartesianGrid strokeDasharray="3 5"/>
                             <XAxis allowDataOverflow={false} dataKey="name"/>
                             <YAxis allowDataOverflow={false} />
-                            <Tooltip/>
+                            <_Tooltip/>
                             <Legend />
                             <Bar dataKey="Flags" stackId="a" fill="#6633ff" />
                             <Bar dataKey="Identities" stackId="a" fill="#00a696" />
@@ -256,6 +272,7 @@ const OrganisationSettingsPage = class extends Component {
         const { props: { webhooks, webhooksLoading } } = this;
         const hasRbacPermission = !this.props.hasFeature('plan_based_access') || Utils.getPlansPermission(AccountStore.getPlans(), 'RBAC');
         const paymentsEnabled = this.props.hasFeature('payments_enabled');
+        const force2faPermission = Utils.getPlansPermission(AccountStore.getPlans(), 'FORCE_2FA');
         return (
             <div className="app-container container">
 
@@ -621,6 +638,22 @@ const OrganisationSettingsPage = class extends Component {
                                                             <UserGroupList showRemove orgId={organisation && organisation.id}/>
                                                         </div>
 
+                                                        {this.props.hasFeature('force_2fa') && (
+                                                            <div>
+                                                                <Row space className="mt-5">
+                                                                    <h3 className="m-b-0">Enforce 2FA</h3>
+                                                                    {!force2faPermission ? (
+                                                                        <Tooltip title={<Switch checked={organisation.force_2fa} onChange={this.save2FA}/>}>
+                                                                            To access this feature please upgrade your account to scaleup or higher."
+                                                                        </Tooltip>
+                                                                    ) : (
+                                                                        <Switch checked={organisation.force_2fa} onChange={this.save2FA}/>
+                                                                    )}
+                                                                </Row>
+                                                                <p>Enabling this setting forces users within the organisation to setup 2 factor security.</p>
+                                                            </div>
+
+                                                        )}
                                                     </div>
                                                     )}
                                                 </div>
