@@ -4,7 +4,6 @@ import typing
 from collections import namedtuple
 
 import coreapi
-from boto3.dynamodb.conditions import BeginsWith, Equals, Key
 from rest_framework import status, viewsets
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
