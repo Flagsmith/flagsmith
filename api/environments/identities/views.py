@@ -10,7 +10,7 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.schemas import AutoSchema
 
-from app.pagination import CustomPagination, IdentityPagination
+from app.pagination import CustomPagination, EdgeIdentityPagination
 from environments.identities.helpers import identify_integrations
 from environments.identities.models import (
     Identity,
@@ -34,7 +34,7 @@ from util.views import SDKAPIView
 class EdgeIdentityViewSet(viewsets.ModelViewSet):
     serializer_class = EdgeIdentitySerializer
     permission_classes = [IsAuthenticated, NestedEnvironmentPermissions]
-    pagination_class = IdentityPagination
+    pagination_class = EdgeIdentityPagination
     lookup_field = "identity_uuid"
 
     @staticmethod
@@ -53,8 +53,8 @@ class EdgeIdentityViewSet(viewsets.ModelViewSet):
             self.kwargs["environment_api_key"], self.kwargs["identity_uuid"]
         )
 
-    def get_queryset_dynamodb(self, page_size):
-
+    def get_queryset(self):
+        page_size = self.pagination_class().get_page_size(self.request)
         previous_last_evaluated_key = self.request.GET.get("last_evaluated_key")
         search_query = self.request.query_params.get("q")
         start_key = None
@@ -68,23 +68,14 @@ class EdgeIdentityViewSet(viewsets.ModelViewSet):
         search_func, search_identifier = self._get_search_function_and_value(
             search_query
         )
-        return Identity.dynamodb.search_items_with_identifier(
+        identity_documents = Identity.dynamodb.search_items_with_identifier(
             self.kwargs["environment_api_key"],
             search_identifier,
             search_func,
             page_size,
             start_key,
         )
-
-    def list(self, request, *args, **kwargs):
-        paginator = self.pagination_class()
-        page_size = paginator.get_page_size(request)
-        dynamo_query_set = self.get_queryset_dynamodb(page_size)
-        paginator.set_pagination_state_dynamo(dynamo_query_set, request)
-
-        serializer = IdentitySerializer(data=dynamo_query_set["Items"], many=True)
-        serializer.is_valid()
-        return paginator.get_paginated_response_dynamo(serializer.data)
+        return identity_documents
 
     def get_environment_from_request(self):
         """
