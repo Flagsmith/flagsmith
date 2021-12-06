@@ -1,6 +1,5 @@
 import urllib
 import uuid
-from unittest import mock
 
 from boto3.dynamodb.conditions import Key
 from django.urls import reverse
@@ -8,7 +7,7 @@ from rest_framework import status
 
 
 def test_get_identity_calls_get_item(
-    admin_client, dynamo_enabled_environment, environment_api_key
+    mocker, admin_client, dynamo_enabled_environment, environment_api_key
 ):
     # Given
     identifier = "test_user123"
@@ -24,15 +23,15 @@ def test_get_identity_calls_get_item(
         args=[environment_api_key, identity_uuid],
     )
     # When
-    with mock.patch(
+    dynamo_identity_table = mocker.patch(
         "environments.identities.models.dynamo_identity_table"
-    ) as dynamo_identity_table:
-        dynamo_identity_table.query.return_value = {
-            "Items": [identity_dict],
-            "Count": 1,
-        }
+    )
+    dynamo_identity_table.query.return_value = {
+        "Items": [identity_dict],
+        "Count": 1,
+    }
 
-        response = admin_client.get(url)
+    response = admin_client.get(url)
     # Then
     assert response.status_code == status.HTTP_200_OK
     assert response.json()["identity_uuid"] == identity_uuid
@@ -75,7 +74,7 @@ def test_create_identity_calls_put_item(
 
 
 def test_delete_identity_calls_delete_item(
-    admin_client, dynamo_enabled_environment, environment_api_key
+    mocker, admin_client, dynamo_enabled_environment, environment_api_key
 ):
     # Given
     identifier = "test_user123"
@@ -91,14 +90,14 @@ def test_delete_identity_calls_delete_item(
         args=[environment_api_key, identifier],
     )
     # When
-    with mock.patch(
+    dynamo_identity_table = mocker.patch(
         "environments.identities.models.dynamo_identity_table"
-    ) as dynamo_identity_table:
-        dynamo_identity_table.query.return_value = {
-            "Items": [identity_dict],
-            "Count": 1,
-        }
-        response = admin_client.delete(url)
+    )
+    dynamo_identity_table.query.return_value = {
+        "Items": [identity_dict],
+        "Count": 1,
+    }
+    response = admin_client.delete(url)
 
     # Then
     assert response.status_code == status.HTTP_204_NO_CONTENT
@@ -108,7 +107,7 @@ def test_delete_identity_calls_delete_item(
 
 
 def test_identity_list_pagination(
-    admin_client, dynamo_enabled_environment, environment_api_key
+    mocker, admin_client, dynamo_enabled_environment, environment_api_key
 ):
     # Given
     identifier = "test_user123"
@@ -131,26 +130,26 @@ def test_identity_list_pagination(
         args=[environment_api_key],
     )
 
-    with mock.patch(
+    dynamo_identity_table = mocker.patch(
         "environments.identities.models.dynamo_identity_table"
-    ) as dynamo_identity_table:
+    )
 
-        dynamo_identity_table.query.return_value = {
-            "Items": [identity_dict],
-            "Count": 1,
-            "LastEvaluatedKey": identity_item_key,
-        }
+    dynamo_identity_table.query.return_value = {
+        "Items": [identity_dict],
+        "Count": 1,
+        "LastEvaluatedKey": identity_item_key,
+    }
 
-        response = admin_client.get(url)
-        # Test the response
-        assert response.status_code == 200
-        response = response.json()
-        assert response["previous"] is None
+    response = admin_client.get(url)
+    # Test the response
+    assert response.status_code == 200
+    response = response.json()
+    assert response["previous"] is None
 
-        # Fetch the next url from the response since LastEvaluatedKey was part of the response from dynamodb
-        next_url = response["next"]
-        # Make the call using the next url
-        response = admin_client.get(next_url)
+    # Fetch the next url from the response since LastEvaluatedKey was part of the response from dynamodb
+    next_url = response["next"]
+    # Make the call using the next url
+    response = admin_client.get(next_url)
 
     # And verify that .query was called with correct arguments
     dynamo_identity_table.query.assert_called_with(
@@ -165,7 +164,7 @@ def test_identity_list_pagination(
 
 
 def test_get_identities_list_calls_query_with_correct_arguments(
-    admin_client, dynamo_enabled_environment, environment_api_key
+    mocker, admin_client, dynamo_enabled_environment, environment_api_key
 ):
     # Given
 
@@ -182,15 +181,16 @@ def test_get_identities_list_calls_query_with_correct_arguments(
         args=[environment_api_key],
     )
 
-    # When
-    with mock.patch(
+    dynamo_identity_table = mocker.patch(
         "environments.identities.models.dynamo_identity_table"
-    ) as dynamo_identity_table:
-        dynamo_identity_table.query.return_value = {
-            "Items": [identity_dict],
-            "Count": 1,
-        }
-        response = admin_client.get(url)
+    )
+    dynamo_identity_table.query.return_value = {
+        "Items": [identity_dict],
+        "Count": 1,
+    }
+
+    # When
+    response = admin_client.get(url)
 
     # Then
     assert response.status_code == status.HTTP_200_OK
@@ -203,7 +203,7 @@ def test_get_identities_list_calls_query_with_correct_arguments(
 
 
 def test_search_identities_calls_query_with_correct_arguments(
-    admin_client, dynamo_enabled_environment, environment_api_key
+    mocker, admin_client, dynamo_enabled_environment, environment_api_key
 ):
     # Given
     identifier = "test_user123"
@@ -220,17 +220,17 @@ def test_search_identities_calls_query_with_correct_arguments(
     )
 
     url = "%s?q=%s" % (base_url, identifier)
-    # When
-    with mock.patch(
+    dynamo_identity_table = mocker.patch(
         "environments.identities.models.dynamo_identity_table"
-    ) as dynamo_identity_table:
+    )
 
-        dynamo_identity_table.query.return_value = {
-            "Items": [identity_dict],
-            "Count": 1,
-        }
+    dynamo_identity_table.query.return_value = {
+        "Items": [identity_dict],
+        "Count": 1,
+    }
 
-        response = admin_client.get(url)
+    # When
+    response = admin_client.get(url)
     # Then
     assert response.status_code == status.HTTP_200_OK
 
@@ -244,7 +244,7 @@ def test_search_identities_calls_query_with_correct_arguments(
 
 
 def test_search_for_identities_with_exact_match_calls_query_with_correct_argument(
-    admin_client, dynamo_enabled_environment, environment_api_key
+    mocker, admin_client, dynamo_enabled_environment, environment_api_key
 ):
     # Given
     identifier = "test_user123"
@@ -264,17 +264,16 @@ def test_search_for_identities_with_exact_match_calls_query_with_correct_argumen
         base_url,
         urllib.parse.urlencode({"q": f'"{identifier}"'}),
     )
-    # When
-    with mock.patch(
+    dynamo_identity_table = mocker.patch(
         "environments.identities.models.dynamo_identity_table"
-    ) as dynamo_identity_table:
+    )
+    dynamo_identity_table.query.return_value = {
+        "Items": [identity_dict],
+        "Count": 1,
+    }
 
-        dynamo_identity_table.query.return_value = {
-            "Items": [identity_dict],
-            "Count": 1,
-        }
-
-        res = admin_client.get(url)
+    # When
+    res = admin_client.get(url)
 
     # Then
     assert res.status_code == status.HTTP_200_OK
