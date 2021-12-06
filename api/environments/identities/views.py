@@ -4,6 +4,7 @@ import typing
 from collections import namedtuple
 
 import coreapi
+from boto3.dynamodb.conditions import Key
 from rest_framework import status, viewsets
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
@@ -11,10 +12,7 @@ from rest_framework.schemas import AutoSchema
 
 from app.pagination import CustomPagination, EdgeIdentityPagination
 from environments.identities.helpers import identify_integrations
-from environments.identities.models import (
-    Identity,
-    dynamo_identifier_search_functions,
-)
+from environments.identities.models import Identity
 from environments.identities.serializers import (
     EdgeIdentitySerializer,
     IdentitySerializer,
@@ -36,6 +34,10 @@ class EdgeIdentityViewSet(viewsets.ModelViewSet):
     permission_classes = [IsAuthenticated, NestedEnvironmentPermissions]
     pagination_class = EdgeIdentityPagination
     lookup_field = "identity_uuid"
+    dynamo_identifier_search_functions = {
+        "EQUAL": lambda identifier: Key("identifier").eq(identifier),
+        "BEGINS_WITH": lambda identifier: Key("identifier").begins_with(identifier),
+    }
 
     def initial(self, request, *args, **kwargs):
         environment = self.get_environment_from_request()
@@ -43,16 +45,15 @@ class EdgeIdentityViewSet(viewsets.ModelViewSet):
             raise DynamoNotEnabledError()
         super().initial(request, *args, **kwargs)
 
-    @staticmethod
     def _get_search_function_and_value(
+        self,
         search_query: str,
     ) -> typing.Tuple[typing.Callable, str]:
         if search_query.startswith('"') and search_query.endswith('"'):
-            return dynamo_identifier_search_functions["EQUAL"], search_query.replace(
-                '"', ""
-            )
-        else:
-            return dynamo_identifier_search_functions["BEGINS_WITH"], search_query
+            return self.dynamo_identifier_search_functions[
+                "EQUAL"
+            ], search_query.replace('"', "")
+        return self.dynamo_identifier_search_functions["BEGINS_WITH"], search_query
 
     def get_object(self):
         return Identity.dynamodb.get_item_from_uuid(

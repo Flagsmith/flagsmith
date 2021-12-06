@@ -21,13 +21,8 @@ if settings.IDENTITIES_TABLE_NAME_DYNAMO:
         settings.IDENTITIES_TABLE_NAME_DYNAMO
     )
 
-dynamo_identifier_search_functions = {
-    "EQUAL": lambda identifier: Key("identifier").eq(identifier),
-    "BEGINS_WITH": lambda identifier: Key("identifier").begins_with(identifier),
-}
 
-
-class DynamoIdentityManager(models.Manager):
+class DynamoIdentityManager:
     @staticmethod
     def query_items_dynamodb(*args, **kwargs):
         return dynamo_identity_table.query(*args, **kwargs)
@@ -95,7 +90,6 @@ class Identity(models.Model):
     environment = models.ForeignKey(
         Environment, related_name="identities", on_delete=models.CASCADE
     )
-    objects = models.Manager()
     dynamodb = DynamoIdentityManager()
 
     class Meta:
