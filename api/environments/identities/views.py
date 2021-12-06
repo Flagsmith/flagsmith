@@ -27,6 +27,7 @@ from environments.sdk.serializers import (
     IdentitySerializerWithTraitsAndSegments,
 )
 from features.serializers import FeatureStateSerializerFull
+from projects.exceptions import DynamoNotEnabledError
 from util.views import SDKAPIView
 
 
@@ -35,6 +36,12 @@ class EdgeIdentityViewSet(viewsets.ModelViewSet):
     permission_classes = [IsAuthenticated, NestedEnvironmentPermissions]
     pagination_class = EdgeIdentityPagination
     lookup_field = "identity_uuid"
+
+    def initial(self, request, *args, **kwargs):
+        environment = self.get_environment_from_request()
+        if not environment.project.enable_dynamo_db:
+            raise DynamoNotEnabledError()
+        super().initial(request, *args, **kwargs)
 
     @staticmethod
     def _get_search_function_and_value(

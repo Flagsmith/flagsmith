@@ -6,6 +6,21 @@ from django.urls import reverse
 from rest_framework import status
 
 
+def test_get_identites_returns_bad_request_if_dynamo_is_not_enabled(
+    admin_client, environment, environment_api_key
+):
+    # Given
+    url = reverse(
+        "api-v1:environments:environment-edge-identities-list",
+        args=[environment_api_key],
+    )
+    # When
+    response = admin_client.get(url)
+
+    # Then
+    assert response.status_code == status.HTTP_400_BAD_REQUEST
+
+
 def test_get_identity_calls_get_item(
     mocker, admin_client, dynamo_enabled_environment, environment_api_key
 ):
