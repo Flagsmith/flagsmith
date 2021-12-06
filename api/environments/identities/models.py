@@ -87,15 +87,6 @@ class DynamoIdentityManager(models.Manager):
             query_kwargs.update(ExclusiveStartKey=start_key)
         return self.query_items_dynamodb(**query_kwargs)
 
-    # def search_items_with_identifier_begins_with(
-    #     self,
-    #     environment_api_key: str,
-    #     identifier: str,
-    #     limit: int,
-    #     start_key: dict = None,
-    # ):
-    #     pass
-
 
 @python_2_unicode_compatible
 class Identity(models.Model):
@@ -104,6 +95,7 @@ class Identity(models.Model):
     environment = models.ForeignKey(
         Environment, related_name="identities", on_delete=models.CASCADE
     )
+    objects = models.Manager()
     dynamodb = DynamoIdentityManager()
 
     class Meta:
