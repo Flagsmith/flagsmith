@@ -13,12 +13,13 @@ const testHelpers = {
             .expect.element(testHelpers.byTestID('email')).to.be.visible;
     },
     byTestID: byId,
-    login: async (browser, url, email, password) => {
+    login: async (browser, url, email, password, retryOnFail) => {
         browser.url(url)
             .pause(200) // Allows the dropdown to fade in
-            .waitAndSet('[name="email"]', email)
+            .waitAndSet('[name="email"]', `${email}`)
             .waitAndSet('[name="password"]', password)
-            .click('#login-btn');
+            .click('#login-btn')
+            .waitForElementVisible('#project-select-page');
     },
     waitLoggedIn: async (browser) => {
         browser.waitForElementNotPresent('#login-btn');
@@ -58,7 +59,7 @@ const testHelpers = {
     toggleFeature(browser, index, toValue) {
         browser
             .waitForElementNotPresent('#confirm-remove-feature-modal')
-            .pause(400) // Additional wait here as it seems rc-switch can be unresponsive for a while
+            .pause(50) // Additional wait here as it seems rc-switch can be unresponsive for a while
             .waitAndClick(byId(`feature-switch-${index}${toValue ? '-off' : 'on'}`))
             .waitForElementPresent('#confirm-toggle-feature-modal')
             .waitAndClick('#confirm-toggle-feature-btn')
@@ -98,8 +99,7 @@ const testHelpers = {
             .waitForElementVisible(byId(`feature-item-${index}`));
     },
     saveFeature(browser) {
-        browser.pause(400);
-        browser.click('#update-feature-btn')
+        browser.waitAndClick('#update-feature-btn')
             .waitForElementNotPresent('#create-feature-modal');
     },
     gotoSegments(browser) {
@@ -109,6 +109,7 @@ const testHelpers = {
     gotoTraits(browser) {
         browser
             .waitAndClick('#users-link')
+            .pause(500)
             .waitAndClick(byId('user-item-0'))
             .waitForElementVisible('#add-trait')
             .pause(100);
@@ -122,7 +123,7 @@ const testHelpers = {
     gotoFeature(browser, index) {
         browser.click(byId(`feature-item-${index}`))
             .waitForElementPresent('#create-feature-modal');
-        browser.pause(200)
+        browser.pause(200);
     },
     createTrait(browser, index, id, value) {
         browser
@@ -149,12 +150,13 @@ const testHelpers = {
     goToUser(browser, index) {
         browser
             .waitAndClick('#users-link')
+            .pause(500)
             .waitAndClick(byId(`user-item-${index}`));
     },
     addSegmentOverrideConfig: (browser, index, value, selectionIndex = 0) => {
         browser.waitAndClick(byId('overrides'));
         browser.waitAndClick(byId(`select-segment-option-${selectionIndex}`));
-        browser.pause(500)
+        browser.pause(500);
         browser.waitForElementVisible(byId(`segment-override-value-${index}`));
         browser.waitAndSet(byId(`segment-override-value-${0}`), value);
     },

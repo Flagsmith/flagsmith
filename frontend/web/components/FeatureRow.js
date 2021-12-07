@@ -8,12 +8,10 @@ import TagStore from '../../common/stores/tags-store'; // we need this to make J
 
 
 class TheComponent extends Component {
-    state = {};
-
-
     static contextTypes = {
         router: propTypes.object.isRequired,
     };
+    state = {};
 
     confirmToggle = (projectFlag, environmentFlag, cb) => {
         openModal('Toggle Feature', <ConfirmToggleFeature

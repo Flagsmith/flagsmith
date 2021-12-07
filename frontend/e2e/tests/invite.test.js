@@ -6,37 +6,22 @@ const email = 'nightwatch@solidstategroup.com';
 const password = 'str0ngp4ssw0rd!';
 const url = `http://localhost:${process.env.PORT || 8080}`;
 const append = `${new Date().valueOf()}`;
-const helpers = require('./helpers');
+const helpers = require('../helpers');
 
 const byId = helpers.byTestID;
 let inviteLink;
+let organistationName;
 module.exports = {
     '[Invite Tests] - Login': function (browser) {
-        testHelpers.login(browser, url, email, password);
-    },
-    '[Invite Tests] - Create organisation': function (browser) {
-        testHelpers.waitLoggedIn(browser);
-        browser.url(`${url}/create`);
-        browser.waitForElementVisible('#create-org-page');
-
-        browser
-            .waitAndSet('[name="orgName"]', `Bullet Train Org${append}`)
-            .click('#create-org-btn')
-            .waitForElementVisible('#project-select-page')
-            .assert.containsText('#org-menu', `Bullet Train Org${append}`);
-    },
-    '[Invite Tests] - Create project': function (browser) {
-        browser
-            .waitForElementVisible('#create-first-project-btn')
-            .click('#create-first-project-btn')
-            .waitAndSet('[name="projectName"]', 'My Test Project')
-            .click(byId('create-project-btn'));
-
-        browser.waitForElementVisible('#features-page');
+        testHelpers.login(browser, url, email, password, true);
     },
     '[Invite Tests] - Invite user': function (browser) {
         browser.pause(200);
         browser.url(`${url}/organisation-settings`);
+        browser.waitForElementVisible(byId('organisation-name'))
+            .getValue(byId('organisation-name'), (result) => {
+                organistationName = result.value;
+            });
         browser.waitForElementVisible(byId('invite-link'))
             .getValue(byId('invite-link'), (result) => {
                 inviteLink = result.value;
@@ -55,7 +40,7 @@ module.exports = {
             .click(byId('signup-btn'));
         browser
             .useXpath()
-            .waitForElementPresent(`//div[contains(@class, "org-nav")]//a[contains(text(),"${`Bullet Train Org${append}`}")]`);
+            .waitForElementPresent(`//div[contains(@class, "org-nav")]//a[contains(text(),"${`${organistationName}`}")]`);
     },
     '[Invite Tests] - Finish': function (browser) {
         browser

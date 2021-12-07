@@ -26,6 +26,14 @@ jobs:
               with:
                   fetch-depth: 0
 
+            - name: Cache npm
+              uses: actions/cache@v2
+              with:
+                  path: frontend/node_modules
+                  key: ${{ runner.os }}-node-${{ hashFiles('frontend/package-lock.json') }}
+                  restore-keys: |
+                      ${{ runner.os }}-node-
+
             - name: Run API
               working-directory: api
               env:
@@ -46,11 +54,12 @@ jobs:
               working-directory: frontend
               env:
                   ENV: local
+                  STATIC_ASSET_CDN_URL: /
                   E2E_TEST_TOKEN_DEV: some-token
                   ENABLE_INFLUXDB_FEATURES: false
               run: |
-                  wget -q https://dl.google.com/linux/chrome/deb/pool/main/g/google-chrome-stable/google-chrome-stable_91.0.4472.114-1_amd64.deb
-                  sudo apt install --allow-downgrades -y ./google-chrome*.deb -f 
+                  wget -q https://dl.google.com/linux/chrome/deb/pool/main/g/google-chrome-stable/google-chrome-stable_96.0.4664.45-1_amd64.deb
+                  sudo apt install --allow-downgrades -y ./google-chrome*.deb -f
                   google-chrome --version
                   node -v
                   npm i
