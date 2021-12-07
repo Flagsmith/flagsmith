@@ -43,10 +43,12 @@ jobs:
               with:
                   python-version: ${{ matrix.python-version }}
 
-            - uses: syphar/restore-virtualenv@v1.2
+            - name: Restore VirtualEnv from cache
+              uses: syphar/restore-virtualenv@v1.2
               id: cache-api
 
-            - uses: syphar/restore-pip-download-cache@v1
+            - name: Restore Pip from cache
+              uses: syphar/restore-pip-download-cache@v1
               if: steps.cache-api.outputs.cache-hit != 'true'
 
             - name: Install Dependencies
