@@ -3,7 +3,6 @@ import { Route, Switch } from 'react-router-dom';
 
 import App from './components/App'; // App Wrapper
 import HomePage from './components/pages/HomePage';
-import MarkupPage from './components/pages/__MarkupPage__';
 import DemoPage from './components/pages/DemoPage';
 import Maintenance from './components/Maintenance';
 import ProjectSelectPage from './components/pages/ProjectSelectPage';
@@ -31,7 +30,7 @@ export default (
     <App>
         <Switch>
             <Route path="/" exact component={HomePage}/>
-            <Route path="/markup" exact component={MarkupPage}/>
+            {/* <Route path="/markup" exact component={MarkupPage}/> */}
             <Route path="/login" exact component={HomePage}/>
             <Route path="/404" exact component={NotFoundErrorPage}/>
             <Route path="/signup" exact component={HomePage}/>

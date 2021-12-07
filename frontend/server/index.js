@@ -182,4 +182,7 @@ if (process.env.SLACK_TOKEN && process.env.DEPLOYMENT_SLACK_CHANNEL && postToSla
 
 app.listen(port, () => {
     console.log(`Server listening on: ${port}`);
+    if (!isDev && process.send) {
+        process.send({ done: true });
+    }
 });

@@ -194,7 +194,9 @@ const App = class extends Component {
             return (
                 <AccountProvider onNoUser={this.onNoUser} onLogout={this.onLogout} onLogin={this.onLogin}>
                     {() => (
-                        <AppLoader />
+                        <div id="login-page">
+                            <AppLoader />
+                        </div>
                     )}
                 </AccountProvider>
             );

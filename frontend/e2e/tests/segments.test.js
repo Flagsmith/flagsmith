@@ -1,13 +1,19 @@
-/* eslint-disable func-names */
-const _ = require('lodash');
-
+``;/* eslint-disable func-names */
 const expect = require('chai').expect;
-const helpers = require('./helpers');
+const helpers = require('../helpers');
 
+const email = 'nightwatch@solidstategroup.com';
+const password = 'str0ngp4ssw0rd!';
 const byId = helpers.byTestID;
-const setSegmentRule = helpers.setSegmentRule;
+const url = `http://localhost:${process.env.PORT || 8080}`;
 
 module.exports = {
+
+    '[Segments Tests] - Login': function (browser) {
+        testHelpers.login(browser, url, email, password);
+        browser.waitAndClick('#project-select-0');
+    },
+
     '[Segments Priority Tests] - Create segments': function (browser) {
         testHelpers.gotoSegments(browser);
         testHelpers.createSegment(browser, 0, 'segment_1', [
@@ -88,5 +94,37 @@ module.exports = {
         testHelpers.gotoFeatures(browser);
         testHelpers.deleteFeature(browser, 1, 'flag');
         testHelpers.deleteFeature(browser, 0, 'config');
+    },
+    '[Users Tests] - Create features': function (browser) {
+        testHelpers.gotoFeatures(browser);
+        testHelpers.createFeature(browser, 0, 'flag', true);
+        testHelpers.createRemoteConfig(browser, 0, 'config', 0);
+    },
+    '[Users Tests] - Toggle flag for user': function (browser) {
+        testHelpers.goToUser(browser, 0);
+
+        browser
+            .waitAndClick(byId('user-feature-switch-1-on'))
+            .waitAndClick('#confirm-toggle-feature-btn')
+            .waitForElementNotPresent('#confirm-toggle-feature-modal')
+            .waitForElementVisible(byId('user-feature-switch-1-off'));
+    },
+    '[Users Tests] - Edit flag for user': function (browser) {
+        browser
+            .pause(200)
+            .waitAndClick(byId('user-feature-0'))
+            .waitForElementPresent('#create-feature-modal')
+            .waitAndSet(byId('featureValue'), 'small')
+            .click('#update-feature-btn')
+            .waitForElementNotPresent('#create-feature-modal')
+            .expect.element(byId('user-feature-value-0')).text.to.equal('"small"');
+    },
+    '[Users Tests] - Toggle flag for user again': function (browser) {
+        browser
+            .pause(200) // Additional wait here as it seems rc-switch can be unresponsive for a while
+            .click(byId('user-feature-switch-1-off'))
+            .waitAndClick('#confirm-toggle-feature-btn')
+            .waitForElementNotPresent('#confirm-toggle-feature-modal')
+            .waitForElementVisible(byId('user-feature-switch-1-on'));
     },
 };

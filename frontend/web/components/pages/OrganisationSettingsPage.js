@@ -26,6 +26,9 @@ const OrganisationSettingsPage = class extends Component {
             role: 'ADMIN',
             manageSubscriptionLoaded: true,
         };
+        if (!AccountStore.getOrganisation()) {
+            return;
+        }
         AppActions.getOrganisation(AccountStore.getOrganisation().id);
 
         if (this.props.hasFeature('usage_chart') && !projectOverrides.disableInflux) {
@@ -279,7 +282,7 @@ const OrganisationSettingsPage = class extends Component {
                         isSaving,
                         user,
                         organisation,
-                    }, { createOrganisation, selectOrganisation, deleteOrganisation }) => (
+                    }, { createOrganisation, selectOrganisation, deleteOrganisation }) => !!organisation && (
                         <div>
                             <FormGroup>
                                 <div className="margin-bottom">
@@ -290,6 +293,7 @@ const OrganisationSettingsPage = class extends Component {
                                                 <Column className="m-l-0">
                                                     <Input
                                                       ref={e => this.input = e}
+                                                      data-test="organisation-name"
                                                       value={this.state.name || organisation.name}
                                                       onChange={e => this.setState({ name: Utils.safeParseEventValue(e) })}
                                                       isValid={name && name.length}
@@ -631,7 +635,7 @@ const OrganisationSettingsPage = class extends Component {
                                                                 </Button>
                                                             </Row>
                                                             <p>Groups allow you to manage permissions for viewing and editing projects, features and environments.</p>
-                                                            <UserGroupList showRemove orgId={organisation.id}/>
+                                                            <UserGroupList showRemove orgId={organisation && organisation.id}/>
                                                         </div>
 
                                                         {this.props.hasFeature('force_2fa') && (
