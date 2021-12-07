@@ -5,7 +5,9 @@ import boto3
 from django.conf import settings
 from django.db.models.signals import post_save
 from django.dispatch import receiver
-from flag_engine.environments.builders import build_environment_dict
+from flag_engine.django_transform.document_builders import (
+    build_environment_document,
+)
 
 from audit.models import AuditLog, RelatedObjectType
 from audit.serializers import AuditLogSerializer
@@ -124,7 +126,7 @@ def send_environments_to_dynamodb(sender, instance, **kwargs):
         return
 
     if environment:
-        dynamo_env_table.put_item(Item=build_environment_dict(environment))
+        dynamo_env_table.put_item(Item=build_environment_document(environment))
     else:
         _write_multiple_environments_to_dynamo(project.environments.all())
 
@@ -132,4 +134,4 @@ def send_environments_to_dynamodb(sender, instance, **kwargs):
 def _write_multiple_environments_to_dynamo(environments: typing.Iterable[Environment]):
     with dynamo_env_table.batch_writer() as writer:
         for environment in environments:
-            writer.put_item(Item=build_environment_dict(environment))
+            writer.put_item(Item=build_environment_document(environment))

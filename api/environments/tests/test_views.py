@@ -18,6 +18,7 @@ from projects.models import (
     ProjectPermissionModel,
     UserProjectPermission,
 )
+from segments.models import EQUAL, Condition, Segment, SegmentRule
 from users.models import FFAdminUser
 from util.tests import Helper
 
@@ -359,6 +360,35 @@ class EnvironmentTestCase(TestCase):
         assert response.status_code == status.HTTP_200_OK
         assert not response.json()["admin"]
         assert "VIEW_ENVIRONMENT" in response.json()["permissions"]
+
+    def test_get_document(self):
+        # Given
+        # an environment
+        environment = Environment.objects.create(
+            name="Test Environment", project=self.project
+        )
+
+        # and some other sample data to make sure we're testing all of the document
+        Feature.objects.create(name="test_feature", project=self.project)
+        segment = Segment.objects.create(name="My segment", project=self.project)
+        segment_rule = SegmentRule.objects.create(
+            segment=segment, type=SegmentRule.ALL_RULE
+        )
+        Condition.objects.create(
+            operator=EQUAL, property="property", value="value", rule=segment_rule
+        )
+
+        # and the relevant URL to get an environment document
+        url = reverse(
+            "api-v1:environments:environment-get-document", args=[environment.api_key]
+        )
+
+        # When
+        response = self.client.get(url)
+
+        # Then
+        assert response.status_code == status.HTTP_200_OK
+        assert response.json()
 
 
 @pytest.mark.django_db

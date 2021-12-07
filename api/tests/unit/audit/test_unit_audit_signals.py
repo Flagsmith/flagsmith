@@ -1,6 +1,8 @@
 import json
 
-from flag_engine.environments.builders import build_environment_dict
+from flag_engine.django_transform.document_builders import (
+    build_environment_document,
+)
 
 from audit.models import AuditLog
 from audit.signals import send_environments_to_dynamodb
@@ -22,7 +24,7 @@ def test_send_env_to_dynamodb_from_audit_log_with_environment(
 
     # Then
     mock_dynamo_env_table.put_item.assert_called_once_with(
-        Item=build_environment_dict(dynamo_enabled_project_environment_one)
+        Item=build_environment_document(dynamo_enabled_project_environment_one)
     )
 
 
@@ -53,7 +55,7 @@ def test_send_env_to_dynamodb_from_audit_log_with_project(
         for call_args in batch_writer_context_manager.put_item.call_args_list
     }
     expected_items = {
-        json.dumps(build_environment_dict(env))
+        json.dumps(build_environment_document(env))
         for env in (
             dynamo_enabled_project_environment_one,
             dynamo_enabled_project_environment_two,
@@ -79,5 +81,5 @@ def test_send_env_to_dynamodb_from_audit_log_with_environment_and_project(
 
     # Then
     mock_dynamo_env_table.put_item.assert_called_once_with(
-        Item=build_environment_dict(dynamo_enabled_project_environment_one)
+        Item=build_environment_document(dynamo_enabled_project_environment_one)
     )
