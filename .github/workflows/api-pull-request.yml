@@ -47,7 +47,7 @@ jobs:
               id: cache-venv  # name for referring later
               with:
                 path: ./.venv/  # what we cache: the virtualenv
-                key: ${{ runner.os }}-${{ matrix.python-version }}-pip-${{ hashFiles('./requirements.txt', './requirements-dev.txt') }}
+                key: ${{ runner.os }}-${{ matrix.python-version }}-pip-${{ hashFiles('**/requirements*.txt') }}
                 
             # Build a virtualenv, but only if it doesn't already exist
             - name: Build virtualenv
@@ -57,6 +57,9 @@ jobs:
                 python -m venv ./.venv
                 source ./.venv/bin/activate
                 pip install -r requirements-dev.txt
+            
+            - name: Setup virtualenv
+              run: source ./.venv/bin/activate
               
             - name: Check black formatting
               run: black --check .
