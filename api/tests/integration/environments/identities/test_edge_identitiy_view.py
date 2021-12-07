@@ -1,9 +1,16 @@
 import urllib
-import uuid
 
+import pytest
 from boto3.dynamodb.conditions import Key
 from django.urls import reverse
 from rest_framework import status
+
+
+@pytest.fixture()
+def dynamo_identity_table(mocker):
+    return mocker.patch(
+        "environments.dynamodb.dynamodb_wrapper.DynamoIdentityWrapper._table"
+    )
 
 
 def test_get_identites_returns_bad_request_if_dynamo_is_not_enabled(
@@ -22,11 +29,11 @@ def test_get_identites_returns_bad_request_if_dynamo_is_not_enabled(
 
 
 def test_get_identity_calls_get_item(
-    mocker,
     admin_client,
     dynamo_enabled_environment,
     environment_api_key,
     identity_document,
+    dynamo_identity_table,
 ):
     # Given
     identity_uuid = identity_document["identity_uuid"]
@@ -36,9 +43,9 @@ def test_get_identity_calls_get_item(
         args=[environment_api_key, identity_uuid],
     )
     # When
-    dynamo_identity_table = mocker.patch(
-        "environments.dynamodb.dynamodb_wrapper.DynamoIdentityWrapper._table"
-    )
+    # dynamo_identity_table = mocker.patch(
+    #     "environments.dynamodb.dynamodb_wrapper.DynamoIdentityWrapper._table"
+    # )
     dynamo_identity_table.query.return_value = {
         "Items": [identity_document],
         "Count": 1,
@@ -56,7 +63,10 @@ def test_get_identity_calls_get_item(
 
 
 def test_create_identity_calls_get_and_put_item(
-    mocker, admin_client, dynamo_enabled_environment, environment_api_key
+    admin_client,
+    dynamo_enabled_environment,
+    environment_api_key,
+    dynamo_identity_table,
 ):
     # Given
     identifier = "test_user123"
@@ -65,9 +75,7 @@ def test_create_identity_calls_get_and_put_item(
         "api-v1:environments:environment-edge-identities-list",
         args=[environment_api_key],
     )
-    dynamo_identity_table = mocker.patch(
-        "environments.dynamodb.dynamodb_wrapper.DynamoIdentityWrapper._table"
-    )
+
     dynamo_identity_table.get_item.return_value = {
         "Count": 0,
     }
@@ -95,11 +103,11 @@ def test_create_identity_calls_get_and_put_item(
 
 
 def test_create_identity_returns_400_if_identity_already_exists(
-    mocker,
     admin_client,
     dynamo_enabled_environment,
     environment_api_key,
     identity_document,
+    dynamo_identity_table,
 ):
     # Given
     identifier = identity_document["identifier"]
@@ -107,9 +115,6 @@ def test_create_identity_returns_400_if_identity_already_exists(
     url = reverse(
         "api-v1:environments:environment-edge-identities-list",
         args=[environment_api_key],
-    )
-    dynamo_identity_table = mocker.patch(
-        "environments.dynamodb.dynamodb_wrapper.DynamoIdentityWrapper._table"
     )
     dynamo_identity_table.get_item.return_value = {
         "Item": identity_document,
@@ -124,11 +129,11 @@ def test_create_identity_returns_400_if_identity_already_exists(
 
 
 def test_delete_identity_calls_delete_item(
-    mocker,
     admin_client,
     dynamo_enabled_environment,
     environment_api_key,
     identity_document,
+    dynamo_identity_table,
 ):
     # Given
 
@@ -137,14 +142,12 @@ def test_delete_identity_calls_delete_item(
         "api-v1:environments:environment-edge-identities-detail",
         args=[environment_api_key, identifier],
     )
-    # When
-    dynamo_identity_table = mocker.patch(
-        "environments.dynamodb.dynamodb_wrapper.DynamoIdentityWrapper._table"
-    )
     dynamo_identity_table.query.return_value = {
         "Items": [identity_document],
         "Count": 1,
     }
+
+    # When
     response = admin_client.delete(url)
 
     # Then
@@ -155,11 +158,11 @@ def test_delete_identity_calls_delete_item(
 
 
 def test_identity_list_pagination(
-    mocker,
     admin_client,
     dynamo_enabled_environment,
     environment_api_key,
     identity_document,
+    dynamo_identity_table,
 ):
     # Firstly, let's setup the data
     identity_item_key = {
@@ -171,10 +174,6 @@ def test_identity_list_pagination(
     url = reverse(
         "api-v1:environments:environment-edge-identities-list",
         args=[environment_api_key],
-    )
-
-    dynamo_identity_table = mocker.patch(
-        "environments.dynamodb.dynamodb_wrapper.DynamoIdentityWrapper._table"
     )
 
     dynamo_identity_table.query.return_value = {
@@ -207,22 +206,18 @@ def test_identity_list_pagination(
 
 
 def test_get_identities_list_calls_query_with_correct_arguments(
-    mocker,
     admin_client,
     dynamo_enabled_environment,
     environment_api_key,
     identity_document,
+    dynamo_identity_table,
 ):
     # Given
-
     url = reverse(
         "api-v1:environments:environment-edge-identities-list",
         args=[environment_api_key],
     )
 
-    dynamo_identity_table = mocker.patch(
-        "environments.dynamodb.dynamodb_wrapper.DynamoIdentityWrapper._table"
-    )
     dynamo_identity_table.query.return_value = {
         "Items": [identity_document],
         "Count": 1,
@@ -242,11 +237,11 @@ def test_get_identities_list_calls_query_with_correct_arguments(
 
 
 def test_search_identities_calls_query_with_correct_arguments(
-    mocker,
     admin_client,
     dynamo_enabled_environment,
     environment_api_key,
     identity_document,
+    dynamo_identity_table,
 ):
     # Given
     identifier = identity_document["identifier"]
@@ -257,10 +252,6 @@ def test_search_identities_calls_query_with_correct_arguments(
     )
 
     url = "%s?q=%s" % (base_url, identifier)
-    dynamo_identity_table = mocker.patch(
-        "environments.dynamodb.dynamodb_wrapper.DynamoIdentityWrapper._table"
-    )
-
     dynamo_identity_table.query.return_value = {
         "Items": [identity_document],
         "Count": 1,
@@ -281,11 +272,11 @@ def test_search_identities_calls_query_with_correct_arguments(
 
 
 def test_search_for_identities_with_exact_match_calls_query_with_correct_argument(
-    mocker,
     admin_client,
     dynamo_enabled_environment,
     environment_api_key,
     identity_document,
+    dynamo_identity_table,
 ):
     # Given
     identifier = identity_document["identifier"]
@@ -297,9 +288,6 @@ def test_search_for_identities_with_exact_match_calls_query_with_correct_argumen
     url = "%s?%s" % (
         base_url,
         urllib.parse.urlencode({"q": f'"{identifier}"'}),
-    )
-    dynamo_identity_table = mocker.patch(
-        "environments.dynamodb.dynamodb_wrapper.DynamoIdentityWrapper._table"
     )
     dynamo_identity_table.query.return_value = {
         "Items": [identity_document],
