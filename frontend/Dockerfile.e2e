@@ -1,9 +1,9 @@
-FROM node:12
+FROM node:16
 
 RUN mkdir /srv/flagsmith && chown node:node /srv/flagsmith
 
 RUN apt-get update
-RUN wget https://dl.google.com/linux/chrome/deb/pool/main/g/google-chrome-stable/google-chrome-stable_91.0.4472.114-1_amd64.deb
+RUN wget https://dl.google.com/linux/chrome/deb/pool/main/g/google-chrome-stable/google-chrome-stable_96.0.4664.45-1_amd64.deb
 RUN apt install -y ./google-chrome*.deb -f
 RUN apt-get clean
 
