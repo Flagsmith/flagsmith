@@ -68,6 +68,7 @@ const Aside = class extends Component {
       const { hasFeature, getValue, toggleAside, asideIsVisible } = this.props;
       let integrations = this.props.getValue('integrations') || '[]';
       integrations = JSON.parse(integrations);
+      const environmentId = (this.props.environmentId !== 'create' && this.props.environmentId) || (ProjectStore.model && ProjectStore.model.environments[0].api_key)
       const hasRbacPermission = !this.props.hasFeature('plan_based_access') || Utils.getPlansPermission(AccountStore.getPlans(), 'AUDIT') || !this.props.hasFeature('scaleup_audit');
       return (
           <OrganisationProvider>
@@ -139,7 +140,7 @@ const Aside = class extends Component {
                                                     />
                                                 )}
                                                 projectId={this.props.projectId}
-                                                environmentId={this.props.environmentId}
+                                                environmentId={environmentId}
                                                 clearableValue={false}
                                                 onChange={(project) => {
                                                     AppActions.getProject(project.id);
@@ -179,7 +180,7 @@ const Aside = class extends Component {
                                                   </Permission>
 
                                                   <NavLink
-                                                    to={`/project/${project.id}/environment/${(this.props.environmentId !== 'create' && this.props.environmentId) || (ProjectStore.model && ProjectStore.model.environments[0].api_key)}/segments`}
+                                                    to={`/project/${project.id}/environment/${environmentId}/segments`}
 
                                                     id="segments-link"
                                                     className="aside__nav-item"
@@ -194,7 +195,7 @@ const Aside = class extends Component {
                                                               id="audit-log-link"
                                                               activeClassName="active"
                                                               className="aside__nav-item"
-                                                              to={`/project/${this.props.projectId}/environment/${this.props.environmentId}/audit-log`}
+                                                              to={`/project/${this.props.projectId}/environment/${environmentId}/audit-log`}
                                                           >
                                                               <AuditLogIcon className="aside__nav-item--icon"/>
                                                               Audit Log
@@ -258,9 +259,9 @@ const Aside = class extends Component {
                                                           <EnvironmentDropdown
                                                             renderRow={(environment, onClick) => (
                                                                 <Collapsible
-                                                                  data-test={`switch-environment-${environment.name.toLowerCase()}${this.props.environmentId === (`${environment.api_key}`) ? '-active' : ''}`}
+                                                                  data-test={`switch-environment-${environment.name.toLowerCase()}${environmentId === (`${environment.api_key}`) ? '-active' : ''}`}
                                                                   onClick={onClick}
-                                                                  active={environment.api_key === this.props.environmentId} title={environment.name}
+                                                                  active={environment.api_key === environmentId} title={environment.name}
                                                                 >
                                                                     <Permission level="environment" permission="ADMIN" id={environment.api_key}>
                                                                         {({ permission: environmentAdmin, isLoading }) => (isLoading
@@ -290,7 +291,7 @@ const Aside = class extends Component {
                                                                                             id="integrations-link"
                                                                                             activeClassName="active"
                                                                                             className="aside__environment-list-item"
-                                                                                            to={`/project/${this.props.projectId}/environment/${this.props.environmentId}/compare`}
+                                                                                            to={`/project/${this.props.projectId}/environment/${environmentId}/compare`}
                                                                                             exact
                                                                                         >
                                                                                             <span className="icon ion-ios-git-pull-request aside__environment-list-item--icon"/>
@@ -313,7 +314,7 @@ const Aside = class extends Component {
                                                                 </Collapsible>
                                                             )}
                                                             projectId={this.props.projectId}
-                                                            environmentId={this.props.environmentId}
+                                                            environmentId={environmentId}
                                                             clearableValue={false}
                                                             onChange={(environment) => {
                                                                 this.context.router.history.push(`/project/${this.props.projectId}/environment/${environment}/features`);
@@ -348,7 +349,7 @@ const Aside = class extends Component {
                                                         id="organisation-settings-link"
                                                         activeClassName="active"
                                                         className="aside__nav-item"
-                                                        to={`/project/${this.props.projectId}/environment/${this.props.environmentId}/organisation-settings`}
+                                                        to={`/project/${this.props.projectId}/environment/${environmentId}/organisation-settings`}
                                                       >
                                                           <OrgSettingsIcon className="aside__nav-item--icon"/>
                                                           Organisation
@@ -366,7 +367,7 @@ const Aside = class extends Component {
                                                       <NavLink
                                                         id="account-settings-link"
                                                         className="aside__nav-item hidden-sm-up"
-                                                        to={`/project/${this.props.projectId}/environment/${this.props.environmentId}/account`}
+                                                        to={`/project/${this.props.projectId}/environment/${environmentId}/account`}
                                                       >
                                                           <UserSettingsIcon className="aside__nav-item--icon"/>
                                                           Account Settings
