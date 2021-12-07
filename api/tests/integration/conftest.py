@@ -145,3 +145,64 @@ def feature_segment(admin_client, segment, feature, environment):
         url, data=json.dumps(data), content_type="application/json"
     )
     return response.json()["id"]
+
+
+@pytest.fixture()
+def identity_document(environment_api_key):
+    _environment_feature_state_1_document = {
+        "multivariate_feature_state_values": [],
+        "feature_state_value": "feature_1_value",
+        "id": 1,
+        "feature": {
+            "name": "feature_1",
+            "type": "STANDARD",
+            "id": 1,
+        },
+        "enabled": False,
+    }
+    _environment_feature_state_2_document = {
+        "multivariate_feature_state_values": [],
+        "feature_state_value": "2.3",
+        "id": 2,
+        "feature": {
+            "name": "feature_2",
+            "type": "STANDARD",
+            "id": 2,
+        },
+        "enabled": True,
+    }
+    _mv_feature_state_document = {
+        "multivariate_feature_state_values": [
+            {
+                "percentage_allocation": 50,
+                "multivariate_feature_option": {"value": "50_percent"},
+                "id": 1,
+            },
+            {
+                "percentage_allocation": 50,
+                "multivariate_feature_option": {"value": "other_50_percent"},
+                "id": 2,
+            },
+        ],
+        "feature_state_value": None,
+        "id": 4,
+        "feature": {
+            "name": "multivariate_feature",
+            "type": "MULTIVARIATE",
+            "id": 4,
+        },
+        "enabled": False,
+    }
+    return {
+        "composite_key": f"{environment_api_key}_user_1_test",
+        "identity_traits": [{"trait_value": "test", "trait_key": "first_name"}],
+        "identity_features": [
+            _environment_feature_state_1_document,
+            _environment_feature_state_2_document,
+            _mv_feature_state_document,
+        ],
+        "identifier": "user_1_test",
+        "created_date": "2021-09-21T10:12:42.230257+00:00",
+        "environment_api_key": environment_api_key,
+        "identity_uuid": "59efa2a7-6a45-46d6-b953-a7073a90eacf",
+    }

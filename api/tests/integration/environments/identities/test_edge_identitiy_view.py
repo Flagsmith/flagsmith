@@ -22,17 +22,15 @@ def test_get_identites_returns_bad_request_if_dynamo_is_not_enabled(
 
 
 def test_get_identity_calls_get_item(
-    mocker, admin_client, dynamo_enabled_environment, environment_api_key
+    mocker,
+    admin_client,
+    dynamo_enabled_environment,
+    environment_api_key,
+    identity_document,
 ):
     # Given
-    identifier = "test_user123"
-    identity_uuid = str(uuid.uuid4())
-    identity_dict = {
-        "composite_key": f"{environment_api_key}_{identifier}",
-        "environment_api_key": environment_api_key,
-        "identifier": identifier,
-        "identity_uuid": identity_uuid,
-    }
+    identity_uuid = identity_document["identity_uuid"]
+
     url = reverse(
         "api-v1:environments:environment-edge-identities-detail",
         args=[environment_api_key, identity_uuid],
@@ -42,7 +40,7 @@ def test_get_identity_calls_get_item(
         "environments.dynamodb.dynamodb_wrapper.DynamoIdentityWrapper._table"
     )
     dynamo_identity_table.query.return_value = {
-        "Items": [identity_dict],
+        "Items": [identity_document],
         "Count": 1,
     }
 
@@ -96,18 +94,45 @@ def test_create_identity_calls_get_and_put_item(
     assert response.json()["identity_uuid"] is not None
 
 
-def test_delete_identity_calls_delete_item(
-    mocker, admin_client, dynamo_enabled_environment, environment_api_key
+def test_create_identity_returns_400_if_identity_already_exists(
+    mocker,
+    admin_client,
+    dynamo_enabled_environment,
+    environment_api_key,
+    identity_document,
 ):
     # Given
-    identifier = "test_user123"
-    identity_dict = {
-        "composite_key": f"{environment_api_key}_{identifier}",
-        "environment_api_key": environment_api_key,
-        "id": 0,
-        "identifier": identifier,
-        "created_date": "2021-09-29T13:28:20.839914+00:00",
+    identifier = identity_document["identifier"]
+
+    url = reverse(
+        "api-v1:environments:environment-edge-identities-list",
+        args=[environment_api_key],
+    )
+    dynamo_identity_table = mocker.patch(
+        "environments.dynamodb.dynamodb_wrapper.DynamoIdentityWrapper._table"
+    )
+    dynamo_identity_table.get_item.return_value = {
+        "Item": identity_document,
+        "Count": 0,
     }
+    response = admin_client.post(url, data={"identifier": identifier})
+    assert response.status_code == status.HTTP_400_BAD_REQUEST
+    dynamo_identity_table.put_item.assert_not_called()
+    dynamo_identity_table.get_item.assert_called_with(
+        Key={"composite_key": identity_document["composite_key"]}
+    )
+
+
+def test_delete_identity_calls_delete_item(
+    mocker,
+    admin_client,
+    dynamo_enabled_environment,
+    environment_api_key,
+    identity_document,
+):
+    # Given
+
+    identifier = identity_document["identifier"]
     url = reverse(
         "api-v1:environments:environment-edge-identities-detail",
         args=[environment_api_key, identifier],
@@ -117,7 +142,7 @@ def test_delete_identity_calls_delete_item(
         "environments.dynamodb.dynamodb_wrapper.DynamoIdentityWrapper._table"
     )
     dynamo_identity_table.query.return_value = {
-        "Items": [identity_dict],
+        "Items": [identity_document],
         "Count": 1,
     }
     response = admin_client.delete(url)
@@ -125,26 +150,21 @@ def test_delete_identity_calls_delete_item(
     # Then
     assert response.status_code == status.HTTP_204_NO_CONTENT
     dynamo_identity_table.delete_item.assert_called_with(
-        Key={"composite_key": f"{environment_api_key}_{identifier}"}
+        Key={"composite_key": identity_document["composite_key"]}
     )
 
 
 def test_identity_list_pagination(
-    mocker, admin_client, dynamo_enabled_environment, environment_api_key
+    mocker,
+    admin_client,
+    dynamo_enabled_environment,
+    environment_api_key,
+    identity_document,
 ):
-    # Given
-    identifier = "test_user123"
-    identity_dict = {
-        "composite_key": f"{environment_api_key}_{identifier}",
-        "environment_api_key": environment_api_key,
-        "id": 0,
-        "identifier": identifier,
-        "created_date": "2021-09-29T13:28:20.839914+00:00",
-    }
     # Firstly, let's setup the data
     identity_item_key = {
         k: v
-        for k, v in identity_dict.items()
+        for k, v in identity_document.items()
         if k in ["composite_key", "environment_api_key", "identifier"]
     }
 
@@ -158,13 +178,13 @@ def test_identity_list_pagination(
     )
 
     dynamo_identity_table.query.return_value = {
-        "Items": [identity_dict],
+        "Items": [identity_document],
         "Count": 1,
         "LastEvaluatedKey": identity_item_key,
     }
 
     response = admin_client.get(url)
-    # Test the response
+    # Next, Test the response
     assert response.status_code == 200
     response = response.json()
     assert response["previous"] is None
@@ -187,18 +207,14 @@ def test_identity_list_pagination(
 
 
 def test_get_identities_list_calls_query_with_correct_arguments(
-    mocker, admin_client, dynamo_enabled_environment, environment_api_key
+    mocker,
+    admin_client,
+    dynamo_enabled_environment,
+    environment_api_key,
+    identity_document,
 ):
     # Given
 
-    identifier = "test_user123"
-    identity_dict = {
-        "composite_key": f"{environment_api_key}_{identifier}",
-        "environment_api_key": environment_api_key,
-        "id": 0,
-        "identifier": identifier,
-        "created_date": "2021-09-29T13:28:20.839914+00:00",
-    }
     url = reverse(
         "api-v1:environments:environment-edge-identities-list",
         args=[environment_api_key],
@@ -208,7 +224,7 @@ def test_get_identities_list_calls_query_with_correct_arguments(
         "environments.dynamodb.dynamodb_wrapper.DynamoIdentityWrapper._table"
     )
     dynamo_identity_table.query.return_value = {
-        "Items": [identity_dict],
+        "Items": [identity_document],
         "Count": 1,
     }
 
@@ -226,17 +242,15 @@ def test_get_identities_list_calls_query_with_correct_arguments(
 
 
 def test_search_identities_calls_query_with_correct_arguments(
-    mocker, admin_client, dynamo_enabled_environment, environment_api_key
+    mocker,
+    admin_client,
+    dynamo_enabled_environment,
+    environment_api_key,
+    identity_document,
 ):
     # Given
-    identifier = "test_user123"
-    identity_dict = {
-        "composite_key": f"{environment_api_key}_{identifier}",
-        "environment_api_key": environment_api_key,
-        "id": 0,
-        "identifier": identifier,
-        "created_date": "2021-09-29T13:28:20.839914+00:00",
-    }
+    identifier = identity_document["identifier"]
+
     base_url = reverse(
         "api-v1:environments:environment-edge-identities-list",
         args=[environment_api_key],
@@ -248,7 +262,7 @@ def test_search_identities_calls_query_with_correct_arguments(
     )
 
     dynamo_identity_table.query.return_value = {
-        "Items": [identity_dict],
+        "Items": [identity_document],
         "Count": 1,
     }
 
@@ -267,17 +281,14 @@ def test_search_identities_calls_query_with_correct_arguments(
 
 
 def test_search_for_identities_with_exact_match_calls_query_with_correct_argument(
-    mocker, admin_client, dynamo_enabled_environment, environment_api_key
+    mocker,
+    admin_client,
+    dynamo_enabled_environment,
+    environment_api_key,
+    identity_document,
 ):
     # Given
-    identifier = "test_user123"
-    identity_dict = {
-        "composite_key": f"{environment_api_key}_{identifier}",
-        "environment_api_key": environment_api_key,
-        "id": 0,
-        "identifier": identifier,
-        "created_date": "2021-09-29T13:28:20.839914+00:00",
-    }
+    identifier = identity_document["identifier"]
 
     base_url = reverse(
         "api-v1:environments:environment-edge-identities-list",
@@ -291,15 +302,15 @@ def test_search_for_identities_with_exact_match_calls_query_with_correct_argumen
         "environments.dynamodb.dynamodb_wrapper.DynamoIdentityWrapper._table"
     )
     dynamo_identity_table.query.return_value = {
-        "Items": [identity_dict],
+        "Items": [identity_document],
         "Count": 1,
     }
 
     # When
-    res = admin_client.get(url)
+    response = admin_client.get(url)
 
     # Then
-    assert res.status_code == status.HTTP_200_OK
+    assert response.status_code == status.HTTP_200_OK
 
     # Add query is called with correct arguments
     dynamo_identity_table.query.assert_called_with(
