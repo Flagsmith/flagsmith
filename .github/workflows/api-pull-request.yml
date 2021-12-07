@@ -43,10 +43,15 @@ jobs:
               with:
                   python-version: ${{ matrix.python-version }}
 
+            - uses: syphar/restore-virtualenv@v1.2
+              id: cache-api
+
             - name: Cache pip download
-              uses: syphar/restore-pip-download-cache@v1
+            - uses: syphar/restore-pip-download-cache@v1
+              if: steps.cache-api.outputs.cache-hit != 'true'
 
             - name: Install Dependencies
+              if: steps.cache-api.outputs.cache-hit != 'true'
               run: |
                   python -m pip install --upgrade pip
                   pip install -r requirements-dev.txt
