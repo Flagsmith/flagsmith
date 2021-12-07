@@ -34,6 +34,11 @@ jobs:
                   restore-keys: |
                       ${{ runner.os }}-node-
 
+            - name: Set up Python 3.8
+              uses: actions/setup-python@v2
+              with:
+                  python-version: 3.8
+
             - name: Copy pip requirements
               run: |
                   cp api/requirements.txt .
