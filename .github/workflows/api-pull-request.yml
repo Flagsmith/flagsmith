@@ -47,6 +47,8 @@ jobs:
               id: cache-venv  # name for referring later
               with:
                 path: ./.venv/  # what we cache: the virtualenv
+                key: ${{ runner.os }}-${{ matrix.python-version }}-pip-${{ hashFiles('**/requirements.txt') }}
+
                 
             # Build a virtualenv, but only if it doesn't already exist
             - name: build venv
