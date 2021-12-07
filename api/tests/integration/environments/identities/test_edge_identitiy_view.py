@@ -53,12 +53,11 @@ def test_get_identity_calls_get_item(
     dynamo_identity_table.query.assert_called_with(
         IndexName="identity_uuid-index",
         Limit=1,
-        KeyConditionExpression=Key("environment_api_key").eq(environment_api_key)
-        & Key("identity_uuid").eq(identity_uuid),
+        KeyConditionExpression=Key("identity_uuid").eq(identity_uuid),
     )
 
 
-def test_create_identity_calls_put_item(
+def test_create_identity_calls_get_and_put_item(
     mocker, admin_client, dynamo_enabled_environment, environment_api_key
 ):
     # Given
@@ -71,13 +70,22 @@ def test_create_identity_calls_put_item(
     dynamo_identity_table = mocker.patch(
         "environments.dynamodb.dynamodb_wrapper.DynamoIdentityWrapper._table"
     )
+    dynamo_identity_table.get_item.return_value = {
+        "Count": 0,
+    }
     response = admin_client.post(url, data={"identifier": identifier})
 
-    # Then, let's verify the function call
-    # test that we only made one function call
-    assert len(dynamo_identity_table.mock_calls) == 1
+    # Then, let's verify the function calls
+    assert len(dynamo_identity_table.mock_calls) == 2
+    # First call should be to check if an identity exists with
+    # The same identifier
     name, args, kwargs = dynamo_identity_table.mock_calls[0]
-    # With correct arguments
+    assert name == "get_item"
+    assert args == ()
+    assert kwargs == {"Key": {"composite_key": f"{environment_api_key}_{identifier}"}}
+
+    # Second call should be to create(put) the item
+    name, args, kwargs = dynamo_identity_table.mock_calls[1]
     assert name == "put_item"
     assert kwargs["Item"]["environment_api_key"] == environment_api_key
     assert kwargs["Item"]["identifier"] == identifier

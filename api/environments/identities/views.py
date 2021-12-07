@@ -43,6 +43,7 @@ class EdgeIdentityViewSet(viewsets.ModelViewSet):
         environment = self.get_environment_from_request()
         if not environment.project.enable_dynamo_db:
             raise DynamoNotEnabledError()
+
         super().initial(request, *args, **kwargs)
 
     def _get_search_function_and_value(

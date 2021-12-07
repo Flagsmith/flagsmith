@@ -28,13 +28,14 @@ class DynamoIdentityWrapper:
     def put_item(self, identity_dict: dict):
         self._table.put_item(Item=identity_dict)
 
+    def get_item(self, composite_key: str) -> typing.Optional[dict]:
+        return self._table.get_item(Key={"composite_key": composite_key}).get("Item")
+
     def delete_item(self, composite_key: str):
         self._table.delete_item(Key={"composite_key": composite_key})
 
     def get_item_from_uuid(self, environment_api_key: str, uuid: str):
-        filter_expression = Key("environment_api_key").eq(environment_api_key) & Key(
-            "identity_uuid"
-        ).eq(uuid)
+        filter_expression = Key("identity_uuid").eq(uuid)
         query_kwargs = {
             "IndexName": "identity_uuid-index",
             "Limit": 1,

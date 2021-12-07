@@ -42,6 +42,10 @@ class EdgeIdentitySerializer(serializers.ModelSerializer):
         self.instance = EngineIdentity(
             identifier=identifier, environment_api_key=environment_api_key
         )
+        if dynamo_identity_wrapper.get_item(self.instance.composite_key):
+            raise ValidationError(
+                f"Identity with identifier: {identifier} already exists"
+            )
         dynamo_identity_wrapper.put_item(build_identity_dict(self.instance))
         return self.instance
 
