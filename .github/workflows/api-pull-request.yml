@@ -59,10 +59,12 @@ jobs:
                 pip install -r requirements-dev.txt
             
             - name: Setup virtualenv
-              run: source ./.venv/bin/activate
+              run: source .venv/bin/activate
               
             - name: Check black formatting
-              run: black --check .
+              run: |
+                  source .venv/bin/activate
+                  black --check .
 
             - name: Check flake8 linting
               run: flake8 --config=../.flake8 .
