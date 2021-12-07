@@ -12,7 +12,7 @@ from rest_framework.schemas import AutoSchema
 
 from app.pagination import CustomPagination, EdgeIdentityPagination
 from environments.identities.helpers import identify_integrations
-from environments.identities.models import Identity
+from environments.identities.models import Identity, dynamo_identity_wrapper
 from environments.identities.serializers import (
     EdgeIdentitySerializer,
     IdentitySerializer,
@@ -56,7 +56,7 @@ class EdgeIdentityViewSet(viewsets.ModelViewSet):
         return self.dynamo_identifier_search_functions["BEGINS_WITH"], search_query
 
     def get_object(self):
-        return Identity.dynamodb.get_item_from_uuid(
+        return dynamo_identity_wrapper.get_item_from_uuid(
             self.kwargs["environment_api_key"], self.kwargs["identity_uuid"]
         )
 
@@ -69,13 +69,13 @@ class EdgeIdentityViewSet(viewsets.ModelViewSet):
             start_key = json.loads(base64.b64decode(previous_last_evaluated_key))
 
         if not search_query:
-            return Identity.dynamodb.get_all_items(
+            return dynamo_identity_wrapper.get_all_items(
                 self.kwargs["environment_api_key"], page_size, start_key
             )
         search_func, search_identifier = self._get_search_function_and_value(
             search_query
         )
-        identity_documents = Identity.dynamodb.search_items_with_identifier(
+        identity_documents = dynamo_identity_wrapper.search_items_with_identifier(
             self.kwargs["environment_api_key"],
             search_identifier,
             search_func,
@@ -91,7 +91,7 @@ class EdgeIdentityViewSet(viewsets.ModelViewSet):
         return Environment.objects.get(api_key=self.kwargs["environment_api_key"])
 
     def perform_destroy(self, instance):
-        Identity.dynamodb.delete_item(instance["composite_key"])
+        dynamo_identity_wrapper.delete_item(instance["composite_key"])
 
 
 class IdentityViewSet(viewsets.ModelViewSet):

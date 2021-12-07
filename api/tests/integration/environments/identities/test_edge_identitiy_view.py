@@ -39,7 +39,7 @@ def test_get_identity_calls_get_item(
     )
     # When
     dynamo_identity_table = mocker.patch(
-        "environments.identities.models.dynamo_identity_table"
+        "environments.dynamodb.dynamodb_wrapper.DynamoIdentityWrapper._table"
     )
     dynamo_identity_table.query.return_value = {
         "Items": [identity_dict],
@@ -69,7 +69,7 @@ def test_create_identity_calls_put_item(
         args=[environment_api_key],
     )
     dynamo_identity_table = mocker.patch(
-        "environments.identities.models.dynamo_identity_table"
+        "environments.dynamodb.dynamodb_wrapper.DynamoIdentityWrapper._table"
     )
     response = admin_client.post(url, data={"identifier": identifier})
 
@@ -106,7 +106,7 @@ def test_delete_identity_calls_delete_item(
     )
     # When
     dynamo_identity_table = mocker.patch(
-        "environments.identities.models.dynamo_identity_table"
+        "environments.dynamodb.dynamodb_wrapper.DynamoIdentityWrapper._table"
     )
     dynamo_identity_table.query.return_value = {
         "Items": [identity_dict],
@@ -146,7 +146,7 @@ def test_identity_list_pagination(
     )
 
     dynamo_identity_table = mocker.patch(
-        "environments.identities.models.dynamo_identity_table"
+        "environments.dynamodb.dynamodb_wrapper.DynamoIdentityWrapper._table"
     )
 
     dynamo_identity_table.query.return_value = {
@@ -197,7 +197,7 @@ def test_get_identities_list_calls_query_with_correct_arguments(
     )
 
     dynamo_identity_table = mocker.patch(
-        "environments.identities.models.dynamo_identity_table"
+        "environments.dynamodb.dynamodb_wrapper.DynamoIdentityWrapper._table"
     )
     dynamo_identity_table.query.return_value = {
         "Items": [identity_dict],
@@ -236,7 +236,7 @@ def test_search_identities_calls_query_with_correct_arguments(
 
     url = "%s?q=%s" % (base_url, identifier)
     dynamo_identity_table = mocker.patch(
-        "environments.identities.models.dynamo_identity_table"
+        "environments.dynamodb.dynamodb_wrapper.DynamoIdentityWrapper._table"
     )
 
     dynamo_identity_table.query.return_value = {
@@ -280,7 +280,7 @@ def test_search_for_identities_with_exact_match_calls_query_with_correct_argumen
         urllib.parse.urlencode({"q": f'"{identifier}"'}),
     )
     dynamo_identity_table = mocker.patch(
-        "environments.identities.models.dynamo_identity_table"
+        "environments.dynamodb.dynamodb_wrapper.DynamoIdentityWrapper._table"
     )
     dynamo_identity_table.query.return_value = {
         "Items": [identity_dict],

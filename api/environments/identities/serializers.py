@@ -3,7 +3,7 @@ from flag_engine.identities.models import IdentityModel as EngineIdentity
 from rest_framework import serializers
 from rest_framework.exceptions import ValidationError
 
-from environments.identities.models import Identity
+from environments.identities.models import Identity, dynamo_identity_wrapper
 from environments.serializers import EnvironmentSerializerFull
 from features.models import FeatureState
 from features.serializers import (
@@ -42,7 +42,7 @@ class EdgeIdentitySerializer(serializers.ModelSerializer):
         self.instance = EngineIdentity(
             identifier=identifier, environment_api_key=environment_api_key
         )
-        Identity.dynamodb.put_item(build_identity_dict(self.instance))
+        dynamo_identity_wrapper.put_item(build_identity_dict(self.instance))
         return self.instance
 
 
