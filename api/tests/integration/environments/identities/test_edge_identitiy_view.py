@@ -42,15 +42,12 @@ def test_get_identity_calls_get_item(
         "api-v1:environments:environment-edge-identities-detail",
         args=[environment_api_key, identity_uuid],
     )
-    # When
-    # dynamo_identity_table = mocker.patch(
-    #     "environments.dynamodb.dynamodb_wrapper.DynamoIdentityWrapper._table"
-    # )
     dynamo_identity_table.query.return_value = {
         "Items": [identity_document],
         "Count": 1,
     }
 
+    # When
     response = admin_client.get(url)
     # Then
     assert response.status_code == status.HTTP_200_OK
