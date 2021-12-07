@@ -92,7 +92,7 @@ class Highlight extends React.Component {
                   onFocus={this.onFocus}
                   onInput={this._handleInput}
                   className={className}
-                  dangerouslySetInnerHTML={this.state.focus? this.state.value : this.props.children ? this.state.value : defaultValue}
+                  dangerouslySetInnerHTML={this.state.focus? this.state.value : this.props.children ? {...this.state.value} : defaultValue}
                 />
             </pre>
         );
