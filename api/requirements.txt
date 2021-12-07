@@ -105,7 +105,7 @@ drf-yasg2==1.19.3
     # via -r requirements.in
 environs==9.2.0
     # via -r requirements.in
-flagsmith-flag-engine==1.4.0
+flagsmith-flag-engine==1.4.1
     # via -r requirements.in
 future==0.18.2
     # via django-ses
@@ -145,7 +145,7 @@ jmespath==0.10.0
     #   botocore
 markupsafe==1.1.1
     # via jinja2
-marshmallow==3.9.1
+marshmallow==3.14.1
     # via
     #   environs
     #   flagsmith-flag-engine
