@@ -77,9 +77,10 @@ def test_create_identity(
     dynamo_wrapper_mock.get_item.assert_called_with(composite_key)
 
     # Next, let verify that put item was called with correct args
-    put_item_dict = dynamo_wrapper_mock.put_item.call_args.args[0]
-    assert put_item_dict["identifier"] == identifier
-    assert put_item_dict["composite_key"] == composite_key
+    name, args, _ = dynamo_wrapper_mock.mock_calls[1]
+    assert name == "put_item"
+    assert args[0]["identifier"] == identifier
+    assert args[0]["composite_key"] == composite_key
 
     # Finally, let's verify the response
     assert response.status_code == status.HTTP_201_CREATED
