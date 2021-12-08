@@ -2,6 +2,7 @@
 from __future__ import unicode_literals
 
 import logging
+import typing
 from copy import deepcopy
 
 from django.conf import settings
@@ -115,6 +116,11 @@ class Environment(LifecycleModel):
             return environment
         except cls.DoesNotExist:
             logger.info("Environment with api_key %s does not exist" % api_key)
+
+    def get_feature_state(self, feature_id: int) -> typing.Optional[FeatureState]:
+        return next(
+            filter(lambda fs: fs.feature.id == feature_id, self.feature_states.all())
+        )
 
 
 class Webhook(models.Model):

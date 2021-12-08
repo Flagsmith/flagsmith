@@ -1,6 +1,7 @@
 from rest_framework.permissions import BasePermission
 
 from environments.models import Environment
+from environments.permissions.constants import UPDATE_FEATURE_STATE
 from projects.models import Project
 
 ACTION_PERMISSIONS_MAP = {
@@ -48,7 +49,10 @@ class FeatureStatePermissions(BasePermission):
         try:
             if view.action == "create" and request.data.get("environment"):
                 environment = Environment.objects.get(id=request.data["environment"])
-                return request.user.is_environment_admin(environment)
+                is_environment_admin = request.user.is_environment_admin(environment)
+                return is_environment_admin or request.user.has_environment_permission(
+                    UPDATE_FEATURE_STATE
+                )
 
             # - detail view means we can just defer to object permissions
             # - list view means we just need to filter the objects based on permissions
@@ -58,4 +62,7 @@ class FeatureStatePermissions(BasePermission):
             return False
 
     def has_object_permission(self, request, view, obj):
-        return request.user.is_environment_admin(obj.environment)
+        is_environment_admin = request.user.is_environment_admin(obj.environment)
+        return is_environment_admin or request.user.has_environment_permission(
+            UPDATE_FEATURE_STATE
+        )

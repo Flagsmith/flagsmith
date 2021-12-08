@@ -7,7 +7,7 @@ from permissions.models import ENVIRONMENT_PERMISSION_TYPE
 
 
 def add_update_feature_state_permission(apps, schema_editor):
-    PermissionModel = apps.get("permissions", "PermissionModel")
+    PermissionModel = apps.get_model("permissions", "PermissionModel")
 
     PermissionModel.objects.get_or_create(
         key=UPDATE_FEATURE_STATE,
@@ -17,7 +17,7 @@ def add_update_feature_state_permission(apps, schema_editor):
 
 
 def remove_update_feature_state_permission(apps, schema_editor):
-    PermissionModel = apps.get("permissions", "PermissionModel")
+    PermissionModel = apps.get_model("permissions", "PermissionModel")
 
     PermissionModel.filter(key=UPDATE_FEATURE_STATE).delete()
 
@@ -26,6 +26,7 @@ class Migration(migrations.Migration):
 
     dependencies = [
         ("environment_permissions", "0001_initial"),
+        ("features", "0035_auto_20211109_0603")
     ]
 
     operations = [
