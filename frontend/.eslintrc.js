@@ -21,6 +21,7 @@ module.exports = {
         'eol-last': 0,
         'no-use-before-define': 0,
         'global-require': 0,
+        'no-unused-expressions': 0,
         'jsx-a11y/click-events-have-key-events': 0, // there are valid cases for this e.g. forms
         'jsx-a11y/interactive-supports-focus': 0, // there are valid cases for this e.g. forms
         'jsx-a11y/label-has-associated-control': 0, // rule seems buggy, doesn't understand some htmlFor cases
@@ -110,6 +111,8 @@ module.exports = {
         'testHelpers': true,
         'toast': true,
         'Utils': true,
-        'window': true
+        'window': true,
+        "test": true,
+        "fixture": true
     }
 };
