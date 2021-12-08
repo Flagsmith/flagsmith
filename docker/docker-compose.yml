@@ -20,7 +20,7 @@ services:
         
         
             DJANGO_ALLOWED_HOSTS: '*' # Change this in production
-            DATABASE_URL: postgresql://postgres:password@db:5432/flagsmith
+            DATABASE_URL: postgresql://postgres:password@postgres:5432/flagsmith
             DISABLE_INFLUXDB_FEATURES: true # set to false to enable InfluxDB 
 
             ENV: prod # set to "prod" in production.
