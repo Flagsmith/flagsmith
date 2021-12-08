@@ -7,7 +7,10 @@ const upload = require('../bin/upload-file');
 
 let testcafe;
 let server;
-
+const dir = path.join(__dirname, '../reports/screen-captures');
+if (fs.existsSync(dir)) {
+    fs.rmdirSync(dir, { recursive: true });
+}
 createTestCafe()
     .then(async (tc) => {
         testcafe = tc;
@@ -19,17 +22,29 @@ createTestCafe()
             });
         });
         const runner = testcafe.createRunner();
-        return runner
-            .src(['./e2e/cafe'])
-            .browsers(['chrome:headless'])
-            .run();
+        await runner
+            .src(['./e2e/init.cafe.js'])
+            .browsers(process.env.E2E_DEV ? ['chrome'] : ['chrome:headless'])
+            .run()
+            .then((v) => {
+                if (!v) {
+                    return runner
+                        .src(['./e2e/cafe'])
+                        .browsers(process.env.E2E_DEV ? ['chrome'] : ['chrome:headless'])
+                        .run();
+                }
+                return v;
+            });
     })
-    .then(async (failedCount) => {
-        // Clean up your database here...
-
-        const dir = path.join(__dirname, '../reports/screen-captures');
-        const files = fs.readdirSync(dir);
-        await Promise.all(files.map(f => upload(path.join(dir, f))));
+    .then(async () => {
+        // Upload files
+        if (fs.existsSync(dir) && !process.env.E2E_DEV) {
+            try {
+                const files = fs.readdirSync(dir);
+                await Promise.all(files.map(f => upload(path.join(dir, f))));
+            } catch (e) { console.log('error uploading files', e); }
+        }
+        // Shut down server and testcafe
         server.kill('SIGINT');
         testcafe.close();
         process.exit(0);
