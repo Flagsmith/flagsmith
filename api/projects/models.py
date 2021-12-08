@@ -29,7 +29,7 @@ class Project(models.Model):
     )
     enable_dynamo_db = models.BooleanField(
         default=False,
-        help_text="If true will sync environment data with dynamodb for global API",
+        help_text="If true will sync environment data with dynamodb and allow access to dynamodb identities",
     )
 
     class Meta:
