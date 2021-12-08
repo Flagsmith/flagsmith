@@ -171,7 +171,7 @@ REST_FRAMEWORK = {
     "UNICODE_JSON": False,
     "DEFAULT_PAGINATION_CLASS": "rest_framework.pagination.PageNumberPagination",
     "DEFAULT_THROTTLE_RATES": {
-        "login": "20/min",
+        "login": "120/min",
         "mfa_code": "5/min",
         "invite": "10/min",
     },
