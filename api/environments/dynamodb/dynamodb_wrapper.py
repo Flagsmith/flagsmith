@@ -7,20 +7,12 @@ from django.core.exceptions import ObjectDoesNotExist
 
 
 class DynamoIdentityWrapper:
-    _table = None
-
     def __init__(self):
+        self._table = None
         if settings.IDENTITIES_TABLE_NAME_DYNAMO:
-            self._table = boto3.resource("dynamodb").Table(
+            return boto3.resource("dynamodb").Table(
                 settings.IDENTITIES_TABLE_NAME_DYNAMO
             )
-
-    def __getattribute__(self, name):
-        if name != "_table" and self._table is None:
-            raise RuntimeError(
-                "Environment variable IDENTITIES_TABLE_NAME_DYNAMO is not set"
-            )
-        return object.__getattribute__(self, name)
 
     def query_items(self, *args, **kwargs):
         return self._table.query(*args, **kwargs)

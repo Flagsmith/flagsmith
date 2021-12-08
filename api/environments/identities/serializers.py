@@ -3,7 +3,7 @@ from flag_engine.identities.models import IdentityModel as EngineIdentity
 from rest_framework import serializers
 from rest_framework.exceptions import ValidationError
 
-from environments.identities.models import Identity, dynamo_identity_wrapper
+from environments.identities.models import Identity
 from environments.serializers import EnvironmentSerializerFull
 from features.models import FeatureState
 from features.serializers import (
@@ -42,11 +42,11 @@ class EdgeIdentitySerializer(serializers.ModelSerializer):
         self.instance = EngineIdentity(
             identifier=identifier, environment_api_key=environment_api_key
         )
-        if dynamo_identity_wrapper.get_item(self.instance.composite_key):
+        if Identity.dynamo_wrapper.get_item(self.instance.composite_key):
             raise ValidationError(
                 f"Identity with identifier: {identifier} already exists"
             )
-        dynamo_identity_wrapper.put_item(build_identity_dict(self.instance))
+        Identity.dynamo_wrapper.put_item(build_identity_dict(self.instance))
         return self.instance
 
 

@@ -10,9 +10,6 @@ from environments.models import Environment
 from features.models import FeatureState
 from features.multivariate.models import MultivariateFeatureStateValue
 
-# Initialize the dynamo wrapper client globally
-dynamo_identity_wrapper = DynamoIdentityWrapper()
-
 
 @python_2_unicode_compatible
 class Identity(models.Model):
@@ -21,6 +18,8 @@ class Identity(models.Model):
     environment = models.ForeignKey(
         Environment, related_name="identities", on_delete=models.CASCADE
     )
+
+    dynamo_wrapper = DynamoIdentityWrapper()
 
     class Meta:
         verbose_name_plural = "Identities"
