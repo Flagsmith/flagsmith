@@ -75,13 +75,11 @@ module.exports = {
                     ) {
                         browser.getLog('browser', (logEntries) => {
                             logEntries.forEach((log) => {
-                                if (log.level === 'SEVERE') {
-                                    console.log(`[${log.level}] ${log.message}`);
-                                }
+                                console.log(`[${log.level}] ${log.message}`);
                             });
                             browser.source((result) => {
                                 // Source will be stored in result.value
-                                // console.log(result && result.value)
+                                console.log(result && result.value)
                                 done();
                             });
                         });
