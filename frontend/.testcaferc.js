@@ -8,7 +8,6 @@ module.exports = {
     "port2": 8081,
     "hostname": "localhost",
     skipJsErrors: true,
-    speed: 0.01,
     "videoPath": "reports/screen-captures",
     "videoOptions": {
         "singleFile": true,
