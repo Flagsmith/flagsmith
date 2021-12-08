@@ -45,6 +45,8 @@ module.exports = {
     test_settings: {
         default: {
             globals: {
+                end_session_on_fail: true,
+                skip_testcases_on_fail: true,
                 'waitForConditionPollInterval': 500, // sometimes internet is slow so wait.
                 'waitForConditionTimeout': 20000, // sometimes internet is slow so wait.
                 'asyncHookTimeout': 60000,
@@ -79,7 +81,7 @@ module.exports = {
                             });
                             browser.source((result) => {
                                 // Source will be stored in result.value
-                                console.log(result && result.value)
+                                console.log(result && result.value);
                                 done();
                             });
                         });
