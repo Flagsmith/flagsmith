@@ -8,7 +8,7 @@ from integrations.mixpanel.views import MixpanelConfigurationViewSet
 from integrations.segment.views import SegmentConfigurationViewSet
 
 from .identities.traits.views import TraitViewSet
-from .identities.views import IdentityViewSet
+from .identities.views import EdgeIdentityViewSet, IdentityViewSet
 from .permissions.views import (
     UserEnvironmentPermissionsViewSet,
     UserPermissionGroupEnvironmentPermissionsViewSet,
@@ -21,6 +21,9 @@ router.register(r"", EnvironmentViewSet, basename="environment")
 environments_router = routers.NestedSimpleRouter(router, r"", lookup="environment")
 environments_router.register(
     r"identities", IdentityViewSet, basename="environment-identities"
+)
+environments_router.register(
+    r"edge-identities", EdgeIdentityViewSet, basename="environment-edge-identities"
 )
 environments_router.register(
     r"webhooks", WebhookViewSet, basename="environment-webhooks"

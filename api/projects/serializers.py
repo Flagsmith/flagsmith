@@ -15,7 +15,13 @@ from users.serializers import (
 class ProjectSerializer(serializers.ModelSerializer):
     class Meta:
         model = Project
-        fields = ("id", "name", "organisation", "hide_disabled_flags")
+        fields = (
+            "id",
+            "name",
+            "organisation",
+            "hide_disabled_flags",
+            "enable_dynamo_db",
+        )
 
 
 class CreateUpdateUserProjectPermissionSerializer(
