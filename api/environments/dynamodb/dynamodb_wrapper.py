@@ -10,7 +10,7 @@ class DynamoIdentityWrapper:
     def __init__(self):
         self._table = None
         if settings.IDENTITIES_TABLE_NAME_DYNAMO:
-            return boto3.resource("dynamodb").Table(
+            self._table = boto3.resource("dynamodb").Table(
                 settings.IDENTITIES_TABLE_NAME_DYNAMO
             )
 
