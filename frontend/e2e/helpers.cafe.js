@@ -24,6 +24,7 @@ export const gotoFeatures = async () => {
 };
 
 export const assertTextContent = (selector, v) => t.expect(Selector(selector).textContent).eql(v);
+export const getText = selector => Selector(selector).innerText;
 
 export const createRemoteConfig = async (index, name, value, description = 'description') => {
     const expectedValue = typeof value === 'string' ? `"${value}"` : `${value}`;

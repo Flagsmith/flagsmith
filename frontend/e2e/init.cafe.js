@@ -1,12 +1,12 @@
-import { ClientFunction, Selector } from 'testcafe';
+import { t, Selector } from 'testcafe';
 import fetch from 'node-fetch';
-import { t } from 'testcafe';
 import Project from '../common/project';
 import {
+    assertTextContent,
     byId,
     createFeature,
     createRemoteConfig,
-    deleteFeature,
+    deleteFeature, getText,
     setText,
     toggleFeature,
     waitForElementVisible,
@@ -17,7 +17,7 @@ const password = 'str0ngp4ssw0rd!';
 const url = `http://localhost:${process.env.PORT || 8080}/signup`;
 
 fixture`Initialise`
-    .before(async (ctx) => {
+    .before(async () => {
         let token;
         if (process.env[`E2E_TEST_TOKEN_${Project.env.toUpperCase()}`]) {
             token = process.env[`E2E_TEST_TOKEN_${Project.env.toUpperCase()}`];
@@ -34,18 +34,25 @@ fixture`Initialise`
                 body: JSON.stringify({}),
             }).then((res) => {
                 if (res.ok) {
+                    // eslint-disable-next-line no-console
                     console.log('\n', '\x1b[32m', 'e2e teardown successful', '\x1b[0m', '\n');
                 } else {
+                    // eslint-disable-next-line no-console
                     console.error('\n', '\x1b[31m', 'e2e teardown failed', res.status, '\x1b[0m', '\n');
                 }
             });
         } else {
+            // eslint-disable-next-line no-console
             console.error('\n', '\x1b[31m', 'e2e teardown failed - no available token', '\x1b[0m', '\n');
         }
     })
     .page`${url}`;
 
+// eslint-disable-next-line no-console
+const log = message => console.log('\n', '\x1b[32m', message, '\x1b[0m', '\n');
+
 test('[Initialise]', async () => {
+    log('Create Organisation');
     await setText(byId('firstName'), 'Bullet'); // visit the url
     await setText(byId('lastName'), 'Train'); // visit the url
     await setText(byId('email'), email); // visit the url
@@ -55,110 +62,39 @@ test('[Initialise]', async () => {
     await t.click('#create-org-btn')
         .expect(Selector(byId('project-select-page')).visible)
         .ok();
+    log('Create Project');
     await t.click(byId('create-first-project-btn'));
     await setText(byId('projectName'), 'My Test Project');
     await t.click(byId('create-project-btn'));
     await waitForElementVisible((byId('features-page')));
+    log('Create Features');
     await createRemoteConfig(0, 'header_size', 'big');
     await createFeature(1, 'header_enabled', false);
+    log('Create Short Life Feature');
     await createFeature(2, 'short_life_feature', false);
     await deleteFeature(2, 'short_life_feature');
+    log('Toggle Feature');
     await toggleFeature(0, true);
+    log('Try it');
+    await t.click('#try-it-btn');
+    let text = await getText('#try-it-results');
+    let json;
+    try { json = JSON.parse(text); } catch (e) { throw new Error('Try it results are not valid JSON'); }
+    await t.expect(json.header_size.value).eql('big');
+    await t.expect(json.header_enabled.enabled).eql(true);
+    await t.eval(() => location.reload(true));
+    log('Update feature');
+    await t.click(byId('feature-item-1'));
+    await setText(byId('featureValue'), '12');
+    await t.click('#update-feature-btn');
+    await assertTextContent(byId('feature-value-1'), '12');
+    log('Try it again');
+    await t.click('#try-it-btn');
+    text = await getText('#try-it-results');
+    try { json = JSON.parse(text); } catch (e) { throw new Error('Try it results are not valid JSON'); }
+    await t.expect(json.header_size.value).eql(12);
 });
 
-// '[Initialise Tests] - Create feature 2': function (browser) {
-//     testHelpers.createFeature(browser, 1, 'header_enabled', false);
-// },
-
-// '[Initialise - Create Org]': (browser) => {
-//     browser.url(url)
-//         .waitAndSet(byId('firstName'), 'Bullet') // visit the url
-//         .waitAndSet(byId('lastName'), 'Train')
-//         .waitAndSet(byId('email'), email)
-//         .waitAndSet(byId('password'), password)
-//         .click(byId('signup-btn'))
-//         .waitAndSet('[name="orgName"]', 'Bullet Train Ltd')
-//         .click('#create-org-btn')
-//         .waitForElementVisible(byId('project-select-page'));
-//
-//     browser.waitAndClick(byId('create-first-project-btn'))
-//         .waitAndSet(byId('projectName'), 'My Test Project')
-//         .click(byId('create-project-btn'))
-//         .waitForElementVisible(byId('features-page'));
-// },
-//     '[Initialise Tests] - Create feature': function (browser) {
-//     testHelpers.createRemoteConfig(browser, 0, 'header_size', 'big');
-// },
-// '[Initialise Tests] - Create feature 2': function (browser) {
-//     testHelpers.createFeature(browser, 1, 'header_enabled', false);
-// },
-// '[Initialise Tests] - Create feature 3 and remove it': function (browser) {
-//     testHelpers.createFeature(browser, 2, 'short_life_feature', false);
-//     testHelpers.deleteFeature(browser, 2, 'short_life_feature');
-// },
-// '[Initialise Tests] - Toggle feature on': function (browser) {
-//     testHelpers.toggleFeature(browser, 0, true);
-// },
-// '[Initialise Tests] - Try feature out': function (browser) {
-//     browser.waitForElementNotPresent('#confirm-toggle-feature-modal')
-//         .pause(200)
-//         .waitAndClick('#try-it-btn')
-//         .waitForElementVisible('#try-it-results')
-//         .getText('#try-it-results', (res) => {
-//             browser.assert.equal(typeof res, 'object');
-//             browser.assert.equal(res.status, 0);
-//             let json;
-//             try {
-//                 json = JSON.parse(res.value);
-//             } catch (e) {
-//                 throw new Error('Try it results are not valid JSON');
-//             }
-//             // Unfortunately chai.js expect assertions do not report success in the Nightwatch reporter (but they do report failure)
-//             expect(json).to.have.property('header_size');
-//             expect(json.header_size).to.have.property('value');
-//             expect(json.header_size.value).to.equal('big');
-//             browser.assert.ok(true, 'Try it JSON was correct for the feature'); // Re-assurance that the chai tests above passed
-//         });
-// },
-// '[Initialise Tests] - Change feature value to number': function (browser) {
-//     browser
-//         .refresh()
-//         .waitAndClick(byId('feature-item-1'))
-//         .waitForElementPresent('#create-feature-modal')
-//         .pause(500)
-//         .waitAndSet(byId('featureValue'), '12')
-//         .pause(500)
-//         .click('#update-feature-btn')
-//         .waitForElementNotPresent('#create-feature-modal')
-//         .waitForElementVisible(byId('feature-value-1'))
-//         .expect.element(byId('feature-value-1')).text.to.equal('12');
-// },
-// '[Initialise Tests] - Try feature out should return numeric value': function (browser) {
-//     browser
-//         .refresh()
-//         .waitForElementNotPresent('#create-feature-modal')
-//         .pause(cacheWait)
-//         .waitForElementVisible('#try-it-btn')
-//         .click('#try-it-btn')
-//         .waitForElementVisible('#try-it-results')
-//         .getText('#try-it-results', (res) => {
-//             browser.assert.equal(typeof res, 'object');
-//             browser.assert.equal(res.status, 0);
-//             let json;
-//             try {
-//                 json = JSON.parse(res.value);
-//             } catch (e) {
-//                 throw new Error('Try it results are not valid JSON');
-//             }
-//             // Unfortunately chai.js expect assertions do not report success in the Nightwatch reporter (but they do report failure)
-//             expect(json).to.have.property('header_size');
-//             expect(json.header_size).to.have.property('value');
-//             expect(json.header_size.value).to.equal(12);
-//             expect(json.header_enabled).to.have.property('enabled');
-//             expect(json.header_enabled.enabled).to.equal(true);
-//             browser.assert.ok(true, 'Try it JSON was correct for the feature'); // Re-assurance that the chai tests above passed
-//         });
-// },
 // '[Initialise Tests] - Change feature value to boolean': function (browser) {
 //     browser
 //         .waitAndClick(byId('feature-item-1'))
