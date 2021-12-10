@@ -54,7 +54,7 @@ def test_permitted_user_can_update_feature_state(
     organisation_one_project_one_environment_one,
     organisation_one_project_one_feature_one,
     organisation_one_project_one,
-    environment_one_viewer_user,
+    organisation_one_user,
     organisation_one,
     permissions,
     admin,
@@ -64,7 +64,7 @@ def test_permitted_user_can_update_feature_state(
     feature = organisation_one_project_one_feature_one
 
     client = get_environment_user_client(
-        user=environment_one_viewer_user,
+        user=organisation_one_user,
         environment=environment,
         permission_keys=permissions,
         admin=admin,
