@@ -48,7 +48,7 @@ def test_user_without_update_feature_state_permission_cannot_update_feature_stat
 
 @pytest.mark.parametrize(
     "permissions, admin",
-    (([], True), ([UPDATE_FEATURE_STATE], False)),
+    (([], True), ([VIEW_ENVIRONMENT, UPDATE_FEATURE_STATE], False)),
 )
 def test_permitted_user_can_update_feature_state(
     organisation_one_project_one_environment_one,
