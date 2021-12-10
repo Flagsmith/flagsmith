@@ -434,6 +434,17 @@ class OrganisationTestCase(TestCase):
             subscription_id=subscription.subscription_id, plan_id=plan_id
         )
 
+    def test_get_permissions(self):
+        # Given
+        url = reverse("api-v1:organisations:organisation-permissions")
+
+        # When
+        response = self.client.get(url)
+
+        # Then
+        assert response.status_code == status.HTTP_200_OK
+        assert len(response.json()) == 1
+
 
 @pytest.mark.django_db
 class ChargeBeeWebhookTestCase(TestCase):

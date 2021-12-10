@@ -4,6 +4,12 @@ from rest_framework.permissions import BasePermission
 
 from organisations.models import Organisation
 
+CREATE_PROJECT = "CREATE_PROJECT"
+
+ORGANISATION_PERMISSIONS = (
+    (CREATE_PROJECT, "Allows the user to create projects in this organisation."),
+)
+
 
 class NestedOrganisationEntityPermission(BasePermission):
     def has_permission(self, request, view):

@@ -20,6 +20,7 @@ from rest_framework.throttling import ScopedRateThrottle
 
 from organisations.exceptions import OrganisationHasNoSubscription
 from organisations.models import (
+    OrganisationPermissionModel,
     OrganisationRole,
     OrganisationWebhook,
     Subscription,
@@ -37,6 +38,7 @@ from organisations.serializers import (
     PortalUrlSerializer,
     UpdateSubscriptionSerializer,
 )
+from permissions.serializers import PermissionModelSerializer
 from projects.serializers import ProjectSerializer
 from users.serializers import UserIdSerializer
 
@@ -59,6 +61,8 @@ class OrganisationViewSet(viewsets.ModelViewSet):
             return InfluxDataSerializer
         elif self.action == "get_hosted_page_url_for_subscription_upgrade":
             return GetHostedPageForSubscriptionUpgradeSerializer
+        elif self.action == "permissions":
+            return PermissionModelSerializer
         return OrganisationSerializerFull
 
     def get_serializer_context(self):
@@ -181,6 +185,12 @@ class OrganisationViewSet(viewsets.ModelViewSet):
             data={"events_list": get_multiple_event_list_for_organisation(pk)}
         )
         serializer.is_valid(raise_exception=True)
+        return Response(serializer.data)
+
+    @action(detail=False, methods=["GET"])
+    def permissions(self, request):
+        organisation_permissions = OrganisationPermissionModel.objects.all()
+        serializer = self.get_serializer(instance=organisation_permissions, many=True)
         return Response(serializer.data)
 
 
