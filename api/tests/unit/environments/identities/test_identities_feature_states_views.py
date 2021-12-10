@@ -11,13 +11,14 @@ from environments.permissions.constants import (
 )
 
 
-def test_user_without_update_feature_state_permission_cannot_update_feature_state(
+def test_user_without_update_feature_state_permission_cannot_create_identity_feature_state(
     client,
     organisation_one,
     organisation_one_project_one,
     organisation_one_project_one_environment_one,
     organisation_one_project_one_feature_one,
     organisation_one_user,
+    identity_one,
 ):
     # Given
     environment = organisation_one_project_one_environment_one
@@ -29,16 +30,15 @@ def test_user_without_update_feature_state_permission_cannot_update_feature_stat
         permission_keys=[VIEW_ENVIRONMENT],
     )
 
-    feature_state = environment.get_feature_state(feature_id=feature.id)
     url = reverse(
-        "api-v1:environments:environment-featurestates-detail",
-        args=[environment.api_key, feature_state.id],
+        "api-v1:environments:identity-featurestates-list",
+        args=[environment.api_key, identity_one.id],
     )
 
     # When
-    response = client.patch(
+    response = client.post(
         url,
-        data=json.dumps({"feature_state_value": "something-else"}),
+        data=json.dumps({"feature": feature.id, "enabled": True}),
         content_type="application/json",
     )
 
@@ -47,16 +47,16 @@ def test_user_without_update_feature_state_permission_cannot_update_feature_stat
 
 
 @pytest.mark.parametrize(
-    "permissions, admin",
-    (([], True), ([UPDATE_FEATURE_STATE], False)),
+    "permission_keys, admin", (([], True), ([UPDATE_FEATURE_STATE], False))
 )
-def test_permitted_user_can_update_feature_state(
+def test_user_with_update_feature_state_permission_can_update_identity_feature_state(
     organisation_one_project_one_environment_one,
     organisation_one_project_one_feature_one,
     organisation_one_project_one,
-    environment_one_viewer_user,
+    organisation_one_user,
     organisation_one,
-    permissions,
+    identity_one,
+    permission_keys,
     admin,
 ):
     # Given
@@ -64,22 +64,23 @@ def test_permitted_user_can_update_feature_state(
     feature = organisation_one_project_one_feature_one
 
     client = get_environment_user_client(
-        user=environment_one_viewer_user,
+        user=organisation_one_user,
         environment=environment,
-        permission_keys=permissions,
+        permission_keys=permission_keys,
         admin=admin,
     )
 
-    feature_state = environment.get_feature_state(feature_id=feature.id)
     url = reverse(
-        "api-v1:environments:environment-featurestates-detail",
-        args=[environment.api_key, feature_state.id],
+        "api-v1:environments:identity-featurestates-list",
+        args=[environment.api_key, identity_one.id],
     )
 
     # When
-    response = client.patch(
-        url, data=json.dumps({"enabled": True}), content_type="application/json"
+    response = client.post(
+        url,
+        data=json.dumps({"feature": feature.id, "enabled": True}),
+        content_type="application/json",
     )
 
     # Then
-    assert response.status_code == status.HTTP_200_OK
+    assert response.status_code == status.HTTP_201_CREATED

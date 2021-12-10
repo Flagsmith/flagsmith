@@ -1,7 +1,10 @@
 from django.conf.urls import include, url
 from rest_framework_nested import routers
 
-from features.views import FeatureStateViewSet
+from features.views import (
+    EnvironmentFeatureStateViewSet,
+    IdentityFeatureStateViewSet,
+)
 from integrations.amplitude.views import AmplitudeConfigurationViewSet
 from integrations.heap.views import HeapConfigurationViewSet
 from integrations.mixpanel.views import MixpanelConfigurationViewSet
@@ -26,7 +29,9 @@ environments_router.register(
     r"webhooks", WebhookViewSet, basename="environment-webhooks"
 )
 environments_router.register(
-    r"featurestates", FeatureStateViewSet, basename="environment-featurestates"
+    r"featurestates",
+    EnvironmentFeatureStateViewSet,
+    basename="environment-featurestates",
 )
 environments_router.register(
     r"user-permissions",
@@ -62,7 +67,7 @@ identity_router = routers.NestedSimpleRouter(
     environments_router, r"identities", lookup="identity"
 )
 identity_router.register(
-    r"featurestates", FeatureStateViewSet, basename="identity-featurestates"
+    r"featurestates", IdentityFeatureStateViewSet, basename="identity-featurestates"
 )
 identity_router.register(r"traits", TraitViewSet, basename="identities-traits")
 

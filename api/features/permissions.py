@@ -66,3 +66,31 @@ class FeatureStatePermissions(BasePermission):
         return is_environment_admin or request.user.has_environment_permission(
             UPDATE_FEATURE_STATE
         )
+
+
+class EnvironmentFeatureStatePermissions(BasePermission):
+    def has_permission(self, request, view):
+        if view.action == "create":
+            environment_api_key = view.kwargs.get("environment_api_key")
+            if not environment_api_key:
+                return False
+
+            environment = Environment.objects.get(api_key=environment_api_key)
+            return request.user.has_environment_permission(
+                permission=UPDATE_FEATURE_STATE, environment=environment
+            )
+
+        if view.action == "list":
+            return True
+
+        # move on to object specific permissions
+        return view.detail
+
+    def has_object_permission(self, request, view, obj):
+        return request.user.has_environment_permission(
+            permission=UPDATE_FEATURE_STATE, environment=obj.environment
+        )
+
+
+class IdentityFeatureStatePermissions(EnvironmentFeatureStatePermissions):
+    pass
