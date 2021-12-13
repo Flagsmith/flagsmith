@@ -5,6 +5,7 @@ from django.db import migrations, models
 import django.db.models.deletion
 
 from organisations.models import OrganisationRole
+from organisations.permissions import CREATE_PROJECT
 
 
 def add_create_project_permission_to_existing_users(apps, schema_editor):
@@ -12,16 +13,30 @@ def add_create_project_permission_to_existing_users(apps, schema_editor):
         "organisations", "UserOrganisationPermission"
     )
     user_organisation_model_class = apps.get_model("organisations", "UserOrganisation")
+    through_model_class = user_organisation_permission_model_class.permissions.through
 
-    user_org_permission_models = [
-        user_organisation_permission_model_class(user=user_organisation.user)
-        for user_organisation in user_organisation_model_class.objects.filter(
-            role=OrganisationRole.USER
+    # generate the user organisation permission models without any permissions
+    user_permission_models = []
+    for user_organisation in user_organisation_model_class.objects.filter(
+        role=OrganisationRole.USER.name
+    ):
+        user_permission_models.append(
+            user_organisation_permission_model_class(
+                user=user_organisation.user, organisation=user_organisation.organisation
+            )
         )
-    ]
-    user_organisation_permission_model_class.objects.bulk_create(
-        user_org_permission_models
-    )
+    user_organisation_permission_model_class.objects.bulk_create(user_permission_models)
+
+    # use the through model so that we can bulk create the actual permissions
+    through_models = []
+    for user_organisation_permission in user_permission_models:
+        through_models.append(
+            through_model_class(
+                userorganisationpermission_id=user_organisation_permission.id,
+                permissionmodel_id=CREATE_PROJECT,
+            )
+        )
+    through_model_class.objects.bulk_create(through_models)
 
 
 def reverse(apps, schema_editor):
