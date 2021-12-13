@@ -8,7 +8,12 @@ from environments.permissions.models import (
     EnvironmentPermissionModel,
     UserEnvironmentPermission,
 )
-from organisations.models import Organisation, OrganisationRole
+from organisations.models import (
+    Organisation,
+    OrganisationRole,
+    UserOrganisationPermission,
+)
+from organisations.permissions import ORGANISATION_PERMISSIONS
 from projects.models import (
     Project,
     ProjectPermissionModel,
@@ -121,3 +126,50 @@ class FFAdminUserTestCase(TestCase):
         # Then
         with pytest.raises(IntegrityError):
             self.user.add_organisation(self.organisation, OrganisationRole.USER)
+
+    def test_has_organisation_permission_is_true_for_organisation_admin(self):
+        # Given
+        self.user.add_organisation(self.organisation, OrganisationRole.ADMIN)
+
+        # Then
+        assert all(
+            self.user.has_organisation_permission(
+                organisation=self.organisation, permission_key=permission_key
+            )
+            for permission_key, _ in ORGANISATION_PERMISSIONS
+        )
+
+    def test_has_organisation_permission_is_true_when_user_has_permission(self):
+        # Given
+        self.user.add_organisation(self.organisation)
+
+        for permission_key, _ in ORGANISATION_PERMISSIONS:
+            user_organisation_permission = UserOrganisationPermission.objects.create(
+                user=self.user, organisation=self.organisation
+            )
+            user_organisation_permission.permissions.through.objects.create(
+                permissionmodel_id=permission_key,
+                userorganisationpermission=user_organisation_permission,
+            )
+
+        # Then
+        assert all(
+            self.user.has_organisation_permission(
+                organisation=self.organisation, permission_key=permission_key
+            )
+            for permission_key, _ in ORGANISATION_PERMISSIONS
+        )
+
+    def test_has_organisation_permission_is_false_when_user_does_not_have_permission(
+        self,
+    ):
+        # Given
+        self.user.add_organisation(self.organisation)
+
+        # Then
+        assert not any(
+            self.user.has_organisation_permission(
+                organisation=self.organisation, permission_key=permission_key
+            )
+            for permission_key, _ in ORGANISATION_PERMISSIONS
+        )
