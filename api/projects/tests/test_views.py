@@ -182,9 +182,6 @@ class ProjectTestCase(TestCase):
         # Then
         assert response.status_code == status.HTTP_200_OK
 
-    def test_organisation_user_with_create_project_permission_can_create_project(self):
-        pass
-
 
 @pytest.mark.django_db
 class UserProjectPermissionsViewSetTestCase(TestCase):
