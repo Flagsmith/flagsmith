@@ -1,6 +1,7 @@
 from rest_framework.permissions import BasePermission
 
 from organisations.models import Organisation
+from organisations.permissions import CREATE_PROJECT
 from projects.models import Project
 
 # Maintain a list of permissions here
@@ -24,7 +25,9 @@ class ProjectPermissions(BasePermission):
             )
             if organisation.restrict_project_create_to_admin:
                 return request.user.is_admin(organisation.pk)
-            return True
+            return request.user.has_organisation_permission(
+                organisation, CREATE_PROJECT
+            )
 
         if view.action in ("list", "permissions"):
             return True

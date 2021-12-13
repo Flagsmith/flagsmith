@@ -14,7 +14,7 @@ from organisations.chargebee import (
     get_portal_url,
 )
 from organisations.managers import OrganisationPermissionManager
-from permissions.models import BasePermissionModelABC, PermissionModel
+from permissions.models import AbstractBasePermissionModel, PermissionModel
 
 
 class OrganisationRole(enum.Enum):
@@ -34,7 +34,7 @@ class Organisation(models.Model):
     alerted_over_plan_limit = models.BooleanField(default=False)
     stop_serving_flags = models.BooleanField(
         default=False,
-        help_text="Enable this to cease serving flags for this " "organisation.",
+        help_text="Enable this to cease serving flags for this organisation.",
     )
     restrict_project_create_to_admin = models.BooleanField(default=False)
     persist_trait_data = models.BooleanField(
@@ -152,16 +152,14 @@ class OrganisationWebhook(models.Model):
         ordering = ("id",)  # explicit ordering to prevent pagination warnings
 
 
-class UserOrganisationPermission(BasePermissionModelABC):
+class UserOrganisationPermission(AbstractBasePermissionModel):
     organisation = models.ForeignKey(Organisation, on_delete=models.CASCADE)
     user = models.ForeignKey("users.FFAdminUser", on_delete=models.CASCADE)
 
 
-class UserPermissionGroupOrganisationPermission(BasePermissionModelABC):
+class UserPermissionGroupOrganisationPermission(AbstractBasePermissionModel):
     organisation = models.ForeignKey(Organisation, on_delete=models.CASCADE)
-    user_permission_group = models.ForeignKey(
-        "users.UserPermissionGroup", on_delete=models.CASCADE
-    )
+    group = models.ForeignKey("users.UserPermissionGroup", on_delete=models.CASCADE)
 
 
 class OrganisationPermissionModel(PermissionModel):

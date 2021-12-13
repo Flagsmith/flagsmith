@@ -19,6 +19,8 @@ from organisations.models import (
     Organisation,
     OrganisationRole,
     UserOrganisation,
+    UserOrganisationPermission,
+    UserPermissionGroupOrganisationPermission,
 )
 from projects.models import (
     Project,
@@ -297,6 +299,23 @@ class FFAdminUser(AbstractUser):
             ).exists()
             or UserPermissionGroupEnvironmentPermission.objects.filter(
                 group__users=self, admin=True, environment=environment
+            ).exists()
+        )
+
+    def has_organisation_permission(
+        self, organisation: Organisation, permission_key: str
+    ) -> bool:
+        if self.is_admin(organisation):
+            return True
+
+        return (
+            UserOrganisationPermission.objects.filter(
+                user=self, organisation=organisation, permissions__key=permission_key
+            ).exists()
+            or UserPermissionGroupOrganisationPermission.objects.filter(
+                group__users=self,
+                organisation=organisation,
+                permissions__key=permission_key,
             ).exists()
         )
 
