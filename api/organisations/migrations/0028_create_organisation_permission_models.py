@@ -4,50 +4,125 @@ from django.conf import settings
 from django.db import migrations, models
 import django.db.models.deletion
 
+from organisations.models import OrganisationRole
+
+
+def add_create_project_permission_to_existing_users(apps, schema_editor):
+    user_organisation_permission_model_class = apps.get_model(
+        "organisations", "UserOrganisationPermission"
+    )
+    user_organisation_model_class = apps.get_model("organisations", "UserOrganisation")
+
+    user_org_permission_models = [
+        user_organisation_permission_model_class(user=user_organisation.user)
+        for user_organisation in user_organisation_model_class.objects.filter(
+            role=OrganisationRole.USER
+        )
+    ]
+    user_organisation_permission_model_class.objects.bulk_create(
+        user_org_permission_models
+    )
+
+
+def reverse(apps, schema_editor):
+    pass
+
 
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('users', '0029_auto_20210223_1603'),
-        ('permissions', '0004_add_create_project_permission'),
+        ("users", "0029_auto_20210223_1603"),
+        ("permissions", "0004_add_create_project_permission"),
         migrations.swappable_dependency(settings.AUTH_USER_MODEL),
-        ('organisations', '0027_organisation_restrict_project_create_to_admin'),
+        ("organisations", "0027_organisation_restrict_project_create_to_admin"),
     ]
 
     operations = [
         migrations.CreateModel(
-            name='OrganisationPermissionModel',
-            fields=[
-            ],
+            name="OrganisationPermissionModel",
+            fields=[],
             options={
-                'proxy': True,
-                'indexes': [],
-                'constraints': [],
+                "proxy": True,
+                "indexes": [],
+                "constraints": [],
             },
-            bases=('permissions.permissionmodel',),
+            bases=("permissions.permissionmodel",),
         ),
         migrations.CreateModel(
-            name='UserPermissionGroupOrganisationPermission',
+            name="UserPermissionGroupOrganisationPermission",
             fields=[
-                ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('group', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to='users.UserPermissionGroup')),
-                ('organisation', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to='organisations.Organisation')),
-                ('permissions', models.ManyToManyField(blank=True, to='permissions.PermissionModel')),
+                (
+                    "id",
+                    models.AutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                (
+                    "group",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.CASCADE,
+                        to="users.UserPermissionGroup",
+                    ),
+                ),
+                (
+                    "organisation",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.CASCADE,
+                        to="organisations.Organisation",
+                    ),
+                ),
+                (
+                    "permissions",
+                    models.ManyToManyField(
+                        blank=True, to="permissions.PermissionModel"
+                    ),
+                ),
             ],
             options={
-                'abstract': False,
+                "abstract": False,
             },
         ),
         migrations.CreateModel(
-            name='UserOrganisationPermission',
+            name="UserOrganisationPermission",
             fields=[
-                ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('organisation', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to='organisations.Organisation')),
-                ('permissions', models.ManyToManyField(blank=True, to='permissions.PermissionModel')),
-                ('user', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to=settings.AUTH_USER_MODEL)),
+                (
+                    "id",
+                    models.AutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                (
+                    "organisation",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.CASCADE,
+                        to="organisations.Organisation",
+                    ),
+                ),
+                (
+                    "permissions",
+                    models.ManyToManyField(
+                        blank=True, to="permissions.PermissionModel"
+                    ),
+                ),
+                (
+                    "user",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.CASCADE,
+                        to=settings.AUTH_USER_MODEL,
+                    ),
+                ),
             ],
             options={
-                'abstract': False,
+                "abstract": False,
             },
+        ),
+        migrations.RunPython(
+            add_create_project_permission_to_existing_users, reverse_code=reverse
         ),
     ]
