@@ -16,6 +16,31 @@ class OrganisationTestCase(TestCase):
         self.assertTrue(organisation_1.name)
         self.assertTrue(organisation_2.name)
 
+    def test_has_subscription_true(self):
+        # Given
+        organisation = Organisation.objects.create(name="Test org")
+        Subscription.objects.create(
+            organisation=organisation, subscription_id="subscription_id"
+        )
+
+        # Then
+        assert organisation.has_subscription()
+
+    def test_has_subscription_missing_subscription(self):
+        # Given
+        organisation = Organisation.objects.create(name="Test org")
+
+        # Then
+        assert not organisation.has_subscription()
+
+    def test_has_subscription_missing_subscription_id(self):
+        # Given
+        organisation = Organisation.objects.create(name="Test org")
+        Subscription.objects.create(organisation=organisation)
+
+        # Then
+        assert not organisation.has_subscription()
+
 
 class SubscriptionTestCase(TestCase):
     def setUp(self) -> None:
