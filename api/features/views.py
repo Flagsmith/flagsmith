@@ -29,7 +29,12 @@ from environments.permissions.permissions import (
 )
 
 from .models import Feature, FeatureState
-from .permissions import FeaturePermissions, FeatureStatePermissions
+from .permissions import (
+    EnvironmentFeatureStatePermissions,
+    FeaturePermissions,
+    FeatureStatePermissions,
+    IdentityFeatureStatePermissions,
+)
 from .serializers import (
     FeatureInfluxDataSerializer,
     FeatureOwnerInputSerializer,
@@ -143,7 +148,7 @@ class FeatureViewSet(viewsets.ModelViewSet):
         ]
     ),
 )
-class FeatureStateViewSet(viewsets.ModelViewSet):
+class BaseFeatureStateViewSet(viewsets.ModelViewSet):
     """
     View set to manage feature states. Nested beneath environments and environments + identities
     to allow for filtering on both.
@@ -292,7 +297,7 @@ class FeatureStateViewSet(viewsets.ModelViewSet):
 
     def destroy(self, request, *args, **kwargs):
         feature_state = get_object_or_404(self.get_queryset(), pk=kwargs.get("pk"))
-        res = super(FeatureStateViewSet, self).destroy(request, *args, **kwargs)
+        res = super(BaseFeatureStateViewSet, self).destroy(request, *args, **kwargs)
         if res.status_code == status.HTTP_204_NO_CONTENT:
             self._create_deleted_feature_state_audit_log(feature_state)
         return res
@@ -341,6 +346,14 @@ class FeatureStateViewSet(viewsets.ModelViewSet):
             )
 
         return feature_state_value
+
+
+class EnvironmentFeatureStateViewSet(BaseFeatureStateViewSet):
+    permission_classes = [IsAuthenticated, EnvironmentFeatureStatePermissions]
+
+
+class IdentityFeatureStateViewSet(BaseFeatureStateViewSet):
+    permission_classes = [IsAuthenticated, IdentityFeatureStatePermissions]
 
 
 class SimpleFeatureStateViewSet(

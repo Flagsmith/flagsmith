@@ -2,6 +2,7 @@
 from __future__ import unicode_literals
 
 import logging
+import typing
 from copy import deepcopy
 
 from django.conf import settings
@@ -115,6 +116,25 @@ class Environment(LifecycleModel):
             return environment
         except cls.DoesNotExist:
             logger.info("Environment with api_key %s does not exist" % api_key)
+
+    def get_feature_state(
+        self, feature_id: int, filter_kwargs: dict = None
+    ) -> typing.Optional[FeatureState]:
+        """
+        Get the corresponding feature state in an environment for a given feature id.
+        Optionally override the kwargs passed to filter to get the feature state for
+        a feature segment or identity.
+        """
+
+        if not filter_kwargs:
+            filter_kwargs = {"feature_segment_id": None, "identity_id": None}
+
+        return next(
+            filter(
+                lambda fs: fs.feature.id == feature_id,
+                self.feature_states.filter(**filter_kwargs),
+            )
+        )
 
 
 class Webhook(models.Model):

@@ -191,6 +191,14 @@ class FFAdminUser(AbstractUser):
 
         return project in self.get_permitted_projects([permission])
 
+    def has_environment_permission(self, permission, environment):
+        if self.is_environment_admin(environment) or self.is_admin(
+            environment.project.organisation
+        ):
+            return True
+
+        return environment in self.get_permitted_environments([permission])
+
     def is_project_admin(self, project):
         if self.is_admin(project.organisation):
             return True

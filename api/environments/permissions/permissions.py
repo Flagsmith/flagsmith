@@ -90,7 +90,6 @@ class NestedEnvironmentPermissions(BasePermission):
                 return False
 
             environment = Environment.objects.get(api_key=environment_api_key)
-
             return request.user.is_environment_admin(environment)
 
         if view.action == "list":
