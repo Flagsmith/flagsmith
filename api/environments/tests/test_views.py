@@ -334,7 +334,7 @@ class EnvironmentTestCase(TestCase):
         # Then
         assert response.status_code == status.HTTP_200_OK
         assert (
-            len(response.json()) == 1
+            len(response.json()) == 2
         )  # hard code how many permissions we expect there to be
 
     def test_environment_user_can_get_their_permissions(self):
