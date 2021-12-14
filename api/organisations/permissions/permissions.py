@@ -26,11 +26,7 @@ class NestedOrganisationEntityPermission(BasePermission):
     def has_object_permission(self, request, view, obj):
         organisation_id = view.kwargs.get("organisation_pk")
         organisation = Organisation.objects.get(id=organisation_id)
-
-        if request.user.is_admin(organisation):
-            return True
-
-        return False
+        return request.user.is_admin(organisation)
 
 
 class OrganisationPermission(BasePermission):

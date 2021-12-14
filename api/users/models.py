@@ -19,6 +19,8 @@ from organisations.models import (
     Organisation,
     OrganisationRole,
     UserOrganisation,
+)
+from organisations.permissions.models import (
     UserOrganisationPermission,
     UserPermissionGroupOrganisationPermission,
 )

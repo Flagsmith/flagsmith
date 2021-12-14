@@ -13,8 +13,6 @@ from organisations.chargebee import (
     get_max_seats_for_plan,
     get_portal_url,
 )
-from organisations.managers import OrganisationPermissionManager
-from permissions.models import AbstractBasePermissionModel, PermissionModel
 
 
 class OrganisationRole(enum.Enum):
@@ -150,20 +148,3 @@ class OrganisationWebhook(models.Model):
 
     class Meta:
         ordering = ("id",)  # explicit ordering to prevent pagination warnings
-
-
-class UserOrganisationPermission(AbstractBasePermissionModel):
-    organisation = models.ForeignKey(Organisation, on_delete=models.CASCADE)
-    user = models.ForeignKey("users.FFAdminUser", on_delete=models.CASCADE)
-
-
-class UserPermissionGroupOrganisationPermission(AbstractBasePermissionModel):
-    organisation = models.ForeignKey(Organisation, on_delete=models.CASCADE)
-    group = models.ForeignKey("users.UserPermissionGroup", on_delete=models.CASCADE)
-
-
-class OrganisationPermissionModel(PermissionModel):
-    class Meta:
-        proxy = True
-
-    objects = OrganisationPermissionManager()

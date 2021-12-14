@@ -20,12 +20,12 @@ from rest_framework.throttling import ScopedRateThrottle
 
 from organisations.exceptions import OrganisationHasNoSubscription
 from organisations.models import (
-    OrganisationPermissionModel,
     OrganisationRole,
     OrganisationWebhook,
     Subscription,
 )
-from organisations.permissions import (
+from organisations.permissions.models import OrganisationPermissionModel
+from organisations.permissions.permissions import (
     NestedOrganisationEntityPermission,
     OrganisationPermission,
 )

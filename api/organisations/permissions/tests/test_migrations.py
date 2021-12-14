@@ -1,11 +1,11 @@
 from organisations.models import OrganisationRole
-from organisations.permissions import CREATE_PROJECT
+from organisations.permissions.permissions import CREATE_PROJECT
 
 
 def test_migration_creates_create_project_permissions_for_org_users(migrator):
     # Given
-    # the state of the application is set to be one migration before the migration we
-    # want to test
+    # we use one of the dependencies of the migration we want to test to set the
+    # initial state of the database correctly
     old_state = migrator.apply_initial_migration(
         ("organisations", "0027_organisation_restrict_project_create_to_admin")
     )
@@ -38,10 +38,10 @@ def test_migration_creates_create_project_permissions_for_org_users(migrator):
     # When
     # we apply the migration we want to test
     new_state = migrator.apply_tested_migration(
-        ("organisations", "0028_create_organisation_permission_models")
+        ("organisation_permissions", "0001_initial")
     )
     new_user_organisation_permission_model_class = new_state.apps.get_model(
-        "organisations", "UserOrganisationPermission"
+        "organisation_permissions", "UserOrganisationPermission"
     )
 
     # Then

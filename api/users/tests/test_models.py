@@ -8,12 +8,9 @@ from environments.permissions.models import (
     EnvironmentPermissionModel,
     UserEnvironmentPermission,
 )
-from organisations.models import (
-    Organisation,
-    OrganisationRole,
-    UserOrganisationPermission,
-)
-from organisations.permissions import ORGANISATION_PERMISSIONS
+from organisations.models import Organisation, OrganisationRole
+from organisations.permissions.models import UserOrganisationPermission
+from organisations.permissions.permissions import ORGANISATION_PERMISSIONS
 from projects.models import (
     Project,
     ProjectPermissionModel,

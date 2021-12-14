@@ -6,13 +6,12 @@ from django.urls import reverse
 from rest_framework import status
 from rest_framework.test import APIClient
 
-from organisations.models import (
-    Organisation,
+from organisations.models import Organisation, OrganisationRole
+from organisations.permissions.models import (
     OrganisationPermissionModel,
-    OrganisationRole,
     UserOrganisationPermission,
 )
-from organisations.permissions import CREATE_PROJECT
+from organisations.permissions.permissions import CREATE_PROJECT
 from projects.models import (
     Project,
     ProjectPermissionModel,

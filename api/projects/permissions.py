@@ -1,7 +1,7 @@
 from rest_framework.permissions import BasePermission
 
 from organisations.models import Organisation
-from organisations.permissions import CREATE_PROJECT
+from organisations.permissions.permissions import CREATE_PROJECT
 from projects.models import Project
 
 # Maintain a list of permissions here
