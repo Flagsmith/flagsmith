@@ -5,8 +5,8 @@ import {
     assertTextContent,
     byId,
     createFeature,
-    createRemoteConfig,
-    deleteFeature, getText,
+    createRemoteConfig, createSegment,
+    deleteFeature, getText, gotoSegments, gotoTraits,
     setText,
     toggleFeature,
     waitForElementVisible,
@@ -93,109 +93,79 @@ test('[Initialise]', async () => {
     text = await getText('#try-it-results');
     try { json = JSON.parse(text); } catch (e) { throw new Error('Try it results are not valid JSON'); }
     await t.expect(json.header_size.value).eql(12);
+    log('Change feature value to boolean');
+    await t.click(byId('feature-item-1'));
+    await setText(byId('featureValue'), 'false');
+    await setText(byId('featureValue'), 'false');
+    await t.click('#update-feature-btn');
+    await assertTextContent(byId('feature-value-1'), 'false');
+    log('Change feature value to boolean');
+    await t.click('#try-it-btn');
+    text = await getText('#try-it-results');
+    try { json = JSON.parse(text); } catch (e) { throw new Error('Try it results are not valid JSON'); }
+    await t.expect(json.header_size.value).eql(false);
+    log('Switch environment');
+    await t.click(byId('switch-environment-production'));
+    log('Feature should be off under different environment');
+    await waitForElementVisible(byId('switch-environment-production-active'));
+    await waitForElementVisible(byId('feature-switch-0-off'));
+    log('Clear down features');
+    await deleteFeature(1, 'header_size');
+    await deleteFeature(0, 'header_enabled');
+    await gotoSegments();
+    gotoSegments();
+    // (=== 18 || === 19) && (> 17 || < 19) && (!=20) && (<=18) && (>=18)
+    // Rule 1- Age === 18 || Age === 19
+
+    await createSegment(0, '18_or_19', [
+        // rule 2 =18 || =17
+        {
+            name: 'age',
+            operator: 'EQUAL',
+            value: 18,
+            ors: [
+                {
+                    name: 'age',
+                    operator: 'EQUAL',
+                    value: 17,
+                },
+            ],
+        },
+        // rule 2 >17 or <10
+        {
+            name: 'age',
+            operator: 'GREATER_THAN',
+            value: 17,
+            ors: [
+                {
+                    name: 'age',
+                    operator: 'LESS_THAN',
+                    value: 10,
+                },
+            ],
+        },
+        // rule 3 !=20
+        {
+            name: 'age',
+            operator: 'NOT_EQUAL',
+            value: 20,
+        },
+        // Rule 4 <= 18
+        {
+            name: 'age',
+            operator: 'LESS_THAN_INCLUSIVE',
+            value: 18,
+        },
+        // Rule 5 >= 18
+        {
+            name: 'age',
+            operator: 'GREATER_THAN_INCLUSIVE',
+            value: 18,
+        },
+    ]);
+    await gotoTraits();
 });
 
-// '[Initialise Tests] - Change feature value to boolean': function (browser) {
-//     browser
-//         .waitAndClick(byId('feature-item-1'))
-//         .waitForElementPresent('#create-feature-modal')
-//         .waitAndSet(byId('featureValue'), 'false')
-//         .waitAndClick('#update-feature-btn')
-//         .waitForElementNotPresent('#create-feature-modal')
-//         .waitForElementVisible(byId('feature-value-1'))
-//         .expect.element(byId('feature-value-1')).text.to.equal('false');
-// },
-// '[Initialise Tests] - Try feature out should return boolean value': function (browser) {
-//     browser
-//         .refresh()
-//         .waitForElementNotPresent('#create-feature-modal')
-//         .waitForElementVisible('#try-it-btn')
-//         .pause(cacheWait) // wait for cache to expire, todo: remove when api has shared cache
-//         .click('#try-it-btn')
-//         .waitForElementVisible('#try-it-results')
-//         .getText('#try-it-results', (res) => {
-//             browser.assert.equal(typeof res, 'object');
-//             browser.assert.equal(res.status, 0);
-//             let json;
-//             try {
-//                 json = JSON.parse(res.value);
-//             } catch (e) {
-//                 throw new Error('Try it results are not valid JSON');
-//             }
-//             // Unfortunately chai.js expect assertions do not report success in the Nightwatch reporter (but they do report failure)
-//             expect(json).to.have.property('header_size');
-//             expect(json.header_size).to.have.property('value');
-//             expect(json.header_size.value).to.equal(false);
-//             expect(json.header_enabled).to.have.property('enabled');
-//             expect(json.header_enabled.enabled).to.equal(true);
-//             browser.assert.ok(true, 'Try it JSON was correct for the feature'); // Re-assurance that the chai tests above passed
-//         });
-// },
-// '[Initialise Tests] - Switch environment': function (browser) {
-//     browser
-//         .waitAndClick(byId('switch-environment-production'))
-//         .waitForElementVisible(byId('switch-environment-production-active'));
-// },
-// '[Initialise Tests] - Feature should be off under different environment': function (browser) {
-//     browser.waitForElementVisible(byId('feature-switch-0-off'));
-// },
-// '[Initialise Tests] - Clear down features': function (browser) {
-//     testHelpers.deleteFeature(browser, 1, 'header_size');
-//     testHelpers.deleteFeature(browser, 0, 'header_enabled');
-// },
-// '[Initialise Tests] - Create Segment': function (browser) {
-//     testHelpers.gotoSegments(browser);
-//
-//     // (=== 18 || === 19) && (> 17 || < 19) && (!=20) && (<=18) && (>=18)
-//     // Rule 1- Age === 18 || Age === 19
-//
-//     testHelpers.createSegment(browser, 0, '18_or_19', [
-//         // rule 2 =18 || =17
-//         {
-//             name: 'age',
-//             operator: 'EQUAL',
-//             value: 18,
-//             ors: [
-//                 {
-//                     name: 'age',
-//                     operator: 'EQUAL',
-//                     value: 17,
-//                 },
-//             ],
-//         },
-//         // rule 2 >17 or <10
-//         {
-//             name: 'age',
-//             operator: 'GREATER_THAN',
-//             value: 17,
-//             ors: [
-//                 {
-//                     name: 'age',
-//                     operator: 'LESS_THAN',
-//                     value: 10,
-//                 },
-//             ],
-//         },
-//         // rule 3 !=20
-//         {
-//             name: 'age',
-//             operator: 'NOT_EQUAL',
-//             value: 20,
-//         },
-//         // Rule 4 <= 18
-//         {
-//             name: 'age',
-//             operator: 'LESS_THAN_INCLUSIVE',
-//             value: 18,
-//         },
-//         // Rule 5 >= 18
-//         {
-//             name: 'age',
-//             operator: 'GREATER_THAN_INCLUSIVE',
-//             value: 18,
-//         },
-//     ]);
-// },
 // '[Initialise Tests] - Add segment trait for user': function (browser) {
 //     testHelpers.gotoTraits(browser);
 //     testHelpers.createTrait(browser, 0, 'age', 18);
