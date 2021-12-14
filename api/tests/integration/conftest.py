@@ -148,30 +148,33 @@ def feature_segment(admin_client, segment, feature, environment):
 
 
 @pytest.fixture()
-def identity_document(environment_api_key):
+def identity_document(environment_api_key, feature):
     _environment_feature_state_1_document = {
+        "featurestate_uuid": "ad71c644-71df-4e83-9cb5-cd2cd0160200",
         "multivariate_feature_state_values": [],
         "feature_state_value": "feature_1_value",
         "id": 1,
         "feature": {
             "name": "feature_1",
             "type": "STANDARD",
-            "id": 1,
+            "id": feature,
         },
         "enabled": False,
     }
     _environment_feature_state_2_document = {
+        "featurestate_uuid": "c6ec4de7-11a7-47c2-abc9-0d7bf0fc90e9",
         "multivariate_feature_state_values": [],
+        "id": 1,
         "feature_state_value": "2.3",
-        "id": 2,
         "feature": {
             "name": "feature_2",
             "type": "STANDARD",
-            "id": 2,
+            "id": 200,
         },
         "enabled": True,
     }
     _mv_feature_state_document = {
+        "featurestate_uuid": "4a8fbe06-d4cd-4686-a184-d924844bb421",
         "multivariate_feature_state_values": [
             {
                 "percentage_allocation": 50,
@@ -185,11 +188,11 @@ def identity_document(environment_api_key):
             },
         ],
         "feature_state_value": None,
-        "id": 4,
+        "id": 1,
         "feature": {
             "name": "multivariate_feature",
             "type": "MULTIVARIATE",
-            "id": 4,
+            "id": 400,
         },
         "enabled": False,
     }

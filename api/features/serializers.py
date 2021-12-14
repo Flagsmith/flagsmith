@@ -1,4 +1,10 @@
 from drf_writable_nested import WritableNestedModelSerializer
+from flag_engine.features.models import (
+    FeatureStateModel as EngineFeatureStateModel,
+)
+from flag_engine.features.schemas import MultivariateFeatureStateValueSchema
+from flag_engine.identities.builders import build_identity_dict
+from flag_engine.utils.exceptions import DuplicateFeatureState
 from rest_framework import serializers
 
 from audit.models import (
@@ -14,9 +20,12 @@ from users.serializers import UserIdsSerializer, UserListSerializer
 
 from .models import Feature, FeatureState, FeatureStateValue
 from .multivariate.serializers import (
+    EdgeMultivariateFeatureStateValueSerializer,
     MultivariateFeatureOptionSerializer,
     MultivariateFeatureStateValueSerializer,
 )
+
+engine_multi_fs_value_schema = MultivariateFeatureStateValueSchema()
 
 
 class FeatureOwnerInputSerializer(UserIdsSerializer):
@@ -242,6 +251,92 @@ class FeatureStateSerializerWithIdentity(FeatureStateSerializerBasic):
             fields = ("id", "identifier")
 
     identity = _IdentitySerializer()
+
+
+class FeatureStateValueEdgeIdentityField(serializers.Field):
+    def to_representation(self, obj):
+        identity_id = self.parent._get_identity_uuid()
+        return obj.get_value(identity_id=identity_id)
+
+    def get_attribute(self, instance):
+        return instance
+
+    def to_internal_value(self, data):
+        feature_state_value_dict = FeatureState().generate_feature_state_value_data(
+            data
+        )
+
+        data = {**feature_state_value_dict}
+        fs_value_serializer = FeatureStateValueSerializer(data=data)
+        fs_value_serializer.is_valid(raise_exception=True)
+        return FeatureStateValue(**data).value
+
+
+class FeatureStateSerializerWithEdgeIdentity(serializers.ModelSerializer):
+    # feature_state_value = serializers.SerializerMethodField()
+    feature_state_value = FeatureStateValueEdgeIdentityField()
+    multivariate_feature_state_values = EdgeMultivariateFeatureStateValueSerializer(
+        many=True, required=False
+    )
+
+    identity_uuid = serializers.SerializerMethodField()
+
+    featurestate_uuid = serializers.CharField(required=False)
+
+    class Meta:
+        model = FeatureState
+        fields = (
+            "feature",
+            "enabled",
+            "identity_uuid",
+            "featurestate_uuid",
+            "feature_state_value",
+            "multivariate_feature_state_values",
+        )
+        read_only_fields = ("featurestate_uuid",)
+
+    def get_feature(self, obj):
+        return obj.feature
+
+    def _get_identity_uuid(self):
+        return self.context["view"].kwargs["edge_identity_identity_uuid"]
+
+    def get_environment_api_key(self):
+        return self.context["view"].kwargs["environment_api_key"]
+
+    def get_identity_uuid(self, obj):
+        return self._get_identity_uuid()
+
+    def get_feature_state_value(self, obj):
+        identity_id = self._get_identity_uuid()
+        return obj.get_value(identity_id=identity_id)
+
+    def save(self, **kwargs):
+        identity = self.context["view"].identity
+        feature_state_value = self.validated_data.pop("feature_state_value")
+
+        if self.instance:
+            if self.validated_data.get("multivariate_feature_state_values"):
+                engine_multi_fs_value_models = engine_multi_fs_value_schema.load(
+                    self.validated_data["multivariate_feature_state_values"], many=True
+                )
+                self.instance.multivariate_feature_state_values = (
+                    engine_multi_fs_value_models
+                )
+            self.instance.set_value(feature_state_value)
+
+        else:
+            self.instance = EngineFeatureStateModel(**self.validated_data)
+            self.instance.set_value(feature_state_value)
+            try:
+                identity.add_feature_override(self.instance)
+            except DuplicateFeatureState as e:
+                raise serializers.ValidationError(
+                    "Feature state already exists."
+                ) from e
+
+        Identity.dynamo_wrapper.put_item(build_identity_dict(identity))
+        return self.instance
 
 
 class FeatureStateSerializerFullWithIdentity(FeatureStateSerializerFull):
