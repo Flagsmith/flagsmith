@@ -33,5 +33,5 @@ class CreateUpdateUserPermissionSerializerABC(serializers.ModelSerializer):
 
 
 class MyUserObjectPermissionsSerializer(serializers.Serializer):
-    permissions = serializers.CharField()
+    permissions = serializers.ListField(child=serializers.CharField())
     admin = serializers.BooleanField()

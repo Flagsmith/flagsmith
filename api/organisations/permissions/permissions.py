@@ -36,7 +36,9 @@ class OrganisationPermission(BasePermission):
         return True
 
     def has_object_permission(self, request, view, obj):
-        if request.user.is_admin(obj):
+        if request.user.is_admin(obj) or (
+            view.action == "my_permissions" and obj in request.user.organisations.all()
+        ):
             return True
 
         raise PermissionDenied(

@@ -1,4 +1,5 @@
 import logging
+import typing
 
 from django.conf import settings
 from django.contrib.auth.base_user import BaseUserManager
@@ -320,6 +321,28 @@ class FFAdminUser(AbstractUser):
                 permissions__key=permission_key,
             ).exists()
         )
+
+    def get_permission_keys_for_organisation(
+        self, organisation: Organisation
+    ) -> typing.Iterable[str]:
+        user_permission = UserOrganisationPermission.objects.filter(
+            user=self, organisation=organisation
+        ).first()
+        group_permissions = UserPermissionGroupOrganisationPermission.objects.filter(
+            group__users=self, organisation=organisation
+        )
+
+        all_permission_keys = set()
+        for organisation_permission in [user_permission, *group_permissions]:
+            if organisation_permission is not None:
+                all_permission_keys.update(
+                    {
+                        permission.key
+                        for permission in organisation_permission.permissions.all()
+                    }
+                )
+
+        return all_permission_keys
 
 
 class UserPermissionGroup(models.Model):

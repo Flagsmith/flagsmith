@@ -9,14 +9,20 @@ from environments.permissions.models import (
     UserEnvironmentPermission,
 )
 from organisations.models import Organisation, OrganisationRole
-from organisations.permissions.models import UserOrganisationPermission
-from organisations.permissions.permissions import ORGANISATION_PERMISSIONS
+from organisations.permissions.models import (
+    UserOrganisationPermission,
+    UserPermissionGroupOrganisationPermission,
+)
+from organisations.permissions.permissions import (
+    CREATE_PROJECT,
+    ORGANISATION_PERMISSIONS,
+)
 from projects.models import (
     Project,
     ProjectPermissionModel,
     UserProjectPermission,
 )
-from users.models import FFAdminUser
+from users.models import FFAdminUser, UserPermissionGroup
 
 
 @pytest.mark.django_db
@@ -170,3 +176,44 @@ class FFAdminUserTestCase(TestCase):
             )
             for permission_key, _ in ORGANISATION_PERMISSIONS
         )
+
+
+@pytest.mark.django_db
+@pytest.mark.parametrize(
+    "user_permission_keys, group_permission_keys, expected_keys",
+    (
+        ([], [], set()),
+        ([CREATE_PROJECT], [], {CREATE_PROJECT}),
+        ([], [CREATE_PROJECT], {CREATE_PROJECT}),
+        ([CREATE_PROJECT], [CREATE_PROJECT], {CREATE_PROJECT}),
+    ),
+)
+def test_get_permission_keys_for_organisation(
+    user_permission_keys, group_permission_keys, expected_keys
+):
+    # Given
+    user = FFAdminUser.objects.create(email="test@example.com")
+    organisation = Organisation.objects.create(name="Test org")
+    user.add_organisation(organisation)
+    group = UserPermissionGroup.objects.create(
+        name="Test group", organisation=organisation
+    )
+    group.users.add(user)
+
+    if user_permission_keys:
+        user_permission = UserOrganisationPermission.objects.create(
+            user=user, organisation=organisation
+        )
+        user_permission.set_permissions(user_permission_keys)
+
+    if group_permission_keys:
+        group_permission = UserPermissionGroupOrganisationPermission.objects.create(
+            group=group, organisation=organisation
+        )
+        group_permission.set_permissions(group_permission_keys)
+
+    # When
+    permission_keys = user.get_permission_keys_for_organisation(organisation)
+
+    # Then
+    assert permission_keys == expected_keys
