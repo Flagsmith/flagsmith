@@ -6,11 +6,8 @@
   "scripts": {
     "kill": "kill -9 $(lsof -ti tcp:4444)",
     "test:bundle": "cross-env STATIC_ASSET_CDN_URL=/ E2E=1 npm run bundle",
-    "test:init": "cross-env NODE_ENV=production E2E=true nightwatch e2e/initialise.js",
-    "test:local": "npm run test:init && cross-env NODE_ENV=production E2E=true nightwatch",
-    "test:local:10": "npm run test:local && npm run test:local && npm run test:local && npm run test:local && npm run test:local",
-    "test": "npm run test:bundle && cross-env NODE_ENV=production E2E=true node ./e2e/init-test-cafe",
     "test:dev": "cross-env NODE_ENV=production E2E=true E2E_DEV=true node ./e2e/init-test-cafe",
+    "test": "npm run test:bundle && cross-env NODE_ENV=production E2E=true node ./e2e/init-test-cafe",
     "env": "node ./bin/env.js",
     "start": "cross-env NODE_ENV=production node ./server",
     "dev": "cross-env npm run env && node_modules/.bin/nodemon --watch server --ignore server/config/config.json --watch webpack --exec node ./server",

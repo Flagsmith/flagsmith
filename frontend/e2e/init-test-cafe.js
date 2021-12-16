@@ -24,13 +24,14 @@ createTestCafe()
         const runner = testcafe.createRunner();
         await runner
             .src(['./e2e/init.cafe.js'])
-            .browsers(process.env.E2E_DEV ? ['chrome'] : ['chrome:headless'])
+            .browsers(process.env.E2E_DEV ? ['chrome:headless'] : ['chrome:headless']) // always headless
             .run()
             .then((v) => {
                 if (!v) {
                     return runner
                         .src(['./e2e/cafe'])
                         .browsers(process.env.E2E_DEV ? ['chrome'] : ['chrome:headless'])
+                        .concurrency(4)
                         .run();
                 }
                 return v;
