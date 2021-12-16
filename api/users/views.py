@@ -12,7 +12,7 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 
 from organisations.models import Organisation
-from organisations.permissions import (
+from organisations.permissions.permissions import (
     OrganisationUsersPermission,
     UserPermissionGroupPermission,
 )

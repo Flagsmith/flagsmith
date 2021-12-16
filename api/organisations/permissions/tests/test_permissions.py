@@ -3,7 +3,7 @@ from unittest import TestCase, mock
 import pytest
 
 from organisations.models import Organisation, OrganisationRole
-from organisations.permissions import OrganisationUsersPermission
+from organisations.permissions.permissions import OrganisationUsersPermission
 from users.models import FFAdminUser
 
 mock_request = mock.MagicMock

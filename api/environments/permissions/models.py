@@ -2,7 +2,7 @@ from django.db import models
 
 from environments.models import Environment
 from environments.permissions.managers import EnvironmentPermissionManager
-from permissions.models import BasePermissionModelABC, PermissionModel
+from permissions.models import AbstractBasePermissionModel, PermissionModel
 
 
 class EnvironmentPermissionModel(PermissionModel):
@@ -12,11 +12,12 @@ class EnvironmentPermissionModel(PermissionModel):
     objects = EnvironmentPermissionManager()
 
 
-class UserEnvironmentPermission(BasePermissionModelABC):
+class UserEnvironmentPermission(AbstractBasePermissionModel):
     user = models.ForeignKey("users.FFAdminUser", on_delete=models.CASCADE)
     environment = models.ForeignKey(
         Environment, on_delete=models.CASCADE, related_query_name="userpermission"
     )
+    admin = models.BooleanField(default=False)
 
     class Meta:
         # hard code the table name after moving from the environments app to prevent
@@ -24,11 +25,12 @@ class UserEnvironmentPermission(BasePermissionModelABC):
         db_table = "environments_userenvironmentpermission"
 
 
-class UserPermissionGroupEnvironmentPermission(BasePermissionModelABC):
+class UserPermissionGroupEnvironmentPermission(AbstractBasePermissionModel):
     group = models.ForeignKey("users.UserPermissionGroup", on_delete=models.CASCADE)
     environment = models.ForeignKey(
         Environment, on_delete=models.CASCADE, related_query_name="grouppermission"
     )
+    admin = models.BooleanField(default=False)
 
     class Meta:
         # hard code the table name after moving from the environments app to prevent

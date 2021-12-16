@@ -9,7 +9,7 @@ from django.utils.encoding import python_2_unicode_compatible
 from organisations.models import Organisation
 from permissions.models import (
     PROJECT_PERMISSION_TYPE,
-    BasePermissionModelABC,
+    AbstractBasePermissionModel,
     PermissionModel,
 )
 
@@ -75,15 +75,17 @@ class ProjectPermissionModel(PermissionModel):
     objects = ProjectPermissionManager()
 
 
-class UserPermissionGroupProjectPermission(BasePermissionModelABC):
+class UserPermissionGroupProjectPermission(AbstractBasePermissionModel):
     group = models.ForeignKey("users.UserPermissionGroup", on_delete=models.CASCADE)
     project = models.ForeignKey(
         Project, on_delete=models.CASCADE, related_query_name="grouppermission"
     )
+    admin = models.BooleanField(default=False)
 
 
-class UserProjectPermission(BasePermissionModelABC):
+class UserProjectPermission(AbstractBasePermissionModel):
     user = models.ForeignKey("users.FFAdminUser", on_delete=models.CASCADE)
     project = models.ForeignKey(
         Project, on_delete=models.CASCADE, related_query_name="userpermission"
     )
+    admin = models.BooleanField(default=False)
