@@ -64,7 +64,6 @@ class SlackConfigurationViewSet(IntegrationCommonViewSet):
             project=env.project, defaults={"api_token": bot_token}
         )
 
-        # TODO: where should we redirect? after successful auth
         return Response("Success")
 
     @action(detail=False, methods=["GET"], url_path="oauth")
