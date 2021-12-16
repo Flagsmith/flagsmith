@@ -19,7 +19,7 @@ from integrations.slack.slack import get_bot_token, get_channels_data
 from .exceptions import InValidStateError
 
 
-class SlackConfigurationViewSet(IntegrationCommonViewSet):
+class SlackEnvironmentViewSet(IntegrationCommonViewSet):
     serializer_class = SlackEnvironmentSerializer
     pagination_class = None  # set here to ensure documentation is correct
     model_class = SlackEnvironment
