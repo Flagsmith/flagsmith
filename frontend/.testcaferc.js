@@ -6,6 +6,7 @@ module.exports = {
     "hostname": "localhost",
     quarantineMode: false,
     skipJsErrors: true,
+    cache: true,
     "videoPath": "reports/screen-captures",
     "videoOptions": {
         "singleFile": true,
