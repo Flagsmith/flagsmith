@@ -95,7 +95,7 @@ test('[Initialise]', async () => {
     await assertTextContent(byId('feature-value-1'), '12');
 
     log('Try it again');
-    await click('#try-it-btn');
+    await click('try-it-btn');
     text = await getText('#try-it-results');
     try { json = JSON.parse(text); } catch (e) { throw new Error('Try it results are not valid JSON'); }
     await t.expect(json.header_size.value).eql(12);
