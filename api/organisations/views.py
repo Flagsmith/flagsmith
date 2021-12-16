@@ -24,7 +24,8 @@ from organisations.models import (
     OrganisationWebhook,
     Subscription,
 )
-from organisations.permissions import (
+from organisations.permissions.models import OrganisationPermissionModel
+from organisations.permissions.permissions import (
     NestedOrganisationEntityPermission,
     OrganisationPermission,
 )
@@ -36,6 +37,10 @@ from organisations.serializers import (
     OrganisationWebhookSerializer,
     PortalUrlSerializer,
     UpdateSubscriptionSerializer,
+)
+from permissions.serializers import (
+    MyUserObjectPermissionsSerializer,
+    PermissionModelSerializer,
 )
 from projects.serializers import ProjectSerializer
 from users.serializers import UserIdSerializer
@@ -59,6 +64,10 @@ class OrganisationViewSet(viewsets.ModelViewSet):
             return InfluxDataSerializer
         elif self.action == "get_hosted_page_url_for_subscription_upgrade":
             return GetHostedPageForSubscriptionUpgradeSerializer
+        elif self.action == "permissions":
+            return PermissionModelSerializer
+        elif self.action == "my_permissions":
+            return MyUserObjectPermissionsSerializer
         return OrganisationSerializerFull
 
     def get_serializer_context(self):
@@ -181,6 +190,24 @@ class OrganisationViewSet(viewsets.ModelViewSet):
             data={"events_list": get_multiple_event_list_for_organisation(pk)}
         )
         serializer.is_valid(raise_exception=True)
+        return Response(serializer.data)
+
+    @action(detail=False, methods=["GET"])
+    def permissions(self, request):
+        organisation_permissions = OrganisationPermissionModel.objects.all()
+        serializer = self.get_serializer(instance=organisation_permissions, many=True)
+        return Response(serializer.data)
+
+    @action(detail=True, methods=["GET"], url_path="my-permissions")
+    def my_permissions(self, request, pk):
+        org = self.get_object()
+        permission_keys = request.user.get_permission_keys_for_organisation(org)
+        serializer = self.get_serializer(
+            instance={
+                "permissions": permission_keys,
+                "admin": request.user.is_admin(org),
+            }
+        )
         return Response(serializer.data)
 
 

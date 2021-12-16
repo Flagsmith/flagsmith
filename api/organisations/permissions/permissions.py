@@ -4,6 +4,12 @@ from rest_framework.permissions import BasePermission
 
 from organisations.models import Organisation
 
+CREATE_PROJECT = "CREATE_PROJECT"
+
+ORGANISATION_PERMISSIONS = (
+    (CREATE_PROJECT, "Allows the user to create projects in this organisation."),
+)
+
 
 class NestedOrganisationEntityPermission(BasePermission):
     def has_permission(self, request, view):
@@ -20,11 +26,7 @@ class NestedOrganisationEntityPermission(BasePermission):
     def has_object_permission(self, request, view, obj):
         organisation_id = view.kwargs.get("organisation_pk")
         organisation = Organisation.objects.get(id=organisation_id)
-
-        if request.user.is_admin(organisation):
-            return True
-
-        return False
+        return request.user.is_admin(organisation)
 
 
 class OrganisationPermission(BasePermission):
@@ -34,7 +36,9 @@ class OrganisationPermission(BasePermission):
         return True
 
     def has_object_permission(self, request, view, obj):
-        if request.user.is_admin(obj):
+        if request.user.is_admin(obj) or (
+            view.action == "my_permissions" and obj in request.user.organisations.all()
+        ):
             return True
 
         raise PermissionDenied(

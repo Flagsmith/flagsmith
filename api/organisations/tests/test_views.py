@@ -15,6 +15,8 @@ from environments.models import Environment
 from features.models import Feature, FeatureSegment
 from organisations.invites.models import Invite
 from organisations.models import Organisation, OrganisationRole, Subscription
+from organisations.permissions.models import UserOrganisationPermission
+from organisations.permissions.permissions import CREATE_PROJECT
 from projects.models import Project
 from segments.models import Segment
 from users.models import FFAdminUser, UserPermissionGroup
@@ -433,6 +435,59 @@ class OrganisationTestCase(TestCase):
         mock_get_hosted_page_url.assert_called_once_with(
             subscription_id=subscription.subscription_id, plan_id=plan_id
         )
+
+    def test_get_permissions(self):
+        # Given
+        url = reverse("api-v1:organisations:organisation-permissions")
+
+        # When
+        response = self.client.get(url)
+
+        # Then
+        assert response.status_code == status.HTTP_200_OK
+        assert len(response.json()) == 1
+
+    def test_get_my_permissions_for_non_admin(self):
+        # Given
+        organisation = Organisation.objects.create(name="Test org")
+        self.user.add_organisation(organisation)
+        user_permission = UserOrganisationPermission.objects.create(
+            user=self.user, organisation=organisation
+        )
+        user_permission.add_permission(CREATE_PROJECT)
+
+        url = reverse(
+            "api-v1:organisations:organisation-my-permissions", args=[organisation.id]
+        )
+
+        # When
+        response = self.client.get(url)
+
+        # Then
+        assert response.status_code == status.HTTP_200_OK
+
+        response_json = response.json()
+        assert response_json["permissions"] == [CREATE_PROJECT]
+        assert response_json["admin"] is False
+
+    def test_get_my_permissions_for_admin(self):
+        # Given
+        organisation = Organisation.objects.create(name="Test org")
+        self.user.add_organisation(organisation, OrganisationRole.ADMIN)
+
+        url = reverse(
+            "api-v1:organisations:organisation-my-permissions", args=[organisation.id]
+        )
+
+        # When
+        response = self.client.get(url)
+
+        # Then
+        assert response.status_code == status.HTTP_200_OK
+
+        response_json = response.json()
+        assert response_json["permissions"] == []
+        assert response_json["admin"] is True
 
 
 @pytest.mark.django_db

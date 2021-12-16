@@ -32,7 +32,7 @@ class Organisation(models.Model):
     alerted_over_plan_limit = models.BooleanField(default=False)
     stop_serving_flags = models.BooleanField(
         default=False,
-        help_text="Enable this to cease serving flags for this " "organisation.",
+        help_text="Enable this to cease serving flags for this organisation.",
     )
     restrict_project_create_to_admin = models.BooleanField(default=False)
     persist_trait_data = models.BooleanField(
