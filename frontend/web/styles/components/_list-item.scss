@@ -58,3 +58,14 @@
 	left: 0.25em;
 	transform: rotate(-135deg);
 }
+
+
+.dark {
+	.list-item {
+		&.clickable:hover {
+			.btn--link {
+				color: $dark-highlight-color;
+			}
+		}
+	}
+}
