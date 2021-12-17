@@ -42,7 +42,7 @@ jobs:
             - name: Copy pip requirements
               run: |
                   cp api/requirements.txt .
-                  
+
             - name: Restore VirtualEnv from cache
               uses: syphar/restore-virtualenv@v1.2
               id: cache-e2e-api
@@ -74,10 +74,11 @@ jobs:
             - name: Run E2E Tests with Chromedriver
               working-directory: frontend
               env:
-                  ENV: local
-                  STATIC_ASSET_CDN_URL: /
                   E2E_TEST_TOKEN_DEV: some-token
                   ENABLE_INFLUXDB_FEATURES: false
+                  ENV: local
+                  SLACK_TOKEN: ${{ secrets.SLACK_TOKEN }}
+                  STATIC_ASSET_CDN_URL: /
               run: |
                   wget -q https://dl.google.com/linux/chrome/deb/pool/main/g/google-chrome-stable/google-chrome-stable_96.0.4664.45-1_amd64.deb
                   sudo apt install --allow-downgrades -y ./google-chrome*.deb -f
