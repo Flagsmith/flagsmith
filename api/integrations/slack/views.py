@@ -45,11 +45,8 @@ class SlackEnvironmentViewSet(IntegrationCommonViewSet):
         serializer.is_valid()
         return Response(serializer.data)
 
-    def _get_slack_callback_url(self, **kwargs):
-        return self.reverse_action("slack-oauth-callback", kwargs=kwargs)
-
     @action(detail=False, methods=["GET"], url_path="callback", permission_classes=[])
-    def slack_oauth_callback(self, request, *args, **kwargs):
+    def slack_oauth_callback(self, request, environment_api_key):
         code = request.GET.get("code")
         if not code:
             return Response(
@@ -58,7 +55,9 @@ class SlackEnvironmentViewSet(IntegrationCommonViewSet):
             )
         env = self.get_environment_from_request()
         validate_state(request.GET.get("state"), request)
-        bot_token = get_bot_token(code, self._get_slack_callback_url(**kwargs))
+        bot_token = get_bot_token(
+            code, self._get_slack_callback_url(environment_api_key)
+        )
 
         SlackConfiguration.objects.update_or_create(
             project=env.project, defaults={"api_token": bot_token}
@@ -67,7 +66,7 @@ class SlackEnvironmentViewSet(IntegrationCommonViewSet):
         return Response("Success")
 
     @action(detail=False, methods=["GET"], url_path="oauth")
-    def slack_oauth_init(self, request, *args, **kwargs):
+    def slack_oauth_init(self, request, environment_api_key):
         if not settings.SLACK_CLIENT_ID:
             return Response(
                 data={"message": "Slack is not configured"},
@@ -78,10 +77,13 @@ class SlackEnvironmentViewSet(IntegrationCommonViewSet):
         request.session["state"] = state
         authorize_url_generator = AuthorizeUrlGenerator(
             client_id=settings.SLACK_CLIENT_ID,
-            redirect_uri=self._get_slack_callback_url(**kwargs),
+            redirect_uri=self._get_slack_callback_url(environment_api_key),
             scopes=["chat:write", "channels:read", "channels:join"],
         )
         return redirect(authorize_url_generator.generate(state))
+
+    def _get_slack_callback_url(self, environment_api_key):
+        return self.reverse_action("slack-oauth-callback", args=[environment_api_key])
 
 
 def validate_state(state, request):

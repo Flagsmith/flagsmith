@@ -25,7 +25,7 @@ class SlackWrapper(AbstractBaseEventIntegrationWrapper):
 
 
 def get_bot_token(code: str, redirect_uri: str) -> str:
-    client = WebClient()
+    client = get_client()
     oauth_response = client.oauth_v2_access(
         client_id=settings.SLACK_CLIENT_ID,
         client_secret=settings.SLACK_CLIENT_SECRET,
@@ -48,7 +48,7 @@ def get_client(api_token: str = None) -> WebClient:
 
 def get_channels_data(api_token: str) -> typing.List[typing.Mapping[str, str]]:
     """
-    Returns a dictionary with channel_name and channel_id of non archived
+    Returns a list of dictionary with channel_name and channel_id of non archived
     public channels.
     """
 
