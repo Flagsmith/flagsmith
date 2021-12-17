@@ -129,7 +129,7 @@ class TheComponent extends Component {
                                             </div>
                                             <Flex className="mr-2">
                                                 <Permission
-                                                  level="environment" permission="ADMIN"
+                                                  level="environment" permission={Utils.getManageFeaturePermission()}
                                                   id={this.props.match.params.environmentId}
                                                 >
                                                     {({ permission, isLoading }) => (
@@ -154,7 +154,7 @@ class TheComponent extends Component {
                                             </Flex>
                                             <Flex className="ml-2">
                                                 <Permission
-                                                  level="environment" permission="ADMIN"
+                                                  level="environment" permission={Utils.getManageFeaturePermission()}
                                                   id={this.props.match.params.environmentId}
                                                 >
                                                     {({ permission, isLoading }) => (

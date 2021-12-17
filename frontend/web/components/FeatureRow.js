@@ -11,6 +11,7 @@ class TheComponent extends Component {
     static contextTypes = {
         router: propTypes.object.isRequired,
     };
+
     state = {};
 
     confirmToggle = (projectFlag, environmentFlag, cb) => {
@@ -50,7 +51,7 @@ class TheComponent extends Component {
         const isProtected = TagStore.hasProtectedTag(projectFlag, parseInt(projectId));
 
         if (this.props.condensed) {
-            return (
+            return Utils.renderWithPermission(permission, Constants.environmentPermissions(Utils.getManageFeaturePermissionDescription()), (
                 <Row>
                     <div className={`mr-2 ${this.props.fadeEnabled && 'faded'}`}>
                         <Switch
@@ -58,7 +59,7 @@ class TheComponent extends Component {
                           data-test={`feature-switch-${this.props.index}${environmentFlags[id] && environmentFlags[id].enabled ? '-on' : '-off'}`}
                           checked={environmentFlags[id] && environmentFlags[id].enabled}
                           onChange={() => this.confirmToggle(projectFlag, environmentFlags[id], (environments) => {
-                              toggleFlag(_.findIndex(projectFlags, { id }), environments,null, this.props.environmentFlags);
+                              toggleFlag(_.findIndex(projectFlags, { id }), environments, null, this.props.environmentFlags);
                           })}
                         />
                     </div>
@@ -70,7 +71,7 @@ class TheComponent extends Component {
                         />
                     </div>
                 </Row>
-            );
+            ));
         }
 
         return (
@@ -103,7 +104,7 @@ class TheComponent extends Component {
                 </div>
                 <Row>
                     {
-                    Utils.renderWithPermission(permission, Constants.environmentPermissions('Admin'), (
+                    Utils.renderWithPermission(permission, Constants.environmentPermissions(Utils.getManageFeaturePermissionDescription()), (
                         <Row style={{
                             marginTop: 5,
                             marginBottom: 5,
