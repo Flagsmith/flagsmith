@@ -23,7 +23,7 @@ module.exports = Object.assign({}, require('./base/_utils'), {
         if (flagsmith.hasFeature('update_feature_state_permission')) {
             return 'Update Feature State';
         }
-        return 'ADMIN';
+        return 'Admin';
     },
 
 
