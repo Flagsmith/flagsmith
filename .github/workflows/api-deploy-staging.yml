@@ -43,8 +43,9 @@ jobs:
             - name: Test with Chromedriver
               working-directory: frontend
               env:
-                  STATIC_ASSET_CDN_URL: /
                   E2E_TEST_TOKEN_STAGING: ${{ secrets.E2E_TEST_TOKEN }}
+                  SLACK_TOKEN: ${{ secrets.SLACK_TOKEN }}
+                  STATIC_ASSET_CDN_URL: /
               run: |
                   wget -q https://dl.google.com/linux/chrome/deb/pool/main/g/google-chrome-stable/google-chrome-stable_96.0.4664.45-1_amd64.deb
                   sudo apt install --allow-downgrades -y ./google-chrome*.deb -f

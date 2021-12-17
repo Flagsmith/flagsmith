@@ -22,7 +22,7 @@ createTestCafe()
             });
         });
         const runner = testcafe.createRunner();
-        await runner
+        return runner
             .src(['./e2e/init.cafe.js'])
             .browsers(process.env.E2E_DEV ? ['chrome:headless'] : ['chrome:headless']) // always headless
             .run()
@@ -37,16 +37,19 @@ createTestCafe()
                 return v;
             });
     })
-    .then(async () => {
+    .then(async (v) => {
         // Upload files
+        console.log(`Test failures ${v}`);
         if (fs.existsSync(dir) && !process.env.E2E_DEV) {
             try {
                 const files = fs.readdirSync(dir);
                 await Promise.all(files.map(f => upload(path.join(dir, f))));
             } catch (e) { console.log('error uploading files', e); }
+        } else {
+            console.log('No files to upload');
         }
         // Shut down server and testcafe
         server.kill('SIGINT');
         testcafe.close();
-        process.exit(0);
+        process.exit(v);
     });
