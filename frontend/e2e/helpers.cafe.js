@@ -25,8 +25,8 @@ export const gotoFeatures = async () => {
 };
 
 export const click = async (selector) => {
-    // await waitForElementVisible(selector);
-    // await t.expect(Selector(selector).hasAttribute('disabled')).notOk('ready for testing', { timeout: 5000 });
+    await waitForElementVisible(selector);
+    await t.expect(Selector(selector).hasAttribute('disabled')).notOk('ready for testing', { timeout: 5000 });
     await t.click(selector);
 };
 export const gotoSegments = async () => {
