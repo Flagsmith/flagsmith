@@ -64,7 +64,10 @@ class Organisation(models.Model):
         return self.users.count()
 
     def has_subscription(self):
-        return hasattr(self, "subscription")
+        return (
+            hasattr(self, "subscription")
+            and self.subscription.subscription_id is not None
+        )
 
     def over_plan_seats_limit(self):
         if self.has_subscription():
