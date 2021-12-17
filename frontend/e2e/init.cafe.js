@@ -86,7 +86,6 @@ test('[Initialise]', async () => {
     try { json = JSON.parse(text); } catch (e) { throw new Error('Try it results are not valid JSON'); }
     await t.expect(json.header_size.value).eql('big');
     await t.expect(json.header_enabled.enabled).eql(true);
-    await t.eval(() => location.reload(true));
 
     log('Update feature');
     await click(byId('feature-item-1'));
