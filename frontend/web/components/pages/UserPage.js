@@ -370,7 +370,7 @@ const UserPage = class extends Component {
                                                       items={traits}
                                                       renderFooter={() => (
                                                           <FormGroup className="text-center mb-2">
-                                                              <Button id="add-trait" onClick={this.createTrait}>Add new trait</Button>
+                                                              <Button className="mb-2" id="add-trait" onClick={this.createTrait}>Add new trait</Button>
                                                           </FormGroup>
                                                       )}
                                                       renderRow={({ id, trait_value, trait_key }, i) => (
@@ -422,7 +422,7 @@ const UserPage = class extends Component {
                                                               <div className="text-center">
                                                                     This user has no traits.
                                                                   <FormGroup className="text-center mb-0 mt-2">
-                                                                      <Button id="add-trait" onClick={this.createTrait}>Add new trait</Button>
+                                                                      <Button className="my-1" id="add-trait" onClick={this.createTrait}>Add new trait</Button>
                                                                   </FormGroup>
                                                               </div>
                                                           </Panel>
