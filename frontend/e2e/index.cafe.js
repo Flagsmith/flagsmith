@@ -11,6 +11,7 @@ const dir = path.join(__dirname, '../reports/screen-captures');
 if (fs.existsSync(dir)) {
     fs.rmdirSync(dir, { recursive: true });
 }
+const start = Date.now().valueOf();
 createTestCafe()
     .then(async (tc) => {
         testcafe = tc;
@@ -39,7 +40,7 @@ createTestCafe()
     })
     .then(async (v) => {
         // Upload files
-        console.log(`Test failures ${v}`);
+        console.log(`Test failures ${v} in ${Date.now().valueOf() - start}ms`);
         if (fs.existsSync(dir) && !process.env.E2E_DEV) {
             try {
                 const files = fs.readdirSync(dir);

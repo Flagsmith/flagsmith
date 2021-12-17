@@ -137,7 +137,7 @@ const EnvironmentSettingsPage = class extends Component {
                                                         <Column className="m-l-0">
                                                             <Input
                                                               ref={e => this.input = e}
-                                                              value={this.state.name || env.name}
+                                                              value={typeof this.state.name == "string"  ? this.state.name : env.name}
                                                               inputClassName="input input--wide"
                                                               name="env-name"
 
