@@ -179,7 +179,7 @@ const FeaturesPage = class extends Component {
                                                             : null}
                                                     </FormGroup>
                                                 </Row>
-                                                <Permission level="environment" permission="ADMIN" id={this.props.match.params.environmentId}>
+                                                <Permission level="environment" permission={Utils.getManageFeaturePermission()} id={this.props.match.params.environmentId}>
                                                     {({ permission, isLoading }) => (
                                                         <FormGroup className="mb-4">
                                                             <PanelSearch

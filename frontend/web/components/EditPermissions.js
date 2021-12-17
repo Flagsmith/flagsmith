@@ -144,9 +144,11 @@ class _EditPermissionsModal extends Component {
                                           <div className="list-item-footer faint">
                                               {
                                               hasRbacPermission ? `Full View and Write permissions for the given ${Format.camelCase(this.props.level)}.`
-                                                  : <span>
+                                                  : (
+                                                      <span>
                                                       Role-based access is not available in our Open Source version. Please contact <a href="mailto:sales@flagsmith.com">sales@flagsmith.com</a> for more information on our licensing options.
-                                                  </span>
+                                                      </span>
+                                                  )
                                             }
                                           </div>
                                       </Flex>
@@ -159,7 +161,8 @@ class _EditPermissionsModal extends Component {
                                     className="no-pad"
                                     items={permissions}
                                     renderRow={(p) => {
-                                        const disabled = this.props.level === 'project' && p.key !== 'VIEW_PROJECT' && !this.hasPermission('VIEW_PROJECT');
+                                        const levelUpperCase = this.props.level.toUpperCase();
+                                        const disabled = p.key !== `VIEW_${levelUpperCase}` && !this.hasPermission(`VIEW_${levelUpperCase}`);
                                         return (
                                             <div key={p.key} style={this.admin() ? { opacity: 0.5 } : null} className="list-item">
                                                 <Row>
