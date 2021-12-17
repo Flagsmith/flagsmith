@@ -11,7 +11,7 @@ class SlackConfiguration(models.Model):
     project = models.OneToOneField(
         Project, on_delete=models.CASCADE, related_name="slack_config"
     )
-    created_date = models.DateTimeField("DateCreated", auto_now_add=True)
+    created_date = models.DateTimeField(auto_now_add=True)
 
 
 class SlackEnvironment(LifecycleModel):
