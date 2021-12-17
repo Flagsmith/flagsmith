@@ -12,15 +12,29 @@ module.exports = Object.assign({}, require('./base/_utils'), {
         return p.innerHTML;
     },
 
+    getManageFeaturePermission() {
+        if (flagsmith.hasFeature('update_feature_state_permission')) {
+            return 'UPDATE_FEATURE_STATE';
+        }
+        return 'ADMIN';
+    },
+
+    getManageFeaturePermissionDescription() {
+        if (flagsmith.hasFeature('update_feature_state_permission')) {
+            return 'Update Feature State';
+        }
+        return 'ADMIN';
+    },
+
 
     renderWithPermission(permission, name, el) {
         return permission ? (
             el
         ) : (
             <Tooltip
-                title={<div>{el}</div>}
-                place="right"
-                html
+              title={<div>{el}</div>}
+              place="right"
+              html
             >{name}
             </Tooltip>
         );
