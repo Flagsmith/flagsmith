@@ -75,8 +75,9 @@ a, .btn, button{
         &--link {
             color: $bt-link-color-dark;
             background-color: transparent;
-            &:hover, &:active  {
+            &:hover, &:active, &:focus  {
                 background-color: transparent;
+                color: $dark-highlight-color;
             }
         }
         &__oauth {
