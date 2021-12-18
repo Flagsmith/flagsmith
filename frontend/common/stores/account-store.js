@@ -353,6 +353,7 @@ const store = Object.assign({}, BaseStore, {
         return id && store.getOrganisationRole(id) === 'ADMIN';
     },
     getPlans() {
+        if (!store.model) return []
         return _.filter(store.model.organisations.map(org => org.subscription && org.subscription.plan), plan => !!plan);
     },
     getDate() {
