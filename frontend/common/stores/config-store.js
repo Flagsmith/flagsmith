@@ -17,7 +17,7 @@ const controller = {
         if (flagsmith.hasFeature('dark_mode')) {
             document.body.classList.add('dark');
         }
-        if (!Object.keys(oldFlags).length) {
+        if (!oldFlags || !Object.keys(oldFlags).length) {
             store.loaded();
         } else {
             store.changed();
