@@ -385,7 +385,7 @@ const OrganisationSettingsPage = class extends Component {
                                                 <Row space className="mt-5">
                                                     <h3 className="m-b-0">Team Members</h3>
                                                     <Button
-                                                      className="mr-2"
+                                                        style={{ width: 180 }}
                                                       id="btn-invite" onClick={() => openModal('Invite Users',
                                                           <InviteUsersModal/>)}
                                                       type="button"
@@ -440,9 +440,9 @@ const OrganisationSettingsPage = class extends Component {
                                                                  </div>
                                                                  {inviteLinks.find(f => f.role === this.state.role) && (
                                                                   <>
-                                                                      <div className="mr-2">
+                                                                      <Flex className="mr-4">
                                                                           <Input
-                                                                            style={{ width: 450 }}
+                                                                            style={{ width: "100%" }}
                                                                             value={`${document.location.origin}/invite/${inviteLinks.find(f => f.role === this.state.role).hash}`}
                                                                             data-test="invite-link"
                                                                             inputClassName="input input--wide"
@@ -452,12 +452,15 @@ const OrganisationSettingsPage = class extends Component {
                                                                             title={<h3>Link</h3>}
                                                                             placeholder="Link"
                                                                           />
-                                                                      </div>
+                                                                      </Flex>
+
                                                                       <div>
-                                                                          <Button onClick={() => {
-                                                                              navigator.clipboard.writeText(`${document.location.origin}/invite/${inviteLinks.find(f => f.role === this.state.role).hash}`);
-                                                                              toast('Link copied');
-                                                                          }}
+                                                                          <Button
+                                                                            style={{ width: 180 }}
+                                                                            onClick={() => {
+                                                                                navigator.clipboard.writeText(`${document.location.origin}/invite/${inviteLinks.find(f => f.role === this.state.role).hash}`);
+                                                                                toast('Link copied');
+                                                                            }}
                                                                           >
                                                                               Copy invite link
                                                                           </Button>
@@ -529,7 +532,7 @@ const OrganisationSettingsPage = class extends Component {
                                                                                       />
                                                                                   </div>
                                                                               ) : (
-                                                                                  <div className="pl-3">{Constants.roles[role] || ''}</div>
+                                                                                  <div className="pl-3 mr-2">{Constants.roles[role] || ''}</div>
                                                                               )}
                                                                           </Column>
 

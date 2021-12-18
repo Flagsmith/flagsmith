@@ -75,7 +75,7 @@ const InviteUsers = class extends Component {
                   }}
                   >
                       {_.map(invites, (invite, index) => (
-                        <Row key={index}>
+                        <Row className="mt-2" key={index}>
                             <Flex>
                                 <InputGroup
                                   ref={e => this.input = e}
@@ -90,7 +90,7 @@ const InviteUsers = class extends Component {
                                   placeholder="E-mail address"
                                 />
                             </Flex>
-                            <Flex style={{ top: 6, position: 'relative' }}>
+                            <Flex className="mb-2" style={{ position: 'relative' }}>
                                 <Select
                                   data-test="select-role"
                                   placeholder="Select a role"
