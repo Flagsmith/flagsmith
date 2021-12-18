@@ -75,7 +75,7 @@ const InviteUsers = class extends Component {
                   }}
                   >
                       {_.map(invites, (invite, index) => (
-                        <Row key={index}>
+                        <Row className="mt-2" key={index}>
                             <Flex>
                                 <InputGroup
                                   ref={e => this.input = e}
