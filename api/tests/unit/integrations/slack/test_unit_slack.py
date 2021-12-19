@@ -1,7 +1,3 @@
-from unittest import mock
-
-import pytest
-
 from integrations.slack.slack import (
     SlackWrapper,
     get_bot_token,
