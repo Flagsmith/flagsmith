@@ -16,7 +16,7 @@ from integrations.slack.serializers import (
 )
 from integrations.slack.slack import get_bot_token, get_channels_data
 
-from .exceptions import InValidStateError
+from .exceptions import InvalidStateError
 
 
 class SlackEnvironmentViewSet(IntegrationCommonViewSet):
@@ -62,8 +62,7 @@ class SlackEnvironmentViewSet(IntegrationCommonViewSet):
         SlackConfiguration.objects.update_or_create(
             project=env.project, defaults={"api_token": bot_token}
         )
-
-        return Response("Success")
+        return Response(status=status.HTTP_204_NO_CONTENT)
 
     @action(detail=False, methods=["GET"], url_path="oauth")
     def slack_oauth_init(self, request, environment_api_key):
@@ -89,5 +88,5 @@ class SlackEnvironmentViewSet(IntegrationCommonViewSet):
 def validate_state(state, request):
     state_before = request.session.pop("state", None)
     if state_before != state:
-        raise InValidStateError()
+        raise InvalidStateError()
     return True

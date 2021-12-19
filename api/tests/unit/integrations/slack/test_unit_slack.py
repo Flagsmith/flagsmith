@@ -11,12 +11,7 @@ from integrations.slack.slack import (
 )
 
 
-@pytest.fixture()
-def mocked_get_client(mocker):
-    return mocker.patch("integrations.slack.slack.get_client")
-
-
-def test_get_channels_data_response_structure():
+def test_get_channels_data_response_structure(mocker, slack_mocked_get_client):
     # Given
     api_token = "test_token"
     response_data = {
@@ -39,17 +34,20 @@ def test_get_channels_data_response_structure():
     }
 
     # When
-    with mock.patch("integrations.slack.slack.get_client") as client:
-        client.return_value.conversations_list.return_value = response_data
-        channels = get_channels_data(api_token)
+
+    mocked_client = mocker.MagicMock()
+    slack_mocked_get_client.return_value = mocked_client
+    mocked_client.conversations_list.return_value = response_data
+    channels = get_channels_data(api_token)
 
     # Then
     assert channels == [
         {"channel_name": "channel1", "channel_id": "id1"},
         {"channel_name": "channel2", "channel_id": "id2"},
     ]
-    client.assert_called_with(api_token)
-    client.return_value.conversations_list.assert_called_with(exclude_archived=True)
+    slack_mocked_get_client.assert_called_with(api_token)
+
+    mocked_client.conversations_list.assert_called_with(exclude_archived=True)
 
 
 def test_get_client_makes_correct_calls(mocker):
@@ -71,7 +69,7 @@ def test_join_channel_makes_correct_call(mocker):
     channel = "channel_1"
     api_token = "random_token"
     mocked_client = mocker.MagicMock()
-    mocked_get_client = mocker.patch(
+    slack_mocked_get_client = mocker.patch(
         "integrations.slack.slack.get_client", return_value=mocked_client
     )
 
@@ -79,11 +77,11 @@ def test_join_channel_makes_correct_call(mocker):
     join_channel(api_token, channel)
 
     # Then
-    mocked_get_client.assert_called_with(api_token)
+    slack_mocked_get_client.assert_called_with(api_token)
     mocked_client.conversations_join.assert_called_with(channel=channel)
 
 
-def test_get_bot_token_makes_correct_calls(mocker, settings, mocked_get_client):
+def test_get_bot_token_makes_correct_calls(mocker, settings, slack_mocked_get_client):
     # Given
     code = "test_code"
     redirect_uri = "http://localhost"
@@ -91,12 +89,12 @@ def test_get_bot_token_makes_correct_calls(mocker, settings, mocked_get_client):
     settings.SLACK_CLIENT_SECRET = "test_client_secret"
 
     mocked_client = mocker.MagicMock()
-    mocked_get_client.return_value = mocked_client
+    slack_mocked_get_client.return_value = mocked_client
     # When
     token = get_bot_token(code, redirect_uri)
 
     # Then
-    mocked_get_client.assert_called_with()
+    slack_mocked_get_client.assert_called_with()
     mocked_client.oauth_v2_access.assert_called_with(
         client_id=settings.SLACK_CLIENT_ID,
         client_secret=settings.SLACK_CLIENT_SECRET,
@@ -106,7 +104,7 @@ def test_get_bot_token_makes_correct_calls(mocker, settings, mocked_get_client):
     assert token == mocked_client.oauth_v2_access.return_value.get.return_value
 
 
-def test_slack_initialized_correctly(mocker, mocked_get_client):
+def test_slack_initialized_correctly(mocker, slack_mocked_get_client):
     # Given
     api_token = "test_token"
     channel_id = "channel_id_1"
@@ -114,20 +112,20 @@ def test_slack_initialized_correctly(mocker, mocked_get_client):
     # When
     slack_wrapper = SlackWrapper(api_token, channel_id)
     assert slack_wrapper.channel_id == channel_id
-    assert slack_wrapper.client == mocked_get_client.return_value
+    assert slack_wrapper.client == slack_mocked_get_client.return_value
 
     # Then
-    mocked_get_client.assert_called_with(api_token)
+    slack_mocked_get_client.assert_called_with(api_token)
 
 
-def test_track_event_makes_correct_call(mocker, mocked_get_client):
+def test_track_event_makes_correct_call(mocker, slack_mocked_get_client):
     # Given
     api_token = "test_token"
     channel_id = "channel_id_1"
     event = {"text": "random_text"}
 
     mocked_client = mocker.MagicMock()
-    mocked_get_client.return_value = mocked_client
+    slack_mocked_get_client.return_value = mocked_client
 
     slack_wrapper = SlackWrapper(api_token, channel_id)
 

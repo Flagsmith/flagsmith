@@ -1,39 +1,7 @@
 import json
 
-import pytest
 from django.urls import reverse
 from rest_framework import status
-
-bot_token = "bot_token_test"
-
-
-@pytest.fixture
-def slack_project_config(mocker, django_client, environment, environment_api_key):
-    url = reverse(
-        "api-v1:environments:integrations-slack-slack-oauth-callback",
-        args=[environment_api_key],
-    )
-    mocker.patch("integrations.slack.views.get_bot_token", return_value=bot_token)
-    mocker.patch("integrations.slack.views.validate_state", return_value=True)
-    django_client.get(f"{url}?state=state&code=code")
-
-
-@pytest.fixture
-def slack_environment_config(
-    mocker, admin_client, environment, environment_api_key, slack_project_config
-):
-    url = reverse(
-        "api-v1:environments:integrations-slack-list",
-        args=[environment_api_key],
-    )
-    env_config = {"channel_id": "channel_id1", "enabled": True}
-    mocker.patch("integrations.slack.models.join_channel")
-    response = admin_client.post(
-        url,
-        data=json.dumps(env_config),
-        content_type="application/json",
-    )
-    return response.json()["id"]
 
 
 def test_get_channels_returns_400_when_slack_project_config_does_not_exist(
@@ -54,7 +22,7 @@ def test_get_channels_returns_400_when_slack_project_config_does_not_exist(
 
 
 def test_get_channels_returns_200_when_slack_project_config_exists(
-    mocker, admin_client, environment_api_key, slack_project_config
+    mocker, admin_client, environment_api_key, slack_project_config, slack_bot_token
 ):
     # Given
     url = reverse(
@@ -70,13 +38,13 @@ def test_get_channels_returns_200_when_slack_project_config_exists(
     response = admin_client.get(url)
 
     # Then
-    mocked_get_channels_data.assert_called_with(bot_token)
+    mocked_get_channels_data.assert_called_with(slack_bot_token)
     assert response.status_code == status.HTTP_200_OK
     assert response.json() == channels_data
 
 
 def test_posting_env_config_return_400_when_slack_project_config_does_not_exist(
-    admin_client, environment, environment_api_key
+    admin_client, environment, environment_api_key, slack_bot_token
 ):
     # Given
     url = reverse(
@@ -95,7 +63,12 @@ def test_posting_env_config_return_400_when_slack_project_config_does_not_exist(
 
 
 def test_posting_env_config_calls_join_channel(
-    mocker, admin_client, environment, environment_api_key, slack_project_config
+    mocker,
+    admin_client,
+    environment,
+    environment_api_key,
+    slack_project_config,
+    slack_bot_token,
 ):
     # Given
     url = reverse(
@@ -113,14 +86,19 @@ def test_posting_env_config_calls_join_channel(
     )
 
     # Then
-    mocked_join_channel.assert_called_with(bot_token, env_config["channel_id"])
+    mocked_join_channel.assert_called_with(slack_bot_token, env_config["channel_id"])
     assert response.status_code == status.HTTP_201_CREATED
     assert response.json()["enabled"] == env_config["enabled"]
     assert response.json()["channel_id"] == env_config["channel_id"]
 
 
 def test_update_environment_config_calls_join_channel(
-    mocker, admin_client, environment, environment_api_key, slack_environment_config
+    mocker,
+    admin_client,
+    environment,
+    environment_api_key,
+    slack_environment_config,
+    slack_bot_token,
 ):
     # Given
     url = reverse(
@@ -138,7 +116,7 @@ def test_update_environment_config_calls_join_channel(
     )
 
     # Then
-    mocked_join_channel.assert_called_with(bot_token, env_config["channel_id"])
+    mocked_join_channel.assert_called_with(slack_bot_token, env_config["channel_id"])
     assert response.status_code == status.HTTP_200_OK
     assert response.json()["enabled"] == env_config["enabled"]
     assert response.json()["channel_id"] == env_config["channel_id"]
