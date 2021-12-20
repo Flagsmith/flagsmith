@@ -72,7 +72,7 @@ class SlackEnvironmentViewSet(IntegrationCommonViewSet):
                 status=status.HTTP_503_SERVICE_UNAVAILABLE,
             )
 
-        state = str(uuid.uuid4())[:6]
+        state = str(uuid.uuid4())
         request.session["state"] = state
         authorize_url_generator = AuthorizeUrlGenerator(
             client_id=settings.SLACK_CLIENT_ID,
