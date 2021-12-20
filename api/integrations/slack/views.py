@@ -14,7 +14,7 @@ from integrations.slack.serializers import (
     SlackChannelListSerializer,
     SlackEnvironmentSerializer,
 )
-from integrations.slack.slack import get_bot_token, get_channels_data
+from integrations.slack.slack import SlackWrapper
 
 from .exceptions import InvalidStateError
 
@@ -40,8 +40,10 @@ class SlackEnvironmentViewSet(IntegrationCommonViewSet):
                 "Slack api token not found. Please generate the token using oauth",
                 status.HTTP_400_BAD_REQUEST,
             )
-        slack_token = config.api_token
-        serializer = self.get_serializer(data=get_channels_data(slack_token), many=True)
+        slack_wrapper = SlackWrapper(api_token=config.api_token)
+        serializer = self.get_serializer(
+            data=slack_wrapper.get_channels_data(), many=True
+        )
         serializer.is_valid()
         return Response(serializer.data)
 
@@ -55,9 +57,9 @@ class SlackEnvironmentViewSet(IntegrationCommonViewSet):
             )
         env = self.get_environment_from_request()
         validate_state(request.GET.get("state"), request)
-        bot_token = get_bot_token(
+        bot_token = SlackWrapper(
             code, self._get_slack_callback_url(environment_api_key)
-        )
+        ).get_bot_token()
 
         SlackConfiguration.objects.update_or_create(
             project=env.project, defaults={"api_token": bot_token}

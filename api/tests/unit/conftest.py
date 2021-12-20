@@ -83,8 +83,3 @@ def organisation_one_project_one_feature_one(organisation_one_project_one):
         name="feature_1",
         initial_value="feature_1_value",
     )
-
-
-@pytest.fixture()
-def slack_mocked_get_client(mocker):
-    return mocker.patch("integrations.slack.slack.get_client")

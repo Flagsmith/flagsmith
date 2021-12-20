@@ -3,7 +3,7 @@ from django_lifecycle import BEFORE_SAVE, LifecycleModel, hook
 
 from projects.models import Project
 
-from .slack import join_channel
+from .slack import SlackWrapper
 
 
 class SlackConfiguration(models.Model):
@@ -35,7 +35,9 @@ class SlackEnvironment(LifecycleModel):
 
     @hook(BEFORE_SAVE)
     def join_channel(self):
-        join_channel(self.slack_configuration.api_token, self.channel_id)
+        SlackWrapper(
+            api_token=self.slack_configuration.api_token, channel_id=self.channel_id
+        ).join_channel()
 
     class Meta:
         unique_together = ("slack_configuration", "environment")
