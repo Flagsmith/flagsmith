@@ -35,5 +35,5 @@ def test_slack_oauth_flow(
     response = admin_client.get(f"{callback_url}?state={state}&code={code}")
     assert response.status_code == status.HTTP_204_NO_CONTENT
     # Finally, verify that get_bot_token was called with correct arguments
-    mocked_slack_wrapper.assert_called_with(code, callback_url)
-    mocked_get_bot_token.assert_called_with()
+    mocked_slack_wrapper.assert_called_with()
+    mocked_get_bot_token.assert_called_with(code, callback_url)

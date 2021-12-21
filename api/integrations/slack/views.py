@@ -57,9 +57,9 @@ class SlackEnvironmentViewSet(IntegrationCommonViewSet):
             )
         env = self.get_environment_from_request()
         validate_state(request.GET.get("state"), request)
-        bot_token = SlackWrapper(
+        bot_token = SlackWrapper().get_bot_token(
             code, self._get_slack_callback_url(environment_api_key)
-        ).get_bot_token()
+        )
 
         SlackConfiguration.objects.update_or_create(
             project=env.project, defaults={"api_token": bot_token}
