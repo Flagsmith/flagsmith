@@ -14,7 +14,7 @@ Flagsmith makes it easy to create and manage features flags across web, mobile, 
 a section of code with a flag, and then use Flagsmith to toggle that feature on or off for different environments, users
 or user segments.
 
-Get up and running in 1 minute with:
+Get up and running in 1 minute via our [Self Hosted Repository](https://github.com/Flagsmith/self-hosted):
 
 ```bash
 git clone git@github.com:flagsmith/self-hosted.git
