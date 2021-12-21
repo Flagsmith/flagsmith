@@ -306,7 +306,7 @@ const HomePage = class extends React.Component {
 
                                           <div>
                                               <Row className="justify-content-center mt-2">
-                                                  Not got an account?{' '}
+                                                  Creating a new account is easy{' '}
                                                   <Link id="existing-member-btn" to={`/signup${redirect}`}>
                                                       <ButtonLink className="ml-1" buttonText=" Sign up" />
                                                   </Link>
