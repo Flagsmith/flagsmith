@@ -126,9 +126,11 @@ def test_slack_generate_event_data_with_correct_values():
     log = "some log data"
     email = "tes@email.com"
     environment_name = "test"
+
     # When
     event_data = SlackWrapper.generate_event_data(log, email, environment_name)
 
+    # Then
     assert event_data["title"] == "Flagsmith Feature Flag Event"
     assert event_data["text"] == f"{log} by user {email}"
     assert event_data["tags"] == [f"env:{environment_name}"]
