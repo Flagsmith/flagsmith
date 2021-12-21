@@ -65,7 +65,9 @@ class SlackEnvironmentViewSet(IntegrationCommonViewSet):
             project=env.project, defaults={"api_token": bot_token}
         )
         front_end_redirect_url = request.session.pop("front_end_redirect_url", None)
-        return redirect(front_end_redirect_url)
+        if front_end_redirect_url:
+            return redirect(front_end_redirect_url)
+        return Response(status=status.HTTP_204_NO_CONTENT)
 
     @action(detail=False, methods=["GET"], url_path="oauth")
     def slack_oauth_init(self, request, environment_api_key):
