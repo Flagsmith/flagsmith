@@ -9,6 +9,7 @@ from django.db import models
 from django.db.models import Q
 from django.utils.encoding import python_2_unicode_compatible
 from django.utils.translation import gettext_lazy as _
+from django_lifecycle import AFTER_CREATE, LifecycleModel, hook
 
 from environments.identities.models import Identity
 from environments.models import Environment
@@ -32,8 +33,10 @@ from projects.models import (
 )
 from users.auth_type import AuthType
 from users.exceptions import InvalidInviteError
+from users.utils.mailer_lite import MailerLite
 
 logger = logging.getLogger(__name__)
+mailer_lite = MailerLite()
 
 
 class UserManager(BaseUserManager):
@@ -75,7 +78,7 @@ class UserManager(BaseUserManager):
 
 
 @python_2_unicode_compatible
-class FFAdminUser(AbstractUser):
+class FFAdminUser(LifecycleModel, AbstractUser):
     organisations = models.ManyToManyField(
         Organisation, related_name="users", blank=True, through=UserOrganisation
     )
@@ -86,6 +89,10 @@ class FFAdminUser(AbstractUser):
     last_name = models.CharField(_("last name"), max_length=150)
     google_user_id = models.CharField(max_length=50, null=True, blank=True)
     github_user_id = models.CharField(max_length=50, null=True, blank=True)
+    is_subscribed = models.BooleanField(
+        default=False,
+        help_text="Determines wether the user is subscribed to the mailing list or not",
+    )
 
     USERNAME_FIELD = "email"
     REQUIRED_FIELDS = ["first_name", "last_name"]
@@ -96,6 +103,16 @@ class FFAdminUser(AbstractUser):
 
     def __str__(self):
         return "%s %s" % (self.first_name, self.last_name)
+
+    @hook(AFTER_CREATE)
+    def subscribe_to_mailing_list(self):
+        # TODO: Add a flag for paid user
+        user_data = {
+            "email": self.email,
+            "name": self.get_full_name(),
+        }
+        if self.is_subscribed:
+            mailer_lite.subscribe(data=user_data)
 
     @property
     def auth_type(self):

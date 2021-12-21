@@ -1,5 +1,9 @@
+from typing import Mapping
+
 import requests
-import settings
+from django.conf import settings
+
+from util.util import postpone
 
 
 class MailerLite:
@@ -7,5 +11,6 @@ class MailerLite:
         self.url = settings.MAILERLITE_BASE_URL + "subscribers"
         self.headers = {"X-MailerLite-ApiKey": settings.MAILERLITE_API_KEY}
 
-    def subscribe(self, data):
+    @postpone
+    def subscribe(self, data: Mapping):
         requests.post(self.url, data=data, headers=self.headers)
