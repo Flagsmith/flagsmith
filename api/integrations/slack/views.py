@@ -64,7 +64,8 @@ class SlackEnvironmentViewSet(IntegrationCommonViewSet):
         SlackConfiguration.objects.update_or_create(
             project=env.project, defaults={"api_token": bot_token}
         )
-        return Response(status=status.HTTP_204_NO_CONTENT)
+        front_end_redirect_url = request.session.pop("front_end_redirect_url", None)
+        return redirect(front_end_redirect_url)
 
     @action(detail=False, methods=["GET"], url_path="oauth")
     def slack_oauth_init(self, request, environment_api_key):
@@ -76,6 +77,13 @@ class SlackEnvironmentViewSet(IntegrationCommonViewSet):
 
         state = str(uuid.uuid4())
         request.session["state"] = state
+        front_end_redirect_url = request.GET.get("redirect_url")
+        if not front_end_redirect_url:
+            return Response(
+                data={"message": "redirect_url not found in query params"},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        request.session["front_end_redirect_url"] = front_end_redirect_url
         authorize_url_generator = AuthorizeUrlGenerator(
             client_id=settings.SLACK_CLIENT_ID,
             redirect_uri=self._get_slack_callback_url(environment_api_key),

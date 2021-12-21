@@ -10,12 +10,13 @@ def test_slack_oauth_flow(
     # Given
     settings.SLACK_CLIENT_ID = "slack_id"
     settings.SLACK_CLIENT_SECRET = "client_secret"
-
+    redirect_url = "http://localhost"
     # Let's start the oauth flow
-    url = reverse(
+    base_url = reverse(
         "api-v1:environments:integrations-slack-slack-oauth-init",
         args=[environment_api_key],
     )
+    url = f"{base_url}?redirect_url={redirect_url}"
     response = admin_client.get(url)
 
     # Verify the response
@@ -33,7 +34,9 @@ def test_slack_oauth_flow(
 
     # Add state and code to the callback url
     response = admin_client.get(f"{callback_url}?state={state}&code={code}")
-    assert response.status_code == status.HTTP_204_NO_CONTENT
+    # verity that the redirect worked correctly
+    assert response.status_code == status.HTTP_302_FOUND
+    assert response.url == redirect_url
     # Finally, verify that get_bot_token was called with correct arguments
     mocked_slack_wrapper.assert_called_with()
     mocked_get_bot_token.assert_called_with(code, callback_url)
