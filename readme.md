@@ -17,8 +17,8 @@ or user segments.
 Get up and running in 1 minute with:
 
 ```bash
-git clone git@github.com:flagsmith/flagsmith.git
-docker-compose -f flagsmith/docker/docker-compose.yml up
+git clone git@github.com:flagsmith/self-hosted.git
+docker-compose -f self-hosted/docker-compose.yml up
 ```
 
 ![Flagsmith Screenshot](static-files/screenshot.png)
