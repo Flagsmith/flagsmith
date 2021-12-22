@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 from __future__ import unicode_literals
 
+import enum
 import logging
 import typing
 from copy import deepcopy
@@ -8,6 +9,7 @@ from copy import deepcopy
 from django.conf import settings
 from django.core.cache import caches
 from django.db import models
+from django.utils import timezone
 from django.utils.encoding import python_2_unicode_compatible
 from django.utils.translation import ugettext_lazy as _
 from django_lifecycle import AFTER_CREATE, LifecycleModel, hook
@@ -44,7 +46,10 @@ class Environment(LifecycleModel):
         ),
         on_delete=models.CASCADE,
     )
+
+    # TODO: deprecate this field and use EnvironmentAPIKey instead
     api_key = models.CharField(default=create_hash, unique=True, max_length=100)
+
     webhooks_enabled = models.BooleanField(default=False, help_text="DEPRECATED FIELD.")
     webhook_url = models.URLField(null=True, blank=True, help_text="DEPRECATED FIELD.")
 
@@ -145,3 +150,30 @@ class Webhook(AbstractBaseWebhookModel):
     enabled = models.BooleanField(default=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
+
+
+class EnvironmentAPIKeyType(enum.Enum):
+    SERVER = "Server"
+
+
+environment_api_key_types = [(tag.name, tag.value) for tag in EnvironmentAPIKeyType]
+
+
+class EnvironmentAPIKey(models.Model):
+    environment = models.ForeignKey(
+        Environment, on_delete=models.CASCADE, related_name="api_keys"
+    )
+    api_key_type = models.CharField(
+        choices=environment_api_key_types,
+        default=EnvironmentAPIKeyType.SERVER,
+        max_length=50,
+    )  # TODO: move client side api keys to this model
+    key = models.CharField(default=create_hash, max_length=100, unique=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    name = models.CharField(max_length=100)
+    expires_at = models.DateTimeField(blank=True, null=True)
+    active = models.BooleanField(default=True)
+
+    @property
+    def is_valid(self):
+        return self.active and (not self.expires_at or self.expires_at > timezone.now())
