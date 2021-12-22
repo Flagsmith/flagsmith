@@ -797,31 +797,6 @@ const OrganisationSettingsPage = class extends Component {
                                     />
                                 )}
                             </FormGroup>
-                            {this.props.hasFeature('restrict_project_create_to_admin') && (
-                                <FormGroup className="mt-5">
-                                    <Row>
-                                        <Column>
-                                            <h3>Admin Settings</h3>
-                                            <Row>
-                                                Only allow organisation admins to create projects
-                                                <Switch
-                                                  checked={organisation.restrict_project_create_to_admin} onChange={() => this.setAdminCanCreateProject(!organisation.restrict_project_create_to_admin)}
-                                                />
-                                            </Row>
-                                        </Column>
-                                        <Button
-                                          id="delete-org-btn"
-                                          onClick={() => this.confirmRemove(organisation, () => {
-                                              deleteOrganisation();
-                                          })}
-                                          className="btn btn--with-icon ml-auto btn--remove"
-                                        >
-                                            <RemoveIcon/>
-                                        </Button>
-                                    </Row>
-
-                                </FormGroup>
-                            )}
                             <FormGroup className="mt-5">
                                 <Row>
                                     <Column>
