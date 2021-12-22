@@ -136,24 +136,27 @@ class _EditPermissionsModal extends Component {
                       : (
                           <div>
                               <div className="list-item">
-                                  <Row>
-                                      <Flex>
-                                          <bold>
-                                              Administrator
-                                          </bold>
-                                          <div className="list-item-footer faint">
-                                              {
-                                              hasRbacPermission ? `Full View and Write permissions for the given ${Format.camelCase(this.props.level)}.`
-                                                  : (
-                                                      <span>
-                                                      Role-based access is not available in our Open Source version. Please contact <a href="mailto:sales@flagsmith.com">sales@flagsmith.com</a> for more information on our licensing options.
-                                                      </span>
-                                                  )
-                                            }
-                                          </div>
-                                      </Flex>
-                                      <Switch disabled={!hasRbacPermission} onChange={this.toggleAdmin} checked={isAdmin}/>
-                                  </Row>
+                                  {this.props.level !== "organisation" && (
+                                      <Row>
+                                          <Flex>
+                                              <bold>
+                                                  Administrator
+                                              </bold>
+                                              <div className="list-item-footer faint">
+                                                  {
+                                                      hasRbacPermission ? `Full View and Write permissions for the given ${Format.camelCase(this.props.level)}.`
+                                                          : (
+                                                              <span>
+                                                                  Role-based access is not available in our Open Source version. Please contact <a href="mailto:sales@flagsmith.com">sales@flagsmith.com</a> for more information on our licensing options.
+                                                              </span>
+                                                          )
+                                                  }
+                                              </div>
+                                          </Flex>
+                                          <Switch disabled={!hasRbacPermission} onChange={this.toggleAdmin} checked={isAdmin}/>
+                                      </Row>
+                                  )}
+
                               </div>
                               <div className="panel--grey">
                                   <PanelSearch
@@ -162,7 +165,7 @@ class _EditPermissionsModal extends Component {
                                     items={permissions}
                                     renderRow={(p) => {
                                         const levelUpperCase = this.props.level.toUpperCase();
-                                        const disabled = p.key !== `VIEW_${levelUpperCase}` && !this.hasPermission(`VIEW_${levelUpperCase}`);
+                                        const disabled = this.props.level!=="organisation" && p.key !== `VIEW_${levelUpperCase}` && !this.hasPermission(`VIEW_${levelUpperCase}`);
                                         return (
                                             <div key={p.key} style={this.admin() ? { opacity: 0.5 } : null} className="list-item">
                                                 <Row>
@@ -201,7 +204,7 @@ class _EditPermissionsModal extends Component {
   }
 }
 
-const EditPermissionsModal = ConfigProvider(_EditPermissionsModal);
+export const EditPermissionsModal = ConfigProvider(_EditPermissionsModal);
 
 export default class EditPermissions extends PureComponent {
   static displayName = 'EditPermissions';

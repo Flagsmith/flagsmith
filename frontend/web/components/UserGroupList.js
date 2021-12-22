@@ -2,6 +2,7 @@
 import React, { PureComponent } from 'react';
 import UserGroupsProvider from '../../common/providers/UserGroupsProvider';
 import CreateGroup from './modals/CreateGroup';
+import Button from './base/forms/Button';
 
 export default class TheComponent extends PureComponent {
   static displayName = 'TheComponent';
@@ -55,10 +56,11 @@ export default class TheComponent extends PureComponent {
                         nextPage={() => AppActions.getGroupsPage(this.props.orgId, userGroupsPaging.next)}
                         prevPage={() => AppActions.getGroupsPage(this.props.orgId, userGroupsPaging.previous)}
                         goToPage={page => AppActions.getGroupsPage(this.props.orgId, `${Project.api}organisations/${this.props.orgId}/groups/?page=${page}`)}
-                        renderRow={({ id, name, users }, index) => {
+                        renderRow={(group, index) => {
+                            const { id, name, users } = group;
                             const onClick = () => {
                                 if (this.props.onClick) {
-                                    this.props.onClick({ id, users, name });
+                                    this.props.onClick(group);
                                 } else {
                                     openModal('Edit Group', <CreateGroup orgId={this.props.orgId} group={{ id, users, name }}/>);
                                 }
@@ -82,6 +84,9 @@ export default class TheComponent extends PureComponent {
                                         </div>
                                     </Flex>
 
+                                    {this.props.onEditPermissions && (
+                                        <Button onClick={() => this.props.onEditPermissions(group)} className="btn--link">Edit Permissions</Button>
+                                    )}
                                     {this.props.showRemove ? (
                                         <Column>
                                             <button
