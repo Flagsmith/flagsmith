@@ -40,3 +40,21 @@ def test_slack_oauth_flow(
     # Finally, verify that get_bot_token was called with correct arguments
     mocked_slack_wrapper.assert_called_with()
     mocked_get_bot_token.assert_called_with(code, callback_url)
+
+
+def test_slack_oauth_callback_returns_400_if_redirect_url_is_not_found_in_session(
+    mocker, django_client, environment, environment_api_key, slack_bot_token
+):
+    url = reverse(
+        "api-v1:environments:integrations-slack-slack-oauth-callback",
+        args=[environment_api_key],
+    )
+    mocker.patch(
+        "integrations.slack.views.SlackWrapper.get_bot_token",
+        return_value=slack_bot_token,
+    )
+
+    mocker.patch("integrations.slack.views.validate_state", return_value=True)
+    response = django_client.get(f"{url}?state=state&code=code")
+    assert response.status_code == status.HTTP_400_BAD_REQUEST
+    assert response.json()["detail"] == "Redirect URL not found in request session"

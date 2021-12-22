@@ -16,7 +16,7 @@ from integrations.slack.serializers import (
 )
 from integrations.slack.slack import SlackWrapper
 
-from .exceptions import InvalidStateError
+from .exceptions import FrontEndRedirectURLNotFound, InvalidStateError
 
 
 class SlackEnvironmentViewSet(IntegrationCommonViewSet):
@@ -64,10 +64,7 @@ class SlackEnvironmentViewSet(IntegrationCommonViewSet):
         SlackConfiguration.objects.update_or_create(
             project=env.project, defaults={"api_token": bot_token}
         )
-        front_end_redirect_url = request.session.pop("front_end_redirect_url", None)
-        if front_end_redirect_url:
-            return redirect(front_end_redirect_url)
-        return Response(status=status.HTTP_204_NO_CONTENT)
+        return redirect(self._get_front_end_redirect_url())
 
     @action(detail=False, methods=["GET"], url_path="oauth")
     def slack_oauth_init(self, request, environment_api_key):
@@ -95,6 +92,12 @@ class SlackEnvironmentViewSet(IntegrationCommonViewSet):
 
     def _get_slack_callback_url(self, environment_api_key):
         return self.reverse_action("slack-oauth-callback", args=[environment_api_key])
+
+    def _get_front_end_redirect_url(self):
+        try:
+            return self.request.session.pop("front_end_redirect_url")
+        except KeyError as e:
+            raise FrontEndRedirectURLNotFound() from e
 
 
 def validate_state(state, request):

@@ -21,6 +21,10 @@ def slack_project_config(
         "integrations.slack.views.SlackWrapper.get_bot_token",
         return_value=slack_bot_token,
     )
+    mocker.patch(
+        "integrations.slack.views.SlackEnvironmentViewSet._get_front_end_redirect_url",
+        return_value="http://localhost",
+    )
     mocker.patch("integrations.slack.views.validate_state", return_value=True)
     django_client.get(f"{url}?state=state&code=code")
 
