@@ -13,6 +13,7 @@ from integrations.slack.models import SlackConfiguration, SlackEnvironment
 from integrations.slack.serializers import (
     SlackChannelListSerializer,
     SlackEnvironmentSerializer,
+    SlackOauthInitQueryParamSerializer,
 )
 from integrations.slack.slack import SlackWrapper
 
@@ -76,12 +77,9 @@ class SlackEnvironmentViewSet(IntegrationCommonViewSet):
 
         state = str(uuid.uuid4())
         request.session["state"] = state
-        front_end_redirect_url = request.GET.get("redirect_url")
-        if not front_end_redirect_url:
-            return Response(
-                data={"message": "redirect_url not found in query params"},
-                status=status.HTTP_400_BAD_REQUEST,
-            )
+        serializer = SlackOauthInitQueryParamSerializer(data=request.GET)
+        serializer.is_valid(raise_exception=True)
+        front_end_redirect_url = serializer.validated_data["redirect_url"]
         request.session["front_end_redirect_url"] = front_end_redirect_url
         authorize_url_generator = AuthorizeUrlGenerator(
             client_id=settings.SLACK_CLIENT_ID,

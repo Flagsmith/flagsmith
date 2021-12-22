@@ -27,3 +27,7 @@ class SlackEnvironmentSerializer(serializers.ModelSerializer):
 class SlackChannelListSerializer(serializers.Serializer):
     channel_name = serializers.CharField()
     channel_id = serializers.CharField()
+
+
+class SlackOauthInitQueryParamSerializer(serializers.Serializer):
+    redirect_url = serializers.URLField(allow_blank=False)
