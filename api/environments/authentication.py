@@ -10,7 +10,8 @@ environment_cache = caches[settings.ENVIRONMENT_CACHE_LOCATION]
 
 class EnvironmentKeyAuthentication(BaseAuthentication):
     """
-    Custom authentication class to add the environment to the request for endpoints used by the clients.
+    Custom authentication class to add the environment to the request for
+    endpoints used by the clients.
     """
 
     def authenticate(self, request):
@@ -19,13 +20,10 @@ class EnvironmentKeyAuthentication(BaseAuthentication):
         if not environment:
             raise AuthenticationFailed("Invalid or missing Environment Key")
 
-        if not self._can_serve_flags(environment):
+        if not environment.project.organisation.stop_serving_flags:
             raise AuthenticationFailed("Organisation is disabled from serving flags.")
 
         request.environment = environment
 
         # DRF authentication expects a two tuple to be returned containing User, auth
         return None, None
-
-    def _can_serve_flags(self, environment):
-        return not environment.project.organisation.stop_serving_flags
