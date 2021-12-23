@@ -14,6 +14,7 @@ from audit.serializers import AuditLogSerializer
 from environments.models import Environment
 from integrations.datadog.datadog import DataDogWrapper
 from integrations.new_relic.new_relic import NewRelicWrapper
+from integrations.slack.slack import SlackWrapper
 from webhooks.webhooks import WebhookEventType, call_organisation_webhooks
 
 logger = logging.getLogger(__name__)
@@ -35,31 +36,25 @@ def call_webhooks(sender, instance, **kwargs):
     call_organisation_webhooks(organisation, data, WebhookEventType.AUDIT_LOG_CREATED)
 
 
-def _send_audit_log_event_verification(instance, integration):
-    if not instance.project:
-        logger.warning(
-            f"Audit log missing project, not sending data to {integration.get('name')}."
-        )
-        return
+def _get_integration_config(instance, integration_name):
+    if not hasattr(instance.project, integration_name):
+        return None
 
-    if not hasattr(instance.project, integration.get("attr")):
-        logger.debug(
-            f"No datadog integration configured for project {instance.project.id}"
-        )
-        return
+    return getattr(instance.project, integration_name)
 
-    # Only handle Feature related changes
-    if instance.related_object_type not in [
-        RelatedObjectType.FEATURE.name,
-        RelatedObjectType.FEATURE_STATE.name,
-        RelatedObjectType.SEGMENT.name,
-    ]:
-        logger.debug(
-            f"Ignoring none Flag audit event {instance.related_object_type} for {integration.get('name', '').lower()}"
-        )
-        return
 
-    return getattr(instance.project, integration.get("attr"))
+def track_only_feature_related_events(signal_function):
+    def signal_wrapper(sender, instance, **kwargs):
+        # Only handle Feature related changes
+        if instance.related_object_type not in [
+            RelatedObjectType.FEATURE.name,
+            RelatedObjectType.FEATURE_STATE.name,
+            RelatedObjectType.SEGMENT.name,
+        ]:
+            return None
+        return signal_function(sender, instance, **kwargs)
+
+    return signal_wrapper
 
 
 def _track_event_async(instance, integration_client):
@@ -75,12 +70,9 @@ def _track_event_async(instance, integration_client):
 
 
 @receiver(post_save, sender=AuditLog)
+@track_only_feature_related_events
 def send_audit_log_event_to_datadog(sender, instance, **kwargs):
-    integration = {
-        "name": "DataDog",
-        "attr": "data_dog_config",
-    }
-    data_dog_config = _send_audit_log_event_verification(instance, integration)
+    data_dog_config = _get_integration_config(instance, "data_dog_config")
 
     if not data_dog_config:
         return
@@ -92,13 +84,10 @@ def send_audit_log_event_to_datadog(sender, instance, **kwargs):
 
 
 @receiver(post_save, sender=AuditLog)
+@track_only_feature_related_events
 def send_audit_log_event_to_new_relic(sender, instance, **kwargs):
-    integration = {
-        "name": "New Relic",
-        "attr": "new_relic_config",
-    }
 
-    new_relic_config = _send_audit_log_event_verification(instance, integration)
+    new_relic_config = _get_integration_config(instance, "new_relic_config")
     if not new_relic_config:
         return
 
@@ -135,3 +124,20 @@ def _write_multiple_environments_to_dynamo(environments: typing.Iterable[Environ
     with dynamo_env_table.batch_writer() as writer:
         for environment in environments:
             writer.put_item(Item=build_environment_document(environment))
+
+
+@receiver(post_save, sender=AuditLog)
+@track_only_feature_related_events
+def send_audit_log_event_to_slack(sender, instance, **kwargs):
+    slack_project_config = _get_integration_config(instance, "slack_config")
+    if not slack_project_config:
+        return
+    env_config = slack_project_config.env_config.filter(
+        environment=instance.environment, enabled=True
+    ).first()
+    if not env_config:
+        return
+    slack = SlackWrapper(
+        api_token=slack_project_config.api_token, channel_id=env_config.channel_id
+    )
+    _track_event_async(instance, slack)

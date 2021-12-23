@@ -41,3 +41,4 @@ django-filter
 dataclasses
 flagsmith-flag-engine
 boto3
+slack_sdk

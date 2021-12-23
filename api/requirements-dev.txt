@@ -11,3 +11,4 @@ pip-tools
 responses
 pre-commit
 flake8
+pytest-mock
