@@ -128,6 +128,7 @@ INSTALLED_APPS = [
     "integrations.segment",
     "integrations.heap",
     "integrations.mixpanel",
+    "integrations.slack",
     # Rate limiting admin endpoints
     "axes",
     "telemetry",
@@ -510,3 +511,6 @@ AMPLITUDE_API_KEY = env("AMPLITUDE_API_KEY", default=None)
 
 # Set this to enable create organisation for only superusers
 RESTRICT_ORG_CREATE_TO_SUPERUSERS = env.bool("RESTRICT_ORG_CREATE_TO_SUPERUSERS", False)
+# Slack Integration
+SLACK_CLIENT_ID = env.str("SLACK_CLIENT_ID", default="")
+SLACK_CLIENT_SECRET = env.str("SLACK_CLIENT_SECRET", default="")
