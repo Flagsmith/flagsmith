@@ -105,14 +105,8 @@ class FFAdminUser(LifecycleModel, AbstractUser):
         return "%s %s" % (self.first_name, self.last_name)
 
     @hook(AFTER_CREATE)
-    def subscribe_to_mailing_list(self):
-        # TODO: Add a flag for paid user
-        user_data = {
-            "email": self.email,
-            "name": self.get_full_name(),
-        }
-        if self.is_subscribed:
-            mailer_lite.subscribe(data=user_data)
+    def subscribe_to_mailing_list(self, is_paid=False):
+        mailer_lite.subscribe(self)
 
     @property
     def auth_type(self):
@@ -148,6 +142,9 @@ class FFAdminUser(LifecycleModel, AbstractUser):
         )
 
     def add_organisation(self, organisation, role=OrganisationRole.USER):
+        if organisation.is_paid:
+            mailer_lite.subscribe(self)
+
         UserOrganisation.objects.create(
             user=self, organisation=organisation, role=role.name
         )

@@ -1,3 +1,5 @@
+from datetime import datetime
+
 import pytest
 from django.test import TestCase
 
@@ -58,3 +60,52 @@ class SubscriptionTestCase(TestCase):
 
         # Then
         assert subscription.max_seats == 1
+
+
+@pytest.mark.django_db
+def test_creating_a_subscription_calls_mailer_lite_subscribe_organisation(mocker):
+    # Given
+    organisation = Organisation.objects.create(name="Test org")
+    mocked_mailer_lite = mocker.patch("organisations.models.mailer_lite")
+
+    # When
+    Subscription.objects.create(organisation=organisation)
+
+    # Then
+    mocked_mailer_lite.subcribe_organisation.assert_called_with(organisation.id)
+
+
+@pytest.mark.django_db
+def test_updating_a_cancelled_subscription_calls_mailer_lite_subscribe_organisation(
+    mocker,
+):
+    # Given
+    organisation = Organisation.objects.create(name="Test org")
+    subscription = Subscription.objects.create(
+        organisation=organisation, cancellation_date=datetime.now()
+    )
+    mocked_mailer_lite = mocker.patch("organisations.models.mailer_lite")
+
+    # When
+    subscription.cancellation_date = None
+    subscription.save()
+
+    # Then
+    mocked_mailer_lite.subcribe_organisation.assert_called_with(organisation.id)
+
+
+@pytest.mark.django_db
+def test_cancelling_a_subscription_does_not_calls_mailer_lite_subscribe_organisation(
+    mocker,
+):
+    # Given
+    organisation = Organisation.objects.create(name="Test org")
+    subscription = Subscription.objects.create(organisation=organisation)
+    mocked_mailer_lite = mocker.patch("organisations.models.mailer_lite")
+
+    # When
+    subscription.cancellation_date = datetime.now()
+    subscription.save()
+
+    # Then
+    mocked_mailer_lite.subcribe_organisation.assert_not_called()

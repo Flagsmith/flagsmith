@@ -365,6 +365,11 @@ class OrganisationTestCase(TestCase):
 
         # Then
         assert res.status_code == status.HTTP_200_OK
+        # since subscription is created using organisation.id rather than
+        # organisation and we already have evaluated subscription(by add_organisation)
+        # attribute of organisation(before we created the subscription) we need to
+        # refresh organisation for `has_subscription` to work properly
+        organisation.refresh_from_db()
 
         # and
         mock_get_subscription_data.assert_called_with(hosted_page_id=hosted_page_id)

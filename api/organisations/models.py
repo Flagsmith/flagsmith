@@ -7,12 +7,14 @@ from django.conf import settings
 from django.db import models
 from django.utils import timezone
 from django.utils.encoding import python_2_unicode_compatible
+from django_lifecycle import AFTER_CREATE, AFTER_SAVE, LifecycleModel, hook
 
 from organisations.chargebee import (
     get_customer_id_from_subscription_id,
     get_max_seats_for_plan,
     get_portal_url,
 )
+from users.utils.mailer_lite import mailer_lite
 
 
 class OrganisationRole(enum.Enum):
@@ -69,6 +71,10 @@ class Organisation(models.Model):
             and self.subscription.subscription_id is not None
         )
 
+    @property
+    def is_paid(self):
+        self.has_subscription() and self.subscription.cancellation_date is None
+
     def over_plan_seats_limit(self):
         if self.has_subscription():
             return self.num_seats > self.subscription.max_seats
@@ -93,7 +99,7 @@ class UserOrganisation(models.Model):
         )
 
 
-class Subscription(models.Model):
+class Subscription(LifecycleModel, models.Model):
     MAX_SEATS_IN_FREE_PLAN = 1
 
     organisation = models.OneToOneField(
@@ -124,6 +130,11 @@ class Subscription(models.Model):
         self.plan = plan_id
         self.max_seats = get_max_seats_for_plan(plan_id)
         self.save()
+
+    @hook(AFTER_CREATE)
+    @hook(AFTER_SAVE, when="cancellation_date", was_not=None, is_now=None)
+    def subscribe_all_users_to_mailing_list(self):
+        mailer_lite.subcribe_organisation(self.organisation.id)
 
     def cancel(self, cancellation_date=timezone.now()):
         self.cancellation_date = cancellation_date
