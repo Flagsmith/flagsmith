@@ -20,8 +20,8 @@ class MailerLite:
         self._subscribe(user)
 
     @postpone
-    def subcribe_organisation(self, organisation_id: int):
-        return self._subcribe_organisation(organisation_id)
+    def subscribe_organisation(self, organisation_id: int):
+        return self._subscribe_organisation(organisation_id)
 
     def _subscribe(self, user: "models.FFAdminUser"):
         if not user.is_subscribed:
@@ -29,7 +29,7 @@ class MailerLite:
         payload = json.dumps(_get_request_body_from_user(user))
         requests.post(self.url, data=payload, headers=_get_request_headers())
 
-    def _subcribe_organisation(self, organisation_id: int):
+    def _subscribe_organisation(self, organisation_id: int):
         users = models.FFAdminUser.objects.filter(
             organisations__id=organisation_id, is_subscribed=True
         )

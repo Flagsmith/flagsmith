@@ -72,7 +72,7 @@ def test_creating_a_subscription_calls_mailer_lite_subscribe_organisation(mocker
     Subscription.objects.create(organisation=organisation)
 
     # Then
-    mocked_mailer_lite.subcribe_organisation.assert_called_with(organisation.id)
+    mocked_mailer_lite.subscribe_organisation.assert_called_with(organisation.id)
 
 
 @pytest.mark.django_db
@@ -91,11 +91,11 @@ def test_updating_a_cancelled_subscription_calls_mailer_lite_subscribe_organisat
     subscription.save()
 
     # Then
-    mocked_mailer_lite.subcribe_organisation.assert_called_with(organisation.id)
+    mocked_mailer_lite.subscribe_organisation.assert_called_with(organisation.id)
 
 
 @pytest.mark.django_db
-def test_cancelling_a_subscription_does_not_calls_mailer_lite_subscribe_organisation(
+def test_cancelling_a_subscription_does_not_call_mailer_lite_subscribe_organisation(
     mocker,
 ):
     # Given
@@ -108,4 +108,32 @@ def test_cancelling_a_subscription_does_not_calls_mailer_lite_subscribe_organisa
     subscription.save()
 
     # Then
-    mocked_mailer_lite.subcribe_organisation.assert_not_called()
+    mocked_mailer_lite.subscribe_organisation.assert_not_called()
+
+
+@pytest.mark.django_db
+def test_organisation_is_paid_returns_false_if_subscription_does_not_exists():
+    # Given
+    organisation = Organisation.objects.create(name="Test org")
+    # Then
+    assert organisation.is_paid is False
+
+
+@pytest.mark.django_db
+def test_organisation_is_paid_returns_true_if_active_subscription_exists():
+    # Given
+    organisation = Organisation.objects.create(name="Test org")
+    Subscription.objects.create(organisation=organisation)
+    # Then
+    assert organisation.is_paid is True
+
+
+@pytest.mark.django_db
+def test_organisation_is_paid_returns_false_if_cancelled_subscription_exists():
+    # Given
+    organisation = Organisation.objects.create(name="Test org")
+    Subscription.objects.create(
+        organisation=organisation, cancellation_date=datetime.now()
+    )
+    # Then
+    assert organisation.is_paid is False
