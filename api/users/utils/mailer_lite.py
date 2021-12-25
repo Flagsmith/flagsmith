@@ -45,8 +45,6 @@ class MailerLite(MailerLiteBaseClient):
             return
         data = _get_request_body_from_user(user)
         self._post(data)
-        # payload = json.dumps()
-        # requests.post(self.url, data=payload, headers=_get_request_headers())
 
     def _subscribe_organisation(self, organisation_id: int):
         users = models.FFAdminUser.objects.filter(
