@@ -11,9 +11,26 @@ from util.util import postpone
 MAX_BATCH_SIZE = 50
 
 
-class MailerLite:
+class MailerLiteBaseClient:
+    resource = None
+
     def __init__(self):
-        self.url = settings.MAILERLITE_BASE_URL + "subscribers"
+        self.base_url = settings.MAILERLITE_BASE_URL
+
+    def _post(self, data):
+        url = self.base_url + self.resource
+        requests.post(url, data=json.dumps(data), headers=self._get_request_headers())
+
+    @staticmethod
+    def _get_request_headers() -> typing.Mapping:
+        return {
+            "X-MailerLite-ApiKey": settings.MAILERLITE_API_KEY,
+            "Content-Type": "application/json",
+        }
+
+
+class MailerLite(MailerLiteBaseClient):
+    resource = "subscribers"
 
     @postpone
     def subscribe(self, user: "models.FFAdminUser"):
@@ -26,8 +43,10 @@ class MailerLite:
     def _subscribe(self, user: "models.FFAdminUser"):
         if not user.is_subscribed:
             return
-        payload = json.dumps(_get_request_body_from_user(user))
-        requests.post(self.url, data=payload, headers=_get_request_headers())
+        data = _get_request_body_from_user(user)
+        self._post(data)
+        # payload = json.dumps()
+        # requests.post(self.url, data=payload, headers=_get_request_headers())
 
     def _subscribe_organisation(self, organisation_id: int):
         users = models.FFAdminUser.objects.filter(
@@ -38,9 +57,11 @@ class MailerLite:
                 batch.subscribe(user)
 
 
-class BatchSubscribe(AbstractContextManager):
+class BatchSubscribe(MailerLiteBaseClient, AbstractContextManager):
+    resource = "batch"
+
     def __init__(self):
-        self.url = settings.MAILERLITE_BASE_URL + "batch"
+        super().__init__()
         self._batch = []
 
     def _get_raw_subscribe_request(self, user):
@@ -51,8 +72,8 @@ class BatchSubscribe(AbstractContextManager):
         }
 
     def _batch_send(self):
-        payload = json.dumps({"requests": self._batch})
-        requests.post(self.url, data=payload, headers=_get_request_headers())
+        data = {"requests": self._batch}
+        self._post(data)
         self._batch.clear()
 
     def subscribe(self, user: "models.FFAdminUser"):
@@ -62,13 +83,6 @@ class BatchSubscribe(AbstractContextManager):
 
     def __exit__(self, exc_type, exc_value, exc_traceback):
         self._batch_send()
-
-
-def _get_request_headers() -> typing.Mapping:
-    return {
-        "X-MailerLite-ApiKey": settings.MAILERLITE_API_KEY,
-        "Content-Type": "application/json",
-    }
 
 
 def _get_request_body_from_user(user: "models.FFAdminUser") -> typing.Mapping:
