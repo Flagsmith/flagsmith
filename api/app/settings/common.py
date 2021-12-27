@@ -516,7 +516,6 @@ SLACK_CLIENT_ID = env.str("SLACK_CLIENT_ID", default="")
 SLACK_CLIENT_SECRET = env.str("SLACK_CLIENT_SECRET", default="")
 
 # MailerLite
-
 MAILERLITE_BASE_URL = env.str(
     "MAILERLITE_BASE_URL", default="https://api.mailerlite.com/api/v2/"
 )

@@ -13,6 +13,6 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='ffadminuser',
             name='is_subscribed',
-            field=models.BooleanField(default=False, help_text='Determines wether the user is subscribed to the mailing list or not'),
+            field=models.BooleanField(default=False, help_text='Determines whether the user is subscribed to the mailing list or not'),
         ),
     ]

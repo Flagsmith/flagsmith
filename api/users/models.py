@@ -91,7 +91,7 @@ class FFAdminUser(LifecycleModel, AbstractUser):
     github_user_id = models.CharField(max_length=50, null=True, blank=True)
     is_subscribed = models.BooleanField(
         default=False,
-        help_text="Determines wether the user is subscribed to the mailing list or not",
+        help_text="Determines whether the user is subscribed to the mailing list or not",
     )
 
     USERNAME_FIELD = "email"

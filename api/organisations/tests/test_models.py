@@ -123,7 +123,7 @@ def test_organisation_is_paid_returns_false_if_subscription_does_not_exists():
 def test_organisation_is_paid_returns_true_if_active_subscription_exists():
     # Given
     organisation = Organisation.objects.create(name="Test org")
-    Subscription.objects.create(organisation=organisation)
+    Subscription.objects.create(organisation=organisation, subscription_id="random_id")
     # Then
     assert organisation.is_paid is True
 
