@@ -22,3 +22,11 @@ class AuditLogSerializer(serializers.ModelSerializer):
             "related_object_id",
             "related_object_type",
         )
+
+
+class AuditLogsQueryParamSerializer(serializers.Serializer):
+    project = serializers.IntegerField(required=False)
+    environments = serializers.ListField(
+        child=serializers.IntegerField(min_value=0), required=False
+    )
+    search = serializers.CharField(max_length=256, required=False)
