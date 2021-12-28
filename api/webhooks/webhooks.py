@@ -2,12 +2,18 @@ import enum
 import hashlib
 import hmac
 import json
+import typing
 
 import requests
 from django.conf import settings
 from django.core.mail import EmailMultiAlternatives
 from django.core.serializers.json import DjangoJSONEncoder
 from django.template.loader import get_template
+
+from webhooks.sample_webhook_data import (
+    environment_webhook_data,
+    organisation_webhook_data,
+)
 
 from .constants import WEBHOOK_SIGNATURE_HEADER
 from .serializers import WebhookSerializer
@@ -47,30 +53,51 @@ def call_organisation_webhooks(organisation, data, event_type):
     )
 
 
+def trigger_sample_environment_webhook(
+    webhook,
+) -> typing.Optional[requests.models.Response]:
+    data = environment_webhook_data
+    serializer = WebhookSerializer(data=data)
+    serializer.is_valid(raise_exception=True)
+    return _call_webhook(webhook, serializer, WebhookType.ENVIRONMENT, False)
+
+
+def trigger_sample_organisation_webhook(
+    webhook,
+) -> typing.Optional[requests.models.Response]:
+    data = organisation_webhook_data
+    serializer = WebhookSerializer(data=data)
+    serializer.is_valid(raise_exception=True)
+    return _call_webhook(webhook, serializer, WebhookType.ORGANISATION, False)
+
+
+def _call_webhook(
+    webhook, serializer, webhook_type, send_email_on_error=True
+) -> typing.Optional[requests.models.Response]:
+    try:
+        headers = {"content-type": "application/json"}
+        json_data = json.dumps(serializer.data, sort_keys=True, cls=DjangoJSONEncoder)
+        if webhook.secret:
+            signature = generate_signature(json_data, key=webhook.secret)
+            headers.update({WEBHOOK_SIGNATURE_HEADER: signature})
+
+        res = requests.post(str(webhook.url), data=json_data, headers=headers)
+    except requests.exceptions.ConnectionError:
+        if send_email_on_error:
+            send_failure_email(webhook, serializer.data, webhook_type)
+        return None
+
+    if res.status_code != 200 and send_email_on_error:
+        send_failure_email(webhook, serializer.data, webhook_type, res.status_code)
+    return res
+
+
 def _call_webhooks(webhooks, data, event_type, webhook_type):
     webhook_data = {"event_type": event_type.value, "data": data}
     serializer = WebhookSerializer(data=webhook_data)
     serializer.is_valid(raise_exception=False)
     for webhook in webhooks:
-        try:
-
-            json_data = json.dumps(
-                serializer.data, sort_keys=True, cls=DjangoJSONEncoder
-            )
-            headers = {
-                "content-type": "application/json",
-            }
-            if webhook.secret:
-                signature = generate_signature(json_data, key=webhook.secret)
-                headers.update({WEBHOOK_SIGNATURE_HEADER: signature})
-
-            res = requests.post(str(webhook.url), data=json_data, headers=headers)
-        except requests.exceptions.ConnectionError:
-            send_failure_email(webhook, serializer.data, webhook_type)
-            continue
-
-        if res.status_code != 200:
-            send_failure_email(webhook, serializer.data, webhook_type, res.status_code)
+        _call_webhook(webhook, serializer, webhook_type)
 
 
 def send_failure_email(webhook, data, webhook_type, status_code=None):

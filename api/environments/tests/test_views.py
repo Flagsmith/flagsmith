@@ -1,5 +1,5 @@
 import json
-from unittest import TestCase
+from unittest import TestCase, mock
 
 import pytest
 from django.urls import reverse
@@ -534,3 +534,25 @@ class WebhookViewSetTestCase(TestCase):
 
         # and
         assert Webhook.objects.filter(id=webhook.id).exists()
+
+    @mock.patch("environments.views.WebhookViewSet.sample_trigger_method")
+    def test_trigger_sample_webhook_calls_sample_trigger_method_with_correct_arguments(
+        self, mocked_sample_trigger_method
+    ):
+        # Given
+        mocked_response = mock.MagicMock(status_code=200)
+        mocked_sample_trigger_method.return_value = mocked_response
+        url = reverse(
+            "api-v1:environments:environment-webhooks-trigger-sample-webhook",
+            args=[self.environment.api_key],
+        )
+        data = {"url": self.valid_webhook_url}
+
+        # When
+        response = self.client.post(url, data)
+
+        # Then
+        assert response.json()["message"] == "Request returned 200"
+        assert response.status_code == status.HTTP_200_OK
+        args, _ = mocked_sample_trigger_method.call_args
+        assert args[0].url == self.valid_webhook_url

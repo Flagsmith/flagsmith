@@ -44,6 +44,8 @@ from permissions.serializers import (
 )
 from projects.serializers import ProjectSerializer
 from users.serializers import UserIdSerializer
+from webhooks.mixins import TriggerSampleWebhookMixin
+from webhooks.webhooks import trigger_sample_organisation_webhook
 
 logger = logging.getLogger(__name__)
 
@@ -251,9 +253,11 @@ def chargebee_webhook(request):
     return Response(status=status.HTTP_200_OK)
 
 
-class OrganisationWebhookViewSet(viewsets.ModelViewSet):
+class OrganisationWebhookViewSet(viewsets.ModelViewSet, TriggerSampleWebhookMixin):
     serializer_class = OrganisationWebhookSerializer
     permission_classes = [IsAuthenticated, NestedOrganisationEntityPermission]
+    webhook_model = OrganisationWebhook
+    sample_trigger_method = staticmethod(trigger_sample_organisation_webhook)
 
     def get_queryset(self):
         if "organisation_pk" not in self.kwargs:
