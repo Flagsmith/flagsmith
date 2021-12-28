@@ -17,6 +17,7 @@ from organisations.chargebee import (
 from users.utils.mailer_lite import MailerLite
 
 mailer_lite = MailerLite()
+from webhooks.models import AbstractBaseWebhookModel
 
 
 class OrganisationRole(enum.Enum):
@@ -154,8 +155,7 @@ class Subscription(LifecycleModel, models.Model):
         return get_portal_url(self.customer_id, redirect_url)
 
 
-class OrganisationWebhook(models.Model):
-    url = models.URLField()
+class OrganisationWebhook(AbstractBaseWebhookModel):
     name = models.CharField(max_length=100)
     enabled = models.BooleanField(default=True)
     organisation = models.ForeignKey(
