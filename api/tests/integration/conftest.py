@@ -10,6 +10,11 @@ from app.utils import create_hash
 
 
 @pytest.fixture()
+def mv_option_value():
+    return "test_mv_value"
+
+
+@pytest.fixture()
 def django_client():
     return DjangoClient()
 
@@ -115,6 +120,24 @@ def feature(admin_client, project):
 
     response = admin_client.post(url, data=data)
     return response.json()["id"]
+
+
+@pytest.fixture()
+def mv_option(admin_client, project, mv_option_value):
+    data = {
+        "name": "test_feature_mv",
+        "default_enabled": True,
+        "multivariate_options": [{"type": "unicode", "string_value": mv_option_value}],
+    }
+    url = reverse("api-v1:projects:project-features-list", args=[project])
+
+    # When
+    response = admin_client.post(
+        url, data=json.dumps(data), content_type="application/json"
+    )
+
+    response_json = response.json()
+    return response_json["multivariate_options"][0]["id"]
 
 
 @pytest.fixture()

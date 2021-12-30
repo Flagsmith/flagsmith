@@ -329,13 +329,13 @@ class FeatureStateSerializerWithEdgeIdentity(serializers.ModelSerializer):
             self.instance = EngineFeatureStateModel(**self.validated_data)
             self.instance.set_value(feature_state_value)
             try:
-                identity.add_feature_override(self.instance)
+                identity.identity_features.append(self.instance)
             except DuplicateFeatureState as e:
                 raise serializers.ValidationError(
                     "Feature state already exists."
                 ) from e
 
-        Identity.dynamo_wrapper.put_item(build_identity_dict(identity))
+        #        Identity.dynamo_wrapper.put_item(build_identity_dict(identity))
         return self.instance
 
 

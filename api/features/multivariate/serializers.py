@@ -1,9 +1,15 @@
+from flag_engine.features.models import (
+    MultivariateFeatureStateValueModel as EngineMultivariateFeatureStateValueModel,
+)
+from flag_engine.features.schemas import MultivariateFeatureStateValueSchema
 from rest_framework import serializers
 
 from features.multivariate.models import (
     MultivariateFeatureOption,
     MultivariateFeatureStateValue,
 )
+
+engine_multi_fs_value_schema = MultivariateFeatureStateValueSchema()
 
 
 class MultivariateFeatureOptionSerializer(serializers.ModelSerializer):
@@ -30,20 +36,11 @@ class MultivariateFeatureStateValueSerializer(serializers.ModelSerializer):
         )
 
 
-class EdgeMultivariateFeatureOptionSerializer(serializers.Serializer):
-    value = serializers.SerializerMethodField()
-
-    class Meta:
-        model = MultivariateFeatureOption
-        fields = ("value",)
-
-    def get_value(self, obj):
-        return obj.value
-
-
 class EdgeMultivariateFeatureStateValueSerializer(serializers.ModelSerializer):
     # custom serializer because it does not have pk
-    multivariate_feature_option = EdgeMultivariateFeatureOptionSerializer()
+    def to_internal_value(self, data):
+        data = super().to_internal_value(data)
+        return EngineMultivariateFeatureStateValueModel(**data)
 
     class Meta:
         model = MultivariateFeatureStateValue

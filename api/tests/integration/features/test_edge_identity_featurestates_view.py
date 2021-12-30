@@ -1,3 +1,5 @@
+import json
+
 import pytest
 from django.urls import reverse
 from rest_framework import status
@@ -169,6 +171,53 @@ def test_edge_identities_create_featurestate(
     assert response.status_code == status.HTTP_201_CREATED
     assert response.json()["feature"] == feature
     assert response.json()["feature_state_value"] == feature_state_value
+
+
+def test_edge_identities_create_mv_featurestate(
+    mocker,
+    admin_client,
+    environment,
+    environment_api_key,
+    identity_document,
+    dynamo_wrapper_mock,
+    feature,
+    mv_option,
+    mv_option_value,
+):
+    # Given
+    dynamo_wrapper_mock.get_item_from_uuid.return_value = identity_document
+    # Remove the already preset feature state form the fixture document
+    identity_document["identity_features"].pop(0)
+    identity_uuid = identity_document["identity_uuid"]
+    url = reverse(
+        "api-v1:environments:edge-identity-featurestates-list",
+        args=[environment_api_key, identity_uuid],
+    )
+
+    data = {
+        "feature": feature,
+        "enabled": True,
+        "multivariate_feature_state_values": [
+            {
+                "multivariate_feature_option": mv_option,
+                "multivariate_feature_option_index": 0,
+                "percentage_allocation": 100,
+            }
+        ],
+        "feature_state_value": False,
+    }
+
+    # When
+    response = admin_client.post(
+        url, data=json.dumps(data), content_type="application/json"
+    )
+    # Then
+    dynamo_wrapper_mock.get_item_from_uuid.assert_called_with(
+        environment_api_key, identity_uuid
+    )
+    assert response.status_code == status.HTTP_201_CREATED
+    assert response.json()["feature"] == feature
+    assert response.json()["feature_state_value"] == mv_option_value
 
 
 def test_edge_identities_udpate_featurestate(
