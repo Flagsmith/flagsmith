@@ -4,7 +4,10 @@ from flag_engine.features.models import (
 )
 from flag_engine.features.schemas import MultivariateFeatureStateValueSchema
 from flag_engine.identities.builders import build_identity_dict
-from flag_engine.utils.exceptions import DuplicateFeatureState
+from flag_engine.utils.exceptions import (
+    DuplicateFeatureState,
+    InvalidPercentageAllocation,
+)
 from rest_framework import serializers
 
 from audit.models import (
@@ -334,8 +337,16 @@ class FeatureStateSerializerWithEdgeIdentity(serializers.ModelSerializer):
                 raise serializers.ValidationError(
                     "Feature state already exists."
                 ) from e
-
-        #        Identity.dynamo_wrapper.put_item(build_identity_dict(identity))
+        try:
+            identity_dict = build_identity_dict(identity)
+        except InvalidPercentageAllocation as e:
+            raise serializers.ValidationError(
+                {
+                    "multivariate_feature_state_values": "Total percentage allocation"
+                    "for feature must be less than 100 percent"
+                }
+            ) from e
+        Identity.dynamo_wrapper.put_item(identity_dict)
         return self.instance
 
 

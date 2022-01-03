@@ -256,3 +256,58 @@ def test_edge_identities_udpate_featurestate(
     assert response.status_code == status.HTTP_200_OK
     assert response.json()["feature"] == feature
     assert response.json()["feature_state_value"] == feature_state_value
+
+
+def test_edge_identities_post_returns_400_for_invalid_mvfs_allocation(
+    mocker,
+    admin_client,
+    environment,
+    environment_api_key,
+    identity_document,
+    dynamo_wrapper_mock,
+    feature,
+    mv_option,
+    mv_option_value,
+):
+
+    # Given
+    dynamo_wrapper_mock.get_item_from_uuid.return_value = identity_document
+    # Remove the already preset feature state form the fixture document
+    identity_document["identity_features"].pop(0)
+    identity_uuid = identity_document["identity_uuid"]
+    url = reverse(
+        "api-v1:environments:edge-identity-featurestates-list",
+        args=[environment_api_key, identity_uuid],
+    )
+
+    data = {
+        "feature": feature,
+        "enabled": True,
+        "multivariate_feature_state_values": [
+            {
+                "multivariate_feature_option": mv_option,
+                "multivariate_feature_option_index": 0,
+                "percentage_allocation": 90,
+            },
+            {
+                "multivariate_feature_option": mv_option,
+                "multivariate_feature_option_index": 0,
+                "percentage_allocation": 90,
+            },
+        ],
+        "feature_state_value": False,
+    }
+
+    # When
+    response = admin_client.post(
+        url, data=json.dumps(data), content_type="application/json"
+    )
+    # Then
+    dynamo_wrapper_mock.get_item_from_uuid.assert_called_with(
+        environment_api_key, identity_uuid
+    )
+
+    assert response.status_code == status.HTTP_400_BAD_REQUEST
+    response.json()[
+        "multivariate_feature_state_values"
+    ] == "Total percentage allocation for feature must be less than 100 percent"
