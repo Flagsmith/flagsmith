@@ -2,7 +2,7 @@ import uuid
 
 from django.conf import settings
 from django.core.exceptions import ObjectDoesNotExist
-from django.core.signing import BadSignature, TimestampSigner
+from django.core.signing import TimestampSigner
 from django.shortcuts import redirect
 from rest_framework import status
 from rest_framework.decorators import action
@@ -18,14 +18,11 @@ from integrations.slack.serializers import (
 )
 from integrations.slack.slack import SlackWrapper
 
-from .exceptions import (
-    FrontEndRedirectURLNotFound,
-    InvalidSignatureError,
-    InvalidStateError,
-)
+from .authentication import OauthInitAuthentication
+from .exceptions import FrontEndRedirectURLNotFound, InvalidStateError
+from .permissions import OauthInitPermission
 
 signer = TimestampSigner()
-SLACK_TEMP_TOKEN_MAX_AGE = 60
 
 
 class SlackEnvironmentViewSet(IntegrationCommonViewSet):
@@ -79,7 +76,13 @@ class SlackEnvironmentViewSet(IntegrationCommonViewSet):
         )
         return redirect(self._get_front_end_redirect_url())
 
-    @action(detail=False, methods=["GET"], url_path="oauth", permission_classes=[])
+    @action(
+        detail=False,
+        methods=["GET"],
+        url_path="oauth",
+        authentication_classes=[OauthInitAuthentication],
+        permission_classes=[OauthInitPermission],
+    )
     def slack_oauth_init(self, request, environment_api_key):
         if not settings.SLACK_CLIENT_ID:
             return Response(
@@ -91,7 +94,6 @@ class SlackEnvironmentViewSet(IntegrationCommonViewSet):
         request.session["state"] = state
         serializer = SlackOauthInitQueryParamSerializer(data=request.GET)
         serializer.is_valid(raise_exception=True)
-        validate_signature(serializer.validated_data["signature"])
         front_end_redirect_url = serializer.validated_data["redirect_url"]
         request.session["front_end_redirect_url"] = front_end_redirect_url
         authorize_url_generator = AuthorizeUrlGenerator(
@@ -109,13 +111,6 @@ class SlackEnvironmentViewSet(IntegrationCommonViewSet):
             return self.request.session.pop("front_end_redirect_url")
         except KeyError as e:
             raise FrontEndRedirectURLNotFound() from e
-
-
-def validate_signature(signature):
-    try:
-        signer.unsign(signature, max_age=10)
-    except BadSignature as e:
-        raise InvalidSignatureError() from e
 
 
 def validate_state(state, request):

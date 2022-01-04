@@ -18,6 +18,7 @@ def test_slack_oauth_flow(
         args=[environment_api_key],
     )
     signature = admin_client.get(url).json()["signature"]
+
     # Now, Let's start the oauth flow
     base_url = reverse(
         "api-v1:environments:integrations-slack-slack-oauth-init",
@@ -67,10 +68,19 @@ def test_slack_oauth_callback_returns_400_if_redirect_url_is_not_found_in_sessio
     assert response.json()["detail"] == "Redirect URL not found in request session"
 
 
-def test_slack_oauth_init_returns_400_for_invalid_signature(
-    django_client, environment, environment_api_key, settings
+def test_slack_oauth_init_returns_401_for_user_that_does_not_have_access_to_the_environment(
+    environment, environment_api_key, settings, django_user_model, api_client
 ):
     # Given
+    a_non_admin_user = django_user_model.objects.create(username="random_user")
+    api_client.force_authenticate(user=a_non_admin_user)
+
+    url = reverse(
+        "api-v1:environments:integrations-slack-get-temporary-signature",
+        args=[environment_api_key],
+    )
+    signature = api_client.get(url).json()["signature"]
+
     settings.SLACK_CLIENT_ID = "slack_id"
     settings.SLACK_CLIENT_SECRET = "client_secret"
 
@@ -78,7 +88,6 @@ def test_slack_oauth_init_returns_400_for_invalid_signature(
         "api-v1:environments:integrations-slack-slack-oauth-init",
         args=[environment_api_key],
     )
-    url = f"{base_url}?redirect_url=http://localhost&signature=random_sign"
-    response = django_client.get(url)
-    assert response.status_code == status.HTTP_400_BAD_REQUEST
-    assert response.json()["detail"] == "Invalid or expired signature"
+    url = f"{base_url}?redirect_url=http://localhost&signature={signature}"
+    response = api_client.get(url)
+    assert response.status_code == status.HTTP_403_FORBIDDEN
