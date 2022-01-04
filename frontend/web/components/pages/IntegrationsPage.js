@@ -21,7 +21,7 @@ const ProjectSettingsPage = class extends Component {
     render() {
         let integrations = this.props.getValue('integrations') || '[]';
         try {
-            integrations = JSON.parse(integrations);
+            integrations = JSON.parse(integrations).sort();
         } catch (e) {
             integrations = [];
         }
