@@ -27,10 +27,8 @@ const controller = {
         if (store.model.availablePermissions.projects) {
             return;
         }
-        const permissions = ['project', 'environment'];
-        if (flagsmith.hasFeature('organisation_permissions')) {
-            permissions.push('organisation');
-        }
+        const permissions = ['project', 'environment', 'organisation'];
+
         Promise.all(permissions.map(v => data.get(`${Project.api}${v}s/permissions/`)
             .then((res) => {
                 store.model.availablePermissions[v] = res;
