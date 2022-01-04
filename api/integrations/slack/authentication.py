@@ -10,7 +10,7 @@ from users.models import FFAdminUser
 
 class OauthInitAuthentication(BaseAuthentication):
     """
-    Custom authentication class to add the environment to the request for endpoints used by the clients.
+    Custom authentication class to fetch signed user_id from query params
     """
 
     def authenticate(self, request):
