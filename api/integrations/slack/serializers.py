@@ -31,3 +31,4 @@ class SlackChannelListSerializer(serializers.Serializer):
 
 class SlackOauthInitQueryParamSerializer(serializers.Serializer):
     redirect_url = serializers.URLField(allow_blank=False)
+    signature = serializers.CharField(allow_blank=False)
