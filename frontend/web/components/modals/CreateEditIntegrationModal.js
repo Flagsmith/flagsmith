@@ -32,6 +32,13 @@ const CreateEditIntegration = class extends Component {
         }
         this.setState({ isLoading: true });
         if (this.props.integration.perEnvironment) {
+            if (this.props.integration.isOauth) {
+                return _data.get(`${Project.api}environments/${this.state.data.flagsmithEnvironment}/integrations/${this.props.id}/oauth/`, {
+                    redirect_url: document.location.href,
+                }).then((res) => {
+
+                });
+            }
             if (this.props.data) {
                 _data.put(`${Project.api}environments/${this.state.data.flagsmithEnvironment}/integrations/${this.props.id}/${this.props.data.id}/`, this.state.data)
                     .then(this.onComplete).catch(this.onError);
@@ -39,6 +46,12 @@ const CreateEditIntegration = class extends Component {
                 _data.post(`${Project.api}environments/${this.state.data.flagsmithEnvironment}/integrations/${this.props.id}/`, this.state.data)
                     .then(this.onComplete).catch(this.onError);
             }
+        } else if (this.props.integration.isOauth){
+            return _data.get(`${Project.api}projects/${this.props.projectId}/integrations/${this.props.id}/oauth/`, {
+                redirect_url: document.location.href,
+            }).then((res) => {
+
+            });
         } else if (this.props.data) {
             _data.put(`${Project.api}projects/${this.props.projectId}/integrations/${this.props.id}/${this.props.data.id}/`, this.state.data)
                 .then(this.onComplete).catch(this.onError);
@@ -74,12 +87,12 @@ const CreateEditIntegration = class extends Component {
               id="create-project-modal" onSubmit={this.submit}
             >
                 {this.props.integration.perEnvironment && (
-                  <div className="mb-2">
-                      <label>Flagsmith Environment</label>
-                      <EnvironmentSelect readOnly={!!this.props.data || this.props.readOnly} value={this.state.data.flagsmithEnvironment} onChange={environment => this.update('flagsmithEnvironment', environment)}/>
-                  </div>
+                <div className="mb-2">
+                    <label>Flagsmith Environment</label>
+                    <EnvironmentSelect readOnly={!!this.props.data || this.props.readOnly} value={this.state.data.flagsmithEnvironment} onChange={environment => this.update('flagsmithEnvironment', environment)}/>
+                </div>
                 )}
-                {this.props.integration.fields.map(field => (
+                {this.props.integration.fields && this.props.integration.fields.map(field => (
                   <>
                       <div>
                           <label htmlFor={field.label.replace(/ /g, '')}>
@@ -112,7 +125,7 @@ const CreateEditIntegration = class extends Component {
                 {!this.props.readOnly && (
                     <div className="text-right">
                         <Button disabled={this.state.isLoading} type="submit">
-                          Save
+                            {this.props.integration.isOauth ? 'Authorise' : 'Save'}
                         </Button>
                     </div>
                 )}
