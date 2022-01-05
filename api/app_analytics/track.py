@@ -115,6 +115,7 @@ def track_request_influxdb(request):
             "project_id": environment.project_id,
             "environment": environment.name,
             "environment_id": environment.id,
+            "host": request.get_host(),
         }
 
         influxdb = InfluxDBWrapper("api_call")

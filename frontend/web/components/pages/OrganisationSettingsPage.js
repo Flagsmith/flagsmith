@@ -300,7 +300,6 @@ const OrganisationSettingsPage = class extends Component {
         const hasRbacPermission = !this.props.hasFeature('plan_based_access') || Utils.getPlansPermission(AccountStore.getPlans(), 'RBAC');
         const paymentsEnabled = this.props.hasFeature('payments_enabled');
         const force2faPermission = Utils.getPlansPermission(AccountStore.getPlans(), 'FORCE_2FA');
-        const organisationPermissionsEnabled = this.props.hasFeature('organisation_permissions');
 
         return (
             <div className="app-container container">
@@ -526,7 +525,7 @@ const OrganisationSettingsPage = class extends Component {
                                                               renderRow={(user, i) => {
                                                                   const { id, first_name, last_name, email, role } = user;
                                                                   const onEditClick = () => {
-                                                                      if (role !== 'ADMIN' && organisationPermissionsEnabled) {
+                                                                      if (role !== 'ADMIN') {
                                                                           this.editUserPermissions(user);
                                                                       }
                                                                   };
@@ -534,7 +533,7 @@ const OrganisationSettingsPage = class extends Component {
                                                                       <Row
                                                                         data-test={`user-${i}`}
 
-                                                                        space className={'list-item' + `${role === 'ADMIN' || !organisationPermissionsEnabled ? '' : ' clickable'}`} key={id}
+                                                                        space className={'list-item clickable'} key={id}
                                                                       >
                                                                           <Flex onClick={onEditClick}>
 
@@ -576,7 +575,7 @@ const OrganisationSettingsPage = class extends Component {
                                                                                   )}
                                                                               </Column>
 
-                                                                              {role !== 'ADMIN' && organisationPermissionsEnabled && (
+                                                                              {role !== 'ADMIN' && (
                                                                                   <Column onClick={onEditClick}>
                                                                                       <Button className="btn--link">Edit Permissions</Button>
                                                                                   </Column>

@@ -49,7 +49,7 @@ const ProjectSelectPage = class extends Component {
                                     <div className="col-md-3 pl-0 pr-0">
                                         <Permission level="organisation" permission="CREATE_PROJECT" id={AccountStore.getOrganisation().id}>
                                             {({ permission, isLoading }) => {
-                                                const canCreate = permission || !this.props.hasFeature('organisation_permissions');
+                                                const canCreate = permission;
                                                 return Utils.renderWithPermission(permission, Constants.environmentPermissions('Create Project'), (
                                                     <Button disabled={!canCreate} className="float-right btn__md-full mb-md-0 mb-3" onClick={this.newProject}>
                                                         Create Project
@@ -121,7 +121,7 @@ const ProjectSelectPage = class extends Component {
                                                       <div>
                                                           <Permission level="organisation" permission="CREATE_PROJECT" id={AccountStore.getOrganisation().id}>
                                                               {({ permission, isLoading }) => {
-                                                                  const canCreate = permission || !this.props.hasFeature('organisation_permissions');
+                                                                  const canCreate = permission;
                                                                   return Utils.renderWithPermission(permission, Constants.environmentPermissions('Create Project'), (
                                                                       <button
                                                                         disabled={!canCreate}
