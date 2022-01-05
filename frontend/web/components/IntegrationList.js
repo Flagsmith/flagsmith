@@ -6,6 +6,8 @@ import ProjectStore from '../../common/stores/project-store';
 const CreateEditIntegration = require('./modals/CreateEditIntegrationModal');
 
 class Integration extends Component {
+
+
     add =() => {
         this.props.addIntegration(this.props.integration, this.props.id);
     }
@@ -80,7 +82,9 @@ class Integration extends Component {
 
 class IntegrationList extends Component {
     state = {}
-
+    static contextTypes = {
+        router: propTypes.object.isRequired,
+    };
     componentDidMount() {
         this.fetch();
     }
@@ -114,6 +118,15 @@ class IntegrationList extends Component {
             console.log(res);
             this.setState({ isLoading: false, activeIntegrations: _.map(res, item => (!!item && item.length ? item : [])) });
         });
+        const params = Utils.fromParam();
+        if (params && params.configure) {
+            const integrationList = this.props.getValue('integration_data') && JSON.parse(this.props.getValue('integration_data'));
+
+            if (integrationList && integrationList[params.configure]) {
+                this.addIntegration(integrationList[params.configure], params.configure)
+                this.context.router.history.replace(document.location.pathname);
+            }
+        }
     }
 
     removeIntegration =(integration, id) => {
@@ -129,8 +142,12 @@ class IntegrationList extends Component {
     }
 
     addIntegration =(integration, id) => {
+        const params = Utils.fromParam()
         openModal(`${integration.title} Integration`, <CreateEditIntegration
           id={id} integration={integration}
+          data={params.environment?{
+              flagsmithEnvironment:params.environment
+          }:null}
           projectId={this.props.projectId} onComplete={this.fetch}
         />);
     }
