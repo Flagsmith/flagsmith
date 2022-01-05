@@ -22,3 +22,13 @@ def test_oauth_init_authentication_with_valid_signature(django_user_model, rf):
     request = rf.get("/url", {"signature": signer.sign(user.id)})
     # Then
     oauth_init_authentication.authenticate(request)
+
+
+def test_oauth_init_authentication_failes_with_correct_error_if_no_signature_is_passed(
+    rf,
+):
+    # Given
+    request = rf.get("/url")
+    # Then
+    with pytest.raises(AuthenticationFailed):
+        oauth_init_authentication.authenticate(request)
