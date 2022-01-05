@@ -4,6 +4,7 @@ module.exports = global.Project = {
     flagsmith: 'ENktaJnfLVbLifybz34JmX', // This is our Bullet Train API key - Bullet Train runs on Bullet Train!
     env: 'staging', // This is used for Sentry tracking
     maintenance: false, // trigger maintenance mode
+    cookieDomain: 'staging.flagsmith.com',
     demoAccount: {
         email: 'kyle+bullet-train@solidstategroup.com',
         password: 'demo_account',
