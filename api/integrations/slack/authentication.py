@@ -17,6 +17,8 @@ class OauthInitAuthentication(BaseAuthentication):
         signer = TimestampSigner()
         with suppress(BadSignature, ObjectDoesNotExist):
             signature = request.GET.get("signature")
+            if not signature:
+                raise AuthenticationFailed("No such user")
             user_id = signer.unsign(signature, max_age=30)
             user = FFAdminUser.objects.get(id=user_id)
             return user, None
