@@ -10,14 +10,14 @@ from users.models import FFAdminUser
 
 class OauthInitAuthentication(BaseAuthentication):
     """
-    Custom authentication class to fetch signed user_id from query params
+    Custom authentication class to use signed user_id present in query params
     """
 
     def authenticate(self, request):
         signer = TimestampSigner()
         with suppress(BadSignature, ObjectDoesNotExist):
             signature = request.GET.get("signature")
-            user_id = signer.unsign(signature, max_age=10)
+            user_id = signer.unsign(signature, max_age=30)
             user = FFAdminUser.objects.get(id=user_id)
             return user, None
         raise AuthenticationFailed("No such user")
