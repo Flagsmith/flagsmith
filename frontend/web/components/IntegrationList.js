@@ -123,8 +123,10 @@ class IntegrationList extends Component {
             const integrationList = this.props.getValue('integration_data') && JSON.parse(this.props.getValue('integration_data'));
 
             if (integrationList && integrationList[params.configure]) {
-                this.addIntegration(integrationList[params.configure], params.configure)
-                this.context.router.history.replace(document.location.pathname);
+                setTimeout(()=>{
+                    this.addIntegration(integrationList[params.configure], params.configure)
+                    this.context.router.history.replace(document.location.pathname);
+                },500)
             }
         }
     }
