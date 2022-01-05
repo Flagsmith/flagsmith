@@ -2,6 +2,7 @@ import uuid
 
 from django.conf import settings
 from django.core.exceptions import ObjectDoesNotExist
+from django.core.signing import TimestampSigner
 from django.shortcuts import redirect
 from rest_framework import status
 from rest_framework.decorators import action
@@ -17,7 +18,11 @@ from integrations.slack.serializers import (
 )
 from integrations.slack.slack import SlackWrapper
 
+from .authentication import OauthInitAuthentication
 from .exceptions import FrontEndRedirectURLNotFound, InvalidStateError
+from .permissions import OauthInitPermission
+
+signer = TimestampSigner()
 
 
 class SlackEnvironmentViewSet(IntegrationCommonViewSet):
@@ -48,6 +53,10 @@ class SlackEnvironmentViewSet(IntegrationCommonViewSet):
         serializer.is_valid()
         return Response(serializer.data)
 
+    @action(detail=False, methods=["GET"], url_path="signature")
+    def get_temporary_signature(self, request, *args, **kwargs):
+        return Response({"signature": signer.sign(request.user.id)})
+
     @action(detail=False, methods=["GET"], url_path="callback", permission_classes=[])
     def slack_oauth_callback(self, request, environment_api_key):
         code = request.GET.get("code")
@@ -67,7 +76,13 @@ class SlackEnvironmentViewSet(IntegrationCommonViewSet):
         )
         return redirect(self._get_front_end_redirect_url())
 
-    @action(detail=False, methods=["GET"], url_path="oauth")
+    @action(
+        detail=False,
+        methods=["GET"],
+        url_path="oauth",
+        authentication_classes=[OauthInitAuthentication],
+        permission_classes=[OauthInitPermission],
+    )
     def slack_oauth_init(self, request, environment_api_key):
         if not settings.SLACK_CLIENT_ID:
             return Response(
