@@ -1,7 +1,7 @@
 import pytest
 
-from custom_auth.oauth.exceptions import GithubError
-from custom_auth.oauth.helpers.github_helpers import (
+from custom_auth.sso.oauth.exceptions import GithubError
+from custom_auth.sso.oauth.helpers.github_helpers import (
     convert_response_data_to_dictionary,
     get_first_and_last_name,
 )

@@ -7,12 +7,12 @@ from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
 
 from api.serializers import ErrorSerializer
-from custom_auth.oauth.exceptions import GithubError, GoogleError
-from custom_auth.oauth.serializers import (
+from custom_auth.serializers import CustomTokenSerializer
+from custom_auth.sso.oauth.exceptions import GithubError, GoogleError
+from custom_auth.sso.oauth.serializers import (
     GithubLoginSerializer,
     GoogleLoginSerializer,
 )
-from custom_auth.serializers import CustomTokenSerializer
 
 logger = logging.getLogger(__name__)
 

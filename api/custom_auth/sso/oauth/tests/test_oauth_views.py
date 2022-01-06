@@ -9,7 +9,7 @@ from organisations.invites.models import Invite
 from organisations.models import Organisation
 
 
-@mock.patch("custom_auth.oauth.serializers.get_user_info")
+@mock.patch("custom_auth.sso.oauth.serializers.get_user_info")
 @override_settings(ALLOW_REGISTRATION_WITHOUT_INVITE=False)
 def test_cannot_register_with_google_without_invite_if_registration_disabled(
     mock_get_user_info, db
@@ -28,7 +28,7 @@ def test_cannot_register_with_google_without_invite_if_registration_disabled(
     assert response.status_code == status.HTTP_403_FORBIDDEN
 
 
-@mock.patch("custom_auth.oauth.serializers.GithubUser")
+@mock.patch("custom_auth.sso.oauth.serializers.GithubUser")
 @override_settings(ALLOW_REGISTRATION_WITHOUT_INVITE=False)
 def test_cannot_register_with_github_without_invite_if_registration_disabled(
     MockGithubUser, db
@@ -49,7 +49,7 @@ def test_cannot_register_with_github_without_invite_if_registration_disabled(
     assert response.status_code == status.HTTP_403_FORBIDDEN
 
 
-@mock.patch("custom_auth.oauth.serializers.get_user_info")
+@mock.patch("custom_auth.sso.oauth.serializers.get_user_info")
 @override_settings(ALLOW_REGISTRATION_WITHOUT_INVITE=False)
 def test_can_register_with_google_with_invite_if_registration_disabled(
     mock_get_user_info, db
@@ -70,7 +70,7 @@ def test_can_register_with_google_with_invite_if_registration_disabled(
     assert response.status_code == status.HTTP_200_OK
 
 
-@mock.patch("custom_auth.oauth.serializers.GithubUser")
+@mock.patch("custom_auth.sso.oauth.serializers.GithubUser")
 @override_settings(ALLOW_REGISTRATION_WITHOUT_INVITE=False)
 def test_can_register_with_github_with_invite_if_registration_disabled(
     MockGithubUser, db
@@ -93,7 +93,7 @@ def test_can_register_with_github_with_invite_if_registration_disabled(
     assert response.status_code == status.HTTP_200_OK
 
 
-@mock.patch("custom_auth.oauth.serializers.get_user_info")
+@mock.patch("custom_auth.sso.oauth.serializers.get_user_info")
 @override_settings(ALLOW_OAUTH_REGISTRATION_WITHOUT_INVITE=False)
 def test_can_login_with_google_if_registration_disabled(
     mock_get_user_info, db, django_user_model
@@ -114,7 +114,7 @@ def test_can_login_with_google_if_registration_disabled(
     assert "key" in response.json()
 
 
-@mock.patch("custom_auth.oauth.serializers.GithubUser")
+@mock.patch("custom_auth.sso.oauth.serializers.GithubUser")
 @override_settings(ALLOW_OAUTH_REGISTRATION_WITHOUT_INVITE=False)
 def test_can_login_with_github_if_registration_disabled(
     MockGithubUser, db, django_user_model

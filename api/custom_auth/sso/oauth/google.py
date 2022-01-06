@@ -2,7 +2,7 @@ import requests
 from requests import RequestException
 from rest_framework import status
 
-from custom_auth.oauth.exceptions import GoogleError
+from custom_auth.sso.oauth.exceptions import GoogleError
 
 USER_INFO_URL = "https://www.googleapis.com/oauth2/v1/userinfo?alt=json&"
 NON_200_ERROR_MESSAGE = "Google returned {} status code when getting an access token."

@@ -5,9 +5,11 @@ from rest_framework import serializers
 from rest_framework.authtoken.models import Token
 from rest_framework.exceptions import PermissionDenied
 
+from custom_auth.constants import (
+    USER_REGISTRATION_WITHOUT_INVITE_ERROR_MESSAGE,
+)
 from organisations.invites.models import Invite
 
-from ..constants import USER_REGISTRATION_WITHOUT_INVITE_ERROR_MESSAGE
 from .github import GithubUser
 from .google import get_user_info
 

@@ -2,11 +2,11 @@ from unittest import mock
 
 import pytest
 
-from custom_auth.oauth.exceptions import GoogleError
-from custom_auth.oauth.google import USER_INFO_URL, get_user_info
+from custom_auth.sso.oauth.exceptions import GoogleError
+from custom_auth.sso.oauth.google import USER_INFO_URL, get_user_info
 
 
-@mock.patch("custom_auth.oauth.google.requests")
+@mock.patch("custom_auth.sso.oauth.google.requests")
 def test_get_user_info(mock_requests):
     # Given
     access_token = "access-token"
@@ -34,7 +34,7 @@ def test_get_user_info(mock_requests):
     }
 
 
-@mock.patch("custom_auth.oauth.google.requests")
+@mock.patch("custom_auth.sso.oauth.google.requests")
 def test_get_user_info_non_200_status_code(mock_requests):
     # Given
     access_token = "access-token"

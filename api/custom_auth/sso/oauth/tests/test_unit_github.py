@@ -2,8 +2,8 @@ from unittest import TestCase, mock
 
 import pytest
 
-from custom_auth.oauth.exceptions import GithubError
-from custom_auth.oauth.github import NON_200_ERROR_MESSAGE, GithubUser
+from custom_auth.sso.oauth.exceptions import GithubError
+from custom_auth.sso.oauth.github import NON_200_ERROR_MESSAGE, GithubUser
 
 
 class GithubUserTestCase(TestCase):
@@ -11,7 +11,7 @@ class GithubUserTestCase(TestCase):
         self.test_client_id = "test-client-id"
         self.test_client_secret = "test-client-secret"
 
-        self.mock_requests = mock.patch("custom_auth.oauth.github.requests").start()
+        self.mock_requests = mock.patch("custom_auth.sso.oauth.github.requests").start()
 
     def tearDown(self) -> None:
         self.mock_requests.stop()

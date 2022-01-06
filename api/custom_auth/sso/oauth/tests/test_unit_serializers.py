@@ -6,7 +6,7 @@ from django.test import RequestFactory
 from django.utils import timezone
 from rest_framework.authtoken.models import Token
 
-from custom_auth.oauth.serializers import (
+from custom_auth.sso.oauth.serializers import (
     GithubLoginSerializer,
     GoogleLoginSerializer,
     OAuthLoginSerializer,
@@ -31,7 +31,7 @@ class OAuthLoginSerializerTestCase(TestCase):
         rf = RequestFactory()
         self.request = rf.post("placeholer-login-url")
 
-    @mock.patch("custom_auth.oauth.serializers.get_user_info")
+    @mock.patch("custom_auth.sso.oauth.serializers.get_user_info")
     def test_create(self, mock_get_user_info):
         # Given
         access_token = "access-token"
@@ -57,7 +57,7 @@ class GoogleLoginSerializerTestCase(TestCase):
         rf = RequestFactory()
         self.request = rf.post("placeholer-login-url")
 
-    @mock.patch("custom_auth.oauth.serializers.get_user_info")
+    @mock.patch("custom_auth.sso.oauth.serializers.get_user_info")
     def test_get_user_info(self, mock_get_user_info):
         # Given
         access_token = "some-access-token"
@@ -78,7 +78,7 @@ class GithubLoginSerializerTestCase(TestCase):
         rf = RequestFactory()
         self.request = rf.post("placeholer-login-url")
 
-    @mock.patch("custom_auth.oauth.serializers.GithubUser")
+    @mock.patch("custom_auth.sso.oauth.serializers.GithubUser")
     def test_get_user_info(self, MockGithubUser):
         # Given
         access_token = "some-access-token"
