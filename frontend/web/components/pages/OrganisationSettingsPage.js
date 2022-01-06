@@ -390,26 +390,6 @@ const OrganisationSettingsPage = class extends Component {
                                     <OrganisationProvider>
                                         {({ isLoading, name, error, projects, usage, users, invites, influx_data, inviteLinks }) => (
                                             <div>
-                                                {this.props.hasFeature('usage_chart') && !projectOverrides.disableInflux && (
-                                                <div className="panel--grey">
-                                                    {!isLoading && usage != null ? (
-                                                        <div>
-                                                            {this.props.hasFeature('usage_chart') ? this.drawChart(influx_data) : (
-                                                                <>
-                                                                    <div className="flex-row header--icon">
-                                                                        <h5>API usage</h5>
-                                                                    </div>
-                                                                    <span>
-                                                                        {'You have made '}
-                                                                        <strong>{`${Utils.numberWithCommas(usage)}`}</strong>
-                                                                        {' requests over the past 30 days.'}
-                                                                    </span>
-                                                                </>
-                                                            )}
-                                                        </div>
-                                                    ) : <div className="text-center"><Loader/></div> }
-                                                </div>
-                                                )}
                                                 <Row space className="mt-5">
                                                     <h3 className="m-b-0">Team Members</h3>
                                                     <Button
@@ -820,6 +800,26 @@ const OrganisationSettingsPage = class extends Component {
                                     </Row>
 
                                 </FormGroup>
+                            )}
+                            {this.props.hasFeature('usage_chart') && !projectOverrides.disableInflux && (
+                                <div className="panel--grey mt-2">
+                                    {!isLoading && usage != null ? (
+                                        <div>
+                                            {this.props.hasFeature('usage_chart') ? this.drawChart(influx_data) : (
+                                                <>
+                                                    <div className="flex-row header--icon">
+                                                        <h5>API usage</h5>
+                                                    </div>
+                                                    <span>
+                                                        {'You have made '}
+                                                        <strong>{`${Utils.numberWithCommas(usage)}`}</strong>
+                                                        {' requests over the past 30 days.'}
+                                                    </span>
+                                                </>
+                                            )}
+                                        </div>
+                                    ) : <div className="text-center"><Loader/></div> }
+                                </div>
                             )}
                             <FormGroup className="mt-5">
                                 <Row>
