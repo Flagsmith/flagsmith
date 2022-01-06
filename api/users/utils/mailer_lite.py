@@ -37,8 +37,8 @@ class MailerLite(MailerLiteBaseClient):
         self._subscribe(user)
 
     @postpone
-    def subscribe_organisation(self, organisation_id: int):
-        return self._subscribe_organisation(organisation_id)
+    def update_organisation_users(self, organisation_id: int):
+        return self._update_organisation_users(organisation_id)
 
     def _subscribe(self, user: "models.FFAdminUser"):
         if not user.marketing_consent_given:
@@ -46,7 +46,7 @@ class MailerLite(MailerLiteBaseClient):
         data = _get_request_body_from_user(user)
         self._post(data)
 
-    def _subscribe_organisation(self, organisation_id: int):
+    def _update_organisation_users(self, organisation_id: int):
         users = models.FFAdminUser.objects.filter(
             organisations__id=organisation_id, marketing_consent_given=True
         )

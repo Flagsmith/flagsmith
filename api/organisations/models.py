@@ -135,9 +135,8 @@ class Subscription(LifecycleModel, models.Model):
 
     @hook(AFTER_CREATE)
     @hook(AFTER_SAVE, when="cancellation_date", has_changed=True)
-    def subscribe_all_users_to_mailing_list(self):
-        if self.cancellation_date is None:
-            mailer_lite.subscribe_organisation(self.organisation.id)
+    def update_mailer_lite_subscribers(self):
+        mailer_lite.update_organisation_users(self.organisation.id)
 
     def cancel(self, cancellation_date=timezone.now()):
         self.cancellation_date = cancellation_date

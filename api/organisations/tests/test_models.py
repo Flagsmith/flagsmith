@@ -62,7 +62,9 @@ class SubscriptionTestCase(TestCase):
         assert subscription.max_seats == 1
 
 
-def test_creating_a_subscription_calls_mailer_lite_subscribe_organisation(mocker, db):
+def test_creating_a_subscription_calls_mailer_lite_update_organisation_users(
+    mocker, db
+):
     # Given
     organisation = Organisation.objects.create(name="Test org")
     mocked_mailer_lite = mocker.patch("organisations.models.mailer_lite")
@@ -71,10 +73,10 @@ def test_creating_a_subscription_calls_mailer_lite_subscribe_organisation(mocker
     Subscription.objects.create(organisation=organisation)
 
     # Then
-    mocked_mailer_lite.subscribe_organisation.assert_called_with(organisation.id)
+    mocked_mailer_lite.update_organisation_users.assert_called_with(organisation.id)
 
 
-def test_updating_a_cancelled_subscription_calls_mailer_lite_subscribe_organisation(
+def test_updating_a_cancelled_subscription_calls_mailer_lite_update_organisation_users(
     mocker, db
 ):
     # Given
@@ -89,10 +91,10 @@ def test_updating_a_cancelled_subscription_calls_mailer_lite_subscribe_organisat
     subscription.save()
 
     # Then
-    mocked_mailer_lite.subscribe_organisation.assert_called_with(organisation.id)
+    mocked_mailer_lite.update_organisation_users.assert_called_with(organisation.id)
 
 
-def test_cancelling_a_subscription_does_not_call_mailer_lite_subscribe_organisation(
+def test_cancelling_a_subscription_does_calls_mailer_lite_update_organisation_users(
     mocker, db
 ):
     # Given
@@ -105,7 +107,7 @@ def test_cancelling_a_subscription_does_not_call_mailer_lite_subscribe_organisat
     subscription.save()
 
     # Then
-    mocked_mailer_lite.subscribe_organisation.assert_not_called()
+    mocked_mailer_lite.update_organisation_users.assert_called_with(organisation.id)
 
 
 def test_organisation_is_paid_returns_false_if_subscription_does_not_exists(db):
