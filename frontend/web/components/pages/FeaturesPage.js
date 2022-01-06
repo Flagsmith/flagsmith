@@ -100,6 +100,9 @@ const FeaturesPage = class extends Component {
 
     filter = flags => _.filter(flags, (flag) => {
         let isArchivedFlagFilter = this.state.includeArchived && flag.is_archived;
+        if (!this.state.includeArchived && (!flag.tags || !flag.tags.length)) {
+            return true
+        }
         if (this.state.tags.includes('') && (!flag.tags || !flag.tags.length)) {
             return true;
         }
