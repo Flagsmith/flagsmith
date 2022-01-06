@@ -24,7 +24,7 @@ def test_mailer_lite_subscribe_calls_post_with_correct_arguments(mocker, setting
         email="test_user",
         first_name="test",
         last_name="test",
-        has_agreed_to_marketing=True,
+        marketing_consent_given=True,
     )
     mailer_lite = MailerLite()
     mocked_headers = mocker.patch(

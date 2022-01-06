@@ -24,7 +24,7 @@ class CustomUserCreateSerializer(UserCreateSerializer):
     class Meta(UserCreateSerializer.Meta):
         fields = UserCreateSerializer.Meta.fields + (
             "is_active",
-            "has_agreed_to_marketing",
+            "marketing_consent_given",
         )
         read_only_fields = ("is_active",)
 

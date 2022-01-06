@@ -89,7 +89,7 @@ class FFAdminUser(LifecycleModel, AbstractUser):
     last_name = models.CharField(_("last name"), max_length=150)
     google_user_id = models.CharField(max_length=50, null=True, blank=True)
     github_user_id = models.CharField(max_length=50, null=True, blank=True)
-    has_agreed_to_marketing = models.BooleanField(
+    marketing_consent_given = models.BooleanField(
         default=False,
         help_text="Determines whether the user has agreed to receive marketing mails",
     )

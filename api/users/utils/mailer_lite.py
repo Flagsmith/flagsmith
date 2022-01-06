@@ -41,14 +41,14 @@ class MailerLite(MailerLiteBaseClient):
         return self._subscribe_organisation(organisation_id)
 
     def _subscribe(self, user: "models.FFAdminUser"):
-        if not user.has_agreed_to_marketing:
+        if not user.marketing_consent_given:
             return
         data = _get_request_body_from_user(user)
         self._post(data)
 
     def _subscribe_organisation(self, organisation_id: int):
         users = models.FFAdminUser.objects.filter(
-            organisations__id=organisation_id, has_agreed_to_marketing=True
+            organisations__id=organisation_id, marketing_consent_given=True
         )
         with BatchSubscribe() as batch:
             for user in users:
