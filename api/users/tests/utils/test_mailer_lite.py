@@ -8,7 +8,6 @@ from users.models import FFAdminUser
 from users.utils.mailer_lite import (
     BatchSubscribe,
     MailerLite,
-    MailerLiteBaseClient,
     _get_request_body_from_user,
 )
 
