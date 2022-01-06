@@ -102,7 +102,7 @@ const FeaturesPage = class extends Component {
         if (!this.state.includeArchived && flag.is_archived) {
             return false;
         } if (!this.state.tags.length && this.state.includeArchived) {
-            return true;
+            return flag.is_archived;
         }
         if (!this.state.tags.length && !flag.is_archived) {
             return true;
