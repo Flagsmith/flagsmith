@@ -1,3 +1,4 @@
+import importlib
 import json
 
 import pytest
@@ -28,9 +29,8 @@ def test_mailer_lite_subscribe_calls_post_with_correct_arguments(mocker, setting
     )
     mailer_lite = MailerLite()
     mocked_headers = mocker.patch(
-        "users.utils.mailer_lite.MailerLiteBaseClient._request_headers",
-        new_callable=mocker.PropertyMock,
-    ).return_value
+        "users.utils.mailer_lite.MailerLiteBaseClient.request_headers",
+    )
     # When
     mailer_lite._subscribe(user)
     # Then
@@ -58,9 +58,9 @@ def test_batch_subscribe__subscribe_calls_batch_send_correct_number_of_times(moc
 
     users = [user1, user2, user3]
     mocker.patch("users.utils.mailer_lite.MAX_BATCH_SIZE", 2)
-    mocked_batch_send = mocker.patch(
-        "users.utils.mailer_lite.BatchSubscribe.batch_send"
-    )
+
+    mocked_request = mocker.patch("users.utils.mailer_lite.requests")
+
     # When
     with BatchSubscribe() as batch:
         for user in users:
@@ -69,7 +69,7 @@ def test_batch_subscribe__subscribe_calls_batch_send_correct_number_of_times(moc
     # assert that batch_send is call twice, first time for
     # hitting the maximum limit and second time
     # for exiting the context manager
-    assert mocked_batch_send.call_count == 2
+    assert mocked_request.post.call_count == 2
 
 
 @pytest.mark.django_db
@@ -119,9 +119,8 @@ def test_batch_subscribe_batch_send_makes_correct_post_request(mocker, settings)
     # Given
     mocked_request = mocker.patch("users.utils.mailer_lite.requests")
     mocked_headers = mocker.patch(
-        "users.utils.mailer_lite.MailerLiteBaseClient._request_headers",
-        new_callable=mocker.PropertyMock,
-    ).return_value
+        "users.utils.mailer_lite.MailerLiteBaseClient.request_headers",
+    )
 
     base_url = "http//localhost/mailer/test/"
     settings.MAILERLITE_BASE_URL = base_url
@@ -146,9 +145,16 @@ def test_batch_subscribe_batch_send_makes_correct_post_request(mocker, settings)
 def test_mailer_lite_base_client_request_headers(settings):
     # Given
     api_key = "test_key"
+    # First, let's update settings
     settings.MAILERLITE_API_KEY = api_key
+    # Reload the module to use updated settings
+    from users.utils import mailer_lite
+
+    importlib.reload(mailer_lite)
+
     # When
-    headers = MailerLiteBaseClient()._request_headers
+    headers = mailer_lite.MailerLiteBaseClient.request_headers
+    # Then
     assert headers == {
         "X-MailerLite-ApiKey": api_key,
         "Content-Type": "application/json",

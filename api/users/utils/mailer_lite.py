@@ -13,20 +13,17 @@ MAX_BATCH_SIZE = 50
 
 class MailerLiteBaseClient:
     resource = None
+    request_headers = {
+        "X-MailerLite-ApiKey": settings.MAILERLITE_API_KEY,
+        "Content-Type": "application/json",
+    }
 
     def __init__(self):
         self.base_url = settings.MAILERLITE_BASE_URL
 
     def _post(self, data):
         url = self.base_url + self.resource
-        requests.post(url, data=json.dumps(data), headers=self._request_headers)
-
-    @property
-    def _request_headers(self) -> typing.Mapping:
-        return {
-            "X-MailerLite-ApiKey": settings.MAILERLITE_API_KEY,
-            "Content-Type": "application/json",
-        }
+        requests.post(url, data=json.dumps(data), headers=self.request_headers)
 
 
 class MailerLite(MailerLiteBaseClient):
