@@ -1,10 +1,22 @@
-import typing
+from dataclasses import dataclass, field
 
 from django.conf import settings
 from slack_sdk import WebClient
 from slack_sdk.http_retry.builtin_handlers import RateLimitErrorRetryHandler
 
 from integrations.common.wrapper import AbstractBaseEventIntegrationWrapper
+
+
+@dataclass
+class SlackChannel:
+    channel_name: str
+    channel_id: str
+
+
+@dataclass
+class ChannelsDataResponse:
+    cursor: str
+    channels: list[SlackChannel] = field(default_factory=list)
 
 
 class SlackWrapper(AbstractBaseEventIntegrationWrapper):
@@ -24,19 +36,18 @@ class SlackWrapper(AbstractBaseEventIntegrationWrapper):
     def join_channel(self) -> None:
         self._client.conversations_join(channel=self.channel_id)
 
-    def get_channels_data(self) -> typing.List[typing.Mapping[str, str]]:
+    def get_channels_data(self, **kwargs) -> ChannelsDataResponse:
         """
-        Returns a list of dictionary with channel_name and channel_id of non archived
-        public channels.
+        Returns non archived public channels.
         """
 
-        response = self._client.conversations_list(exclude_archived=True)
+        response = self._client.conversations_list(exclude_archived=True, **kwargs)
         channels = response["channels"]
-        channel_data = [
-            {"channel_name": channel["name"], "channel_id": channel["id"]}
-            for channel in channels
+        channels = [
+            SlackChannel(channel["name"], channel["id"]) for channel in channels
         ]
-        return channel_data
+        cursor = response["response_metadata"]["next_cursor"]
+        return ChannelsDataResponse(channels=channels, cursor=cursor)
 
     @property
     def _client(self) -> WebClient:

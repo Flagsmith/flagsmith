@@ -9,7 +9,10 @@ from integrations.amplitude.views import AmplitudeConfigurationViewSet
 from integrations.heap.views import HeapConfigurationViewSet
 from integrations.mixpanel.views import MixpanelConfigurationViewSet
 from integrations.segment.views import SegmentConfigurationViewSet
-from integrations.slack.views import SlackEnvironmentViewSet
+from integrations.slack.views import (
+    SlackEnvironmentViewSet,
+    SlackGetChannelsView,
+)
 
 from .identities.traits.views import TraitViewSet
 from .identities.views import EdgeIdentityViewSet, IdentityViewSet
@@ -71,6 +74,11 @@ environments_router.register(
     r"integrations/slack",
     SlackEnvironmentViewSet,
     basename="integrations-slack",
+)
+environments_router.register(
+    r"integrations/slack-channels",
+    SlackGetChannelsView,
+    basename="integrations-slack-channels",
 )
 identity_router = routers.NestedSimpleRouter(
     environments_router, r"identities", lookup="identity"

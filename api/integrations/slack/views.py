@@ -7,8 +7,10 @@ from django.shortcuts import redirect
 from rest_framework import status
 from rest_framework.decorators import action
 from rest_framework.response import Response
+from rest_framework.viewsets import GenericViewSet
 from slack_sdk.oauth import AuthorizeUrlGenerator
 
+from environments.models import Environment
 from integrations.common.views import IntegrationCommonViewSet
 from integrations.slack.models import SlackConfiguration, SlackEnvironment
 from integrations.slack.serializers import (
@@ -19,39 +21,44 @@ from integrations.slack.serializers import (
 from integrations.slack.slack import SlackWrapper
 
 from .authentication import OauthInitAuthentication
-from .exceptions import FrontEndRedirectURLNotFound, InvalidStateError
+from .exceptions import (
+    FrontEndRedirectURLNotFound,
+    InvalidStateError,
+    SlackConfigurationDoesNotExist,
+)
+from .pagination import ChannelListPagination
 from .permissions import OauthInitPermission
 
 signer = TimestampSigner()
+
+
+class SlackGetChannelsView(GenericViewSet):
+    serializer_class = SlackChannelListSerializer
+    pagination_class = ChannelListPagination
+
+    def get_queryset(self) -> SlackWrapper:
+        environment = Environment.objects.get(
+            api_key=self.kwargs["environment_api_key"]
+        )
+        try:
+            config = SlackConfiguration.objects.get(project=environment.project)
+        except ObjectDoesNotExist as e:
+            raise SlackConfigurationDoesNotExist() from e
+        slack_wrapper = SlackWrapper(api_token=config.api_token)
+
+        return slack_wrapper
+
+    def list(self, request, *args, **kwargs):
+        queryset = self.filter_queryset(self.get_queryset())
+        page = self.paginate_queryset(queryset)
+        serializer = self.get_serializer(page, many=True)
+        return self.get_paginated_response(serializer.data)
 
 
 class SlackEnvironmentViewSet(IntegrationCommonViewSet):
     serializer_class = SlackEnvironmentSerializer
     pagination_class = None  # set here to ensure documentation is correct
     model_class = SlackEnvironment
-
-    @action(
-        detail=False,
-        methods=["GET"],
-        url_path="channels",
-        serializer_class=SlackChannelListSerializer,
-    )
-    def get_channels(self, request, *args, **kwargs):
-        env = self.get_environment_from_request()
-
-        try:
-            config = SlackConfiguration.objects.get(project=env.project)
-        except ObjectDoesNotExist:
-            return Response(
-                "Slack api token not found. Please generate the token using oauth",
-                status.HTTP_400_BAD_REQUEST,
-            )
-        slack_wrapper = SlackWrapper(api_token=config.api_token)
-        serializer = self.get_serializer(
-            data=slack_wrapper.get_channels_data(), many=True
-        )
-        serializer.is_valid()
-        return Response(serializer.data)
 
     @action(detail=False, methods=["GET"], url_path="signature")
     def get_temporary_signature(self, request, *args, **kwargs):

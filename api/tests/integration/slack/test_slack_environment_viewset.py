@@ -4,46 +4,6 @@ from django.urls import reverse
 from rest_framework import status
 
 
-def test_get_channels_returns_400_when_slack_project_config_does_not_exist(
-    admin_client, environment, environment_api_key
-):
-    # Given
-    url = reverse(
-        "api-v1:environments:integrations-slack-get-channels",
-        args=[environment_api_key],
-    )
-
-    # When
-    response = admin_client.get(url)
-
-    # Then
-    assert response.status_code == status.HTTP_400_BAD_REQUEST
-    assert "Slack api token not found" in response.json()
-
-
-def test_get_channels_returns_200_when_slack_project_config_exists(
-    mocker, admin_client, environment_api_key, slack_project_config
-):
-    # Given
-    url = reverse(
-        "api-v1:environments:integrations-slack-get-channels",
-        args=[environment_api_key],
-    )
-    channels_data = [{"channel_name": "test_channel", "channel_id": "123"}]
-    mocked_get_channels_data = mocker.patch(
-        "integrations.slack.views.SlackWrapper.get_channels_data",
-        return_value=channels_data,
-    )
-
-    # When
-    response = admin_client.get(url)
-
-    # Then
-    mocked_get_channels_data.assert_called()
-    assert response.status_code == status.HTTP_200_OK
-    assert response.json() == channels_data
-
-
 def test_posting_env_config_return_400_when_slack_project_config_does_not_exist(
     admin_client, environment, environment_api_key
 ):
