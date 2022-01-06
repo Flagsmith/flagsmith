@@ -1,4 +1,5 @@
 from dataclasses import dataclass, field
+from typing import List
 
 from django.conf import settings
 from slack_sdk import WebClient
@@ -16,7 +17,7 @@ class SlackChannel:
 @dataclass
 class ChannelsDataResponse:
     cursor: str
-    channels: list[SlackChannel] = field(default_factory=list)
+    channels: List[SlackChannel] = field(default_factory=list)
 
 
 class SlackWrapper(AbstractBaseEventIntegrationWrapper):
