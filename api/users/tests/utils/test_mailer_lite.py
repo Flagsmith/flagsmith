@@ -66,7 +66,7 @@ def test_batch_subscribe__subscribe_calls_batch_send_correct_number_of_times(moc
         for user in users:
             batch.subscribe(user)
     # Then
-    # assert that batch_send is call twice, first time for
+    # assert that batch_send is called(using requests made) twice, first time for
     # hitting the maximum limit and second time
     # for exiting the context manager
     assert mocked_request.post.call_count == 2
