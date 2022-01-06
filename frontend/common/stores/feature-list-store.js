@@ -77,7 +77,17 @@ const controller = {
                 store.model.lastSaved = new Date().valueOf();
                 store.changed();
             })
-            .catch(e => API.ajaxHandler(store, e));
+            .catch(e => {
+                if (onComplete) {
+                    onComplete({
+                        ...flag,
+                        type: flag.multivariate_options && flag.multivariate_options.length ? 'MULTIVARIATE' : 'STANDARD',
+                        project: projectId,
+                    })
+                } else {
+                    API.ajaxHandler(store, e)
+                }
+            });
     },
     getInfluxDate(projectId, environmentId, flag, period) {
         data.get(`${Project.api}projects/${projectId}/features/${flag}/influx-data/?period=${period}&environment_id=${environmentId}`)
