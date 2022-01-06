@@ -32,7 +32,7 @@ from .permissions import OauthInitPermission
 signer = TimestampSigner()
 
 
-class SlackGetChannelsView(GenericViewSet):
+class SlackGetChannelsViewSet(GenericViewSet):
     serializer_class = SlackChannelListSerializer
     pagination_class = ChannelListPagination
 

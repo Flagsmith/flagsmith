@@ -11,7 +11,7 @@ from integrations.mixpanel.views import MixpanelConfigurationViewSet
 from integrations.segment.views import SegmentConfigurationViewSet
 from integrations.slack.views import (
     SlackEnvironmentViewSet,
-    SlackGetChannelsView,
+    SlackGetChannelsViewSet,
 )
 
 from .identities.traits.views import TraitViewSet
@@ -77,7 +77,7 @@ environments_router.register(
 )
 environments_router.register(
     r"integrations/slack-channels",
-    SlackGetChannelsView,
+    SlackGetChannelsViewSet,
     basename="integrations-slack-channels",
 )
 identity_router = routers.NestedSimpleRouter(
