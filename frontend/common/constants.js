@@ -116,6 +116,7 @@ const Constants = {
         'USERS': 'Users Page',
     },
     strings: {
+        TAGS_DESCRIPTION: 'Organise your flags with tags, tagging your features as "<strong>protected</strong>" will prevent them from accidentally being deleted.',
         HIDE_FROM_SDKS_DESCRIPTION: 'Enable this if you want to prevent the Flagsmith API from returning this feature regardless of if it is enabled. Use this if you don\'t want users to see that a feature name whilst it is in development.',
         SEGMENT_OVERRIDES_DESCRIPTION: 'Set different values for your feature based on what segments users are in.',
         MULTIVARIATE_DESCRIPTION: 'Features by default have 1 value and enabled state. Adding variations (or multivariates) lets you do % split a/b tests.<br/>Values for variations are set per projects but their % values are configured per environment, segment and identity.',

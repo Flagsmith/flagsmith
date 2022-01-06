@@ -33,7 +33,7 @@ const CreateFlag = class extends Component {
             default_enabled: enabled,
             hide_from_client,
             name,
-            tags,
+            tags: tags || [],
             initial_value: typeof feature_state_value === 'undefined' ? undefined : Utils.getTypedValue(feature_state_value),
             description,
             multivariate_options: _.cloneDeep(multivariate_options),
@@ -326,6 +326,7 @@ const CreateFlag = class extends Component {
                     <FormGroup className="mb-4 mr-3 ml-3" >
                         <InputGroup
                           title={identity ? 'Tags' : 'Tags (optional)'}
+                          tooltip={Constants.strings.TAGS_DESCRIPTION}
                           component={(
                               <AddEditTags
                                 readOnly={!!identity} projectId={this.props.projectId} value={this.state.tags}
@@ -360,7 +361,7 @@ const CreateFlag = class extends Component {
                       placeholder="e.g. 'This determines what size the header is' "
                     />
                 </FormGroup>
-                {!identity && (
+                {!identity && isEdit && (
                     <FormGroup className="mb-4 mr-3 ml-3" >
                         <InputGroup
                           value={description}
