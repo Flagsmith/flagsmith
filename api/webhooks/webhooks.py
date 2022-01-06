@@ -9,6 +9,7 @@ from django.core.mail import EmailMultiAlternatives
 from django.core.serializers.json import DjangoJSONEncoder
 from django.template.loader import get_template
 
+from .constants import WEBHOOK_SIGNATURE_HEADER
 from .serializers import WebhookSerializer
 
 
@@ -61,7 +62,7 @@ def _call_webhooks(webhooks, data, event_type, webhook_type):
             }
             if webhook.secret:
                 signature = generate_signature(json_data, key=webhook.secret)
-                headers.update({"x-flagsmith-signature": signature})
+                headers.update({WEBHOOK_SIGNATURE_HEADER: signature})
 
             res = requests.post(str(webhook.url), data=json_data, headers=headers)
         except requests.exceptions.ConnectionError:

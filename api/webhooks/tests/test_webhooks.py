@@ -81,7 +81,7 @@ class WebhooksTestCase(TestCase):
             secret=secret,
         )
 
-        given_signature = hmac.new(
+        expected_signature = hmac.new(
             key=secret.encode(),
             msg=json.dumps(payload).encode(),
             digestmod=hashlib.sha256,
@@ -96,7 +96,7 @@ class WebhooksTestCase(TestCase):
         _, kwargs = mock_requests.post.call_args_list[0]
         # Then
         received_signature = kwargs["headers"]["x-flagsmith-signature"]
-        assert hmac.compare_digest(given_signature, received_signature) is True
+        assert hmac.compare_digest(expected_signature, received_signature) is True
 
     @mock.patch("webhooks.webhooks.requests")
     def test_request_does_not_have_signature_header_if_secret_is_not_set(
