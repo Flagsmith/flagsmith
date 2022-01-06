@@ -99,18 +99,11 @@ const FeaturesPage = class extends Component {
     }
 
     filter = flags => _.filter(flags, (flag) => {
-        if (this.state.includeArchived) {
-            return flag.is_archived;
-        }
-        if (!this.state.includeArchived && flag.is_archived) {
-            return false;
-        } else if (!this.state.tags.length && !flag.is_archived) {
-            return true;
-        }
+        let isArchivedFlagFilter = this.state.includeArchived && flag.is_archived;
         if (this.state.tags.includes('') && (!flag.tags || !flag.tags.length)) {
             return true;
         }
-        return _.intersection(flag.tags || [], this.state.tags).length;
+        return _.intersection(flag.tags || [], this.state.tags).length || isArchivedFlagFilter;
     }) || []
 
     createFeaturePermission(el) {
