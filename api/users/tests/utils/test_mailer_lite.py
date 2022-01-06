@@ -114,19 +114,6 @@ def test_get_request_body_from_user_with_paid_organisations(mocker):
     }
 
 
-def test_batch_subscribe_batch_send_clears_internal_batch(mocker):
-    # Given
-    batch = BatchSubscribe()
-    batch._batch = ["some_value"]
-    mocker.patch("users.utils.mailer_lite.requests")
-
-    # When
-    batch.batch_send()
-
-    # Then
-    assert batch._batch == []
-
-
 def test_batch_subscribe_batch_send_makes_correct_post_request(mocker, settings):
 
     # Given
@@ -153,6 +140,7 @@ def test_batch_subscribe_batch_send_makes_correct_post_request(mocker, settings)
         data=json.dumps({"requests": test_batch_data}),
         headers=mocked_headers,
     )
+    assert batch._batch == []
 
 
 def test_mailer_lite_base_client_request_headers(settings):
