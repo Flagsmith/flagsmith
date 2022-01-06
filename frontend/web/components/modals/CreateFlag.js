@@ -326,6 +326,7 @@ const CreateFlag = class extends Component {
                     <FormGroup className="mb-4 mr-3 ml-3" >
                         <InputGroup
                           title={identity ? 'Tags' : 'Tags (optional)'}
+                          tooltip={Constants.strings.TAGS_DESCRIPTION}
                           component={(
                               <AddEditTags
                                 readOnly={!!identity} projectId={this.props.projectId} value={this.state.tags}
