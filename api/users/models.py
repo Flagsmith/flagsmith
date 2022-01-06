@@ -89,9 +89,9 @@ class FFAdminUser(LifecycleModel, AbstractUser):
     last_name = models.CharField(_("last name"), max_length=150)
     google_user_id = models.CharField(max_length=50, null=True, blank=True)
     github_user_id = models.CharField(max_length=50, null=True, blank=True)
-    is_subscribed = models.BooleanField(
+    has_agreed_to_marketing = models.BooleanField(
         default=False,
-        help_text="Determines whether the user is subscribed to the mailing list or not",
+        help_text="Determines whether the user has agreed to receive marketing mails",
     )
 
     USERNAME_FIELD = "email"
@@ -105,7 +105,7 @@ class FFAdminUser(LifecycleModel, AbstractUser):
         return "%s %s" % (self.first_name, self.last_name)
 
     @hook(AFTER_CREATE)
-    def subscribe_to_mailing_list(self, is_paid=False):
+    def subscribe_to_mailing_list(self):
         mailer_lite.subscribe(self)
 
     @property

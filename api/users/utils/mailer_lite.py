@@ -19,10 +19,10 @@ class MailerLiteBaseClient:
 
     def _post(self, data):
         url = self.base_url + self.resource
-        requests.post(url, data=json.dumps(data), headers=self._get_request_headers())
+        requests.post(url, data=json.dumps(data), headers=self._request_headers)
 
-    @staticmethod
-    def _get_request_headers() -> typing.Mapping:
+    @property
+    def _request_headers(self) -> typing.Mapping:
         return {
             "X-MailerLite-ApiKey": settings.MAILERLITE_API_KEY,
             "Content-Type": "application/json",
@@ -41,14 +41,14 @@ class MailerLite(MailerLiteBaseClient):
         return self._subscribe_organisation(organisation_id)
 
     def _subscribe(self, user: "models.FFAdminUser"):
-        if not user.is_subscribed:
+        if not user.has_agreed_to_marketing:
             return
         data = _get_request_body_from_user(user)
         self._post(data)
 
     def _subscribe_organisation(self, organisation_id: int):
         users = models.FFAdminUser.objects.filter(
-            organisations__id=organisation_id, is_subscribed=True
+            organisations__id=organisation_id, has_agreed_to_marketing=True
         )
         with BatchSubscribe() as batch:
             for user in users:
@@ -69,18 +69,18 @@ class BatchSubscribe(MailerLiteBaseClient, AbstractContextManager):
             "body": _get_request_body_from_user(user),
         }
 
-    def _batch_send(self):
+    def batch_send(self):
         data = {"requests": self._batch}
         self._post(data)
         self._batch.clear()
 
     def subscribe(self, user: "models.FFAdminUser"):
         if len(self._batch) >= MAX_BATCH_SIZE:
-            self._batch_send()
+            self.batch_send()
         self._batch.append(self._get_raw_subscribe_request(user))
 
     def __exit__(self, exc_type, exc_value, exc_traceback):
-        self._batch_send()
+        self.batch_send()
 
 
 def _get_request_body_from_user(user: "models.FFAdminUser") -> typing.Mapping:
@@ -94,6 +94,3 @@ def _get_request_body_from_user(user: "models.FFAdminUser") -> typing.Mapping:
             ).exists()
         },
     }
-
-
-mailer_lite = MailerLite()

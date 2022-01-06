@@ -62,8 +62,7 @@ class SubscriptionTestCase(TestCase):
         assert subscription.max_seats == 1
 
 
-@pytest.mark.django_db
-def test_creating_a_subscription_calls_mailer_lite_subscribe_organisation(mocker):
+def test_creating_a_subscription_calls_mailer_lite_subscribe_organisation(mocker, db):
     # Given
     organisation = Organisation.objects.create(name="Test org")
     mocked_mailer_lite = mocker.patch("organisations.models.mailer_lite")
@@ -75,9 +74,8 @@ def test_creating_a_subscription_calls_mailer_lite_subscribe_organisation(mocker
     mocked_mailer_lite.subscribe_organisation.assert_called_with(organisation.id)
 
 
-@pytest.mark.django_db
 def test_updating_a_cancelled_subscription_calls_mailer_lite_subscribe_organisation(
-    mocker,
+    mocker, db
 ):
     # Given
     organisation = Organisation.objects.create(name="Test org")
@@ -94,9 +92,8 @@ def test_updating_a_cancelled_subscription_calls_mailer_lite_subscribe_organisat
     mocked_mailer_lite.subscribe_organisation.assert_called_with(organisation.id)
 
 
-@pytest.mark.django_db
 def test_cancelling_a_subscription_does_not_call_mailer_lite_subscribe_organisation(
-    mocker,
+    mocker, db
 ):
     # Given
     organisation = Organisation.objects.create(name="Test org")
@@ -111,16 +108,14 @@ def test_cancelling_a_subscription_does_not_call_mailer_lite_subscribe_organisat
     mocked_mailer_lite.subscribe_organisation.assert_not_called()
 
 
-@pytest.mark.django_db
-def test_organisation_is_paid_returns_false_if_subscription_does_not_exists():
+def test_organisation_is_paid_returns_false_if_subscription_does_not_exists(db):
     # Given
     organisation = Organisation.objects.create(name="Test org")
     # Then
     assert organisation.is_paid is False
 
 
-@pytest.mark.django_db
-def test_organisation_is_paid_returns_true_if_active_subscription_exists():
+def test_organisation_is_paid_returns_true_if_active_subscription_exists(db):
     # Given
     organisation = Organisation.objects.create(name="Test org")
     Subscription.objects.create(organisation=organisation, subscription_id="random_id")
@@ -128,8 +123,7 @@ def test_organisation_is_paid_returns_true_if_active_subscription_exists():
     assert organisation.is_paid is True
 
 
-@pytest.mark.django_db
-def test_organisation_is_paid_returns_false_if_cancelled_subscription_exists():
+def test_organisation_is_paid_returns_false_if_cancelled_subscription_exists(db):
     # Given
     organisation = Organisation.objects.create(name="Test org")
     Subscription.objects.create(

@@ -14,7 +14,9 @@ from organisations.chargebee import (
     get_max_seats_for_plan,
     get_portal_url,
 )
-from users.utils.mailer_lite import mailer_lite
+from users.utils.mailer_lite import MailerLite
+
+mailer_lite = MailerLite()
 
 
 class OrganisationRole(enum.Enum):

@@ -21,11 +21,15 @@ def test_mailer_lite_subscribe_calls_post_with_correct_arguments(mocker, setting
     resource = "subscribers"
 
     user = FFAdminUser.objects.create(
-        email="test_user", first_name="test", last_name="test", is_subscribed=True
+        email="test_user",
+        first_name="test",
+        last_name="test",
+        has_agreed_to_marketing=True,
     )
     mailer_lite = MailerLite()
     mocked_headers = mocker.patch(
-        "users.utils.mailer_lite.MailerLiteBaseClient._get_request_headers"
+        "users.utils.mailer_lite.MailerLiteBaseClient._request_headers",
+        new_callable=mocker.PropertyMock,
     ).return_value
     # When
     mailer_lite._subscribe(user)
@@ -55,7 +59,7 @@ def test_batch_subscribe__subscribe_calls_batch_send_correct_number_of_times(moc
     users = [user1, user2, user3]
     mocker.patch("users.utils.mailer_lite.MAX_BATCH_SIZE", 2)
     mocked_batch_send = mocker.patch(
-        "users.utils.mailer_lite.BatchSubscribe._batch_send"
+        "users.utils.mailer_lite.BatchSubscribe.batch_send"
     )
     # When
     with BatchSubscribe() as batch:
@@ -110,26 +114,28 @@ def test_get_request_body_from_user_with_paid_organisations(mocker):
     }
 
 
-def test_batch_subscribe__batch_send_clears_internal_batch(mocker):
+def test_batch_subscribe_batch_send_clears_internal_batch(mocker):
     # Given
     batch = BatchSubscribe()
     batch._batch = ["some_value"]
     mocker.patch("users.utils.mailer_lite.requests")
 
     # When
-    batch._batch_send()
+    batch.batch_send()
 
     # Then
     assert batch._batch == []
 
 
-def test_batch_subscribe__batch_send_makes_correct_post_request(mocker, settings):
+def test_batch_subscribe_batch_send_makes_correct_post_request(mocker, settings):
 
     # Given
     mocked_request = mocker.patch("users.utils.mailer_lite.requests")
     mocked_headers = mocker.patch(
-        "users.utils.mailer_lite.MailerLiteBaseClient._get_request_headers"
+        "users.utils.mailer_lite.MailerLiteBaseClient._request_headers",
+        new_callable=mocker.PropertyMock,
     ).return_value
+
     base_url = "http//localhost/mailer/test/"
     settings.MAILERLITE_BASE_URL = base_url
     resource = "batch"
@@ -140,7 +146,7 @@ def test_batch_subscribe__batch_send_makes_correct_post_request(mocker, settings
     mocker.patch.object(batch, "_batch", test_batch_data.copy())
 
     # When
-    batch._batch_send()
+    batch.batch_send()
     # Then
     mocked_request.post.assert_called_with(
         base_url + resource,
@@ -149,12 +155,12 @@ def test_batch_subscribe__batch_send_makes_correct_post_request(mocker, settings
     )
 
 
-def test_mailer_lite_base_client_get_request_headers(settings):
+def test_mailer_lite_base_client_request_headers(settings):
     # Given
     api_key = "test_key"
     settings.MAILERLITE_API_KEY = api_key
     # When
-    headers = MailerLiteBaseClient._get_request_headers()
+    headers = MailerLiteBaseClient()._request_headers
     assert headers == {
         "X-MailerLite-ApiKey": api_key,
         "Content-Type": "application/json",

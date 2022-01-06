@@ -22,7 +22,10 @@ class CustomUserCreateSerializer(UserCreateSerializer):
         self.fields["key"] = serializers.SerializerMethodField()
 
     class Meta(UserCreateSerializer.Meta):
-        fields = UserCreateSerializer.Meta.fields + ("is_active", "is_subscribed")
+        fields = UserCreateSerializer.Meta.fields + (
+            "is_active",
+            "has_agreed_to_marketing",
+        )
         read_only_fields = ("is_active",)
 
     def validate_email(self, value):
