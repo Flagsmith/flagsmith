@@ -42,7 +42,7 @@ const OrganisationSettingsPage = class extends Component {
     componentDidMount = () => {
         API.trackPage(Constants.pages.ORGANISATION_SETTINGS);
         $('body').trigger('click');
-        if (AccountStore.getOrganisationRole() !== 'ADMIN') {
+        if (AccountStore.getUser() && AccountStore.getOrganisationRole() !== 'ADMIN') {
             this.context.router.history.replace('/projects');
         }
     };
@@ -311,7 +311,9 @@ const OrganisationSettingsPage = class extends Component {
                         user,
                         organisation,
                     }, { createOrganisation, selectOrganisation, deleteOrganisation }) => !!organisation && (
-                        <div>
+                        <OrganisationProvider>
+                            {({ isLoading, name, error, projects, usage, users, invites, influx_data, inviteLinks }) => (
+                                <div>
                             <FormGroup>
                                 <div className="margin-bottom">
                                     <div className="panel--grey" style={{ marginTop: '3em' }}>
@@ -387,8 +389,6 @@ const OrganisationSettingsPage = class extends Component {
                             </FormGroup>
                             <FormGroup className="mt-5">
                                 <div>
-                                    <OrganisationProvider>
-                                        {({ isLoading, name, error, projects, usage, users, invites, influx_data, inviteLinks }) => (
                                             <div>
                                                 <Row space className="mt-5">
                                                     <h3 className="m-b-0">Team Members</h3>
@@ -690,8 +690,6 @@ const OrganisationSettingsPage = class extends Component {
                                                     )}
                                                 </div>
                                             </div>
-                                        )}
-                                    </OrganisationProvider>
                                 </div>
                             </FormGroup>
                             <FormGroup className="m-y-3">
@@ -841,6 +839,8 @@ const OrganisationSettingsPage = class extends Component {
                                 </Row>
                             </FormGroup>
                         </div>
+                            )}
+                        </OrganisationProvider>
                     )}
                 </AccountProvider>
             </div>
