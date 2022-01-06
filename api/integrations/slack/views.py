@@ -36,7 +36,7 @@ class SlackGetChannelsViewSet(GenericViewSet):
     serializer_class = SlackChannelListSerializer
     pagination_class = ChannelListPagination
 
-    def get_queryset(self) -> SlackWrapper:
+    def get_api_token(self) -> SlackWrapper:
         environment = Environment.objects.get(
             api_key=self.kwargs["environment_api_key"]
         )
@@ -44,13 +44,12 @@ class SlackGetChannelsViewSet(GenericViewSet):
             config = SlackConfiguration.objects.get(project=environment.project)
         except ObjectDoesNotExist as e:
             raise SlackConfigurationDoesNotExist() from e
-        slack_wrapper = SlackWrapper(api_token=config.api_token)
-
-        return slack_wrapper
+        return config.api_token
 
     def list(self, request, *args, **kwargs):
-        queryset = self.filter_queryset(self.get_queryset())
-        page = self.paginate_queryset(queryset)
+        api_token = self.get_api_token()
+        slack_wrapper = SlackWrapper(api_token=api_token)
+        page = self.paginate_queryset(slack_wrapper)
         serializer = self.get_serializer(page, many=True)
         return self.get_paginated_response(serializer.data)
 
