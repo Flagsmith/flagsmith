@@ -15,9 +15,9 @@ from organisations.chargebee import (
     get_portal_url,
 )
 from users.utils.mailer_lite import MailerLite
+from webhooks.models import AbstractBaseWebhookModel
 
 mailer_lite = MailerLite()
-from webhooks.models import AbstractBaseWebhookModel
 
 
 class OrganisationRole(enum.Enum):
