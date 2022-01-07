@@ -1,15 +1,12 @@
 from flag_engine.features.models import (
     MultivariateFeatureStateValueModel as EngineMultivariateFeatureStateValueModel,
 )
-from flag_engine.features.schemas import MultivariateFeatureStateValueSchema
 from rest_framework import serializers
 
 from features.multivariate.models import (
     MultivariateFeatureOption,
     MultivariateFeatureStateValue,
 )
-
-engine_multi_fs_value_schema = MultivariateFeatureStateValueSchema()
 
 
 class MultivariateFeatureOptionSerializer(serializers.ModelSerializer):

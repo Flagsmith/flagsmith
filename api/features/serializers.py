@@ -307,21 +307,11 @@ class FeatureStateSerializerWithEdgeIdentity(serializers.ModelSerializer):
         )
         read_only_fields = ("featurestate_uuid",)
 
-    def get_feature(self, obj):
-        return obj.feature
-
     def _get_identity_uuid(self):
         return self.context["view"].kwargs["edge_identity_identity_uuid"]
 
-    def get_environment_api_key(self):
-        return self.context["view"].kwargs["environment_api_key"]
-
     def get_identity_uuid(self, obj):
         return self._get_identity_uuid()
-
-    def get_feature_state_value(self, obj):
-        identity_id = self._get_identity_uuid()
-        return obj.get_value(identity_id=identity_id)
 
     def save(self, **kwargs):
         identity = self.context["view"].identity
