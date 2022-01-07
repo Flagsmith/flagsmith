@@ -1,3 +1,5 @@
+from datetime import datetime
+
 import pytest
 from django.test import TestCase
 
@@ -58,3 +60,76 @@ class SubscriptionTestCase(TestCase):
 
         # Then
         assert subscription.max_seats == 1
+
+
+def test_creating_a_subscription_calls_mailer_lite_update_organisation_users(
+    mocker, db
+):
+    # Given
+    organisation = Organisation.objects.create(name="Test org")
+    mocked_mailer_lite = mocker.patch("organisations.models.mailer_lite")
+
+    # When
+    Subscription.objects.create(organisation=organisation)
+
+    # Then
+    mocked_mailer_lite.update_organisation_users.assert_called_with(organisation.id)
+
+
+def test_updating_a_cancelled_subscription_calls_mailer_lite_update_organisation_users(
+    mocker, db
+):
+    # Given
+    organisation = Organisation.objects.create(name="Test org")
+    subscription = Subscription.objects.create(
+        organisation=organisation, cancellation_date=datetime.now()
+    )
+    mocked_mailer_lite = mocker.patch("organisations.models.mailer_lite")
+
+    # When
+    subscription.cancellation_date = None
+    subscription.save()
+
+    # Then
+    mocked_mailer_lite.update_organisation_users.assert_called_with(organisation.id)
+
+
+def test_cancelling_a_subscription_calls_mailer_lite_update_organisation_users(
+    mocker, db
+):
+    # Given
+    organisation = Organisation.objects.create(name="Test org")
+    subscription = Subscription.objects.create(organisation=organisation)
+    mocked_mailer_lite = mocker.patch("organisations.models.mailer_lite")
+
+    # When
+    subscription.cancellation_date = datetime.now()
+    subscription.save()
+
+    # Then
+    mocked_mailer_lite.update_organisation_users.assert_called_with(organisation.id)
+
+
+def test_organisation_is_paid_returns_false_if_subscription_does_not_exists(db):
+    # Given
+    organisation = Organisation.objects.create(name="Test org")
+    # Then
+    assert organisation.is_paid is False
+
+
+def test_organisation_is_paid_returns_true_if_active_subscription_exists(db):
+    # Given
+    organisation = Organisation.objects.create(name="Test org")
+    Subscription.objects.create(organisation=organisation, subscription_id="random_id")
+    # Then
+    assert organisation.is_paid is True
+
+
+def test_organisation_is_paid_returns_false_if_cancelled_subscription_exists(db):
+    # Given
+    organisation = Organisation.objects.create(name="Test org")
+    Subscription.objects.create(
+        organisation=organisation, cancellation_date=datetime.now()
+    )
+    # Then
+    assert organisation.is_paid is False
