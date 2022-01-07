@@ -284,28 +284,16 @@ class EdgeFeatureField(serializers.Field):
         return feature
 
 
-class FeatureStateSerializerWithEdgeIdentity(serializers.ModelSerializer):
+class FeatureStateSerializerWithEdgeIdentity(serializers.Serializer):
     feature_state_value = FeatureStateValueEdgeIdentityField()
     feature = EdgeFeatureField()
     multivariate_feature_state_values = EdgeMultivariateFeatureStateValueSerializer(
         many=True, required=False
     )
-
+    enabled = serializers.BooleanField(required=False, default=False)
     identity_uuid = serializers.SerializerMethodField()
 
-    featurestate_uuid = serializers.CharField(required=False)
-
-    class Meta:
-        model = FeatureState
-        fields = (
-            "feature",
-            "enabled",
-            "identity_uuid",
-            "featurestate_uuid",
-            "feature_state_value",
-            "multivariate_feature_state_values",
-        )
-        read_only_fields = ("featurestate_uuid",)
+    featurestate_uuid = serializers.CharField(required=False, read_only=True)
 
     def _get_identity_uuid(self):
         return self.context["view"].kwargs["edge_identity_identity_uuid"]
