@@ -14,7 +14,12 @@ from rest_framework.test import APIClient, override_settings
 from environments.models import Environment
 from features.models import Feature, FeatureSegment
 from organisations.invites.models import Invite
-from organisations.models import Organisation, OrganisationRole, Subscription
+from organisations.models import (
+    Organisation,
+    OrganisationRole,
+    OrganisationWebhook,
+    Subscription,
+)
 from organisations.permissions.models import UserOrganisationPermission
 from organisations.permissions.permissions import CREATE_PROJECT
 from projects.models import Project
@@ -675,3 +680,27 @@ class OrganisationWebhookViewSetTestCase(TestCase):
 
         # Then
         assert response.status_code == status.HTTP_201_CREATED
+
+    def test_can_update_secret(self):
+        # Given
+        webhook = OrganisationWebhook.objects.create(
+            url="https://test.com/my-webhook", organisation=self.organisation
+        )
+        url = reverse(
+            "api-v1:organisations:organisation-webhooks-detail",
+            args=[self.organisation.id, webhook.id],
+        )
+        data = {
+            "secret": "random_key",
+        }
+        # When
+        res = self.client.patch(
+            url, data=json.dumps(data), content_type="application/json"
+        )
+        # Then
+        assert res.status_code == status.HTTP_200_OK
+        assert res.json()["secret"] == data["secret"]
+
+        # and
+        webhook.refresh_from_db()
+        assert webhook.secret == data["secret"]

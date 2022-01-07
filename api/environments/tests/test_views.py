@@ -448,6 +448,29 @@ class WebhookViewSetTestCase(TestCase):
         webhook.refresh_from_db()
         assert webhook.url == data["url"] and not webhook.enabled
 
+    def test_can_update_secret(self):
+        # Given
+        webhook = Webhook.objects.create(
+            url=self.valid_webhook_url, environment=self.environment
+        )
+        url = reverse(
+            "api-v1:environments:environment-webhooks-detail",
+            args=[self.environment.api_key, webhook.id],
+        )
+        data = {"secret": "random_secret"}
+
+        # When
+        res = self.client.patch(
+            url, data=json.dumps(data), content_type="application/json"
+        )
+
+        # Then
+        assert res.status_code == status.HTTP_200_OK
+
+        # and
+        webhook.refresh_from_db()
+        assert webhook.secret == data["secret"]
+
     def test_can_delete_webhook_for_an_environment(self):
         # Given
         webhook = Webhook.objects.create(

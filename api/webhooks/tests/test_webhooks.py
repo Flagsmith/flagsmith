@@ -1,3 +1,6 @@
+import hashlib
+import hmac
+import json
 from unittest import TestCase, mock
 
 import pytest
@@ -61,3 +64,55 @@ class WebhooksTestCase(TestCase):
 
         # Then
         mock_requests.post.assert_not_called()
+
+    @mock.patch("webhooks.webhooks.WebhookSerializer")
+    @mock.patch("webhooks.webhooks.requests")
+    def test_request_made_with_correct_signature(
+        self, mock_requests, webhook_serializer
+    ):
+        # Given
+        payload = {"key": "value"}
+        webhook_serializer.return_value.data = payload
+        secret = "random_key"
+        Webhook.objects.create(
+            url="http://url.1.com",
+            enabled=True,
+            environment=self.environment,
+            secret=secret,
+        )
+
+        expected_signature = hmac.new(
+            key=secret.encode(),
+            msg=json.dumps(payload).encode(),
+            digestmod=hashlib.sha256,
+        ).hexdigest()
+
+        call_environment_webhooks(
+            environment=self.environment,
+            data={},
+            event_type=WebhookEventType.FLAG_UPDATED,
+        )
+        # When
+        _, kwargs = mock_requests.post.call_args_list[0]
+        # Then
+        received_signature = kwargs["headers"]["x-flagsmith-signature"]
+        assert hmac.compare_digest(expected_signature, received_signature) is True
+
+    @mock.patch("webhooks.webhooks.requests")
+    def test_request_does_not_have_signature_header_if_secret_is_not_set(
+        self, mock_requests
+    ):
+        # Given
+        Webhook.objects.create(
+            url="http://url.1.com", enabled=True, environment=self.environment
+        )
+        # When
+        call_environment_webhooks(
+            environment=self.environment,
+            data={},
+            event_type=WebhookEventType.FLAG_UPDATED,
+        )
+
+        # Then
+        _, kwargs = mock_requests.post.call_args_list[0]
+        assert "x-flagsmith-signature" not in kwargs["headers"]

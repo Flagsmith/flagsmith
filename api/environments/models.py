@@ -16,6 +16,7 @@ from app.utils import create_hash
 from environments.exceptions import EnvironmentHeaderNotPresentError
 from features.models import FeatureState
 from projects.models import Project
+from webhooks.models import AbstractBaseWebhookModel
 
 logger = logging.getLogger(__name__)
 
@@ -137,11 +138,10 @@ class Environment(LifecycleModel):
         )
 
 
-class Webhook(models.Model):
+class Webhook(AbstractBaseWebhookModel):
     environment = models.ForeignKey(
         Environment, on_delete=models.CASCADE, related_name="webhooks"
     )
-    url = models.URLField()
     enabled = models.BooleanField(default=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
