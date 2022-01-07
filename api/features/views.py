@@ -13,6 +13,7 @@ from flag_engine.identities.builders import (
 )
 from rest_framework import mixins, status, viewsets
 from rest_framework.decorators import action
+from rest_framework.exceptions import NotFound
 from rest_framework.generics import GenericAPIView, get_object_or_404
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.renderers import JSONRenderer
@@ -154,14 +155,15 @@ class EdgeIdentityFeatureStateViewSet(viewsets.ModelViewSet):
 
     def get_object(self):
         featurestate_uuid = self.kwargs["featurestate_uuid"]
-
-        featurestate = next(
-            filter(
-                lambda fs: fs.featurestate_uuid == featurestate_uuid,
-                self.identity.identity_features,
-            ),
-            None,
-        )
+        try:
+            featurestate = next(
+                filter(
+                    lambda fs: fs.featurestate_uuid == featurestate_uuid,
+                    self.identity.identity_features,
+                )
+            )
+        except StopIteration:
+            raise NotFound()
         return featurestate
 
     def list(self, request, *args, **kwargs):

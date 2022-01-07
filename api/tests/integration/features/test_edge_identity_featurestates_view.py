@@ -101,6 +101,29 @@ def test_edge_identities_featurestate_delete(
     assert response.status_code == status.HTTP_204_NO_CONTENT
 
 
+def test_edge_identities_featurestate_delete_returns_404_if_featurestate_does_not_exists(
+    mocker,
+    admin_client,
+    environment,
+    environment_api_key,
+    identity_document,
+    dynamo_wrapper_mock,
+):
+    # Given
+    dynamo_wrapper_mock.get_item_from_uuid.return_value = identity_document
+    identity_uuid = identity_document["identity_uuid"]
+    featurestate_uuid = "some_random_uuid"
+    url = reverse(
+        "api-v1:environments:edge-identity-featurestates-detail",
+        args=[environment_api_key, identity_uuid, featurestate_uuid],
+    )
+    # When
+    response = admin_client.delete(url)
+
+    # Then
+    assert response.status_code == status.HTTP_404_NOT_FOUND
+
+
 def test_edge_identities_create_featurestate_returns_400_if_feature_state_already_exists(
     mocker,
     admin_client,
