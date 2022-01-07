@@ -1,12 +1,14 @@
 const BaseStore = require('./base/_store');
 const data = require('../data/base/_data');
 
-const PAGE_SIZE = 999;
 
 const controller = {
     getAuditLog: (page, projectId) => {
+        const PAGE_SIZE = flagsmith.hasFeature("audit_api_search")? flagsmith.getValue("audit_api_search")||999 :999;
+
         store.loading();
-        const endpoint = ((page && `${page}${store.search ? `&q=${store.search}&project=${projectId}` : `&project=${projectId}`}`) || `${Project.api}audit/${store.search ? `?q=${store.search}&project=${projectId}` : `?project=${projectId}`}`);
+        let endpoint = ((page && `${page}${store.search ? `&search=${store.search}&project=${projectId}` : `&project=${projectId}`}`) || `${Project.api}audit/${store.search ? `?search=${store.search}&project=${projectId}` : `?project=${projectId}`}`);
+        endpoint = endpoint + `&page_size=${PAGE_SIZE}`
         data.get(endpoint)
             .then((res) => {
                 store.model = res && res.results;
@@ -27,10 +29,12 @@ const controller = {
 const store = Object.assign({}, BaseStore, {
     id: 'identitylist',
     paging: {
-        pageSize: PAGE_SIZE,
     },
     getPaging() {
-        return store.paging;
+        return {
+            ...store.paging,
+            pageSize: flagsmith.hasFeature("audit_api_search")?flagsmith.getValue("audit_api_search")||999 :999
+        };
     },
 });
 
@@ -40,7 +44,7 @@ store.dispatcherIndex = Dispatcher.register(store, (payload) => {
 
     switch (action.actionType) {
         case Actions.GET_AUDIT_LOG:
-            store.search = '';
+            store.search = action.search || '';
             controller.getAuditLog(null, action.projectId);
             break;
         case Actions.GET_AUDIT_LOG_PAGE:

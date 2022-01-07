@@ -419,10 +419,11 @@ const AppActions = Object.assign({}, require('./base/_app-actions'), {
             pageSize,
         });
     },
-    getAuditLog(projectId) {
+    getAuditLog(projectId, search) {
         Dispatcher.handleViewAction({
             actionType: Actions.GET_AUDIT_LOG,
             projectId,
+            search
         });
     },
     getAuditLogPage(projectId, page) {

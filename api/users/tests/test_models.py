@@ -1,4 +1,4 @@
-from unittest import TestCase
+from unittest import TestCase, mock
 
 import pytest
 from django.db.utils import IntegrityError
@@ -217,3 +217,53 @@ def test_get_permission_keys_for_organisation(
 
     # Then
     assert permission_keys == expected_keys
+
+
+@pytest.mark.django_db
+def test_creating_a_user_calls_mailer_lite_subscribe(mocker):
+    # Given
+    mailer_lite_mock = mocker.patch("users.models.mailer_lite")
+    # When
+    user = FFAdminUser.objects.create(
+        email="test@mail.com",
+    )
+    # Then
+    mailer_lite_mock.subscribe.assert_called_with(user)
+
+
+@pytest.mark.django_db
+def test_user_add_organisation_does_not_call_mailer_lite_subscribe_for_unpaid_organisation(
+    mocker,
+):
+    user = FFAdminUser.objects.create(email="test@example.com")
+    organisation = Organisation.objects.create(name="Test Organisation")
+    mailer_lite_mock = mocker.patch("users.models.mailer_lite")
+    mocker.patch(
+        "organisations.models.Organisation.is_paid",
+        new_callable=mock.PropertyMock,
+        return_value=False,
+    )
+    # When
+    user.add_organisation(organisation, OrganisationRole.USER)
+
+    # Then
+    mailer_lite_mock.subscribe.assert_not_called()
+
+
+@pytest.mark.django_db
+def test_user_add_organisation_calls_mailer_lite_subscribe_for_paid_organisation(
+    mocker,
+):
+    mailer_lite_mock = mocker.patch("users.models.mailer_lite")
+    user = FFAdminUser.objects.create(email="test@example.com")
+    organisation = Organisation.objects.create(name="Test Organisation")
+    mocker.patch(
+        "organisations.models.Organisation.is_paid",
+        new_callable=mock.PropertyMock,
+        return_value=True,
+    )
+    # When
+    user.add_organisation(organisation, OrganisationRole.USER)
+
+    # Then
+    mailer_lite_mock.subscribe.assert_called_with(user)

@@ -8,7 +8,7 @@ RUN python3 -m venv $VIRTUAL_ENV
 ENV PATH="$VIRTUAL_ENV/bin:$PATH"
 
 COPY requirements.txt /app/
-RUN apt-get update && apt-get install -y git && pip install -r requirements.txt
+RUN pip install -r requirements.txt --no-cache-dir --compile 
 
 COPY . /app/
 
