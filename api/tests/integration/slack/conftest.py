@@ -53,3 +53,8 @@ def slack_environment_config(
         content_type="application/json",
     )
     return response.json()["id"]
+
+
+@pytest.fixture
+def mocked_slack_wrapper(mocker):
+    return mocker.patch("integrations.slack.views.SlackWrapper")

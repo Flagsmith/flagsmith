@@ -30,6 +30,8 @@ def test_get_channels_pagination(
     environment_api_key,
     slack_project_config,
     slack_channels_data_response,
+    slack_bot_token,
+    mocked_slack_wrapper,
 ):
     # Given
     page_size = 10
@@ -37,27 +39,31 @@ def test_get_channels_pagination(
         "api-v1:environments:integrations-slack-channels-list",
         args=[environment_api_key],
     )
-    mocked_get_channels_data = mocker.patch(
-        "integrations.slack.views.SlackWrapper.get_channels_data",
-        return_value=slack_channels_data_response,
+    mocked_get_channels_data = mocker.MagicMock(
+        return_value=slack_channels_data_response
     )
-    url = f"{base_url}?page_size={page_size}"
+
+    mocked_slack_wrapper.return_value.get_channels_data = mocked_get_channels_data
+
+    url = f"{base_url}?limit={page_size}"
 
     # Let's make the first call
     response = admin_client.get(url)
-    # and, verify that get_channels_data was called with correct arguments
-    mocked_get_channels_data.assert_called_with(limit=page_size, cursor=None)
-
+    # and, verify that slack components were called with correct arguments
+    mocked_get_channels_data.assert_called_with(limit=page_size)
+    mocked_slack_wrapper.assert_called_with(api_token=slack_bot_token)
     # Next, verify the length of the result
-    assert response.json()["count"] == len(slack_channels_data_response.channels)
-    assert len(response.json()["results"]) == len(slack_channels_data_response.channels)
+    assert len(response.json()["channels"]) == len(
+        slack_channels_data_response.channels
+    )
 
     # Now, let's make the second call using cursor
     cursor = response.json()["cursor"]
-    url = f"{base_url}?cursor={cursor}?page_size={page_size}"
+    url = f"{base_url}?cursor={cursor}&limit={page_size}"
     response = admin_client.get(url)
-    # Finally verify that get_channels_data was called with correct arguments
+    # Finally verify that slack components were called with correct arguments
     mocked_get_channels_data.assert_called_with(cursor=cursor, limit=page_size)
+    mocked_slack_wrapper.assert_called_with(api_token=slack_bot_token)
 
 
 def test_get_channels_response_structure(
@@ -66,27 +72,27 @@ def test_get_channels_response_structure(
     environment_api_key,
     slack_project_config,
     slack_channels_data_response,
+    mocked_slack_wrapper,
 ):
     # Given
     url = reverse(
         "api-v1:environments:integrations-slack-channels-list",
         args=[environment_api_key],
     )
-    mocked_get_channels_data = mocker.patch(
-        "integrations.slack.views.SlackWrapper.get_channels_data",
-        return_value=slack_channels_data_response,
+    mocked_get_channels_data = mocker.MagicMock(
+        return_value=slack_channels_data_response
     )
+    mocked_slack_wrapper.return_value.get_channels_data = mocked_get_channels_data
 
     # When
     response = admin_client.get(url)
 
     # Then
-    mocked_get_channels_data.assert_called()
     assert response.status_code == status.HTTP_200_OK
     assert response.json()["cursor"] == slack_channels_data_response.cursor
-    assert response.json()["results"][0] == asdict(
+    assert response.json()["channels"][0] == asdict(
         slack_channels_data_response.channels[0]
     )
-    assert response.json()["results"][1] == asdict(
+    assert response.json()["channels"][1] == asdict(
         slack_channels_data_response.channels[1]
     )

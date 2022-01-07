@@ -14,6 +14,7 @@ from environments.models import Environment
 from integrations.common.views import IntegrationCommonViewSet
 from integrations.slack.models import SlackConfiguration, SlackEnvironment
 from integrations.slack.serializers import (
+    SlackChannelListQueryParamSerializer,
     SlackChannelListSerializer,
     SlackEnvironmentSerializer,
     SlackOauthInitQueryParamSerializer,
@@ -26,7 +27,6 @@ from .exceptions import (
     InvalidStateError,
     SlackConfigurationDoesNotExist,
 )
-from .pagination import ChannelListPagination
 from .permissions import OauthInitPermission
 
 signer = TimestampSigner()
@@ -34,7 +34,6 @@ signer = TimestampSigner()
 
 class SlackGetChannelsViewSet(GenericViewSet):
     serializer_class = SlackChannelListSerializer
-    pagination_class = ChannelListPagination
 
     def get_api_token(self) -> str:
         environment = Environment.objects.get(
@@ -48,10 +47,14 @@ class SlackGetChannelsViewSet(GenericViewSet):
 
     def list(self, request, *args, **kwargs):
         api_token = self.get_api_token()
+        q_param_serializer = SlackChannelListQueryParamSerializer(data=request.GET)
+        q_param_serializer.is_valid(raise_exception=True)
         slack_wrapper = SlackWrapper(api_token=api_token)
-        channels = self.paginator.get_paginated_channels(slack_wrapper, self.request)
-        serializer = self.get_serializer(channels, many=True)
-        return self.get_paginated_response(serializer.data)
+        channel_data_response = slack_wrapper.get_channels_data(
+            **q_param_serializer.validated_data
+        )
+        serializer = self.get_serializer(channel_data_response)
+        return Response(serializer.data)
 
 
 class SlackEnvironmentViewSet(IntegrationCommonViewSet):
