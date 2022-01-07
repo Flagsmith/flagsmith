@@ -98,9 +98,10 @@ def test_cancelling_a_subscription_calls_mailer_lite_update_organisation_users(
     mocker, db
 ):
     # Given
+
+    mocked_mailer_lite = mocker.patch("organisations.models.mailer_lite")
     organisation = Organisation.objects.create(name="Test org")
     subscription = Subscription.objects.create(organisation=organisation)
-    mocked_mailer_lite = mocker.patch("organisations.models.mailer_lite")
 
     # When
     subscription.cancellation_date = datetime.now()
@@ -108,6 +109,8 @@ def test_cancelling_a_subscription_calls_mailer_lite_update_organisation_users(
 
     # Then
     mocked_mailer_lite.update_organisation_users.assert_called_with(organisation.id)
+    # once for creating a subscription and second time for cancellation
+    assert mocked_mailer_lite.update_organisation_users.call_count == 2
 
 
 def test_organisation_is_paid_returns_false_if_subscription_does_not_exists(db):
