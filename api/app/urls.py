@@ -1,3 +1,5 @@
+import os
+
 from django.conf import settings
 from django.conf.urls import include, url
 from django.contrib import admin
@@ -30,8 +32,6 @@ urlpatterns = [
         name="project_overrides",
     ),
     path("", views.index, name="index"),
-    # Catch all for subfolder views on the front end
-    url(r"^.*/$", views.index, name="index"),
 ]
 
 if settings.DEBUG:
@@ -40,3 +40,16 @@ if settings.DEBUG:
     urlpatterns = [
         url(r"^__debug__/", include(debug_toolbar.urls)),
     ] + urlpatterns
+
+if settings.ENVIRONMENT == "saas" and os.path.exists(
+    os.path.join(settings.BASE_DIR, "saml")
+):
+    urlpatterns += [
+        path("api/v1/auth/saml/", include("saml.urls")),
+    ]
+
+urlpatterns += [
+    # Catch all for subfolder views on the front end
+    # Note: must be after all other URL paths
+    url(r"^.*/$", views.index, name="index"),
+]
