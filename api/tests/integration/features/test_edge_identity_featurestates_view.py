@@ -163,7 +163,9 @@ def test_edge_identities_create_featurestate(
     }
 
     # When
-    response = admin_client.post(url, data=data)
+    response = admin_client.post(
+        url, data=json.dumps(data), content_type="application/json"
+    )
     # Then
     dynamo_wrapper_mock.get_item_from_uuid.assert_called_with(
         environment_api_key, identity_uuid

@@ -36,8 +36,17 @@ class MultivariateFeatureStateValueSerializer(serializers.ModelSerializer):
         )
 
 
+class EdgeMultivariateFeatureOptionField(serializers.Field):
+    def to_internal_value(self, data):
+        return MultivariateFeatureOption.objects.get(id=data)
+
+    def to_representation(self, obj):
+        return obj.id
+
+
 class EdgeMultivariateFeatureStateValueSerializer(serializers.ModelSerializer):
-    # custom serializer because it does not have pk
+    multivariate_feature_option = EdgeMultivariateFeatureOptionField()
+
     def to_internal_value(self, data):
         data = super().to_internal_value(data)
         return EngineMultivariateFeatureStateValueModel(**data)

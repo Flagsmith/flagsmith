@@ -275,9 +275,18 @@ class FeatureStateValueEdgeIdentityField(serializers.Field):
         return FeatureStateValue(**data).value
 
 
+class EdgeFeatureField(serializers.Field):
+    def to_representation(self, obj):
+        return obj.id
+
+    def to_internal_value(self, data):
+        feature = Feature.objects.get(id=data)
+        return feature
+
+
 class FeatureStateSerializerWithEdgeIdentity(serializers.ModelSerializer):
-    # feature_state_value = serializers.SerializerMethodField()
     feature_state_value = FeatureStateValueEdgeIdentityField()
+    feature = EdgeFeatureField()
     multivariate_feature_state_values = EdgeMultivariateFeatureStateValueSerializer(
         many=True, required=False
     )
