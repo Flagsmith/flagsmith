@@ -34,6 +34,7 @@ signer = TimestampSigner()
 
 class SlackGetChannelsViewSet(GenericViewSet):
     serializer_class = SlackChannelListSerializer
+    pagination_class = None  # set here to ensure documentation is correct
 
     def get_api_token(self) -> str:
         environment = Environment.objects.get(
