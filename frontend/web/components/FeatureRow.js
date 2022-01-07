@@ -96,7 +96,7 @@ class TheComponent extends Component {
                                     </ButtonLink>}
                                     place="right"
                                 >
-                                    {`Flag owned by ${projectFlag.owners.map((v)=>`${v.first_name} ${v.last_name}`).join(", ")}`}
+                                    {`Flag assigned to ${projectFlag.owners.map((v)=>`${v.first_name} ${v.last_name}`).join(", ")}`}
                                 </Tooltip>
 
                         ): (
