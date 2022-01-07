@@ -132,7 +132,7 @@ class FeatureViewSet(viewsets.ModelViewSet):
 
 
 class EdgeIdentityFeatureStateViewSet(viewsets.ModelViewSet):
-    permission_classes = [IsAuthenticated, NestedEnvironmentPermissions]
+    permission_classes = [IsAuthenticated, IdentityFeatureStatePermissions]
     lookup_field = "featurestate_uuid"
 
     serializer_class = FeatureStateSerializerWithEdgeIdentity
