@@ -24,10 +24,20 @@ class SlackEnvironmentSerializer(serializers.ModelSerializer):
         )
 
 
-class SlackChannelListSerializer(serializers.Serializer):
+class SlackChannelSerializer(serializers.Serializer):
     channel_name = serializers.CharField()
     channel_id = serializers.CharField()
 
 
+class SlackChannelListSerializer(serializers.Serializer):
+    cursor = serializers.CharField()
+    channels = serializers.ListField(child=SlackChannelSerializer())
+
+
 class SlackOauthInitQueryParamSerializer(serializers.Serializer):
     redirect_url = serializers.URLField(allow_blank=False)
+
+
+class SlackChannelListQueryParamSerializer(serializers.Serializer):
+    limit = serializers.IntegerField(default=20, max_value=1000, min_value=1)
+    cursor = serializers.CharField(required=False)

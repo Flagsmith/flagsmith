@@ -1,9 +1,10 @@
-from integrations.slack.slack import SlackWrapper
+from integrations.slack.slack import SlackChannel, SlackWrapper
 
 
 def test_get_channels_data_response_structure(mocker, mocked_slack_internal_client):
     # Given
     api_token = "test_token"
+    cursor = "dGVhbTpDMDI3MEpNRldNVg=="
     response_data = {
         "ok": True,
         "channels": [
@@ -20,21 +21,23 @@ def test_get_channels_data_response_structure(mocker, mocked_slack_internal_clie
                 "num_members": 3,
             },
         ],
-        "response_metadata": {"next_cursor": "dGVhbTpDMDI3MEpNRldNVg=="},
+        "response_metadata": {"next_cursor": cursor},
     }
 
     # When
+    some_kwargs = {"key": "value"}
     mocked_slack_internal_client.conversations_list.return_value = response_data
-    channels = SlackWrapper(api_token=api_token).get_channels_data()
+    channels_data = SlackWrapper(api_token=api_token).get_channels_data(**some_kwargs)
 
     # Then
-    assert channels == [
-        {"channel_name": "channel1", "channel_id": "id1"},
-        {"channel_name": "channel2", "channel_id": "id2"},
+    assert channels_data.channels == [
+        SlackChannel("channel1", "id1"),
+        SlackChannel("channel2", "id2"),
     ]
+    assert channels_data.cursor == cursor
 
     mocked_slack_internal_client.conversations_list.assert_called_with(
-        exclude_archived=True
+        exclude_archived=True, **some_kwargs
     )
 
 
