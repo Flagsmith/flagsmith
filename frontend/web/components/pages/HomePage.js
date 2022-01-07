@@ -302,7 +302,7 @@ const HomePage = class extends React.Component {
                                                 </AccountProvider>
                                             </Card>
 
-                                            {!projectOverrides.preventSignup || isInvite && (
+                                            {(!projectOverrides.preventSignup || isInvite) && (
 
                                                 <div>
                                                     <Row className="justify-content-center mt-2">
