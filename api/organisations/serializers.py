@@ -201,7 +201,7 @@ class PortalUrlSerializer(serializers.Serializer):
 class OrganisationWebhookSerializer(serializers.ModelSerializer):
     class Meta:
         model = OrganisationWebhook
-        fields = ("id", "url", "enabled")
+        fields = ("id", "url", "enabled", "secret")
         read_only_fields = ("id",)
 
 
