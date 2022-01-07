@@ -1,4 +1,3 @@
-import importlib
 import json
 
 import pytest
@@ -139,22 +138,3 @@ def test_batch_subscribe_batch_send_makes_correct_post_request(mocker, settings)
         headers=mocked_headers,
     )
     assert batch._batch == []
-
-
-def test_mailer_lite_base_client_request_headers(settings):
-    # Given
-    api_key = "test_key"
-    # First, let's update settings
-    settings.MAILERLITE_API_KEY = api_key
-    # Reload the module to use updated settings
-    from users.utils import mailer_lite
-
-    importlib.reload(mailer_lite)
-
-    # When
-    headers = mailer_lite.MailerLiteBaseClient.request_headers
-    # Then
-    assert headers == {
-        "X-MailerLite-ApiKey": api_key,
-        "Content-Type": "application/json",
-    }
