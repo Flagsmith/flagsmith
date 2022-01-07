@@ -90,7 +90,7 @@ const InviteUsers = class extends Component {
                                   placeholder="E-mail address"
                                 />
                             </Flex>
-                            <Flex className="mb-2" style={{ position: 'relative' }}>
+                            <Flex className="mb-4" style={{ position: 'relative' }}>
                                 <Select
                                   data-test="select-role"
                                   placeholder="Select a role"
