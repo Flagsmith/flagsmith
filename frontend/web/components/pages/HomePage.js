@@ -16,7 +16,9 @@ const HomePage = class extends React.Component {
 
     constructor(props, context) {
         super(props, context);
-        this.state = {};
+        this.state = {
+            marketing_consent_given: API.getCookie("marketing_consent_given") !== "false"
+        };
     }
 
     componentDidUpdate(prevProps, prevState, snapshot) {
@@ -37,11 +39,13 @@ const HomePage = class extends React.Component {
                 const access_token = Utils.fromParam().code;
                 AppActions.oauthLogin('google', {
                     access_token,
+                    marketing_consent_given: this.state.marketing_consent_given
                 });
             } else if (params && params.includes('github')) {
                 const access_token = Utils.fromParam().code;
                 AppActions.oauthLogin('github', {
                     access_token,
+                    marketing_consent_given: this.state.marketing_consent_given
                 });
             }
         }
@@ -59,6 +63,7 @@ const HomePage = class extends React.Component {
             if (access_token) {
                 AppActions.oauthLogin('saml', {
                     access_token,
+                    marketing_consent_given:this.state.marketing_consent_given
                 });
                 this.context.router.history.replace('/');
             }
@@ -217,7 +222,7 @@ const HomePage = class extends React.Component {
                                                             && (
                                                                 <div className="notification flex-row">
                                                                     <span
-                                                                        className="notification__icon ion-md-information-circle-outline mb-3"
+                                                                        className="notification__icon ion-md-information-circle-outline mb-2"
                                                                     />
                                                                     <p className="notification__text pl-3">Login to accept your invite</p>
                                                                 </div>
@@ -243,7 +248,7 @@ const HomePage = class extends React.Component {
                                                                     onChange={(e) => {
                                                                         this.setState({ email: Utils.safeParseEventValue(e) });
                                                                     }}
-                                                                    className="input-default full-width mb-3 "
+                                                                    className="input-default full-width mb-2 "
                                                                     type="email"
                                                                     name="email" id="email"
                                                                 />
@@ -274,7 +279,7 @@ const HomePage = class extends React.Component {
                                                                             <ButtonLink type="button" buttonText="Forgot password?" />
                                                                         </Link>
                                                                     )}
-                                                                    className="input-default full-width mb-3"
+                                                                    className="input-default full-width mb-2"
                                                                     type="password"
                                                                     name="password"
                                                                     data-test="password"
@@ -339,6 +344,7 @@ const HomePage = class extends React.Component {
                                                             password,
                                                             first_name,
                                                             last_name,
+                                                            marketing_consent_given:this.state.marketing_consent_given
                                                         },
                                                         isInvite);
                                                 }}
@@ -363,7 +369,7 @@ const HomePage = class extends React.Component {
                                                     && (
                                                         <div className="notification flex-row">
                                                             <span
-                                                                className="notification__icon ion-md-information-circle-outline mb-3"
+                                                                className="notification__icon ion-md-information-circle-outline mb-2"
                                                             />
                                                             <p className="notification__text pl-3">Create an account to accept your
                                                                 invite
@@ -377,7 +383,7 @@ const HomePage = class extends React.Component {
                                                             data-test="firstName"
                                                             inputProps={{
                                                                 name: 'firstName',
-                                                                className: 'full-width mb-3',
+                                                                className: 'full-width mb-2',
                                                                 error: error && error.first_name,
                                                             }}
                                                             onChange={(e) => {
@@ -392,7 +398,7 @@ const HomePage = class extends React.Component {
                                                             data-test="lastName"
                                                             inputProps={{
                                                                 name: 'lastName',
-                                                                className: 'full-width mb-3',
+                                                                className: 'full-width mb-2',
                                                                 error: error && error.last_name,
                                                             }}
                                                             onChange={(e) => {
@@ -416,7 +422,7 @@ const HomePage = class extends React.Component {
                                                             data-test="email"
                                                             inputProps={{
                                                                 name: 'email',
-                                                                className: 'full-width mb-3',
+                                                                className: 'full-width mb-2',
                                                                 error: error && error.email,
                                                             }}
                                                             onChange={(e) => {
@@ -441,7 +447,7 @@ const HomePage = class extends React.Component {
                                                             data-test="password"
                                                             inputProps={{
                                                                 name: 'password',
-                                                                className: 'full-width mb-3',
+                                                                className: 'full-width mb-2',
                                                                 error: error && error.password,
                                                             }}
                                                             onChange={(e) => {
@@ -452,6 +458,16 @@ const HomePage = class extends React.Component {
                                                             name="password"
                                                             id="password"
                                                         />
+                                                        {this.props.hasFeature("mailing_list") && (
+                                                            <Row className="text-right">
+                                                                <Flex/>
+                                                                <input onChange={(e)=>{
+                                                                    API.setCookie("marketing_consent_given", `${e.target.checked}`)
+                                                                    this.setState({marketing_consent_given:e.target.checked})
+                                                                }} id="mailinglist" className="mr-2" type="checkbox" checked={this.state.marketing_consent_given}/>
+                                                                <label className="mb-0" htmlFor="mailinglist">Join our mailing list!</label>
+                                                            </Row>
+                                                        )}
                                                         <div classNam e="form-cta">
                                                             <Button
                                                                 data-test="signup-btn"

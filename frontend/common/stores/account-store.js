@@ -6,13 +6,14 @@ const BaseStore = require('./base/_store');
 const data = require('../data/base/_data');
 
 const controller = {
-    register: ({ email, password, first_name, last_name, organisation_name = 'Default Organisation' }, isInvite) => {
+    register: ({ email, password, first_name, last_name, marketing_consent_given, organisation_name = 'Default Organisation' }, isInvite) => {
         store.saving();
         data.post(`${Project.api}auth/users/`, {
             email,
             password,
             first_name,
             last_name,
+            marketing_consent_given,
             referrer: API.getReferrer() || '',
         })
             .then((res) => {
