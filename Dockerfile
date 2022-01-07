@@ -18,7 +18,7 @@ WORKDIR /app
 COPY api /app/
 
 # Install python dependencies
-RUN apt-get update && apt-get install -y git && pip install -r requirements.txt --no-cache-dir --compile
+RUN pip install -r requirements.txt --no-cache-dir --compile 
 
 # Compile static Django assets
 RUN python /app/manage.py collectstatic --no-input
