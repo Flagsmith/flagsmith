@@ -16,7 +16,7 @@ require('dotenv').config();
 
 const email = 'nightwatch@solidstategroup.com';
 const password = 'str0ngp4ssw0rd!';
-const url = `http://localhost:${process.env.PORT || 8080}/signup`;
+const url = `http://localhost:${process.env.PORT || 8080}/`;
 
 fixture`Initialise`
     .before(async () => {
@@ -53,6 +53,7 @@ fixture`Initialise`
 
 test('[Initialise]', async () => {
     log('Create Organisation');
+    await click(byId("jsSignup"))
     await setText(byId('firstName'), 'Bullet'); // visit the url
     await setText(byId('lastName'), 'Train'); // visit the url
     await setText(byId('email'), email); // visit the url

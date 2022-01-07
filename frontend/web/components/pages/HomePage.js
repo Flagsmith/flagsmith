@@ -308,7 +308,7 @@ const HomePage = class extends React.Component {
                                                     <Row className="justify-content-center mt-2">
                                                         Creating a new account is easy{' '}
                                                         <Link id="existing-member-btn" to={`/signup${redirect}`}>
-                                                            <ButtonLink className="ml-1" buttonText=" Sign up" />
+                                                            <ButtonLink data-test="jsSignup" className="ml-1" buttonText=" Sign up" />
                                                         </Link>
                                                     </Row>
                                                     <div className="mt-5 text-center text-small text-muted">
