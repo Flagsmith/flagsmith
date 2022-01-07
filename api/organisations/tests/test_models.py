@@ -94,7 +94,7 @@ def test_updating_a_cancelled_subscription_calls_mailer_lite_update_organisation
     mocked_mailer_lite.update_organisation_users.assert_called_with(organisation.id)
 
 
-def test_cancelling_a_subscription_does_calls_mailer_lite_update_organisation_users(
+def test_cancelling_a_subscription_calls_mailer_lite_update_organisation_users(
     mocker, db
 ):
     # Given
