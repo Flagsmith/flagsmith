@@ -140,15 +140,13 @@ def test_edge_identities_create_featurestate(
     admin_client,
     environment,
     environment_api_key,
-    identity_document,
+    identity_document_without_fs,
     dynamo_wrapper_mock,
     feature,
 ):
     # Given
-    dynamo_wrapper_mock.get_item_from_uuid.return_value = identity_document
-    # Remove the already preset feature state form the fixture document
-    identity_document["identity_features"].pop(0)
-    identity_uuid = identity_document["identity_uuid"]
+    dynamo_wrapper_mock.get_item_from_uuid.return_value = identity_document_without_fs
+    identity_uuid = identity_document_without_fs["identity_uuid"]
     url = reverse(
         "api-v1:environments:edge-identity-featurestates-list",
         args=[environment_api_key, identity_uuid],
@@ -180,17 +178,15 @@ def test_edge_identities_create_mv_featurestate(
     admin_client,
     environment,
     environment_api_key,
-    identity_document,
+    identity_document_without_fs,
     dynamo_wrapper_mock,
     feature,
     mv_option,
     mv_option_value,
 ):
     # Given
-    dynamo_wrapper_mock.get_item_from_uuid.return_value = identity_document
-    # Remove the already preset feature state form the fixture document
-    identity_document["identity_features"].pop(0)
-    identity_uuid = identity_document["identity_uuid"]
+    dynamo_wrapper_mock.get_item_from_uuid.return_value = identity_document_without_fs
+    identity_uuid = identity_document_without_fs["identity_uuid"]
     url = reverse(
         "api-v1:environments:edge-identity-featurestates-list",
         args=[environment_api_key, identity_uuid],
@@ -265,7 +261,7 @@ def test_edge_identities_post_returns_400_for_invalid_mvfs_allocation(
     admin_client,
     environment,
     environment_api_key,
-    identity_document,
+    identity_document_without_fs,
     dynamo_wrapper_mock,
     feature,
     mv_option,
@@ -273,10 +269,8 @@ def test_edge_identities_post_returns_400_for_invalid_mvfs_allocation(
 ):
 
     # Given
-    dynamo_wrapper_mock.get_item_from_uuid.return_value = identity_document
-    # Remove the already preset feature state form the fixture document
-    identity_document["identity_features"].pop(0)
-    identity_uuid = identity_document["identity_uuid"]
+    dynamo_wrapper_mock.get_item_from_uuid.return_value = identity_document_without_fs
+    identity_uuid = identity_document_without_fs["identity_uuid"]
     url = reverse(
         "api-v1:environments:edge-identity-featurestates-list",
         args=[environment_api_key, identity_uuid],

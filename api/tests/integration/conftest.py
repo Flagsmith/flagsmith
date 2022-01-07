@@ -232,3 +232,9 @@ def identity_document(environment_api_key, feature):
         "environment_api_key": environment_api_key,
         "identity_uuid": "59efa2a7-6a45-46d6-b953-a7073a90eacf",
     }
+
+
+@pytest.fixture()
+def identity_document_without_fs(identity_document):
+    identity_document["identity_features"].clear()
+    return identity_document
