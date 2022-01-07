@@ -15,7 +15,7 @@ const AuditLogPage = class extends Component {
     };
 
     componentDidMount() {
-        AppActions.getAuditLog(this.props.match.params.projectId);
+        AppActions.getAuditLog(this.props.match.params.projectId, this.state.search);
         API.trackPage(Constants.pages.AUDIT_LOG);
     }
 
@@ -84,7 +84,7 @@ const AuditLogPage = class extends Component {
         const { state: { search } } = this;
         const { env: envFilter } = Utils.fromParam();
         const hasRbacPermission = !this.props.hasFeature('plan_based_access') || Utils.getPlansPermission(AccountStore.getPlans(), 'AUDIT') || !this.props.hasFeature('scaleup_audit');
-
+        const apiSearch = flagsmith.hasFeature("audit_api_search");
         if (!hasRbacPermission) {
             return (
                 <div>
@@ -107,8 +107,6 @@ const AuditLogPage = class extends Component {
                             <AuditLogProvider>
                                 {({ isLoading, auditLog, auditLogPaging }) => (
                                     <div>
-                                        {isLoading && <div className="centered-container"><Loader/></div>}
-                                        {!isLoading && (
                                             <div className="audit">
                                                 <div className="font-weight-bold mb-2">
                                                     Filter by environments:
@@ -129,13 +127,23 @@ const AuditLogPage = class extends Component {
                                                       onBlur={this.saveSearch}
                                                       id="messages-list"
                                                       title="Log entries"
+                                                      isLoading={isLoading}
                                                       className="no-pad"
                                                       icon="ion-md-browsers"
                                                       items={auditLog}
                                                       search={search}
                                                       filter={envFilter}
-                                                      onChange={this.filterSearch}
+                                                      onChange={(e)=>{
+                                                          if (apiSearch) {
+                                                              this.setState({ search: Utils.safeParseEventValue(e) });
+                                                              AppActions.getAuditLog(this.props.match.params.projectId, Utils.safeParseEventValue(e));
+                                                          } else {
+                                                              this.filterSearch(e)
+                                                          }
+                                                      }}
                                                       paging={auditLogPaging}
+                                                      nextPage={apiSearch? () => AppActions.getAuditLogPage(this.props.match.params.projectId, auditLogPaging.next):undefined}
+                                                      prevPage={apiSearch? () => AppActions.getAuditLogPage(this.props.match.params.projectId, auditLogPaging.previous): undefined}
                                                       goToPage={page => AppActions.getAuditLogPage(this.props.match.params.projectId,`${Project.api}audit/?page=${page}`)}
                                                       renderRow={this.renderRow}
                                                       renderNoResults={(
@@ -150,7 +158,6 @@ const AuditLogPage = class extends Component {
                                                     />
                                                 </FormGroup>
                                             </div>
-                                        )}
                                     </div>
                                 )}
                             </AuditLogProvider>
