@@ -89,6 +89,19 @@ class TheComponent extends Component {
                         <ButtonLink>
                             {name}
                         </ButtonLink>
+                        {projectFlag.owners && !!projectFlag.owners.length? (
+                                <Tooltip
+                                    title={  <ButtonLink>
+                                        <ion className={"ion ion-md-person px-2"}/>
+                                    </ButtonLink>}
+                                    place="right"
+                                >
+                                    {`Flag owned by ${projectFlag.owners.map((v)=>`${v.first_name} ${v.last_name}`).join(", ")}`}
+                                </Tooltip>
+
+                        ): (
+                            <span/>
+                        )}
                     </div>
                     <div className="list-item-footer faint">
                         <Row>
