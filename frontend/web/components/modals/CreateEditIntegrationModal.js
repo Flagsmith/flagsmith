@@ -12,14 +12,14 @@ const CreateEditIntegration = class extends Component {
         const fields = _.cloneDeep(this.props.integration.fields)
         this.state = { fields, data: this.props.data ? { ...this.props.data } : {fields} };
         if (this.props.id === "slack" && this.state.data.flagsmithEnvironment) {
-            _data.get(`${Project.api}environments/${this.state.data.flagsmithEnvironment}/integrations/${this.props.id}/channels`)
+            _data.get(`${Project.api}environments/${this.state.data.flagsmithEnvironment}/integrations/${this.props.id}-channels?limit=1000`)
                 .then((res)=>{
                     this.state.data.enabled = true
                     this.state.fields = this.state.fields || []
                     this.state.fields.push({
                         key:"channel_id",
                         label: "Channel",
-                        options:res.map((v)=>(
+                        options:((res && res.channels)||[]).map((v)=>(
                             {label:v.channel_name,value:v.channel_id}
                         ))
                     })
