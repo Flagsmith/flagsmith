@@ -14,7 +14,9 @@ from environments.identities.helpers import (
 from environments.identities.models import Identity
 from environments.identities.traits.models import Trait
 from environments.models import Environment
+from features.feature_types import MULTIVARIATE
 from features.models import Feature, FeatureSegment, FeatureState
+from features.multivariate.models import MultivariateFeatureOption
 from integrations.amplitude.models import AmplitudeConfiguration
 from organisations.models import Organisation, OrganisationRole
 from projects.models import Project
@@ -301,6 +303,122 @@ class SDKIdentitiesTestCase(APITestCase):
 
     def tearDown(self) -> None:
         Segment.objects.all().delete()
+
+    def test_identities_endpoint_returns_default_value_for_segment_if_identity_in_segment_and_overrides_are_disabled(
+        self,
+    ):
+        # Given
+        base_url = reverse("api-v1:sdk-identities")
+        url = base_url + "?identifier=" + self.identity.identifier
+
+        trait_key = "trait_key"
+        trait_value = "trait_value"
+        Trait.objects.create(
+            identity=self.identity,
+            trait_key=trait_key,
+            value_type="STRING",
+            string_value=trait_value,
+        )
+        segment = Segment.objects.create(name="Test Segment", project=self.project)
+        segment_rule = SegmentRule.objects.create(
+            segment=segment, type=SegmentRule.ALL_RULE
+        )
+        Condition.objects.create(
+            operator="EQUAL", property=trait_key, value=trait_value, rule=segment_rule
+        )
+        feature_segment = FeatureSegment.objects.create(
+            segment=segment,
+            feature=self.feature_2,
+            environment=self.environment,
+            priority=1,
+        )
+        FeatureState.objects.create(
+            feature=self.feature_2,
+            feature_segment=feature_segment,
+            environment=self.environment,
+            enabled=True,
+        )
+        # Let's disable overrides for feature_2
+        FeatureState.objects.filter(feature=self.feature_2).update(
+            disable_overrides=True
+        )
+        # When
+        response = self.client.get(url)
+
+        # Then
+        assert response.status_code == status.HTTP_200_OK
+
+        # and
+        assert response.json().get("flags")[1].get("enabled") is False
+
+    def test_identities_endpoint_returns_control_value_for_mv_flag_if_overrides_are_disabled(
+        self,
+    ):
+        # Given
+        control_value = "control_value"
+
+        mv_feature = Feature.objects.create(
+            project=self.project,
+            name="Test Feature MV",
+            type=MULTIVARIATE,
+            initial_value=control_value,
+        )
+        MultivariateFeatureOption.objects.create(
+            feature=mv_feature,
+            default_percentage_allocation=100,
+            string_value="mv_override",
+        )
+        base_url = reverse("api-v1:sdk-identities")
+        url = (
+            base_url
+            + "?identifier="
+            + self.identity.identifier
+            + "&feature="
+            + mv_feature.name
+        )
+        # Now let's disable overrides for feature_1
+        FeatureState.objects.filter(feature=mv_feature).update(disable_overrides=True)
+
+        # When
+        response = self.client.get(url)
+
+        # Then
+        assert response.status_code == status.HTTP_200_OK
+        response.json()["feature_state_value"] == control_value
+
+    def test_identities_endpoint_returns_default_value_for_identitiy_overrries_if_overrides_are_disabled(
+        self,
+    ):
+        # Given
+        base_url = reverse("api-v1:sdk-identities")
+        url = base_url + "?identifier=" + self.identity.identifier
+        # Let's enable both the features using identity overrides
+        FeatureState.objects.create(
+            feature=self.feature_1,
+            identity=self.identity,
+            environment=self.environment,
+            enabled=True,
+        )
+        FeatureState.objects.create(
+            feature=self.feature_2,
+            identity=self.identity,
+            environment=self.environment,
+            enabled=True,
+        )
+        # Now let's disable overrides for feature_1
+        FeatureState.objects.filter(feature=self.feature_1).update(
+            disable_overrides=True
+        )
+
+        # When
+        response = self.client.get(url)
+
+        # Then
+        assert response.status_code == status.HTTP_200_OK
+
+        # and
+        assert response.json()["flags"][0]["enabled"] is False
+        assert response.json()["flags"][1]["enabled"] is True
 
     def test_identities_endpoint_returns_all_feature_states_for_identity_if_feature_not_provided(
         self,

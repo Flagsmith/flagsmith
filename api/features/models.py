@@ -241,6 +241,7 @@ class FeatureState(LifecycleModel, models.Model):
 
     enabled = models.BooleanField(default=False)
     history = HistoricalRecords()
+    disable_overrides = models.BooleanField(default=False)
 
     class Meta:
         # Note: this is manually overridden in the migrations for Oracle DBs to include
@@ -322,7 +323,11 @@ class FeatureState(LifecycleModel, models.Model):
     def get_feature_state_value(self, identity: "Identity" = None) -> typing.Any:
         feature_state_value = (
             self.get_multivariate_feature_state_value(identity)
-            if self.feature.type == MULTIVARIATE and identity
+            if (
+                self.feature.type == MULTIVARIATE
+                and identity
+                and self.disable_overrides is False
+            )
             else getattr(self, "feature_state_value", None)
         )
 

@@ -46,7 +46,7 @@ class Identity(models.Model):
 
         # define sub queries
         belongs_to_environment_query = Q(environment=self.environment)
-        overridden_for_identity_query = Q(identity=self)
+        overridden_for_identity_query = Q(identity=self, disable_overrides=False)
         overridden_for_segment_query = Q(
             feature_segment__segment__in=segments,
             feature_segment__environment=self.environment,
@@ -59,7 +59,6 @@ class Identity(models.Model):
             | overridden_for_segment_query
             | environment_default_query
         )
-
         select_related_args = [
             "feature",
             "feature_state_value",
@@ -85,6 +84,9 @@ class Identity(models.Model):
         # for the given identity as the value.
         identity_flags = {}
         for flag in all_flags:
+            # skip segment overrides for disabled_overrides
+            if flag.feature_segment and flag.disable_overrides:
+                continue
             if flag.feature_id not in identity_flags:
                 identity_flags[flag.feature_id] = flag
             else:
