@@ -2,11 +2,10 @@ spec:
   name: flagsmith
   services:
   - name: flagsmith-server
-    image:
-      registry_type: DOCKER_HUB
-      registry: flagsmith
-      repository: flagsmith
-      tag: latest
+    dockerfile_path: Dockerfile
+    git:
+      branch: main
+      repo_clone_url: https://github.com/flagsmith/flagsmith.git
     envs:
       - key: DATABASE_URL
         scope: RUN_TIME
