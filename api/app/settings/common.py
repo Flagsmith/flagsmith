@@ -30,10 +30,9 @@ BASE_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__fil
 PROJECT_ROOT = os.path.abspath(os.path.dirname(__file__))
 
 ENV = env("ENVIRONMENT", default="local")
-if ENV not in ("local", "dev", "staging", "production", "saas"):
+if ENV not in ("local", "dev", "staging", "production"):
     warnings.warn(
-        "ENVIRONMENT env variable must be one of "
-        "local, dev, staging, production or saas"
+        "ENVIRONMENT env variable must be one of local, dev, staging, production"
     )
 
 DEBUG = env.bool("DEBUG", default=False)
