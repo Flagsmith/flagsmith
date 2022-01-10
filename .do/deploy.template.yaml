@@ -14,5 +14,8 @@ spec:
       - key: DATABASE_URL
         scope: RUN_TIME
         value: ${flagsmith-db.DATABASE_URL}
+      - key: DJANGO_ALLOWED_HOSTS
+        scope: RUN_TIME
+        value: '*'
   databases:
   - name: flagsmith-db
