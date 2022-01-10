@@ -19,5 +19,6 @@ services:
 databases:
     # The Flagsmith Postgres Database
     - name: flagsmith-db
-      databaseName: flagsmith-db
+      databaseName: flagsmith
+      user: flagsmith-user
       ipAllowList: []
