@@ -20,5 +20,5 @@ databases:
     # The Flagsmith Postgres Database
     - name: flagsmith-db
       databaseName: flagsmith
-      user: flagsmith-user
+      user: flagsmithuser
       ipAllowList: []
