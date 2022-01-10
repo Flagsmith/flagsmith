@@ -21,6 +21,22 @@ jobs:
               with:
                   fetch-depth: 0
 
+            - name: Add SAML package
+              env:
+                FLAGSMITH_SAML_REVISION: main
+              run: |
+                echo "Downloading and injecting flagsmith-saml module..."
+                TARBALL_URL="https://github.com/flagsmith/flagsmith-saml/tarball/${FLAGSMITH_SAML_REVISION}" 
+                mkdir /tmp/flagsmith-saml
+                curl -L -u token:${{ secrets.ACCESS_TOKEN }} $TARBALL_URL | tar --strip-components=1 -xz -C /tmp/flagsmith-saml -- 
+                mv /tmp/flagsmith-saml/saml ./api
+
+            - name: Add SAML dependencies
+              working-directory: api
+              run: |
+                echo "Adding SAML requirements to requirements.txt..."
+                cat /tmp/flagsmith-saml/requirements.txt >> requirements.txt
+
             - name: Push to ElasticBeanstalk
               working-directory: api
               env:

@@ -1,5 +1,3 @@
-import os
-
 from django.conf import settings
 from django.conf.urls import include, url
 from django.contrib import admin
@@ -41,7 +39,7 @@ if settings.DEBUG:
         url(r"^__debug__/", include(debug_toolbar.urls)),
     ] + urlpatterns
 
-if settings.ENV == "saas" and os.path.exists(os.path.join(settings.BASE_DIR, "saml")):
+if settings.SAML_INSTALLED:
     urlpatterns += [
         path("api/v1/auth/saml/", include("saml.urls")),
     ]

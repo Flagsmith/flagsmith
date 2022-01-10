@@ -521,3 +521,17 @@ MAILERLITE_BASE_URL = env.str(
     "MAILERLITE_BASE_URL", default="https://api.mailerlite.com/api/v2/"
 )
 MAILERLITE_API_KEY = env.str("MAILERLITE_API_KEY", None)
+
+# Additional functionality for using SAML in Flagsmith SaaS
+SAML_MODULE_PATH = env("SAML_MODULE_PATH", None) or os.path.join(BASE_DIR, "saml")
+SAML_INSTALLED = os.path.exists(SAML_MODULE_PATH)
+
+if SAML_INSTALLED:
+    SAML_REQUESTS_CACHE_LOCATION = "saml_requests_cache"
+    CACHES[SAML_REQUESTS_CACHE_LOCATION] = {
+        "BACKEND": "django.core.cache.backends.db.DatabaseCache",
+        "LOCATION": SAML_REQUESTS_CACHE_LOCATION,
+    }
+    INSTALLED_APPS += ["saml"]
+    SAML_ACCEPTED_TIME_DIFF = env.int("SAML_ACCEPTED_TIME_DIFF", default=60)
+    DJOSER["SERIALIZERS"]["current_user"] = "saml.serializers.SamlCurrentUserSerializer"
