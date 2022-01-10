@@ -1,0 +1,21 @@
+# This file describes the deployment for a Digital Ocean One Click app install
+# It builds the unified dockerfile, creates a DB connects the Flagsmith server to the DB
+
+spec:
+  name: flagsmith
+  services:
+  - name: flagsmith-server
+    dockerfile_path: Dockerfile
+    http_port: 8000
+    git:
+      branch: main
+      repo_clone_url: https://github.com/flagsmith/flagsmith.git
+    envs:
+      - key: DATABASE_URL
+        scope: RUN_TIME
+        value: ${flagsmith-db.DATABASE_URL}
+      - key: DJANGO_ALLOWED_HOSTS
+        scope: RUN_TIME
+        value: '*'
+  databases:
+  - name: flagsmith-db
