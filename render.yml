@@ -1,0 +1,23 @@
+# This file describes the deployment for a render.com One Click app install
+# It builds the unified dockerfile, creates a DB connects the Flagsmith server to the DB
+
+services:
+    # The Flagsmith Web Service
+    - type: web
+      name: flagsmith
+      env: docker
+      repo: https://github.com/flagsmith/flagsmith.git
+      healthCheckPath: /health
+      envVars:
+          - key: DATABASE_URL
+            fromDatabase:
+                name: flagsmith-db
+                property: connectionString
+          - key: DJANGO_ALLOWED_HOSTS
+            value: "*"
+
+databases:
+    # The Flagsmith Postgres Database
+    - name: flagsmith-db
+      databaseName: flagsmith-db
+      ipAllowList: []
