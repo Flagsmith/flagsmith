@@ -30,6 +30,8 @@ urlpatterns = [
         name="project_overrides",
     ),
     path("", views.index, name="index"),
+    # Catch all for subfolder views on the front end
+    url(r"^.*/$", views.index, name="index"),
 ]
 
 if settings.DEBUG:
@@ -40,12 +42,5 @@ if settings.DEBUG:
     ] + urlpatterns
 
 if settings.SAML_INSTALLED:
-    urlpatterns += [
-        path("api/v1/auth/saml/", include("saml.urls")),
-    ]
-
-urlpatterns += [
-    # Catch all for subfolder views on the front end
-    # Note: must be after all other URL paths
-    url(r"^.*/$", views.index, name="index"),
-]
+    # insert before final url pattern which catches all URLs that are not matched
+    urlpatterns.insert(-1, path("api/v1/auth/saml/", include("saml.urls")))
