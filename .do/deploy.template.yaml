@@ -1,0 +1,15 @@
+spec:
+  name: flagsmith
+  services:
+  - name: flagsmith-server
+    image:
+      registry_type: DOCKER_HUB
+      registry: flagsmith
+      repository: flagsmith
+      tag: latest
+    envs:
+      - key: DATABASE_URL
+        scope: RUN_TIME
+        value: ${flagsmith-db.DATABASE_URL}
+  databases:
+  - name: flagsmith-db
