@@ -18,6 +18,6 @@ services:
 
 databases:
     # The Flagsmith Postgres Database
-    - name: Flagsmith Database
+    - name: flagsmith-db
       databaseName: flagsmith-db
       ipAllowList: []
