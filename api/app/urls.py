@@ -41,9 +41,7 @@ if settings.DEBUG:
         url(r"^__debug__/", include(debug_toolbar.urls)),
     ] + urlpatterns
 
-if settings.ENVIRONMENT == "saas" and os.path.exists(
-    os.path.join(settings.BASE_DIR, "saml")
-):
+if settings.ENV == "saas" and os.path.exists(os.path.join(settings.BASE_DIR, "saml")):
     urlpatterns += [
         path("api/v1/auth/saml/", include("saml.urls")),
     ]
