@@ -2,5 +2,4 @@
 set -e
 
 python manage.py migrate
-mkdir gunicorn-worker-tmp-dir
-gunicorn --bind 0.0.0.0:8000 --worker-tmp-dir=/dev/shm --workers ${GUNICORN_WORKERS:-3} --threads ${GUNICORN_THREADS:-2} --access-logfile $ACCESS_LOG_LOCATION app.wsgi
+gunicorn --bind 0.0.0.0:8000 --worker-tmp-dir /dev/shm --workers ${GUNICORN_WORKERS:-3} --threads ${GUNICORN_THREADS:-2} --access-logfile $ACCESS_LOG_LOCATION app.wsgi

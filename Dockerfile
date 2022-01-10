@@ -33,6 +33,6 @@ ENV DJANGO_SETTINGS_MODULE=app.settings.production
 
 EXPOSE 8000
 
-#USER nobody
+USER nobody
 
 CMD ["./scripts/run-docker.sh"]
