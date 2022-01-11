@@ -10,7 +10,6 @@ from django.core.mail import EmailMultiAlternatives
 from django.core.serializers.json import DjangoJSONEncoder
 from django.template.loader import get_template
 
-from environments import models as environment_models
 from organisations.models import OrganisationWebhook
 from webhooks.sample_webhook_data import (
     environment_webhook_data,
@@ -21,7 +20,10 @@ from .constants import WEBHOOK_SIGNATURE_HEADER
 from .models import AbstractBaseWebhookModel
 from .serializers import WebhookSerializer
 
-WebhookModels = typing.Union[OrganisationWebhook, environment_models.Webhook]
+if typing.TYPE_CHECKING:
+    import environments
+
+WebhookModels = typing.Union[OrganisationWebhook, "environments.models.Webhook"]
 
 
 class WebhookEventType(enum.Enum):
