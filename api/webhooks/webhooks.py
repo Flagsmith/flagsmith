@@ -73,7 +73,7 @@ def trigger_sample_webhook(
     serializer = WebhookSerializer(data=data)
     serializer.is_valid(raise_exception=True)
 
-    return _call_webhook(webhook, serializer, webhook_type)
+    return _call_webhook(webhook, serializer.data, webhook_type)
 
 
 def _call_webhook(
