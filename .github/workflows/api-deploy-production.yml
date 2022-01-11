@@ -10,40 +10,14 @@ on:
 
 jobs:
     deploy-production:
-        runs-on: ubuntu-latest
-        name: API Deploy to Production
-        container: flagsmith/eb-cli:latest
-        environment: production
-        timeout-minutes: 20
-
-        steps:
-            - name: Cloning repo
-              uses: actions/checkout@v2
-              with:
-                  fetch-depth: 0
-
-            - name: Add SAML package
-              env:
-                FLAGSMITH_SAML_REVISION: main
-              run: |
-                echo "Downloading and injecting flagsmith-saml module..."
-                TARBALL_URL="https://github.com/flagsmith/flagsmith-saml/tarball/${FLAGSMITH_SAML_REVISION}" 
-                mkdir /tmp/flagsmith-saml
-                curl -L -u token:${{ secrets.ACCESS_TOKEN }} $TARBALL_URL | tar --strip-components=1 -xz -C /tmp/flagsmith-saml -- 
-                mv /tmp/flagsmith-saml/saml ./api
-
-            - name: Add SAML dependencies
-              working-directory: api
-              run: |
-                echo "Adding SAML requirements to requirements.txt..."
-                cat /tmp/flagsmith-saml/requirements.txt >> requirements.txt
-
-            - name: Push to ElasticBeanstalk
-              working-directory: api
-              env:
-                  AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
-                  AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-              run: eb deploy production-api -l "${GITHUB_SHA}" --timeout 20
+        uses: flagsmith/flagsmith/.github/workflows/api-deploy.yml@main  # TODO: should this be in another repo?
+        with:
+          beanstalk_environment_name: production-api
+          github_environment_name: production
+        secrets:
+          github_access_token: ${{ secrets.ACCESS_TOKEN }}  # TODO: change this to another user's access token
+          aws_access_key_id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws_secret_access_key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
 
     run-tests:
         runs-on: ubuntu-latest
