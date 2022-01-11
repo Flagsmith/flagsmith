@@ -73,13 +73,12 @@ def trigger_sample_webhook(
     serializer = WebhookSerializer(data=data)
     serializer.is_valid(raise_exception=True)
 
-    return _call_webhook(webhook, serializer.data, webhook_type)
+    return _call_webhook(webhook, serializer.data)
 
 
 def _call_webhook(
     webhook: typing.Type[AbstractBaseWebhookModel],
     data: typing.Mapping,
-    webhook_type: WebhookType,
 ) -> requests.models.Response:
     headers = {"content-type": "application/json"}
     json_data = json.dumps(data, sort_keys=True, cls=DjangoJSONEncoder)
@@ -94,7 +93,7 @@ def _call_webhook_email_on_error(
     webhook: WebhookModels, data: typing.Mapping, webhook_type: WebhookType
 ):
     try:
-        res = _call_webhook(webhook, data, webhook_type)
+        res = _call_webhook(webhook, data)
     except requests.exceptions.ConnectionError:
         send_failure_email(webhook, data, webhook_type)
         return
@@ -108,7 +107,7 @@ def _call_webhooks(webhooks, data, event_type, webhook_type):
     serializer = WebhookSerializer(data=webhook_data)
     serializer.is_valid(raise_exception=False)
     for webhook in webhooks:
-        _call_webhook(webhook, serializer.data, webhook_type)
+        _call_webhook_email_on_error(webhook, serializer.data, webhook_type)
 
 
 def send_failure_email(webhook, data, webhook_type, status_code=None):
