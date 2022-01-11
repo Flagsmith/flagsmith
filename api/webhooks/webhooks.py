@@ -42,6 +42,16 @@ WEBHOOK_SAMPLE_DATA = {
 }
 
 
+def get_webhook_model(webhok_type: WebhookType) -> typing.Union[WebhookModels]:
+
+    from environments.models import Webhook
+
+    if webhok_type == WebhookType.ORGANISATION:
+        return OrganisationWebhook
+    if webhok_type == WebhookType.ENVIRONMENT:
+        return Webhook
+
+
 def generate_signature(payload: str, key: str) -> str:
     return hmac.new(
         key=key.encode(), msg=payload.encode(), digestmod=hashlib.sha256
