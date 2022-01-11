@@ -522,7 +522,7 @@ MAILERLITE_BASE_URL = env.str(
 MAILERLITE_API_KEY = env.str("MAILERLITE_API_KEY", None)
 
 # Additional functionality for using SAML in Flagsmith SaaS
-SAML_MODULE_PATH = env("SAML_MODULE_PATH", None) or os.path.join(BASE_DIR, "saml")
+SAML_MODULE_PATH = env("SAML_MODULE_PATH", os.path.join(BASE_DIR, "saml"))
 SAML_INSTALLED = os.path.exists(SAML_MODULE_PATH)
 
 if SAML_INSTALLED:
