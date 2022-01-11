@@ -11,6 +11,7 @@ on:
 jobs:
     deploy-staging:
         runs-on: ubuntu-latest
+        name: API Deploy to Staging
         container: flagsmith/eb-cli:latest
         environment: staging
 
