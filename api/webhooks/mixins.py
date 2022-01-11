@@ -24,6 +24,6 @@ class TriggerSampleWebhookMixin:
         message = (
             f"Request returned {response.status_code}"
             if response
-            else "Request Failed with connection error"
+            else "Request failed with connection error"
         )
         return Response({"message": message})
