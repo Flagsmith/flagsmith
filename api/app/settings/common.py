@@ -129,6 +129,7 @@ INSTALLED_APPS = [
     "integrations.heap",
     "integrations.mixpanel",
     "integrations.slack",
+    "integrations.webhook",
     # Rate limiting admin endpoints
     "axes",
     "telemetry",

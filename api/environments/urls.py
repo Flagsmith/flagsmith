@@ -13,6 +13,7 @@ from integrations.slack.views import (
     SlackEnvironmentViewSet,
     SlackGetChannelsViewSet,
 )
+from integrations.webhook.views import WebhookConfigurationViewSet
 
 from .identities.traits.views import TraitViewSet
 from .identities.views import EdgeIdentityViewSet, IdentityViewSet
@@ -71,9 +72,12 @@ environments_router.register(
     basename="integrations-mixpanel",
 )
 environments_router.register(
-    r"integrations/slack",
-    SlackEnvironmentViewSet,
-    basename="integrations-slack",
+    r"integrations/slack", SlackEnvironmentViewSet, basename="integrations-slack"
+)
+environments_router.register(
+    r"integrations/webhook",
+    WebhookConfigurationViewSet,
+    basename="integrations-webhook",
 )
 environments_router.register(
     r"integrations/slack-channels",

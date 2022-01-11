@@ -10,6 +10,7 @@ from django.core.mail import EmailMultiAlternatives
 from django.core.serializers.json import DjangoJSONEncoder
 from django.template.loader import get_template
 
+from environments.models import Webhook
 from organisations.models import OrganisationWebhook
 from webhooks.sample_webhook_data import (
     environment_webhook_data,
@@ -21,7 +22,7 @@ from .models import AbstractBaseWebhookModel
 from .serializers import WebhookSerializer
 
 if typing.TYPE_CHECKING:
-    import environments
+    import environments  # noqa
 
 WebhookModels = typing.Union[OrganisationWebhook, "environments.models.Webhook"]
 
@@ -42,13 +43,10 @@ WEBHOOK_SAMPLE_DATA = {
 }
 
 
-def get_webhook_model(webhok_type: WebhookType) -> typing.Union[WebhookModels]:
-
-    from environments.models import Webhook
-
-    if webhok_type == WebhookType.ORGANISATION:
+def get_webhook_model(webhook_type: WebhookType) -> typing.Union[WebhookModels]:
+    if webhook_type == WebhookType.ORGANISATION:
         return OrganisationWebhook
-    if webhok_type == WebhookType.ENVIRONMENT:
+    if webhook_type == WebhookType.ENVIRONMENT:
         return Webhook
 
 
@@ -74,6 +72,10 @@ def call_organisation_webhooks(organisation, data, event_type):
         event_type,
         WebhookType.ORGANISATION,
     )
+
+
+def call_integration_webhook(config, data):
+    return _call_webhook(config, data)
 
 
 def trigger_sample_webhook(

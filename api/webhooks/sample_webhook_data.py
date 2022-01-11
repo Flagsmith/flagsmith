@@ -7,7 +7,7 @@ environment_webhook_data = {
             "feature": {
                 "created_date": "2021-02-10T20:03:43.348556Z",
                 "default_enabled": False,
-                "description": "This is description",
+                "description": "This is a description",
                 "id": 1,
                 "initial_value": None,
                 "name": "test_feature",
@@ -49,8 +49,8 @@ organisation_webhook_data = {
         "author": {
             "id": 1,
             "email": "user@domain.com",
-            "first_name": "Test",
-            "last_name": "test1",
+            "first_name": "Jane",
+            "last_name": "Doe",
         },
         "environment": None,
         "project": {"id": 1, "name": "Test Project", "organisation": 1},

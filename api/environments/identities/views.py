@@ -11,7 +11,6 @@ from rest_framework.response import Response
 from rest_framework.schemas import AutoSchema
 
 from app.pagination import CustomPagination, EdgeIdentityPagination
-from environments.identities.helpers import identify_integrations
 from environments.identities.models import Identity
 from environments.identities.serializers import (
     EdgeIdentitySerializer,
@@ -25,6 +24,7 @@ from environments.sdk.serializers import (
     IdentitySerializerWithTraitsAndSegments,
 )
 from features.serializers import FeatureStateSerializerFull
+from integrations.integration import identify_integrations
 from projects.exceptions import DynamoNotEnabledError
 from util.views import SDKAPIView
 
