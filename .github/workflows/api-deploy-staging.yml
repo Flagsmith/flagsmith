@@ -24,7 +24,7 @@ jobs:
               uses: ./.github/actions/api-deploy
               with:
                   beanstalk_environment_name: staging-api
-                  github_access_token: ${{ secrets.ACCESS_TOKEN }}  # TODO: change this to another user's access token
+                  github_access_token: ${{ secrets.GH_PRIVATE_ACCESS_TOKEN }}
                   aws_access_key_id: ${{ secrets.AWS_ACCESS_KEY_ID }}
                   aws_secret_access_key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
 
