@@ -4,20 +4,30 @@ on:
     push:
         branches:
             - main
+            - feature/build-saas-package
         paths:
             - 'api/**'
             - '.github/**'
 
 jobs:
     deploy-staging:
-        uses: flagsmith/flagsmith/.github/workflows/api-deploy.yml@main  # TODO: should this be in another repo?
-        with:
-            beanstalk_environment_name: staging-api
-            github_environment_name: staging
-        secrets:
-            github_access_token: ${{ secrets.ACCESS_TOKEN }}  # TODO: change this to another user's access token
-            aws_access_key_id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-            aws_secret_access_key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        runs-on: ubuntu-latest
+        container: flagsmith/eb-cli:latest
+        environment: staging
+
+        steps:
+            - name: Cloning repo
+              uses: actions/checkout@v2
+              with:
+                  fetch-depth: 0
+
+            - name: Deploy API to Staging
+              uses: ./.github/actions/api-deploy
+              with:
+                  beanstalk_environment_name: staging-api
+                  github_access_token: ${{ secrets.ACCESS_TOKEN }}  # TODO: change this to another user's access token
+                  aws_access_key_id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+                  aws_secret_access_key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
 
     run-tests:
         runs-on: ubuntu-latest
