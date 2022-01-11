@@ -14,9 +14,9 @@ from webhooks.sample_webhook_data import (
 )
 from webhooks.webhooks import (
     WebhookEventType,
+    WebhookType,
     call_environment_webhooks,
-    trigger_sample_environment_webhook,
-    trigger_sample_organisation_webhook,
+    trigger_sample_webhook,
 )
 
 
@@ -75,23 +75,24 @@ class WebhooksTestCase(TestCase):
         mock_requests.post.assert_not_called()
 
     @mock.patch("webhooks.webhooks.requests")
-    def test_trigger_sample_environment_webhook_makes_correct_post_request(
+    def test_trigger_sample_webhook_makes_correct_post_request_for_environment(
         self, mock_request
     ):
         url = "http://test.test"
         webhook = Webhook(url=url)
-        trigger_sample_environment_webhook(webhook)
+        trigger_sample_webhook(webhook, WebhookType.ENVIRONMENT)
         args, kwargs = mock_request.post.call_args
         assert json.loads(kwargs["data"]) == environment_webhook_data
         assert args[0] == url
 
     @mock.patch("webhooks.webhooks.requests")
-    def test_trigger_sample_organisation_webhook_makes_correct_post_request(
+    def test_trigger_sample_webhook_makes_correct_post_request_for_organisation(
         self, mock_request
     ):
         url = "http://test.test"
         webhook = OrganisationWebhook(url=url)
-        trigger_sample_organisation_webhook(webhook)
+
+        trigger_sample_webhook(webhook, WebhookType.ORGANISATION)
         args, kwargs = mock_request.post.call_args
         assert json.loads(kwargs["data"]) == organisation_webhook_data
         assert args[0] == url

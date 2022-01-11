@@ -23,7 +23,7 @@ from permissions.serializers import (
     PermissionModelSerializer,
 )
 from webhooks.mixins import TriggerSampleWebhookMixin
-from webhooks.webhooks import trigger_sample_environment_webhook
+from webhooks.webhooks import WebhookType
 
 from .identities.traits.models import Trait
 from .identities.traits.serializers import (
@@ -217,8 +217,7 @@ class WebhookViewSet(
     pagination_class = None
     permission_classes = [IsAuthenticated, NestedEnvironmentPermissions]
 
-    webhook_model = Webhook
-    sample_trigger_method = staticmethod(trigger_sample_environment_webhook)
+    webhook_type = WebhookType.ENVIRONMENT
 
     def get_queryset(self):
         return Webhook.objects.filter(
