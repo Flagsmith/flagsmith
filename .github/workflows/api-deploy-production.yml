@@ -22,12 +22,13 @@ jobs:
               with:
                   fetch-depth: 0
 
-            - name: Push to ElasticBeanstalk
-              working-directory: api
-              env:
-                  AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
-                  AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-              run: eb deploy production-api -l "${GITHUB_SHA}" --timeout 20
+            - name: Deploy API to Production
+              uses: ./.github/actions/api-deploy
+              with:
+                  beanstalk_environment_name: production-api
+                  github_access_token: ${{ secrets.GH_PRIVATE_ACCESS_TOKEN }}
+                  aws_access_key_id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+                  aws_secret_access_key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
 
     run-tests:
         runs-on: ubuntu-latest
