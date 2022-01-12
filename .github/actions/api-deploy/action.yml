@@ -23,23 +23,18 @@ runs:
     using: composite
 
     steps:
-      - name: Add SAML package
-        working-directory: api
-        env:
-          FLAGSMITH_SAML_REVISION: ${{ inputs.flagsmith_saml_revision }}
-        run: |
-          echo "Downloading and injecting flagsmith-saml module..."
-          TARBALL_URL="https://github.com/flagsmith/flagsmith-saml/tarball/${FLAGSMITH_SAML_REVISION}"
-          mkdir /tmp/flagsmith-saml
-          curl -L -u token:${{ inputs.github_access_token }} $TARBALL_URL | tar --strip-components=1 -xz -C /tmp/flagsmith-saml --
-          mv /tmp/flagsmith-saml/saml .
-        shell: bash
+      - name: Checkout SAML package
+        uses: actions/checkout@v2
+        with:
+            repository: flagsmith/flagsmith-saml
+            token: ${{ inputs.github_access_token }}
+            ref: ${{ inputs.flagsmith_saml_revision }}
+            path: ./flagsmith-saml
 
-      - name: Add SAML dependencies
-        working-directory: api
+      - name: Integrate SAML module
         run: |
-          echo "Adding SAML requirements to requirements.txt..."
-          cat /tmp/flagsmith-saml/requirements.txt >> requirements.txt
+          mv ./flagsmith-saml/saml ./api
+          cat ./flagsmith-saml/requirements.txt >> ./api/requirements.txt
         shell: bash
 
       - name: Push to ElasticBeanstalk
