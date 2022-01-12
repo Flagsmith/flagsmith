@@ -1,0 +1,51 @@
+name: API Deploy
+description: "Deploy the Flagsmith API to Elastic Beanstalk"
+
+inputs:
+  beanstalk_environment_name:
+    description: "The elastic beanstalk environment name"
+    required: true
+  github_access_token:
+    description: "The Github access token to use to access external repositories (e.g. flagsmith-saml)"
+    required: true
+  aws_access_key_id:
+    description: "The AWS access key ID to use for deploying to Beanstalk."
+    required: true
+  aws_secret_access_key:
+    description: "The AWS secret access key to use for deploying to Beanstalk."
+    required: true
+  flagsmith_saml_revision:
+    description: "The flagsmith-saml repo git revision to use when building deployment package."
+    required: false
+    default: main
+
+runs:
+    using: composite
+
+    steps:
+      - name: Add SAML package
+        working-directory: api
+        env:
+          FLAGSMITH_SAML_REVISION: ${{ inputs.flagsmith_saml_revision }}
+        run: |
+          echo "Downloading and injecting flagsmith-saml module..."
+          TARBALL_URL="https://github.com/flagsmith/flagsmith-saml/tarball/${FLAGSMITH_SAML_REVISION}"
+          mkdir /tmp/flagsmith-saml
+          curl -L -u token:${{ inputs.github_access_token }} $TARBALL_URL | tar --strip-components=1 -xz -C /tmp/flagsmith-saml --
+          mv /tmp/flagsmith-saml/saml .
+        shell: bash
+
+      - name: Add SAML dependencies
+        working-directory: api
+        run: |
+          echo "Adding SAML requirements to requirements.txt..."
+          cat /tmp/flagsmith-saml/requirements.txt >> requirements.txt
+        shell: bash
+
+      - name: Push to ElasticBeanstalk
+        working-directory: api
+        env:
+            AWS_ACCESS_KEY_ID: ${{ inputs.aws_access_key_id }}
+            AWS_SECRET_ACCESS_KEY: ${{ inputs.aws_secret_access_key }}
+        run: eb deploy ${{ inputs.beanstalk_environment_name }} -l "${GITHUB_SHA}" --timeout 20
+        shell: bash
