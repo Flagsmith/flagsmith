@@ -35,4 +35,7 @@ EXPOSE 8000
 
 USER nobody
 
-CMD ["./scripts/run-docker.sh"]
+ENTRYPOINT ["./scripts/run-docker.sh"]
+
+# other options below are `migrate` or `serve`
+CMD ["migrate-and-serve"]
