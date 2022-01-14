@@ -4,7 +4,7 @@ import pytest
 from django.test import TestCase
 
 from environments.identities.models import Identity
-from environments.models import Environment
+from environments.models import Environment, EnvironmentAPIKey
 from features.models import Feature, FeatureState
 from organisations.models import Organisation
 from projects.models import Project
@@ -142,3 +142,16 @@ class EnvironmentTestCase(TestCase):
 
         # Then
         assert env is None
+
+    def test_get_from_cache_accepts_environment_api_key_model_key(self):
+        # Given
+        self.environment.save()
+        api_key = EnvironmentAPIKey.objects.create(
+            name="Some key", environment=self.environment
+        )
+
+        # When
+        environment_from_cache = Environment.get_from_cache(api_key=api_key.key)
+
+        # Then
+        assert environment_from_cache == self.environment
