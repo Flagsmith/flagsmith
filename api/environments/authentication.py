@@ -20,7 +20,7 @@ class EnvironmentKeyAuthentication(BaseAuthentication):
         if not environment:
             raise AuthenticationFailed("Invalid or missing Environment Key")
 
-        if not environment.project.organisation.stop_serving_flags:
+        if environment.project.organisation.stop_serving_flags:
             raise AuthenticationFailed("Organisation is disabled from serving flags.")
 
         request.environment = environment
