@@ -40,7 +40,9 @@ const FormGroup = class extends Component {
                             <div style={{
                                 marginBottom: '0.5rem',
                             }}
-                            />
+                            >
+                                {this.props.rightComponent}
+                            </div>
                         )}
 
                     </Row>
