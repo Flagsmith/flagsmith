@@ -6,3 +6,4 @@ exclude = .git,__pycache__,*/migrations/*
 per-file-ignores = 
     app/settings/local.py: F403, F405
     app/settings/production.py: F403, F405
+    app/settings/saas.py: F403, F405
