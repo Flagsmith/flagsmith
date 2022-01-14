@@ -30,7 +30,6 @@
     "@babel/preset-env": "7.1.0",
     "@babel/preset-react": "7.0.0",
     "@babel/register": "7.0.0",
-    "@ffmpeg-installer/ffmpeg": "^1.1.0",
     "@material-ui/core": "3.9.0",
     "amplitude-js": "^7.3.3",
     "animejs": "3.0.1",
@@ -103,7 +102,6 @@
     "slackbots": "1.2.0",
     "ssg-node-express": "4.16.4",
     "style-loader": "0.23.1",
-    "testcafe": "^1.17.1",
     "uglifyjs-webpack-plugin": "1.3.0",
     "webpack": "4.46.0",
     "webpack-bundle-analyzer": "3.4.1",
@@ -113,9 +111,11 @@
     "whatwg-fetch": "3.0.0"
   },
   "devDependencies": {
+    "@ffmpeg-installer/ffmpeg": "^1.1.0",
     "chromedriver": "96.0.0",
     "nightwatch": "1.7.8",
     "nodemon": "1.18.11",
-    "raw-loader": "0.5.1"
+    "raw-loader": "0.5.1",
+    "testcafe": "^1.17.1"
   }
 }
