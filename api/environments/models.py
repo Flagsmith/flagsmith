@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 from __future__ import unicode_literals
 
-import enum
 import logging
 import typing
 from copy import deepcopy
@@ -13,7 +12,7 @@ from django.db.models import Q
 from django.utils import timezone
 from django.utils.encoding import python_2_unicode_compatible
 from django.utils.translation import ugettext_lazy as _
-from django_lifecycle import AFTER_CREATE, LifecycleModel, hook
+from django_lifecycle import AFTER_CREATE, AFTER_SAVE, LifecycleModel, hook
 
 from app.utils import create_hash
 from environments.api_keys import (
@@ -156,7 +155,7 @@ class Webhook(AbstractBaseWebhookModel):
     updated_at = models.DateTimeField(auto_now=True)
 
 
-class EnvironmentAPIKey(models.Model):
+class EnvironmentAPIKey(LifecycleModel):
     """
     These API keys are only currently used for server side integrations.
     """
@@ -173,3 +172,9 @@ class EnvironmentAPIKey(models.Model):
     @property
     def is_valid(self):
         return self.active and (not self.expires_at or self.expires_at > timezone.now())
+
+    @hook(AFTER_SAVE)
+    def send_to_dynamo(self):
+        # TODO: create a new table in dynamo to store api keys so we can subsequently
+        #  look up the environment
+        pass
