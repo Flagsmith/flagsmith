@@ -10,7 +10,6 @@ const Project = require('../common/project');
 const postToSlack = Project.env === 'prod';
 const api = require('./api');
 const spm = require('./middleware/single-page-middleware');
-const webpackMiddleware = require('./middleware/webpack-middleware');
 const env = require('../common/project').env;
 const slackClient = require('./slack-client');
 
@@ -95,7 +94,7 @@ if (process.env.FLAGSMITH_PROXY_API_URL) {
 
 if (isDev) { // Serve files from src directory and use webpack-dev-server
     console.log('Enabled Webpack Hot Reloading');
-    webpackMiddleware(app);
+    require('./middleware/webpack-middleware')(app);
     app.set('views', 'web/');
     app.use(express.static('web'));
 } else { // Serve files from build directory
