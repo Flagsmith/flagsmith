@@ -20,7 +20,7 @@ from .permissions.views import (
     UserEnvironmentPermissionsViewSet,
     UserPermissionGroupEnvironmentPermissionsViewSet,
 )
-from .views import EnvironmentViewSet, WebhookViewSet
+from .views import EnvironmentAPIKeyViewSet, EnvironmentViewSet, WebhookViewSet
 
 router = routers.DefaultRouter()
 router.register(r"", EnvironmentViewSet, basename="environment")
@@ -87,6 +87,8 @@ identity_router.register(
     r"featurestates", IdentityFeatureStateViewSet, basename="identity-featurestates"
 )
 identity_router.register(r"traits", TraitViewSet, basename="identities-traits")
+
+environments_router.register(r"api-keys", EnvironmentAPIKeyViewSet, basename="api-keys")
 
 app_name = "environments"
 

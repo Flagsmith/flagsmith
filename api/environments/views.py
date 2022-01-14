@@ -15,6 +15,7 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 
 from environments.permissions.permissions import (
+    EnvironmentAdminPermission,
     EnvironmentPermissions,
     NestedEnvironmentPermissions,
 )
@@ -30,7 +31,7 @@ from .identities.traits.serializers import (
     DeleteAllTraitKeysSerializer,
     TraitKeysSerializer,
 )
-from .models import Environment, Webhook
+from .models import Environment, EnvironmentAPIKey, Webhook
 from .permissions.models import (
     EnvironmentPermissionModel,
     UserEnvironmentPermission,
@@ -38,6 +39,7 @@ from .permissions.models import (
 )
 from .serializers import (
     CloneEnvironmentSerializer,
+    EnvironmentAPIKeySerializer,
     EnvironmentSerializerLight,
     WebhookSerializer,
 )
@@ -205,33 +207,46 @@ class EnvironmentViewSet(viewsets.ModelViewSet):
         return Response(build_environment_document(environment))
 
 
-class WebhookViewSet(
-    mixins.ListModelMixin,
-    mixins.CreateModelMixin,
-    mixins.UpdateModelMixin,
-    mixins.DestroyModelMixin,
-    viewsets.GenericViewSet,
-    TriggerSampleWebhookMixin,
-):
-    serializer_class = WebhookSerializer
-    pagination_class = None
-    permission_classes = [IsAuthenticated, NestedEnvironmentPermissions]
-
+class NestedEnvironmentViewSet(viewsets.GenericViewSet):
+    model_class = None
     webhook_type = WebhookType.ENVIRONMENT
 
     def get_queryset(self):
-        return Webhook.objects.filter(
+        return self.model_class.objects.filter(
             environment__api_key=self.kwargs.get("environment_api_key")
         )
 
     def perform_create(self, serializer):
-        environment = Environment.objects.get(
-            api_key=self.kwargs.get("environment_api_key")
-        )
-        serializer.save(environment=environment)
+        serializer.save(environment=self._get_environment())
 
     def perform_update(self, serializer):
-        environment = Environment.objects.get(
-            api_key=self.kwargs.get("environment_api_key")
-        )
-        serializer.save(environment=environment)
+        serializer.save(environment=self._get_environment())
+
+    def _get_environment(self):
+        return Environment.objects.get(api_key=self.kwargs.get("environment_api_key"))
+
+
+class WebhookViewSet(
+    NestedEnvironmentViewSet,
+    mixins.ListModelMixin,
+    mixins.CreateModelMixin,
+    mixins.UpdateModelMixin,
+    mixins.DestroyModelMixin,
+):
+    serializer_class = WebhookSerializer
+    pagination_class = None
+    permission_classes = [IsAuthenticated, NestedEnvironmentPermissions]
+    model_class = Webhook
+
+
+class EnvironmentAPIKeyViewSet(
+    NestedEnvironmentViewSet,
+    mixins.ListModelMixin,
+    mixins.CreateModelMixin,
+    mixins.UpdateModelMixin,
+    mixins.DestroyModelMixin,
+):
+    serializer_class = EnvironmentAPIKeySerializer
+    pagination_class = None
+    permission_classes = [IsAuthenticated, EnvironmentAdminPermission]
+    model_class = EnvironmentAPIKey
