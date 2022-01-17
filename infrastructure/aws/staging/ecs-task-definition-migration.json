@@ -6,7 +6,9 @@
     "containerDefinitions": [
         {
             "name": "flagsmith-api-migration",
-            "command": ["migrate"],
+            "command": [
+                "migrate"
+            ],
             "environment": [
                 {
                     "name": "AWS_REGION",
