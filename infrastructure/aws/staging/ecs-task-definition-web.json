@@ -37,7 +37,7 @@
             "secrets": [
                 {
                     "name": "DATABASE_URL",
-                    "valueFrom": "arn:aws:secretsmanager:eu-west-2:302456015006:secret:DATABASE_URL-EMaUaY"
+                    "valueFrom": "arn:aws:secretsmanager:eu-west-2:302456015006:secret:DATABASE_URL-EMaUaY:DATABASE_URL::"
                 }
             ],
             "logConfiguration": {
