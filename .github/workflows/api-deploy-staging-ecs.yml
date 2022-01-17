@@ -41,7 +41,7 @@ jobs:
               with:
                   task-definition: infrastructure/aws/staging/ecs-task-definition-web.json
                   service: flagsmith-svc-eu-west-2-95f96fb
-                  cluster: flagsmith-api-cluster-eu-west-2-7c9bc9dUpdate
+                  cluster: flagsmith-api-cluster-eu-west-2-7c9bc9d
 
             #- name: Build, tag, and push image to Amazon ECR
             #  id: build-image
