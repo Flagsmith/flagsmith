@@ -1,0 +1,78 @@
+name: API Deploy to Staging
+
+on:
+    pull_request: #todo: remove
+        paths:
+            - 'api/**'
+            - '.github/**'
+        types: [opened, synchronize, reopened, ready_for_review]
+    push:
+        branches:
+            - main
+        paths:
+            - 'api/**'
+            - '.github/**'
+    
+jobs:
+    deploy-staging-ecs:
+        runs-on: ubuntu-latest
+        name: API Deploy to Staging ECS
+        environment: staging
+
+        steps:
+            - name: Cloning repo
+              uses: actions/checkout@v2
+              with:
+                  fetch-depth: 0
+
+            - name: Configure AWS Credentials
+              uses: aws-actions/configure-aws-credentials@v1
+              with:
+                  aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+                  aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+                  aws-region: eu-west-2
+
+            - name: Login to Amazon ECR
+              id: login-ecr
+              uses: aws-actions/amazon-ecr-login@v1
+
+            - name: Build, tag, and push image to Amazon ECR
+              id: build-image
+              env:
+                  ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+                  ECR_REPOSITORY: posthog-production
+                  IMAGE_TAG: ${{ github.sha }}
+              run: |
+                  cd api
+                  docker build -t $ECR_REPOSITORY:$IMAGE_TAG -f Dockerfile .
+                  docker push $ECR_REPOSITORY:$IMAGE_TAG
+                  echo "::set-output name=image::$ECR_REPOSITORY:$IMAGE_TAG"
+
+#    run-tests:
+#        runs-on: ubuntu-latest
+#        name: Run E2E Tests
+#        environment: staging
+#        needs: deploy-staging
+#
+#        steps:
+#            - name: Cloning repo
+#              uses: actions/checkout@v2
+#              with:
+#                  fetch-depth: 0
+#
+#            - name: Test with Chromedriver
+#              working-directory: frontend
+#              env:
+#                  E2E_TEST_TOKEN_STAGING: ${{ secrets.E2E_TEST_TOKEN }}
+#                  SLACK_TOKEN: ${{ secrets.SLACK_TOKEN }}
+#                  STATIC_ASSET_CDN_URL: /
+#              run: |
+#                  wget -q https://dl.google.com/linux/chrome/deb/pool/main/g/google-chrome-stable/google-chrome-stable_96.0.4664.110-1_amd64.deb
+#                  sudo apt install --allow-downgrades -y ./google-chrome*.deb -f
+#                  google-chrome --version
+#                  node -v
+#                  npm i
+#                  export ENV=staging;
+#                  npm run env
+#                  npm run test
+#
