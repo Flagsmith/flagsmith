@@ -39,7 +39,7 @@ jobs:
             - name: Build, tag, and push image to Amazon ECR
               id: build-image
               env:
-                  ECR_REGISTRY: ${{ secrets.ECR_REPOSITORY }}
+                  ECR_REPOSITORY: ${{ secrets.ECR_REPOSITORY }}
                   IMAGE_TAG: ${{ github.sha }}
               run: |
                   cd api
