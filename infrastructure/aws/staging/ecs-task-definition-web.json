@@ -47,8 +47,7 @@
                     "awslogs-region": "eu-west-2",
                     "awslogs-stream-prefix": "awslogs-flagsmith"
                 }
-            },
-            "image": "302456015006.dkr.ecr.eu-west-2.amazonaws.com/flagsmith-ecr-580125f:latest"
+            }
         }
     ],
     "requiresCompatibilities": [
