@@ -1,4 +1,4 @@
-name: API Deploy to Staging
+name: API Deploy to Staging ECS
 
 on:
     pull_request: #todo: remove
@@ -40,7 +40,6 @@ jobs:
               id: build-image
               env:
                   ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
-                  ECR_REPOSITORY: posthog-production
                   IMAGE_TAG: ${{ github.sha }}
               run: |
                   cd api
