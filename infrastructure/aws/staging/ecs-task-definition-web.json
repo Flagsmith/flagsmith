@@ -6,7 +6,6 @@
     "containerDefinitions": [
         {
             "name": "flagsmith-api",
-            "image": "302456015006.dkr.ecr.eu-west-2.amazonaws.com/flagsmith-ecr-580125f:latest",
             "cpu": 0,
             "portMappings": [
                 {

@@ -3,16 +3,16 @@ name: API Deploy to Staging ECS
 on:
     pull_request: #todo: remove
         paths:
-            - 'api/**'
-            - '.github/**'
+            - "api/**"
+            - ".github/**"
         types: [opened, synchronize, reopened, ready_for_review]
     push:
         branches:
             - main
         paths:
-            - 'api/**'
-            - '.github/**'
-    
+            - "api/**"
+            - ".github/**"
+
 jobs:
     deploy-staging-ecs:
         runs-on: ubuntu-latest
@@ -36,21 +36,30 @@ jobs:
               id: login-ecr
               uses: aws-actions/amazon-ecr-login@v1
 
-            #- name: Build, tag, and push image to Amazon ECR
-            #  id: build-image
-            #  env:
-            #      ECR_REPOSITORY: ${{ secrets.ECR_REPOSITORY }}
-            #      IMAGE_TAG: ${{ github.sha }}
-            #  run: |
-            #      cd api
-            #      docker build -t $ECR_REPOSITORY:$IMAGE_TAG -f Dockerfile .
-            #      docker push $ECR_REPOSITORY:$IMAGE_TAG
-            #      echo "::set-output name=image::$ECR_REPOSITORY:$IMAGE_TAG"
+            - name: Build, tag, and push image to Amazon ECR
+              id: build-image
+              env:
+                  ECR_REPOSITORY: ${{ secrets.ECR_REPOSITORY }}
+                  IMAGE_TAG: ${{ github.sha }}
+              run: |
+                  cd api
+                  docker build -t $ECR_REPOSITORY:$IMAGE_TAG -f Dockerfile .
+                  docker push $ECR_REPOSITORY:$IMAGE_TAG
+                  echo "::set-output name=image::$ECR_REPOSITORY:$IMAGE_TAG"
+
+            - name: Fill in the new image ID in the Amazon ECS task definition
+              id: task-def-api
+              uses: aws-actions/amazon-ecs-render-task-definition@v1
+              with:
+                  task-definition: infrastructure/aws/staging/ecs-task-definition-web.json
+                  container-name: flagsmith-api
+                  image: ${{ steps.build-image.outputs.image }}
+
 
             - name: Deploy Amazon ECS web task definition
               uses: aws-actions/amazon-ecs-deploy-task-definition@v1
               with:
-                  task-definition: infrastructure/aws/staging/ecs-task-definition-web.json
+                  task-definition: ${{ steps.task-def-api.outputs.task-definition }}
                   service: flagsmith-svc-eu-west-2-95f96fb
                   cluster: flagsmith-api-cluster-eu-west-2-7c9bc9d
 
