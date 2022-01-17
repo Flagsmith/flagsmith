@@ -36,13 +36,6 @@ jobs:
               id: login-ecr
               uses: aws-actions/amazon-ecr-login@v1
 
-            - name: Deploy Amazon ECS web task definition
-              uses: aws-actions/amazon-ecs-deploy-task-definition@v1
-              with:
-                  task-definition: infrastructure/aws/staging/ecs-task-definition-web.json
-                  service: flagsmith-svc-eu-west-2-95f96fb
-                  cluster: flagsmith-api-cluster-eu-west-2-7c9bc9d
-
             #- name: Build, tag, and push image to Amazon ECR
             #  id: build-image
             #  env:
@@ -53,6 +46,13 @@ jobs:
             #      docker build -t $ECR_REPOSITORY:$IMAGE_TAG -f Dockerfile .
             #      docker push $ECR_REPOSITORY:$IMAGE_TAG
             #      echo "::set-output name=image::$ECR_REPOSITORY:$IMAGE_TAG"
+
+            - name: Deploy Amazon ECS web task definition
+              uses: aws-actions/amazon-ecs-deploy-task-definition@v1
+              with:
+                  task-definition: infrastructure/aws/staging/ecs-task-definition-web.json
+                  service: flagsmith-svc-eu-west-2-95f96fb
+                  cluster: flagsmith-api-cluster-eu-west-2-7c9bc9d
 
 #    run-tests:
 #        runs-on: ubuntu-latest
