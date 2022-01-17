@@ -12,10 +12,10 @@ from organisations.views import chargebee_webhook
 
 schema_view = get_schema_view(
     openapi.Info(
-        title="Flagsmith API Testahhhh",
+        title="Flagsmith API",
         default_version="v1",
         description="",
-        license=openapi.License(name="BSD2222 License"),
+        license=openapi.License(name="BSD License"),
         contact=openapi.Contact(email="support@flagsmith.com"),
     ),
     public=True,
