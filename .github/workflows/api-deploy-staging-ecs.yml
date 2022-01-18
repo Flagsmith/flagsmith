@@ -13,6 +13,10 @@ on:
             - "api/**"
             - ".github/**"
 
+env:
+    ECS_CLUSTER: flagsmith-api-cluster-eu-west-2-7c9bc9d
+    ECS_SERVICE: flagsmith-svc-eu-west-2-95f96fb
+
 jobs:
     deploy-staging-ecs:
         runs-on: ubuntu-latest
@@ -66,7 +70,7 @@ jobs:
             - name: Perform migrations
               run: |
                   aws ecs register-task-definition --cli-input-json file://$TASK_DEFINITION
-                  aws ecs run-task --cluster flagsmith-api-cluster-eu-west-2-7c9bc9d --count 1 --launch-type FARGATE --task-definition flagsmith-api-migration  --network-configuration '{
+                  aws ecs run-task --cluster ${{ env.ECS_CLUSTER }} --count 1 --launch-type FARGATE --task-definition flagsmith-api-migration  --network-configuration '{
                     "awsvpcConfiguration": {
                       "subnets": ["subnet-1b0b8861"],
                       "securityGroups": ["sg-08632d6fb4cb0fdf3"],
@@ -81,8 +85,8 @@ jobs:
             - name: Deploy Amazon ECS web task definition
               uses: aws-actions/amazon-ecs-deploy-task-definition@v1
               with:
-                  cluster: flagsmith-api-cluster-eu-west-2-7c9bc9d
-                  service: flagsmith-svc-eu-west-2-95f96fb
+                  cluster: ${{ env.ECS_CLUSTER }}
+                  service: ${{ env.ECS_SERVICE }}
                   task-definition: ${{ steps.task-def-api.outputs.task-definition }}
 
 #    run-tests:
