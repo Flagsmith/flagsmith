@@ -47,7 +47,7 @@ jobs:
                   docker push $ECR_REPOSITORY:$IMAGE_TAG
                   echo "::set-output name=image::$ECR_REPOSITORY:$IMAGE_TAG"
 
-            - name: Fill in the new image ID in the Amazon ECS task definition
+            - name: Fill in the new image ID in the Amazon ECS API task definition
               id: task-def-api
               uses: aws-actions/amazon-ecs-render-task-definition@v1
               with:
@@ -55,7 +55,7 @@ jobs:
                   container-name: flagsmith-api
                   image: ${{ steps.build-image.outputs.image }}
 
-            - name: Fill in the new image ID in the Amazon ECS task definition
+            - name: Fill in the new image ID in the Amazon ECS migration task definition
               id: task-def-api-migration
               uses: aws-actions/amazon-ecs-render-task-definition@v1
               with:
