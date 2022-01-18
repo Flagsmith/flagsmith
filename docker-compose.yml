@@ -26,7 +26,8 @@ services:
             DISABLE_INFLUXDB_FEATURES: 'true' # set to false to enable InfluxDB
             PREVENT_SIGNUP: 'true'
 
-            ENV: prod # set to "prod" in production.
+            # set to "prod" in production.
+            ENV: prod
 
             # For more info on configuring InfluxDB - https://docs.flagsmith.com/deployment/overview#influxdb
             # INFLUXDB_URL: http://influxdb:8086
@@ -45,7 +46,8 @@ services:
             # EMAIL_PORT: 587 # optional
             # EMAIL_USE_TLS: True # optional
 
-            # ENABLE_ADMIN_ACCESS_USER_PASS: True # set to True to enable access to the /admin/ Django backend via your username and password
+            # set to True to enable access to the /admin/ Django backend via your username and password
+            ENABLE_ADMIN_ACCESS_USER_PASS: True
             # ALLOW_REGISTRATION_WITHOUT_INVITE: True
 
         ports:
