@@ -66,7 +66,12 @@ jobs:
             - name: Perform migrations
               run: |
                   aws ecs register-task-definition --cli-input-json file://$TASK_DEFINITION
-                  aws ecs run-task --cluster flagsmith-api-cluster-eu-west-2-7c9bc9d --count 1 --launch-type FARGATE --task-definition flagsmith-api-migration
+                  aws ecs run-task --cluster flagsmith-api-cluster-eu-west-2-7c9bc9d --count 1 --launch-type FARGATE --task-definition flagsmith-api-migration  --network-configuration '{
+                    "awsvpcConfiguration": {
+                      "subnets": ["subnet-1b0b8861"],
+                      "securityGroups": ["sg-08632d6fb4cb0fdf3"],
+                      "assignPublicIp": "ENABLED"
+                    }}'
               env:
                   AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
                   AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
