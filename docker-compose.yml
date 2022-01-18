@@ -47,7 +47,7 @@ services:
             # EMAIL_USE_TLS: True # optional
 
             # set to True to enable access to the /admin/ Django backend via your username and password
-            ENABLE_ADMIN_ACCESS_USER_PASS: True
+            ENABLE_ADMIN_ACCESS_USER_PASS: 'true'
             # ALLOW_REGISTRATION_WITHOUT_INVITE: True
 
         ports:
