@@ -55,13 +55,30 @@ jobs:
                   container-name: flagsmith-api
                   image: ${{ steps.build-image.outputs.image }}
 
+            - name: Fill in the new image ID in the Amazon ECS task definition
+              id: task-def-api-migration
+              uses: aws-actions/amazon-ecs-render-task-definition@v1
+              with:
+                  task-definition: infrastructure/aws/staging/ecs-task-definition-migration.json
+                  container-name: flagsmith-api-migration
+                  image: ${{ steps.build-image.outputs.image }}
+
+            - name: Perform migrations
+              run: |
+                  aws ecs register-task-definition --cli-input-json file://$TASK_DEFINITION
+                  aws ecs run-task --cluster flagsmith-production-cluster --count 1 --launch-type FARGATE --task-definition flagsmith-api-migration
+              env:
+                  AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+                  AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+                  AWS_DEFAULT_REGION: "eu-west-2"
+                  TASK_DEFINITION: ${{ steps.task-def-api-migration.outputs.task-definition }}
 
             - name: Deploy Amazon ECS web task definition
               uses: aws-actions/amazon-ecs-deploy-task-definition@v1
               with:
-                  task-definition: ${{ steps.task-def-api.outputs.task-definition }}
-                  service: flagsmith-svc-eu-west-2-95f96fb
                   cluster: flagsmith-api-cluster-eu-west-2-7c9bc9d
+                  service: flagsmith-svc-eu-west-2-95f96fb
+                  task-definition: ${{ steps.task-def-api.outputs.task-definition }}
 
 #    run-tests:
 #        runs-on: ubuntu-latest
