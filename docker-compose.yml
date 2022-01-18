@@ -1,15 +1,15 @@
 # See https://docs.flagsmith.com/deployment/docker for more information on running Flagsmith in Docker
 # This will docker-compose file will run the entire Flagsmith Platform in Docker
-# Uncomment and configure InfluxDB lines below (not neccesary but adds some functionality that requires InfluxDB)
+# Uncomment and configure InfluxDB lines below (not necessary but adds some functionality that requires InfluxDB)
 
 version: '3'
 services:
     postgres:
         image: postgres:11.12-alpine
+        container_name: flagsmith_postgres
         environment:
             POSTGRES_PASSWORD: password
             POSTGRES_DB: flagsmith
-        container_name: flagsmith_postgres
 
     flagsmith:
         platform: linux/amd64
@@ -20,8 +20,7 @@ services:
             # All environments variables are available here:
             # API: https://docs.flagsmith.com/deployment/locally-api#environment-variables
             # UI: https://docs.flagsmith.com/deployment/locally-frontend#environment-variables
-        
-        
+
             DJANGO_ALLOWED_HOSTS: '*' # Change this in production
             DATABASE_URL: postgresql://postgres:password@postgres:5432/flagsmith
             DISABLE_INFLUXDB_FEATURES: 'true' # set to false to enable InfluxDB
@@ -45,25 +44,23 @@ services:
             # EMAIL_HOST_PASSWORD: smtp_account_password
             # EMAIL_PORT: 587 # optional
             # EMAIL_USE_TLS: True # optional
-            
+
             # ENABLE_ADMIN_ACCESS_USER_PASS: True # set to True to enable access to the /admin/ Django backend via your username and password
             # ALLOW_REGISTRATION_WITHOUT_INVITE: True
-                
-            
-            
+
         ports:
             - '8000:8000'
         depends_on:
             - postgres
-            # - influxdb
+#             - influxdb
         links:
             - postgres
-            # - influxdb:influxdb
+#             - influxdb:influxdb
 
     # InfluxDB requires additional setup - please see https://docs.flagsmith.com/deployment-overview/#influxdb
     # Note that InfluxDB is optional, but enabling it will provide additional functionality to the Flagsmith platform
-    # influxdb:
-    #   image: quay.io/influxdb/influxdb:v2.0.3
-    #   container_name: flagsmith_influxdb
-    #   ports:
-    #     - "8086:8086"
+#    influxdb:
+#        image: quay.io/influxdb/influxdb:v2.0.3
+#        container_name: flagsmith_influxdb
+#        ports:
+#            - "8086:8086"
