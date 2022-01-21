@@ -23,8 +23,7 @@ class MultivariateFeatureOption(LifecycleModelMixin, AbstractBaseFeatureValueMod
     # to the MultivariateFeatureStateValue on creation of a new option or when creating
     # a new environment.
     default_percentage_allocation = models.FloatField(
-        null=True,
-        blank=True,
+        default=100,
         validators=[MinValueValidator(0), MaxValueValidator(100)],
     )
 
@@ -51,18 +50,24 @@ class MultivariateFeatureStateValue(LifecycleModelMixin, models.Model):
     )
 
     percentage_allocation = models.FloatField(
-        blank=False,
-        null=True,
         validators=[MinValueValidator(0), MaxValueValidator(100)],
     )
 
+    class Meta:
+        unique_together = ("feature_state", "multivariate_feature_option")
+
     @hook(BEFORE_SAVE)
     def validate_percentage_allocations(self):
-        # TODO: add tests
-        total_percentage_allocation = self.get_siblings().aggregate(
-            total_percentage_allocation=Sum("percentage_allocation")
-        )["total_percentage_allocation"]
-        if total_percentage_allocation and total_percentage_allocation > 100:
+        total_sibling_percentage_allocation = (
+            self.get_siblings().aggregate(
+                total_percentage_allocation=Sum("percentage_allocation")
+            )["total_percentage_allocation"]
+            or 0
+        )
+        total_percentage_allocation = (
+            total_sibling_percentage_allocation + self.percentage_allocation
+        )
+        if total_percentage_allocation > 100:
             raise ValidationError(
                 self._get_invalid_percentage_allocation_error_message()
             )

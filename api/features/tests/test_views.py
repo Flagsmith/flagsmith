@@ -695,6 +695,37 @@ class ProjectFeatureTestCase(TestCase):
         response_json = response.json()
         assert len(response_json["multivariate_options"]) == 1
 
+    def test_create_mv_feature_with_invalid_percentage_allocation_returns_400(self):
+        # Given
+        data = {
+            "name": "test_feature",
+            "default_enabled": True,
+            "multivariate_options": [
+                {
+                    "type": "unicode",
+                    "string_value": "test-value-50",
+                    "default_percentage_allocation": 50,
+                },
+                {
+                    "type": "unicode",
+                    "string_value": "test-value-51",
+                    "default_percentage_allocation": 51,
+                },
+            ],
+        }
+        url = reverse("api-v1:projects:project-features-list", args=[self.project.id])
+
+        # When
+        response = self.client.post(
+            url, data=json.dumps(data), content_type="application/json"
+        )
+        # Then
+        assert response.status_code == status.HTTP_400_BAD_REQUEST
+        assert (
+            response.json()["multivariate_options"][0]
+            == "Invalid percentage allocation"
+        )
+
     def test_update_feature_with_multivariate_options(self):
         # Given
         # a feature
@@ -703,13 +734,19 @@ class ProjectFeatureTestCase(TestCase):
         # a multivariate feature option for the feature that we will leave out from
         # the list in the PUT request
         multivariate_option_to_delete = MultivariateFeatureOption.objects.create(
-            feature=feature, type=STRING, string_value="test-value"
+            feature=feature,
+            type=STRING,
+            string_value="test-value_to_delete",
+            default_percentage_allocation=50,
         )
 
         # a multivariate feature option for the feature that we will update in the
         # PUT request
         multivariate_option_to_update = MultivariateFeatureOption.objects.create(
-            feature=feature, type=STRING, string_value="test-value"
+            feature=feature,
+            type=STRING,
+            string_value="test-value",
+            default_percentage_allocation=50,
         )
         updated_mv_option_data = model_to_dict(multivariate_option_to_update)
         updated_mv_option_data["string_value"] = "updated-value"
@@ -718,7 +755,11 @@ class ProjectFeatureTestCase(TestCase):
         data = {
             "name": "test_feature",
             "multivariate_options": [
-                {"type": "unicode", "string_value": "test-value"},  # new mv option
+                {
+                    "type": "unicode",
+                    "string_value": "test-value",
+                    "default_percentage_allocation": 50,
+                },  # new mv option
                 updated_mv_option_data,  # the updated mv option
             ],  # and we removed the deleted one
         }
@@ -726,12 +767,12 @@ class ProjectFeatureTestCase(TestCase):
             "api-v1:projects:project-features-detail",
             args=[self.project.id, feature.id],
         )
-
+        breakpoint()
         # When
         response = self.client.put(
             url, data=json.dumps(data), content_type="application/json"
         )
-
+        breakpoint()
         # Then
         # The response is successful
         assert response.status_code == status.HTTP_200_OK
