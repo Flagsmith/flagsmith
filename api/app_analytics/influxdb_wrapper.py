@@ -37,6 +37,7 @@ DEFAULT_DROP_COLUMNS = (
     "project_id",
     "environment",
     "environment_id",
+    "host",
 )
 
 
