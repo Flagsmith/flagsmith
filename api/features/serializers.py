@@ -1,4 +1,3 @@
-from drf_writable_nested import WritableNestedModelSerializer
 from rest_framework import serializers
 
 from audit.models import (
@@ -11,6 +10,7 @@ from audit.models import (
 )
 from environments.identities.models import Identity
 from users.serializers import UserIdsSerializer, UserListSerializer
+from util.drf_writable_nested.serializers import WritableNestedModelSerializer
 
 from .models import Feature, FeatureState, FeatureStateValue
 from .multivariate.serializers import (
@@ -106,14 +106,14 @@ class ListCreateFeatureSerializer(WritableNestedModelSerializer):
             log=message,
         )
 
-    # def validate_multivariate_options(self, mv_options):
-    #     total_percentage_allocation = sum(
-    #         mv_option.get("default_percentage_allocation", 100)
-    #         for mv_option in mv_options
-    #     )
-    #     if total_percentage_allocation > 100:
-    #         raise serializers.ValidationError("Invalid percentage allocation")
-    #     return mv_options
+    def validate_multivariate_options(self, mv_options):
+        total_percentage_allocation = sum(
+            mv_option.get("default_percentage_allocation", 100)
+            for mv_option in mv_options
+        )
+        if total_percentage_allocation > 100:
+            raise serializers.ValidationError("Invalid percentage allocation")
+        return mv_options
 
     def validate(self, attrs):
         view = self.context["view"]

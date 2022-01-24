@@ -767,12 +767,10 @@ class ProjectFeatureTestCase(TestCase):
             "api-v1:projects:project-features-detail",
             args=[self.project.id, feature.id],
         )
-        breakpoint()
         # When
         response = self.client.put(
             url, data=json.dumps(data), content_type="application/json"
         )
-        breakpoint()
         # Then
         # The response is successful
         assert response.status_code == status.HTTP_200_OK
