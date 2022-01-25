@@ -551,10 +551,10 @@ const CreateFlag = class extends Component {
                                         </TabItem>
                                         <TabItem data-test="overrides" tabLabel="Overrides">
                                             {!identity && isEdit && (
-                                                <Permission level="project" permission="ADMIN" id={this.props.projectId}>
-                                                    {({ permission: projectAdmin }) => projectAdmin && (
+                                                <FormGroup className="mb-4 mr-3 ml-3">
+                                                <Permission level="environment" permission={Utils.getManageFeaturePermission()} id={this.props.environmentId}>
+                                                    {({ permission: environmentAdmin }) => environmentAdmin ? (
 
-                                                        <FormGroup className="mb-4 mr-3 ml-3">
                                                             <Panel
                                                               icon="ion-ios-settings"
                                                               title={(
@@ -591,9 +591,23 @@ const CreateFlag = class extends Component {
                                                                 )}
 
                                                             </Panel>
-                                                        </FormGroup>
+                                                    ) : (
+                                                        <Panel
+                                                            icon="ion-ios-settings"
+                                                            title={(
+                                                                <Tooltip
+                                                                    title={<h6 className="mb-0">Segment Overrides <span className="icon ion-ios-information-circle"/></h6>}
+                                                                    place="right"
+                                                                >
+                                                                    {Constants.strings.SEGMENT_OVERRIDES_DESCRIPTION}
+                                                                </Tooltip>
+                                                            )}
+                                                        >
+                                                            <div dangerouslySetInnerHTML={{__html:Constants.environmentPermissions(Utils.getManageFeaturePermission())}}/>
+                                                        </Panel>
                                                     )}
                                                 </Permission>
+                                                </FormGroup>
                                             )}
                                             {
                                                 !identity
