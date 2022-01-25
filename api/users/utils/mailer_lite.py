@@ -27,7 +27,7 @@ class MailerLiteBaseClient:
 
 
 class MailerLite(MailerLiteBaseClient):
-    resource = "subscribers"
+    resource = f"groups/{settings.MAILERLITE_NEW_USER_GROUP_ID}/subscribers"
 
     @postpone
     def subscribe(self, user: "models.FFAdminUser"):
