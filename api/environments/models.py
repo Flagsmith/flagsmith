@@ -5,6 +5,7 @@ import logging
 import typing
 from copy import deepcopy
 
+import boto3
 from django.conf import settings
 from django.core.cache import caches
 from django.db import models
@@ -13,6 +14,9 @@ from django.utils import timezone
 from django.utils.encoding import python_2_unicode_compatible
 from django.utils.translation import ugettext_lazy as _
 from django_lifecycle import AFTER_CREATE, AFTER_SAVE, LifecycleModel, hook
+from flag_engine.django_transform.document_builders import (
+    build_environment_api_key_document,
+)
 
 from app.utils import create_hash
 from environments.api_keys import (
@@ -155,6 +159,13 @@ class Webhook(AbstractBaseWebhookModel):
     updated_at = models.DateTimeField(auto_now=True)
 
 
+dynamo_api_key_table = None
+if settings.ENVIRONMENTS_API_KEY_TABLE_NAME_DYNAMO:
+    dynamo_api_key_table = boto3.resource("dynamodb").Table(
+        settings.ENVIRONMENTS_API_KEY_TABLE_NAME_DYNAMO
+    )
+
+
 class EnvironmentAPIKey(LifecycleModel):
     """
     These API keys are only currently used for server side integrations.
@@ -175,6 +186,7 @@ class EnvironmentAPIKey(LifecycleModel):
 
     @hook(AFTER_SAVE)
     def send_to_dynamo(self):
-        # TODO: create a new table in dynamo to store api keys so we can subsequently
-        #  look up the environment
-        pass
+        if not dynamo_api_key_table:
+            return
+        env_key_dict = build_environment_api_key_document(self)
+        dynamo_api_key_table.put_item(Item=env_key_dict)
