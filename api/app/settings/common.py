@@ -526,6 +526,7 @@ MAILERLITE_BASE_URL = env.str(
     "MAILERLITE_BASE_URL", default="https://api.mailerlite.com/api/v2/"
 )
 MAILERLITE_API_KEY = env.str("MAILERLITE_API_KEY", None)
+MAILERLITE_NEW_USER_GROUP_ID = env.int("MAILERLITE_NEW_USER_GROUP_ID", None)
 
 # Additional functionality for using SAML in Flagsmith SaaS
 SAML_MODULE_PATH = env("SAML_MODULE_PATH", os.path.join(BASE_DIR, "saml"))
