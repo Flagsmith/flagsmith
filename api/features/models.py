@@ -13,13 +13,7 @@ from django.db import models
 from django.db.models import Q, UniqueConstraint
 from django.utils.encoding import python_2_unicode_compatible
 from django.utils.translation import ugettext_lazy as _
-from django_lifecycle import (
-    AFTER_CREATE,
-    AFTER_SAVE,
-    BEFORE_CREATE,
-    LifecycleModel,
-    hook,
-)
+from django_lifecycle import AFTER_CREATE, BEFORE_CREATE, LifecycleModel, hook
 from ordered_model.models import OrderedModelBase
 from simple_history.models import HistoricalRecords
 
