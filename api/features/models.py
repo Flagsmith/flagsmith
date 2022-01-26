@@ -31,7 +31,6 @@ from features.feature_states.models import AbstractBaseFeatureValueModel
 from features.feature_types import MULTIVARIATE
 from features.helpers import get_correctly_typed_value
 from features.multivariate.models import MultivariateFeatureStateValue
-from features.tasks import trigger_feature_state_change_webhooks
 from features.utils import (
     get_boolean_from_string,
     get_integer_from_string,
@@ -408,10 +407,6 @@ class FeatureState(LifecycleModel, models.Model):
                 for mv_option in self.feature.multivariate_options.all()
             ]
             MultivariateFeatureStateValue.objects.bulk_create(mv_feature_state_values)
-
-    @hook(AFTER_SAVE)
-    def trigger_feature_state_change_webhooks(self):
-        trigger_feature_state_change_webhooks(self)
 
     def get_feature_state_value_defaults(self) -> dict:
         if self.feature.initial_value is None:
