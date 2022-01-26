@@ -13,7 +13,7 @@ import VariationValue from '../mv/VariationValue';
 import AddVariationButton from '../mv/AddVariationButton';
 import VariationOptions from '../mv/VariationOptions';
 import FlagOwners from '../FlagOwners';
-
+import FeatureListStore from '../../../common/stores/feature-list-store'
 const FEATURE_ID_MAXLENGTH = Constants.forms.maxLength.FEATURE_ID;
 
 const CreateFlag = class extends Component {
@@ -143,6 +143,8 @@ const CreateFlag = class extends Component {
                 environmentId,
             });
         } else {
+            FeatureListStore.isSaving = true;
+            FeatureListStore.trigger("change")
             !isSaving && name && func(this.props.projectId, this.props.environmentId, {
                 name,
                 initial_value,
