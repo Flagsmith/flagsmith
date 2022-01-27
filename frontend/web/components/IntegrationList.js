@@ -6,6 +6,8 @@ import ProjectStore from '../../common/stores/project-store';
 const CreateEditIntegration = require('./modals/CreateEditIntegrationModal');
 
 class Integration extends Component {
+
+
     add =() => {
         this.props.addIntegration(this.props.integration, this.props.id);
     }
@@ -24,7 +26,7 @@ class Integration extends Component {
         const showAdd = !(!perEnvironment && activeIntegrations && activeIntegrations.length);
         return (
             <Panel
-              className="no-pad m-4"
+              className="no-pad panel--transparent m-4"
               title={(
                   <Row style={{ flexWrap: 'noWrap' }}>
                       <Flex>
@@ -39,7 +41,7 @@ class Integration extends Component {
                         className="btn-lg btn-primary ml-4" id="show-create-segment-btn" data-test="show-create-segment-btn"
                         onClick={this.add}
                       >
-                          <span className="icon ion-ios-apps"/>
+                          <span className="icon ion-ios-apps text-white"/>
                           {' '}
                           Add integration
                       </Button>
@@ -80,7 +82,9 @@ class Integration extends Component {
 
 class IntegrationList extends Component {
     state = {}
-
+    static contextTypes = {
+        router: propTypes.object.isRequired,
+    };
     componentDidMount() {
         this.fetch();
     }
@@ -114,6 +118,17 @@ class IntegrationList extends Component {
             console.log(res);
             this.setState({ isLoading: false, activeIntegrations: _.map(res, item => (!!item && item.length ? item : [])) });
         });
+        const params = Utils.fromParam();
+        if (params && params.configure) {
+            const integrationList = this.props.getValue('integration_data') && JSON.parse(this.props.getValue('integration_data'));
+
+            if (integrationList && integrationList[params.configure]) {
+                setTimeout(()=>{
+                    this.addIntegration(integrationList[params.configure], params.configure)
+                    this.context.router.history.replace(document.location.pathname);
+                },500)
+            }
+        }
     }
 
     removeIntegration =(integration, id) => {
@@ -129,8 +144,12 @@ class IntegrationList extends Component {
     }
 
     addIntegration =(integration, id) => {
+        const params = Utils.fromParam()
         openModal(`${integration.title} Integration`, <CreateEditIntegration
           id={id} integration={integration}
+          data={params.environment?{
+              flagsmithEnvironment:params.environment
+          }:null}
           projectId={this.props.projectId} onComplete={this.fetch}
         />);
     }

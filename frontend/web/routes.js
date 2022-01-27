@@ -3,7 +3,6 @@ import { Route, Switch } from 'react-router-dom';
 
 import App from './components/App'; // App Wrapper
 import HomePage from './components/pages/HomePage';
-import MarkupPage from './components/pages/__MarkupPage__';
 import DemoPage from './components/pages/DemoPage';
 import Maintenance from './components/Maintenance';
 import ProjectSelectPage from './components/pages/ProjectSelectPage';
@@ -25,12 +24,13 @@ import NotFoundPage from './components/pages/NotFoundPage';
 import PricingPage from './components/pages/PricingPage';
 import TermsPoliciesPage from './components/pages/TermsPoliciesPage';
 import AuditLogPage from './components/pages/AuditLogPage';
+import CompareEnvironmentsPage from './components/pages/CompareEnvironmentsPage';
 
 export default (
     <App>
         <Switch>
             <Route path="/" exact component={HomePage}/>
-            <Route path="/markup" exact component={MarkupPage}/>
+            {/* <Route path="/markup" exact component={MarkupPage}/> */}
             <Route path="/login" exact component={HomePage}/>
             <Route path="/404" exact component={NotFoundErrorPage}/>
             <Route path="/signup" exact component={HomePage}/>
@@ -53,6 +53,7 @@ export default (
             <Route path="/project/:projectId/environment/:environmentId/users/:identity/:id" exact component={UserPage}/>
             <Route path="/project/:projectId/environment/create" exact component={CreateEnvironmentPage}/>
             <Route path="/project/:projectId/environment/:environmentId/project-settings" exact component={ProjectSettingsPage}/>
+            <Route path="/project/:projectId/environment/:environmentId/compare" exact component={CompareEnvironmentsPage}/>
             <Route path="/project/:projectId/settings" exact component={ProjectSettingsPage}/>
             <Route path="/project/:projectId/environment/:environmentId/segments" exact component={SegmentsPage}/>
             <Route path="/project/:projectId/environment/:environmentId/organisation-settings" exact component={OrganisationSettingsPage}/>

@@ -41,8 +41,8 @@ def project_overrides(request):
         "preventSignup": "PREVENT_SIGNUP",
         "disableInflux": "DISABLE_INFLUXDB_FEATURES",
         "flagsmithAnalytics": "FLAGSMITH_ANALYTICS",
-        "flagsmith": "FLAGSMITH_ON_FLAGSMITH_API_URL",
-        "flagsmithClientAPI": "FLAGSMITH_ON_FLAGSMITH_API_KEY",
+        "flagsmith": "FLAGSMITH_ON_FLAGSMITH_API_KEY",
+        "flagsmithClientAPI": "FLAGSMITH_ON_FLAGSMITH_API_URL",
         "ga": "GOOGLE_ANALYTICS_API_KEY",
         "linkedin_api_key": "LINKEDIN_API_KEY",
         "crispChat": "CRISP_CHAT_API_KEY",
@@ -51,11 +51,13 @@ def project_overrides(request):
         "amplitude": "AMPLITUDE_API_KEY",
     }
 
-    project_overrides = {}
+    override_data = {
+        key: getattr(settings, value)
+        for key, value in config_mapping_dict.items()
+        if getattr(settings, value, None) is not None
+    }
 
-    for key, value in config_mapping_dict.items():
-        settings_value = getattr(settings, value, None)
-        if settings_value:
-            project_overrides[key] = settings_value
-
-    return HttpResponse("window.projectOverrides = " + json.dumps(project_overrides))
+    return HttpResponse(
+        content="window.projectOverrides = " + json.dumps(override_data),
+        content_type="application/javascript",
+    )

@@ -77,7 +77,17 @@ const controller = {
                 store.model.lastSaved = new Date().valueOf();
                 store.changed();
             })
-            .catch(e => API.ajaxHandler(store, e));
+            .catch(e => {
+                if (onComplete) {
+                    onComplete({
+                        ...flag,
+                        type: flag.multivariate_options && flag.multivariate_options.length ? 'MULTIVARIATE' : 'STANDARD',
+                        project: projectId,
+                    })
+                } else {
+                    API.ajaxHandler(store, e)
+                }
+            });
     },
     getInfluxDate(projectId, environmentId, flag, period) {
         data.get(`${Project.api}projects/${projectId}/features/${flag}/influx-data/?period=${period}&environment_id=${environmentId}`)
@@ -86,14 +96,14 @@ const controller = {
                 store.changed();
             }).catch(e => API.ajaxHandler(store, e));
     },
-    toggleFlag: (index, environments, comment) => {
+    toggleFlag: (index, environments, comment, environmentFlags) => {
         const flag = store.model.features[index];
         store.saving();
 
         API.trackEvent(Constants.events.TOGGLE_FEATURE);
         return Promise.all(environments.map((e) => {
-            if (store.hasFlagInEnvironment(flag.id)) {
-                const environmentFlag = store.model.keyedEnvironmentFeatures[flag.id];
+            if (store.hasFlagInEnvironment(flag.id, environmentFlags)) {
+                const environmentFlag = (environmentFlags || store.model.keyedEnvironmentFeatures)[flag.id];
                 return data.put(`${Project.api}environments/${e.api_key}/featurestates/${environmentFlag.id}/`, Object.assign({}, environmentFlag, { enabled: !environmentFlag.enabled }));
             }
             return data.post(`${Project.api}environments/${e.api_key}/featurestates/`, Object.assign({}, {
@@ -103,7 +113,9 @@ const controller = {
             }));
         }))
             .then((res) => {
-                store.model.keyedEnvironmentFeatures[flag.id] = res[0];
+                if (!environmentFlags) {
+                    store.model.keyedEnvironmentFeatures[flag.id] = res[0];
+                }
                 store.model.lastSaved = new Date().valueOf();
                 store.saved();
             });
@@ -188,8 +200,10 @@ const store = Object.assign({}, BaseStore, {
     getProjectFlags() {
         return store.model && store.model.features;
     },
-    hasFlagInEnvironment(id) {
-        return store.model && store.model.keyedEnvironmentFeatures && store.model.keyedEnvironmentFeatures.hasOwnProperty(id);
+    hasFlagInEnvironment(id, environmentFlags) {
+        const flags = environmentFlags || (store.model && store.model.keyedEnvironmentFeatures);
+
+        return flags && flags.hasOwnProperty(id);
     },
     getLastSaved() {
         return store.model && store.model.lastSaved;
@@ -208,7 +222,7 @@ store.dispatcherIndex = Dispatcher.register(store, (payload) => {
             controller.getFeatures(action.projectId, action.environmentId, action.force);
             break;
         case Actions.TOGGLE_FLAG:
-            controller.toggleFlag(action.index, action.environments, action.comment);
+            controller.toggleFlag(action.index, action.environments, action.comment, action.environmentFlags);
             break;
         case Actions.GET_FLAG_INFLUX_DATA:
             controller.getInfluxDate(action.projectId, action.environmentId, action.flag, action.period);

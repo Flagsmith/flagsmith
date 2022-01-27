@@ -21,7 +21,7 @@ const controller = {
                     // projects = projects.results;
                     store.model = { ...store.model, users, invites: invites && invites.results };
 
-                    if (AccountStore.getOrganisationRole(id) === 'ADMIN' && flagsmith.hasFeature('usage_chart')) {
+                    if (AccountStore.getOrganisationRole(id) === 'ADMIN' && !E2E && flagsmith.hasFeature('usage_chart')) {
                         data.get(`${Project.api}organisations/${id}/usage/`).then((usage) => {
                             store.model.usage = usage && usage.events;
                             store.loaded();
@@ -222,6 +222,7 @@ var store = Object.assign({}, BaseStore, {
     getProjects() {
         return store.model && store.model.projects;
     },
+
     getUsers: () => store.model && store.model.users,
     getInvites: () => store.model && store.model.invites,
     getInflux() {

@@ -18,7 +18,9 @@ from organisations.invites.exceptions import InviteExpiredError
 from organisations.invites.models import Invite, InviteLink
 from organisations.invites.serializers import InviteLinkSerializer
 from organisations.models import OrganisationRole
-from organisations.permissions import NestedOrganisationEntityPermission
+from organisations.permissions.permissions import (
+    NestedOrganisationEntityPermission,
+)
 from organisations.serializers import OrganisationSerializerFull
 from users.exceptions import InvalidInviteError
 from users.models import FFAdminUser

@@ -26,13 +26,13 @@ env = Env()
 logger = logging.getLogger(__name__)
 
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
-BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+BASE_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 PROJECT_ROOT = os.path.abspath(os.path.dirname(__file__))
 
 ENV = env("ENVIRONMENT", default="local")
 if ENV not in ("local", "dev", "staging", "production"):
     warnings.warn(
-        "ENVIRONMENT env variable must be one of local, dev, staging or production"
+        "ENVIRONMENT env variable must be one of local, dev, staging, production"
     )
 
 DEBUG = env.bool("DEBUG", default=False)
@@ -58,6 +58,8 @@ INFLUXDB_URL = env.str("INFLUXDB_URL", default="")
 INFLUXDB_ORG = env.str("INFLUXDB_ORG", default="")
 
 ALLOWED_HOSTS = env.list("DJANGO_ALLOWED_HOSTS", default=[])
+USE_X_FORWARDED_HOST = env.bool("USE_X_FORWARDED_HOST", default=False)
+
 CSRF_TRUSTED_ORIGINS = env.list("DJANGO_CSRF_TRUSTED_ORIGINS", default=[])
 
 INTERNAL_IPS = ["127.0.0.1"]
@@ -96,6 +98,7 @@ INSTALLED_APPS = [
     "users",
     "organisations",
     "organisations.invites",
+    "organisations.permissions",
     "projects",
     "sales_dashboard",
     "environments",
@@ -127,6 +130,7 @@ INSTALLED_APPS = [
     "integrations.segment",
     "integrations.heap",
     "integrations.mixpanel",
+    "integrations.slack",
     # Rate limiting admin endpoints
     "axes",
     "telemetry",
@@ -171,7 +175,7 @@ REST_FRAMEWORK = {
     "UNICODE_JSON": False,
     "DEFAULT_PAGINATION_CLASS": "rest_framework.pagination.PageNumberPagination",
     "DEFAULT_THROTTLE_RATES": {
-        "login": "5/min",
+        "login": "20/min",
         "mfa_code": "5/min",
         "invite": "10/min",
     },
@@ -271,7 +275,11 @@ STATIC_ROOT = os.path.join(PROJECT_ROOT, "../../static/")
 # CORS settings
 
 CORS_ORIGIN_ALLOW_ALL = True
-CORS_ALLOW_HEADERS = default_headers + ("X-Environment-Key", "X-E2E-Test-Auth-Token")
+CORS_ALLOW_HEADERS = default_headers + (
+    "X-Environment-Key",
+    "X-E2E-Test-Auth-Token",
+    "sentry-trace",
+)
 
 DEFAULT_FROM_EMAIL = env("SENDER_EMAIL", default="noreply@flagsmith.com")
 EMAIL_CONFIGURATION = {
@@ -341,7 +349,11 @@ LOGOUT_URL = "/admin/logout/"
 # Email associated with user that is used by front end for end to end testing purposes
 FE_E2E_TEST_USER_EMAIL = "nightwatch@solidstategroup.com"
 
-SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
+SECURE_PROXY_SSL_HEADER_NAME = env.str(
+    "SECURE_PROXY_SSL_HEADER_NAME", "HTTP_X_FORWARDED_PROTO"
+)
+SECURE_PROXY_SSL_HEADER_VALUE = env.str("SECURE_PROXY_SSL_HEADER_VALUE", "https")
+SECURE_PROXY_SSL_HEADER = (SECURE_PROXY_SSL_HEADER_NAME, SECURE_PROXY_SSL_HEADER_VALUE)
 
 # Chargebee
 ENABLE_CHARGEBEE = env.bool("ENABLE_CHARGEBEE", default=False)
@@ -457,13 +469,18 @@ ENABLE_AXES = env.bool("ENABLE_AXES", default=True)
 if ENABLE_AXES:
     # must be the first item in the auth backends
     AUTHENTICATION_BACKENDS.insert(0, "axes.backends.AxesBackend")
+
     # must be the last item in the middleware stack
     MIDDLEWARE.append("core.middleware.axes.AxesMiddleware")
+
     AXES_COOLOFF_TIME = timedelta(minutes=env.int("AXES_COOLOFF_TIME", 15))
     AXES_BLACKLISTED_URLS = [
         "/admin/login/?next=/admin",
         "/admin/",
     ]
+    AXES_ONLY_USER_FAILURES = env.bool("AXES_ONLY_USER_FAILURES", True)
+    AXES_FAILURE_LIMIT = env.int("AXES_FAILURE_LIMIT", 10)
+
 
 # Sentry tracking
 SENTRY_SDK_DSN = env("SENTRY_SDK_DSN", default=None)
@@ -500,3 +517,27 @@ AMPLITUDE_API_KEY = env("AMPLITUDE_API_KEY", default=None)
 
 # Set this to enable create organisation for only superusers
 RESTRICT_ORG_CREATE_TO_SUPERUSERS = env.bool("RESTRICT_ORG_CREATE_TO_SUPERUSERS", False)
+# Slack Integration
+SLACK_CLIENT_ID = env.str("SLACK_CLIENT_ID", default="")
+SLACK_CLIENT_SECRET = env.str("SLACK_CLIENT_SECRET", default="")
+
+# MailerLite
+MAILERLITE_BASE_URL = env.str(
+    "MAILERLITE_BASE_URL", default="https://api.mailerlite.com/api/v2/"
+)
+MAILERLITE_API_KEY = env.str("MAILERLITE_API_KEY", None)
+MAILERLITE_NEW_USER_GROUP_ID = env.int("MAILERLITE_NEW_USER_GROUP_ID", None)
+
+# Additional functionality for using SAML in Flagsmith SaaS
+SAML_MODULE_PATH = env("SAML_MODULE_PATH", os.path.join(BASE_DIR, "saml"))
+SAML_INSTALLED = os.path.exists(SAML_MODULE_PATH)
+
+if SAML_INSTALLED:
+    SAML_REQUESTS_CACHE_LOCATION = "saml_requests_cache"
+    CACHES[SAML_REQUESTS_CACHE_LOCATION] = {
+        "BACKEND": "django.core.cache.backends.db.DatabaseCache",
+        "LOCATION": SAML_REQUESTS_CACHE_LOCATION,
+    }
+    INSTALLED_APPS += ["saml"]
+    SAML_ACCEPTED_TIME_DIFF = env.int("SAML_ACCEPTED_TIME_DIFF", default=60)
+    DJOSER["SERIALIZERS"]["current_user"] = "saml.serializers.SamlCurrentUserSerializer"

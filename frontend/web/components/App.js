@@ -18,6 +18,7 @@ import DocumentationIcon from './svg/DocumentationIcon';
 import ArrowUpIcon from './svg/ArrowUpIcon';
 import RebrandBanner from './RebrandBanner';
 import UpgradeIcon from './svg/UpgradeIcon';
+import AccountSettingsPage from './pages/AccountSettingsPage';
 
 const App = class extends Component {
     static propTypes = {
@@ -193,10 +194,15 @@ const App = class extends Component {
             return (
                 <AccountProvider onNoUser={this.onNoUser} onLogout={this.onLogout} onLogin={this.onLogin}>
                     {() => (
-                        <AppLoader />
+                        <div id="login-page">
+                            <AppLoader />
+                        </div>
                     )}
                 </AccountProvider>
             );
+        }
+        if (AccountStore.forced2Factor()) {
+            return <AccountSettingsPage/>;
         }
         return (
             <div>

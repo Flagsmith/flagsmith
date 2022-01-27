@@ -1,5 +1,5 @@
 # Step 1 - Build Front End Application
-FROM node:12 AS build
+FROM node:16 AS build
 
 # Copy the entire project - Webpack puts compiled assets into the Django folder
 WORKDIR /app
@@ -12,13 +12,13 @@ RUN cd frontend && npm run bundledjango
 
 
 # Step 2 - Build Django Application
-FROM python:3.8-slim as application
+FROM python:3.9-slim as application
 
 WORKDIR /app
 COPY api /app/
 
 # Install python dependencies
-RUN apt-get update && apt-get install -y git && pip install -r requirements.txt --no-cache-dir --compile
+RUN pip install -r requirements.txt --no-cache-dir --compile 
 
 # Compile static Django assets
 RUN python /app/manage.py collectstatic --no-input
@@ -35,4 +35,7 @@ EXPOSE 8000
 
 USER nobody
 
-CMD ["./scripts/run-docker.sh"]
+ENTRYPOINT ["./scripts/run-docker.sh"]
+
+# other options below are `migrate` or `serve`
+CMD ["migrate-and-serve"]

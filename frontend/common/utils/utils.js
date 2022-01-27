@@ -1,3 +1,4 @@
+const React = require('react');
 module.exports = Object.assign({}, require('./base/_utils'), {
     numberWithCommas(x) {
         return x.toString()
@@ -10,6 +11,35 @@ module.exports = Object.assign({}, require('./base/_utils'), {
         p.appendChild(text);
         return p.innerHTML;
     },
+
+    getManageFeaturePermission() {
+        if (flagsmith.hasFeature('update_feature_state_permission')) {
+            return 'UPDATE_FEATURE_STATE';
+        }
+        return 'ADMIN';
+    },
+
+    getManageFeaturePermissionDescription() {
+        if (flagsmith.hasFeature('update_feature_state_permission')) {
+            return 'Update Feature State';
+        }
+        return 'Admin';
+    },
+
+
+    renderWithPermission(permission, name, el) {
+        return permission ? (
+            el
+        ) : (
+            <Tooltip
+              title={<div>{el}</div>}
+              place="right"
+              html
+            >{name}
+            </Tooltip>
+        );
+    },
+
 
     calculateControl(multivariateOptions, variations) {
         if (!multivariateOptions || !multivariateOptions.length) {
@@ -186,6 +216,10 @@ module.exports = Object.assign({}, require('./base/_utils'), {
                 break;
             }
             case 'AUDIT': {
+                valid = !plan.includes('side-project') && !plan.includes('startup');
+                break;
+            }
+            case 'FORCE_2FA': {
                 valid = !plan.includes('side-project') && !plan.includes('startup');
                 break;
             }

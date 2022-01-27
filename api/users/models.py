@@ -1,4 +1,5 @@
 import logging
+import typing
 
 from django.conf import settings
 from django.contrib.auth.base_user import BaseUserManager
@@ -8,6 +9,7 @@ from django.db import models
 from django.db.models import Q
 from django.utils.encoding import python_2_unicode_compatible
 from django.utils.translation import gettext_lazy as _
+from django_lifecycle import AFTER_CREATE, LifecycleModel, hook
 
 from environments.identities.models import Identity
 from environments.models import Environment
@@ -20,6 +22,10 @@ from organisations.models import (
     OrganisationRole,
     UserOrganisation,
 )
+from organisations.permissions.models import (
+    UserOrganisationPermission,
+    UserPermissionGroupOrganisationPermission,
+)
 from projects.models import (
     Project,
     UserPermissionGroupProjectPermission,
@@ -27,8 +33,10 @@ from projects.models import (
 )
 from users.auth_type import AuthType
 from users.exceptions import InvalidInviteError
+from users.utils.mailer_lite import MailerLite
 
 logger = logging.getLogger(__name__)
+mailer_lite = MailerLite()
 
 
 class UserManager(BaseUserManager):
@@ -70,7 +78,7 @@ class UserManager(BaseUserManager):
 
 
 @python_2_unicode_compatible
-class FFAdminUser(AbstractUser):
+class FFAdminUser(LifecycleModel, AbstractUser):
     organisations = models.ManyToManyField(
         Organisation, related_name="users", blank=True, through=UserOrganisation
     )
@@ -81,6 +89,10 @@ class FFAdminUser(AbstractUser):
     last_name = models.CharField(_("last name"), max_length=150)
     google_user_id = models.CharField(max_length=50, null=True, blank=True)
     github_user_id = models.CharField(max_length=50, null=True, blank=True)
+    marketing_consent_given = models.BooleanField(
+        default=False,
+        help_text="Determines whether the user has agreed to receive marketing mails",
+    )
 
     USERNAME_FIELD = "email"
     REQUIRED_FIELDS = ["first_name", "last_name"]
@@ -91,6 +103,10 @@ class FFAdminUser(AbstractUser):
 
     def __str__(self):
         return "%s %s" % (self.first_name, self.last_name)
+
+    @hook(AFTER_CREATE)
+    def subscribe_to_mailing_list(self):
+        mailer_lite.subscribe(self)
 
     @property
     def auth_type(self):
@@ -126,6 +142,9 @@ class FFAdminUser(AbstractUser):
         )
 
     def add_organisation(self, organisation, role=OrganisationRole.USER):
+        if organisation.is_paid:
+            mailer_lite.subscribe(self)
+
         UserOrganisation.objects.create(
             user=self, organisation=organisation, role=role.name
         )
@@ -190,6 +209,14 @@ class FFAdminUser(AbstractUser):
             return True
 
         return project in self.get_permitted_projects([permission])
+
+    def has_environment_permission(self, permission, environment):
+        if self.is_environment_admin(environment) or self.is_admin(
+            environment.project.organisation
+        ):
+            return True
+
+        return environment in self.get_permitted_environments([permission])
 
     def is_project_admin(self, project):
         if self.is_admin(project.organisation):
@@ -299,6 +326,45 @@ class FFAdminUser(AbstractUser):
                 group__users=self, admin=True, environment=environment
             ).exists()
         )
+
+    def has_organisation_permission(
+        self, organisation: Organisation, permission_key: str
+    ) -> bool:
+        if self.is_admin(organisation):
+            return True
+
+        return (
+            UserOrganisationPermission.objects.filter(
+                user=self, organisation=organisation, permissions__key=permission_key
+            ).exists()
+            or UserPermissionGroupOrganisationPermission.objects.filter(
+                group__users=self,
+                organisation=organisation,
+                permissions__key=permission_key,
+            ).exists()
+        )
+
+    def get_permission_keys_for_organisation(
+        self, organisation: Organisation
+    ) -> typing.Iterable[str]:
+        user_permission = UserOrganisationPermission.objects.filter(
+            user=self, organisation=organisation
+        ).first()
+        group_permissions = UserPermissionGroupOrganisationPermission.objects.filter(
+            group__users=self, organisation=organisation
+        )
+
+        all_permission_keys = set()
+        for organisation_permission in [user_permission, *group_permissions]:
+            if organisation_permission is not None:
+                all_permission_keys.update(
+                    {
+                        permission.key
+                        for permission in organisation_permission.permissions.all()
+                    }
+                )
+
+        return all_permission_keys
 
 
 class UserPermissionGroup(models.Model):

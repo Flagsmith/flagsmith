@@ -27,7 +27,9 @@ const controller = {
         if (store.model.availablePermissions.projects) {
             return;
         }
-        Promise.all(['project', 'environment'].map(v => data.get(`${Project.api}${v}s/permissions/`)
+        const permissions = ['project', 'environment', 'organisation'];
+
+        Promise.all(permissions.map(v => data.get(`${Project.api}${v}s/permissions/`)
             .then((res) => {
                 store.model.availablePermissions[v] = res;
             }))).then(() => {

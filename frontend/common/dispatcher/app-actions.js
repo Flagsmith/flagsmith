@@ -223,12 +223,13 @@ const AppActions = Object.assign({}, require('./base/_app-actions'), {
             name,
         });
     },
-    toggleFlag(index, environments, comment) {
+    toggleFlag(index, environments, comment, environmentFlags) {
         Dispatcher.handleViewAction({
             actionType: Actions.TOGGLE_FLAG,
             index,
             environments,
             comment,
+            environmentFlags,
         });
     },
     editUserFlag(params) {
@@ -418,10 +419,11 @@ const AppActions = Object.assign({}, require('./base/_app-actions'), {
             pageSize,
         });
     },
-    getAuditLog(projectId) {
+    getAuditLog(projectId, search) {
         Dispatcher.handleViewAction({
             actionType: Actions.GET_AUDIT_LOG,
             projectId,
+            search
         });
     },
     getAuditLogPage(projectId, page) {

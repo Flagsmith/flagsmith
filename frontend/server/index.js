@@ -57,9 +57,10 @@ app.get('/config/project-overrides', (req, res) => {
     };
 
     const values = [
-        { name: 'preventSignup', value: !envToBool('ALLOW_SIGNUPS', true) },
+        { name: 'preventSignup', value: envToBool('PREVENT_SIGNUP', false) ||  !envToBool('ALLOW_SIGNUPS', true) }, // todo:  deprecate ALLOW_SIGNUPS
         { name: 'superUserCreateOnly', value: envToBool('ONLY_SUPERUSERS_CAN_CREATE_ORGANISATIONS', false) },
         { name: 'flagsmith', value: process.env.FLAGSMITH_ON_FLAGSMITH_API_KEY },
+        { name: 'heap', value: process.env.HEAP_API_KEY },
         { name: 'ga', value: process.env.GOOGLE_ANALYTICS_API_KEY },
         { name: 'crispChat', value: process.env.CRISP_WEBSITE_ID },
         { name: 'sha', value: sha },
@@ -77,7 +78,7 @@ app.get('/config/project-overrides', (req, res) => {
     ];
     const output = values.map(getVariable).join('');
 
-    res.setHeader('content-type', 'text/javascript');
+    res.setHeader('content-type', 'application/javascript');
     res.send(`window.projectOverrides = {
         ${output}
     };
@@ -181,4 +182,7 @@ if (process.env.SLACK_TOKEN && process.env.DEPLOYMENT_SLACK_CHANNEL && postToSla
 
 app.listen(port, () => {
     console.log(`Server listening on: ${port}`);
+    if (!isDev && process.send) {
+        process.send({ done: true });
+    }
 });
