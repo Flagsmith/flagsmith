@@ -22,6 +22,8 @@ from permissions.serializers import (
     MyUserObjectPermissionsSerializer,
     PermissionModelSerializer,
 )
+from webhooks.mixins import TriggerSampleWebhookMixin
+from webhooks.webhooks import WebhookType
 
 from .identities.traits.models import Trait
 from .identities.traits.serializers import (
@@ -209,10 +211,13 @@ class WebhookViewSet(
     mixins.UpdateModelMixin,
     mixins.DestroyModelMixin,
     viewsets.GenericViewSet,
+    TriggerSampleWebhookMixin,
 ):
     serializer_class = WebhookSerializer
     pagination_class = None
     permission_classes = [IsAuthenticated, NestedEnvironmentPermissions]
+
+    webhook_type = WebhookType.ENVIRONMENT
 
     def get_queryset(self):
         return Webhook.objects.filter(
