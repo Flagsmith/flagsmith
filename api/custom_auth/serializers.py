@@ -5,6 +5,7 @@ from rest_framework.authtoken.models import Token
 from rest_framework.exceptions import PermissionDenied
 
 from organisations.invites.models import Invite
+from users.models import FFAdminUser
 
 from .constants import USER_REGISTRATION_WITHOUT_INVITE_ERROR_MESSAGE
 
@@ -21,8 +22,19 @@ class CustomUserCreateSerializer(UserCreateSerializer):
         self.fields["key"] = serializers.SerializerMethodField()
 
     class Meta(UserCreateSerializer.Meta):
-        fields = UserCreateSerializer.Meta.fields + ("is_active",)
+        fields = UserCreateSerializer.Meta.fields + (
+            "is_active",
+            "marketing_consent_given",
+        )
         read_only_fields = ("is_active",)
+
+    def validate_email(self, value):
+        if FFAdminUser.objects.filter(email__iexact=value).count() != 0:
+            raise serializers.ValidationError(
+                "Feature flag admin user with this email already exists."
+            )
+
+        return value.lower()
 
     @staticmethod
     def get_key(instance):

@@ -13,11 +13,11 @@ logger = logging.getLogger(__name__)
 
 class SegmentWrapper(AbstractBaseIdentityIntegrationWrapper):
     def __init__(self, api_key: str):
-        self.analytics = SegmentClient(write_key=api_key)
+        self.analytics = SegmentClient(write_key=api_key, sync_mode=True)
 
     def _identify_user(self, data: dict) -> None:
         self.analytics.identify(**data)
-        logger.debug(f"Sent event to Segment.")
+        logger.debug("Sent event to Segment.")
 
     def generate_user_data(
         self, identity: "Identity", feature_states: typing.List["FeatureState"]

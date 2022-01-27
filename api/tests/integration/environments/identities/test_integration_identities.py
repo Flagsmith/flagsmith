@@ -168,7 +168,7 @@ def test_get_feature_states_for_identity_only_makes_one_query_to_get_mv_feature_
     create_feature_with_api(
         client=admin_client,
         project_id=project,
-        feature_name=f"another_multivariate_feature",
+        feature_name="another_multivariate_feature",
         initial_value=control_value,
         multivariate_options=[
             (variant_1_value, variant_1_percentage_allocation),

@@ -42,8 +42,8 @@ const FeatureListProvider = class extends Component {
         });
     }
 
-    toggleFlag = (i, environments) => {
-        AppActions.toggleFlag(i, environments);
+    toggleFlag = (i, environments, comment, environmentFlags) => {
+        AppActions.toggleFlag(i, environments, comment,environmentFlags);
     };
 
     setFlag = (i, flag, environments) => {
@@ -55,23 +55,18 @@ const FeatureListProvider = class extends Component {
     };
 
     editFlag = (projectId, environmentId, flag, projectFlag, environmentFlag, segmentOverrides) => {
-        AppActions.editFlag(projectId, Object.assign({}, projectFlag, flag), (newProjectFlag) => {
-            AppActions.editEnvironmentFlag(projectId, environmentId, flag, projectFlag, {
+        AppActions.editFlag(projectId, Object.assign({}, projectFlag, flag, {
+            multivariate_options: flag.multivariate_options && flag.multivariate_options.map((v) => {
+                const matchingProjectVariate = (projectFlag.multivariate_options && projectFlag.multivariate_options.find(p => p.id === v.id)) || v;
+                return {
+                    ...v,
+                    default_percentage_allocation: matchingProjectVariate.default_percentage_allocation,
+                };
+            }),
+        }), (newProjectFlag) => {
+            AppActions.editEnvironmentFlag(projectId, environmentId, flag, newProjectFlag, {
                 ...environmentFlag,
-                multivariate_feature_state_values: newProjectFlag.multivariate_options && newProjectFlag.multivariate_options.map((v) => {
-                    const matching = environmentFlag.multivariate_feature_state_values && environmentFlag.multivariate_feature_state_values.find(environmentValue => environmentValue.multivariate_feature_option === v.id);
-                    if (matching) {
-                        return ({
-                            id: matching.id,
-                            multivariate_feature_option: v.id,
-                            percentage_allocation: v.default_percentage_allocation,
-                        });
-                    }
-                    return ({
-                        multivariate_feature_option: v.id,
-                        percentage_allocation: v.default_percentage_allocation,
-                    });
-                }),
+                multivariate_feature_state_values: flag.multivariate_options,
             }, segmentOverrides);
         });
     };
@@ -79,7 +74,6 @@ const FeatureListProvider = class extends Component {
     removeFlag = (projectId, flag) => {
         AppActions.removeFlag(projectId, flag);
     };
-
 
     render() {
         return (

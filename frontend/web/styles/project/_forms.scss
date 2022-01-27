@@ -86,12 +86,12 @@
     margin-bottom:1rem;
 }
 
-label {
+label, .icon-primary {
     color: $header-color;
     font-weight: 500;
 }
 .dark {
-    label {
+    label,.icon-primary {
         color: $header-color-dark;
     }
 }
@@ -99,7 +99,9 @@ label {
     border-radius: $default-border-radius;
 }
 
-
+.control-label {
+    display: block;
+}
 
 .__react_component_tooltip {
     z-index: 99999999 !important;

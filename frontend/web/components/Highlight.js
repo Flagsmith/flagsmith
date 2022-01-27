@@ -1,6 +1,8 @@
 import React from 'react';
 
-hljs.initHighlightingOnLoad();
+if (typeof hljs !=="undefined") {
+    hljs.initHighlightingOnLoad();
+}
 
 const defaultValue = {__html:"Enter a value..."}
 class Highlight extends React.Component {
@@ -24,9 +26,12 @@ class Highlight extends React.Component {
   highlightCode = () => {
       const nodes = this.el.querySelectorAll('pre code');
 
-      for (let i = 0; i < nodes.length; i++) {
-          hljs.highlightBlock(nodes[i]);
+      if (typeof hljs!=="undefined"){
+          for (let i = 0; i < nodes.length; i++) {
+              hljs.highlightBlock(nodes[i]);
+          }
       }
+
   };
 
   setEl(el) {
@@ -92,7 +97,7 @@ class Highlight extends React.Component {
                   onFocus={this.onFocus}
                   onInput={this._handleInput}
                   className={className}
-                  dangerouslySetInnerHTML={this.state.focus? this.state.value : this.props.children ? this.state.value : defaultValue}
+                  dangerouslySetInnerHTML={this.state.focus? this.state.value : this.props.children ? {...this.state.value} : defaultValue}
                 />
             </pre>
         );

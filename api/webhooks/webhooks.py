@@ -1,4 +1,6 @@
 import enum
+import hashlib
+import hmac
 import json
 
 import requests
@@ -7,6 +9,7 @@ from django.core.mail import EmailMultiAlternatives
 from django.core.serializers.json import DjangoJSONEncoder
 from django.template.loader import get_template
 
+from .constants import WEBHOOK_SIGNATURE_HEADER
 from .serializers import WebhookSerializer
 
 
@@ -18,6 +21,12 @@ class WebhookEventType(enum.Enum):
 class WebhookType(enum.Enum):
     ORGANISATION = "ORGANISATION"
     ENVIRONMENT = "ENVIRONMENT"
+
+
+def generate_signature(payload: str, key: str) -> str:
+    return hmac.new(
+        key=key.encode(), msg=payload.encode(), digestmod=hashlib.sha256
+    ).hexdigest()
 
 
 def call_environment_webhooks(environment, data, event_type):
@@ -44,10 +53,17 @@ def _call_webhooks(webhooks, data, event_type, webhook_type):
     serializer.is_valid(raise_exception=False)
     for webhook in webhooks:
         try:
-            headers = {"content-type": "application/json"}
+
             json_data = json.dumps(
                 serializer.data, sort_keys=True, cls=DjangoJSONEncoder
             )
+            headers = {
+                "content-type": "application/json",
+            }
+            if webhook.secret:
+                signature = generate_signature(json_data, key=webhook.secret)
+                headers.update({WEBHOOK_SIGNATURE_HEADER: signature})
+
             res = requests.post(str(webhook.url), data=json_data, headers=headers)
         except requests.exceptions.ConnectionError:
             send_failure_email(webhook, serializer.data, webhook_type)

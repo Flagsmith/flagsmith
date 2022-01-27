@@ -41,7 +41,7 @@ const PasswordResetPage = class extends Component {
             <div className="app-container">
                 <AccountProvider onSave={this.onSave}>
                     {({ isSaving, error }) => (
-                        <div className="card signup-form container">
+                        <div className="card signup-form container px-4 py-4">
                             <h3>Reset Password</h3>
 
                             {isSaving ? (
@@ -60,7 +60,7 @@ const PasswordResetPage = class extends Component {
                                       onChange={(e) => {
                                           this.setState({ password: Utils.safeParseEventValue(e) });
                                       }}
-                                      className="input-default full-width"
+                                      className="input-default full-width mt-4"
                                       placeholder="New Password"
                                       type="password"
                                       name="password1" id="password1"

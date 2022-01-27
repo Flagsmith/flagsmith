@@ -28,8 +28,10 @@ jobs:
               env:
                   E2E_TEST_TOKEN_PROD: ${{ secrets.E2E_TEST_TOKEN }}
                   ENV: prod
+                  SLACK_TOKEN: ${{ secrets.SLACK_TOKEN }}
+                  STATIC_ASSET_CDN_URL: /
               run: |
-                  wget -q https://dl.google.com/linux/chrome/deb/pool/main/g/google-chrome-stable/google-chrome-stable_91.0.4472.114-1_amd64.deb
+                  wget -q https://dl.google.com/linux/chrome/deb/pool/main/g/google-chrome-stable/google-chrome-stable_96.0.4664.110-1_amd64.deb
                   sudo apt install --allow-downgrades -y ./google-chrome*.deb -f
                   google-chrome --version
                   node -v
@@ -74,6 +76,7 @@ jobs:
                   ENABLE_FLAG_EVALUATION_ANALYTICS: ${{ secrets.ENABLE_FLAG_EVALUATION_ANALYTICS }}
                   ENABLE_INFLUXDB_FEATURES: ${{ secrets.ENABLE_INFLUXDB_FEATURES }}
                   GOOGLE_ANALYTICS_API_KEY: ${{ secrets.GOOGLE_ANALYTICS_API_KEY }}
+                  HEAP_API_KEY: ${{ secrets.HEAP_API_KEY }}
                   LINKEDIN: ${{ secrets.LINKEDIN }}
                   MIXPANEL_API_KEY: ${{ secrets.MIXPANEL_API_KEY }}
                   SLACK_TOKEN: ${{ secrets.SLACK_TOKEN }}

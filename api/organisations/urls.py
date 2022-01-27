@@ -2,10 +2,14 @@ from django.conf.urls import include, url
 from rest_framework_nested import routers
 
 from organisations.views import OrganisationWebhookViewSet
-from .invites.views import InviteViewSet, InviteLinkViewSet
 from users.views import FFAdminUserViewSet, UserPermissionGroupViewSet
 
 from . import views
+from .invites.views import InviteLinkViewSet, InviteViewSet
+from .permissions.views import (
+    UserOrganisationPermissionViewSet,
+    UserPermissionGroupOrganisationPermissionViewSet,
+)
 
 router = routers.DefaultRouter()
 router.register(r"", views.OrganisationViewSet, basename="organisation")
@@ -25,6 +29,16 @@ organisations_router.register(
 )
 organisations_router.register(
     r"webhooks", OrganisationWebhookViewSet, basename="organisation-webhooks"
+)
+organisations_router.register(
+    "user-permissions",
+    UserOrganisationPermissionViewSet,
+    basename="organisation-user-permission",
+)
+organisations_router.register(
+    "user-group-permissions",
+    UserPermissionGroupOrganisationPermissionViewSet,
+    basename="organisation-user-group-permission",
 )
 
 app_name = "organisations"

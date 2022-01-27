@@ -8,17 +8,21 @@ const path = require('path');
 
 const src = path.resolve(__dirname, '../app.yaml');
 let str = extra.readFileSync(src, 'utf8');
+//todo: Deprecate ALLOW_SIGNUPS
 str += `
 env_variables:
   SLACK_TOKEN: ${process.env.SLACK_TOKEN}
   EVENTS_SLACK_CHANNEL: ${process.env.EVENTS_SLACK_CHANNEL}
   FLAGSMITH_ON_FLAGSMITH_API_KEY: ${process.env.FLAGSMITH_ON_FLAGSMITH_API_KEY}
+  HEAP_API_KEY: ${process.env.HEAP_API_KEY}
   FLAGSMITH_ANALYTICS: ${process.env.ENABLE_FLAG_EVALUATION_ANALYTICS}
   GOOGLE_ANALYTICS_API_KEY: ${process.env.GOOGLE_ANALYTICS_API_KEY}
   CRISP_WEBSITE_ID: ${process.env.CRISP_WEBSITE_ID}
   CAPTERRA_API_KEY: ${process.env.CAPTERRA_API_KEY}
   LINKEDIN: ${process.env.LINKEDIN}
   ALLOW_SIGNUPS: ${process.env.ALLOW_SIGNUPS}
+  PREVENT_SIGNUP: ${process.env.PREVENT_SIGNUP}
+  ONLY_SUPERUSERS_CAN_CREATE_ORGANISATIONS: ${process.env.ONLY_SUPERUSERS_CAN_CREATE_ORGANISATIONS}
   MIXPANEL: ${process.env.MIXPANEL_API_KEY}
   FLAGSMITH_API_URL: ${process.env.FLAGSMITH_API_URL}
   AMPLITUDE: ${process.env.AMPLITUDE_API_KEY}

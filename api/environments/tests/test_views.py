@@ -1,9 +1,8 @@
 import json
-from unittest import TestCase, mock
+from unittest import TestCase
 
 import pytest
 from django.urls import reverse
-from flag_engine.identities.builders import build_identity_dict
 from rest_framework import status
 from rest_framework.test import APIClient
 
@@ -19,6 +18,7 @@ from projects.models import (
     ProjectPermissionModel,
     UserProjectPermission,
 )
+from segments.models import EQUAL, Condition, Segment, SegmentRule
 from users.models import FFAdminUser
 from util.tests import Helper
 
@@ -334,7 +334,7 @@ class EnvironmentTestCase(TestCase):
         # Then
         assert response.status_code == status.HTTP_200_OK
         assert (
-            len(response.json()) == 1
+            len(response.json()) == 2
         )  # hard code how many permissions we expect there to be
 
     def test_environment_user_can_get_their_permissions(self):
@@ -360,6 +360,35 @@ class EnvironmentTestCase(TestCase):
         assert response.status_code == status.HTTP_200_OK
         assert not response.json()["admin"]
         assert "VIEW_ENVIRONMENT" in response.json()["permissions"]
+
+    def test_get_document(self):
+        # Given
+        # an environment
+        environment = Environment.objects.create(
+            name="Test Environment", project=self.project
+        )
+
+        # and some other sample data to make sure we're testing all of the document
+        Feature.objects.create(name="test_feature", project=self.project)
+        segment = Segment.objects.create(name="My segment", project=self.project)
+        segment_rule = SegmentRule.objects.create(
+            segment=segment, type=SegmentRule.ALL_RULE
+        )
+        Condition.objects.create(
+            operator=EQUAL, property="property", value="value", rule=segment_rule
+        )
+
+        # and the relevant URL to get an environment document
+        url = reverse(
+            "api-v1:environments:environment-get-document", args=[environment.api_key]
+        )
+
+        # When
+        response = self.client.get(url)
+
+        # Then
+        assert response.status_code == status.HTTP_200_OK
+        assert response.json()
 
 
 @pytest.mark.django_db
@@ -418,6 +447,29 @@ class WebhookViewSetTestCase(TestCase):
         # and
         webhook.refresh_from_db()
         assert webhook.url == data["url"] and not webhook.enabled
+
+    def test_can_update_secret(self):
+        # Given
+        webhook = Webhook.objects.create(
+            url=self.valid_webhook_url, environment=self.environment
+        )
+        url = reverse(
+            "api-v1:environments:environment-webhooks-detail",
+            args=[self.environment.api_key, webhook.id],
+        )
+        data = {"secret": "random_secret"}
+
+        # When
+        res = self.client.patch(
+            url, data=json.dumps(data), content_type="application/json"
+        )
+
+        # Then
+        assert res.status_code == status.HTTP_200_OK
+
+        # and
+        webhook.refresh_from_db()
+        assert webhook.secret == data["secret"]
 
     def test_can_delete_webhook_for_an_environment(self):
         # Given

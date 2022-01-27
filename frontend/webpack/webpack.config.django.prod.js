@@ -62,7 +62,7 @@ module.exports = {
             // pull inline styles into cachebusted file
             new ExtractTextPlugin({
                 filename: 'style.[hash].css',
-                allChunks: true
+                allChunks: true,
             }),
 
             // Copy static content
@@ -73,25 +73,22 @@ module.exports = {
                 { from: path.join(__dirname, '../web/javascript'), to: path.join(__dirname, '../../api/static/javascript') },
             ]),
 
-        ]).concat(require('./pages').map((page) => {
-            console.log(page);
-            return new HtmlWebpackPlugin({
-                template: `../api/app/templates/${page}.html`, // template to use
-                filename: `${page}.html`, // output template
-                'assets': { // add these script/link tags
-                    'client': '/[hash].js',
-                    'style': 'style.[hash].css',
-                },
-            });
-        })),
+        ]).concat(require('./pages').map(page => new HtmlWebpackPlugin({
+            filename: `${page}.html`, // output template
+            template: `../api/app/templates/${page}.html`, // template to use
+            'assets': { // add these script/link tags
+                'client': '/[hash].js',
+                'style': 'style.[hash].css',
+            },
+        }))),
 
     module: {
         rules: require('./loaders').concat([{
             test: /\.scss$/,
             use: ExtractTextPlugin.extract({
                 fallback: 'style-loader',
-                use: 'css-loader!sass-loader'
+                use: 'css-loader!sass-loader',
             }),
-        }, ]),
-    },  
+        }]),
+    },
 };

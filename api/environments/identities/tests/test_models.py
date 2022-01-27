@@ -1,9 +1,5 @@
-from unittest import mock
-
 from django.test import TransactionTestCase
-from flag_engine.identities.builders import build_identity_dict
 
-import environments
 from environments.identities.models import Identity
 from environments.identities.traits.models import Trait
 from environments.models import FLOAT, Environment
@@ -21,6 +17,7 @@ from segments.models import (
     GREATER_THAN,
     GREATER_THAN_INCLUSIVE,
     LESS_THAN_INCLUSIVE,
+    NOT_EQUAL,
     Condition,
     Segment,
     SegmentRule,
@@ -196,7 +193,7 @@ class IdentityTestCase(TransactionTestCase):
         identity = Identity.objects.create(
             identifier="test-identifier", environment=self.environment
         )
-        trait = Trait.objects.create(
+        Trait.objects.create(
             trait_key="test-key", string_value="testing trait", identity=identity
         )
 
@@ -557,7 +554,7 @@ class IdentityTestCase(TransactionTestCase):
         segment_rule = SegmentRule.objects.create(
             segment=segment, type=SegmentRule.ALL_RULE
         )
-        condition = Condition.objects.create(
+        Condition.objects.create(
             rule=segment_rule,
             operator=GREATER_THAN,
             value="5",
@@ -712,7 +709,7 @@ class IdentityTestCase(TransactionTestCase):
         trait_2_key = "trait_2"
         trait_2_value = 2
         trait_1 = create_trait_for_identity(identity, trait_1_key, trait_1_value)
-        trait_2 = create_trait_for_identity(identity, trait_2_key, trait_2_value)
+        create_trait_for_identity(identity, trait_2_key, trait_2_value)
 
         # and a list of trait data items that should end up creating 1 additional
         # trait, updating 1 and leaving another alone but returning it as it is
@@ -810,6 +807,19 @@ class IdentityTestCase(TransactionTestCase):
             rule=rule_two, operator=LESS_THAN_INCLUSIVE, property="bar", value=20
         )
 
+        # And nested rules to test the number of queries
+        for i in range(50):
+            property_name = "foo"
+            nested_rule = SegmentRule.objects.create(
+                rule=rule_two, type=SegmentRule.ALL_RULE
+            )
+            Condition.objects.create(
+                rule=nested_rule,
+                operator=NOT_EQUAL,
+                property=property_name,
+                value="some_other_value",
+            )
+
         # and an identity with traits that match the segment
         identity = Identity.objects.create(
             identifier="identity-1", environment=self.environment
@@ -823,9 +833,10 @@ class IdentityTestCase(TransactionTestCase):
 
         # When
         # we get the matching segments for an identity
-        with self.assertNumQueries(5):
+        with self.assertNumQueries(7):
             segments = identity.get_segments()
 
         # Then
-        # the number of queries are what we expect (see above context manager) and the segment is returned
+        # the number of queries are what we expect (see above context manager) and
+        # the segment is returned
         assert len(segments) == 1 and segments[0] == segment

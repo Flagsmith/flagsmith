@@ -7,6 +7,11 @@ from rest_framework import status
 from rest_framework.test import APIClient
 
 from organisations.models import Organisation, OrganisationRole
+from organisations.permissions.models import (
+    OrganisationPermissionModel,
+    UserOrganisationPermission,
+)
+from organisations.permissions.permissions import CREATE_PROJECT
 from projects.models import (
     Project,
     ProjectPermissionModel,
@@ -27,6 +32,10 @@ class ProjectTestCase(TestCase):
         self.user.add_organisation(self.organisation, OrganisationRole.ADMIN)
 
         self.list_url = reverse("api-v1:projects:project-list")
+
+        self.create_project_permission = OrganisationPermissionModel.objects.get(
+            key=CREATE_PROJECT
+        )
 
     def _get_detail_url(self, project_id):
         return reverse("api-v1:projects:project-detail", args=[project_id])
@@ -52,6 +61,72 @@ class ProjectTestCase(TestCase):
         url = reverse("api-v1:projects:project-detail", args=[response.json()["id"]])
         get_project_response = self.client.get(url)
         assert get_project_response.status_code == status.HTTP_200_OK
+
+    def test_create_project_returns_403_if_user_is_not_organisation_admin(self):
+        # Given
+        not_permitted_user = FFAdminUser.objects.create(email="notpermitted@org.com")
+        not_permitted_user.add_organisation(self.organisation)
+        not_permitted_user.save()
+        client = APIClient()
+        client.force_authenticate(not_permitted_user)
+
+        project_name = "project1"
+        data = {"name": project_name, "organisation": self.organisation.id}
+
+        # When
+        response = client.post(self.list_url, data=data)
+
+        # Then
+        assert response.status_code == status.HTTP_403_FORBIDDEN
+        assert (
+            response.json()["detail"]
+            == "You do not have permission to perform this action."
+        )
+
+    def test_user_with_create_project_permission_can_create_project(self):
+        # Given
+        permitted_user = FFAdminUser.objects.create(email="permitted@org.com")
+        permitted_user.add_organisation(self.organisation)
+        permitted_user.save()
+        user_permission = UserOrganisationPermission.objects.create(
+            organisation=self.organisation, user=permitted_user
+        )
+        user_permission.permissions.add(self.create_project_permission)
+        user_permission.save()
+        client = APIClient()
+        client.force_authenticate(permitted_user)
+
+        # When
+        response = client.post(
+            self.list_url,
+            data={"name": "some proj", "organisation": self.organisation.id},
+        )
+
+        # Then
+        assert response.status_code == status.HTTP_201_CREATED
+
+    def test_user_with_create_project_permission_cannot_create_project_if_restricted_to_admin(
+        self,
+    ):
+        # Given
+        new_organisation = Organisation.objects.create(
+            name="New org", restrict_project_create_to_admin=True
+        )
+        permitted_user = FFAdminUser.objects.create(email="permitted@org.com")
+        user_permission = UserOrganisationPermission.objects.create(
+            organisation=new_organisation, user=permitted_user
+        )
+        user_permission.permissions.add(self.create_project_permission)
+        user_permission.save()
+
+        # When
+        response = self.client.post(
+            self.list_url,
+            data={"name": "some proj", "organisation": new_organisation.id},
+        )
+
+        # Then
+        assert response.status_code == status.HTTP_403_FORBIDDEN
 
     def test_user_can_list_project_permission(self):
         # Given

@@ -18,6 +18,7 @@ import DocumentationIcon from './svg/DocumentationIcon';
 import ArrowUpIcon from './svg/ArrowUpIcon';
 import RebrandBanner from './RebrandBanner';
 import UpgradeIcon from './svg/UpgradeIcon';
+import AccountSettingsPage from './pages/AccountSettingsPage';
 
 const App = class extends Component {
     static propTypes = {
@@ -193,10 +194,15 @@ const App = class extends Component {
             return (
                 <AccountProvider onNoUser={this.onNoUser} onLogout={this.onLogout} onLogin={this.onLogin}>
                     {() => (
-                        <AppLoader />
+                        <div id="login-page">
+                            <AppLoader />
+                        </div>
                     )}
                 </AccountProvider>
             );
+        }
+        if (AccountStore.forced2Factor()) {
+            return <AccountSettingsPage/>;
         }
         return (
             <div>
@@ -354,7 +360,7 @@ const App = class extends Component {
                                                                               }}
                                                                             />
                                                                         )}
-                                                                        {!this.props.hasFeature('disable_create_org') && (
+                                                                        {!this.props.hasFeature('disable_create_org') && (!projectOverrides.superUserCreateOnly || (projectOverrides.superUserCreateOnly && AccountStore.model.is_superuser)) && (
                                                                             <div className="pl-3 pr-3 mt-2 mb-2">
                                                                                 <Link
                                                                                   id="create-org-link" onClick={toggle}

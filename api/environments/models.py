@@ -2,6 +2,7 @@
 from __future__ import unicode_literals
 
 import logging
+import typing
 from copy import deepcopy
 
 from django.conf import settings
@@ -9,13 +10,13 @@ from django.core.cache import caches
 from django.db import models
 from django.utils.encoding import python_2_unicode_compatible
 from django.utils.translation import ugettext_lazy as _
-from django_lifecycle import AFTER_CREATE, BEFORE_SAVE, LifecycleModel, hook
+from django_lifecycle import AFTER_CREATE, LifecycleModel, hook
 
 from app.utils import create_hash
 from environments.exceptions import EnvironmentHeaderNotPresentError
 from features.models import FeatureState
 from projects.models import Project
-from util.history.custom_simple_history import NonWritingHistoricalRecords
+from webhooks.models import AbstractBaseWebhookModel
 
 logger = logging.getLogger(__name__)
 
@@ -117,12 +118,30 @@ class Environment(LifecycleModel):
         except cls.DoesNotExist:
             logger.info("Environment with api_key %s does not exist" % api_key)
 
+    def get_feature_state(
+        self, feature_id: int, filter_kwargs: dict = None
+    ) -> typing.Optional[FeatureState]:
+        """
+        Get the corresponding feature state in an environment for a given feature id.
+        Optionally override the kwargs passed to filter to get the feature state for
+        a feature segment or identity.
+        """
 
-class Webhook(models.Model):
+        if not filter_kwargs:
+            filter_kwargs = {"feature_segment_id": None, "identity_id": None}
+
+        return next(
+            filter(
+                lambda fs: fs.feature.id == feature_id,
+                self.feature_states.filter(**filter_kwargs),
+            )
+        )
+
+
+class Webhook(AbstractBaseWebhookModel):
     environment = models.ForeignKey(
         Environment, on_delete=models.CASCADE, related_name="webhooks"
     )
-    url = models.URLField()
     enabled = models.BooleanField(default=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
