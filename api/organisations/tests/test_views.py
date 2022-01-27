@@ -668,11 +668,12 @@ class OrganisationWebhookViewSetTestCase(TestCase):
             "api-v1:organisations:organisation-webhooks-list",
             args=[self.organisation.id],
         )
+        self.valid_webhook_url = "http://my.webhook.com/webhooks"
 
     def test_user_can_create_new_webhook(self):
         # Given
         data = {
-            "url": "https://test.com/my-webhook",
+            "url": self.valid_webhook_url,
         }
 
         # When
@@ -684,7 +685,7 @@ class OrganisationWebhookViewSetTestCase(TestCase):
     def test_can_update_secret(self):
         # Given
         webhook = OrganisationWebhook.objects.create(
-            url="https://test.com/my-webhook", organisation=self.organisation
+            url=self.valid_webhook_url, organisation=self.organisation
         )
         url = reverse(
             "api-v1:organisations:organisation-webhooks-detail",
@@ -704,3 +705,26 @@ class OrganisationWebhookViewSetTestCase(TestCase):
         # and
         webhook.refresh_from_db()
         assert webhook.secret == data["secret"]
+
+    @mock.patch("webhooks.mixins.trigger_sample_webhook")
+    def test_trigger_sample_webhook_calls_trigger_sample_webhook_method_with_correct_arguments(
+        self, trigger_sample_webhook
+    ):
+        # Given
+        mocked_response = mock.MagicMock(status_code=200)
+        trigger_sample_webhook.return_value = mocked_response
+
+        url = reverse(
+            "api-v1:organisations:organisation-webhooks-trigger-sample-webhook",
+            args=[self.organisation.id],
+        )
+        data = {"url": self.valid_webhook_url}
+
+        # When
+        response = self.client.post(url, data)
+
+        # Then
+        assert response.json()["message"] == "Request returned 200"
+        assert response.status_code == status.HTTP_200_OK
+        args, _ = trigger_sample_webhook.call_args
+        assert args[0].url == self.valid_webhook_url
