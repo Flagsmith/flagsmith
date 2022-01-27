@@ -1,5 +1,6 @@
 import logging
 
+from django.db.models.signals import post_save
 from django.dispatch import receiver
 from simple_history.signals import post_create_historical_record
 
@@ -10,7 +11,8 @@ from audit.models import (
 )
 
 # noinspection PyUnresolvedReferences
-from .models import HistoricalFeatureSegment
+from .models import FeatureState, HistoricalFeatureSegment
+from .tasks import trigger_feature_state_change_webhooks
 
 logger = logging.getLogger(__name__)
 
@@ -35,3 +37,8 @@ def create_feature_segment_audit_log(
         author=history_user,
         project=project,
     )
+
+
+@receiver(post_save, sender=FeatureState)
+def trigger_feature_state_change_webhooks_signal(instance, **kwargs):
+    trigger_feature_state_change_webhooks(instance)

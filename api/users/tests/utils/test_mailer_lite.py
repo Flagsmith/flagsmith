@@ -17,8 +17,7 @@ def test_mailer_lite_subscribe_calls_post_with_correct_arguments(mocker, setting
     mocked_requests = mocker.patch("users.utils.mailer_lite.requests")
     base_url = "http//localhost/mailer/test/"
     settings.MAILERLITE_BASE_URL = base_url
-    resource = "subscribers"
-
+    resource = "/test"
     user = FFAdminUser.objects.create(
         email="test_user",
         first_name="test",
@@ -26,6 +25,8 @@ def test_mailer_lite_subscribe_calls_post_with_correct_arguments(mocker, setting
         marketing_consent_given=True,
     )
     mailer_lite = MailerLite()
+
+    mocker.patch("users.utils.mailer_lite.MailerLite.resource", resource)
     mocked_headers = mocker.patch(
         "users.utils.mailer_lite.MailerLiteBaseClient.request_headers",
     )

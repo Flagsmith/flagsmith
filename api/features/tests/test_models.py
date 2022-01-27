@@ -203,7 +203,7 @@ class FeatureStateTest(TestCase):
         )
         self.feature = Feature.objects.create(name="Test feature", project=self.project)
 
-    @mock.patch("features.models.trigger_feature_state_change_webhooks")
+    @mock.patch("features.signals.trigger_feature_state_change_webhooks")
     def test_cannot_create_duplicate_feature_state_in_an_environment(
         self, mock_trigger_webhooks
     ):
@@ -338,7 +338,7 @@ class FeatureStateTest(TestCase):
 
         # Then - exception raised
 
-    @mock.patch("features.models.trigger_feature_state_change_webhooks")
+    @mock.patch("features.signals.trigger_feature_state_change_webhooks")
     def test_save_calls_trigger_webhooks(self, mock_trigger_webhooks):
         # Given
         feature_state = FeatureState.objects.get(
