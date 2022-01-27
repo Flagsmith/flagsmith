@@ -33,7 +33,7 @@ from users.models import FFAdminUser
 from util.tests import Helper
 
 # patch this function as it's triggering extra threads and causing errors
-mock.patch("features.models.trigger_feature_state_change_webhooks").start()
+mock.patch("features.signals.trigger_feature_state_change_webhooks").start()
 
 
 @pytest.mark.django_db

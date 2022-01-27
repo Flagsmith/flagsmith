@@ -6,9 +6,18 @@ from unittest import TestCase, mock
 import pytest
 
 from environments.models import Environment, Webhook
-from organisations.models import Organisation
+from organisations.models import Organisation, OrganisationWebhook
 from projects.models import Project
-from webhooks.webhooks import WebhookEventType, call_environment_webhooks
+from webhooks.sample_webhook_data import (
+    environment_webhook_data,
+    organisation_webhook_data,
+)
+from webhooks.webhooks import (
+    WebhookEventType,
+    WebhookType,
+    call_environment_webhooks,
+    trigger_sample_webhook,
+)
 
 
 @pytest.mark.django_db
@@ -64,6 +73,29 @@ class WebhooksTestCase(TestCase):
 
         # Then
         mock_requests.post.assert_not_called()
+
+    @mock.patch("webhooks.webhooks.requests")
+    def test_trigger_sample_webhook_makes_correct_post_request_for_environment(
+        self, mock_request
+    ):
+        url = "http://test.test"
+        webhook = Webhook(url=url)
+        trigger_sample_webhook(webhook, WebhookType.ENVIRONMENT)
+        args, kwargs = mock_request.post.call_args
+        assert json.loads(kwargs["data"]) == environment_webhook_data
+        assert args[0] == url
+
+    @mock.patch("webhooks.webhooks.requests")
+    def test_trigger_sample_webhook_makes_correct_post_request_for_organisation(
+        self, mock_request
+    ):
+        url = "http://test.test"
+        webhook = OrganisationWebhook(url=url)
+
+        trigger_sample_webhook(webhook, WebhookType.ORGANISATION)
+        args, kwargs = mock_request.post.call_args
+        assert json.loads(kwargs["data"]) == organisation_webhook_data
+        assert args[0] == url
 
     @mock.patch("webhooks.webhooks.WebhookSerializer")
     @mock.patch("webhooks.webhooks.requests")

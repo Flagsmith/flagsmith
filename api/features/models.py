@@ -13,13 +13,7 @@ from django.db import models
 from django.db.models import Q, UniqueConstraint
 from django.utils.encoding import python_2_unicode_compatible
 from django.utils.translation import ugettext_lazy as _
-from django_lifecycle import (
-    AFTER_CREATE,
-    AFTER_SAVE,
-    BEFORE_CREATE,
-    LifecycleModel,
-    hook,
-)
+from django_lifecycle import AFTER_CREATE, BEFORE_CREATE, LifecycleModel, hook
 from ordered_model.models import OrderedModelBase
 from simple_history.models import HistoricalRecords
 
@@ -31,7 +25,6 @@ from features.feature_states.models import AbstractBaseFeatureValueModel
 from features.feature_types import MULTIVARIATE
 from features.helpers import get_correctly_typed_value
 from features.multivariate.models import MultivariateFeatureStateValue
-from features.tasks import trigger_feature_state_change_webhooks
 from features.utils import (
     get_boolean_from_string,
     get_integer_from_string,
@@ -408,10 +401,6 @@ class FeatureState(LifecycleModel, models.Model):
                 for mv_option in self.feature.multivariate_options.all()
             ]
             MultivariateFeatureStateValue.objects.bulk_create(mv_feature_state_values)
-
-    @hook(AFTER_SAVE)
-    def trigger_feature_state_change_webhooks(self):
-        trigger_feature_state_change_webhooks(self)
 
     def get_feature_state_value_defaults(self) -> dict:
         if self.feature.initial_value is None:
