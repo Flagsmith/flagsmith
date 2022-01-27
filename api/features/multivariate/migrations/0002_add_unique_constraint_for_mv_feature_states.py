@@ -18,7 +18,7 @@ def remove_duplicate_mv_feature_state_values(apps, schema_editor):
         "feature_state", "multivariate_feature_option"
     ).annotate(max_id=Max("id"))
 
-    max_ids = [obj.max_id for obj in max_id_objects]
+    max_ids = [obj["max_id"] for obj in max_id_objects]
     delete_qs = MultivariateFeatureStateValue.objects.exclude(id__in=max_ids)
 
     # Make sure we're not deleting anything that is NOT a duplicate
