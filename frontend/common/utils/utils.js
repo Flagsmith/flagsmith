@@ -1,3 +1,4 @@
+const React = require('react');
 module.exports = Object.assign({}, require('./base/_utils'), {
     numberWithCommas(x) {
         return x.toString()
@@ -10,6 +11,35 @@ module.exports = Object.assign({}, require('./base/_utils'), {
         p.appendChild(text);
         return p.innerHTML;
     },
+
+    getManageFeaturePermission() {
+        if (flagsmith.hasFeature('update_feature_state_permission')) {
+            return 'UPDATE_FEATURE_STATE';
+        }
+        return 'ADMIN';
+    },
+
+    getManageFeaturePermissionDescription() {
+        if (flagsmith.hasFeature('update_feature_state_permission')) {
+            return 'Update Feature State';
+        }
+        return 'Admin';
+    },
+
+
+    renderWithPermission(permission, name, el) {
+        return permission ? (
+            el
+        ) : (
+            <Tooltip
+              title={<div>{el}</div>}
+              place="right"
+              html
+            >{name}
+            </Tooltip>
+        );
+    },
+
 
     calculateControl(multivariateOptions, variations) {
         if (!multivariateOptions || !multivariateOptions.length) {
@@ -28,7 +58,7 @@ module.exports = Object.assign({}, require('./base/_utils'), {
             return null;
         }
 
-        return Utils.getTypedValue(featureState.boolean_value || featureState.integer_value || featureState.string_value);
+        return Utils.getTypedValue(featureState.integer_value || featureState.string_value || featureState.boolean_value);
     },
     valueToFeatureState(value) {
         const val = Utils.getTypedValue(value);
@@ -69,6 +99,7 @@ module.exports = Object.assign({}, require('./base/_utils'), {
                 enabled: false,
                 hide_from_client: false,
                 description: projectFlag.description,
+                is_archived: projectFlag.is_archived,
             };
         }
         if (identityFlag) {
@@ -80,6 +111,7 @@ module.exports = Object.assign({}, require('./base/_utils'), {
                 hide_from_client: environmentFlag.hide_from_client,
                 enabled: identityFlag.enabled,
                 description: projectFlag.description,
+                is_archived: projectFlag.is_archived,
             };
         }
         return {
@@ -91,20 +123,30 @@ module.exports = Object.assign({}, require('./base/_utils'), {
             multivariate_options: projectFlag.multivariate_options,
             enabled: environmentFlag.enabled,
             description: projectFlag.description,
+            is_archived: projectFlag.is_archived,
         };
     },
 
-    getTypedValue(str) {
+    getTypedValue(str, boolToString) {
+        if (typeof str === 'undefined') {
+            return '';
+        }
         if (typeof str !== 'string') {
             return str;
         }
 
         const isNum = /^\d+$/.test(str);
+        if (isNum && parseInt(str) > Number.MAX_SAFE_INTEGER) {
+            return `${str}`;
+        }
+
 
         if (str == 'true') {
+            if (boolToString) return 'true';
             return true;
         }
         if (str == 'false') {
+            if (boolToString) return 'false';
             return false;
         }
 
@@ -144,6 +186,11 @@ module.exports = Object.assign({}, require('./base/_utils'), {
         );
         return !!found;
     },
+    appendImage: (src) => {
+        const img = document.createElement('img');
+        img.src = src;
+        document.body.appendChild(img);
+    },
     getPlanPermission: (plan, permission) => {
         let valid = true;
         if (!plan) {
@@ -156,6 +203,10 @@ module.exports = Object.assign({}, require('./base/_utils'), {
             return true;
         }
         switch (permission) {
+            case 'FLAG_OWNERS': {
+                valid = true;
+                break;
+            }
             case '2FA': {
                 valid = !plan.includes('side-project');
                 break;
@@ -165,6 +216,10 @@ module.exports = Object.assign({}, require('./base/_utils'), {
                 break;
             }
             case 'AUDIT': {
+                valid = !plan.includes('side-project') && !plan.includes('startup');
+                break;
+            }
+            case 'FORCE_2FA': {
                 valid = !plan.includes('side-project') && !plan.includes('startup');
                 break;
             }

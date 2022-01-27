@@ -17,7 +17,7 @@ const AppActions = Object.assign({}, require('./base/_app-actions'), {
             actionType: Actions.GET_FLAGS,
             projectId,
             environmentId,
-            force
+            force,
         });
     },
     createProject(name) {
@@ -126,11 +126,12 @@ const AppActions = Object.assign({}, require('./base/_app-actions'), {
             ...data,
         });
     },
-    createEnv(name, projectId) {
+    createEnv(name, projectId, cloneId) {
         Dispatcher.handleViewAction({
             actionType: Actions.CREATE_ENV,
             name,
             projectId,
+            cloneId,
         });
     },
     editEnv(env) {
@@ -181,12 +182,12 @@ const AppActions = Object.assign({}, require('./base/_app-actions'), {
         });
     },
 
-    editFlag(projectId, flag,onComplete) {
+    editFlag(projectId, flag, onComplete) {
         Dispatcher.handleViewAction({
             actionType: Actions.EDIT_FLAG,
             projectId,
             flag,
-            onComplete
+            onComplete,
         });
     },
     editProject(id, project) {
@@ -222,12 +223,13 @@ const AppActions = Object.assign({}, require('./base/_app-actions'), {
             name,
         });
     },
-    toggleFlag(index, environments, comment) {
+    toggleFlag(index, environments, comment, environmentFlags) {
         Dispatcher.handleViewAction({
             actionType: Actions.TOGGLE_FLAG,
             index,
             environments,
             comment,
+            environmentFlags,
         });
     },
     editUserFlag(params) {
@@ -417,13 +419,14 @@ const AppActions = Object.assign({}, require('./base/_app-actions'), {
             pageSize,
         });
     },
-    getAuditLog(projectId) {
+    getAuditLog(projectId, search) {
         Dispatcher.handleViewAction({
             actionType: Actions.GET_AUDIT_LOG,
-            projectId
+            projectId,
+            search
         });
     },
-    getAuditLogPage(projectId,page) {
+    getAuditLogPage(projectId, page) {
         Dispatcher.handleViewAction({
             projectId,
             actionType: Actions.GET_AUDIT_LOG_PAGE,

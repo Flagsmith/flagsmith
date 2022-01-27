@@ -34,8 +34,8 @@ const controller = {
             }))
             : data.post(`${Project.api}environments/${environmentId}/identities/${identity}/featurestates/`, {
                 feature: projectFlag.id,
-                enabled: !environmentFlag.enabled,
-                value: environmentFlag.value,
+                enabled: !environmentFlag || !environmentFlag.enabled,
+                value: environmentFlag ? environmentFlag.value : undefined,
             });
 
         prom.then((res) => {
@@ -72,7 +72,7 @@ const controller = {
             }))
             : data.post(`${Project.api}environments/${environmentId}/identities/${identity}/featurestates/`, {
                 feature: projectFlag.id,
-                enabled: environmentFlag.enabled,
+                enabled: identityFlag.enabled,
                 multivariate_feature_state_values:identityFlag.multivariate_options,
                 feature_state_value: identityFlag.feature_state_value,
             });

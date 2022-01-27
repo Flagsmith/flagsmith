@@ -137,7 +137,7 @@ const EnvironmentSettingsPage = class extends Component {
                                                         <Column className="m-l-0">
                                                             <Input
                                                               ref={e => this.input = e}
-                                                              value={this.state.name || env.name}
+                                                              value={typeof this.state.name == "string"  ? this.state.name : env.name}
                                                               inputClassName="input input--wide"
                                                               name="env-name"
 
@@ -169,7 +169,14 @@ const EnvironmentSettingsPage = class extends Component {
                                             </FormGroup>
                                         </div>
                                         <FormGroup className="mt-1">
-                                            <EditPermissions tabClassName="flat-panel" id={this.props.match.params.environmentId} level="environment"/>
+                                            <EditPermissions
+                                              tabClassName="flat-panel"
+                                              parentId={this.props.match.params.projectId}
+                                              parentLevel="project"
+                                              parentSettingsLink={`/project/${this.props.match.params.projectId}/settings`}
+                                              id={this.props.match.params.environmentId}
+                                              level="environment"
+                                            />
                                         </FormGroup>
                                         <FormGroup className="m-y-3">
                                             <Row className="mb-3" space>

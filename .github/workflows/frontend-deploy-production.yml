@@ -28,9 +28,11 @@ jobs:
               env:
                   E2E_TEST_TOKEN_PROD: ${{ secrets.E2E_TEST_TOKEN }}
                   ENV: prod
+                  SLACK_TOKEN: ${{ secrets.SLACK_TOKEN }}
+                  STATIC_ASSET_CDN_URL: /
               run: |
-                  wget -q https://dl.google.com/linux/chrome/deb/pool/main/g/google-chrome-stable/google-chrome-stable_91.0.4472.114-1_amd64.deb
-                  sudo apt install --allow-downgrades -y ./google-chrome*.deb -f 
+                  wget -q https://dl.google.com/linux/chrome/deb/pool/main/g/google-chrome-stable/google-chrome-stable_96.0.4664.110-1_amd64.deb
+                  sudo apt install --allow-downgrades -y ./google-chrome*.deb -f
                   google-chrome --version
                   node -v
                   npm i
@@ -62,17 +64,21 @@ jobs:
 
             - name: Deploy to App Engine
               env:
-                  ASSET_URL: https://cdn.flagsmith.com
+                  STATIC_ASSET_CDN_URL: https://cdn.flagsmith.com
                   ENV: prod
-                  AMPLITUDE: ${{ secrets.AMPLITUDE }}
-                  CRISP_CHAT: ${{ secrets.CRISP_CHAT }}
+                  AMPLITUDE_API_KEY: ${{ secrets.AMPLITUDE_API_KEY }}
+                  DELIGHTED_API_KEY: ${{ secrets.DELIGHTED_API_KEY }}
+                  CRISP_WEBSITE_ID: ${{ secrets.CRISP_WEBSITE_ID }}
+                  CAPTERRA_API_KEY: ${{ secrets.CAPTERRA_API_KEY }}
                   DEPLOYMENT_SLACK_CHANNEL: ${ secrets.DEPLOYMENT_SLACK_CHANNEL }}
                   E2E_SLACK_CHANNEL: ${{ secrets.E2E_SLACK_CHANNEL }}
                   EVENTS_SLACK_CHANNEL: ${{ secrets.EVENTS_SLACK_CHANNEL }}
-                  FLAGSMITH_ANALYTICS: ${{ secrets.FLAGSMITH_ANALYTICS }}
-                  GA: ${{ secrets.GA }}
+                  ENABLE_FLAG_EVALUATION_ANALYTICS: ${{ secrets.ENABLE_FLAG_EVALUATION_ANALYTICS }}
+                  ENABLE_INFLUXDB_FEATURES: ${{ secrets.ENABLE_INFLUXDB_FEATURES }}
+                  GOOGLE_ANALYTICS_API_KEY: ${{ secrets.GOOGLE_ANALYTICS_API_KEY }}
+                  HEAP_API_KEY: ${{ secrets.HEAP_API_KEY }}
                   LINKEDIN: ${{ secrets.LINKEDIN }}
-                  MIXPANEL: ${{ secrets.MIXPANEL }}
+                  MIXPANEL_API_KEY: ${{ secrets.MIXPANEL_API_KEY }}
                   SLACK_TOKEN: ${{ secrets.SLACK_TOKEN }}
               run: |
                   npm i

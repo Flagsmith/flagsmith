@@ -3,12 +3,11 @@ from django.test import TestCase
 
 from environments.identities.models import Identity
 from environments.identities.traits.models import Trait
-from environments.models import Environment, STRING
-from features.models import Feature, FeatureSegment, FeatureState, FeatureStateValue
-from features.utils import INTEGER, BOOLEAN
+from environments.models import STRING, Environment
+from features.models import Feature, FeatureSegment
 from organisations.models import Organisation
 from projects.models import Project
-from segments.models import Segment, SegmentRule, Condition, EQUAL
+from segments.models import EQUAL, Condition, Segment, SegmentRule
 
 
 @pytest.mark.django_db
@@ -135,3 +134,23 @@ class FeatureSegmentTest(TestCase):
         assert feature_segment_3.priority == 0
         assert feature_segment_4.priority == 0
         assert feature_segment_5.priority == 0
+
+    def test_clone_creates_a_new_object(self):
+        # Given
+        feature_segment = FeatureSegment.objects.create(
+            feature=self.remote_config,
+            segment=self.segment,
+            environment=self.environment,
+            priority=1,
+        )
+        new_env = Environment.objects.create(
+            name="Test environment New", project=self.project
+        )
+
+        # When
+        feature_segment_clone = feature_segment.clone(new_env)
+
+        # Then
+        assert feature_segment_clone.id != feature_segment.id
+        assert feature_segment_clone.priority == feature_segment.priority
+        assert feature_segment_clone.environment.id == new_env.id

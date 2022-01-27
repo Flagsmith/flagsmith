@@ -63,6 +63,10 @@ window.RequiredElement = propTypes.node.isRequired;
 window.Link = require('react-router-dom').Link;
 window.NavLink = require('react-router-dom').NavLink;
 
+if (Project.heap) {
+    window.heap=window.heap||[],heap.load=function(e,t){window.heap.appid=e,window.heap.config=t=t||{};var r=document.createElement("script");r.type="text/javascript",r.async=!0,r.src="https://cdn.heapanalytics.com/js/heap-"+e+".js";var a=document.getElementsByTagName("script")[0];a.parentNode.insertBefore(r,a);for(var n=function(e){return function(){heap.push([e].concat(Array.prototype.slice.call(arguments,0)))}},p=["addEventProperties","addUserProperties","clearEventProperties","identify","resetIdentity","removeEventProperty","setEventProperties","track","unsetEventProperty"],o=0;o<p.length;o++)heap[p[o]]=n(p[o])};
+    heap.load(Project.heap)
+}
 // Analytics
 if (Project.ga) {
     (function (i, s, o, g, r, a, m) {
@@ -103,6 +107,6 @@ if (typeof SENTRY_RELEASE_VERSION !== 'undefined' && Project.sentry && typeof Se
     });
 }
 
-if (Project.delighted) {
-    !(function (e, t, r, n) { if (!e[n]) { for (var a = e[n] = [], i = ['survey', 'reset', 'config', 'init', 'set', 'get', 'event', 'identify', 'track', 'page', 'screen', 'group', 'alias'], s = 0; s < i.length; s++) { const c = i[s]; a[c] = a[c] || (function (e) { return function () { const t = Array.prototype.slice.call(arguments); a.push([e, t]); }; }(c)); }a.SNIPPET_VERSION = '1.0.1'; const o = t.createElement('script'); o.type = 'text/javascript', o.async = !0, o.src = `https://d2yyd1h5u9mauk.cloudfront.net/integrations/web/v1/library/${r}/${n}.js`; const p = t.getElementsByTagName('script')[0]; p.parentNode.insertBefore(o, p); } }(window, document, 'Vq6wXzvfVxa8Xa3H', 'delighted'));
+if (projectOverrides.delighted) {
+    !(function (e, t, r, n) { if (!e[n]) { for (var a = e[n] = [], i = ['survey', 'reset', 'config', 'init', 'set', 'get', 'event', 'identify', 'track', 'page', 'screen', 'group', 'alias'], s = 0; s < i.length; s++) { const c = i[s]; a[c] = a[c] || (function (e) { return function () { const t = Array.prototype.slice.call(arguments); a.push([e, t]); }; }(c)); }a.SNIPPET_VERSION = '1.0.1'; const o = t.createElement('script'); o.type = 'text/javascript', o.async = !0, o.src = `https://d2yyd1h5u9mauk.cloudfront.net/integrations/web/v1/library/${r}/${n}.js`; const p = t.getElementsByTagName('script')[0]; p.parentNode.insertBefore(o, p); } }(window, document, projectOverrides.delighted, 'delighted'));
 }

@@ -60,18 +60,26 @@ export class Tag extends PureComponent {
 
   render() {
       const { props: { onClick, tag, selected, className } } = this;
+      if (!this.props.hideNames) {
+          return (
+              <ToggleChip color={this.getColor()} active={selected} onClick={onClick ? () => onClick(tag) : null}>
+                  {tag.label}
+              </ToggleChip>
+          );
+      }
+
       return (
           <div
             onClick={onClick ? () => onClick(tag) : null}
             onMouseEnter={onClick ? this.toggleHover : null}
             onMouseLeave={onClick ? this.toggleHover : null}
             style={{ backgroundColor: this.state.hover ? color(this.getColor()).darken(0.1) : this.getColor() }}
-            className={cx('tag', { selected,hideNames: this.props.hideNames }, className)}
+            className={cx('tag', { selected, hideNames: this.props.hideNames }, className)}
           >
               <div>
                   {tag.label ? (
                       <Row space>
-                          {this.props.hideNames ? "":tag.label}
+                          {this.props.hideNames ? '' : tag.label}
                           {selected && (
                           <span className="icon ion-md-checkmark"/>
                           )}
@@ -142,16 +150,18 @@ class _CreateEditTag extends PureComponent {
                 component={(
                     <Row className="mb-2">
                         {Constants.tagColors.map(color => (
-                            <Tag
-                              onClick={e => this.update('color', e.color)}
-                              key={color}
-                              selected={this.state.tag.color === color}
-                              className="tag--select mr-2 mb-2"
-                              tag={{
-                                  color,
-                                  id: color,
-                              }}
-                            />
+                            <div                               className="tag--select mr-2 mb-2">
+                                <Tag
+                                    onClick={e => this.update('color', e.color)}
+                                    key={color}
+                                    selected={this.state.tag.color === color}
+                                    tag={{
+                                        color,
+                                        id: color,
+                                    }}
+                                />
+                            </div>
+
                         ))}
                     </Row>
 )}
@@ -237,12 +247,12 @@ class TheComponent extends PureComponent {
       const noTags = projectTags && !projectTags.length;
       return (
           <div>
-              <div className="inline-tags mt-2">
+              <Row className="inline-tags mt-2">
                   <TagValues
                     onAdd={readOnly ? null : this.toggle} tags={projectTags} isSelected={this.props.isSelected}
                     value={this.props.value}
                   />
-              </div>
+              </Row>
 
               <InlineModal
                 title="Tags"
@@ -265,7 +275,7 @@ class TheComponent extends PureComponent {
                       )}
                       <div className="tag-list">
                           {filteredTags && filteredTags.map((tag, index) => (
-                              <div key={tag.id} className="mb-2">
+                              <div key={tag.id}>
                                   <Row>
                                       <Flex>
                                           <Tag

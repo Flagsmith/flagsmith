@@ -2,11 +2,11 @@ from djoser.serializers import UserSerializer as DjoserUserSerializer
 from rest_framework import serializers
 from rest_framework.exceptions import ValidationError
 
+from organisations.invites.models import Invite
 from organisations.models import Organisation
 from organisations.serializers import UserOrganisationSerializer
 
 from .models import FFAdminUser, UserPermissionGroup
-from organisations.invites.models import Invite
 
 
 class UserIdSerializer(serializers.Serializer):
@@ -21,6 +21,9 @@ class UserIdSerializer(serializers.Serializer):
 
         if user and organisation in user.organisations.all():
             user.remove_organisation(organisation)
+        user.permission_groups.remove(
+            *UserPermissionGroup.objects.filter(organisation=organisation)
+        )
 
         return user
 
@@ -95,7 +98,15 @@ class InviteListSerializer(serializers.ModelSerializer):
 
 
 class UserIdsSerializer(serializers.Serializer):
-    user_ids = serializers.ListField(serializers.IntegerField)
+    user_ids = serializers.ListField(child=serializers.IntegerField())
+
+    def validate(self, data):
+        if not FFAdminUser.objects.filter(id__in=data["user_ids"]).count() == len(
+            data["user_ids"]
+        ):
+            raise serializers.ValidationError("Some users not found")
+
+        return data
 
 
 class UserPermissionGroupSerializerList(serializers.ModelSerializer):
@@ -112,6 +123,7 @@ class UserPermissionGroupSerializerDetail(UserPermissionGroupSerializerList):
 
 class CustomCurrentUserSerializer(DjoserUserSerializer):
     auth_type = serializers.CharField(read_only=True)
+    is_superuser = serializers.BooleanField(read_only=True)
 
     class Meta(DjoserUserSerializer.Meta):
-        fields = DjoserUserSerializer.Meta.fields + ("auth_type",)
+        fields = DjoserUserSerializer.Meta.fields + ("auth_type", "is_superuser")

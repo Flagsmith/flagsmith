@@ -12,21 +12,37 @@ const moment = require('moment');
 
 const Project = require('../common/project');
 
+const extraPlugins = [
+    // Clear out build folder
+    new CleanWebpackPlugin(['build'], { root: path.join(__dirname, '../') }),
+
+    new webpack.DefinePlugin({
+        __DEV__: false,
+        SENTRY_RELEASE_VERSION: moment().valueOf().toString(),
+    }),
+];
+if (!process.env.E2E) {
+    // reduce filesize
+    extraPlugins.push(new webpack.optimize.OccurrenceOrderPlugin());
+    extraPlugins.push(new ExtractTextPlugin({ filename: 'style.[hash].css', allChunks: true }));
+} else {
+    extraPlugins.push(new ExtractTextPlugin({ filename: 'style.[hash].css', allChunks: true }));
+}
 module.exports = {
-    devtool: 'source-map',
+    devtool: process.env.E2E ? false : 'source-map',
     mode: 'production',
 
     entry: {
         main: './web/main.js',
     },
     optimization: { // chunk bundle into Libraries, App JS and dumb components
-        minimizer: [
+        minimizer: process.env.E2E ? [] : [
             new UglifyJSPlugin({
-                cache: true,
+                cache: !process.env.E2E,
                 parallel: true,
-                sourceMap: true, // set to true if you want JS source maps
-                extractComments: true,
-                uglifyOptions: {
+                sourceMap: !process.env.E2E, // set to true if you want JS source maps
+                extractComments: !process.env.E2E,
+                uglifyOptions: process.env.E2E ? null : {
                     compress: {
                         drop_console: true,
                     },
@@ -42,26 +58,11 @@ module.exports = {
     output: {
         path: path.join(__dirname, '../build/static'),
         filename: '[name].[hash].js',
-        publicPath: url.resolve(process.env.ASSET_URL || Project.assetUrl || 'https://cdn.flagsmith.com', 'static/'),
+        publicPath: url.resolve(process.env.STATIC_ASSET_CDN_URL || Project.assetUrl || 'https://cdn.flagsmith.com', 'static/'),
     },
 
     plugins: require('./plugins')
-        .concat([
-            // Clear out build folder
-            new CleanWebpackPlugin(['build'], { root: path.join(__dirname, '../') }),
-
-            new webpack.DefinePlugin({
-                __DEV__: false,
-                SENTRY_RELEASE_VERSION: moment().valueOf().toString(),
-            }),
-
-            // reduce filesize
-            new webpack.optimize.OccurrenceOrderPlugin(),
-
-            // pull inline styles into cachebusted file
-            new ExtractTextPlugin({ filename: 'style.[hash].css', allChunks: true }),
-
-        ]).concat(require('./pages').map((page) => {
+        .concat(extraPlugins).concat(require('./pages').map((page) => {
             console.log(page);
             return new HtmlWebpackPlugin({
                 filename: `${page}.handlebars`, // output

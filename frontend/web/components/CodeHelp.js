@@ -14,7 +14,7 @@ const getGithubLink = (key) => {
         case 'Java':
             return 'https://github.com/flagsmith/flagsmith-java-client/';
         case 'JavaScript':
-            return 'https://docs.flagsmith.com/clients/javascript/';
+            return 'https://github.com/flagsmith/flagsmith-js-client/';
         case 'Node JS':
             return 'https://github.com/flagsmith/flagsmith-nodejs-client/';
         case 'PHP':
@@ -24,7 +24,7 @@ const getGithubLink = (key) => {
         case 'REST':
             return 'https://docs.flagsmith.com/clients/rest/';
         case 'React Native':
-            return 'https://docs.flagsmith.com/clients/javascript/';
+            return 'https://github.com/flagsmith/flagsmith-js-client/';
         case 'Ruby':
             return 'https://github.com/flagsmith/flagsmith-ruby-client/';
         case 'Rust':
@@ -46,7 +46,7 @@ const getDocsLink = (key) => {
         case 'Java':
             return 'https://docs.flagsmith.com/clients/java/';
         case 'JavaScript':
-            return 'https://github.com/flagsmith/flagsmith-js-client/';
+            return 'https://docs.flagsmith.com/clients/javascript/';
         case 'Node JS':
             return 'https://docs.flagsmith.com/clients/node/';
         case 'PHP':
@@ -56,7 +56,7 @@ const getDocsLink = (key) => {
         case 'REST':
             return null;
         case 'React Native':
-            return 'https://github.com/flagsmith/flagsmith-js-client/';
+            return 'https://docs.flagsmith.com/clients/javascript/';
         case 'Ruby':
             return 'https://docs.flagsmith.com/clients/ruby/';
         case 'Rust':
@@ -78,6 +78,7 @@ const CodeHelp = class extends Component {
         };
     }
 
+
     copy = (s) => {
         const res = Clipboard.setString(s);
         toast(res ? 'Clipboard set' : 'Could not set clipboard :(');
@@ -85,10 +86,16 @@ const CodeHelp = class extends Component {
 
     render() {
         const { hideHeader } = this.props;
+        const language = this.state.language || flagsmith.getTrait('preferred_language') || Object.keys(this.props.snippets)[0];
+        const tab = language ? Math.max(Object.keys(this.props.snippets).indexOf(language), 0) : 0;
         return (
             <div>
                 {!hideHeader && (
-                    <div style={{ cursor: 'pointer' }} onClick={() => this.setState({ visible: !this.state.visible })}>
+                    <div
+                      style={{ cursor: 'pointer' }} onClick={() => {
+                          this.setState({ visible: !this.state.visible });
+                      }}
+                    >
                         <Row>
                             <Flex style={isMobile ? { overflowX: 'scroll' } : {}}>
                                 <div>
@@ -118,8 +125,44 @@ Code example:
                                     {this.props.subtitle}
                                 </div>
                             )}
+
                         <div className="code-help">
-                            <Tabs value={this.state.tab} onChange={tab => this.setState({ tab })}>
+                            <Select
+                              data-test="select-segment"
+                              placeholder="Select a language"
+                              value={{
+                                  label: language,
+                              }}
+                              onChange={(v) => {
+                                  const lang = v.label;
+                                  this.setState({ language: lang });
+                                  flagsmith.setTrait('preferred_language', lang);
+                                  this.setState({ tab });
+                              }}
+                              options={
+                                    Object.keys(this.props.snippets).map((v, i) => (
+                                        {
+                                            label: v,
+                                            value: i,
+                                        }
+                                    ))
+                                }
+                              styles={{
+                                  control: base => ({
+                                      ...base,
+                                      width: 200,
+                                      alignSelf: 'flex-end',
+                                      '&:hover': { borderColor: '$bt-brand-secondary' },
+                                      border: '1px solid $bt-brand-secondary',
+                                  }),
+                              }}
+                            />
+                            <Tabs
+                              value={tab}
+                              onChange={(tab) => {
+                                  const lang = Object.keys(this.props.snippets)[tab];
+                              }}
+                            >
                                 {_.map(this.props.snippets, (s, key) => {
                                     const docs = getDocsLink(key);
                                     const github = getGithubLink(key);
@@ -172,4 +215,4 @@ Code example:
 
 CodeHelp.propTypes = {};
 
-module.exports = CodeHelp;
+module.exports = ConfigProvider(CodeHelp);

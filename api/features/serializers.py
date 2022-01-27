@@ -10,6 +10,7 @@ from audit.models import (
     RelatedObjectType,
 )
 from environments.identities.models import Identity
+from users.serializers import UserIdsSerializer, UserListSerializer
 
 from .models import Feature, FeatureState, FeatureStateValue
 from .multivariate.serializers import (
@@ -18,10 +19,39 @@ from .multivariate.serializers import (
 )
 
 
+class FeatureOwnerInputSerializer(UserIdsSerializer):
+    def add_owners(self, feature: Feature):
+        user_ids = self.validated_data["user_ids"]
+        feature.owners.add(*user_ids)
+
+    def remove_users(self, feature: Feature):
+        user_ids = self.validated_data["user_ids"]
+        feature.owners.remove(*user_ids)
+
+
+class ProjectFeatureSerializer(serializers.ModelSerializer):
+    owners = UserListSerializer(many=True, read_only=True)
+
+    class Meta:
+        model = Feature
+        fields = (
+            "id",
+            "name",
+            "created_date",
+            "description",
+            "initial_value",
+            "default_enabled",
+            "type",
+            "owners",
+        )
+        writeonly_fields = ("initial_value", "default_enabled")
+
+
 class ListCreateFeatureSerializer(WritableNestedModelSerializer):
     multivariate_options = MultivariateFeatureOptionSerializer(
         many=True, required=False
     )
+    owners = UserListSerializer(many=True, read_only=True)
 
     class Meta:
         model = Feature
@@ -35,6 +65,8 @@ class ListCreateFeatureSerializer(WritableNestedModelSerializer):
             "description",
             "tags",
             "multivariate_options",
+            "is_archived",
+            "owners",
         )
         read_only_fields = ("feature_segments", "created_date")
 
@@ -44,7 +76,11 @@ class ListCreateFeatureSerializer(WritableNestedModelSerializer):
         return super(ListCreateFeatureSerializer, self).to_internal_value(data)
 
     def create(self, validated_data):
+        # Add the default(User creating the feature) owner of the feature
+        # NOTE: pop the user before passing the data to create
+        user = validated_data.pop("user")
         instance = super(ListCreateFeatureSerializer, self).create(validated_data)
+        instance.owners.add(user)
         self._create_audit_log(instance, True)
         return instance
 

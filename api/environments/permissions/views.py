@@ -9,10 +9,10 @@ from environments.permissions.models import (
 )
 from environments.permissions.permissions import NestedEnvironmentPermissions
 from environments.permissions.serializers import (
-    ListUserEnvironmentPermissionSerializer,
     CreateUpdateUserEnvironmentPermissionSerializer,
-    ListUserPermissionGroupEnvironmentPermissionSerializer,
     CreateUpdateUserPermissionGroupEnvironmentPermissionSerializer,
+    ListUserEnvironmentPermissionSerializer,
+    ListUserPermissionGroupEnvironmentPermissionSerializer,
 )
 
 

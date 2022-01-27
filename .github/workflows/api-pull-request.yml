@@ -5,6 +5,7 @@ on:
         paths:
             - 'api/**'
             - '.github/**'
+        types: [opened, synchronize, reopened, ready_for_review]
 
 defaults:
     run:
@@ -12,9 +13,10 @@ defaults:
 
 jobs:
     test:
+        if: github.event.pull_request.draft == false
         runs-on: ubuntu-latest
         name: API Unit Tests
-        
+
         services:
             postgres:
                 image: postgres:11.12-alpine
@@ -24,31 +26,47 @@ jobs:
                     POSTGRES_DB: postgres
                 ports: ['5432:5432']
                 options: --health-cmd pg_isready --health-interval 10s --health-timeout 5s --health-retries 5
-        
+
         strategy:
             max-parallel: 4
             matrix:
-                python-version: [3.6, 3.7, 3.8, 3.9]
-                
+                python-version: ["3.6", "3.7", "3.8", "3.9", "3.10"]
+
         steps:
             - name: Cloning repo
               uses: actions/checkout@v2
               with:
                   fetch-depth: 0
-                  
+
             - name: Set up Python ${{ matrix.python-version }}
               uses: actions/setup-python@v2
               with:
                   python-version: ${{ matrix.python-version }}
-                  
+
+            - name: Restore VirtualEnv from cache
+              uses: syphar/restore-virtualenv@v1.2
+              id: cache-api
+
+            - name: Restore Pip from cache
+              uses: syphar/restore-pip-download-cache@v1
+              if: steps.cache-api.outputs.cache-hit != 'true'
+
             - name: Install Dependencies
+              if: steps.cache-api.outputs.cache-hit != 'true'
               run: |
                   python -m pip install --upgrade pip
                   pip install -r requirements-dev.txt
-                  
-            - name: Check Formatting
+
+            - name: Check black formatting
               run: black --check .
-              
+
+            - name: Check flake8 linting
+              working-directory: .  # working dir should be root due to conflicts with pre-commit
+              run: flake8 .
+
+            - name: Check isort imports
+              run: isort --check .
+
             - name: Run Tests
               env:
                   DATABASE_URL:

@@ -52,8 +52,22 @@ class EnvironmentSerializerLight(serializers.ModelSerializer):
         )
 
 
+class CloneEnvironmentSerializer(EnvironmentSerializerLight):
+    class Meta:
+        model = Environment
+        fields = ("id", "name", "api_key", "project")
+        read_only_fields = ("id", "api_key", "project")
+
+    def create(self, validated_data):
+        name = validated_data.get("name")
+        source_env = validated_data.get("source_env")
+        clone = source_env.clone(name)
+        self._create_audit_log(clone, True)
+        return clone
+
+
 class WebhookSerializer(serializers.ModelSerializer):
     class Meta:
         model = Webhook
-        fields = ("id", "url", "enabled", "created_at", "updated_at")
+        fields = ("id", "url", "enabled", "created_at", "updated_at", "secret")
         read_only_fields = ("id", "created_at", "updated_at")

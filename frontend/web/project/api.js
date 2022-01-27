@@ -58,6 +58,11 @@ global.API = {
             });
         }
 
+        if (Project.heap) {
+            heap.track(data.event, {
+                category: data.category,
+            });
+        }
         if (Project.mixpanel) {
             if (!data) {
                 console.error('Passed null event data');
@@ -118,7 +123,13 @@ global.API = {
                 page: document.location.pathname,
             });
         }
-
+        if (Project.heap) {
+            heap.track(`Page View  - ${title}`, {
+                title,
+                location: document.location.href,
+                page: document.location.pathname,
+            });
+        }
         if (Project.mixpanel) {
             mixpanel.track(`Page View  - ${title}`, {
                 title,
@@ -133,6 +144,21 @@ global.API = {
             mixpanel.alias(id);
         }
 
+        if (Project.heap) {
+            heap.identify(id);
+            const orgs = (user && user.organisations && _.map(user.organisations, o => `${o.name} #${o.id}(${o.role})[${o.num_seats}]`).join(',')) || '';
+            const user = AccountStore.model;
+            const plans = AccountStore.getPlans();
+            heap.addUserProperties({
+                email: id,
+                'USER_ID': id, // use human-readable names
+                '$first_name': user.first_name,
+                'isCompanyEmail': !user.email.includes('@gmail') && !user.email.includes('@yahoo') && !user.email.includes('@hotmail') && !user.email.includes('@icloud'),
+                '$last_name': user.last_name,
+                'plan': plans && plans.join(','),
+                orgs,
+            });
+        }
         if (Project.amplitude) {
             amplitude.getInstance().setUserId(id);
             const identify = new amplitude.Identify()
@@ -152,6 +178,20 @@ global.API = {
 
                 mixpanel.people.set({
                     '$email': id, // only reserved properties need the $
+                    'USER_ID': id, // use human-readable names
+                    '$first_name': user.first_name,
+                    'isCompanyEmail': !user.email.includes('@gmail') && !user.email.includes('@yahoo') && !user.email.includes('@hotmail') && !user.email.includes('@icloud'),
+                    '$last_name': user.last_name,
+                    'plan': plans && plans.join(','),
+                    orgs,
+                });
+            }
+
+            if (Project.heap) {
+                const plans = AccountStore.getPlans();
+                heap.identify(id);
+                heap.addUserProperties({
+                    email: id,
                     'USER_ID': id, // use human-readable names
                     '$first_name': user.first_name,
                     'isCompanyEmail': !user.email.includes('@gmail') && !user.email.includes('@yahoo') && !user.email.includes('@hotmail') && !user.email.includes('@icloud'),

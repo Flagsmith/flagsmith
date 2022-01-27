@@ -1,0 +1,122 @@
+- model: sites.site
+  pk: 1
+  fields:
+    domain: example.com
+    name: example.com
+- model: organisations.organisation
+  pk: 1
+  fields:
+    name: Test Org
+    has_requested_features: false
+    webhook_notification_email: null
+    created_date: 2021-08-02 12:23:25.410055+00:00
+    alerted_over_plan_limit: false
+    stop_serving_flags: false
+    persist_trait_data: true
+    block_access_to_admin: false
+    feature_analytics: false
+- model: projects.project
+  pk: 1
+  fields:
+    name: Test Project
+    created_date: 2021-08-02 12:23:33.981797+00:00
+    organisation: 1
+    hide_disabled_flags: false
+- model: environments.environment
+  pk: 1
+  fields:
+    name: Production
+    created_date: 2021-08-02 12:23:34.297656+00:00
+    project: 1
+    api_key: e3jwq93LdN62FyMpoWpLsG
+    webhooks_enabled: false
+    webhook_url: null
+- model: environments.environment
+  pk: 2
+  fields:
+    name: Development
+    created_date: 2021-08-02 12:23:34.358430+00:00
+    project: 1
+    api_key: T4JZKgozvyhqbUS2pMXZpR
+    webhooks_enabled: false
+    webhook_url: null
+- model: identities.identity
+  pk: 1
+  fields:
+    identifier: development_user_123456
+    created_date: 2021-08-02 12:23:35.199360+00:00
+    environment: 2
+- model: identities.identity
+  pk: 2
+  fields:
+    identifier: production_user_123456
+    created_date: 2021-08-02 12:23:35.388576+00:00
+    environment: 1
+- model: features.feature
+  pk: 1
+  fields:
+    name: test_feature
+    created_date: 2021-08-02 12:24:03.315647+00:00
+    project: 1
+    initial_value: null
+    description: null
+    default_enabled: true
+    type: STANDARD
+    tags: []
+- model: features.featurestate
+  pk: 1
+  fields:
+    feature: 1
+    environment: 1
+    identity: null
+    feature_segment: null
+    enabled: true
+- model: features.featurestate
+  pk: 2
+  fields:
+    feature: 1
+    environment: 2
+    identity: null
+    feature_segment: null
+    enabled: true
+- model: features.featurestatevalue
+  pk: 1
+  fields:
+    type: unicode
+    boolean_value: null
+    integer_value: null
+    feature_state: 1
+    string_value: null
+- model: features.featurestatevalue
+  pk: 2
+  fields:
+    type: unicode
+    boolean_value: null
+    integer_value: null
+    feature_state: 2
+    string_value: null
+- model: permissions.permissionmodel
+  pk: CREATE_ENVIRONMENT
+  fields:
+    description: Ability to create an environment in the given project.
+    type: PROJECT
+- model: permissions.permissionmodel
+  pk: CREATE_FEATURE
+  fields:
+    description: Ability to create features in the given project.
+    type: PROJECT
+- model: permissions.permissionmodel
+  pk: DELETE_FEATURE
+  fields:
+    description: Ability to delete features in the given project.
+    type: PROJECT
+- model: permissions.permissionmodel
+  pk: VIEW_ENVIRONMENT
+  fields:
+    description: View permission for the given environment.
+    type: ENVIRONMENT
+- model: permissions.permissionmodel
+  pk: VIEW_PROJECT
+  fields:
+    description: View permission for the given project.
+    type: PROJECT

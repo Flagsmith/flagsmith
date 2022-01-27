@@ -37,7 +37,7 @@ jobs:
 
             - name: Deploy to App Engine
               env:
-                  ASSET_URL: https://staging.flagsmith.com
+                  STATIC_ASSET_CDN_URL: https://staging.flagsmith.com
                   ENV: staging
               run: |
                   npm i

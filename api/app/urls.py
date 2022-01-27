@@ -1,9 +1,10 @@
 from django.conf import settings
-from django.conf.urls import url, include
+from django.conf.urls import include, url
 from django.contrib import admin
-from django.http import HttpResponse
+from django.urls import path
 
 from users.views import password_reset_redirect
+
 from . import views
 
 urlpatterns = [
@@ -16,7 +17,6 @@ urlpatterns = [
         r"^sales-dashboard/",
         include("sales_dashboard.urls", namespace="sales_dashboard"),
     ),
-    url(r"", lambda r: HttpResponse("Flagsmith API")),
     # this url is used to generate email content for the password reset workflow
     url(
         r"^password-reset/confirm/(?P<uidb64>[0-9A-Za-z_\-]+)/(?P<token>[0-9A-Za-z]{1,"
@@ -24,6 +24,14 @@ urlpatterns = [
         password_reset_redirect,
         name="password_reset_confirm",
     ),
+    url(
+        r"^config/project-overrides",
+        views.project_overrides,
+        name="project_overrides",
+    ),
+    path("", views.index, name="index"),
+    # Catch all for subfolder views on the front end
+    url(r"^.*/$", views.index, name="index"),
 ]
 
 if settings.DEBUG:
@@ -32,3 +40,7 @@ if settings.DEBUG:
     urlpatterns = [
         url(r"^__debug__/", include(debug_toolbar.urls)),
     ] + urlpatterns
+
+if settings.SAML_INSTALLED:
+    # insert before final url pattern which catches all URLs that are not matched
+    urlpatterns.insert(-1, path("api/v1/auth/saml/", include("saml.urls")))

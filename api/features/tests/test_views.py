@@ -24,7 +24,7 @@ from features.models import (
     FeatureStateValue,
 )
 from features.multivariate.models import MultivariateFeatureOption
-from features.value_types import STRING, INTEGER, BOOLEAN
+from features.value_types import STRING
 from organisations.models import Organisation, OrganisationRole
 from projects.models import Project
 from projects.tags.models import Tag
@@ -44,12 +44,12 @@ class ProjectFeatureTestCase(TestCase):
 
     def setUp(self):
         self.client = APIClient()
-        user = Helper.create_ffadminuser()
-        self.client.force_authenticate(user=user)
+        self.user = Helper.create_ffadminuser()
+        self.client.force_authenticate(user=self.user)
 
         self.organisation = Organisation.objects.create(name="Test Org")
 
-        user.add_organisation(self.organisation, OrganisationRole.ADMIN)
+        self.user.add_organisation(self.organisation, OrganisationRole.ADMIN)
 
         self.project = Project.objects.create(
             name="Test project", organisation=self.organisation
@@ -83,6 +83,36 @@ class ProjectFeatureTestCase(TestCase):
             project=self.project2,
         )
 
+    def test_default_is_archived_is_false(self):
+        # Given - set up data
+        data = {
+            "name": "test feature",
+        }
+        url = reverse("api-v1:projects:project-features-list", args=[self.project.id])
+
+        # When
+        response = self.client.post(
+            url, data=json.dumps(data), content_type="application/json"
+        ).json()
+
+        # Then
+        assert response["is_archived"] is False
+
+    def test_update_is_archived_works(self):
+        # Given
+        feature = Feature.objects.create(name="test feature", project=self.project)
+        url = reverse(
+            "api-v1:projects:project-features-detail",
+            args=[self.project.id, feature.id],
+        )
+        data = {"name": "test feature", "is_archived": True}
+
+        # When
+        response = self.client.put(url, data=data).json()
+
+        # Then
+        assert response["is_archived"] is True
+
     def test_should_create_feature_states_when_feature_created(self):
         # Given - set up data
         default_value = "This is a value"
@@ -115,6 +145,35 @@ class ProjectFeatureTestCase(TestCase):
             environment=self.environment_1
         ).first()
         assert feature_state.get_feature_state_value() == default_value
+
+    def test_owners_is_read_only_for_feature_create(self):
+        # Given - set up data
+        default_value = "This is a value"
+        data = {
+            "name": "test feature",
+            "initial_value": default_value,
+            "project": self.project.id,
+            "owners": [
+                {
+                    "id": 2,
+                    "email": "fake_user@mail.com",
+                    "first_name": "fake",
+                    "last_name": "user",
+                }
+            ],
+        }
+        url = reverse("api-v1:projects:project-features-list", args=[self.project.id])
+
+        # When
+        response = self.client.post(
+            url, data=json.dumps(data), content_type="application/json"
+        )
+
+        # Then
+        assert response.status_code == status.HTTP_201_CREATED
+        assert len(response.json()["owners"]) == 1
+        assert response.json()["owners"][0]["id"] == self.user.id
+        assert response.json()["owners"][0]["email"] == self.user.email
 
     def test_should_create_feature_states_with_integer_value_when_feature_created(self):
         # Given - set up data
@@ -255,6 +314,58 @@ class ProjectFeatureTestCase(TestCase):
             == 1
         )
 
+    def test_add_owners_adds_owner(self):
+        # Given
+        feature = Feature.objects.create(name="Test Feature", project=self.project)
+        user_2 = FFAdminUser.objects.create_user(email="user2@mail.com")
+        user_3 = FFAdminUser.objects.create_user(email="user3@mail.com")
+        url = reverse(
+            "api-v1:projects:project-features-add-owners",
+            args=[self.project.id, feature.id],
+        )
+        data = {"user_ids": [user_2.id, user_3.id]}
+        # When
+        json_response = self.client.post(
+            url, data=json.dumps(data), content_type="application/json"
+        ).json()
+        assert len(json_response["owners"]) == 2
+        assert json_response["owners"][0] == {
+            "id": user_2.id,
+            "email": user_2.email,
+            "first_name": user_2.first_name,
+            "last_name": user_2.last_name,
+        }
+        assert json_response["owners"][1] == {
+            "id": user_3.id,
+            "email": user_3.email,
+            "first_name": user_3.first_name,
+            "last_name": user_3.last_name,
+        }
+
+    def test_remove_owners_only_remove_specified_owners(self):
+        # Given
+        user_2 = FFAdminUser.objects.create_user(email="user2@mail.com")
+        user_3 = FFAdminUser.objects.create_user(email="user3@mail.com")
+        feature = Feature.objects.create(name="Test Feature", project=self.project)
+        feature.owners.add(user_2, user_3)
+
+        url = reverse(
+            "api-v1:projects:project-features-remove-owners",
+            args=[self.project.id, feature.id],
+        )
+        data = {"user_ids": [user_2.id]}
+        # When
+        json_response = self.client.post(
+            url, data=json.dumps(data), content_type="application/json"
+        ).json()
+        assert len(json_response["owners"]) == 1
+        assert json_response["owners"][0] == {
+            "id": user_3.id,
+            "email": user_3.email,
+            "first_name": user_3.first_name,
+            "last_name": user_3.last_name,
+        }
+
     def test_audit_log_created_when_feature_state_created_for_identity(self):
         # Given
         feature = Feature.objects.create(name="Test feature", project=self.project)
@@ -307,9 +418,7 @@ class ProjectFeatureTestCase(TestCase):
         data = {"feature": feature.id, "enabled": False}
 
         # When
-        res = self.client.put(
-            url, data=json.dumps(data), content_type="application/json"
-        )
+        self.client.put(url, data=json.dumps(data), content_type="application/json")
 
         # Then
         assert (
@@ -347,7 +456,7 @@ class ProjectFeatureTestCase(TestCase):
         )
 
         # When
-        res = self.client.delete(url)
+        self.client.delete(url)
 
         # Then
         assert (
@@ -493,6 +602,27 @@ class ProjectFeatureTestCase(TestCase):
 
         feature = response_json["results"][0]
         assert "tags" in feature
+
+    def test_list_features_is_archived_filter(self):
+        # Firstly, let's setup the initial data
+        feature = Feature.objects.create(name="test_feature", project=self.project)
+        archived_feature = Feature.objects.create(
+            name="archived_feature", project=self.project, is_archived=True
+        )
+        base_url = reverse(
+            "api-v1:projects:project-features-list", args=[self.project.id]
+        )
+        # Next, let's test true filter
+        url = f"{base_url}?is_archived=true"
+        response = self.client.get(url)
+        assert len(response.json()["results"]) == 1
+        assert response.json()["results"][0]["id"] == archived_feature.id
+
+        # Finally, let's test false filter
+        url = f"{base_url}?is_archived=false"
+        response = self.client.get(url)
+        assert len(response.json()["results"]) == 1
+        assert response.json()["results"][0]["id"] == feature.id
 
     def test_put_feature_does_not_update_feature_states(self):
         # Given
@@ -667,15 +797,13 @@ class FeatureStateViewSetTestCase(TestCase):
 
     def test_can_filter_feature_states_to_show_identity_overrides_only(self):
         # Given
-        feature_state = FeatureState.objects.get(
-            environment=self.environment, feature=self.feature
-        )
+        FeatureState.objects.get(environment=self.environment, feature=self.feature)
 
         identifier = "test-identity"
         identity = Identity.objects.create(
             identifier=identifier, environment=self.environment
         )
-        identity_feature_state = FeatureState.objects.create(
+        FeatureState.objects.create(
             environment=self.environment, feature=self.feature, identity=identity
         )
 

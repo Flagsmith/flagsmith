@@ -1,8 +1,10 @@
 from django.conf import settings
+from django.contrib.auth.mixins import PermissionRequiredMixin
 from django.contrib.sites.shortcuts import get_current_site
-from django.http import HttpResponse
+from django.http import Http404, HttpResponse
 from django.shortcuts import redirect
 from django.views import View
+from django.views.generic.edit import FormView
 from drf_yasg2.utils import swagger_auto_schema
 from rest_framework import mixins, status, viewsets
 from rest_framework.decorators import action
@@ -10,19 +12,38 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 
 from organisations.models import Organisation
-from organisations.permissions import (
+from organisations.permissions.permissions import (
     OrganisationUsersPermission,
     UserPermissionGroupPermission,
 )
-from organisations.serializers import (
-    UserOrganisationSerializer,
-)
+from organisations.serializers import UserOrganisationSerializer
 from users.models import FFAdminUser, UserPermissionGroup
 from users.serializers import (
     UserIdsSerializer,
     UserListSerializer,
     UserPermissionGroupSerializerDetail,
 )
+
+from .forms import InitConfigForm
+
+
+class InitialConfigurationView(PermissionRequiredMixin, FormView):
+    template_name = "users/onboard.html"
+    form_class = InitConfigForm
+    permission_denied_message = (
+        "FAILED TO INIT Configuration. USER(S) ALREADY EXIST IN SYSTEM."
+    )
+
+    def has_permission(self):
+        return FFAdminUser.objects.count() == 0
+
+    def handle_no_permission(self):
+        raise Http404("CAN NOT INIT CONFIGURATION. USER(S) ALREADY EXIST IN SYSTEM.")
+
+    def form_valid(self, form):
+        form.create_admin()
+        form.update_site()
+        return HttpResponse("INSTALLATION CONFIGURED SUCCESSFULLY")
 
 
 class AdminInitView(View):

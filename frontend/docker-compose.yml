@@ -8,8 +8,8 @@ services:
             dockerfile: Dockerfile
         command: npm run dev
         environment:
-            - API_URL=http://localhost:8000/api/v1/
-            - ASSET_URL=http://localhost:8080/
+            - FLAGSMITH_API_URL=http://localhost:8000/api/v1/
+            - STATIC_ASSET_CDN_URL=http://localhost:8080/
         ports:
             - '8080:8080'
         volumes:

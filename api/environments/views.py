@@ -1,9 +1,14 @@
 # -*- coding: utf-8 -*-
 from __future__ import unicode_literals
 
+import logging
+
 from django.utils.decorators import method_decorator
 from drf_yasg2 import openapi
 from drf_yasg2.utils import swagger_auto_schema
+from flag_engine.django_transform.document_builders import (
+    build_environment_document,
+)
 from rest_framework import mixins, status, viewsets
 from rest_framework.decorators import action
 from rest_framework.permissions import IsAuthenticated
@@ -17,7 +22,6 @@ from permissions.serializers import (
     MyUserObjectPermissionsSerializer,
     PermissionModelSerializer,
 )
-import logging
 
 from .identities.traits.models import Trait
 from .identities.traits.serializers import (
@@ -30,7 +34,11 @@ from .permissions.models import (
     UserEnvironmentPermission,
     UserPermissionGroupEnvironmentPermission,
 )
-from .serializers import EnvironmentSerializerLight, WebhookSerializer
+from .serializers import (
+    CloneEnvironmentSerializer,
+    EnvironmentSerializerLight,
+    WebhookSerializer,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -58,6 +66,8 @@ class EnvironmentViewSet(viewsets.ModelViewSet):
             return TraitKeysSerializer
         if self.action == "delete_traits":
             return DeleteAllTraitKeysSerializer
+        if self.action == "clone":
+            return CloneEnvironmentSerializer
         return EnvironmentSerializerLight
 
     def get_serializer_context(self):
@@ -103,6 +113,16 @@ class EnvironmentViewSet(viewsets.ModelViewSet):
                 {"detail": "Couldn't get trait keys"},
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR,
             )
+
+    @action(detail=True, methods=["POST"])
+    def clone(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        clone = serializer.save(source_env=self.get_object())
+        UserEnvironmentPermission.objects.create(
+            user=self.request.user, environment=clone, admin=True
+        )
+        return Response(serializer.data, status=status.HTTP_200_OK)
 
     @action(detail=True, methods=["POST"], url_path="delete-traits")
     def delete_traits(self, request, *args, **kwargs):
@@ -174,6 +194,13 @@ class EnvironmentViewSet(viewsets.ModelViewSet):
         serializer.is_valid()
 
         return Response(serializer.data)
+
+    @action(detail=True, methods=["GET"], url_path="document")
+    def get_document(self, request, api_key: str):
+        environment = Environment.objects.select_related(
+            "project", "project__organisation"
+        ).get(api_key=api_key)
+        return Response(build_environment_document(environment))
 
 
 class WebhookViewSet(

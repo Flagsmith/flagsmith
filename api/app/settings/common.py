@@ -9,6 +9,7 @@ https://docs.djangoproject.com/en/1.9/topics/settings/
 For the full list of settings and their values, see
 https://docs.djangoproject.com/en/1.9/ref/settings/
 """
+import logging
 import os
 import sys
 import warnings
@@ -22,21 +23,25 @@ from django.core.management.utils import get_random_secret_key
 from environs import Env
 
 env = Env()
+logger = logging.getLogger(__name__)
 
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
-BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+BASE_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 PROJECT_ROOT = os.path.abspath(os.path.dirname(__file__))
 
 ENV = env("ENVIRONMENT", default="local")
 if ENV not in ("local", "dev", "staging", "production"):
     warnings.warn(
-        "ENVIRONMENT env variable must be one of local, dev, staging or production"
+        "ENVIRONMENT env variable must be one of local, dev, staging, production"
     )
 
-DEBUG = env("DEBUG", default=False)
+DEBUG = env.bool("DEBUG", default=False)
 
 # Enables the sending of telemetry data to the central Flagsmith API for usage tracking
 ENABLE_TELEMETRY = env("ENABLE_TELEMETRY", default=True)
+
+# Enables gzip compression
+ENABLE_GZIP_COMPRESSION = env.bool("ENABLE_GZIP_COMPRESSION", default=False)
 
 SECRET_KEY = env("DJANGO_SECRET_KEY", default=get_random_secret_key())
 
@@ -45,15 +50,7 @@ HOSTED_SEATS_LIMIT = env.int("HOSTED_SEATS_LIMIT", default=0)
 # Google Analytics Configuration
 GOOGLE_ANALYTICS_KEY = env("GOOGLE_ANALYTICS_KEY", default="")
 GOOGLE_SERVICE_ACCOUNT = env("GOOGLE_SERVICE_ACCOUNT", default=None)
-if not GOOGLE_SERVICE_ACCOUNT:
-    warnings.warn(
-        "GOOGLE_SERVICE_ACCOUNT not configured, getting organisation usage will not work"
-    )
 GA_TABLE_ID = env("GA_TABLE_ID", default=None)
-if not GA_TABLE_ID:
-    warnings.warn(
-        "GA_TABLE_ID not configured, getting organisation usage will not work"
-    )
 
 INFLUXDB_TOKEN = env.str("INFLUXDB_TOKEN", default="")
 INFLUXDB_BUCKET = env.str("INFLUXDB_BUCKET", default="")
@@ -61,6 +58,8 @@ INFLUXDB_URL = env.str("INFLUXDB_URL", default="")
 INFLUXDB_ORG = env.str("INFLUXDB_ORG", default="")
 
 ALLOWED_HOSTS = env.list("DJANGO_ALLOWED_HOSTS", default=[])
+USE_X_FORWARDED_HOST = env.bool("USE_X_FORWARDED_HOST", default=False)
+
 CSRF_TRUSTED_ORIGINS = env.list("DJANGO_CSRF_TRUSTED_ORIGINS", default=[])
 
 INTERNAL_IPS = ["127.0.0.1"]
@@ -99,6 +98,7 @@ INSTALLED_APPS = [
     "users",
     "organisations",
     "organisations.invites",
+    "organisations.permissions",
     "projects",
     "sales_dashboard",
     "environments",
@@ -108,6 +108,7 @@ INSTALLED_APPS = [
     "features",
     "features.multivariate",
     "segments",
+    "app",
     "e2etests",
     "simple_history",
     "drf_yasg2",
@@ -129,6 +130,7 @@ INSTALLED_APPS = [
     "integrations.segment",
     "integrations.heap",
     "integrations.mixpanel",
+    "integrations.slack",
     # Rate limiting admin endpoints
     "axes",
     "telemetry",
@@ -173,7 +175,7 @@ REST_FRAMEWORK = {
     "UNICODE_JSON": False,
     "DEFAULT_PAGINATION_CLASS": "rest_framework.pagination.PageNumberPagination",
     "DEFAULT_THROTTLE_RATES": {
-        "login": "5/min",
+        "login": "20/min",
         "mfa_code": "5/min",
         "invite": "10/min",
     },
@@ -182,6 +184,7 @@ REST_FRAMEWORK = {
 
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
+    "whitenoise.middleware.WhiteNoiseMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
     "corsheaders.middleware.CorsMiddleware",
     "django.middleware.common.CommonMiddleware",
@@ -191,6 +194,10 @@ MIDDLEWARE = [
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
     "simple_history.middleware.HistoryRequestMiddleware",
 ]
+
+if ENABLE_GZIP_COMPRESSION:
+    # ref: https://docs.djangoproject.com/en/2.2/ref/middleware/#middleware-ordering
+    MIDDLEWARE.insert(1, "django.middleware.gzip.GZipMiddleware")
 
 if GOOGLE_ANALYTICS_KEY:
     MIDDLEWARE.append("app_analytics.middleware.GoogleAnalyticsMiddleware")
@@ -262,13 +269,17 @@ USE_TZ = True
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/1.9/howto/static-files/
 
-STATIC_URL = "/static/"
+STATIC_URL = "/"
 STATIC_ROOT = os.path.join(PROJECT_ROOT, "../../static/")
 
 # CORS settings
 
 CORS_ORIGIN_ALLOW_ALL = True
-CORS_ALLOW_HEADERS = default_headers + ("X-Environment-Key", "X-E2E-Test-Auth-Token")
+CORS_ALLOW_HEADERS = default_headers + (
+    "X-Environment-Key",
+    "X-E2E-Test-Auth-Token",
+    "sentry-trace",
+)
 
 DEFAULT_FROM_EMAIL = env("SENDER_EMAIL", default="noreply@flagsmith.com")
 EMAIL_CONFIGURATION = {
@@ -303,7 +314,7 @@ EMAIL_BACKEND = env("EMAIL_BACKEND", default="sgbackend.SendGridBackend")
 if EMAIL_BACKEND == "sgbackend.SendGridBackend":
     SENDGRID_API_KEY = env("SENDGRID_API_KEY", default=None)
     if not SENDGRID_API_KEY:
-        warnings.warn(
+        logger.info(
             "`SENDGRID_API_KEY` has not been configured. You will not receive emails."
         )
 elif EMAIL_BACKEND == "django.core.mail.backends.smtp.EmailBackend":
@@ -316,9 +327,21 @@ elif EMAIL_BACKEND == "django.core.mail.backends.smtp.EmailBackend":
 SWAGGER_SETTINGS = {
     "SHOW_REQUEST_HEADERS": True,
     "SECURITY_DEFINITIONS": {
-        "api_key": {"type": "apiKey", "in": "header", "name": "Authorization"}
+        "Private": {
+            "type": "apiKey",
+            "in": "header",
+            "name": "Authorization",
+            "description": "Every time you create a new Project Environment, an environment API key is automatically generated for you. This is all you need to pass in to get access to Flags etc. <br />Example value: <br />Token 884b1b4c6b4ddd112e7a0a139f09eb85e8c254ff",  # noqa
+        },
+        "Public": {
+            "type": "apiKey",
+            "in": "header",
+            "name": "X-Environment-Key",
+            "description": "Things like creating new flags, environments, toggle flags or indeed anything that is possible from the administrative front end. <br />Example value: <br />FFnVjhp7xvkT5oTLq4q788",  # noqa
+        },
     },
 }
+
 
 LOGIN_URL = "/admin/login/"
 LOGOUT_URL = "/admin/logout/"
@@ -326,7 +349,11 @@ LOGOUT_URL = "/admin/logout/"
 # Email associated with user that is used by front end for end to end testing purposes
 FE_E2E_TEST_USER_EMAIL = "nightwatch@solidstategroup.com"
 
-SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
+SECURE_PROXY_SSL_HEADER_NAME = env.str(
+    "SECURE_PROXY_SSL_HEADER_NAME", "HTTP_X_FORWARDED_PROTO"
+)
+SECURE_PROXY_SSL_HEADER_VALUE = env.str("SECURE_PROXY_SSL_HEADER_VALUE", "https")
+SECURE_PROXY_SSL_HEADER = (SECURE_PROXY_SSL_HEADER_NAME, SECURE_PROXY_SSL_HEADER_VALUE)
 
 # Chargebee
 ENABLE_CHARGEBEE = env.bool("ENABLE_CHARGEBEE", default=False)
@@ -438,17 +465,22 @@ ALLOW_REGISTRATION_WITHOUT_INVITE = env.bool(
 )
 
 # Django Axes settings
-ENABLE_AXES = env.bool("ENABLE_AXES", default=False)
+ENABLE_AXES = env.bool("ENABLE_AXES", default=True)
 if ENABLE_AXES:
     # must be the first item in the auth backends
     AUTHENTICATION_BACKENDS.insert(0, "axes.backends.AxesBackend")
+
     # must be the last item in the middleware stack
     MIDDLEWARE.append("core.middleware.axes.AxesMiddleware")
+
     AXES_COOLOFF_TIME = timedelta(minutes=env.int("AXES_COOLOFF_TIME", 15))
     AXES_BLACKLISTED_URLS = [
         "/admin/login/?next=/admin",
         "/admin/",
     ]
+    AXES_ONLY_USER_FAILURES = env.bool("AXES_ONLY_USER_FAILURES", True)
+    AXES_FAILURE_LIMIT = env.int("AXES_FAILURE_LIMIT", 10)
+
 
 # Sentry tracking
 SENTRY_SDK_DSN = env("SENTRY_SDK_DSN", default=None)
@@ -460,3 +492,52 @@ ENABLE_ADMIN_ACCESS_USER_PASS = env.bool("ENABLE_ADMIN_ACCESS_USER_PASS", defaul
 # Set this flag to prevent traits being stored for all Organisations within the application
 # Useful for data sensitive installations that dont want persistent traits.
 DEFAULT_ORG_STORE_TRAITS_VALUE = env.bool("DEFAULT_ORG_STORE_TRAITS_VALUE", True)
+
+# DynamoDB table name for storing environment
+ENVIRONMENTS_TABLE_NAME_DYNAMO = env.str("ENVIRONMENTS_TABLE_NAME_DYNAMO", None)
+
+# DynamoDB table name for storing identities
+IDENTITIES_TABLE_NAME_DYNAMO = env.str("IDENTITIES_TABLE_NAME_DYNAMO", None)
+
+# Front end environment variables
+API_URL = env("API_URL", default="/api/v1/")
+ASSET_URL = env("ASSET_URL", default="/")
+MAINTENANCE_MODE = env.bool("MAINTENANCE_MODE", default=False)
+PREVENT_SIGNUP = env.bool("PREVENT_SIGNUP", default=False)
+DISABLE_INFLUXDB_FEATURES = env.bool("DISABLE_INFLUXDB_FEATURES", default=True)
+FLAGSMITH_ANALYTICS = env.bool("FLAGSMITH_ANALYTICS", default=False)
+FLAGSMITH_ON_FLAGSMITH_API_URL = env("FLAGSMITH_ON_FLAGSMITH_API_URL", default=None)
+FLAGSMITH_ON_FLAGSMITH_API_KEY = env("FLAGSMITH_ON_FLAGSMITH_API_KEY", default=None)
+GOOGLE_ANALYTICS_API_KEY = env("GOOGLE_ANALYTICS_API_KEY", default=None)
+LINKEDIN_API_KEY = env("LINKEDIN_API_KEY", default=None)
+CRISP_CHAT_API_KEY = env("CRISP_CHAT_API_KEY", default=None)
+MIXPANEL_API_KEY = env("MIXPANEL_API_KEY", default=None)
+SENTRY_API_KEY = env("SENTRY_API_KEY", default=None)
+AMPLITUDE_API_KEY = env("AMPLITUDE_API_KEY", default=None)
+
+# Set this to enable create organisation for only superusers
+RESTRICT_ORG_CREATE_TO_SUPERUSERS = env.bool("RESTRICT_ORG_CREATE_TO_SUPERUSERS", False)
+# Slack Integration
+SLACK_CLIENT_ID = env.str("SLACK_CLIENT_ID", default="")
+SLACK_CLIENT_SECRET = env.str("SLACK_CLIENT_SECRET", default="")
+
+# MailerLite
+MAILERLITE_BASE_URL = env.str(
+    "MAILERLITE_BASE_URL", default="https://api.mailerlite.com/api/v2/"
+)
+MAILERLITE_API_KEY = env.str("MAILERLITE_API_KEY", None)
+MAILERLITE_NEW_USER_GROUP_ID = env.int("MAILERLITE_NEW_USER_GROUP_ID", None)
+
+# Additional functionality for using SAML in Flagsmith SaaS
+SAML_MODULE_PATH = env("SAML_MODULE_PATH", os.path.join(BASE_DIR, "saml"))
+SAML_INSTALLED = os.path.exists(SAML_MODULE_PATH)
+
+if SAML_INSTALLED:
+    SAML_REQUESTS_CACHE_LOCATION = "saml_requests_cache"
+    CACHES[SAML_REQUESTS_CACHE_LOCATION] = {
+        "BACKEND": "django.core.cache.backends.db.DatabaseCache",
+        "LOCATION": SAML_REQUESTS_CACHE_LOCATION,
+    }
+    INSTALLED_APPS += ["saml"]
+    SAML_ACCEPTED_TIME_DIFF = env.int("SAML_ACCEPTED_TIME_DIFF", default=60)
+    DJOSER["SERIALIZERS"]["current_user"] = "saml.serializers.SamlCurrentUserSerializer"

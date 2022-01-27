@@ -58,8 +58,12 @@
         .panel-heading {
             background-color: transparent;
         }
+        input[type="text"] {
+            background: $input-bg-alt;
+        }
     }
     &--nested {
+        box-shadow: none !important;
         border-top-left-radius: 0 !important;
         border-top-right-radius: 0 !important;
     }
@@ -71,6 +75,15 @@
     &__segments-achievements {
             border: 1px solid $bt-brand-primary !important;
 
+    }
+}
+.dark {
+    .panel {
+        &--transparent {
+            input[type="text"] {
+                background: $input-bg-dark;
+            }
+        }
     }
 }
 

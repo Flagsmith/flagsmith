@@ -1,5 +1,5 @@
 # Feature State Value Types
-from features.value_types import INTEGER, STRING, BOOLEAN
+from features.value_types import BOOLEAN, INTEGER, STRING
 
 
 def get_value_type(value: str) -> str:

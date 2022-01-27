@@ -64,7 +64,7 @@ const UsersPage = class extends Component {
 
         return (
             <div className="app-container container">
-                <Permission level="environment" permission="ADMIN" id={environmentId}>
+                <Permission level="environment" permission={Utils.getManageFeaturePermission()} id={environmentId}>
                     {({ permission }) => (
                         <div>
                             <div>
@@ -111,25 +111,22 @@ const UsersPage = class extends Component {
                             <FormGroup>
                                 <IdentityListProvider>
                                     {({ isLoading, identities, identitiesPaging }) => {
-                                        const fullReload = ((identitiesPaging && this.state.search === null && identitiesPaging.currentPage === 1) || !identities || !identities.length) && isLoading;
+                                        const fullReload = ((identitiesPaging && this.state.search === null && identitiesPaging.currentPage === 1) || !identities || (!identities.length && !this.state.search)) && isLoading;
                                         return (
                                             <div>
 
-                                                {isLoading && (fullReload) && (
-                                                    <div className="centered-container">
-                                                        <Loader/>
-                                                    </div>
-                                                )}
-                                                {!fullReload && (
+
                                                     <FormGroup>
                                                         <PanelSearch
                                                             renderSearchWithNoResults
                                                             id="users-list"
                                                             title="Users"
                                                             className="no-pad"
+                                                            isLoading={isLoading}
                                                             icon="ion-md-person"
                                                             items={identities}
                                                             paging={identitiesPaging}
+                                                            showExactFilter
                                                             nextPage={() => AppActions.getIdentitiesPage(environmentId, identitiesPaging.next)}
                                                             prevPage={() => AppActions.getIdentitiesPage(environmentId, identitiesPaging.previous)}
                                                             goToPage={page => AppActions.getIdentitiesPage(environmentId, `${Project.api}environments/${environmentId}/identities/?page=${page}`)}
@@ -175,7 +172,8 @@ const UsersPage = class extends Component {
                                                                     You have no users in your project{this.state.search ? <span> for <strong>"{this.state.search}"</strong></span> : ''}.
                                                                 </div>
                                                             )}
-                                                            filterRow={(flag, search) => flag.identifier && flag.identifier.indexOf(search) != -1}
+                                                            filterRow={(flag, search) => flag.identifier && flag.identifier.toLowerCase().indexOf(search) !== -1}
+                                                            search={this.state.search}
                                                             onChange={(e) => {
                                                                 this.setState({ search: Utils.safeParseEventValue(e) });
                                                                 AppActions.searchIdentities(this.props.match.params.environmentId, Utils.safeParseEventValue(e));
@@ -183,7 +181,6 @@ const UsersPage = class extends Component {
                                                             isLoading={isLoading}
                                                         />
                                                     </FormGroup>
-                                                )}
 
 
                                                 {permission && !preventAddTrait && (

@@ -27,7 +27,7 @@ const VariationValue = ({
                             placeholder="e.g. 'big' "
                           />
 )}
-                      tooltip={Constants.strings.REMOTE_CONFIG_DESCRIPTION}
+                      tooltip={Constants.strings.REMOTE_CONFIG_DESCRIPTION_VARIATION}
                       title="Value"
                     />
                 </div>

@@ -18,6 +18,7 @@ import DocumentationIcon from './svg/DocumentationIcon';
 import ArrowUpIcon from './svg/ArrowUpIcon';
 import RebrandBanner from './RebrandBanner';
 import UpgradeIcon from './svg/UpgradeIcon';
+import AccountSettingsPage from './pages/AccountSettingsPage';
 
 const App = class extends Component {
     static propTypes = {
@@ -143,8 +144,8 @@ const App = class extends Component {
     };
 
     onLogout = () => {
-        if (document.location.href.includes("saml?")) {
-            return
+        if (document.location.href.includes('saml?')) {
+            return;
         }
         this.context.router.history.replace('/');
     };
@@ -193,10 +194,15 @@ const App = class extends Component {
             return (
                 <AccountProvider onNoUser={this.onNoUser} onLogout={this.onLogout} onLogin={this.onLogin}>
                     {() => (
-                        <AppLoader />
+                        <div id="login-page">
+                            <AppLoader />
+                        </div>
                     )}
                 </AccountProvider>
             );
+        }
+        if (AccountStore.forced2Factor()) {
+            return <AccountSettingsPage/>;
         }
         return (
             <div>
@@ -268,7 +274,7 @@ const App = class extends Component {
                                                 {user ? (
                                                     <React.Fragment>
                                                         <nav className="my-2 my-md-0 hidden-xs-down">
-                                                            {organisation && !organisation.subscription && (
+                                                            {organisation && !organisation.subscription && flagsmith.hasFeature('payments_enabled') && (
                                                                 <a
                                                                   href="#"
                                                                   disabled={!this.state.manageSubscriptionLoaded}
@@ -293,19 +299,17 @@ const App = class extends Component {
                                                             <NavLink
                                                               id="account-settings-link"
                                                               activeClassName="active"
-                                                              className="nav-link p-2"
+                                                              className="nav-link"
                                                               to={projectId ? `/project/${projectId}/environment/${environmentId}/account` : '/account'}
                                                             >
                                                                 <UserSettingsIcon />
                                                                 Account
                                                             </NavLink>
-
-
                                                             {AccountStore.getOrganisationRole() === 'ADMIN' && (
                                                             <NavLink
                                                               id="org-settings-link"
                                                               activeClassName="active"
-                                                              className="nav-link p-2"
+                                                              className="nav-link"
                                                               to="/organisation-settings"
                                                             >
                                                                 <ion style={{ marginRight: 4 }} className="icon--primary ion ion-md-settings"/>
@@ -313,8 +317,12 @@ const App = class extends Component {
                                                             </NavLink>
                                                             )}
                                                         </nav>
-
-
+                                                        <div style={{ marginRight: 16, marginTop: 0 }} className="dark-mode">
+                                                            <Switch
+                                                              checked={flagsmith.hasFeature('dark_mode')} onChange={this.toggleDarkMode} onMarkup="Light"
+                                                              offMarkup="Dark"
+                                                            />
+                                                        </div>
                                                         <div className="org-nav">
                                                             <Popover
                                                               className="popover-right"
@@ -352,23 +360,18 @@ const App = class extends Component {
                                                                               }}
                                                                             />
                                                                         )}
-
-
-                                                                        <div className="pl-3 pr-3 mt-2 mb-2">
-                                                                            <Link
-                                                                              id="create-org-link" onClick={toggle}
-                                                                              to="/create"
-                                                                            >
-                                                                                <Button>
-
-                                                                                    Create Organisation <span
-                                                                                      className="ion-md-add"
-                                                                                    />
-
-                                                                                </Button>
-                                                                            </Link>
-                                                                        </div>
-
+                                                                        {!this.props.hasFeature('disable_create_org') && (!projectOverrides.superUserCreateOnly || (projectOverrides.superUserCreateOnly && AccountStore.model.is_superuser)) && (
+                                                                            <div className="pl-3 pr-3 mt-2 mb-2">
+                                                                                <Link
+                                                                                  id="create-org-link" onClick={toggle}
+                                                                                  to="/create"
+                                                                                >
+                                                                                    <Flex className="text-center">
+                                                                                        <Button>Create Organisation <span className="ion-md-add"/></Button>
+                                                                                    </Flex>
+                                                                                </Link>
+                                                                            </div>
+                                                                        )}
                                                                         <a
                                                                           id="logout-link" href="#"
                                                                           onClick={AppActions.logout}
@@ -383,13 +386,6 @@ const App = class extends Component {
                                                                     </div>
                                                                 )}
                                                             </Popover>
-                                                        </div>
-
-                                                        <div style={{ marginRight: -15, marginTop: 5 }} className="ml-4 dark-mode">
-                                                            <Switch
-                                                              checked={flagsmith.hasFeature('dark_mode')} onChange={this.toggleDarkMode} onMarkup="Light"
-                                                              offMarkup="Dark"
-                                                            />
                                                         </div>
                                                     </React.Fragment>
                                                 ) : (

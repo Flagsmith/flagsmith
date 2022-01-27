@@ -1,9 +1,17 @@
+import logging
 import typing
 from collections import defaultdict
 
 from django.conf import settings
 from influxdb_client import InfluxDBClient, Point
 from influxdb_client.client.write_api import SYNCHRONOUS
+from sentry_sdk import capture_exception
+from urllib3 import Retry
+from urllib3.exceptions import HTTPError
+
+logger = logging.getLogger(__name__)
+
+logger = logging.getLogger(__name__)
 
 url = settings.INFLUXDB_URL
 token = settings.INFLUXDB_TOKEN
@@ -15,7 +23,22 @@ range_bucket_mappings = {
     "7d": settings.INFLUXDB_BUCKET + "_downsampled_15m",
     "30d": settings.INFLUXDB_BUCKET + "_downsampled_1h",
 }
-influxdb_client = InfluxDBClient(url=url, token=token, org=influx_org)
+retries = Retry(connect=3, read=3, redirect=3)
+# Set a timeout to prevent threads being potentially stuck open due to network weirdness
+influxdb_client = InfluxDBClient(
+    url=url, token=token, org=influx_org, retries=retries, timeout=3
+)
+
+DEFAULT_DROP_COLUMNS = (
+    "organisation",
+    "organisation_id",
+    "type",
+    "project",
+    "project_id",
+    "environment",
+    "environment_id",
+    "host",
+)
 
 
 class InfluxDBWrapper:
@@ -35,29 +58,37 @@ class InfluxDBWrapper:
         self.records.append(point)
 
     def write(self):
-        self.write_api.write(bucket=settings.INFLUXDB_BUCKET, record=self.records)
+        try:
+            self.write_api.write(bucket=settings.INFLUXDB_BUCKET, record=self.records)
+        except HTTPError as e:
+            capture_exception(e)
 
     @staticmethod
     def influx_query_manager(
         date_range: str = "30d",
         date_stop: str = "now()",
-        drop_columns: str = "'organisation', 'organisation_id', 'type', 'project', 'project_id'",
+        drop_columns: typing.Tuple[str, ...] = DEFAULT_DROP_COLUMNS,
         filters: str = "|> filter(fn:(r) => r._measurement == 'api_call')",
         extra: str = "",
         bucket: str = read_bucket,
     ):
         query_api = influxdb_client.query_api()
+        drop_columns_input = str(list(drop_columns)).replace("'", '"')
 
         query = (
             f'from(bucket:"{bucket}")'
             f" |> range(start: -{date_range}, stop: {date_stop})"
             f" {filters}"
-            f" |> drop(columns: [{drop_columns}])"
+            f" |> drop(columns: {drop_columns_input})"
             f"{extra}"
         )
 
-        result = query_api.query(org=influx_org, query=query)
-        return result
+        try:
+            result = query_api.query(org=influx_org, query=query)
+            return result
+        except HTTPError as e:
+            capture_exception(e)
+            return []
 
 
 def get_events_for_organisation(organisation_id: id, date_range: str = "30d"):
@@ -71,7 +102,13 @@ def get_events_for_organisation(organisation_id: id, date_range: str = "30d"):
         filters=f'|> filter(fn:(r) => r._measurement == "api_call") \
         |> filter(fn: (r) => r["_field"] == "request_count") \
         |> filter(fn: (r) => r["organisation_id"] == "{organisation_id}")',
-        drop_columns='"organisation", "project", "project_id"',
+        drop_columns=(
+            "organisation",
+            "project",
+            "project_id",
+            "environment",
+            "environment_id",
+        ),
         extra="|> sum()",
         date_range=date_range,
     )
@@ -95,7 +132,6 @@ def get_event_list_for_organisation(organisation_id: int):
     results = InfluxDBWrapper.influx_query_manager(
         filters=f'|> filter(fn:(r) => r._measurement == "api_call") \
                   |> filter(fn: (r) => r["organisation_id"] == "{organisation_id}")',
-        drop_columns='"organisation", "organisation_id", "type", "project", "project_id"',
         extra="|> aggregateWindow(every: 24h, fn: sum)",
     )
     dataset = defaultdict(list)
@@ -119,7 +155,6 @@ def get_multiple_event_list_for_organisation(organisation_id: int):
     results = InfluxDBWrapper.influx_query_manager(
         filters=f'|> filter(fn:(r) => r._measurement == "api_call") \
                   |> filter(fn: (r) => r["organisation_id"] == "{organisation_id}")',
-        drop_columns='"organisation", "organisation_id", "type", "project", "project_id"',
         extra="|> aggregateWindow(every: 24h, fn: sum)",
     )
     if not results:
@@ -165,7 +200,6 @@ def get_multiple_event_list_for_feature(
                   |> filter(fn: (r) => r["_field"] == "request_count") \
                   |> filter(fn: (r) => r["environment_id"] == "{environment_id}") \
                   |> filter(fn: (r) => r["feature_id"] == "{feature_name}")',
-        drop_columns='"organisation", "organisation_id", "type", "project", "project_id"',
         extra=f'|> aggregateWindow(every: {period}, fn: sum, createEmpty: false) \
                    |> yield(name: "sum")',
     )
@@ -203,8 +237,8 @@ def get_top_organisations(date_range: str, limit: str = ""):
         bucket=bucket,
         filters='|> filter(fn:(r) => r._measurement == "api_call") \
                     |> filter(fn: (r) => r["_field"] == "request_count")',
-        drop_columns='"_start", "_stop", "_time"',
-        extra=f'|> group(columns: ["organisation"]) \
+        drop_columns=("_start", "_stop", "_time"),
+        extra='|> group(columns: ["organisation"]) \
               |> sum() \
               |> group() \
               |> sort(columns: ["_value"], desc: true) '
@@ -214,6 +248,13 @@ def get_top_organisations(date_range: str, limit: str = ""):
     dataset = {}
     for result in results:
         for record in result.records:
-            org_id = int(record.values["organisation"].partition("-")[0])
-            dataset[org_id] = record.get_value()
+            try:
+                org_id = int(record.values["organisation"].partition("-")[0])
+                dataset[org_id] = record.get_value()
+            except ValueError:
+                logger.warning(
+                    "Bad InfluxDB data found with organisation %s"
+                    % record.values["organisation"].partition("-")[0]
+                )
+
     return dataset

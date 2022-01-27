@@ -89,9 +89,10 @@ const Constants = {
         'PAYMENT': 'Payment Modal',
     },
 
-    adminPermissions: () => 'To use this feature you need the to be admin of the organisation.<br/>Please contact member of this organisation who has administrator privileges.',
-    projectPermissions: perm => `To use this feature you need the <i>${perm}</i> permission for this project.<br/>Please contact member of this project who has administrator privileges.`,
-    environmentPermissions: perm => `To use this feature you need the <i>${perm}</i> permission for this environment.<br/>Please contact member of this environment who has administrator privileges.`,
+    adminPermissions: () => 'To use this feature you need the to be admin of the organisation.<br/>Please contact a member of this organisation who has administrator privileges.',
+    projectPermissions: perm => `To use this feature you need the <i>${perm}</i> permission for this project.<br/>Please contact a member of this project who has administrator privileges.`,
+    environmentPermissions: perm => `To use this feature you need the <i>${perm}</i> permission for this environment.<br/>Please contact a member of this environment who has administrator privileges.`,
+    organisationPermissions: perm => `To use this feature you need the <i>${perm}</i> permission for this organisation.<br/>Please contact a member of this organisation who has administrator privileges.`,
     pages: {
         'ACCOUNT': 'Account Page',
         'AUDIT_LOG': 'Audit Log Page',
@@ -115,16 +116,18 @@ const Constants = {
         'USERS': 'Users Page',
     },
     strings: {
+        TAGS_DESCRIPTION: 'Organise your flags with tags, tagging your features as "<strong>protected</strong>" will prevent them from accidentally being deleted.',
         HIDE_FROM_SDKS_DESCRIPTION: 'Enable this if you want to prevent the Flagsmith API from returning this feature regardless of if it is enabled. Use this if you don\'t want users to see that a feature name whilst it is in development.',
         SEGMENT_OVERRIDES_DESCRIPTION: 'Set different values for your feature based on what segments users are in.',
-        MULTIVARIATE_DESCRIPTION: 'Features by default have 1 value and enabled state. Adding variations (or multivariates)  lets you do % spit abn tests.<br/>Values for variations are set per projects but their % values are configured per environment, segment and identity.',
+        MULTIVARIATE_DESCRIPTION: 'Features by default have 1 value and enabled state. Adding variations (or multivariates) lets you do % split a/b tests.<br/>Values for variations are set per projects but their % values are configured per environment, segment and identity.',
         ENVIRONMENT_OVERRIDE_DESCRIPTION: name => `Features are created once per project<br/>but their <strong>value</strong> and <strong>enabled state</strong> are set per environment.<br/>Saving this feature will override the <strong>${name}</strong> environment.`,
         IDENTITY_OVERRIDES_DESCRIPTION: 'See which identities have specific overridden values for this feature.<br/>Identity overrides take priority over segment overrides and environment values.',
-        REMOTE_CONFIG_DESCRIPTION: 'Features can have values as well as being simply on or off, E.g. a font size for a banner or an environment variable for a server.',
-        FEATURE_FLAG_DESCRIPTION: 'A feature that you can turn on or off per environment or user. E.g. instant messaging for a mobile app or an endpoint for an API.',
-        AUDIT_WEBHOOKS_DESCRIPTION: 'Receive a webhook for when an audit log is recieved.',
+        REMOTE_CONFIG_DESCRIPTION: 'Features can have values as well as being simply on or off, e.g. a font size for a banner or an environment variable for a server.',
+        REMOTE_CONFIG_DESCRIPTION_VARIATION: 'Features can have values as well as being simply on or off, e.g. a font size for a banner or an environment variable for a server.<br/>Variation values are set per project, the environment weight is per environment.',
+        FEATURE_FLAG_DESCRIPTION: 'A feature that you can turn on or off per environment or user, e.g. instant messaging for a mobile app or an endpoint for an API.',
+        AUDIT_WEBHOOKS_DESCRIPTION: 'Receive a webhook for when an audit log is received.',
         WEBHOOKS_DESCRIPTION: 'Receive a webhook for when feature values are changed.',
-        USER_PROPERTY_DESCRIPTION: 'The name of the user trait or custom property belonging to the user. E.g. firstName',
+        USER_PROPERTY_DESCRIPTION: 'The name of the user trait or custom property belonging to the user, e.g. firstName',
         ORGANISATION_DESCRIPTION: 'This is used to create a default organisation for team members to create and manage projects.',
         ENVIRONMENT_DESCRIPTION: 'Environments are versions of your projects, environments within a project all share the same features but can be individually turned on/off or have different values.',
     },
@@ -215,59 +218,78 @@ const Constants = {
         'USER': 'User',
     },
     exampleWebhook: `
- {
-  "data": {
-    "changed_by": "Some User",
-    "new_state": {
-      "enabled": true,
-      "environment": 23,
-      "feature": {
-        "created_date": "2020-02-25T22:11:16.355547Z",
-        "default_enabled": false,
-        "description": null,
-        "id": 2411,
-        "initial_value": "blue",
-        "name": "feature_name",
-        "project": 12,
-        "type": "FLAG|CONFIG"
-      },
-      "feature_segment": null,
-      "feature_state_value": null,
-      "id": 10430,
-      "identity": null,
-      "identity_identifier": null
+{
+ "data": {
+  "changed_by": "Ben Rometsch",
+  "new_state": {
+   "enabled": true,
+   "environment": {
+    "id": 23,
+    "name": "Development"
+   },
+   "feature": {
+    "created_date": "2021-02-10T20:03:43.348556Z",
+    "default_enabled": false,
+    "description": "Show html in a butter bar for certain users",
+    "id": 7168,
+    "initial_value": null,
+    "name": "butter_bar",
+    "project": {
+     "id": 12,
+     "name": "Flagsmith Website"
     },
-    "previous_state": {
-    "enabled": false,
-      "environment": 23,
-      "feature": {
-        "created_date": "2020-02-25T22:11:16.355547Z",
-        "default_enabled": false,
-        "description": null,
-        "id": 2411,
-        "initial_value": "red",
-        "name": "feature_name",
-        "project": 12,
-        "type": "FLAG|CONFIG"
-      },
-      "feature_segment": null,
-      "feature_state_value": null,
-      "id": 10430,
-      "identity": null,
-      "identity_identifier": null
-    },
-    "timestamp": "2020-03-07T13:59:07.040Z"
+    "type": "CONFIG"
+   },
+   "feature_segment": null,
+   "feature_state_value": "<strong>\\nYou are using the develop environment.\\n</strong>",
+   "identity": null,
+   "identity_identifier": null
   },
-  "event_type": "FLAG_UPDATED"
+  "previous_state": {
+   "enabled": false,
+   "environment": {
+    "id": 23,
+    "name": "Development"
+   },
+   "feature": {
+    "created_date": "2021-02-10T20:03:43.348556Z",
+    "default_enabled": false,
+    "description": "Show html in a butter bar for certain users",
+    "id": 7168,
+    "initial_value": null,
+    "name": "butter_bar",
+    "project": {
+     "id": 12,
+     "name": "Flagsmith Website"
+    },
+    "type": "CONFIG"
+   },
+   "feature_segment": null,
+   "feature_state_value": "<strong>\\nYou are using the develop environment.\\n</strong>",
+   "identity": null,
+   "identity_identifier": null
+  },
+  "timestamp": "2021-06-18T07:50:26.595298Z"
+ },
+ "event_type": "FLAG_UPDATED"
 }`,
     exampleAuditWebhook: `{
-  "created_date": "2020-02-23T17:30:57.006318Z",
-  "log": "New Flag / Remote Config created: my_feature",
-  "author": { "id": 3, "email": "user@domain.com", "first_name": "Kyle", "last_name": "Johnson" },
-  "environment": null,
-  "project": { "id": 6, "name": "Project name", "organisation": 1 },
-  "related_object_id": 6,
-  "related_object_type": "FEATURE"
+ "created_date": "2020-02-23T17:30:57.006318Z",
+ "log": "New Flag / Remote Config created: my_feature",
+ "author": {
+  "id": 3,
+  "email": "user@domain.com",
+  "first_name": "Kyle",
+  "last_name": "Johnson"
+ },
+ "environment": null,
+ "project": {
+  "id": 6,
+  "name": "Project name",
+  "organisation": 1
+ },
+ "related_object_id": 6,
+ "related_object_type": "FEATURE"
 }`,
 };
 module.exports = Constants;

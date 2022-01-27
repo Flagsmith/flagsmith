@@ -1,12 +1,10 @@
 from unittest import mock
 
-import app_analytics
 import pytest
 from app_analytics.track import (
     track_request_googleanalytics,
     track_request_influxdb,
 )
-from django.conf import settings
 
 
 @pytest.mark.parametrize(
@@ -78,6 +76,33 @@ def test_track_request_sends_data_to_influxdb_for_tracked_uris(
     assert (
         mock_influxdb.add_data_point.call_args_list[0][1]["tags"]["resource"]
         == expected_resource
+    )
+
+
+@mock.patch("app_analytics.track.InfluxDBWrapper")
+@mock.patch("app_analytics.track.Environment")
+def test_track_request_sends_host_data_to_influxdb(
+    MockEnvironment, MockInfluxDBWrapper, rf
+):
+    """
+    Verify that host is part of the data send to influxDB
+    """
+    # Given
+    environment_api_key = "test"
+    headers = {"X-Environment-Key": environment_api_key}
+
+    request = rf.get("/api/v1/flags/", headers=headers)
+
+    mock_influxdb = mock.MagicMock()
+    MockInfluxDBWrapper.return_value = mock_influxdb
+
+    # When
+    track_request_influxdb(request)
+
+    # Then
+    assert (
+        mock_influxdb.add_data_point.call_args_list[0][1]["tags"]["host"]
+        == "testserver"
     )
 
 
