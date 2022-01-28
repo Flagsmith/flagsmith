@@ -6,6 +6,7 @@ from environments.identities.models import Identity
 from environments.models import Environment
 from environments.permissions.models import UserEnvironmentPermission
 from environments.permissions.permissions import (
+    EnvironmentAdminPermission,
     EnvironmentPermissions,
     NestedEnvironmentPermissions,
 )
@@ -22,6 +23,46 @@ mock_request = mock.MagicMock()
 
 environment_permissions = EnvironmentPermissions()
 nested_environment_permissions = NestedEnvironmentPermissions()
+environment_admin_permissions = EnvironmentAdminPermission()
+
+
+def test_environment_admin_permissions_has_permissions_returns_false_for_non_admin_user(
+    environment, django_user_model, mocker
+):
+    # Given
+    user = django_user_model.objects.create(username="test_user")
+    mocked_request = mocker.MagicMock()
+    mocked_request.user = user
+
+    mocked_view = mocker.MagicMock()
+    mocked_view.kwargs = {"environment_api_key": environment.api_key}
+
+    # When
+    has_permission = environment_admin_permissions.has_permission(
+        mocked_request, mocked_view
+    )
+    assert has_permission is False
+
+
+def test_environment_admin_permissions_has_permissions_returns_true_for_admin_user(
+    environment, django_user_model, mocker
+):
+    # Given
+    user = django_user_model.objects.create(username="test_user")
+    UserEnvironmentPermission.objects.create(
+        user=user, environment=environment, admin=True
+    )
+    mocked_request = mocker.MagicMock()
+    mocked_request.user = user
+
+    mocked_view = mocker.MagicMock()
+    mocked_view.kwargs = {"environment_api_key": environment.api_key}
+
+    # When
+    has_permission = environment_admin_permissions.has_permission(
+        mocked_request, mocked_view
+    )
+    assert has_permission is True
 
 
 @pytest.mark.django_db
