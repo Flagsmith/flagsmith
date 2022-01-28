@@ -1,8 +1,8 @@
 from django.conf.urls import include, url
 from rest_framework_nested import routers
 
+from edge_api.identities.views import EdgeIdentityFeatureStateViewSet
 from features.views import (
-    EdgeIdentityFeatureStateViewSet,
     EnvironmentFeatureStateViewSet,
     IdentityFeatureStateViewSet,
 )

@@ -7,13 +7,8 @@ from django.core.cache import caches
 from django.utils.decorators import method_decorator
 from drf_yasg2 import openapi
 from drf_yasg2.utils import swagger_auto_schema
-from flag_engine.identities.builders import (
-    build_identity_dict,
-    build_identity_model,
-)
 from rest_framework import mixins, status, viewsets
 from rest_framework.decorators import action
-from rest_framework.exceptions import NotFound
 from rest_framework.generics import GenericAPIView, get_object_or_404
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.renderers import JSONRenderer
@@ -46,7 +41,6 @@ from .serializers import (
     FeatureStateSerializerBasic,
     FeatureStateSerializerCreate,
     FeatureStateSerializerFull,
-    FeatureStateSerializerWithEdgeIdentity,
     FeatureStateSerializerWithIdentity,
     FeatureStateValueSerializer,
     GetInfluxDataQuerySerializer,
@@ -130,49 +124,6 @@ class FeatureViewSet(viewsets.ModelViewSet):
         )
         serializer = FeatureInfluxDataSerializer(instance={"events_list": events_list})
         return Response(serializer.data)
-
-
-class EdgeIdentityFeatureStateViewSet(viewsets.ModelViewSet):
-    permission_classes = [IsAuthenticated, IdentityFeatureStatePermissions]
-    lookup_field = "featurestate_uuid"
-
-    serializer_class = FeatureStateSerializerWithEdgeIdentity
-
-    def initial(self, request, *args, **kwargs):
-        super().initial(request, *args, **kwargs)
-        self.identity = self._get_identity_from_request()
-
-    def _get_identity_from_request(self):
-        """
-        Get identity object from URL parameters in request.
-        """
-
-        identity_document = Identity.dynamo_wrapper.get_item_from_uuid(
-            self.kwargs["environment_api_key"],
-            self.kwargs["edge_identity_identity_uuid"],
-        )
-        return build_identity_model(identity_document)
-
-    def get_object(self):
-        featurestate_uuid = self.kwargs["featurestate_uuid"]
-        try:
-            featurestate = next(
-                filter(
-                    lambda fs: fs.featurestate_uuid == featurestate_uuid,
-                    self.identity.identity_features,
-                )
-            )
-        except StopIteration:
-            raise NotFound()
-        return featurestate
-
-    def list(self, request, *args, **kwargs):
-        serializer = self.get_serializer(self.identity.identity_features, many=True)
-        return Response(data=serializer.data, status=status.HTTP_200_OK)
-
-    def perform_destroy(self, instance):
-        self.identity.identity_features.remove(instance)
-        Identity.dynamo_wrapper.put_item(build_identity_dict(self.identity))
 
 
 @method_decorator(
