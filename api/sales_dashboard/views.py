@@ -20,7 +20,7 @@ from organisations.models import Organisation
 from projects.models import Project
 from users.models import FFAdminUser
 
-from .forms import EmailUsageForm, MaxSeatsForm
+from .forms import EmailUsageForm, MaxAPICallsForm, MaxSeatsForm
 
 OBJECTS_PER_PAGE = 50
 
@@ -103,11 +103,22 @@ def organisation_info(request, organisation_id):
         }
     )
 
+    max_api_calls_form = MaxAPICallsForm(
+        {
+            "max_api_calls": (
+                50000
+                if (organisation.has_subscription() is False)
+                else organisation.subscription.max_api_calls
+            )
+        }
+    )
+
     event_list, labels = get_event_list_for_organisation(organisation_id)
 
     context = {
         "organisation": organisation,
         "max_seats_form": max_seats_form,
+        "max_api_calls_form": max_api_calls_form,
         "event_list": event_list,
         "traits": mark_safe(json.dumps(event_list["traits"])),
         "identities": mark_safe(json.dumps(event_list["identities"])),
@@ -139,6 +150,16 @@ def update_seats(request, organisation_id):
     if max_seats_form.is_valid():
         organisation = get_object_or_404(Organisation, pk=organisation_id)
         max_seats_form.save(organisation)
+
+    return HttpResponseRedirect(reverse("sales_dashboard:index"))
+
+
+@staff_member_required
+def update_max_api_calls(request, organisation_id):
+    max_api_calls_form = MaxAPICallsForm(request.POST)
+    if max_api_calls_form.is_valid():
+        organisation = get_object_or_404(Organisation, pk=organisation_id)
+        max_api_calls_form.save(organisation)
 
     return HttpResponseRedirect(reverse("sales_dashboard:index"))
 

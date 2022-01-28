@@ -19,6 +19,11 @@ urlpatterns = [
         name="update_seats",
     ),
     path(
+        "organisations/<int:organisation_id>/update_max_api_calls",
+        views.update_max_api_calls,
+        name="update_max_api_calls",
+    ),
+    path(
         "email-usage/",
         staff_member_required(views.EmailUsage.as_view()),
         name="email-usage",

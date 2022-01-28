@@ -20,6 +20,14 @@ class MaxSeatsForm(forms.Form):
         organisation.subscription.save()
 
 
+class MaxAPICallsForm(forms.Form):
+    max_api_calls = forms.IntegerField()
+
+    def save(self, organisation, commit=True):
+        organisation.subscription.max_api_calls = self.cleaned_data["max_api_calls"]
+        organisation.subscription.save()
+
+
 class EmailUsageForm(forms.Form):
     email_address = forms.EmailField()
 
