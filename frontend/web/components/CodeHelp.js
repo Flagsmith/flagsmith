@@ -14,7 +14,7 @@ const getGithubLink = (key) => {
         case 'Java':
             return 'https://github.com/flagsmith/flagsmith-java-client/';
         case 'JavaScript':
-            return 'https://docs.flagsmith.com/clients/javascript/';
+            return 'https://github.com/flagsmith/flagsmith-js-client/';
         case 'Node JS':
             return 'https://github.com/flagsmith/flagsmith-nodejs-client/';
         case 'PHP':
@@ -24,7 +24,7 @@ const getGithubLink = (key) => {
         case 'REST':
             return 'https://docs.flagsmith.com/clients/rest/';
         case 'React Native':
-            return 'https://docs.flagsmith.com/clients/javascript/';
+            return 'https://github.com/flagsmith/flagsmith-js-client/';
         case 'Ruby':
             return 'https://github.com/flagsmith/flagsmith-ruby-client/';
         case 'Rust':
@@ -46,7 +46,7 @@ const getDocsLink = (key) => {
         case 'Java':
             return 'https://docs.flagsmith.com/clients/java/';
         case 'JavaScript':
-            return 'https://github.com/flagsmith/flagsmith-js-client/';
+            return 'https://docs.flagsmith.com/clients/javascript/';
         case 'Node JS':
             return 'https://docs.flagsmith.com/clients/node/';
         case 'PHP':
@@ -56,7 +56,7 @@ const getDocsLink = (key) => {
         case 'REST':
             return null;
         case 'React Native':
-            return 'https://github.com/flagsmith/flagsmith-js-client/';
+            return 'https://docs.flagsmith.com/clients/javascript/';
         case 'Ruby':
             return 'https://docs.flagsmith.com/clients/ruby/';
         case 'Rust':

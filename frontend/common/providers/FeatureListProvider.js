@@ -42,8 +42,8 @@ const FeatureListProvider = class extends Component {
         });
     }
 
-    toggleFlag = (i, environments) => {
-        AppActions.toggleFlag(i, environments);
+    toggleFlag = (i, environments, comment, environmentFlags) => {
+        AppActions.toggleFlag(i, environments, comment,environmentFlags);
     };
 
     setFlag = (i, flag, environments) => {
@@ -64,22 +64,9 @@ const FeatureListProvider = class extends Component {
                 };
             }),
         }), (newProjectFlag) => {
-            AppActions.editEnvironmentFlag(projectId, environmentId, flag, projectFlag, {
+            AppActions.editEnvironmentFlag(projectId, environmentId, flag, newProjectFlag, {
                 ...environmentFlag,
-                multivariate_feature_state_values: newProjectFlag.multivariate_options && newProjectFlag.multivariate_options.map((v) => {
-                    const matching = flag.multivariate_options && flag.multivariate_options.find(environmentValue => environmentValue.id === v.id);
-                    if (matching) {
-                        return ({
-                            id: matching.id,
-                            multivariate_feature_option: v.id,
-                            percentage_allocation: matching.default_percentage_allocation,
-                        });
-                    }
-                    return ({
-                        multivariate_feature_option: v.id,
-                        percentage_allocation: v.default_percentage_allocation,
-                    });
-                }),
+                multivariate_feature_state_values: flag.multivariate_options,
             }, segmentOverrides);
         });
     };

@@ -26,6 +26,37 @@ jobs:
               with:
                   fetch-depth: 0
 
+            - name: Cache npm
+              uses: actions/cache@v2
+              with:
+                  path: frontend/node_modules
+                  key: ${{ runner.os }}-node-${{ hashFiles('frontend/package-lock.json') }}
+                  restore-keys: |
+                      ${{ runner.os }}-node-
+
+            - name: Set up Python 3.8
+              uses: actions/setup-python@v2
+              with:
+                  python-version: 3.8
+
+            - name: Copy pip requirements
+              run: |
+                  cp api/requirements.txt .
+
+            - name: Restore VirtualEnv from cache
+              uses: syphar/restore-virtualenv@v1.2
+              id: cache-e2e-api
+
+            - name: Restore Pip from cache
+              uses: syphar/restore-pip-download-cache@v1
+              if: steps.cache-e2e-api.outputs.cache-hit != 'true'
+
+            - name: Install Dependencies
+              if: steps.cache-e2e-api.outputs.cache-hit != 'true'
+              run: |
+                  python -m pip install --upgrade pip
+                  pip install -r requirements.txt
+
             - name: Run API
               working-directory: api
               env:
@@ -35,23 +66,94 @@ jobs:
                   SENDGRID_API_KEY: ${{ secrets.SENDGRID_API_KEY }}
                   DJANGO_SETTINGS_MODULE: app.settings.test
                   FE_E2E_TEST_USER_EMAIL: nightwatch@solidstategroup.com
+                  SENTRY_SDK_DSN: ${{ secrets.SENTRY_SDK_DSN }}
               run: |
-                  python3.8 -m pip install --upgrade pip
-                  python3.8 -m pip install -r requirements.txt
-                  python3.8 manage.py migrate
-                  python3.8 manage.py runserver &
+                  python manage.py migrate
+                  python manage.py runserver &
 
             - name: Run E2E Tests with Chromedriver
               working-directory: frontend
               env:
-                  ENV: local
                   E2E_TEST_TOKEN_DEV: some-token
                   ENABLE_INFLUXDB_FEATURES: false
+                  ENV: local
+                  SLACK_TOKEN: ${{ secrets.SLACK_TOKEN }}
+                  STATIC_ASSET_CDN_URL: /
               run: |
-                  wget -q https://dl.google.com/linux/chrome/deb/pool/main/g/google-chrome-stable/google-chrome-stable_91.0.4472.114-1_amd64.deb
-                  sudo apt install --allow-downgrades -y ./google-chrome*.deb -f 
+                  wget -q https://dl.google.com/linux/chrome/deb/pool/main/g/google-chrome-stable/google-chrome-stable_96.0.4664.110-1_amd64.deb
+                  sudo apt install --allow-downgrades -y ./google-chrome*.deb -f
                   google-chrome --version
                   node -v
                   npm i
                   npm run env
                   npm run test
+
+    docker-build-unified:
+        if: github.event.pull_request.draft == false
+        name: Test unified docker image build
+        runs-on: ubuntu-latest
+
+        steps:
+            - name: Checkout PR branch
+              uses: actions/checkout@v2
+
+            - name: Set up QEMU
+              uses: docker/setup-qemu-action@v1
+
+            - name: Set up Docker Buildx
+              uses: docker/setup-buildx-action@v1
+
+            - name: Build
+              id: docker_build
+              uses: docker/build-push-action@v2
+              with:
+                  push: false
+                  tags: flagsmith/flagsmith:testing
+
+    docker-build-api:
+        if: github.event.pull_request.draft == false
+        name: Test api docker image build
+        runs-on: ubuntu-latest
+
+        steps:
+            - name: Checkout PR branch
+              uses: actions/checkout@v2
+
+            - name: Set up QEMU
+              uses: docker/setup-qemu-action@v1
+
+            - name: Set up Docker Buildx
+              uses: docker/setup-buildx-action@v1
+
+            - name: Build
+              id: docker_build
+              uses: docker/build-push-action@v2
+              with:
+                  file: api/Dockerfile
+                  context: api/
+                  push: false
+                  tags: flagsmith/flagsmith-api:testing
+
+    docker-build-frontend:
+        if: github.event.pull_request.draft == false
+        name: Test frontend docker image build
+        runs-on: ubuntu-latest
+
+        steps:
+            - name: Checkout PR branch
+              uses: actions/checkout@v2
+
+            - name: Set up QEMU
+              uses: docker/setup-qemu-action@v1
+
+            - name: Set up Docker Buildx
+              uses: docker/setup-buildx-action@v1
+
+            - name: Build
+              id: docker_build
+              uses: docker/build-push-action@v2
+              with:
+                  file: frontend/Dockerfile
+                  context: frontend/
+                  push: false
+                  tags: flagsmith/flagsmith-frontend:testing

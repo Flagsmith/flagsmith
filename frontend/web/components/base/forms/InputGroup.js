@@ -29,7 +29,25 @@ const FormGroup = class extends Component {
                     >
                         {this.props.tooltip}
                     </Tooltip>
-                ) : <label htmlFor={id} className="cols-sm-2 control-label">{props.title}</label>}
+                ) : (
+                    <Row>
+                        {!!props.title && (
+                        <Flex className="mr-4">
+                            <label htmlFor={id} className="cols-sm-2 control-label">{props.title}</label>
+                        </Flex>
+                        )}
+                        {!!this.props.rightComponent && (
+                            <div style={{
+                                marginBottom: '0.5rem',
+                            }}
+                            >
+                                {this.props.rightComponent}
+                            </div>
+                        )}
+
+                    </Row>
+
+                )}
 
                 {inputProps && inputProps.error && (
                     <span>

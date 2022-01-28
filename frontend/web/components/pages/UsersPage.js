@@ -64,7 +64,7 @@ const UsersPage = class extends Component {
 
         return (
             <div className="app-container container">
-                <Permission level="environment" permission="ADMIN" id={environmentId}>
+                <Permission level="environment" permission={Utils.getManageFeaturePermission()} id={environmentId}>
                     {({ permission }) => (
                         <div>
                             <div>
@@ -115,18 +115,14 @@ const UsersPage = class extends Component {
                                         return (
                                             <div>
 
-                                                {isLoading && (fullReload) && (
-                                                    <div className="centered-container">
-                                                        <Loader/>
-                                                    </div>
-                                                )}
-                                                {!fullReload && (
+
                                                     <FormGroup>
                                                         <PanelSearch
                                                             renderSearchWithNoResults
                                                             id="users-list"
                                                             title="Users"
                                                             className="no-pad"
+                                                            isLoading={isLoading}
                                                             icon="ion-md-person"
                                                             items={identities}
                                                             paging={identitiesPaging}
@@ -185,7 +181,6 @@ const UsersPage = class extends Component {
                                                             isLoading={isLoading}
                                                         />
                                                     </FormGroup>
-                                                )}
 
 
                                                 {permission && !preventAddTrait && (

@@ -6,6 +6,9 @@ import logging
 from django.utils.decorators import method_decorator
 from drf_yasg2 import openapi
 from drf_yasg2.utils import swagger_auto_schema
+from flag_engine.django_transform.document_builders import (
+    build_environment_document,
+)
 from rest_framework import mixins, status, viewsets
 from rest_framework.decorators import action
 from rest_framework.permissions import IsAuthenticated
@@ -19,6 +22,8 @@ from permissions.serializers import (
     MyUserObjectPermissionsSerializer,
     PermissionModelSerializer,
 )
+from webhooks.mixins import TriggerSampleWebhookMixin
+from webhooks.webhooks import WebhookType
 
 from .identities.traits.models import Trait
 from .identities.traits.serializers import (
@@ -192,6 +197,13 @@ class EnvironmentViewSet(viewsets.ModelViewSet):
 
         return Response(serializer.data)
 
+    @action(detail=True, methods=["GET"], url_path="document")
+    def get_document(self, request, api_key: str):
+        environment = Environment.objects.select_related(
+            "project", "project__organisation"
+        ).get(api_key=api_key)
+        return Response(build_environment_document(environment))
+
 
 class WebhookViewSet(
     mixins.ListModelMixin,
@@ -199,10 +211,13 @@ class WebhookViewSet(
     mixins.UpdateModelMixin,
     mixins.DestroyModelMixin,
     viewsets.GenericViewSet,
+    TriggerSampleWebhookMixin,
 ):
     serializer_class = WebhookSerializer
     pagination_class = None
     permission_classes = [IsAuthenticated, NestedEnvironmentPermissions]
+
+    webhook_type = WebhookType.ENVIRONMENT
 
     def get_queryset(self):
         return Webhook.objects.filter(

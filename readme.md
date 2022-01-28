@@ -1,5 +1,10 @@
 [![Feature Flag, Remote Config and A/B Testing platform, Flagsmith](static-files/hero.png)](https://www.flagsmith.com/)
 
+[![Stars](https://img.shields.io/github/stars/flagsmith/flagsmith)](https://github.com/Flagsmith/flagsmith/stargazers)
+[![Docker Pulls](https://img.shields.io/docker/pulls/flagsmith/flagsmith-api)](https://hub.docker.com/u/flagsmith)
+[![Docker Image Size](https://img.shields.io/docker/image-size/flagsmith/flagsmith)](https://hub.docker.com/u/flagsmith/flagsmith)
+[![Join the Discord chat](https://img.shields.io/discord/517647859495993347)](https://discord.gg/hFhxNtXzgm)
+
 [Flagsmith](https://www.flagsmith.com/) is an open source, fully featured, Feature Flag and Remote Config service. Use
 our hosted API, deploy to your own private cloud, or run on-premise.
 
@@ -9,11 +14,11 @@ Flagsmith makes it easy to create and manage features flags across web, mobile, 
 a section of code with a flag, and then use Flagsmith to toggle that feature on or off for different environments, users
 or user segments.
 
-Get up and running in 1 minute with:
+Get up and running in 1 minute via our [Self Hosted Repository](https://github.com/Flagsmith/self-hosted):
 
 ```bash
-git clone git@github.com:flagsmith/flagsmith.git
-docker-compose -f flagsmith/docker/docker-compose.yml up
+git clone git@github.com:flagsmith/self-hosted.git
+docker-compose -f self-hosted/docker-compose.yml up
 ```
 
 ![Flagsmith Screenshot](static-files/screenshot.png)

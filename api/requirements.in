@@ -39,5 +39,6 @@ django-lifecycle
 drf-writable-nested
 django-filter
 dataclasses
-git+git://github.com/Flagsmith/flagsmith-engine.git@main
+flagsmith-flag-engine
 boto3
+slack_sdk

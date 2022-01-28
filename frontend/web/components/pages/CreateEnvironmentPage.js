@@ -52,7 +52,7 @@ const CreateEnvironmentPage = class extends Component {
                                     </p>
                                     <ProjectProvider id={this.props.match.params.projectId} onSave={this.onSave}>
                                         {({ isLoading, isSaving, createEnv, error, project }) => {
-                                            if (project && project.environments && project.environments.length && !this.state.selectedEnv && this.props.hasFeature('clone_environment')) {
+                                            if (project && project.environments && project.environments.length && !this.state.selectedEnv) {
                                                 this.state.selectedEnv = project.environments[0];
                                             }
                                             return (
@@ -78,7 +78,7 @@ const CreateEnvironmentPage = class extends Component {
                                                                 />
                                                             </div>
                                                             <div className="col-md-6">
-                                                                {this.props.hasFeature('clone_environment') && project && project.environments && project.environments.length && (
+                                                                {project && project.environments && project.environments.length && (
                                                                     <InputGroup
                                                                       title="Clone from environment" component={(
                                                                           <Select

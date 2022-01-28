@@ -18,16 +18,19 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.throttling import ScopedRateThrottle
 
+from organisations.exceptions import OrganisationHasNoSubscription
 from organisations.models import (
     OrganisationRole,
     OrganisationWebhook,
     Subscription,
 )
-from organisations.permissions import (
+from organisations.permissions.models import OrganisationPermissionModel
+from organisations.permissions.permissions import (
     NestedOrganisationEntityPermission,
     OrganisationPermission,
 )
 from organisations.serializers import (
+    GetHostedPageForSubscriptionUpgradeSerializer,
     InfluxDataSerializer,
     MultiInvitesSerializer,
     OrganisationSerializerFull,
@@ -35,8 +38,14 @@ from organisations.serializers import (
     PortalUrlSerializer,
     UpdateSubscriptionSerializer,
 )
+from permissions.serializers import (
+    MyUserObjectPermissionsSerializer,
+    PermissionModelSerializer,
+)
 from projects.serializers import ProjectSerializer
 from users.serializers import UserIdSerializer
+from webhooks.mixins import TriggerSampleWebhookMixin
+from webhooks.webhooks import WebhookType
 
 logger = logging.getLogger(__name__)
 
@@ -55,6 +64,12 @@ class OrganisationViewSet(viewsets.ModelViewSet):
             return PortalUrlSerializer
         elif self.action == "get_influx_data":
             return InfluxDataSerializer
+        elif self.action == "get_hosted_page_url_for_subscription_upgrade":
+            return GetHostedPageForSubscriptionUpgradeSerializer
+        elif self.action == "permissions":
+            return PermissionModelSerializer
+        elif self.action == "my_permissions":
+            return MyUserObjectPermissionsSerializer
         return OrganisationSerializerFull
 
     def get_serializer_context(self):
@@ -144,15 +159,31 @@ class OrganisationViewSet(viewsets.ModelViewSet):
     def get_portal_url(self, request, pk):
         organisation = self.get_object()
         if not organisation.has_subscription():
-            return Response(
-                {"detail": "Organisation has no subscription"},
-                status=status.HTTP_400_BAD_REQUEST,
-            )
+            raise OrganisationHasNoSubscription()
         redirect_url = get_current_site(request)
         serializer = self.get_serializer(
             data={"url": organisation.subscription.get_portal_url(redirect_url)}
         )
         serializer.is_valid(raise_exception=True)
+        return Response(serializer.data)
+
+    @action(
+        detail=True,
+        methods=["POST"],
+        url_path="get-hosted-page-url-for-subscription-upgrade",
+    )
+    def get_hosted_page_url_for_subscription_upgrade(self, request, pk):
+        organisation = self.get_object()
+        if not organisation.has_subscription():
+            raise OrganisationHasNoSubscription()
+        serializer = self.get_serializer(
+            data={
+                "subscription_id": organisation.subscription.subscription_id,
+                **request.data,
+            }
+        )
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
         return Response(serializer.data)
 
     @action(detail=True, methods=["GET"], url_path="influx-data")
@@ -161,6 +192,24 @@ class OrganisationViewSet(viewsets.ModelViewSet):
             data={"events_list": get_multiple_event_list_for_organisation(pk)}
         )
         serializer.is_valid(raise_exception=True)
+        return Response(serializer.data)
+
+    @action(detail=False, methods=["GET"])
+    def permissions(self, request):
+        organisation_permissions = OrganisationPermissionModel.objects.all()
+        serializer = self.get_serializer(instance=organisation_permissions, many=True)
+        return Response(serializer.data)
+
+    @action(detail=True, methods=["GET"], url_path="my-permissions")
+    def my_permissions(self, request, pk):
+        org = self.get_object()
+        permission_keys = request.user.get_permission_keys_for_organisation(org)
+        serializer = self.get_serializer(
+            instance={
+                "permissions": permission_keys,
+                "admin": request.user.is_admin(org),
+            }
+        )
         return Response(serializer.data)
 
 
@@ -204,9 +253,11 @@ def chargebee_webhook(request):
     return Response(status=status.HTTP_200_OK)
 
 
-class OrganisationWebhookViewSet(viewsets.ModelViewSet):
+class OrganisationWebhookViewSet(viewsets.ModelViewSet, TriggerSampleWebhookMixin):
     serializer_class = OrganisationWebhookSerializer
     permission_classes = [IsAuthenticated, NestedOrganisationEntityPermission]
+
+    webhook_type = WebhookType.ORGANISATION
 
     def get_queryset(self):
         if "organisation_pk" not in self.kwargs:

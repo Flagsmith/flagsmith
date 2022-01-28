@@ -1,4 +1,4 @@
-from unittest import TestCase
+from unittest import TestCase, mock
 
 import pytest
 from django.db.utils import IntegrityError
@@ -8,16 +8,21 @@ from environments.permissions.models import (
     EnvironmentPermissionModel,
     UserEnvironmentPermission,
 )
-from organisations.models import (
-    Organisation,
-    OrganisationRole,
+from organisations.models import Organisation, OrganisationRole
+from organisations.permissions.models import (
+    UserOrganisationPermission,
+    UserPermissionGroupOrganisationPermission,
+)
+from organisations.permissions.permissions import (
+    CREATE_PROJECT,
+    ORGANISATION_PERMISSIONS,
 )
 from projects.models import (
     Project,
     ProjectPermissionModel,
     UserProjectPermission,
 )
-from users.models import FFAdminUser
+from users.models import FFAdminUser, UserPermissionGroup
 
 
 @pytest.mark.django_db
@@ -124,3 +129,141 @@ class FFAdminUserTestCase(TestCase):
         # Then
         with pytest.raises(IntegrityError):
             self.user.add_organisation(self.organisation, OrganisationRole.USER)
+
+    def test_has_organisation_permission_is_true_for_organisation_admin(self):
+        # Given
+        self.user.add_organisation(self.organisation, OrganisationRole.ADMIN)
+
+        # Then
+        assert all(
+            self.user.has_organisation_permission(
+                organisation=self.organisation, permission_key=permission_key
+            )
+            for permission_key, _ in ORGANISATION_PERMISSIONS
+        )
+
+    def test_has_organisation_permission_is_true_when_user_has_permission(self):
+        # Given
+        self.user.add_organisation(self.organisation)
+
+        for permission_key, _ in ORGANISATION_PERMISSIONS:
+            user_organisation_permission = UserOrganisationPermission.objects.create(
+                user=self.user, organisation=self.organisation
+            )
+            user_organisation_permission.permissions.through.objects.create(
+                permissionmodel_id=permission_key,
+                userorganisationpermission=user_organisation_permission,
+            )
+
+        # Then
+        assert all(
+            self.user.has_organisation_permission(
+                organisation=self.organisation, permission_key=permission_key
+            )
+            for permission_key, _ in ORGANISATION_PERMISSIONS
+        )
+
+    def test_has_organisation_permission_is_false_when_user_does_not_have_permission(
+        self,
+    ):
+        # Given
+        self.user.add_organisation(self.organisation)
+
+        # Then
+        assert not any(
+            self.user.has_organisation_permission(
+                organisation=self.organisation, permission_key=permission_key
+            )
+            for permission_key, _ in ORGANISATION_PERMISSIONS
+        )
+
+
+@pytest.mark.django_db
+@pytest.mark.parametrize(
+    "user_permission_keys, group_permission_keys, expected_keys",
+    (
+        ([], [], set()),
+        ([CREATE_PROJECT], [], {CREATE_PROJECT}),
+        ([], [CREATE_PROJECT], {CREATE_PROJECT}),
+        ([CREATE_PROJECT], [CREATE_PROJECT], {CREATE_PROJECT}),
+    ),
+)
+def test_get_permission_keys_for_organisation(
+    user_permission_keys, group_permission_keys, expected_keys
+):
+    # Given
+    user = FFAdminUser.objects.create(email="test@example.com")
+    organisation = Organisation.objects.create(name="Test org")
+    user.add_organisation(organisation)
+    group = UserPermissionGroup.objects.create(
+        name="Test group", organisation=organisation
+    )
+    group.users.add(user)
+
+    if user_permission_keys:
+        user_permission = UserOrganisationPermission.objects.create(
+            user=user, organisation=organisation
+        )
+        user_permission.set_permissions(user_permission_keys)
+
+    if group_permission_keys:
+        group_permission = UserPermissionGroupOrganisationPermission.objects.create(
+            group=group, organisation=organisation
+        )
+        group_permission.set_permissions(group_permission_keys)
+
+    # When
+    permission_keys = user.get_permission_keys_for_organisation(organisation)
+
+    # Then
+    assert permission_keys == expected_keys
+
+
+@pytest.mark.django_db
+def test_creating_a_user_calls_mailer_lite_subscribe(mocker):
+    # Given
+    mailer_lite_mock = mocker.patch("users.models.mailer_lite")
+    # When
+    user = FFAdminUser.objects.create(
+        email="test@mail.com",
+    )
+    # Then
+    mailer_lite_mock.subscribe.assert_called_with(user)
+
+
+@pytest.mark.django_db
+def test_user_add_organisation_does_not_call_mailer_lite_subscribe_for_unpaid_organisation(
+    mocker,
+):
+    user = FFAdminUser.objects.create(email="test@example.com")
+    organisation = Organisation.objects.create(name="Test Organisation")
+    mailer_lite_mock = mocker.patch("users.models.mailer_lite")
+    mocker.patch(
+        "organisations.models.Organisation.is_paid",
+        new_callable=mock.PropertyMock,
+        return_value=False,
+    )
+    # When
+    user.add_organisation(organisation, OrganisationRole.USER)
+
+    # Then
+    mailer_lite_mock.subscribe.assert_not_called()
+
+
+@pytest.mark.django_db
+def test_user_add_organisation_calls_mailer_lite_subscribe_for_paid_organisation(
+    mocker,
+):
+    mailer_lite_mock = mocker.patch("users.models.mailer_lite")
+    user = FFAdminUser.objects.create(email="test@example.com")
+    organisation = Organisation.objects.create(name="Test Organisation")
+    mocker.patch(
+        "organisations.models.Organisation.is_paid",
+        new_callable=mock.PropertyMock,
+        return_value=True,
+    )
+    # When
+    user.add_organisation(organisation, OrganisationRole.USER)
+
+    # Then
+    mailer_lite_mock.subscribe.assert_called_with(user)

@@ -12,7 +12,8 @@ import ValueEditor from '../ValueEditor';
 import VariationValue from '../mv/VariationValue';
 import AddVariationButton from '../mv/AddVariationButton';
 import VariationOptions from '../mv/VariationOptions';
-
+import FlagOwners from '../FlagOwners';
+import FeatureListStore from '../../../common/stores/feature-list-store'
 const FEATURE_ID_MAXLENGTH = Constants.forms.maxLength.FEATURE_ID;
 
 const CreateFlag = class extends Component {
@@ -32,7 +33,7 @@ const CreateFlag = class extends Component {
             default_enabled: enabled,
             hide_from_client,
             name,
-            tags,
+            tags: tags || [],
             initial_value: typeof feature_state_value === 'undefined' ? undefined : Utils.getTypedValue(feature_state_value),
             description,
             multivariate_options: _.cloneDeep(multivariate_options),
@@ -142,6 +143,8 @@ const CreateFlag = class extends Component {
                 environmentId,
             });
         } else {
+            FeatureListStore.isSaving = true;
+            FeatureListStore.trigger("change")
             !isSaving && name && func(this.props.projectId, this.props.environmentId, {
                 name,
                 initial_value,
@@ -325,6 +328,7 @@ const CreateFlag = class extends Component {
                     <FormGroup className="mb-4 mr-3 ml-3" >
                         <InputGroup
                           title={identity ? 'Tags' : 'Tags (optional)'}
+                          tooltip={Constants.strings.TAGS_DESCRIPTION}
                           component={(
                               <AddEditTags
                                 readOnly={!!identity} projectId={this.props.projectId} value={this.state.tags}
@@ -333,6 +337,16 @@ const CreateFlag = class extends Component {
                             )}
                         />
                     </FormGroup>
+                )}
+                {!identity && projectFlag && (
+                    <Permission level="project" permission="ADMIN" id={this.props.projectId}>
+                        {({ permission: projectAdmin }) => projectAdmin && (
+                            <FormGroup className="mb-4 mr-3 ml-3" >
+                                <FlagOwners projectId={this.props.projectId} id={projectFlag.id}/>
+                            </FormGroup>
+
+                        )}
+                    </Permission>
                 )}
                 <FormGroup className="mb-4 mr-3 ml-3" >
                     <InputGroup
@@ -349,7 +363,7 @@ const CreateFlag = class extends Component {
                       placeholder="e.g. 'This determines what size the header is' "
                     />
                 </FormGroup>
-                {this.props.hasFeature('archive_flags') && !identity && (
+                {!identity && isEdit && (
                     <FormGroup className="mb-4 mr-3 ml-3" >
                         <InputGroup
                           value={description}
@@ -539,10 +553,10 @@ const CreateFlag = class extends Component {
                                         </TabItem>
                                         <TabItem data-test="overrides" tabLabel="Overrides">
                                             {!identity && isEdit && (
-                                                <Permission level="project" permission="ADMIN" id={this.props.projectId}>
-                                                    {({ permission: projectAdmin }) => projectAdmin && (
+                                                <FormGroup className="mb-4 mr-3 ml-3">
+                                                <Permission level="environment" permission={Utils.getManageFeaturePermission()} id={this.props.environmentId}>
+                                                    {({ permission: environmentAdmin }) => environmentAdmin ? (
 
-                                                        <FormGroup className="mb-4 mr-3 ml-3">
                                                             <Panel
                                                               icon="ion-ios-settings"
                                                               title={(
@@ -579,9 +593,23 @@ const CreateFlag = class extends Component {
                                                                 )}
 
                                                             </Panel>
-                                                        </FormGroup>
+                                                    ) : (
+                                                        <Panel
+                                                            icon="ion-ios-settings"
+                                                            title={(
+                                                                <Tooltip
+                                                                    title={<h6 className="mb-0">Segment Overrides <span className="icon ion-ios-information-circle"/></h6>}
+                                                                    place="right"
+                                                                >
+                                                                    {Constants.strings.SEGMENT_OVERRIDES_DESCRIPTION}
+                                                                </Tooltip>
+                                                            )}
+                                                        >
+                                                            <div dangerouslySetInnerHTML={{__html:Constants.environmentPermissions(Utils.getManageFeaturePermission())}}/>
+                                                        </Panel>
                                                     )}
                                                 </Permission>
+                                                </FormGroup>
                                             )}
                                             {
                                                 !identity
@@ -640,14 +668,14 @@ const CreateFlag = class extends Component {
                                                           renderRow={({ id, feature_state_value, enabled, identity }) => (
                                                               <Row
                                                                 onClick={() => {
-                                                                    window.open(`${document.location.origin}/project/${this.props.projectId}/environment/${this.props.environmentId}/users/${identity.identifier}/${identity.id}`, '_blank');
+                                                                    window.open(`${document.location.origin}/project/${this.props.projectId}/environment/${this.props.environmentId}/users/${identity.identifier}/${identity.id}?flag=${projectFlag.name}`, '_blank');
                                                                 }} space className="list-item cursor-pointer"
                                                                 key={id}
                                                               >
                                                                   <Flex>
                                                                       {identity.identifier}
                                                                   </Flex>
-                                                                  <Switch checked={enabled}/>
+                                                                  <Switch disabled checked={enabled}/>
                                                                   <div className="ml-2">
                                                                       {feature_state_value && (
                                                                       <FeatureValue
@@ -659,11 +687,11 @@ const CreateFlag = class extends Component {
 
                                                                   <a
                                                                     target="_blank"
-                                                                    href={`/project/${this.props.projectId}/environment/${this.props.environmentId}/users/${identity.identifier}/${identity.id}`}
+                                                                    href={`/project/${this.props.projectId}/environment/${this.props.environmentId}/users/${identity.identifier}/${identity.id}?flag=${projectFlag.name}`}
                                                                     className="ml-2 btn btn-link btn--link" onClick={() => {
                                                                     }}
                                                                   >
-                                                                        View user
+                                                                        Edit
                                                                   </a>
                                                               </Row>
                                                           )}

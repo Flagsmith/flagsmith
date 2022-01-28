@@ -47,9 +47,16 @@ const ProjectSelectPage = class extends Component {
                                         </p>
                                     </div>
                                     <div className="col-md-3 pl-0 pr-0">
-                                        <Button className="float-right btn__md-full mb-md-0 mb-3" onClick={this.newProject}>
-                                            Create Project
-                                        </Button>
+                                        <Permission level="organisation" permission="CREATE_PROJECT" id={AccountStore.getOrganisation().id}>
+                                            {({ permission, isLoading }) => {
+                                                const canCreate = permission;
+                                                return Utils.renderWithPermission(permission, Constants.environmentPermissions('Create Project'), (
+                                                    <Button disabled={!canCreate} className="float-right btn__md-full mb-md-0 mb-3" onClick={this.newProject}>
+                                                        Create Project
+                                                    </Button>
+                                                ));
+                                            }}
+                                        </Permission>
                                     </div>
                                 </div>
                             ) : isAdmin ? (
@@ -112,16 +119,25 @@ const ProjectSelectPage = class extends Component {
                                               <div className="text-center">
                                                   <div className="text-center">
                                                       <div>
-                                                          <button
-                                                            onClick={this.newProject}
-                                                            className="btn btn-primary btn-lg"
-                                                            data-test="create-first-project-btn"
-                                                            id="create-first-project-btn"
-                                                          >
-                                                              <span className="icon ion-ios-rocket"/>
-                                                              {' '}
-                                                              Create a project
-                                                          </button>
+                                                          <Permission level="organisation" permission="CREATE_PROJECT" id={AccountStore.getOrganisation().id}>
+                                                              {({ permission, isLoading }) => {
+                                                                  const canCreate = permission;
+                                                                  return Utils.renderWithPermission(permission, Constants.environmentPermissions('Create Project'), (
+                                                                      <button
+                                                                        disabled={!canCreate}
+                                                                        onClick={this.newProject}
+                                                                        className="btn btn-primary btn-lg"
+                                                                        data-test="create-first-project-btn"
+                                                                        id="create-first-project-btn"
+                                                                      >
+                                                                          <span className="icon ion-ios-rocket"/>
+                                                                          {' '}
+                                                                          Create a project
+                                                                      </button>
+                                                                  ));
+                                                              }}
+                                                          </Permission>
+
                                                       </div>
                                                   </div>
                                               </div>
@@ -142,4 +158,4 @@ const ProjectSelectPage = class extends Component {
 
 ProjectSelectPage.propTypes = {};
 
-module.exports = ProjectSelectPage;
+module.exports = ConfigProvider(ProjectSelectPage);

@@ -2,13 +2,30 @@ import React, { Component } from 'react';
 import EnvironmentSelect from '../EnvironmentSelect';
 import _data from '../../../common/data/base/_data';
 import ErrorMessage from '../ErrorMessage';
+import Select from "react-select";
 
 const CreateEditIntegration = class extends Component {
     static displayName = 'CreateEditIntegration'
 
     constructor(props, context) {
         super(props, context);
-        this.state = { data: this.props.data ? { ...this.props.data } : {} };
+        const fields = _.cloneDeep(this.props.integration.fields)
+        this.state = { fields, data: this.props.data ? { ...this.props.data } : {fields} };
+        if (this.props.id === "slack" && this.state.data.flagsmithEnvironment) {
+            _data.get(`${Project.api}environments/${this.state.data.flagsmithEnvironment}/integrations/${this.props.id}-channels?limit=1000`)
+                .then((res)=>{
+                    this.state.data.enabled = true
+                    this.state.fields = this.state.fields || []
+                    this.state.fields.push({
+                        key:"channel_id",
+                        label: "Channel",
+                        options:((res && res.channels)||[]).map((v)=>(
+                            {label:v.channel_name,value:v.channel_id}
+                        ))
+                    })
+                    this.setState({authorised:true})
+                })
+        }
     }
 
 
@@ -26,20 +43,42 @@ const CreateEditIntegration = class extends Component {
     }
 
     submit = (e) => {
+        const isOauth = this.props.integration.isOauth && !this.state.authorised;
+        const isEdit = this.props.data && this.props.data.id;
         Utils.preventDefault(e);
         if (this.state.isLoading) {
             return;
         }
         this.setState({ isLoading: true });
+        const handleOauthSignature = (res, isProject)=> {
+            const signature = res && res.signature;
+            if (signature) {
+                const postfix = `?redirect_url=${encodeURIComponent(`${document.location.href}?environment=${this.state.data.flagsmithEnvironment}&configure=${this.props.id}`)}&signature=${signature}`
+                document.location = isProject?
+                    `${Project.api}projects/${this.props.projectId}/integrations/${this.props.id}/oauth/${postfix}`
+                    :
+                    `${Project.api}environments/${this.state.data.flagsmithEnvironment}/integrations/${this.props.id}/oauth/${postfix}`
+            }
+
+        }
         if (this.props.integration.perEnvironment) {
-            if (this.props.data) {
+            if (isOauth) {
+                return _data.get(`${Project.api}environments/${this.state.data.flagsmithEnvironment}/integrations/${this.props.id}/signature/`, {
+                    redirect_url: document.location.href,
+                }).then((res)=>handleOauthSignature(res, false))
+            }
+            if (isEdit) {
                 _data.put(`${Project.api}environments/${this.state.data.flagsmithEnvironment}/integrations/${this.props.id}/${this.props.data.id}/`, this.state.data)
                     .then(this.onComplete).catch(this.onError);
             } else {
                 _data.post(`${Project.api}environments/${this.state.data.flagsmithEnvironment}/integrations/${this.props.id}/`, this.state.data)
                     .then(this.onComplete).catch(this.onError);
             }
-        } else if (this.props.data) {
+        } else if (isOauth){
+            return _data.get(`${Project.api}projects/${this.props.projectId}/integrations/${this.props.id}/signature/`, {
+                redirect_url: document.location.href,
+            }).then((res)=>handleOauthSignature(res, true))
+        } else if (isEdit) {
             _data.put(`${Project.api}projects/${this.props.projectId}/integrations/${this.props.id}/${this.props.data.id}/`, this.state.data)
                 .then(this.onComplete).catch(this.onError);
         } else {
@@ -74,12 +113,12 @@ const CreateEditIntegration = class extends Component {
               id="create-project-modal" onSubmit={this.submit}
             >
                 {this.props.integration.perEnvironment && (
-                  <div className="mb-2">
-                      <label>Flagsmith Environment</label>
-                      <EnvironmentSelect readOnly={!!this.props.data || this.props.readOnly} value={this.state.data.flagsmithEnvironment} onChange={environment => this.update('flagsmithEnvironment', environment)}/>
-                  </div>
+                <div className="mb-2">
+                    <label>Flagsmith Environment</label>
+                    <EnvironmentSelect readOnly={!!this.props.data || this.props.readOnly} value={this.state.data.flagsmithEnvironment} onChange={environment => this.update('flagsmithEnvironment', environment)}/>
+                </div>
                 )}
-                {this.props.integration.fields.map(field => (
+                {this.state.fields && this.state.fields.map(field => (
                   <>
                       <div>
                           <label htmlFor={field.label.replace(/ /g, '')}>
@@ -94,6 +133,22 @@ const CreateEditIntegration = class extends Component {
                           <div className="mb-2">
                               {this.state.data[field.key]}
                           </div>
+                      ) : field.options? (
+                          <div                             className="full-width mb-2">
+                              <Select
+                                  onChange={(v) => {
+                                      this.update(field.key, v.value)
+                                  }}
+                                  options={field.options}
+                                  value={this.state.data[field.key] && field.options.find((v)=>v.value===this.state.data[field.key]) ? {
+                                      label: field.options.find((v)=>v.value===this.state.data[field.key]).label,
+                                      value: this.state.data[field.key],
+                                  } : {
+                                      label: 'Please select',
+                                  }}
+                              />
+                          </div>
+
                       ) : (
                           <Input
                             id={field.label.replace(/ /g, '')}
@@ -112,7 +167,7 @@ const CreateEditIntegration = class extends Component {
                 {!this.props.readOnly && (
                     <div className="text-right">
                         <Button disabled={this.state.isLoading} type="submit">
-                          Save
+                            {this.props.integration.isOauth && !this.state.authorised ? 'Authorise' : 'Save'}
                         </Button>
                     </div>
                 )}
