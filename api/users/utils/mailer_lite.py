@@ -18,12 +18,13 @@ class MailerLiteBaseClient:
         "Content-Type": "application/json",
     }
 
-    def __init__(self):
+    def __init__(self, session: requests.Session = None):
         self.base_url = settings.MAILERLITE_BASE_URL
+        self.session = session or requests.Session()
 
     def _post(self, data):
         url = self.base_url + self.resource
-        requests.post(url, data=json.dumps(data), headers=self.request_headers)
+        self.session.post(url, data=json.dumps(data), headers=self.request_headers)
 
 
 class MailerLite(MailerLiteBaseClient):
@@ -55,8 +56,8 @@ class MailerLite(MailerLiteBaseClient):
 class BatchSubscribe(MailerLiteBaseClient, AbstractContextManager):
     resource = "batch"
 
-    def __init__(self, batch_size: int = MAX_BATCH_SIZE):
-        super().__init__()
+    def __init__(self, *args, batch_size: int = MAX_BATCH_SIZE, **kwargs):
+        super().__init__(*args, **kwargs)
         self._batch = []
 
         if batch_size > MAX_BATCH_SIZE:
