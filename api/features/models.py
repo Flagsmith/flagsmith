@@ -433,9 +433,7 @@ class FeatureState(LifecycleModel, models.Model):
             INTEGER: "integer_value",
             BOOLEAN: "boolean_value",
             STRING: "string_value",
-        }.get(
-            fsv_type, "string_value"
-        )  # The default was chosen for backwards compatibility
+        }.get(fsv_type)
 
     @staticmethod
     def get_featue_state_value_type(value) -> str:
