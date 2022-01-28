@@ -56,12 +56,11 @@ def test_batch_subscribe__subscribe_calls_batch_send_correct_number_of_times(moc
     )
 
     users = [user1, user2, user3]
-    mocker.patch("users.utils.mailer_lite.MAX_BATCH_SIZE", 2)
 
     mocked_request = mocker.patch("users.utils.mailer_lite.requests")
 
     # When
-    with BatchSubscribe() as batch:
+    with BatchSubscribe(max_batch_size=2) as batch:
         for user in users:
             batch.subscribe(user)
     # Then

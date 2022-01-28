@@ -8,7 +8,7 @@ from django.conf import settings
 from users import models
 from util.util import postpone
 
-MAX_BATCH_SIZE = 50
+DEFAULT_MAX_BATCH_SIZE = 50
 
 
 class MailerLiteBaseClient:
@@ -55,9 +55,10 @@ class MailerLite(MailerLiteBaseClient):
 class BatchSubscribe(MailerLiteBaseClient, AbstractContextManager):
     resource = "batch"
 
-    def __init__(self):
+    def __init__(self, max_batch_size: int = DEFAULT_MAX_BATCH_SIZE):
         super().__init__()
         self._batch = []
+        self.max_batch_size = max_batch_size
 
     def _get_raw_subscribe_request(self, user):
         return {
@@ -72,7 +73,7 @@ class BatchSubscribe(MailerLiteBaseClient, AbstractContextManager):
         self._batch.clear()
 
     def subscribe(self, user: "models.FFAdminUser"):
-        if len(self._batch) >= MAX_BATCH_SIZE:
+        if len(self._batch) >= self.max_batch_size:
             self.batch_send()
         self._batch.append(self._get_raw_subscribe_request(user))
 
