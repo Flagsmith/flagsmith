@@ -18,10 +18,7 @@ from features.multivariate.models import (
     MultivariateFeatureOption,
     MultivariateFeatureStateValue,
 )
-from features.serializers import (
-    FeatureStateSerializerFull,
-    FeatureStateValueSerializer,
-)
+from features.serializers import FeatureStateValueSerializer
 
 engine_multi_fs_value_schema = MultivariateFeatureStateValueSchema()
 
@@ -60,14 +57,14 @@ class FeatureStateValueEdgeIdentityField(serializers.Field):
         return instance
 
     def to_internal_value(self, data):
-        feature_state_value_dict = FeatureState().generate_feature_state_value_data(
-            data
-        )
-
-        data = {**feature_state_value_dict}
-        fs_value_serializer = FeatureStateValueSerializer(data=data)
+        fsv_type = FeatureState.get_featue_state_value_type(data)
+        feature_state_value_dict = {
+            "type": fsv_type,
+            FeatureState.get_feature_state_key_name(fsv_type): data,
+        }
+        fs_value_serializer = FeatureStateValueSerializer(data=feature_state_value_dict)
         fs_value_serializer.is_valid(raise_exception=True)
-        return FeatureStateValue(**data).value
+        return FeatureStateValue(**feature_state_value_dict).value
 
 
 class EdgeFeatureField(serializers.Field):
@@ -128,10 +125,3 @@ class EdgeIdentityFeatureStateSerializer(serializers.Serializer):
             ) from e
         Identity.dynamo_wrapper.put_item(identity_dict)
         return self.instance
-
-
-class FeatureStateSerializerFullWithIdentity(FeatureStateSerializerFull):
-    identity_identifier = serializers.SerializerMethodField()
-
-    def get_identity_identifier(self, instance):
-        return instance.identity.identifier if instance.identity else None

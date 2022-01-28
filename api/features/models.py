@@ -428,7 +428,7 @@ class FeatureState(LifecycleModel, models.Model):
         return {"type": type, key_name: parse_func(value)}
 
     @staticmethod
-    def get_feature_state_key_name(fsv_type):
+    def get_feature_state_key_name(fsv_type) -> str:
         return {
             INTEGER: "integer_value",
             BOOLEAN: "boolean_value",
@@ -436,6 +436,14 @@ class FeatureState(LifecycleModel, models.Model):
         }.get(
             fsv_type, "string_value"
         )  # The default was chosen for backwards compatibility
+
+    @staticmethod
+    def get_featue_state_value_type(value) -> str:
+        fsv_type = type(value).__name__
+        accepted_types = (STRING, INTEGER, BOOLEAN)
+
+        # Default to string if not an anticipate type value to keep backwards compatibility.
+        return fsv_type if fsv_type in accepted_types else STRING
 
     def generate_feature_state_value_data(self, value):
         """
@@ -445,12 +453,9 @@ class FeatureState(LifecycleModel, models.Model):
         :param value: feature state value of variable type
         :return: dictionary to pass directly into feature state value serializer
         """
-        fsv_type = type(value).__name__
-        accepted_types = (STRING, INTEGER, BOOLEAN)
-
+        fsv_type = self.get_featue_state_value_type(value)
         return {
-            # Default to string if not an anticipate type value to keep backwards compatibility.
-            "type": fsv_type if fsv_type in accepted_types else STRING,
+            "type": fsv_type,
             "feature_state": self.id,
             self.get_feature_state_key_name(fsv_type): value,
         }
