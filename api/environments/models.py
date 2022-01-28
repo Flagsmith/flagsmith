@@ -181,7 +181,7 @@ class EnvironmentAPIKey(LifecycleModel):
     active = models.BooleanField(default=True)
 
     @property
-    def is_valid(self):
+    def is_valid(self) -> bool:
         return self.active and (not self.expires_at or self.expires_at > timezone.now())
 
     @hook(AFTER_SAVE)

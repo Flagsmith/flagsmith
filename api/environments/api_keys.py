@@ -16,4 +16,4 @@ def generate_api_key(prefix: str = ""):
     Generate an API key that is unique across both Environment.api_key and
     EnvironmentAPIKey.key
     """
-    return "%s%s" % (prefix, create_hash())
+    return f"{prefix}{create_hash()}"
