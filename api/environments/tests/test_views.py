@@ -539,14 +539,23 @@ class WebhookViewSetTestCase(TestCase):
     def test_trigger_sample_webhook_calls_trigger_sample_webhook_method_with_correct_arguments(
         self, trigger_sample_webhook
     ):
+        # Given
         mocked_response = mock.MagicMock(status_code=200)
         trigger_sample_webhook.return_value = mocked_response
         url = reverse(
             "api-v1:environments:environment-webhooks-trigger-sample-webhook",
             args=[self.environment.api_key],
         )
-
         data = {"url": self.valid_webhook_url}
+
+        # When
+        response = self.client.post(url, data)
+
+        # Then
+        assert response.json()["message"] == "Request returned 200"
+        assert response.status_code == status.HTTP_200_OK
+        args, _ = trigger_sample_webhook.call_args
+        assert args[0].url == self.valid_webhook_url
 
 
 @pytest.mark.django_db
@@ -569,12 +578,6 @@ class EnvironmentAPIKeyViewSetTestCase(TestCase):
         self.list_url = reverse(
             "api-v1:environments:api-keys-list", args={self.environment.api_key}
         )
-
-        assert response.json()["message"] == "Request returned 200"
-        assert response.status_code == status.HTTP_200_OK
-
-        args, _ = trigger_sample_webhook.call_args
-        assert args[0].url == self.valid_webhook_url
 
     def test_list_api_keys(self):
         # Given

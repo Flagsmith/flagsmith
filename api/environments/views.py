@@ -232,11 +232,14 @@ class WebhookViewSet(
     mixins.CreateModelMixin,
     mixins.UpdateModelMixin,
     mixins.DestroyModelMixin,
+    TriggerSampleWebhookMixin,
 ):
     serializer_class = WebhookSerializer
     pagination_class = None
     permission_classes = [IsAuthenticated, NestedEnvironmentPermissions]
     model_class = Webhook
+
+    webhook_type = WebhookType.ENVIRONMENT
 
 
 class EnvironmentAPIKeyViewSet(
