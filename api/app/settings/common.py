@@ -485,8 +485,8 @@ if ENABLE_AXES:
 # Sentry tracking
 SENTRY_SDK_DSN = env("SENTRY_SDK_DSN", default=None)
 SENTRY_TRACE_SAMPLE_RATE = env.float("SENTRY_TRACE_SAMPLE_RATE", default=1.0)
-FORCE_SENTRY_TRACE_AUTH_KEY = env("FORCE_SENTRY_TRACE_AUTH_KEY", default=None)
-if SENTRY_SDK_DSN:
+FORCE_SENTRY_TRACE_KEY = env("FORCE_SENTRY_TRACE_KEY", default=None)
+if FORCE_SENTRY_TRACE_KEY:
     MIDDLEWARE.append("integrations.sentry.middleware.ForceSentryTraceMiddleware")
 
 # allow users to access the admin console
