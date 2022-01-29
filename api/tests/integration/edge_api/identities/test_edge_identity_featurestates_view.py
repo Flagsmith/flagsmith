@@ -241,7 +241,7 @@ def test_edge_identities_create_mv_featurestate(
     assert response.json()["feature_state_value"] == mv_option_value
 
 
-def test_edge_identities_udpate_featurestate(
+def test_edge_identities_update_featurestate(
     mocker,
     admin_client,
     environment,
