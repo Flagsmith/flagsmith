@@ -31,19 +31,13 @@ class EdgeMultivariateFeatureOptionField(serializers.Field):
         return obj.id
 
 
-class EdgeMultivariateFeatureStateValueSerializer(serializers.ModelSerializer):
+class EdgeMultivariateFeatureStateValueSerializer(serializers.Serializer):
     multivariate_feature_option = EdgeMultivariateFeatureOptionField()
+    percentage_allocation = serializers.FloatField(max_value=100, min_value=0)
 
     def to_internal_value(self, data):
         data = super().to_internal_value(data)
         return EngineMultivariateFeatureStateValueModel(**data)
-
-    class Meta:
-        model = MultivariateFeatureStateValue
-        fields = (
-            "multivariate_feature_option",
-            "percentage_allocation",
-        )
 
 
 class FeatureStateValueEdgeIdentityField(serializers.Field):
@@ -77,7 +71,7 @@ class EdgeFeatureField(serializers.Field):
 
 
 class EdgeIdentityFeatureStateSerializer(serializers.Serializer):
-    feature_state_value = FeatureStateValueEdgeIdentityField()
+    feature_state_value = FeatureStateValueEdgeIdentityField(allow_null=True)
     feature = EdgeFeatureField()
     multivariate_feature_state_values = EdgeMultivariateFeatureStateValueSerializer(
         many=True, required=False
@@ -93,18 +87,7 @@ class EdgeIdentityFeatureStateSerializer(serializers.Serializer):
     def save(self, **kwargs):
         identity = self.context["view"].identity
         feature_state_value = self.validated_data.pop("feature_state_value")
-
-        if self.instance:
-            if self.validated_data.get("multivariate_feature_state_values"):
-                engine_multi_fs_value_models = engine_multi_fs_value_schema.load(
-                    self.validated_data["multivariate_feature_state_values"], many=True
-                )
-                self.instance.multivariate_feature_state_values = (
-                    engine_multi_fs_value_models
-                )
-            self.instance.set_value(feature_state_value)
-
-        else:
+        if not self.instance:
             self.instance = EngineFeatureStateModel(**self.validated_data)
             try:
                 identity.identity_features.append(self.instance)
@@ -112,6 +95,10 @@ class EdgeIdentityFeatureStateSerializer(serializers.Serializer):
                 raise serializers.ValidationError(
                     "Feature state already exists."
                 ) from e
+        if self.validated_data.get("multivariate_feature_state_values"):
+            self.instance.multivariate_feature_state_values = self.validated_data[
+                "multivariate_feature_state_values"
+            ]
 
         self.instance.set_value(feature_state_value)
         try:

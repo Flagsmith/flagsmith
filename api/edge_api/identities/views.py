@@ -7,10 +7,9 @@ from rest_framework.exceptions import NotFound
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 
+from edge_api.identities.serializers import EdgeIdentityFeatureStateSerializer
 from environments.identities.models import Identity
 from features.permissions import IdentityFeatureStatePermissions
-
-from .serializers import EdgeIdentityFeatureStateSerializer
 
 
 class EdgeIdentityFeatureStateViewSet(viewsets.ModelViewSet):

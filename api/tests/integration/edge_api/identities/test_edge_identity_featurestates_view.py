@@ -1,19 +1,10 @@
 import json
 
-import pytest
 from django.urls import reverse
 from rest_framework import status
 
 
-@pytest.fixture()
-def dynamo_wrapper_mock(mocker):
-    return mocker.patch(
-        "environments.identities.models.Identity.dynamo_wrapper",
-    )
-
-
 def test_edge_identities_feature_states_list(
-    mocker,
     admin_client,
     environment,
     environment_api_key,
@@ -39,7 +30,6 @@ def test_edge_identities_feature_states_list(
 
 
 def test_edge_identities_featurestate_detail(
-    mocker,
     admin_client,
     environment,
     environment_api_key,
@@ -66,7 +56,6 @@ def test_edge_identities_featurestate_detail(
 
 
 def test_edge_identities_featurestate_delete(
-    mocker,
     admin_client,
     environment,
     environment_api_key,
@@ -102,7 +91,6 @@ def test_edge_identities_featurestate_delete(
 
 
 def test_edge_identities_featurestate_delete_returns_404_if_featurestate_does_not_exists(
-    mocker,
     admin_client,
     environment,
     environment_api_key,
@@ -125,7 +113,6 @@ def test_edge_identities_featurestate_delete_returns_404_if_featurestate_does_no
 
 
 def test_edge_identities_create_featurestate_returns_400_if_feature_state_already_exists(
-    mocker,
     admin_client,
     environment,
     environment_api_key,
@@ -159,7 +146,6 @@ def test_edge_identities_create_featurestate_returns_400_if_feature_state_alread
 
 
 def test_edge_identities_create_featurestate(
-    mocker,
     admin_client,
     environment,
     environment_api_key,
@@ -197,7 +183,6 @@ def test_edge_identities_create_featurestate(
 
 
 def test_edge_identities_create_mv_featurestate(
-    mocker,
     admin_client,
     environment,
     environment_api_key,
@@ -242,7 +227,6 @@ def test_edge_identities_create_mv_featurestate(
 
 
 def test_edge_identities_update_featurestate(
-    mocker,
     admin_client,
     environment,
     environment_api_key,
@@ -279,8 +263,57 @@ def test_edge_identities_update_featurestate(
     assert response.json()["feature_state_value"] == feature_state_value
 
 
+def test_edge_identities_update_mv_featurestate(
+    admin_client,
+    environment,
+    environment_api_key,
+    identity_document,
+    dynamo_wrapper_mock,
+    feature,
+    mv_option,
+    mv_option_value,
+):
+    # Given
+    dynamo_wrapper_mock.get_item_from_uuid.return_value = identity_document
+    identity_uuid = identity_document["identity_uuid"]
+    featurestate_uuid = identity_document["identity_features"][2]["featurestate_uuid"]
+    url = reverse(
+        "api-v1:environments:edge-identity-featurestates-detail",
+        args=[environment_api_key, identity_uuid, featurestate_uuid],
+    )
+    new_mv_allocation = 100
+    data = {
+        "multivariate_feature_state_values": [
+            {
+                "percentage_allocation": new_mv_allocation,
+                "multivariate_feature_option": mv_option,
+                "id": 1,
+            },
+        ],
+        "enabled": True,
+        "feature": feature,
+        "featurestate_uuid": featurestate_uuid,
+        "identity_uuid": identity_uuid,
+        "feature_state_value": None,
+    }
+
+    # When
+    response = admin_client.put(
+        url, data=json.dumps(data), content_type="application/json"
+    )
+    # Then
+    dynamo_wrapper_mock.get_item_from_uuid.assert_called_with(
+        environment_api_key, identity_uuid
+    )
+    assert response.status_code == status.HTTP_200_OK
+    assert response.json()["feature_state_value"] == mv_option_value
+    assert (
+        response.json()["multivariate_feature_state_values"][0]["percentage_allocation"]
+        == new_mv_allocation
+    )
+
+
 def test_edge_identities_post_returns_400_for_invalid_mvfs_allocation(
-    mocker,
     admin_client,
     environment,
     environment_api_key,
@@ -288,7 +321,6 @@ def test_edge_identities_post_returns_400_for_invalid_mvfs_allocation(
     dynamo_wrapper_mock,
     feature,
     mv_option,
-    mv_option_value,
 ):
 
     # Given
@@ -305,12 +337,10 @@ def test_edge_identities_post_returns_400_for_invalid_mvfs_allocation(
         "multivariate_feature_state_values": [
             {
                 "multivariate_feature_option": mv_option,
-                "multivariate_feature_option_index": 0,
                 "percentage_allocation": 90,
             },
             {
                 "multivariate_feature_option": mv_option,
-                "multivariate_feature_option_index": 0,
                 "percentage_allocation": 90,
             },
         ],
@@ -327,6 +357,7 @@ def test_edge_identities_post_returns_400_for_invalid_mvfs_allocation(
     )
 
     assert response.status_code == status.HTTP_400_BAD_REQUEST
-    response.json()[
-        "multivariate_feature_state_values"
-    ] == "Total percentage allocation for feature must be less than 100 percent"
+    assert (
+        response.json()["multivariate_feature_state_values"]
+        == "Total percentage allocation for feature must be less than 100 percent"
+    )
