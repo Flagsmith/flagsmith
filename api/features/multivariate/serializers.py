@@ -9,6 +9,7 @@ from features.multivariate.models import (
 class MultivariateFeatureOptionSerializer(serializers.ModelSerializer):
     class Meta:
         model = MultivariateFeatureOption
+
         fields = (
             "id",
             "type",
