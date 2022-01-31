@@ -216,7 +216,7 @@ class SDKIdentities(SDKAPIView):
 
         identity, _ = (
             Identity.objects.select_related("environment", "environment__project")
-            .prefetch_related("identity_traits", "environment__project__segments")
+            .prefetch_related("identity_traits")
             .get_or_create(identifier=identifier, environment=request.environment)
         )
 
