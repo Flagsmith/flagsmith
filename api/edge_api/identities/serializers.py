@@ -14,10 +14,7 @@ from rest_framework import serializers
 
 from environments.identities.models import Identity
 from features.models import Feature, FeatureState, FeatureStateValue
-from features.multivariate.models import (
-    MultivariateFeatureOption,
-    MultivariateFeatureStateValue,
-)
+from features.multivariate.models import MultivariateFeatureOption
 from features.serializers import FeatureStateValueSerializer
 
 engine_multi_fs_value_schema = MultivariateFeatureStateValueSchema()
