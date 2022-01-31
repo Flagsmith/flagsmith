@@ -72,6 +72,7 @@ class MultivariateFeatureStateValue(LifecycleModelMixin, models.Model):
                 self._get_invalid_percentage_allocation_error_message()
             )
 
+    @hook(BEFORE_SAVE)
     def validate_unique(self, exclude=None):
         super(MultivariateFeatureStateValue, self).validate_unique(exclude=exclude)
         if (
