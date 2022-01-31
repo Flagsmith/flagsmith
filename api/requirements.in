@@ -42,4 +42,4 @@ dataclasses
 flagsmith-flag-engine
 boto3
 slack_sdk
-rudder-sdk-python==1.0.0b1
+rudder-sdk-python
