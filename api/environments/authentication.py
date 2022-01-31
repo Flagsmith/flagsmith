@@ -14,8 +14,15 @@ class EnvironmentKeyAuthentication(BaseAuthentication):
     endpoints used by the clients.
     """
 
+    def __init__(self, *args, required_key_prefix: str = "", **kwargs):
+        super(EnvironmentKeyAuthentication, self).__init__(*args, **kwargs)
+        self.required_key_prefix = required_key_prefix
+
     def authenticate(self, request):
         api_key = request.META.get("HTTP_X_ENVIRONMENT_KEY")
+        if not (api_key and api_key.startswith(self.required_key_prefix)):
+            raise AuthenticationFailed("Invalid or missing Environment key")
+
         environment = Environment.get_from_cache(api_key)
         if not environment:
             raise AuthenticationFailed("Invalid or missing Environment Key")

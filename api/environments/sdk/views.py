@@ -12,7 +12,9 @@ from environments.permissions.permissions import EnvironmentKeyPermissions
 
 class SDKEnvironmentAPIView(APIView):
     permission_classes = (EnvironmentKeyPermissions,)
-    authentication_classes = (EnvironmentKeyAuthentication,)
+
+    def get_authenticators(self):
+        return [EnvironmentKeyAuthentication(required_key_prefix="ser.")]
 
     def get(self, request: HttpRequest) -> Response:
         environment = Environment.objects.select_related(
