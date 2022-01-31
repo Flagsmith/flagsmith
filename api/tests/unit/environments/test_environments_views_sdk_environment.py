@@ -56,4 +56,4 @@ def test_get_environment_document_fails_with_invalid_key(
     response = client.get(url)
 
     # Then
-    assert response.status_code == status.HTTP_401_UNAUTHORIZED
+    assert response.status_code == status.HTTP_403_FORBIDDEN
