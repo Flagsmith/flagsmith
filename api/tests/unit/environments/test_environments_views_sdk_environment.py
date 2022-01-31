@@ -47,6 +47,8 @@ def test_get_environment_document_fails_with_invalid_key(
     # an environment
     environment = Environment.objects.create(name="Test Environment", project=project)
     client = APIClient()
+
+    # and we use the regular 'client' API key from the environment
     client.credentials(HTTP_X_ENVIRONMENT_KEY=environment.api_key)
 
     # and the relevant URL to get an environment document
@@ -56,4 +58,6 @@ def test_get_environment_document_fails_with_invalid_key(
     response = client.get(url)
 
     # Then
+    # We get a 403 since only the server side API keys are able to access the
+    # environment document
     assert response.status_code == status.HTTP_403_FORBIDDEN
