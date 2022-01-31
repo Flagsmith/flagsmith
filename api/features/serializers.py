@@ -244,13 +244,6 @@ class FeatureStateSerializerWithIdentity(FeatureStateSerializerBasic):
     identity = _IdentitySerializer()
 
 
-class FeatureStateSerializerFullWithIdentity(FeatureStateSerializerFull):
-    identity_identifier = serializers.SerializerMethodField()
-
-    def get_identity_identifier(self, instance):
-        return instance.identity.identifier if instance.identity else None
-
-
 class FeatureStateSerializerCreate(serializers.ModelSerializer):
     class Meta:
         model = FeatureState
