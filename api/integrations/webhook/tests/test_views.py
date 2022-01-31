@@ -40,7 +40,7 @@ class WebhookConfigurationTestCase(TestCase):
 
     def test_should_create_webhook_config_when_post(self):
         # Given
-        data = {"url": self.valid_webhook_url}
+        data = {"url": self.valid_webhook_url, "secret": "random_secret"}
 
         # When
         response = self.client.post(
