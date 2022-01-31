@@ -74,19 +74,10 @@ class MultivariateFeatureStateValue(LifecycleModelMixin, models.Model):
 
     @hook(BEFORE_SAVE)
     def validate_unique(self, exclude=None):
+        """
+        Override validate_unique method, so we can add the BEFORE_SAVE hook.
+        """
         super(MultivariateFeatureStateValue, self).validate_unique(exclude=exclude)
-        if (
-            self.__class__.objects.filter(
-                feature_state=self.feature_state,
-                multivariate_feature_option=self.multivariate_feature_option,
-            )
-            .exclude(id=self.id)
-            .exists()
-        ):
-            raise ValidationError(
-                "MultivariateFeatureStateValue already exists for that FeatureState "
-                "and MultivariateFeatureOption combination."
-            )
 
     def get_siblings(self) -> QuerySet:
         # TODO: add tests
