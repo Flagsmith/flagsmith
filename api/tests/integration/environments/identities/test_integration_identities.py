@@ -2,7 +2,6 @@ import json
 from unittest import mock
 
 import pytest
-from django.conf import settings
 from django.urls import reverse
 from rest_framework import status
 from tests.integration.helpers import create_feature_with_api
