@@ -1,10 +1,15 @@
+from datetime import timedelta
 from unittest import mock
 
 import pytest
 from django.test import TestCase
+from django.utils import timezone
+from flag_engine.django_transform.document_builders import (
+    build_environment_api_key_document,
+)
 
 from environments.identities.models import Identity
-from environments.models import Environment
+from environments.models import Environment, EnvironmentAPIKey
 from features.models import Feature, FeatureState
 from organisations.models import Organisation
 from projects.models import Project
@@ -142,3 +147,84 @@ class EnvironmentTestCase(TestCase):
 
         # Then
         assert env is None
+
+    def test_get_from_cache_accepts_environment_api_key_model_key(self):
+        # Given
+        self.environment.save()
+        api_key = EnvironmentAPIKey.objects.create(
+            name="Some key", environment=self.environment
+        )
+
+        # When
+        environment_from_cache = Environment.get_from_cache(api_key=api_key.key)
+
+        # Then
+        assert environment_from_cache == self.environment
+
+
+def test_saving_environment_api_key_calls_put_item_with_correct_arguments(
+    environment, mocker
+):
+    # Given
+    mocked_dynamo_api_key_table = mocker.patch(
+        "environments.models.dynamo_api_key_table"
+    )
+    # When
+    api_key = EnvironmentAPIKey.objects.create(name="Some key", environment=environment)
+
+    # Then
+    mocked_dynamo_api_key_table.put_item.assert_called_with(
+        Item=build_environment_api_key_document(api_key)
+    )
+
+
+def test_environment_api_key_model_is_valid_is_true_for_non_expired_active_key(
+    environment,
+):
+    assert (
+        EnvironmentAPIKey.objects.create(
+            environment=environment,
+            key="ser.random_key",
+            name="test_key",
+        ).is_valid
+        is True
+    )
+
+
+def test_environment_api_key_model_is_valid_is_true_for_non_expired_active_key_with_expired_date_in_future(
+    environment,
+):
+    assert (
+        EnvironmentAPIKey.objects.create(
+            environment=environment,
+            key="ser.random_key",
+            name="test_key",
+            expires_at=timezone.now() + timedelta(days=5),
+        ).is_valid
+        is True
+    )
+
+
+def test_environment_api_key_model_is_valid_is_false_for_expired_active_key(
+    environment,
+):
+    assert (
+        EnvironmentAPIKey.objects.create(
+            environment=environment,
+            key="ser.random_key",
+            name="test_key",
+            expires_at=timezone.now() - timedelta(seconds=1),
+        ).is_valid
+        is False
+    )
+
+
+def test_environment_api_key_model_is_valid_is_false_for_non_expired_inactive_key(
+    environment,
+):
+    assert (
+        EnvironmentAPIKey.objects.create(
+            environment=environment, key="ser.random_key", name="test_key", active=False
+        ).is_valid
+        is False
+    )

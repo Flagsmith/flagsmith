@@ -6,7 +6,7 @@ from audit.models import (
     AuditLog,
     RelatedObjectType,
 )
-from environments.models import Environment, Webhook
+from environments.models import Environment, EnvironmentAPIKey, Webhook
 from features.serializers import FeatureStateSerializerFull
 from projects.serializers import ProjectSerializer
 
@@ -71,3 +71,10 @@ class WebhookSerializer(serializers.ModelSerializer):
         model = Webhook
         fields = ("id", "url", "enabled", "created_at", "updated_at", "secret")
         read_only_fields = ("id", "created_at", "updated_at")
+
+
+class EnvironmentAPIKeySerializer(serializers.ModelSerializer):
+    class Meta:
+        model = EnvironmentAPIKey
+        fields = ("id", "key", "active", "created_at", "name", "expires_at")
+        read_only_fields = ("id", "created_at")

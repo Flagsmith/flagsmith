@@ -116,3 +116,17 @@ class TraitPersistencePermissions(BasePermission):
     def has_object_permission(self, request, view, obj):
         # no views that use this permission currently have any detail endpoints
         return False
+
+
+class EnvironmentAdminPermission(BasePermission):
+    def has_permission(self, request, view):
+        try:
+            environment = Environment.objects.get(
+                api_key=view.kwargs.get("environment_api_key")
+            )
+            return request.user.is_environment_admin(environment)
+        except Environment.DoesNotExist:
+            return False
+
+    def has_object_permission(self, request, view, obj):
+        return request.user.is_environment_admin(obj.environment)
