@@ -1,6 +1,7 @@
 from django.conf.urls import include, url
 from rest_framework_nested import routers
 
+from edge_api.identities.views import EdgeIdentityFeatureStateViewSet
 from features.views import (
     EnvironmentFeatureStateViewSet,
     IdentityFeatureStateViewSet,
@@ -72,9 +73,15 @@ environments_router.register(
     basename="integrations-mixpanel",
 )
 environments_router.register(
-    r"integrations/slack",
-    SlackEnvironmentViewSet,
-    basename="integrations-slack",
+    r"integrations/slack", SlackEnvironmentViewSet, basename="integrations-slack"
+)
+edge_identity_router = routers.NestedSimpleRouter(
+    environments_router, r"edge-identities", lookup="edge_identity"
+)
+edge_identity_router.register(
+    r"edge-featurestates",
+    EdgeIdentityFeatureStateViewSet,
+    basename="edge-identity-featurestates",
 )
 environments_router.register(
     r"integrations/slack-channels",
@@ -92,6 +99,7 @@ identity_router = routers.NestedSimpleRouter(
 identity_router.register(
     r"featurestates", IdentityFeatureStateViewSet, basename="identity-featurestates"
 )
+
 identity_router.register(r"traits", TraitViewSet, basename="identities-traits")
 
 app_name = "environments"
@@ -100,4 +108,5 @@ urlpatterns = [
     url(r"^", include(router.urls)),
     url(r"^", include(environments_router.urls)),
     url(r"^", include(identity_router.urls)),
+    url(r"^", include(edge_identity_router.urls)),
 ]
