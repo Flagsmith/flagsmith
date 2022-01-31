@@ -18,6 +18,8 @@ class EdgeIdentityFeatureStateViewSet(viewsets.ModelViewSet):
 
     serializer_class = EdgeIdentityFeatureStateSerializer
 
+    pagination_class = None
+
     def initial(self, request, *args, **kwargs):
         super().initial(request, *args, **kwargs)
         self.identity = self._get_identity_from_request()

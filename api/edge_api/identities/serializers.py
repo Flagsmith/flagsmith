@@ -23,8 +23,9 @@ from features.serializers import FeatureStateValueSerializer
 engine_multi_fs_value_schema = MultivariateFeatureStateValueSchema()
 
 
-class EdgeMultivariateFeatureOptionField(serializers.Field):
+class EdgeMultivariateFeatureOptionField(serializers.IntegerField):
     def to_internal_value(self, data):
+        data = super().to_internal_value(data)
         return MultivariateFeatureOption.objects.get(id=data)
 
     def to_representation(self, obj):
@@ -61,11 +62,12 @@ class FeatureStateValueEdgeIdentityField(serializers.Field):
         return FeatureStateValue(**feature_state_value_dict).value
 
 
-class EdgeFeatureField(serializers.Field):
+class EdgeFeatureField(serializers.IntegerField):
     def to_representation(self, obj):
         return obj.id
 
     def to_internal_value(self, data):
+        data = super().to_internal_value(data)
         feature = Feature.objects.get(id=data)
         return feature
 
@@ -106,7 +108,7 @@ class EdgeIdentityFeatureStateSerializer(serializers.Serializer):
         except InvalidPercentageAllocation as e:
             raise serializers.ValidationError(
                 {
-                    "multivariate_feature_state_values": "Total percentage allocation"
+                    "multivariate_feature_state_values": "Total percentage allocation "
                     "for feature must be less than 100 percent"
                 }
             ) from e
