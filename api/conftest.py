@@ -3,6 +3,7 @@ import pytest
 from environments.identities.models import Identity
 from environments.identities.traits.models import Trait
 from environments.models import Environment
+from features.models import Feature
 from organisations.models import Organisation
 from projects.models import Project
 
@@ -30,3 +31,8 @@ def identity(environment):
 @pytest.fixture()
 def trait(identity):
     return Trait.objects.create(identity=identity)
+
+
+@pytest.fixture()
+def feature(project, environment):
+    return Feature.objects.create(name="Test Feature1", project=project)
