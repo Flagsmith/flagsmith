@@ -14,25 +14,27 @@ from users.utils.mailer_lite import (
 @pytest.mark.django_db
 def test_mailer_lite_subscribe_calls_post_with_correct_arguments(mocker, settings):
     # Given
-    mocked_requests = mocker.patch("users.utils.mailer_lite.requests")
+    mock_session = mocker.MagicMock()
+
     base_url = "http//localhost/mailer/test/"
     settings.MAILERLITE_BASE_URL = base_url
-    resource = "subscribers"
-
+    resource = "/test"
     user = FFAdminUser.objects.create(
         email="test_user",
         first_name="test",
         last_name="test",
         marketing_consent_given=True,
     )
-    mailer_lite = MailerLite()
+    mailer_lite = MailerLite(session=mock_session)
+
+    mocker.patch("users.utils.mailer_lite.MailerLite.resource", resource)
     mocked_headers = mocker.patch(
         "users.utils.mailer_lite.MailerLiteBaseClient.request_headers",
     )
     # When
     mailer_lite._subscribe(user)
     # Then
-    mocked_requests.post.assert_called_with(
+    mock_session.post.assert_called_with(
         base_url + resource,
         data=json.dumps(
             {"email": user.email, "name": "test test", "fields": {"is_paid": False}}
@@ -55,19 +57,19 @@ def test_batch_subscribe__subscribe_calls_batch_send_correct_number_of_times(moc
     )
 
     users = [user1, user2, user3]
-    mocker.patch("users.utils.mailer_lite.MAX_BATCH_SIZE", 2)
 
-    mocked_request = mocker.patch("users.utils.mailer_lite.requests")
+    mock_session = mocker.MagicMock()
 
     # When
-    with BatchSubscribe() as batch:
+    with BatchSubscribe(batch_size=2, session=mock_session) as batch:
         for user in users:
             batch.subscribe(user)
+
     # Then
-    # assert that batch_send is called(using requests made) twice, first time for
+    # assert that batch_send is called (using requests made) twice, first time for
     # hitting the maximum limit and second time
     # for exiting the context manager
-    assert mocked_request.post.call_count == 2
+    assert mock_session.post.call_count == 2
 
 
 @pytest.mark.django_db
@@ -115,7 +117,7 @@ def test_get_request_body_from_user_with_paid_organisations(mocker):
 def test_batch_subscribe_batch_send_makes_correct_post_request(mocker, settings):
 
     # Given
-    mocked_request = mocker.patch("users.utils.mailer_lite.requests")
+    mock_session = mocker.MagicMock()
     mocked_headers = mocker.patch(
         "users.utils.mailer_lite.MailerLiteBaseClient.request_headers",
     )
@@ -124,7 +126,7 @@ def test_batch_subscribe_batch_send_makes_correct_post_request(mocker, settings)
     settings.MAILERLITE_BASE_URL = base_url
     resource = "batch"
 
-    batch = BatchSubscribe()
+    batch = BatchSubscribe(session=mock_session)
     test_batch_data = [1, 2, 3]
 
     mocker.patch.object(batch, "_batch", test_batch_data.copy())
@@ -132,7 +134,7 @@ def test_batch_subscribe_batch_send_makes_correct_post_request(mocker, settings)
     # When
     batch.batch_send()
     # Then
-    mocked_request.post.assert_called_with(
+    mock_session.post.assert_called_with(
         base_url + resource,
         data=json.dumps({"requests": test_batch_data}),
         headers=mocked_headers,

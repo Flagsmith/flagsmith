@@ -1,2 +1,5 @@
 static/
 **/staticfiles/*
+
+# SaaS only modules
+saml/

@@ -2,6 +2,7 @@ from datetime import datetime
 
 import pytest
 from django.test import TestCase
+from rest_framework.test import override_settings
 
 from organisations.models import Organisation, Subscription
 
@@ -62,12 +63,14 @@ class SubscriptionTestCase(TestCase):
         assert subscription.max_seats == 1
 
 
+@override_settings(MAILERLITE_API_KEY="some-test-key")
 def test_creating_a_subscription_calls_mailer_lite_update_organisation_users(
     mocker, db
 ):
     # Given
     organisation = Organisation.objects.create(name="Test org")
-    mocked_mailer_lite = mocker.patch("organisations.models.mailer_lite")
+    mocked_mailer_lite = mocker.MagicMock()
+    mocker.patch("organisations.models.MailerLite", return_value=mocked_mailer_lite)
 
     # When
     Subscription.objects.create(organisation=organisation)
@@ -76,15 +79,21 @@ def test_creating_a_subscription_calls_mailer_lite_update_organisation_users(
     mocked_mailer_lite.update_organisation_users.assert_called_with(organisation.id)
 
 
+@override_settings(MAILERLITE_API_KEY="some-test-key")
 def test_updating_a_cancelled_subscription_calls_mailer_lite_update_organisation_users(
     mocker, db
 ):
     # Given
     organisation = Organisation.objects.create(name="Test org")
+    mocked_mailer_lite = mocker.MagicMock()
+    mocker.patch("organisations.models.MailerLite", return_value=mocked_mailer_lite)
+
     subscription = Subscription.objects.create(
         organisation=organisation, cancellation_date=datetime.now()
     )
-    mocked_mailer_lite = mocker.patch("organisations.models.mailer_lite")
+
+    # reset the mock as it will have been called on subscription create above
+    mocked_mailer_lite.reset_mock()
 
     # When
     subscription.cancellation_date = None
@@ -94,12 +103,14 @@ def test_updating_a_cancelled_subscription_calls_mailer_lite_update_organisation
     mocked_mailer_lite.update_organisation_users.assert_called_with(organisation.id)
 
 
+@override_settings(MAILERLITE_API_KEY="some-test-key")
 def test_cancelling_a_subscription_calls_mailer_lite_update_organisation_users(
     mocker, db
 ):
     # Given
 
-    mocked_mailer_lite = mocker.patch("organisations.models.mailer_lite")
+    mocked_mailer_lite = mocker.MagicMock()
+    mocker.patch("organisations.models.MailerLite", return_value=mocked_mailer_lite)
     organisation = Organisation.objects.create(name="Test org")
     subscription = Subscription.objects.create(organisation=organisation)
 

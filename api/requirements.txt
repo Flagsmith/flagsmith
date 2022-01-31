@@ -41,7 +41,7 @@ dataclasses==0.6
     # via -r requirements.in
 dj-database-url==0.5.0
     # via -r requirements.in
-django==2.2.25
+django==2.2.26
     # via
     #   -r requirements.in
     #   django-admin-sso

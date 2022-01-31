@@ -13,7 +13,7 @@ import VariationValue from '../mv/VariationValue';
 import AddVariationButton from '../mv/AddVariationButton';
 import VariationOptions from '../mv/VariationOptions';
 import FlagOwners from '../FlagOwners';
-
+import FeatureListStore from '../../../common/stores/feature-list-store'
 const FEATURE_ID_MAXLENGTH = Constants.forms.maxLength.FEATURE_ID;
 
 const CreateFlag = class extends Component {
@@ -143,6 +143,8 @@ const CreateFlag = class extends Component {
                 environmentId,
             });
         } else {
+            FeatureListStore.isSaving = true;
+            FeatureListStore.trigger("change")
             !isSaving && name && func(this.props.projectId, this.props.environmentId, {
                 name,
                 initial_value,
@@ -551,10 +553,10 @@ const CreateFlag = class extends Component {
                                         </TabItem>
                                         <TabItem data-test="overrides" tabLabel="Overrides">
                                             {!identity && isEdit && (
-                                                <Permission level="project" permission="ADMIN" id={this.props.projectId}>
-                                                    {({ permission: projectAdmin }) => projectAdmin && (
+                                                <FormGroup className="mb-4 mr-3 ml-3">
+                                                <Permission level="environment" permission={Utils.getManageFeaturePermission()} id={this.props.environmentId}>
+                                                    {({ permission: environmentAdmin }) => environmentAdmin ? (
 
-                                                        <FormGroup className="mb-4 mr-3 ml-3">
                                                             <Panel
                                                               icon="ion-ios-settings"
                                                               title={(
@@ -591,9 +593,23 @@ const CreateFlag = class extends Component {
                                                                 )}
 
                                                             </Panel>
-                                                        </FormGroup>
+                                                    ) : (
+                                                        <Panel
+                                                            icon="ion-ios-settings"
+                                                            title={(
+                                                                <Tooltip
+                                                                    title={<h6 className="mb-0">Segment Overrides <span className="icon ion-ios-information-circle"/></h6>}
+                                                                    place="right"
+                                                                >
+                                                                    {Constants.strings.SEGMENT_OVERRIDES_DESCRIPTION}
+                                                                </Tooltip>
+                                                            )}
+                                                        >
+                                                            <div dangerouslySetInnerHTML={{__html:Constants.environmentPermissions(Utils.getManageFeaturePermission())}}/>
+                                                        </Panel>
                                                     )}
                                                 </Permission>
+                                                </FormGroup>
                                             )}
                                             {
                                                 !identity

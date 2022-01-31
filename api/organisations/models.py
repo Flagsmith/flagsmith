@@ -17,8 +17,6 @@ from organisations.chargebee import (
 from users.utils.mailer_lite import MailerLite
 from webhooks.models import AbstractBaseWebhookModel
 
-mailer_lite = MailerLite()
-
 
 class OrganisationRole(enum.Enum):
     ADMIN = "ADMIN"
@@ -112,6 +110,7 @@ class Subscription(LifecycleModel, models.Model):
     subscription_date = models.DateTimeField(blank=True, null=True)
     plan = models.CharField(max_length=20, null=True, blank=True)
     max_seats = models.IntegerField(default=1)
+    max_api_calls = models.BigIntegerField(default=50000)
     cancellation_date = models.DateTimeField(blank=True, null=True)
     customer_id = models.CharField(max_length=100, blank=True, null=True)
 
@@ -137,7 +136,9 @@ class Subscription(LifecycleModel, models.Model):
     @hook(AFTER_CREATE)
     @hook(AFTER_SAVE, when="cancellation_date", has_changed=True)
     def update_mailer_lite_subscribers(self):
-        mailer_lite.update_organisation_users(self.organisation.id)
+        if settings.MAILERLITE_API_KEY:
+            mailer_lite = MailerLite()
+            mailer_lite.update_organisation_users(self.organisation.id)
 
     def cancel(self, cancellation_date=timezone.now()):
         self.cancellation_date = cancellation_date

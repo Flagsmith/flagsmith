@@ -26,13 +26,13 @@ env = Env()
 logger = logging.getLogger(__name__)
 
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
-BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+BASE_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 PROJECT_ROOT = os.path.abspath(os.path.dirname(__file__))
 
 ENV = env("ENVIRONMENT", default="local")
 if ENV not in ("local", "dev", "staging", "production"):
     warnings.warn(
-        "ENVIRONMENT env variable must be one of local, dev, staging or production"
+        "ENVIRONMENT env variable must be one of local, dev, staging, production"
     )
 
 DEBUG = env.bool("DEBUG", default=False)
@@ -58,6 +58,8 @@ INFLUXDB_URL = env.str("INFLUXDB_URL", default="")
 INFLUXDB_ORG = env.str("INFLUXDB_ORG", default="")
 
 ALLOWED_HOSTS = env.list("DJANGO_ALLOWED_HOSTS", default=[])
+USE_X_FORWARDED_HOST = env.bool("USE_X_FORWARDED_HOST", default=False)
+
 CSRF_TRUSTED_ORIGINS = env.list("DJANGO_CSRF_TRUSTED_ORIGINS", default=[])
 
 INTERNAL_IPS = ["127.0.0.1"]
@@ -348,7 +350,11 @@ LOGOUT_URL = "/admin/logout/"
 # Email associated with user that is used by front end for end to end testing purposes
 FE_E2E_TEST_USER_EMAIL = "nightwatch@solidstategroup.com"
 
-SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
+SECURE_PROXY_SSL_HEADER_NAME = env.str(
+    "SECURE_PROXY_SSL_HEADER_NAME", "HTTP_X_FORWARDED_PROTO"
+)
+SECURE_PROXY_SSL_HEADER_VALUE = env.str("SECURE_PROXY_SSL_HEADER_VALUE", "https")
+SECURE_PROXY_SSL_HEADER = (SECURE_PROXY_SSL_HEADER_NAME, SECURE_PROXY_SSL_HEADER_VALUE)
 
 # Chargebee
 ENABLE_CHARGEBEE = env.bool("ENABLE_CHARGEBEE", default=False)
@@ -480,6 +486,9 @@ if ENABLE_AXES:
 # Sentry tracking
 SENTRY_SDK_DSN = env("SENTRY_SDK_DSN", default=None)
 SENTRY_TRACE_SAMPLE_RATE = env.float("SENTRY_TRACE_SAMPLE_RATE", default=1.0)
+FORCE_SENTRY_TRACE_KEY = env("FORCE_SENTRY_TRACE_KEY", default=None)
+if FORCE_SENTRY_TRACE_KEY:
+    MIDDLEWARE.append("integrations.sentry.middleware.ForceSentryTraceMiddleware")
 
 # allow users to access the admin console
 ENABLE_ADMIN_ACCESS_USER_PASS = env.bool("ENABLE_ADMIN_ACCESS_USER_PASS", default=None)
@@ -521,3 +530,18 @@ MAILERLITE_BASE_URL = env.str(
     "MAILERLITE_BASE_URL", default="https://api.mailerlite.com/api/v2/"
 )
 MAILERLITE_API_KEY = env.str("MAILERLITE_API_KEY", None)
+MAILERLITE_NEW_USER_GROUP_ID = env.int("MAILERLITE_NEW_USER_GROUP_ID", None)
+
+# Additional functionality for using SAML in Flagsmith SaaS
+SAML_MODULE_PATH = env("SAML_MODULE_PATH", os.path.join(BASE_DIR, "saml"))
+SAML_INSTALLED = os.path.exists(SAML_MODULE_PATH)
+
+if SAML_INSTALLED:
+    SAML_REQUESTS_CACHE_LOCATION = "saml_requests_cache"
+    CACHES[SAML_REQUESTS_CACHE_LOCATION] = {
+        "BACKEND": "django.core.cache.backends.db.DatabaseCache",
+        "LOCATION": SAML_REQUESTS_CACHE_LOCATION,
+    }
+    INSTALLED_APPS += ["saml"]
+    SAML_ACCEPTED_TIME_DIFF = env.int("SAML_ACCEPTED_TIME_DIFF", default=60)
+    DJOSER["SERIALIZERS"]["current_user"] = "saml.serializers.SamlCurrentUserSerializer"

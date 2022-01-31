@@ -71,7 +71,7 @@ def test_influx_db_query_when_get_events_list_then_query_api_called(monkeypatch)
         f'|> filter(fn:(r) => r._measurement == "api_call")                   '
         f'|> filter(fn: (r) => r["organisation_id"] == "{org_id}") '
         f'|> drop(columns: ["organisation", "organisation_id", "type", "project", '
-        f'"project_id", "environment", "environment_id"])'
+        f'"project_id", "environment", "environment_id", "host"])'
         f"|> aggregateWindow(every: 24h, fn: sum)"
     )
     mock_influxdb_client = mock.MagicMock()
@@ -98,7 +98,7 @@ def test_influx_db_query_when_get_multiple_events_for_organistation_then_query_a
         '|> filter(fn:(r) => r._measurement == "api_call")                   '
         f'|> filter(fn: (r) => r["organisation_id"] == "{org_id}") '
         '|> drop(columns: ["organisation", "organisation_id", "type", "project", '
-        '"project_id", "environment", "environment_id"])'
+        '"project_id", "environment", "environment_id", "host"])'
         "|> aggregateWindow(every: 24h, fn: sum)"
     )
     mock_influxdb_client = mock.MagicMock()
@@ -127,7 +127,7 @@ def test_influx_db_query_when_get_multiple_events_for_feature_then_query_api_cal
         f'|> filter(fn: (r) => r["environment_id"] == "{env_id}")                   '
         f'|> filter(fn: (r) => r["feature_id"] == "{feature_name}") '
         '|> drop(columns: ["organisation", "organisation_id", "type", "project", '
-        '"project_id", "environment", "environment_id"])'
+        '"project_id", "environment", "environment_id", "host"])'
         "|> aggregateWindow(every: 30d, fn: sum, createEmpty: false)                    "
         '|> yield(name: "sum")'
     )
