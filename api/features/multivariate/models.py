@@ -68,7 +68,7 @@ class MultivariateFeatureStateValue(LifecycleModelMixin, models.Model):
             )
 
     def validate_unique(self, exclude=None):
-        super(MultivariateFeatureStateValue, self).validate_unique(exclude=None)
+        super(MultivariateFeatureStateValue, self).validate_unique(exclude=exclude)
         if (
             self.__class__.objects.filter(
                 feature_state=self.feature_state,
