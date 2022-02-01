@@ -7,6 +7,7 @@ from rest_framework import authentication, permissions, routers
 
 from environments.identities.traits.views import SDKTraits
 from environments.identities.views import SDKIdentities
+from environments.sdk.views import SDKEnvironmentAPIView
 from features.views import SDKFeatureStates
 from organisations.views import chargebee_webhook
 
@@ -45,6 +46,11 @@ urlpatterns = [
     url(r"^traits/", include(traits_router.urls), name="traits"),
     url(r"^analytics/flags/$", SDKAnalyticsFlags.as_view()),
     url(r"^analytics/telemetry/$", SelfHostedTelemetryAPIView.as_view()),
+    url(
+        r"^environment-document/$",
+        SDKEnvironmentAPIView.as_view(),
+        name="environment-document",
+    ),
     # API documentation
     url(
         r"^swagger(?P<format>\.json|\.yaml)$",

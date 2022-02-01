@@ -5,14 +5,24 @@ import logging
 import typing
 from copy import deepcopy
 
+import boto3
 from django.conf import settings
 from django.core.cache import caches
 from django.db import models
+from django.db.models import Q
+from django.utils import timezone
 from django.utils.encoding import python_2_unicode_compatible
 from django.utils.translation import ugettext_lazy as _
-from django_lifecycle import AFTER_CREATE, LifecycleModel, hook
+from django_lifecycle import AFTER_CREATE, AFTER_SAVE, LifecycleModel, hook
+from flag_engine.django_transform.document_builders import (
+    build_environment_api_key_document,
+)
 
 from app.utils import create_hash
+from environments.api_keys import (
+    generate_client_api_key,
+    generate_server_api_key,
+)
 from environments.exceptions import EnvironmentHeaderNotPresentError
 from features.models import FeatureState
 from projects.models import Project
@@ -44,7 +54,11 @@ class Environment(LifecycleModel):
         ),
         on_delete=models.CASCADE,
     )
-    api_key = models.CharField(default=create_hash, unique=True, max_length=100)
+
+    api_key = models.CharField(
+        default=generate_client_api_key, unique=True, max_length=100
+    )
+
     webhooks_enabled = models.BooleanField(default=False, help_text="DEPRECATED FIELD.")
     webhook_url = models.URLField(null=True, blank=True, help_text="DEPRECATED FIELD.")
 
@@ -109,10 +123,8 @@ class Environment(LifecycleModel):
                     "amplitude_config",
                 )
                 environment = cls.objects.select_related(*select_related_args).get(
-                    api_key=api_key
+                    Q(api_key=api_key) | Q(api_keys__key=api_key)
                 )
-                # TODO: replace the hard coded cache timeout with an environment variable
-                #  until we merge in the pulumi stuff, however, we'll have too many conflicts
                 environment_cache.set(environment.api_key, environment, timeout=60)
             return environment
         except cls.DoesNotExist:
@@ -145,3 +157,36 @@ class Webhook(AbstractBaseWebhookModel):
     enabled = models.BooleanField(default=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
+
+
+dynamo_api_key_table = None
+if settings.ENVIRONMENTS_API_KEY_TABLE_NAME_DYNAMO:
+    dynamo_api_key_table = boto3.resource("dynamodb").Table(
+        settings.ENVIRONMENTS_API_KEY_TABLE_NAME_DYNAMO
+    )
+
+
+class EnvironmentAPIKey(LifecycleModel):
+    """
+    These API keys are only currently used for server side integrations.
+    """
+
+    environment = models.ForeignKey(
+        Environment, on_delete=models.CASCADE, related_name="api_keys"
+    )
+    key = models.CharField(default=generate_server_api_key, max_length=100, unique=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    name = models.CharField(max_length=100)
+    expires_at = models.DateTimeField(blank=True, null=True)
+    active = models.BooleanField(default=True)
+
+    @property
+    def is_valid(self) -> bool:
+        return self.active and (not self.expires_at or self.expires_at > timezone.now())
+
+    @hook(AFTER_SAVE)
+    def send_to_dynamo(self):
+        if not dynamo_api_key_table:
+            return
+        env_key_dict = build_environment_api_key_document(self)
+        dynamo_api_key_table.put_item(Item=env_key_dict)

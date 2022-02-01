@@ -130,6 +130,7 @@ INSTALLED_APPS = [
     "integrations.segment",
     "integrations.heap",
     "integrations.mixpanel",
+    "integrations.rudderstack",
     "integrations.slack",
     "integrations.webhook",
     # Rate limiting admin endpoints
@@ -502,6 +503,11 @@ ENVIRONMENTS_TABLE_NAME_DYNAMO = env.str("ENVIRONMENTS_TABLE_NAME_DYNAMO", None)
 
 # DynamoDB table name for storing identities
 IDENTITIES_TABLE_NAME_DYNAMO = env.str("IDENTITIES_TABLE_NAME_DYNAMO", None)
+
+# DynamoDB table name for storing environment api keys
+ENVIRONMENTS_API_KEY_TABLE_NAME_DYNAMO = env.str(
+    "ENVIRONMENTS_API_KEY_TABLE_NAME_DYNAMO", None
+)
 
 # Front end environment variables
 API_URL = env("API_URL", default="/api/v1/")

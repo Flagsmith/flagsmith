@@ -9,7 +9,7 @@ from rest_framework.test import APIClient
 from audit.models import AuditLog, RelatedObjectType
 from environments.identities.models import Identity
 from environments.identities.traits.models import Trait
-from environments.models import STRING, Environment, Webhook
+from environments.models import STRING, Environment, EnvironmentAPIKey, Webhook
 from environments.permissions.models import UserEnvironmentPermission
 from features.models import Feature, FeatureState
 from organisations.models import Organisation, OrganisationRole
@@ -556,3 +556,105 @@ class WebhookViewSetTestCase(TestCase):
         assert response.status_code == status.HTTP_200_OK
         args, _ = trigger_sample_webhook.call_args
         assert args[0].url == self.valid_webhook_url
+
+
+@pytest.mark.django_db
+class EnvironmentAPIKeyViewSetTestCase(TestCase):
+    def setUp(self) -> None:
+        self.organisation = Organisation.objects.create(name="Test Org")
+        self.project = Project.objects.create(
+            organisation=self.organisation, name="Test Project"
+        )
+        self.environment = Environment.objects.create(
+            project=self.project, name="Test Environment"
+        )
+
+        user = FFAdminUser.objects.create(email="test@example.com")
+        user.add_organisation(self.organisation, OrganisationRole.ADMIN)
+
+        self.client = APIClient()
+        self.client.force_authenticate(user)
+
+        self.list_url = reverse(
+            "api-v1:environments:api-keys-list", args={self.environment.api_key}
+        )
+
+    def test_list_api_keys(self):
+        # Given
+        api_key_1 = EnvironmentAPIKey.objects.create(
+            environment=self.environment, name="api key 1"
+        )
+        api_key_2 = EnvironmentAPIKey.objects.create(
+            environment=self.environment, name="api key 2"
+        )
+
+        # When
+        response = self.client.get(self.list_url)
+
+        # Then
+        assert response.status_code == status.HTTP_200_OK
+
+        response_json = response.json()
+        assert len(response_json) == 2
+
+        assert {api_key["id"] for api_key in response_json} == {
+            api_key_1.id,
+            api_key_2.id,
+        }
+
+    def test_create_api_key(self):
+        # Given
+        data = {"name": "Some key"}
+
+        # When
+        response = self.client.post(
+            self.list_url, data=json.dumps(data), content_type="application/json"
+        )
+
+        # Then
+        assert response.status_code == status.HTTP_201_CREATED
+
+        response_json = response.json()
+        assert response_json["key"] and response_json["key"].startswith("ser.")
+        assert response_json["active"]
+
+    def test_update_api_key(self):
+        # Given
+        old_name = "Some key"
+        api_key = EnvironmentAPIKey.objects.create(
+            name=old_name, environment=self.environment
+        )
+        update_url = reverse(
+            "api-v1:environments:api-keys-detail",
+            args=[self.environment.api_key, api_key.id],
+        )
+
+        # When
+        new_name = "new name"
+        response = self.client.patch(
+            update_url, data={"active": False, "name": new_name}
+        )
+
+        # Then
+        assert response.status_code == status.HTTP_200_OK
+
+        api_key.refresh_from_db()
+        assert api_key.name == new_name
+        assert not api_key.active
+
+    def test_delete_api_key(self):
+        # Given
+        api_key = EnvironmentAPIKey.objects.create(
+            name="Some key", environment=self.environment
+        )
+
+        delete_url = reverse(
+            "api-v1:environments:api-keys-detail",
+            args=[self.environment.api_key, api_key.id],
+        )
+
+        # When
+        self.client.delete(delete_url)
+
+        # Then
+        assert not EnvironmentAPIKey.objects.filter(id=api_key.id)

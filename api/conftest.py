@@ -4,11 +4,14 @@ from rest_framework.test import APIClient
 from environments.identities.models import Identity
 from environments.identities.traits.models import Trait
 from environments.models import Environment
+
 from features.feature_types import MULTIVARIATE
 from features.models import Feature
 from features.multivariate.models import MultivariateFeatureOption
 from features.value_types import STRING
 from organisations.models import Organisation, OrganisationRole
+
+
 from projects.models import Project
 from segments.models import EQUAL, Condition, Segment, SegmentRule
 
@@ -83,3 +86,10 @@ def admin_client(api_client, admin_user, organisation):
     admin_user.add_organisation(organisation, OrganisationRole.ADMIN)
     api_client.force_authenticate(user=admin_user)
     return api_client
+
+
+
+@pytest.fixture()
+def feature(project, environment):
+    return Feature.objects.create(name="Test Feature1", project=project)
+
