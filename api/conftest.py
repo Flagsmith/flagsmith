@@ -1,4 +1,5 @@
 import pytest
+from rest_framework.test import APIClient
 
 from environments.identities.models import Identity
 from environments.identities.traits.models import Trait
@@ -7,7 +8,7 @@ from features.feature_types import MULTIVARIATE
 from features.models import Feature
 from features.multivariate.models import MultivariateFeatureOption
 from features.value_types import STRING
-from organisations.models import Organisation
+from organisations.models import Organisation, OrganisationRole
 from projects.models import Project
 from segments.models import EQUAL, Condition, Segment, SegmentRule
 
@@ -70,3 +71,15 @@ def identity_matching_segment(project):
         rule=matching_rule, property=trait_key, operator=EQUAL, value=trait_value
     )
     return segment
+
+
+@pytest.fixture()
+def api_client():
+    return APIClient()
+
+
+@pytest.fixture()
+def admin_client(api_client, admin_user, organisation):
+    admin_user.add_organisation(organisation, OrganisationRole.ADMIN)
+    api_client.force_authenticate(user=admin_user)
+    return api_client
