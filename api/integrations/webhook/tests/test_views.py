@@ -67,7 +67,6 @@ def test_should_update_configuration_when_put(admin_client, environment):
     new_url = "https://www.flagsmith.com/new-webhook"
 
     # When
-
     response = admin_client.put(
         url,
         data=json.dumps({"url": new_url}),
