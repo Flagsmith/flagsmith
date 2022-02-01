@@ -81,9 +81,11 @@ environments_router.register(
     r"integrations/webhook",
     WebhookConfigurationViewSet,
     basename="integrations-webhook",
-
+)
 edge_identity_router = routers.NestedSimpleRouter(
-    environments_router, r"edge-identities", lookup="edge_identity"
+    environments_router,
+    r"edge-identities",
+    lookup="edge_identity",
 )
 edge_identity_router.register(
     r"edge-featurestates",

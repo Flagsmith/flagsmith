@@ -6,7 +6,7 @@ from django.urls import reverse
 from rest_framework import status
 from tests.integration.helpers import create_feature_with_api
 
-from environments.identities.helpers import IDENTITY_INTEGRATIONS
+from integrations.integration import IDENTITY_INTEGRATIONS
 
 variant_1_value = "variant-1-value"
 variant_2_value = "variant-2-value"
@@ -150,14 +150,10 @@ def test_get_feature_states_for_identity_only_makes_one_query_to_get_mv_feature_
             ],
         )
 
-
-    # When we make a request to get the flags for the identity, 12 queries are made
-
     base_number_of_queries = 6
     number_of_integrations = len(IDENTITY_INTEGRATIONS)
 
-    # When we make a request to get the flags for the identity, 11 queries are made
-
+    # When we make a request to get the flags for the identity, 12 queries are made
     # (although 5 of these are made in a separate thread)
     # TODO: can we reduce the number of queries?!
     base_url = reverse("api-v1:sdk-identities")

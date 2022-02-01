@@ -2,7 +2,6 @@ import hashlib
 import typing
 
 
-
 def get_hashed_percentage_for_object_ids(
     object_ids: typing.Iterable[int], iterations: int = 1
 ) -> float:
