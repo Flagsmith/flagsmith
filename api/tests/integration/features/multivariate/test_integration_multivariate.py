@@ -40,11 +40,9 @@ def test_create_and_update_multivariate_feature_with_2_variations_50_percent(
     )
     create_feature_response_json = create_feature_response.json()
     feature_id = create_feature_response_json["id"]
-    mv_option_ids = [
-        mvo["id"] for mvo in create_feature_response_json["multivariate_options"]
-    ]
+
     assert create_feature_response.status_code == status.HTTP_201_CREATED
-    assert len(mv_option_ids) == 2
+    assert len(create_feature_response_json["multivariate_options"]) == 2
 
     # Now get the feature states for the environment so we can get the id of the
     # feature state and multivariate feature states in the given environment
@@ -55,11 +53,9 @@ def test_create_and_update_multivariate_feature_with_2_variations_50_percent(
     results = get_feature_states_response.json()["results"]
     feature_state = next(filter(lambda fs: fs["feature"] == feature_id, results))
     feature_state_id = feature_state["id"]
-    mv_fsv_ids = [
-        mv_fsv["id"] for mv_fsv in feature_state["multivariate_feature_state_values"]
-    ]
+
     assert get_feature_states_response.status_code == status.HTTP_200_OK
-    assert len(mv_fsv_ids) == 2
+    assert len(feature_state["multivariate_feature_state_values"]) == 2
 
     # Now we just want to try and update the feature state in the environment without
     # changing anything
@@ -76,7 +72,10 @@ def test_create_and_update_multivariate_feature_with_2_variations_50_percent(
                 "id": mv_fsv_id,
                 "percentage_allocation": 50,
             }
-            for mv_option_id, mv_fsv_id in zip(mv_option_ids, mv_fsv_ids)
+            for mv_fsv_id, mv_option_id in [
+                (mv_fsv["id"], mv_fsv["multivariate_feature_option"])
+                for mv_fsv in feature_state["multivariate_feature_state_values"]
+            ]
         ],
         "identity": None,
         "enabled": False,
