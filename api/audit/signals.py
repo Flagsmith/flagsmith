@@ -1,9 +1,8 @@
 import logging
-import typing
 
 import boto3
 from django.conf import settings
-from django.db.models import Prefetch
+from django.db.models import Q
 from django.db.models.signals import post_save
 from django.dispatch import receiver
 from flag_engine.django_transform.document_builders import (
@@ -13,8 +12,6 @@ from flag_engine.django_transform.document_builders import (
 from audit.models import AuditLog, RelatedObjectType
 from audit.serializers import AuditLogSerializer
 from environments.models import Environment
-from features.models import FeatureState
-from features.multivariate.models import MultivariateFeatureStateValue
 from integrations.datadog.datadog import DataDogWrapper
 from integrations.new_relic.new_relic import NewRelicWrapper
 from integrations.slack.slack import SlackWrapper
@@ -112,55 +109,17 @@ if settings.ENVIRONMENTS_TABLE_NAME_DYNAMO:
 
 @receiver(post_save, sender=AuditLog)
 def send_environments_to_dynamodb(sender, instance, **kwargs):
-
-    environment = (
-        Environment.objects.select_related("project")
-        .prefetch_related(
-            Prefetch(
-                "feature_states",
-                queryset=FeatureState.objects.select_related(
-                    "feature", "feature_state_value"
-                ),
-            ),
-            "feature_states__feature__multivariate_feature_option",
-            Prefetch(
-                "feature_states__multivariate_feature_state_values",
-                queryset=MultivariateFeatureStateValue.objects.select_releated(
-                    "multivariate_feature_option"
-                ),
-            ),
-            "project__segments",
-            "project__segments__rules",
-            "project__segments__rules__rules",
-            "project__segments__rules__conditions",
-            Prefetch(
-                "project__segments__feature_segments__feature_states",
-                queryset=FeatureState.objects.select_related(
-                    "feature", "feature_state_value"
-                ),
-            ),
-            Prefetch(
-                "project__segments__feature_segments__feature_states__multivariate_feature_state_values",
-                queryset=MultivariateFeatureStateValue.objects.select_releated(
-                    "multivariate_feature_option"
-                ),
-            ),
-        )
-        .get(id=instance.environment_id)
+    environments_filter = (
+        Q(id=instance.environment_id)
+        if instance.environment_id
+        else Q(project=instance.project)
     )
+    environments = Environment.objects.filter_for_document_builder(environments_filter)
 
-    project = instance.project or getattr(environment, "project", None)
-
+    project = instance.project or environments.first().project
     if not (project and project.enable_dynamo_db and dynamo_env_table):
         return
 
-    if environment:
-        dynamo_env_table.put_item(Item=build_environment_document(environment))
-    else:
-        _write_multiple_environments_to_dynamo(project.environments.all())
-
-
-def _write_multiple_environments_to_dynamo(environments: typing.Iterable[Environment]):
     with dynamo_env_table.batch_writer() as writer:
         for environment in environments:
             writer.put_item(Item=build_environment_document(environment))
