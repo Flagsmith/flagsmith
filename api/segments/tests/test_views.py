@@ -1,5 +1,6 @@
 import json
 
+from core.constants import STRING
 from django.contrib.auth import get_user_model
 from django.urls import reverse
 from rest_framework import status
@@ -8,7 +9,7 @@ from rest_framework.test import APITestCase
 from audit.models import AuditLog, RelatedObjectType
 from environments.identities.models import Identity
 from environments.identities.traits.models import Trait
-from environments.models import STRING, Environment
+from environments.models import Environment
 from organisations.models import Organisation, OrganisationRole
 from projects.models import Project
 from segments.models import EQUAL, Condition, Segment, SegmentRule

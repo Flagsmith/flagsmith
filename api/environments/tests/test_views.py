@@ -2,6 +2,7 @@ import json
 from unittest import TestCase, mock
 
 import pytest
+from core.constants import STRING
 from django.urls import reverse
 from rest_framework import status
 from rest_framework.test import APIClient
@@ -9,7 +10,7 @@ from rest_framework.test import APIClient
 from audit.models import AuditLog, RelatedObjectType
 from environments.identities.models import Identity
 from environments.identities.traits.models import Trait
-from environments.models import STRING, Environment, EnvironmentAPIKey, Webhook
+from environments.models import Environment, EnvironmentAPIKey, Webhook
 from environments.permissions.models import UserEnvironmentPermission
 from features.models import Feature, FeatureState
 from organisations.models import Organisation, OrganisationRole

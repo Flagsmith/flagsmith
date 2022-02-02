@@ -1,8 +1,9 @@
+from core.constants import FLOAT
 from django.test import TransactionTestCase
 
 from environments.identities.models import Identity
 from environments.identities.traits.models import Trait
-from environments.models import FLOAT, Environment
+from environments.models import Environment
 from features.models import (
     Feature,
     FeatureSegment,

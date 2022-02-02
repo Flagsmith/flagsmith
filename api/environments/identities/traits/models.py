@@ -1,11 +1,11 @@
 import typing
 
+from core.constants import BOOLEAN, FLOAT, INTEGER, STRING
 from django.core.exceptions import ObjectDoesNotExist
 from django.db import models
 from django.utils.encoding import python_2_unicode_compatible
 
 from environments.identities.traits.exceptions import TraitPersistenceError
-from environments.models import BOOLEAN, FLOAT, INTEGER, STRING
 
 
 @python_2_unicode_compatible
