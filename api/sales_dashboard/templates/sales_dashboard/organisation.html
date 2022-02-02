@@ -56,7 +56,7 @@
                             <th>Environments</th>
                             <th>Features</th>
                             <th>Segments</th>
-                            <th>Dynamo DB enabled</th>
+                            <th>Dynamo DB Enabled</th>
                             <th>Identity Count</th>
                             <th>Migrate Identity</th>
 
@@ -73,11 +73,11 @@
                             <td>{{project.features.all.count}}</td>
                             <td>{{project.segments.all.count}}</td>
                             <td>{{project.enable_dynamo_db}}</td>
-                            <td>{{identity_count|get_item:project.id}}</td>
+                            <td>{{identity_count_dict|get_item:project.id}}</td>
                             <td>
                             <form method="POST" class="form-inline" action="{% url 'sales_dashboard:migrate_identities' project.id %}">
                                 {% csrf_token %}
-                                <input value="migrate identities" {% if identity_count|get_item:project.id > max_migratable_identities %} {{'disabled'}} {% endif %} type="submit"/>
+                                <input value="migrate identities" {% if identity_count_dict|get_item:project.id > max_migratable_identities %} {{'disabled'}} {% endif %} type="submit"/>
                             </form>
                             </td>
                         </tr>

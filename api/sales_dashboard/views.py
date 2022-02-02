@@ -116,9 +116,9 @@ def organisation_info(request, organisation_id):
     )
 
     event_list, labels = get_event_list_for_organisation(organisation_id)
-    identity_count = {}
+    identity_count_dict = {}
     for project in organisation.projects.all():
-        identity_count[project.id] = Identity.objects.filter(
+        identity_count_dict[project.id] = Identity.objects.filter(
             environment__in=project.environments.all()
         ).count()
 
@@ -137,7 +137,7 @@ def organisation_info(request, organisation_id):
             range_: get_events_for_organisation(organisation_id, date_range=range_)
             for range_ in ("24h", "7d", "30d")
         },
-        "identity_count": identity_count,
+        "identity_count_dict": identity_count_dict,
         "max_migratable_identities": MAX_MIGRATABLE_IDENTITIES,
     }
 

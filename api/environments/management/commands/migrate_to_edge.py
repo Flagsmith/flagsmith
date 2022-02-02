@@ -12,7 +12,6 @@ class Command(BaseCommand):
         )
 
     def handle(self, *args, **options):
-
         project_id = options["project"]
         dynamo_wrapper = DynamoIdentityWrapper()
         dynamo_wrapper.migrate_identities(project_id)
