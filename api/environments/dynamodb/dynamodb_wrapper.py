@@ -4,6 +4,11 @@ import boto3
 from boto3.dynamodb.conditions import Key
 from django.conf import settings
 from django.core.exceptions import ObjectDoesNotExist
+from flag_engine.django_transform.document_builders import (
+    build_identity_document,
+)
+
+from environments.models import Environment
 
 
 class DynamoIdentityWrapper:
@@ -70,3 +75,14 @@ class DynamoIdentityWrapper:
         if start_key:
             query_kwargs.update(ExclusiveStartKey=start_key)
         return self.query_items(**query_kwargs)
+
+    def migrate_identities(self, project_id):
+        assert self._table
+        with self._table.batch_writer() as batch:
+
+            for environment in Environment.objects.filter(project_id=project_id):
+
+                for identity in environment.identities.all():
+                    identity_document = build_identity_document(identity)
+                    print(identity.id)
+                    batch.put_item(Item=identity_document)
