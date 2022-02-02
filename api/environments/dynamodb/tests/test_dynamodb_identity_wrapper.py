@@ -1,4 +1,7 @@
 from boto3.dynamodb.conditions import Key
+from flag_engine.django_transform.document_builders import (
+    build_identity_document,
+)
 
 from environments.dynamodb import DynamoIdentityWrapper
 
@@ -108,3 +111,31 @@ def test_search_items_with_identifier_calls_query_with_correct_arguments(mocker)
         & search_function(identifier),
         ExclusiveStartKey=start_key,
     )
+
+
+def test_migrate_identities_calls_batch_put_item_with_correct_arguments(
+    mocker, project, identity
+):
+    # Given
+    dynamo_identity_wrapper = DynamoIdentityWrapper()
+    mocked_dynamo_table = mocker.patch.object(dynamo_identity_wrapper, "_table")
+    expected_identity_document = build_identity_document(identity)
+
+    # When
+    dynamo_identity_wrapper.migrate_identities(project.id)
+
+    # Then
+    mocked_dynamo_table.batch_writer.assert_called_with()
+
+    mocked_put_item = (
+        mocked_dynamo_table.batch_writer.return_value.__enter__.return_value.put_item
+    )
+    _, kwargs = mocked_put_item.call_args
+    actual_identity_document = kwargs["Item"]
+
+    # Remove identity_uuid from the document since it will be different
+    actual_identity_document.pop("identity_uuid")
+    expected_identity_document.pop("identity_uuid")
+
+    assert actual_identity_document == expected_identity_document
+    mocked_dynamo_table.batch_writer.return_value.__enter__.return_value.put_item.assert_called()
