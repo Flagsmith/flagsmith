@@ -257,8 +257,8 @@ class FeatureStateSerializerCreate(serializers.ModelSerializer):
         model = FeatureState
         fields = ("feature", "enabled")
 
-    def create(self, validated_data):
-        instance = super(FeatureStateSerializerCreate, self).create(validated_data)
+    def save(self, **kwargs):
+        instance = super(FeatureStateSerializerCreate, self).save(**kwargs)
         self._create_audit_log(instance=instance)
         return instance
 

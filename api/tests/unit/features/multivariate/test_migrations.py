@@ -1,6 +1,6 @@
 import typing
 
-from environments.models import STRING
+from core.constants import STRING
 
 
 def test_remove_duplicate_mv_feature_state_values(migrator):

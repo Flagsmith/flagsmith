@@ -24,18 +24,12 @@ from environments.api_keys import (
     generate_server_api_key,
 )
 from environments.exceptions import EnvironmentHeaderNotPresentError
+from environments.managers import EnvironmentManager
 from features.models import FeatureState
 from projects.models import Project
 from webhooks.models import AbstractBaseWebhookModel
 
 logger = logging.getLogger(__name__)
-
-# User Trait Value Types
-INTEGER = "int"
-STRING = "unicode"
-BOOLEAN = "bool"
-FLOAT = "float"
-
 environment_cache = caches[settings.ENVIRONMENT_CACHE_LOCATION]
 
 
@@ -61,6 +55,8 @@ class Environment(LifecycleModel):
 
     webhooks_enabled = models.BooleanField(default=False, help_text="DEPRECATED FIELD.")
     webhook_url = models.URLField(null=True, blank=True, help_text="DEPRECATED FIELD.")
+
+    objects = EnvironmentManager()
 
     class Meta:
         ordering = ["id"]
