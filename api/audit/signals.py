@@ -116,7 +116,7 @@ def send_environments_to_dynamodb(sender, instance, **kwargs):
     )
     environments = Environment.objects.filter_for_document_builder(environments_filter)
 
-    project = instance.project or environments.first().project
+    project = instance.project or getattr(environments.first(), "project", None)
     if not (project and project.enable_dynamo_db and dynamo_env_table):
         return
 
