@@ -1,6 +1,7 @@
 import re
 import typing
 
+from core.constants import BOOLEAN, FLOAT, INTEGER
 from django.core.exceptions import ValidationError
 from django.db import models
 from django.utils.encoding import python_2_unicode_compatible
@@ -8,10 +9,11 @@ from django.utils.encoding import python_2_unicode_compatible
 from environments.identities.helpers import (
     get_hashed_percentage_for_object_ids,
 )
-from environments.identities.models import Identity
-from environments.identities.traits.models import Trait
-from environments.models import BOOLEAN, FLOAT, INTEGER
 from projects.models import Project
+
+if typing.TYPE_CHECKING:
+    from environments.identities.models import Identity
+    from environments.identities.traits.models import Trait
 
 # Condition Types
 EQUAL = "EQUAL"
@@ -41,7 +43,7 @@ class Segment(models.Model):
         return "Segment - %s" % self.name
 
     def does_identity_match(
-        self, identity: Identity, traits: typing.List[Trait] = None
+        self, identity: "Identity", traits: typing.List["Trait"] = None
     ) -> bool:
         rules = self.rules.all()
         return rules.count() > 0 and all(
@@ -82,7 +84,7 @@ class SegmentRule(models.Model):
         )
 
     def does_identity_match(
-        self, identity: Identity, traits: typing.List[Trait] = None
+        self, identity: "Identity", traits: typing.List["Trait"] = None
     ) -> bool:
         matches_conditions = False
         conditions = self.conditions.all()
@@ -154,7 +156,7 @@ class Condition(models.Model):
         )
 
     def does_identity_match(
-        self, identity: Identity, traits: typing.List[Trait] = None
+        self, identity: "Identity", traits: typing.List["Trait"] = None
     ) -> bool:
         if self.operator == PERCENTAGE_SPLIT:
             return self._check_percentage_split_operator(identity)

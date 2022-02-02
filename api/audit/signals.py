@@ -1,8 +1,8 @@
 import logging
-import typing
 
 import boto3
 from django.conf import settings
+from django.db.models import Q
 from django.db.models.signals import post_save
 from django.dispatch import receiver
 from flag_engine.django_transform.document_builders import (
@@ -109,18 +109,17 @@ if settings.ENVIRONMENTS_TABLE_NAME_DYNAMO:
 
 @receiver(post_save, sender=AuditLog)
 def send_environments_to_dynamodb(sender, instance, **kwargs):
-    environment = instance.environment
-    project = instance.project or getattr(environment, "project", None)
+    environments_filter = (
+        Q(id=instance.environment_id)
+        if instance.environment_id
+        else Q(project=instance.project)
+    )
+    environments = Environment.objects.filter_for_document_builder(environments_filter)
+
+    project = instance.project or getattr(environments.first(), "project", None)
     if not (project and project.enable_dynamo_db and dynamo_env_table):
         return
 
-    if environment:
-        dynamo_env_table.put_item(Item=build_environment_document(environment))
-    else:
-        _write_multiple_environments_to_dynamo(project.environments.all())
-
-
-def _write_multiple_environments_to_dynamo(environments: typing.Iterable[Environment]):
     with dynamo_env_table.batch_writer() as writer:
         for environment in environments:
             writer.put_item(Item=build_environment_document(environment))

@@ -1,10 +1,10 @@
+from core.constants import INTEGER
 from rest_framework import exceptions, serializers
 
 from environments.identities.models import Identity
 from environments.identities.serializers import IdentitySerializer
 from environments.identities.traits.fields import TraitValueField
 from environments.identities.traits.models import Trait
-from environments.models import INTEGER
 
 
 class TraitSerializerFull(serializers.ModelSerializer):
