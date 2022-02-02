@@ -16,6 +16,7 @@ from django.utils.safestring import mark_safe
 from django.views.generic import ListView
 from django.views.generic.edit import FormView
 
+from environments.dynamodb import DynamoIdentityWrapper
 from environments.identities.models import Identity
 from organisations.models import Organisation
 from projects.models import Project
@@ -174,8 +175,8 @@ def update_max_api_calls(request, organisation_id):
 
 @staff_member_required
 def migrate_identities_to_edge(request, project_id):
-    print(project_id)
-    # TODO:  Add method call
+    dynamo_wrapper = DynamoIdentityWrapper()
+    dynamo_wrapper.migrate_identities(project_id)
     return HttpResponseRedirect(reverse("sales_dashboard:index"))
 
 

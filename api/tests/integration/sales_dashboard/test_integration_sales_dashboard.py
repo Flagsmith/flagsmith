@@ -14,3 +14,19 @@ def test_sales_dashboard_index(superuser_authenticated_client):
 
     # Then
     assert response.status_code == 200
+
+
+def test_migrate_identities_to_edge_calls_migrate_identity_with_correct_arguments(
+    superuser_authenticated_client, mocker, project
+):
+    # Given
+    mocked_dynamo_wrapper = mocker.patch("sales_dashboard.views.DynamoIdentityWrapper")
+    url = reverse("sales_dashboard:migrate_identities", args=[project])
+
+    # When
+    response = superuser_authenticated_client.post(url)
+
+    # Then
+    assert response.status_code == 302
+    mocked_dynamo_wrapper.assert_called_with()
+    mocked_dynamo_wrapper.return_value.migrate_identities.assert_called_with(project)
