@@ -79,9 +79,8 @@ class DynamoIdentityWrapper:
     def migrate_identities(self, project_id):
         assert self._table
         with self._table.batch_writer() as batch:
-
+            # TODO: optimize this
             for environment in Environment.objects.filter(project_id=project_id):
-
                 for identity in environment.identities.all():
                     identity_document = build_identity_document(identity)
                     print(identity.id)
