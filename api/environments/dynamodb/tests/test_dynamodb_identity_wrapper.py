@@ -113,7 +113,7 @@ def test_search_items_with_identifier_calls_query_with_correct_arguments(mocker)
     )
 
 
-def test_migrate_identities_calls_internal_methods__with_correct_arguments(
+def test_migrate_identities_calls_internal_methods_with_correct_arguments(
     mocker, project, identity
 ):
     # Given
@@ -151,16 +151,17 @@ def test_is_migration_done_calls_dynamo_project_metadata_wrapper_with_correct_ar
     mocker,
 ):
     # Given
+    project_id = 1
     mocked_project_metadata_wrapper = mocker.patch(
         "environments.dynamodb.dynamodb_wrapper.DynamoProjectMetadataWrapper"
     )
     dynamo_identity_wrapper = DynamoIdentityWrapper()
 
     # When
-    result = dynamo_identity_wrapper.is_migration_done(1)
+    result = dynamo_identity_wrapper.is_migration_done(project_id)
 
     # Then
-    mocked_project_metadata_wrapper.assert_called_with(1)
+    mocked_project_metadata_wrapper.assert_called_with(project_id)
     assert (
         result
         == mocked_project_metadata_wrapper.return_value.is_identity_migration_done

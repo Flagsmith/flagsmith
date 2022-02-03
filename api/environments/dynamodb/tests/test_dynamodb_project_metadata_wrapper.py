@@ -4,7 +4,7 @@ from environments.dynamodb.dynamodb_wrapper import DynamoProjectMetadataWrapper
 from environments.dynamodb.types import DynamoProjectMetadata
 
 
-def test_is_identity_migration_done_return_false_if_dcoument_does_not_exists(mocker):
+def test_is_identity_migration_done_returns_false_if_dcoument_does_not_exists(mocker):
     # Given
     project_id = 1
     wrapper = DynamoProjectMetadataWrapper(project_id)
@@ -24,7 +24,7 @@ def test_is_identity_migration_done_return_false_if_dcoument_does_not_exists(moc
     mocked_get_item.assert_called_with(Key={"id": project_id})
 
 
-def test_is_identity_migration_done_return_correct_value_if_dcoument_exists(mocker):
+def test_is_identity_migration_done_returns_correct_value_if_dcoument_exists(mocker):
     # Given
     project_id = 1
     wrapper = DynamoProjectMetadataWrapper(project_id)
@@ -62,7 +62,7 @@ def test_mark_identity_migration_as_done_calls_put_item_with_correct_arguments_i
         return_value={
             "ResponseMetadata": {"some_key": "some_value"},
             "Item": {
-                "id": Decimal("1"),
+                "id": Decimal(f"{project_id}"),
                 "is_migration_done": True,
             },
         }
