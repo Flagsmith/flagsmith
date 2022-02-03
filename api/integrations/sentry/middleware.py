@@ -25,8 +25,10 @@ class ForceSentryTraceMiddleware:
     def __call__(self, request):
         auth = request.headers.get(self.FORCE_SENTRY_TRACE_HEADER)
         if auth == self.auth_key:
-            sentry_sdk.start_transaction(
-                name=f"{request.method} {request.path}", sampled=True
-            )
+            transaction_name = f"{request.method} {request.path}"
+            with sentry_sdk.start_transaction(name=transaction_name, sampled=True):
+                response = self.get_response(request)
+        else:
+            response = self.get_response()
 
-        return self.get_response(request)
+        return response
