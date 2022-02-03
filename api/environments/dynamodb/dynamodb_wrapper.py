@@ -1,4 +1,5 @@
 import typing
+from dataclasses import asdict
 
 import boto3
 from boto3.dynamodb.conditions import Key
@@ -9,6 +10,41 @@ from flag_engine.django_transform.document_builders import (
 )
 
 from environments.models import Environment
+
+from .types import DynamoProjectMetadata
+
+
+class DynamoProjectMetadataWrapper:
+    """Internal Wrapper used by `DynamoIdentityWrapper` to track wether Identity
+    data(for a given project) has been migrated or not"""
+
+    def __init__(self, project_id: int):
+        self.project_id = project_id
+        self._table = None
+        if settings.PROJECT_METADATA_TABLE_NAME_DYNAMO:
+            self._table = boto3.resource("dynamodb").Table(
+                settings.PROJECT_METADATA_TABLE_NAME_DYNAMO
+            )
+
+    def _get_instance_or_none(self) -> typing.Optional[DynamoProjectMetadata]:
+        document = self._table.get_item(Key={"id": self.project_id}).get("Item")
+        if document:
+            return DynamoProjectMetadata(**document)
+        return None
+
+    @property
+    def is_identity_migration_done(self):
+        instance = self._get_instance_or_none()
+        if not instance:
+            return False
+        return instance.is_migration_done
+
+    def mark_identity_migration_as_done(self):
+        instance = self._get_instance_or_none() or DynamoProjectMetadata(
+            id=self.project_id
+        )
+        instance.is_migration_done = True
+        self._table.put_item(Item=asdict(instance))
 
 
 class DynamoIdentityWrapper:
@@ -41,7 +77,7 @@ class DynamoIdentityWrapper:
         try:
             return self.query_items(**query_kwargs)["Items"][0]
         except KeyError:
-            raise ObjectDoesNotExist
+            raise ObjectDoesNotExist()
 
     def get_all_items(
         self, environment_api_key: str, limit: int, start_key: dict = None
@@ -76,9 +112,16 @@ class DynamoIdentityWrapper:
             query_kwargs.update(ExclusiveStartKey=start_key)
         return self.query_items(**query_kwargs)
 
+    def is_migration_done(self, project_id: int) -> bool:
+        project_metadata = DynamoProjectMetadataWrapper(project_id)
+        return project_metadata.is_identity_migration_done
+
     def migrate_identities(self, project_id: int):
         with self._table.batch_writer() as batch:
             for environment in Environment.objects.filter(project_id=project_id):
                 for identity in environment.identities.all():
                     identity_document = build_identity_document(identity)
                     batch.put_item(Item=identity_document)
+
+        project_metadata = DynamoProjectMetadataWrapper(project_id)
+        project_metadata.mark_identity_migration_as_done()

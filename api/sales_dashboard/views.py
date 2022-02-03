@@ -116,11 +116,17 @@ def organisation_info(request, organisation_id):
     )
 
     event_list, labels = get_event_list_for_organisation(organisation_id)
+
+    identity_wrapper = DynamoIdentityWrapper()
     identity_count_dict = {}
+    identity_migration_status_dict = {}
     for project in organisation.projects.all():
         identity_count_dict[project.id] = Identity.objects.filter(
             environment__in=project.environments.all()
         ).count()
+        identity_migration_status_dict[project.id] = identity_wrapper.is_migration_done(
+            project.id
+        )
 
     context = {
         "organisation": organisation,
@@ -139,6 +145,7 @@ def organisation_info(request, organisation_id):
         },
         "identity_count_dict": identity_count_dict,
         "max_migratable_identities": MAX_MIGRATABLE_IDENTITIES,
+        "identity_migration_status_dict": identity_migration_status_dict,
     }
 
     # If self hosted and running without an Influx DB data store, we dont want to/cant show usage
@@ -175,8 +182,9 @@ def update_max_api_calls(request, organisation_id):
 
 @staff_member_required
 def migrate_identities_to_edge(request, project_id):
-    dynamo_wrapper = DynamoIdentityWrapper()
-    dynamo_wrapper.migrate_identities(project_id)
+    identity_wrapper = DynamoIdentityWrapper()
+    if not identity_wrapper.is_migration_done(project_id):
+        identity_wrapper.migrate_identities(project_id)
     return HttpResponseRedirect(reverse("sales_dashboard:index"))
 
 
