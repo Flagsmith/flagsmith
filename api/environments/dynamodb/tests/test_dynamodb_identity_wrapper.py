@@ -113,14 +113,17 @@ def test_search_items_with_identifier_calls_query_with_correct_arguments(mocker)
     )
 
 
-def test_migrate_identities_calls_batch_put_item_with_correct_arguments(
+def test_migrate_identities_calls_internal_methods__with_correct_arguments(
     mocker, project, identity
 ):
     # Given
     dynamo_identity_wrapper = DynamoIdentityWrapper()
     mocked_dynamo_table = mocker.patch.object(dynamo_identity_wrapper, "_table")
-    expected_identity_document = build_identity_document(identity)
+    mocked_project_metadata_wrapper = mocker.patch(
+        "environments.dynamodb.dynamodb_wrapper.DynamoProjectMetadataWrapper"
+    )
 
+    expected_identity_document = build_identity_document(identity)
     # When
     dynamo_identity_wrapper.migrate_identities(project.id)
 
@@ -138,22 +141,8 @@ def test_migrate_identities_calls_batch_put_item_with_correct_arguments(
     expected_identity_document.pop("identity_uuid")
 
     assert actual_identity_document == expected_identity_document
-    mocked_dynamo_table.batch_writer.return_value.__enter__.return_value.put_item.assert_called()
 
-
-def test_migrate_identities_calls_dynamo_project_metadata_wrapper_with_correct_arguments(
-    mocker, project, identity
-):
-    # Given
-    dynamo_identity_wrapper = DynamoIdentityWrapper()
-
-    mocked_project_metadata_wrapper = mocker.patch(
-        "environments.dynamodb.dynamodb_wrapper.DynamoProjectMetadataWrapper"
-    )
-    # When
-    dynamo_identity_wrapper.migrate_identities(project.id)
-
-    # Then
+    # Make sure that Project Metadata Wrapper was called correctly
     mocked_project_metadata_wrapper.assert_called_with(project.id)
     mocked_project_metadata_wrapper.return_value.mark_identity_migration_as_done.asssert_called_with()
 
