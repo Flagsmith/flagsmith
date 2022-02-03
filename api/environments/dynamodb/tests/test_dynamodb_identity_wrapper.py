@@ -139,3 +139,40 @@ def test_migrate_identities_calls_batch_put_item_with_correct_arguments(
 
     assert actual_identity_document == expected_identity_document
     mocked_dynamo_table.batch_writer.return_value.__enter__.return_value.put_item.assert_called()
+
+
+def test_migrate_identities_calls_dynamo_project_metadata_wrapper_with_correct_arguments(
+    mocker, project, identity
+):
+    # Given
+    dynamo_identity_wrapper = DynamoIdentityWrapper()
+
+    mocked_project_metadata_wrapper = mocker.patch(
+        "environments.dynamodb.dynamodb_wrapper.DynamoProjectMetadataWrapper"
+    )
+    # When
+    dynamo_identity_wrapper.migrate_identities(project.id)
+
+    # Then
+    mocked_project_metadata_wrapper.assert_called_with(project.id)
+    mocked_project_metadata_wrapper.return_value.mark_identity_migration_as_done.asssert_called_with()
+
+
+def test_is_migration_done_calls_dynamo_project_metadata_wrapper_with_correct_arguments(
+    mocker,
+):
+    # Given
+    mocked_project_metadata_wrapper = mocker.patch(
+        "environments.dynamodb.dynamodb_wrapper.DynamoProjectMetadataWrapper"
+    )
+    dynamo_identity_wrapper = DynamoIdentityWrapper()
+
+    # When
+    result = dynamo_identity_wrapper.is_migration_done(1)
+
+    # Then
+    mocked_project_metadata_wrapper.assert_called_with(1)
+    assert (
+        result
+        == mocked_project_metadata_wrapper.return_value.is_identity_migration_done
+    )

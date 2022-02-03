@@ -33,7 +33,7 @@ class DynamoProjectMetadataWrapper:
         return None
 
     @property
-    def is_identity_migration_done(self):
+    def is_identity_migration_done(self) -> bool:
         instance = self._get_instance_or_none()
         if not instance:
             return False
