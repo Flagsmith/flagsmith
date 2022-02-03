@@ -2,6 +2,7 @@ import json
 from unittest.case import TestCase
 
 import pytest
+from core.constants import INTEGER, STRING
 from django.urls import reverse
 from rest_framework import status
 from rest_framework.test import APIClient, APITestCase
@@ -11,7 +12,7 @@ from environments.identities.traits.constants import (
     TRAIT_STRING_VALUE_MAX_LENGTH,
 )
 from environments.identities.traits.models import Trait
-from environments.models import INTEGER, STRING, Environment
+from environments.models import Environment
 from organisations.models import Organisation, OrganisationRole
 from projects.models import Project
 from util.tests import Helper

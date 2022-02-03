@@ -18,12 +18,14 @@ def test_send_env_to_dynamodb_from_audit_log_with_environment(
         environment=dynamo_enabled_project_environment_one
     )
     mock_dynamo_env_table.reset_mock()
+    batch_writer = mock_dynamo_env_table.batch_writer.return_value
+    batch_writer_context_manager = batch_writer.__enter__.return_value
 
     # When
     send_environments_to_dynamodb(sender=AuditLog, instance=audit_log)
 
     # Then
-    mock_dynamo_env_table.put_item.assert_called_once_with(
+    batch_writer_context_manager.put_item.assert_called_once_with(
         Item=build_environment_document(dynamo_enabled_project_environment_one)
     )
 
@@ -75,11 +77,13 @@ def test_send_env_to_dynamodb_from_audit_log_with_environment_and_project(
         project=dynamo_enabled_project,
     )
     mock_dynamo_env_table.reset_mock()
+    batch_writer = mock_dynamo_env_table.batch_writer.return_value
+    batch_writer_context_manager = batch_writer.__enter__.return_value
 
     # When
     send_environments_to_dynamodb(sender=AuditLog, instance=audit_log)
 
     # Then
-    mock_dynamo_env_table.put_item.assert_called_once_with(
+    batch_writer_context_manager.put_item.assert_called_once_with(
         Item=build_environment_document(dynamo_enabled_project_environment_one)
     )

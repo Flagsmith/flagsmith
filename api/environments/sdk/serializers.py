@@ -1,3 +1,4 @@
+from core.constants import BOOLEAN, FLOAT, INTEGER, STRING
 from rest_framework import serializers
 
 from environments.identities.models import Identity
@@ -7,7 +8,6 @@ from environments.identities.serializers import (
 from environments.identities.traits.fields import TraitValueField
 from environments.identities.traits.models import Trait
 from environments.identities.traits.serializers import TraitSerializerBasic
-from environments.models import BOOLEAN, FLOAT, INTEGER, STRING
 from features.serializers import FeatureStateSerializerFull
 from segments.serializers import SegmentSerializerBasic
 
