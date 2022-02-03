@@ -30,27 +30,6 @@ def test_identify_integrations_segment_called(mocker, environment, identity):
     mock_segment_wrapper.assert_called()
 
 
-def test_identify_integrations_segment_and_amplitude_called(
-    mocker, environment, identity
-):
-    # Given
-    mock_segment_wrapper = mocker.patch(
-        "integrations.segment.segment.SegmentWrapper.identify_user_async"
-    )
-    mock_amplitude_wrapper = mocker.patch(
-        "integrations.amplitude.amplitude.AmplitudeWrapper.identify_user_async"
-    )
-    SegmentConfiguration.objects.create(api_key="abc-123", environment=environment)
-    AmplitudeConfiguration.objects.create(api_key="abc-123", environment=environment)
-
-    # When
-    identify_integrations(identity, identity.get_all_feature_states())
-
-    # Then
-    mock_segment_wrapper.assert_called()
-    mock_amplitude_wrapper.assert_called()
-
-
 def test_identify_integrations_calls_every_integration_in_identity_integrations_dict(
     mocker, identity
 ):
