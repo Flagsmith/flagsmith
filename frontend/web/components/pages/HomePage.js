@@ -249,7 +249,7 @@ const HomePage = class extends React.Component {
                                                                         this.setState({ email: Utils.safeParseEventValue(e) });
                                                                     }}
                                                                     className="input-default full-width mb-2 "
-                                                                    type="email"
+                                                                    type="text"
                                                                     name="email" id="email"
                                                                 />
                                                                 {error && error.password ? (
