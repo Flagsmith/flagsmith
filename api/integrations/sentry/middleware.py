@@ -29,6 +29,6 @@ class ForceSentryTraceMiddleware:
             with sentry_sdk.start_transaction(name=transaction_name, sampled=True):
                 response = self.get_response(request)
         else:
-            response = self.get_response()
+            response = self.get_response(request)
 
         return response
