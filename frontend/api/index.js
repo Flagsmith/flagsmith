@@ -3,7 +3,7 @@ const Project = require('../common/project');
 const app = require('express')();
 
 // Some infrastructure (e.g. Kubernetes) needs simple healthchecks
-app.get('/health', (req, res) => {
+app.get('/api', (req, res) => {
     console.log('Healthcheck complete');
     res.send('OK');
 });
