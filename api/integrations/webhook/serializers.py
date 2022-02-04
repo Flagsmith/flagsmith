@@ -28,13 +28,13 @@ class SegmentSerializer(serializers.Serializer):
 
 class IntegrationFeatureStateSerializer(FeatureStateSerializerFull):
     def to_representation(self, instance):
-        ret = super().to_representation(instance)
-        value = ret["feature_state_value"]
+        return_value = super().to_representation(instance)
+        value = return_value["feature_state_value"]
         if value:
-            ret["percentage_allocation"] = self.get_percentage_allocation(
+            return_value["percentage_allocation"] = self.get_percentage_allocation(
                 value, instance
             )
-        return ret
+        return return_value
 
     def get_percentage_allocation(self, value, instance) -> typing.Optional[float]:
         value_filter = {
