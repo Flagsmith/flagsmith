@@ -35,3 +35,4 @@ def test_segment_serializer_member_is_correct(
     )
     # Then
     assert serializer.data["member"] is True
+    assert serializer.data["d"] == identity_matching_segment.id

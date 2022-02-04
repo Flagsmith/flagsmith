@@ -15,7 +15,7 @@ class WebhookConfigurationSerializer(serializers.ModelSerializer):
         fields = ("id", "url", "secret")
 
 
-class SegmentSerializer(serializers.Serializer):
+class SegmentSerializer(serializers.ModelSerializer):
     member = serializers.SerializerMethodField()
 
     class Meta:
