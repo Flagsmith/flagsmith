@@ -17,8 +17,17 @@ trait_value = "value1"
 
 
 @pytest.fixture()
-def organisation(db):
-    return Organisation.objects.create(name="Test Org")
+def admin_client(admin_user):
+    client = APIClient()
+    client.force_authenticate(user=admin_user)
+    return client
+
+
+@pytest.fixture()
+def organisation(db, admin_user):
+    org = Organisation.objects.create(name="Test Org")
+    admin_user.add_organisation(org)
+    return org
 
 
 @pytest.fixture()

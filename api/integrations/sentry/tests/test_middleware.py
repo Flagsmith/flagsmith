@@ -6,6 +6,10 @@ def test_force_sentry_trace_middleware_starts_transaction_when_param_present(
 ):
     # Given
     mock_sentry_sdk = mocker.patch("integrations.sentry.middleware.sentry_sdk")
+    mock_start_transaction_context_manager = mocker.MagicMock()
+    mock_sentry_sdk.start_transaction.return_value = (
+        mock_start_transaction_context_manager
+    )
 
     auth_key = "auth-key"
     settings.FORCE_SENTRY_TRACE_KEY = auth_key
@@ -22,6 +26,7 @@ def test_force_sentry_trace_middleware_starts_transaction_when_param_present(
     mock_sentry_sdk.start_transaction.assert_called_once_with(
         name="GET /some-endpoint", sampled=True
     )
+    mock_start_transaction_context_manager.__enter__.assert_called_once()
     assert response == mock_response
 
 
