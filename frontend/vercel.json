@@ -1,9 +1,13 @@
 {
   "version": 2,
-  "routes": [
+  "builds": [{
+    "src": "./server/index.js",
+    "use": "@now/node-server"
+  }],
+  "routes": [{"handle": "filesystem"},
     {
-      "src": "/(.*)",
-      "dest": "/"
+      "src": "/.*",
+      "dest": "./server/index.js"
     }
   ]
 }
