@@ -2,7 +2,7 @@
   "version": 2,
   "builds": [{
     "src": "./server/index.js",
-    "use": "@vercel/node-server"
+    "use": "@vercel/node"
   }],
   "routes": [{"handle": "filesystem"},
     {
