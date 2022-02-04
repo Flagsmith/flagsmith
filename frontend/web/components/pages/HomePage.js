@@ -97,6 +97,7 @@ const HomePage = class extends React.Component {
         const isSignup = (!projectOverrides.preventSignup || isInvite) && ((isInvite && document.location.href.indexOf('login') === -1) || document.location.href.indexOf('signup') != -1);
         const disableSignup = Project.preventSignup && !isInvite && isSignup;
         const oauths = [];
+        const oauths2 = [];
         const disableOauthRegister = this.props.hasFeature('disable_oauth_registration');
 
         if ((!isSignup || !disableOauthRegister) && !disableSignup) {
