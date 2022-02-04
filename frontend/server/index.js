@@ -186,3 +186,5 @@ app.listen(port, () => {
         process.send({ done: true });
     }
 });
+
+module.exports = app;
