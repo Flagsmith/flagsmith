@@ -1,5 +1,7 @@
 const Project = require('../common/project');
 
+const app = express();
+
 // Some infrastructure (e.g. Kubernetes) needs simple healthchecks
 app.get('/health', (req, res) => {
     console.log('Healthcheck complete');
