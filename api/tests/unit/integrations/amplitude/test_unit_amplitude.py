@@ -7,16 +7,17 @@ from integrations.amplitude.amplitude import (
     AMPLITUDE_API_URL,
     AmplitudeWrapper,
 )
+from integrations.amplitude.models import AmplitudeConfiguration
 from organisations.models import Organisation
 from projects.models import Project
 
 
 def test_amplitude_initialized_correctly():
     # Given
-    api_key = "123key"
+    config = AmplitudeConfiguration(api_key="123key")
 
     # When initialized
-    amplitude_wrapper = AmplitudeWrapper(api_key=api_key)
+    amplitude_wrapper = AmplitudeWrapper(config)
 
     # Then
     expected_url = f"{AMPLITUDE_API_URL}/identify"
@@ -27,8 +28,10 @@ def test_amplitude_initialized_correctly():
 def test_amplitude_when_generate_user_data_with_correct_values_then_success():
     # Given
     api_key = "123key"
+
+    config = AmplitudeConfiguration(api_key=api_key)
+    amplitude_wrapper = AmplitudeWrapper(config)
     identity = Identity(identifier="user123")
-    amplitude_wrapper = AmplitudeWrapper(api_key=api_key)
 
     organisation = Organisation.objects.create(name="Test Org")
     project = Project.objects.create(name="Test Project", organisation=organisation)

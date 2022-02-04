@@ -15,6 +15,7 @@ from integrations.slack.views import (
     SlackEnvironmentViewSet,
     SlackGetChannelsViewSet,
 )
+from integrations.webhook.views import WebhookConfigurationViewSet
 
 from .identities.traits.views import TraitViewSet
 from .identities.views import EdgeIdentityViewSet, IdentityViewSet
@@ -75,8 +76,16 @@ environments_router.register(
 environments_router.register(
     r"integrations/slack", SlackEnvironmentViewSet, basename="integrations-slack"
 )
+
+environments_router.register(
+    r"integrations/webhook",
+    WebhookConfigurationViewSet,
+    basename="integrations-webhook",
+)
 edge_identity_router = routers.NestedSimpleRouter(
-    environments_router, r"edge-identities", lookup="edge_identity"
+    environments_router,
+    r"edge-identities",
+    lookup="edge_identity",
 )
 edge_identity_router.register(
     r"edge-featurestates",

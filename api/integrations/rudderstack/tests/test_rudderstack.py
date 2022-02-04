@@ -5,6 +5,7 @@ import pytest
 from environments.identities.models import Identity
 from environments.models import Environment
 from features.models import Feature, FeatureState
+from integrations.rudderstack.models import RudderstackConfiguration
 from integrations.rudderstack.rudderstack import RudderstackWrapper
 from organisations.models import Organisation
 from projects.models import Project
@@ -14,9 +15,10 @@ from projects.models import Project
 class RudderstackConfigurationTestCase(TestCase):
     def test_rudderstack_wrapper_generate_user_data(self):
         # Given
-        rudderstack_wrapper = RudderstackWrapper(
+        rudderstack_config = RudderstackConfiguration(
             api_key="123key", base_url="https://api.rudderstack.com/"
         )
+        rudderstack_wrapper = RudderstackWrapper(rudderstack_config)
         organisation = Organisation.objects.create(name="Test Org")
         project = Project.objects.create(name="Test Project", organisation=organisation)
         environment = Environment.objects.create(

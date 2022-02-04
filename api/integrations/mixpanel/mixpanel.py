@@ -4,11 +4,11 @@ import typing
 
 import requests
 
+from environments.identities.models import Identity
+from features.models import FeatureState
 from integrations.common.wrapper import AbstractBaseIdentityIntegrationWrapper
 
-if typing.TYPE_CHECKING:
-    from environments.identities.models import Identity
-    from features.models import FeatureState
+from .models import MixpanelConfiguration
 
 logger = logging.getLogger(__name__)
 
@@ -16,8 +16,8 @@ MIXPANEL_API_URL = "https://api.mixpanel.com"
 
 
 class MixpanelWrapper(AbstractBaseIdentityIntegrationWrapper):
-    def __init__(self, api_key: str):
-        self.api_key = api_key
+    def __init__(self, config: MixpanelConfiguration):
+        self.api_key = config.api_key
         self.url = f"{MIXPANEL_API_URL}/engage#profile-set"
 
         # Pass the integration ID as per https://developer.mixpanel.com/docs/partner-integration-id
@@ -37,7 +37,7 @@ class MixpanelWrapper(AbstractBaseIdentityIntegrationWrapper):
         logger.debug("Sent event to Mixpanel. Body code was: %s" % response.content)
 
     def generate_user_data(
-        self, identity: "Identity", feature_states: typing.List["FeatureState"]
+        self, identity: Identity, feature_states: typing.List[FeatureState]
     ) -> dict:
         feature_properties = {}
 
