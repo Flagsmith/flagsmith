@@ -8,7 +8,9 @@ from integrations.webhook.models import WebhookConfiguration
 valid_webhook_url = "http://my.webhook.com/webhooks"
 
 
-def test_should_create_webhook_config_when_post(admin_client, environment):
+def test_should_create_webhook_config_when_post(
+    admin_client, organisation, environment
+):
     # Given
     url = reverse(
         "api-v1:environments:integrations-webhook-list",
@@ -30,7 +32,7 @@ def test_should_create_webhook_config_when_post(admin_client, environment):
 
 
 def test_should_return_BadRequest_when_duplicate_webhook_config_is_posted(
-    admin_client, environment
+    admin_client, organisation, environment
 ):
     # Given
     config = WebhookConfiguration.objects.create(
@@ -54,7 +56,7 @@ def test_should_return_BadRequest_when_duplicate_webhook_config_is_posted(
     assert WebhookConfiguration.objects.filter(environment=environment).count() == 1
 
 
-def test_should_update_configuration_when_put(admin_client, environment):
+def test_should_update_configuration_when_put(admin_client, organisation, environment):
     # Given
     config = WebhookConfiguration.objects.create(
         url=valid_webhook_url,
@@ -79,7 +81,9 @@ def test_should_update_configuration_when_put(admin_client, environment):
     assert config.url == new_url
 
 
-def test_should_return_webhook_config_list_when_requested(admin_client, environment):
+def test_should_return_webhook_config_list_when_requested(
+    admin_client, organisation, environment
+):
     # Given
     url = reverse(
         "api-v1:environments:integrations-webhook-list",
@@ -92,7 +96,9 @@ def test_should_return_webhook_config_list_when_requested(admin_client, environm
     assert response.status_code == status.HTTP_200_OK
 
 
-def test_should_remove_configuration_when_delete(admin_client, environment):
+def test_should_remove_configuration_when_delete(
+    admin_client, organisation, environment
+):
     # Given
     config = WebhookConfiguration.objects.create(
         url=valid_webhook_url, environment=environment

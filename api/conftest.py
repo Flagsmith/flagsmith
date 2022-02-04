@@ -26,7 +26,7 @@ def admin_client(admin_user):
 @pytest.fixture()
 def organisation(db, admin_user):
     org = Organisation.objects.create(name="Test Org")
-    admin_user.add_organisation(org)
+    admin_user.add_organisation(org, role=OrganisationRole.ADMIN)
     return org
 
 
@@ -85,13 +85,6 @@ def identity_matching_segment(project):
 @pytest.fixture()
 def api_client():
     return APIClient()
-
-
-@pytest.fixture()
-def admin_client(api_client, admin_user, organisation):
-    admin_user.add_organisation(organisation, OrganisationRole.ADMIN)
-    api_client.force_authenticate(user=admin_user)
-    return api_client
 
 
 @pytest.fixture()
