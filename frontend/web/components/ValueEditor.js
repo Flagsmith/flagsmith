@@ -79,6 +79,16 @@ class ValueEditor extends Component {
                     >
                     .yaml
                     </span>
+                    <span
+                        onMouseDown={(e) => {
+                            const res = Clipboard.setString(this.props.value);
+                            toast(res ? 'Clipboard set' : 'Could not set clipboard :(');
+                        }}
+                        className={cx('txt primary' )}
+                    >
+                        <span className="ion ion-md-clipboard mr-0 ml-2 txt primary"/> copy
+
+                    </span>
                 </Row>
                 {this.state.language === 'txt' ? (
                     <textarea
