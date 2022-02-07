@@ -24,7 +24,10 @@ from environments.sdk.serializers import (
     IdentitySerializerWithTraitsAndSegments,
 )
 from features.serializers import FeatureStateSerializerFull
-from integrations.integration import identify_integrations
+from integrations.integration import (
+    IDENTITY_INTEGRATIONS,
+    identify_integrations,
+)
 from projects.exceptions import DynamoNotEnabledError
 from util.views import SDKAPIView
 
@@ -215,7 +218,14 @@ class SDKIdentities(SDKAPIView):
             )  # TODO: add 400 status - will this break the clients?
 
         identity, _ = (
-            Identity.objects.select_related("environment", "environment__project")
+            Identity.objects.select_related(
+                "environment",
+                "environment__project",
+                *[
+                    f"environment__{integration['relation_name']}"
+                    for integration in IDENTITY_INTEGRATIONS
+                ],
+            )
             .prefetch_related("identity_traits")
             .get_or_create(identifier=identifier, environment=request.environment)
         )
