@@ -119,8 +119,8 @@ def test_migrate_identities_calls_internal_methods_with_correct_arguments(
     # Given
     dynamo_identity_wrapper = DynamoIdentityWrapper()
     mocked_dynamo_table = mocker.patch.object(dynamo_identity_wrapper, "_table")
-    mocked_project_metadata_wrapper = mocker.patch(
-        "environments.dynamodb.dynamodb_wrapper.DynamoProjectMetadataWrapper"
+    mocked_project_metadata = mocker.patch(
+        "environments.dynamodb.dynamodb_wrapper.DynamoProjectMetadata"
     )
 
     expected_identity_document = build_identity_document(identity)
@@ -143,8 +143,13 @@ def test_migrate_identities_calls_internal_methods_with_correct_arguments(
     assert actual_identity_document == expected_identity_document
 
     # Make sure that Project Metadata Wrapper was called correctly
-    mocked_project_metadata_wrapper.assert_called_with(project.id)
-    mocked_project_metadata_wrapper.return_value.mark_identity_migration_as_done.asssert_called_with()
+    mocked_project_metadata.get_or_new.assert_called_with(project.id)
+    # and `is_identity_migration_done` was updated successfully
+    assert (
+        mocked_project_metadata.get_or_new.return_value.is_identity_migration_done
+        is True
+    )
+    mocked_project_metadata.get_or_new.return_value.save.assert_called_with()
 
 
 def test_is_migration_done_calls_dynamo_project_metadata_wrapper_with_correct_arguments(
@@ -152,17 +157,18 @@ def test_is_migration_done_calls_dynamo_project_metadata_wrapper_with_correct_ar
 ):
     # Given
     project_id = 1
-    mocked_project_metadata_wrapper = mocker.patch(
-        "environments.dynamodb.dynamodb_wrapper.DynamoProjectMetadataWrapper"
+    mocked_project_metadata = mocker.patch(
+        "environments.dynamodb.dynamodb_wrapper.DynamoProjectMetadata"
     )
     dynamo_identity_wrapper = DynamoIdentityWrapper()
 
     # When
-    result = dynamo_identity_wrapper.is_migration_done(project_id)
 
+    result = dynamo_identity_wrapper.is_migration_done(project_id)
     # Then
-    mocked_project_metadata_wrapper.assert_called_with(project_id)
+
+    mocked_project_metadata.get_or_new.assert_called_with(project_id)
     assert (
         result
-        == mocked_project_metadata_wrapper.return_value.is_identity_migration_done
+        == mocked_project_metadata.get_or_new.return_value.is_identity_migration_done
     )
