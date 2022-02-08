@@ -1,5 +1,4 @@
 import typing
-from dataclasses import asdict
 
 import boto3
 from boto3.dynamodb.conditions import Key
