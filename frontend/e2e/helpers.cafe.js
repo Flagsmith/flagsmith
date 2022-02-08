@@ -1,5 +1,12 @@
 import { Selector, t } from 'testcafe';
-
+test.clientScripts({
+    content: `
+        window.addEventListener('error', function (e) {
+            console.error(e.message); 
+        });`
+})(`Skip error but log it`, async t => {
+    console.log(await t.getBrowserConsoleMessages());
+});
 export const byId = id => `[data-test="${id}"]`;
 
 export const setText = async (selector, text) => {
