@@ -11,6 +11,7 @@ import {
     toggleFeature,
     waitForElementVisible,
 } from './helpers.cafe';
+import checkConsoleMessages from "./check-console-messages";
 
 require('dotenv').config();
 
@@ -19,6 +20,7 @@ const password = 'str0ngp4ssw0rd!';
 const url = `http://localhost:${process.env.PORT || 8080}/`;
 
 fixture`Initialise`
+    .afterEach(async () => await checkConsoleMessages())
     .before(async () => {
         let token;
         if (process.env[`E2E_TEST_TOKEN_${Project.env.toUpperCase()}`]) {
