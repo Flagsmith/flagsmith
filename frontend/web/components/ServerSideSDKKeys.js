@@ -76,7 +76,7 @@ class ServerSideSDKKeys extends Component {
     }
     remove = (id,name)=>{
 
-        openConfirm(<h3>Server Side SDK Key</h3>, <p>
+        openConfirm(<h3>Delete Server Side SDK Key</h3>, <p>
             The key <strong>{name}</strong> will be permanently deleted, are you sure?
         </p>, () => {
             this.setState({isSaving:true})
