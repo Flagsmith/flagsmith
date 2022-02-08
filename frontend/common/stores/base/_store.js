@@ -26,6 +26,7 @@ module.exports = Object.assign({}, EventEmitter.prototype, {
     subscriptions: {},
 
     trigger(eventName, data) {
+        API.log(data);
         API.log(this.id, eventName || DEFAULT_CHANGE_EVENT, this);
         this.emit(eventName || DEFAULT_CHANGE_EVENT, data);
     },
