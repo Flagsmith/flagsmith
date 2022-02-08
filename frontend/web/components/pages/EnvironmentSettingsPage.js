@@ -170,7 +170,7 @@ const EnvironmentSettingsPage = class extends Component {
                                             </FormGroup>
                                         </div>
                                         {this.props.hasFeature("serverside_sdk_keys") && (
-                                            <FormGroup className="m-t-1">
+                                            <FormGroup className="m-t-3">
                                                 <h3 className="m-b-0">Server Side SDK Keys</h3>
                                                 Flags can be evaluated locally within your own Server environments using
                                                 our <a href="https://docs.flagsmith.com/clients/overview"
