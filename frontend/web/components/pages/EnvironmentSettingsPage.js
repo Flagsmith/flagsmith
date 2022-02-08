@@ -6,6 +6,7 @@ import withWebhooks from '../../../common/providers/withWebhooks';
 import CreateWebhookModal from '../modals/CreateWebhook';
 import ConfirmRemoveWebhook from '../modals/ConfirmRemoveWebhook';
 import EditPermissions from '../EditPermissions';
+import ServerSideSDKKeys from "../ServerSideSDKKeys";
 
 const EnvironmentSettingsPage = class extends Component {
     static displayName = 'EnvironmentSettingsPage'
@@ -42,8 +43,8 @@ const EnvironmentSettingsPage = class extends Component {
 
     confirmRemove = (environment, cb) => {
         openModal('Remove Environment', <ConfirmRemoveEnvironment
-          environment={environment}
-          cb={cb}
+            environment={environment}
+            cb={cb}
         />);
     };
 
@@ -86,31 +87,31 @@ const EnvironmentSettingsPage = class extends Component {
 
     createWebhook = () => {
         openModal('New Webhook', <CreateWebhookModal
-          router={this.context.router}
-          environmentId={this.props.match.params.environmentId}
-          projectId={this.props.match.params.projectId}
-          save={this.props.createWebhook}
+            router={this.context.router}
+            environmentId={this.props.match.params.environmentId}
+            projectId={this.props.match.params.projectId}
+            save={this.props.createWebhook}
         />, null, { className: 'alert fade expand' });
     };
 
 
     editWebhook = (webhook) => {
         openModal('Edit Webhook', <CreateWebhookModal
-          router={this.context.router}
-          webhook={webhook}
-          isEdit
-          environmentId={this.props.match.params.environmentId}
-          projectId={this.props.match.params.projectId}
-          save={this.props.saveWebhook}
+            router={this.context.router}
+            webhook={webhook}
+            isEdit
+            environmentId={this.props.match.params.environmentId}
+            projectId={this.props.match.params.projectId}
+            save={this.props.saveWebhook}
         />, null, { className: 'alert fade expand' });
     };
 
     deleteWebhook = (webhook) => {
         openModal('Remove Webhook', <ConfirmRemoveWebhook
-          environmentId={this.props.match.params.environmentId}
-          projectId={this.props.match.params.projectId}
-          url={webhook.url}
-          cb={() => this.props.deleteWebhook(webhook)}
+            environmentId={this.props.match.params.environmentId}
+            projectId={this.props.match.params.projectId}
+            url={webhook.url}
+            cb={() => this.props.deleteWebhook(webhook)}
         />);
     };
 
@@ -119,8 +120,8 @@ const EnvironmentSettingsPage = class extends Component {
         return (
             <div className="app-container container">
                 <ProjectProvider
-                  onRemoveEnvironment={this.onRemoveEnvironment}
-                  id={this.props.match.params.projectId} onRemove={this.onRemove} onSave={this.onSave}
+                    onRemoveEnvironment={this.onRemoveEnvironment}
+                    id={this.props.match.params.projectId} onRemove={this.onRemove} onSave={this.onSave}
                 >
                     {({ isLoading, isSaving, editProject, editEnv, deleteProject, deleteEnv, project }) => {
                         const env = _.find(project.environments, { api_key: this.props.match.params.environmentId });
@@ -136,20 +137,20 @@ const EnvironmentSettingsPage = class extends Component {
                                                     <Row>
                                                         <Column className="m-l-0">
                                                             <Input
-                                                              ref={e => this.input = e}
-                                                              value={typeof this.state.name == "string"  ? this.state.name : env.name}
-                                                              inputClassName="input input--wide"
-                                                              name="env-name"
+                                                                ref={e => this.input = e}
+                                                                value={typeof this.state.name == "string" ? this.state.name : env.name}
+                                                                inputClassName="input input--wide"
+                                                                name="env-name"
 
-                                                              onChange={e => this.setState({ name: Utils.safeParseEventValue(e) })}
-                                                              isValid={name && name.length}
-                                                              type="text" title={<h3>Environment Name</h3>}
-                                                              placeholder="Environment Name"
+                                                                onChange={e => this.setState({ name: Utils.safeParseEventValue(e) })}
+                                                                isValid={name && name.length}
+                                                                type="text" title={<h3>Environment Name</h3>}
+                                                                placeholder="Environment Name"
                                                             />
                                                         </Column>
                                                         <Button
-                                                          id="save-env-btn" className="float-right"
-                                                          disabled={this.saveDisabled()}
+                                                            id="save-env-btn" className="float-right"
+                                                            disabled={this.saveDisabled()}
                                                         >
                                                             {isSaving ? 'Updating' : 'Update Name'}
                                                         </Button>
@@ -160,22 +161,34 @@ const EnvironmentSettingsPage = class extends Component {
                                                 <label className="m-b-0">API Key</label>
                                                 <Row>
                                                     <Input
-                                                      value={this.props.match.params.environmentId}
-                                                      inputClassName="input input--wide"
-                                                      type="text" title={<h3>API Key</h3>}
-                                                      placeholder="API Key"
+                                                        value={this.props.match.params.environmentId}
+                                                        inputClassName="input input--wide"
+                                                        type="text" title={<h3>API Key</h3>}
+                                                        placeholder="API Key"
                                                     />
                                                 </Row>
                                             </FormGroup>
                                         </div>
+                                        {this.props.hasFeature("serverside_sdk_keys") && (
+                                            <FormGroup className="m-t-1">
+                                                <h3 className="m-b-0">Server Side SDK Keys</h3>
+                                                Flags can be evaluated locally within your own Server environments using
+                                                our <a href="https://docs.flagsmith.com/clients/overview"
+                                                       target="__blank"
+                                            >Server Side SDKs</a>. These SDKs need to be initialised with a Server Side
+                                                SDK Key. You can manage these keys below.
+                                                <ServerSideSDKKeys environmentId={this.props.match.params.environmentId}/>
+                                            </FormGroup>
+                                        )}
+
                                         <FormGroup className="mt-1">
                                             <EditPermissions
-                                              tabClassName="flat-panel"
-                                              parentId={this.props.match.params.projectId}
-                                              parentLevel="project"
-                                              parentSettingsLink={`/project/${this.props.match.params.projectId}/settings`}
-                                              id={this.props.match.params.environmentId}
-                                              level="environment"
+                                                tabClassName="flat-panel"
+                                                parentId={this.props.match.params.projectId}
+                                                parentLevel="project"
+                                                parentSettingsLink={`/project/${this.props.match.params.projectId}/settings`}
+                                                id={this.props.match.params.environmentId}
+                                                level="environment"
                                             />
                                         </FormGroup>
                                         <FormGroup className="m-y-3">
@@ -183,9 +196,13 @@ const EnvironmentSettingsPage = class extends Component {
                                                 <div className="col-md-8 pl-0">
                                                     <h3 className="m-b-0">Feature Webhooks</h3>
                                                     <p>
-                                                            Feature webhooks let you know when features have changed. You can configure 1 or more Feature Webhooks per Environment.
+                                                        Feature webhooks let you know when features have changed. You
+                                                        can configure 1 or more Feature Webhooks per Environment.
                                                         {' '}
-                                                        <ButtonLink href="https://docs.flagsmith.com/advanced-use/system-administration#web-hooks" target="_blank">Learn about Feature Webhooks.</ButtonLink>
+                                                        <ButtonLink
+                                                            href="https://docs.flagsmith.com/advanced-use/system-administration#web-hooks"
+                                                            target="_blank"
+                                                        >Learn about Feature Webhooks.</ButtonLink>
                                                     </p>
                                                 </div>
                                                 <div className="col-md-4 pr-0">
@@ -198,69 +215,74 @@ const EnvironmentSettingsPage = class extends Component {
                                                 <Loader/>
                                             ) : (
                                                 <PanelSearch
-                                                  id="webhook-list"
-                                                  title={(
-                                                      <Tooltip
-                                                        title={<h6 className="mb-0">Webhooks <span className="icon ion-ios-information-circle"/></h6>}
-                                                        place="right"
-                                                      >
-                                                          {Constants.strings.WEBHOOKS_DESCRIPTION}
-                                                      </Tooltip>
+                                                    id="webhook-list"
+                                                    title={(
+                                                        <Tooltip
+                                                            title={<h6 className="mb-0">Webhooks <span
+                                                                className="icon ion-ios-information-circle"
+                                                            /></h6>}
+                                                            place="right"
+                                                        >
+                                                            {Constants.strings.WEBHOOKS_DESCRIPTION}
+                                                        </Tooltip>
                                                     )}
-                                                  className="no-pad"
-                                                  icon="ion-md-cloud"
-                                                  items={webhooks}
-                                                  renderRow={webhook => (
-                                                      <Row
-                                                        onClick={() => {
-                                                            this.editWebhook(webhook);
-                                                        }} space className="list-item clickable cursor-pointer"
-                                                        key={webhook.id}
-                                                      >
-                                                          <div>
-                                                              <ButtonLink>
-                                                                  {webhook.url}
-                                                              </ButtonLink>
-                                                              <div className="list-item-footer faint">
-                                                                  Created
-                                                                  {' '}
-                                                                  {moment(webhook.created_date).format('DD/MMM/YYYY')}
-                                                              </div>
-                                                          </div>
-                                                          <Row>
-                                                              <Switch checked={webhook.enabled}/>
-                                                              <button
-                                                                id="delete-invite"
-                                                                type="button"
-                                                                onClick={(e) => {
-                                                                    e.stopPropagation();
-                                                                    e.preventDefault();
-                                                                    this.deleteWebhook(webhook);
-                                                                }}
-                                                                className="btn btn--with-icon ml-auto btn--remove"
-                                                              >
-                                                                  <RemoveIcon/>
-                                                              </button>
-                                                          </Row>
-                                                      </Row>
-                                                  )}
-                                                  renderNoResults={(
-                                                      <Panel
-                                                        id="users-list"
-                                                        icon="ion-md-cloud"
-                                                        title={(
-                                                            <Tooltip
-                                                              title={<h6 className="mb-0">Webhooks <span className="icon ion-ios-information-circle"/></h6>}
-                                                              place="right"
-                                                            >
-                                                                {Constants.strings.WEBHOOKS_DESCRIPTION}
-                                                            </Tooltip>
-                                                        )}
-                                                      >
-                                                          You currently have no Feature Webhooks configured for this Environment.
-                                                      </Panel>
+                                                    className="no-pad"
+                                                    icon="ion-md-cloud"
+                                                    items={webhooks}
+                                                    renderRow={webhook => (
+                                                        <Row
+                                                            onClick={() => {
+                                                                this.editWebhook(webhook);
+                                                            }} space className="list-item clickable cursor-pointer"
+                                                            key={webhook.id}
+                                                        >
+                                                            <div>
+                                                                <ButtonLink>
+                                                                    {webhook.url}
+                                                                </ButtonLink>
+                                                                <div className="list-item-footer faint">
+                                                                    Created
+                                                                    {' '}
+                                                                    {moment(webhook.created_date).format('DD/MMM/YYYY')}
+                                                                </div>
+                                                            </div>
+                                                            <Row>
+                                                                <Switch checked={webhook.enabled}/>
+                                                                <button
+                                                                    id="delete-invite"
+                                                                    type="button"
+                                                                    onClick={(e) => {
+                                                                        e.stopPropagation();
+                                                                        e.preventDefault();
+                                                                        this.deleteWebhook(webhook);
+                                                                    }}
+                                                                    className="btn btn--with-icon ml-auto btn--remove"
+                                                                >
+                                                                    <RemoveIcon/>
+                                                                </button>
+                                                            </Row>
+                                                        </Row>
                                                     )}
-                                                  isLoading={this.props.webhookLoading}
+                                                    renderNoResults={(
+                                                        <Panel
+                                                            id="users-list"
+                                                            icon="ion-md-cloud"
+                                                            title={(
+                                                                <Tooltip
+                                                                    title={<h6 className="mb-0">Webhooks <span
+                                                                        className="icon ion-ios-information-circle"
+                                                                    /></h6>}
+                                                                    place="right"
+                                                                >
+                                                                    {Constants.strings.WEBHOOKS_DESCRIPTION}
+                                                                </Tooltip>
+                                                            )}
+                                                        >
+                                                            You currently have no Feature Webhooks configured for this
+                                                            Environment.
+                                                        </Panel>
+                                                    )}
+                                                    isLoading={this.props.webhookLoading}
                                                 />
                                             )}
                                         </FormGroup>
@@ -276,11 +298,11 @@ const EnvironmentSettingsPage = class extends Component {
                                                     </p>
                                                 </Column>
                                                 <Button
-                                                  id="delete-env-btn"
-                                                  onClick={() => this.confirmRemove(_.find(project.environments, { api_key: this.props.match.params.environmentId }), () => {
-                                                      deleteEnv(_.find(project.environments, { api_key: this.props.match.params.environmentId }));
-                                                  })}
-                                                  className="btn btn--with-icon ml-auto btn--remove"
+                                                    id="delete-env-btn"
+                                                    onClick={() => this.confirmRemove(_.find(project.environments, { api_key: this.props.match.params.environmentId }), () => {
+                                                        deleteEnv(_.find(project.environments, { api_key: this.props.match.params.environmentId }));
+                                                    })}
+                                                    className="btn btn--with-icon ml-auto btn--remove"
                                                 >
                                                     <RemoveIcon/>
                                                 </Button>

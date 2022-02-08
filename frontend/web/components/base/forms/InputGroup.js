@@ -18,7 +18,7 @@ const FormGroup = class extends Component {
 
     render() {
         const { props } = this;
-        const id = Utils.GUID();
+        const id = this.props.id||Utils.GUID();
         const { inputProps } = this.props;
         return (
             <div className={`${this.props.className} form-group ${(this.props.isInvalid ? 'invalid' : '')}`}>
