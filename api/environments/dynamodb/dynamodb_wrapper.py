@@ -4,6 +4,16 @@ import boto3
 from boto3.dynamodb.conditions import Key
 from django.conf import settings
 from django.core.exceptions import ObjectDoesNotExist
+from django.db.models import Prefetch
+from flag_engine.django_transform.document_builders import (
+    build_identity_document,
+)
+
+from environments.models import Environment
+from features.models import FeatureState
+from features.multivariate.models import MultivariateFeatureStateValue
+
+from .types import DynamoProjectMetadata
 
 
 class DynamoIdentityWrapper:
@@ -36,7 +46,7 @@ class DynamoIdentityWrapper:
         try:
             return self.query_items(**query_kwargs)["Items"][0]
         except KeyError:
-            raise ObjectDoesNotExist
+            raise ObjectDoesNotExist()
 
     def get_all_items(
         self, environment_api_key: str, limit: int, start_key: dict = None
@@ -70,3 +80,32 @@ class DynamoIdentityWrapper:
         if start_key:
             query_kwargs.update(ExclusiveStartKey=start_key)
         return self.query_items(**query_kwargs)
+
+    def is_migration_done(self, project_id: int) -> bool:
+        project_metadata = DynamoProjectMetadata.get_or_new(project_id)
+        return project_metadata.is_identity_migration_done
+
+    def migrate_identities(self, project_id: int):
+        with self._table.batch_writer() as batch:
+            for environment in Environment.objects.filter(project_id=project_id):
+                for identity in environment.identities.all().prefetch_related(
+                    "identity_traits",
+                    Prefetch(
+                        "identity_features",
+                        queryset=FeatureState.objects.select_related(
+                            "feature", "feature_state_value"
+                        ),
+                    ),
+                    Prefetch(
+                        "identity_features__multivariate_feature_state_values",
+                        queryset=MultivariateFeatureStateValue.objects.select_related(
+                            "multivariate_feature_option"
+                        ),
+                    ),
+                ):
+                    identity_document = build_identity_document(identity)
+                    batch.put_item(Item=identity_document)
+
+        project_metadata = DynamoProjectMetadata.get_or_new(project_id)
+        project_metadata.is_identity_migration_done = True
+        project_metadata.save()

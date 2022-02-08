@@ -509,6 +509,9 @@ ENVIRONMENTS_API_KEY_TABLE_NAME_DYNAMO = env.str(
     "ENVIRONMENTS_API_KEY_TABLE_NAME_DYNAMO", None
 )
 
+# DynamoDB table name for storing project metadata(currently only used for identity migration)
+PROJECT_METADATA_TABLE_NAME_DYNAMO = env.str("PROJECT_METADATA_TABLE_NAME_DYNAMO", None)
+
 # Front end environment variables
 API_URL = env("API_URL", default="/api/v1/")
 ASSET_URL = env("ASSET_URL", default="/")
