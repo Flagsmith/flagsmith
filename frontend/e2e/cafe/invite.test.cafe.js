@@ -9,21 +9,16 @@ import {
     waitForElementVisible,
     waitForXPathElementVisible,
 } from '../helpers.cafe';
-test.clientScripts({
-    content: `
-        window.addEventListener('error', function (e) {
-            console.error(e.message); 
-        });`
-})(`Skip error but log it`, async t => {
-    console.log(await t.getBrowserConsoleMessages());
-});
+
 const invitePrefix = `flagsmith${new Date().valueOf()}`;
 const inviteEmail = `${invitePrefix}@restmail.net`;
 const email = 'nightwatch@solidstategroup.com';
 const password = 'str0ngp4ssw0rd!';
+import checkConsoleMessages from '../check-console-messages'
 
-fixture`Environment Tests`
-    .page`http://localhost:3000/`;
+fixture`Invite Tests`
+    .page`http://localhost:3000/`
+    .afterEach(async () => await checkConsoleMessages());
 
 test('Invite Test', async () => {
     log('Login', 'Invite Test');

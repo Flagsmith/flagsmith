@@ -13,19 +13,14 @@ import {
     waitForElementVisible,
 } from '../helpers.cafe';
 import {t} from 'testcafe'
+import checkConsoleMessages from "../check-console-messages";
 const email = 'nightwatch@solidstategroup.com';
 const password = 'str0ngp4ssw0rd!';
 
-fixture`Segments Tests`
-    .page`http://localhost:3000/`;
-test.clientScripts({
-    content: `
-        window.addEventListener('error', function (e) {
-            console.error(e.message); 
-        });`
-})(`Skip error but log it`, async t => {
-    console.log(await t.getBrowserConsoleMessages());
-});
+fixture`Segment Tests`
+    .page`http://localhost:3000/`
+    .afterEach(async () => await checkConsoleMessages());
+
 test('Segments Test', async () => {
     log('Login', 'Segment Test');
     await login(email, password);

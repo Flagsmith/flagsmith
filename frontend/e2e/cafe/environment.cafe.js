@@ -2,17 +2,10 @@ import { byId, click, log, login, setText, waitForElementVisible } from '../help
 
 const email = 'nightwatch@solidstategroup.com';
 const password = 'str0ngp4ssw0rd!';
-
+import checkConsoleMessages from '../check-console-messages'
 fixture`Environment Tests`
-    .page`http://localhost:3000/`;
-test.clientScripts({
-    content: `
-        window.addEventListener('error', function (e) {
-            console.error(e.message); 
-        });`
-})(`Skip error but log it`, async t => {
-    console.log(await t.getBrowserConsoleMessages());
-});
+    .page`http://localhost:3000/`
+    .afterEach(async () => await checkConsoleMessages());
 test('Submit a Form', async () => {
     log('Login', 'Environment Test');
     await login(email, password);

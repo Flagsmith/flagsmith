@@ -1,18 +1,13 @@
 import { byId, click, log, login, setText, waitForElementVisible } from '../helpers.cafe';
+import checkConsoleMessages from "../check-console-messages";
 
 const email = 'nightwatch@solidstategroup.com';
 const password = 'str0ngp4ssw0rd!';
 
 fixture`Project Tests`
-    .page`http://localhost:3000/`;
-test.clientScripts({
-    content: `
-        window.addEventListener('error', function (e) {
-            console.error(e.message); 
-        });`
-})(`Skip error but log it`, async t => {
-    console.log(await t.getBrowserConsoleMessages());
-});
+    .page`http://localhost:3000/`
+    .afterEach(async () => await checkConsoleMessages());
+
 test('Project Test', async () => {
     log('Login', 'Project Test');
     await login(email, password);
