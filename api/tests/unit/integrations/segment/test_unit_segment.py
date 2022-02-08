@@ -3,6 +3,7 @@ import pytest
 from environments.identities.models import Identity
 from environments.models import Environment
 from features.models import Feature, FeatureState
+from integrations.segment.models import SegmentConfiguration
 from integrations.segment.segment import SegmentWrapper
 from organisations.models import Organisation
 from projects.models import Project
@@ -11,9 +12,10 @@ from projects.models import Project
 def test_segment_initialized_correctly():
     # Given
     api_key = "123key"
+    config = SegmentConfiguration(api_key=api_key)
 
     # When initialized
-    segment_wrapper = SegmentWrapper(api_key=api_key)
+    segment_wrapper = SegmentWrapper(config)
 
     # Then
     assert segment_wrapper.analytics.write_key == api_key
@@ -23,8 +25,9 @@ def test_segment_initialized_correctly():
 def test_segment_when_generate_user_data_with_correct_values_then_success():
     # Given
     api_key = "123key"
+    config = SegmentConfiguration(api_key=api_key)
+    segment_wrapper = SegmentWrapper(config)
     identity = Identity(identifier="user123")
-    segment_wrapper = SegmentWrapper(api_key=api_key)
 
     organisation = Organisation.objects.create(name="Test Org")
     project = Project.objects.create(name="Test Project", organisation=organisation)

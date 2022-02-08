@@ -132,6 +132,7 @@ INSTALLED_APPS = [
     "integrations.mixpanel",
     "integrations.rudderstack",
     "integrations.slack",
+    "integrations.webhook",
     # Rate limiting admin endpoints
     "axes",
     "telemetry",
@@ -507,6 +508,9 @@ IDENTITIES_TABLE_NAME_DYNAMO = env.str("IDENTITIES_TABLE_NAME_DYNAMO", None)
 ENVIRONMENTS_API_KEY_TABLE_NAME_DYNAMO = env.str(
     "ENVIRONMENTS_API_KEY_TABLE_NAME_DYNAMO", None
 )
+
+# DynamoDB table name for storing project metadata(currently only used for identity migration)
+PROJECT_METADATA_TABLE_NAME_DYNAMO = env.str("PROJECT_METADATA_TABLE_NAME_DYNAMO", None)
 
 # Front end environment variables
 API_URL = env("API_URL", default="/api/v1/")

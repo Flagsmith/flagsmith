@@ -82,7 +82,7 @@ test('[Initialise]', async () => {
 
     log('Try it');
     await click('#try-it-btn');
-    await t.wait(200)
+    await t.wait(500)
     let text = await getText('#try-it-results');
     let json;
     try { json = JSON.parse(text); } catch (e) { throw new Error('Try it results are not valid JSON'); }
@@ -97,7 +97,7 @@ test('[Initialise]', async () => {
 
     log('Try it again');
     await click('#try-it-btn');
-    await t.wait(200)
+    await t.wait(500)
     text = await getText('#try-it-results');
     try { json = JSON.parse(text); } catch (e) { throw new Error('Try it results are not valid JSON'); }
     await t.expect(json.header_size.value).eql(12);
@@ -105,13 +105,12 @@ test('[Initialise]', async () => {
     log('Change feature value to boolean');
     await click(byId('feature-item-1'));
     await setText(byId('featureValue'), 'false');
-    await setText(byId('featureValue'), 'false');
     await click('#update-feature-btn');
     await assertTextContent(byId('feature-value-1'), 'false');
 
     log('Change feature value to boolean');
     await click('#try-it-btn');
-    await t.wait(200)
+    await t.wait(500)
     text = await getText('#try-it-results');
     try { json = JSON.parse(text); } catch (e) { throw new Error('Try it results are not valid JSON'); }
     await t.expect(json.header_size.value).eql(false);

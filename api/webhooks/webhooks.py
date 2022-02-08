@@ -74,6 +74,10 @@ def call_organisation_webhooks(organisation, data, event_type):
     )
 
 
+def call_integration_webhook(config, data):
+    return _call_webhook(config, data)
+
+
 def trigger_sample_webhook(
     webhook: typing.Type[AbstractBaseWebhookModel], webhook_type: WebhookType
 ) -> requests.models.Response:

@@ -4,11 +4,11 @@ import typing
 
 import requests
 
+from environments.identities.models import Identity
+from features.models import FeatureState
 from integrations.common.wrapper import AbstractBaseIdentityIntegrationWrapper
 
-if typing.TYPE_CHECKING:
-    from environments.identities.models import Identity
-    from features.models import FeatureState
+from .models import AmplitudeConfiguration
 
 logger = logging.getLogger(__name__)
 
@@ -16,8 +16,8 @@ AMPLITUDE_API_URL = "https://api.amplitude.com"
 
 
 class AmplitudeWrapper(AbstractBaseIdentityIntegrationWrapper):
-    def __init__(self, api_key: str):
-        self.api_key = api_key
+    def __init__(self, config: AmplitudeConfiguration):
+        self.api_key = config.api_key
         self.url = f"{AMPLITUDE_API_URL}/identify"
 
     def _identify_user(self, user_data: dict) -> None:
@@ -29,7 +29,7 @@ class AmplitudeWrapper(AbstractBaseIdentityIntegrationWrapper):
         )
 
     def generate_user_data(
-        self, identity: "Identity", feature_states: typing.List["FeatureState"]
+        self, identity: Identity, feature_states: typing.List[FeatureState]
     ) -> dict:
         feature_properties = {}
 
