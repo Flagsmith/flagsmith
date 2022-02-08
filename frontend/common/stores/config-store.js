@@ -51,7 +51,9 @@ flagsmith.init({
     cacheFlags: true,
     AsyncStorage,
     enableAnalytics: projectOverrides.flagsmithAnalytics,
-}).catch(() => {
+}).catch((e) => {
+    API.log("Flags error")
+    API.log(e)
     controller.onError();
 });
 
