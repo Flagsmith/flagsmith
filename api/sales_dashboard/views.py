@@ -122,7 +122,7 @@ def organisation_info(request, organisation_id):
     identity_migration_status_dict = {}
     for project in organisation.projects.all():
         identity_count_dict[project.id] = Identity.objects.filter(
-            environment__in=project.environments.all()
+            environment__project=project
         ).count()
         identity_migration_status_dict[project.id] = identity_wrapper.is_migration_done(
             project.id
