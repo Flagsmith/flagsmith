@@ -24,7 +24,7 @@ module.exports = {
                         status: response.status,
                         error: err,
                     };
-                    console.error(error)
+                    console.log("\n\nREQUEST ERROR\n\n"+JSON.stringify(error)+"\n\n")
                     document.getElementById('e2e-error').innerText = JSON.stringify(error);
                 }
                 API.log(response.url, response.status, err);
