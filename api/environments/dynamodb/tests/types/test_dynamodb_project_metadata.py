@@ -3,7 +3,7 @@ from decimal import Decimal
 from environments.dynamodb.types import DynamoProjectMetadata
 
 
-def test_get_or_new_returns_instnace_with_default_values_if_document_does_not_exists(
+def test_get_or_new_returns_instance_with_default_values_if_document_does_not_exists(
     mocker,
 ):
     # Given
@@ -24,7 +24,7 @@ def test_get_or_new_returns_instnace_with_default_values_if_document_does_not_ex
     mocked_dynamo_table.get_item.assert_called_with(Key={"id": project_id})
 
 
-def test_get_or_new_returns_instnace_with_document_data_if_document_does_exists(mocker):
+def test_get_or_new_returns_instance_with_document_data_if_document_does_exists(mocker):
     # Given
     project_id = 1
 
