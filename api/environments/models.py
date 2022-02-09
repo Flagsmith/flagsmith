@@ -118,8 +118,11 @@ class Environment(LifecycleModel):
                     "project__organisation",
                     "amplitude_config",
                 )
-                environment = cls.objects.select_related(*select_related_args).get(
-                    Q(api_key=api_key) | Q(api_keys__key=api_key)
+                environment = (
+                    cls.objects.select_related(*select_related_args)
+                    .filter(Q(api_key=api_key) | Q(api_keys__key=api_key))
+                    .distinct()
+                    .get()
                 )
                 environment_cache.set(environment.api_key, environment, timeout=60)
             return environment

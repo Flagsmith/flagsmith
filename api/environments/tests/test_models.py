@@ -228,3 +228,28 @@ def test_environment_api_key_model_is_valid_is_false_for_non_expired_inactive_ke
         ).is_valid
         is False
     )
+
+
+def test_existence_of_multiple_environment_api_keys_does_not_break_get_from_cache(
+    environment,
+):
+    # Given
+    environment_api_keys = [
+        EnvironmentAPIKey.objects.create(environment=environment, name=f"test_key_{i}")
+        for i in range(2)
+    ]
+
+    # When
+    retrieved_environments = [
+        Environment.get_from_cache(environment.api_key),
+        *[
+            Environment.get_from_cache(environment_api_key.key)
+            for environment_api_key in environment_api_keys
+        ],
+    ]
+
+    # Then
+    assert all(
+        retrieved_environment == environment
+        for retrieved_environment in retrieved_environments
+    )
