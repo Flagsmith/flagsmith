@@ -206,7 +206,7 @@ const FeaturesPage = class extends Component {
                                                                                     selected={this.state.showArchived}
                                                                                     onClick={() => this.setState({ showArchived: !this.state.showArchived })}
                                                                                     className="px-2 py-2 ml-2 mr-2"
-                                                                                    tag={{ label: `Include Archived (${archivedLength})` }}
+                                                                                    tag={{ label: `Include Archived` }}
                                                                                   />
                                                                               </div>
 
