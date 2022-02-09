@@ -6,6 +6,7 @@ import _data from '../../../common/data/base/_data';
 import ConfigProvider from '../../../common/providers/ConfigProvider';
 import TwoFactor from '../TwoFactor';
 import PaymentModal from '../modals/Payment';
+import Token from "../Token";
 
 class TheComponent extends Component {
     static displayName = 'TheComponent';
@@ -166,12 +167,7 @@ class TheComponent extends Component {
                                     </p>
                                 </div>
                                 <div className="col-md-12">
-                                    <Row>
-                                        <div style={{width:400}} className={`${this.state.showToken?"font-weight-bold":""}`}>
-                                            {this.state.showToken?_data.token : _data.token.split("").map((v)=>"*").join("").trim()}
-                                        </div>
-                                        <Button onClick={()=>this.setState({showToken:!this.state.showToken})}>{this.state.showToken?"Hide":"Show"}</Button>
-                                    </Row>
+                                    <Token style={{width:400}} token={_data.token}/>
                                 </div>
                             </div>
 

@@ -2,6 +2,7 @@ import React from 'react';
 import { Component } from 'react';
 import _data from '../../common/data/base/_data'
 import ProjectStore from '../../common/stores/project-store'
+import Token from './Token'
 class CreateServerSideKeyModal extends Component {
     state = {}
 
@@ -114,12 +115,13 @@ class ServerSideSDKKeys extends Component {
                             const strToSearch = `${item.name}`;
                             return strToSearch.toLowerCase().indexOf(search.toLowerCase()) !== -1;
                         }}
-                        renderRow={({ id, name }) => (
+                        renderRow={({ id, name, key }) => (
                             <div className="list-item">
                                 <Row>
                                     <Flex>
                                         {name}
                                     </Flex>
+                                    <Token token={key}/>
                                     <button
                                         onClick={()=>this.remove(id,name)}
                                         disabled={this.state.isSaving}
