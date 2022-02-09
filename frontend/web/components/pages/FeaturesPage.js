@@ -28,8 +28,12 @@ const FeaturesPage = class extends Component {
         ES6Component(this);
         this.listenTo(TagStore, 'loaded', () => {
             const tags = TagStore.model && TagStore.model[parseInt(this.props.match.params.projectId)];
-            if (this.state.tags.length === 0 && tags && tags.length > 0) {
-                this.setState({ tags: tags.map(v => v.id).concat('') });
+            if (this.state.tags.length === 0) {
+                if (tags && tags.length > 0) {
+                    this.setState({ tags: tags.map(v => v.id).concat('') });
+                } else {
+                    this.setState({tags:['']})
+                }
             }
         });
         AppActions.getFeatures(this.props.match.params.projectId, this.props.match.params.environmentId);
