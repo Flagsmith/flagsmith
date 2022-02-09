@@ -97,7 +97,7 @@ const Input = class extends React.Component {
                       {...rest} onFocus={this.onFocus}
                       onKeyDown={this.onKeyDown}
                       type={this.state.type}
-
+readOnly
                       onBlur={this.onBlur}
                       value={this.props.value}
                       className={innerClassName}

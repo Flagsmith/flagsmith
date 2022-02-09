@@ -121,7 +121,7 @@ class ServerSideSDKKeys extends Component {
                                     <Flex>
                                         {name}
                                     </Flex>
-                                    <Token token={key}/>
+                                    <Token style={{width:280}} token={key}/>
                                     <button
                                         onClick={()=>this.remove(id,name)}
                                         disabled={this.state.isSaving}
