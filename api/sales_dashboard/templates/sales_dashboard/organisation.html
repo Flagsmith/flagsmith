@@ -12,7 +12,7 @@
                 <h1 class="h2">
                     Organisation: <strong>{{organisation.name}}</strong> 
                     - Plan: <strong>{{ organisation.subscription.plan|default:"Free"}}</strong>
-                    {% if organisation.has_subscription and not organisation.is_paid %}<button type="button" class="btn btn-danger">Subscription Cancelled</button>{% endif %}
+                    {% if organisation.has_subscription and not organisation.is_paid %}<span class="badge badge-danger">Subscription Cancelled</button>{% endif %}
                 </h1>
             </div>
 
