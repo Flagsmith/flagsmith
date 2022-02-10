@@ -51,7 +51,7 @@ const CreateSegment = class extends Component {
         }
         const res = rules[0].rules.find((v)=>{
             return v.conditions.find((c)=>{
-                return !c.property || c.value===""
+                return (!c.property&&c.operator!=='PERCENTAGE_SPLIT') || c.value===""
             })
         })
 
