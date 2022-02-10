@@ -24,6 +24,10 @@ class DynamoIdentityWrapper:
                 settings.IDENTITIES_TABLE_NAME_DYNAMO
             )
 
+    @property
+    def is_enabled(self) -> bool:
+        return self._table is not None
+
     def query_items(self, *args, **kwargs):
         return self._table.query(*args, **kwargs)
 
