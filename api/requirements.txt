@@ -43,7 +43,7 @@ dataclasses==0.6
     # via -r requirements.in
 dj-database-url==0.5.0
     # via -r requirements.in
-django==2.2.26
+django==2.2.27
     # via
     #   -r requirements.in
     #   django-admin-sso
@@ -220,10 +220,8 @@ rsa==4.7
     # via
     #   google-auth
     #   oauth2client
-ruamel.yaml==0.16.12
+ruamel-yaml==0.16.12
     # via drf-yasg2
-ruamel.yaml.clib==0.2.6
-    # via ruamel.yaml
 rudder-sdk-python==1.0.3
     # via -r requirements.in
 rx==3.1.1
