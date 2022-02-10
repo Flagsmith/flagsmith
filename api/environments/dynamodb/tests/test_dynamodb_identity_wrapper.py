@@ -172,3 +172,29 @@ def test_is_migration_done_calls_dynamo_project_metadata_wrapper_with_correct_ar
         result
         == mocked_project_metadata.get_or_new.return_value.is_identity_migration_done
     )
+
+
+def test_is_enabled_is_false_if_dynamo_table_name_is_not_set(settings):
+    # Given
+    settings.IDENTITIES_TABLE_NAME_DYNAMO = None
+
+    # When
+    dynamo_identity_wrapper = DynamoIdentityWrapper()
+
+    # Then
+    assert dynamo_identity_wrapper.is_enabled is False
+
+
+def test_is_enabled_is_true_if_dynamo_table_name_is_set(settings, mocker):
+    # Given
+    table_name = "random_table_name"
+    settings.IDENTITIES_TABLE_NAME_DYNAMO = table_name
+    mocked_boto3 = mocker.patch("environments.dynamodb.dynamodb_wrapper.boto3")
+
+    # When
+    dynamo_identity_wrapper = DynamoIdentityWrapper()
+    # Then
+
+    assert dynamo_identity_wrapper.is_enabled is True
+    mocked_boto3.resource.assert_called_with("dynamodb")
+    mocked_boto3.resource.return_value.Table.assert_called_with(table_name)

@@ -8,7 +8,11 @@ from app_analytics.influxdb_wrapper import (
 from django.conf import settings
 from django.contrib.admin.views.decorators import staff_member_required
 from django.db.models import Case, Count, IntegerField, Q, Value, When
-from django.http import HttpResponse, HttpResponseRedirect
+from django.http import (
+    HttpResponse,
+    HttpResponseBadRequest,
+    HttpResponseRedirect,
+)
 from django.shortcuts import get_object_or_404
 from django.template import loader
 from django.urls import reverse, reverse_lazy
@@ -124,9 +128,10 @@ def organisation_info(request, organisation_id):
         identity_count_dict[project.id] = Identity.objects.filter(
             environment__project=project
         ).count()
-        identity_migration_status_dict[project.id] = identity_wrapper.is_migration_done(
-            project.id
-        )
+        if identity_wrapper.is_enabled:
+            identity_migration_status_dict[
+                project.id
+            ] = identity_wrapper.is_migration_done(project.id)
 
     context = {
         "organisation": organisation,
@@ -183,6 +188,10 @@ def update_max_api_calls(request, organisation_id):
 @staff_member_required
 def migrate_identities_to_edge(request, project_id):
     identity_wrapper = DynamoIdentityWrapper()
+
+    if not identity_wrapper.is_enabled:
+        return HttpResponseBadRequest("DynamoDB is not enabled")
+
     if not identity_wrapper.is_migration_done(project_id):
         identity_wrapper.migrate_identities(project_id)
     return HttpResponseRedirect(reverse("sales_dashboard:index"))
