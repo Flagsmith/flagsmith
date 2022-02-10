@@ -28,13 +28,6 @@ const FeaturesPage = class extends Component {
         ES6Component(this);
         this.listenTo(TagStore, 'loaded', () => {
             const tags = TagStore.model && TagStore.model[parseInt(this.props.match.params.projectId)];
-            if (this.state.tags.length === 0) {
-                if (tags && tags.length > 0) {
-                    this.setState({ tags: tags.map(v => v.id).concat('') });
-                } else {
-                    this.setState({tags:['']})
-                }
-            }
         });
         AppActions.getFeatures(this.props.match.params.projectId, this.props.match.params.environmentId);
     }
@@ -70,13 +63,13 @@ const FeaturesPage = class extends Component {
 
     getTags = (projectId) => {
         AppActions.getTags(projectId);
-        AsyncStorage.getItem(`${projectId}tags`).then((res) => {
-            if (res) {
-                this.setState({
-                    tags: JSON.parse(res),
-                });
-            }
-        });
+        // AsyncStorage.getItem(`${projectId}tags`).then((res) => {
+        //     if (res) {
+        //         this.setState({
+        //             tags: JSON.parse(res),
+        //         });
+        //     }
+        // });
     }
 
     componentWillReceiveProps(newProps) {
@@ -103,8 +96,12 @@ const FeaturesPage = class extends Component {
     }
 
     filter = flags => _.filter(flags, (flag) => {
+
         if (!this.state.showArchived && flag.is_archived) {
             return false
+        }
+        if(!this.state.tags || !this.state.tags.length) {
+            return true
         }
         if(this.state.tags.includes('') && (!flag.tags || !flag.tags.length)) {
             return true
