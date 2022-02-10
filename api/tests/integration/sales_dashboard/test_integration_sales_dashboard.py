@@ -55,3 +55,17 @@ def test_migrate_identities_to_edge_does_not_call_migrate_identity_with_correct_
     mocked_dynamo_wrapper.assert_called_with()
     mocked_is_migration_done.assert_called_with(project)
     mocked_dynamo_wrapper.return_value.migrate_identities.assert_not_called()
+
+
+def test_migrate_identities_to_edge_returns_400_if_dynamodb_is_not_enabled(
+    superuser_authenticated_client, mocker, project, settings
+):
+    # Given
+    settings.IDENTITIES_TABLE_NAME_DYNAMO = None
+    url = reverse("sales_dashboard:migrate_identities", args=[project])
+
+    # When
+    response = superuser_authenticated_client.post(url)
+
+    # Then
+    assert response.status_code == status.HTTP_400_BAD_REQUEST
