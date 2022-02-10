@@ -57,7 +57,7 @@
           </thead>
           <tbody>
             {% for org in object_list %}
-            <tr{% if org.has_subscription and not org.is_paid %} class="table-danger" {% elif org.over_plan_seats_limit %} class="table-warning"{% endif %}>
+            <tr class="{% if org.has_subscription and not org.is_paid %}table-danger{% elif org.over_plan_seats_limit %}table-warning{% endif %}">
               <td>{{org.id}}</td>
               <td><a href="/sales-dashboard/organisations/{{org.id}}">{{org.name}}</a></td>
               <td>
