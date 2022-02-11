@@ -8,8 +8,10 @@ analytics-python==1.4.0
     # via -r requirements.in
 appdirs==1.4.4
     # via -r requirements.in
-asgiref==3.5.0
-    # via django
+asgiref==3.4.1
+    # via
+    #   -r requirements.in
+    #   django
 backoff==1.10.0
     # via
     #   analytics-python
