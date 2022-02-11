@@ -90,6 +90,47 @@ jobs:
                   cluster: ${{ env.ECS_CLUSTER }}
                   service: ${{ env.ECS_SERVICE }}
                   task-definition: ${{ steps.task-def-api.outputs.task-definition }}
+            - name: Update identity migrate rule with target
+              run: |
+                aws events put-targets --rule identity_migrate --targets '[{
+                "Id": "Id731ada2a-5de4-411e-b3fc-e07854b069a3",
+                "Arn": "arn:aws:ecs:eu-west-2:302456015006:cluster/flagsmith-api-cluster-eu-west-2-7c9bc9d",
+                "RoleArn": "arn:aws:iam::302456015006:role/task-exec-role-5512471",
+                "EcsParameters": {
+                  "TaskDefinitionArn": "arn:aws:ecs:eu-west-2:302456015006:task-definition/flagsmith-api-migration",
+                  "TaskCount: 1,
+                  "LaunchType": "FARGATE",
+                  "NetworkConfiguration": {
+                    "awsvpcConfiguration": {
+                      "Subnets": [
+                      "subnet-1b0b8861"
+                    ],
+                    "SecurityGroups": [
+                    "sg-08632d6fb4cb0fdf3"
+                    ],
+                    "AssignPublicIp": "ENABLED"
+                    }
+                    },
+                    "PlatformVersion": "1.4.0",
+                    "CapacityProviderStrategy": [],
+                    "EnableECSManagedTags": true,
+                    "EnableExecuteCommand": true,
+                    "PlacementConstraints": [],
+                    "PlacementStrategy": [],
+                    "Tags": []
+                    },
+                    "RetryPolicy": {
+                      "MaximumRetryAttempts": 1,
+                      "MaximumEventAgeInSeconds": 3600
+                      },
+                      "InputTransformer": {
+                        "InputPathsMap":{"project_id":"$.detail.project_id"},
+            
+                        "InputTemplate": "{ \"containerOverrides\": [ { \"name\": \"flagsmith-api-migration\", \"command\": [\"migrate_identity\", <project_id>], \" environment \":[{\"PROJECT_METADATA_TABLE_NAME_DYNAMO\":\"flagsmith_project_metadata\"}]}]}"
+                        }
+                        }
+                        ]'
+
 
 #    run-tests:
 #        runs-on: ubuntu-latest
