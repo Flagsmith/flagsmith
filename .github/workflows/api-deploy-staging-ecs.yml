@@ -15,6 +15,7 @@ on:
 
 env:
     ECS_CLUSTER: flagsmith-api-cluster-eu-west-2-7c9bc9d
+    ECS_CLUSTER_ARN: arn:aws:ecs:eu-west-2:302456015006:cluster/flagsmith-api-cluster-eu-west-2-7c9bc9d
     ECS_SERVICE: flagsmith-svc-eu-west-2-894f4ae
     VPC_SUBNET: subnet-1b0b8861
     VPC_SECURITY_GROUP: sg-08632d6fb4cb0fdf3
@@ -93,21 +94,17 @@ jobs:
             - name: Update identity migrate rule with target
               run: |
                 aws events put-targets --rule identity_migrate --targets '[{
-                "Id": "Id731ada2a-5de4-411e-b3fc-e07854b069a3",
-                "Arn": "arn:aws:ecs:eu-west-2:302456015006:cluster/flagsmith-api-cluster-eu-west-2-7c9bc9d",
+                "Id": "identity_migrate_rule_target",
+                "Arn": "${{env.ECS_CLUSTER_ARN}}",
                 "RoleArn": "arn:aws:iam::302456015006:role/task-exec-role-5512471",
                 "EcsParameters": {
-                  "TaskDefinitionArn": "arn:aws:ecs:eu-west-2:302456015006:task-definition/flagsmith-api-migration",
+                  "TaskDefinitionArn": "${{ steps.task-def-api-migration.outputs.task-definition }}",
                   "TaskCount: 1,
                   "LaunchType": "FARGATE",
                   "NetworkConfiguration": {
                     "awsvpcConfiguration": {
-                      "Subnets": [
-                      "subnet-1b0b8861"
-                    ],
-                    "SecurityGroups": [
-                    "sg-08632d6fb4cb0fdf3"
-                    ],
+                      "Subnets": ["${{ env.VPC_SUBNET }}"],
+                      "SecurityGroups": ["${{ env.VPC_SECURITY_GROUP }}"],
                     "AssignPublicIp": "ENABLED"
                     }
                     },
