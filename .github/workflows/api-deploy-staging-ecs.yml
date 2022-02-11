@@ -20,7 +20,7 @@ env:
     VPC_SECURITY_GROUP: sg-08632d6fb4cb0fdf3
 
 jobs:
-    deploy-staging-ecs:
+    test_rule_put_target:
         runs-on: ubuntu-latest
         name: API Deploy to Staging ECS
         environment: staging
@@ -98,7 +98,7 @@ jobs:
                 "RoleArn": "arn:aws:iam::302456015006:role/task-exec-role-5512471",
                 "EcsParameters": {
                   "TaskDefinitionArn": "arn:aws:ecs:eu-west-2:302456015006:task-definition/flagsmith-api-migration",
-                  "TaskCount": 1,
+                  "TaskCount: 1,
                   "LaunchType": "FARGATE",
                   "NetworkConfiguration": {
                     "awsvpcConfiguration": {
