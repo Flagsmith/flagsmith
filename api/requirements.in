@@ -5,7 +5,7 @@ gunicorn
 pyparsing
 requests
 six
-whitenoise<6.0.0
+whitenoise<6.0.0  # 6.0.0 is not compatible with py36, TODO: remove this constraint once we move to ECS
 dj-database-url
 drf-nested-routers
 shortuuid
