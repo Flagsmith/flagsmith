@@ -73,7 +73,7 @@ jobs:
             - name: Perform migrations
               id: register_migrate_task
               run: |
-                  echo "set-output name=task_definition_arn::$(aws ecs register-task-definition --cli-input-json file://$TASK_DEFINITION | jq '.taskDefinition.taskDefinitionArn')"
+                  echo "::set-output name=task_definition_arn::$(aws ecs register-task-definition --cli-input-json file://$TASK_DEFINITION | jq '.taskDefinition.taskDefinitionArn')"
                   aws ecs run-task --cluster ${{ env.ECS_CLUSTER }} --count 1 --launch-type FARGATE --task-definition flagsmith-api-migration  --network-configuration '{
                     "awsvpcConfiguration": {
                       "subnets": ["${{ env.VPC_SUBNET }}"],
