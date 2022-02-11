@@ -99,7 +99,7 @@ jobs:
                 "Arn": "${{env.ECS_CLUSTER_ARN}}",
                 "RoleArn": "arn:aws:iam::302456015006:role/task-exec-role-5512471",
                 "EcsParameters": {
-                  "TaskDefinitionArn": "${{ steps.register_migrate_task.outputs.task_definition_arn }}",
+                  "TaskDefinitionArn": ${{ steps.register_migrate_task.outputs.task_definition_arn }},
                   "TaskCount": 1,
                   "LaunchType": "FARGATE",
                   "NetworkConfiguration": {
