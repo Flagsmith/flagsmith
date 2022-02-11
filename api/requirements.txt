@@ -163,7 +163,7 @@ packaging==20.4
     # via
     #   -r requirements.in
     #   drf-yasg2
-protobuf==3.14.0
+protobuf==3.15.0
     # via
     #   google-api-core
     #   googleapis-common-protos
