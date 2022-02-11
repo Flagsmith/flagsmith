@@ -282,7 +282,7 @@ urllib3==1.25.11
     #   sentry-sdk
 urlman==1.4.0
     # via django-lifecycle
-whitenoise==6.0.0
+whitenoise==5.3.0
     # via -r requirements.in
 yubico-client==1.13.0
     # via django-trench

@@ -5,7 +5,7 @@ gunicorn
 pyparsing
 requests
 six
-whitenoise
+whitenoise<6.0.0
 dj-database-url
 drf-nested-routers
 shortuuid
