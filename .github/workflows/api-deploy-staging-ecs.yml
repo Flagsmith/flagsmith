@@ -15,7 +15,7 @@ on:
 
 env:
     ECS_CLUSTER: flagsmith-api-cluster-eu-west-2-7c9bc9d
-    ECS_SERVICE: flagsmith-svc-eu-west-2-95f96fb
+    ECS_SERVICE: flagsmith-svc-eu-west-2-894f4ae
     VPC_SUBNET: subnet-1b0b8861
     VPC_SECURITY_GROUP: sg-08632d6fb4cb0fdf3
 
