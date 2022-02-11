@@ -134,7 +134,7 @@ INSTALLED_APPS = [
     "integrations.slack",
     "integrations.webhook",
     # Rate limiting admin endpoints
-    # "axes",
+    "axes",
     "telemetry",
     # for filtering querysets on viewsets
     "django_filters",
