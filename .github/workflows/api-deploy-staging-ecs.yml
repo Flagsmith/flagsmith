@@ -71,8 +71,9 @@ jobs:
                   image: ${{ steps.build-image.outputs.image }}
 
             - name: Perform migrations
+              id: register_migrate_task
               run: |
-                  aws ecs register-task-definition --cli-input-json file://$TASK_DEFINITION
+                  echo "set-output name=task_definition_arn::$(aws ecs register-task-definition --cli-input-json file://$TASK_DEFINITION | jq '.taskDefinition.taskDefinitionArn')"
                   aws ecs run-task --cluster ${{ env.ECS_CLUSTER }} --count 1 --launch-type FARGATE --task-definition flagsmith-api-migration  --network-configuration '{
                     "awsvpcConfiguration": {
                       "subnets": ["${{ env.VPC_SUBNET }}"],
@@ -98,7 +99,7 @@ jobs:
                 "Arn": "${{env.ECS_CLUSTER_ARN}}",
                 "RoleArn": "arn:aws:iam::302456015006:role/task-exec-role-5512471",
                 "EcsParameters": {
-                  "TaskDefinitionArn": "${{ steps.task-def-api-migration.outputs.task-definition }}",
+                  "TaskDefinitionArn": "${{ steps.register_migrate_task.task_definition_arn }}",
                   "TaskCount": 1,
                   "LaunchType": "FARGATE",
                   "NetworkConfiguration": {
