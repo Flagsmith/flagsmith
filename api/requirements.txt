@@ -65,7 +65,7 @@ django==3.2.12
     #   drf-yasg2
 django-admin-sso==3.1.0
     # via -r requirements.in
-django-axes==5.31.0
+django-axes==5.30.0
     # via -r requirements.in
 django-cors-headers==3.5.0
     # via -r requirements.in
