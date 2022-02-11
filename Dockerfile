@@ -1,5 +1,5 @@
 # Step 1 - Build Front End Application
-FROM node:14 AS build
+FROM node:16 AS build
 
 # Copy the entire project - Webpack puts compiled assets into the Django folder
 WORKDIR /app
