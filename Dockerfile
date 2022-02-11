@@ -1,5 +1,5 @@
 # Step 1 - Build Front End Application
-FROM node:16 AS build
+FROM node:14 AS build
 
 # Copy the entire project - Webpack puts compiled assets into the Django folder
 WORKDIR /app
@@ -7,7 +7,7 @@ COPY . .
 
 RUN cd frontend && npm install --quiet --production
 ENV ENV=prod
-ENV ASSET_URL=/
+ENV STATIC_ASSET_CDN_URL=/static/
 RUN cd frontend && npm run bundledjango
 
 
