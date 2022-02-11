@@ -1,7 +1,6 @@
 import enum
 
 from django.db import models
-from django.utils.encoding import python_2_unicode_compatible
 
 from projects.models import Project
 
@@ -35,7 +34,6 @@ class RelatedObjectType(enum.Enum):
 RELATED_OBJECT_TYPES = ((tag.name, tag.value) for tag in RelatedObjectType)
 
 
-@python_2_unicode_compatible
 class AuditLog(models.Model):
     created_date = models.DateTimeField("DateCreated", auto_now_add=True)
     project = models.ForeignKey(

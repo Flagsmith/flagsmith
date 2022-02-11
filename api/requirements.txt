@@ -8,6 +8,8 @@ analytics-python==1.4.0
     # via -r requirements.in
 appdirs==1.4.4
     # via -r requirements.in
+asgiref==3.5.0
+    # via django
 backoff==1.10.0
     # via
     #   analytics-python
@@ -43,7 +45,7 @@ dataclasses==0.6
     # via -r requirements.in
 dj-database-url==0.5.0
     # via -r requirements.in
-django==2.2.27
+django==3.2.12
     # via
     #   -r requirements.in
     #   django-admin-sso
@@ -61,7 +63,7 @@ django==2.2.27
     #   drf-yasg2
 django-admin-sso==3.1.0
     # via -r requirements.in
-django-axes==5.8.0
+django-axes==5.31.0
     # via -r requirements.in
 django-cors-headers==3.5.0
     # via -r requirements.in
@@ -167,7 +169,7 @@ protobuf==3.14.0
     # via
     #   google-api-core
     #   googleapis-common-protos
-psycopg2-binary==2.8.6
+psycopg2-binary==2.9.3
     # via -r requirements.in
 pyasn1==0.4.8
     # via
@@ -220,8 +222,10 @@ rsa==4.7
     # via
     #   google-auth
     #   oauth2client
-ruamel-yaml==0.16.12
+ruamel.yaml==0.17.20
     # via drf-yasg2
+ruamel.yaml.clib==0.2.6
+    # via ruamel.yaml
 rudder-sdk-python==1.0.3
     # via -r requirements.in
 rx==3.1.1
@@ -276,7 +280,7 @@ urllib3==1.25.11
     #   sentry-sdk
 urlman==1.4.0
     # via django-lifecycle
-whitenoise==3.3.1
+whitenoise==6.0.0
     # via -r requirements.in
 yubico-client==1.13.0
     # via django-trench
