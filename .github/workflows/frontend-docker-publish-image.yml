@@ -75,6 +75,7 @@ jobs:
               with:
                   file: frontend/Dockerfile
                   context: frontend/
+                  platforms: linux/amd64,linux/arm64
                   push: true
                   tags: ${{ steps.meta.outputs.tags }}
 
