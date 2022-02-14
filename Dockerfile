@@ -17,6 +17,10 @@ FROM python:3.9-slim as application
 WORKDIR /app
 COPY api /app/
 
+# arm builds need postgres drivers installing via apt #todo: can be removed possibly at some point
+ARG TARGETARCH
+RUN if [ "$TARGETARCH" = "arm64" ]; then apt-get update && apt-get install -y gcc libpq-dev && rm -rf /var/lib/apt/lists/*; fi;
+
 # Install python dependencies
 RUN pip install -r requirements.txt --no-cache-dir --compile
 
