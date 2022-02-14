@@ -9,6 +9,8 @@ on:
         paths:
             - 'api/**'
             - '.github/**'
+    pull_request:
+        types: [opened, synchronize, reopened, ready_for_review]
 
 jobs:
     build-api-dockerhub:
@@ -59,7 +61,8 @@ jobs:
               with:
                   file: api/Dockerfile
                   context: api/
-                  push: true
+                  platforms: linux/amd64,linux/arm/v7
+                  push: false
                   tags: ${{ steps.meta.outputs.tags }}
 
             - name: Image digest
