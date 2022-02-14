@@ -6,6 +6,8 @@ on:
             - main
         tags:
             - '*'
+    pull_request: # todo: remove
+        types: [opened, synchronize, reopened, ready_for_review]
 
 jobs:
     build-dockerhub:
@@ -55,7 +57,8 @@ jobs:
               uses: docker/build-push-action@v2
               with:
                   file: Dockerfile
-                  push: true
+                  platforms: linux/amd64,linux/arm/v7
+                  push: false #todo: make true
                   tags: ${{ steps.meta.outputs.tags }}
 
             - name: Image digest
