@@ -1,4 +1,4 @@
-FROM python:3.8-slim as application
+FROM python:3.9-slim as application
 
 WORKDIR /app
 
@@ -7,8 +7,12 @@ ENV VIRTUAL_ENV=/opt/venv
 RUN python3 -m venv $VIRTUAL_ENV
 ENV PATH="$VIRTUAL_ENV/bin:$PATH"
 
+# arm architecture platform builds need postgres drivers installing via apt #todo: can be removed possibly at some point
+ARG TARGETARCH
+RUN if [ "$TARGETARCH" != "amd64" ]; then apt-get update && apt-get install -y gcc libpq-dev && rm -rf /var/lib/apt/lists/*; fi;
+
 COPY requirements.txt /app/
-RUN pip install -r requirements.txt --no-cache-dir --compile 
+RUN pip install -r requirements.txt --no-cache-dir --compile
 
 COPY . /app/
 
