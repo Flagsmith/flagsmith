@@ -7,7 +7,7 @@ COPY . .
 
 RUN cd frontend && npm install --quiet --production
 ENV ENV=prod
-ENV ASSET_URL=/
+ENV STATIC_ASSET_CDN_URL=/static/
 RUN cd frontend && npm run bundledjango
 
 

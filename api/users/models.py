@@ -7,7 +7,6 @@ from django.contrib.auth.models import AbstractUser
 from django.core.mail import send_mail
 from django.db import models
 from django.db.models import Q
-from django.utils.encoding import python_2_unicode_compatible
 from django.utils.translation import gettext_lazy as _
 from django_lifecycle import AFTER_CREATE, LifecycleModel, hook
 
@@ -77,7 +76,6 @@ class UserManager(BaseUserManager):
         return self.get(email__iexact=email)
 
 
-@python_2_unicode_compatible
 class FFAdminUser(LifecycleModel, AbstractUser):
     organisations = models.ManyToManyField(
         Organisation, related_name="users", blank=True, through=UserOrganisation

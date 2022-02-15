@@ -4,7 +4,6 @@ import typing
 from core.constants import BOOLEAN, FLOAT, INTEGER
 from django.core.exceptions import ValidationError
 from django.db import models
-from django.utils.encoding import python_2_unicode_compatible
 
 from environments.identities.helpers import (
     get_hashed_percentage_for_object_ids,
@@ -28,7 +27,6 @@ REGEX = "REGEX"
 PERCENTAGE_SPLIT = "PERCENTAGE_SPLIT"
 
 
-@python_2_unicode_compatible
 class Segment(models.Model):
     name = models.CharField(max_length=2000)
     description = models.TextField(null=True, blank=True)
@@ -51,7 +49,6 @@ class Segment(models.Model):
         )
 
 
-@python_2_unicode_compatible
 class SegmentRule(models.Model):
     ALL_RULE = "ALL"
     ANY_RULE = "ANY"
@@ -124,7 +121,6 @@ class SegmentRule(models.Model):
         return rule.segment
 
 
-@python_2_unicode_compatible
 class Condition(models.Model):
     CONDITION_TYPES = (
         (EQUAL, "Exactly Matches"),

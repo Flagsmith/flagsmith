@@ -4,7 +4,6 @@ from __future__ import unicode_literals
 from django.conf import settings
 from django.core.cache import caches
 from django.db import models
-from django.utils.encoding import python_2_unicode_compatible
 
 from organisations.models import Organisation
 from permissions.models import (
@@ -16,7 +15,6 @@ from permissions.models import (
 project_segments_cache = caches[settings.PROJECT_SEGMENTS_CACHE_LOCATION]
 
 
-@python_2_unicode_compatible
 class Project(models.Model):
     name = models.CharField(max_length=2000)
     created_date = models.DateTimeField("DateCreated", auto_now_add=True)
