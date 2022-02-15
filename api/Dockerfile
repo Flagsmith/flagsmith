@@ -3,7 +3,7 @@ FROM python:3.10-slim as application
 WORKDIR /app
 COPY . .
 
-# arm architecture platform builds need postgres drivers installing via apt #todo: can be removed possibly at some point
+# arm architecture platform builds need postgres drivers installing via apt
 ARG TARGETARCH
 RUN if [ "$TARGETARCH" != "amd64" ]; then apt-get update && apt-get install -y gcc libpq-dev && rm -rf /var/lib/apt/lists/*; fi;
 
