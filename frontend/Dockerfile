@@ -1,5 +1,5 @@
 # Build Assets
-FROM node:12 AS build
+FROM node:16 AS build
 
 RUN mkdir /srv/bt && chown node:node /srv/bt
 
@@ -16,7 +16,7 @@ RUN npm run bundle
 
 
 # Set up runtime container
-FROM node:12-slim AS production
+FROM node:16-slim AS production
 USER node
 
 WORKDIR /srv/bt
