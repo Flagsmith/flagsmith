@@ -15,9 +15,6 @@ class Migration(migrations.Migration):
 
     dependencies = [
         ('auth', '0008_alter_user_username_max_length'),
-        # ensure Axes migrations are run before all other migrations to avoid
-        # an error found when running the below migration after upgrading to 5.3.0
-        ('axes', '0007_alter_accessattempt_unique_together'),
     ]
 
     operations = [
