@@ -2,6 +2,7 @@ import typing
 
 from django.db import models
 from django.db.models import Prefetch, Q
+from django.utils import timezone
 
 from environments.dynamodb import DynamoIdentityWrapper
 from environments.identities.traits.models import Trait
@@ -52,10 +53,14 @@ class Identity(models.Model):
         environment_default_query = Q(identity=None, feature_segment=None)
 
         # define the full query
-        full_query = belongs_to_environment_query & (
-            overridden_for_identity_query
-            | overridden_for_segment_query
-            | environment_default_query
+        full_query = (
+            Q(live_from__lte=timezone.now())
+            & belongs_to_environment_query
+            & (
+                overridden_for_identity_query
+                | overridden_for_segment_query
+                | environment_default_query
+            )
         )
 
         select_related_args = [
@@ -86,7 +91,11 @@ class Identity(models.Model):
             if flag.feature_id not in identity_flags:
                 identity_flags[flag.feature_id] = flag
             else:
-                if flag > identity_flags[flag.feature_id]:
+                current_flag = identity_flags[flag.feature_id]
+                if flag > current_flag or (
+                    flag.type == current_flag.type
+                    and flag.version > current_flag.version
+                ):
                     identity_flags[flag.feature_id] = flag
 
         if self.environment.project.hide_disabled_flags:

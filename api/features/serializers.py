@@ -174,7 +174,15 @@ class FeatureStateSerializerFull(serializers.ModelSerializer):
 
     class Meta:
         model = FeatureState
-        fields = "__all__"
+        fields = (
+            "id",
+            "feature",
+            "feature_state_value",
+            "environment",
+            "identity",
+            "feature_segment",
+            "enabled",
+        )
 
     def get_feature_state_value(self, obj):
         return obj.get_feature_state_value(identity=self.context.get("identity"))
@@ -189,6 +197,7 @@ class FeatureStateSerializerBasic(WritableNestedModelSerializer):
     class Meta:
         model = FeatureState
         fields = "__all__"
+        read_only_fields = ("version", "created_at", "updated_at", "status")
 
     def get_feature_state_value(self, obj):
         return obj.get_feature_state_value(identity=self.context.get("identity"))
