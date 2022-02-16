@@ -1,5 +1,6 @@
 from __future__ import unicode_literals
 
+import datetime
 import logging
 import typing
 from copy import deepcopy
@@ -11,6 +12,7 @@ from django.core.exceptions import (
 )
 from django.db import models
 from django.db.models import Q, UniqueConstraint
+from django.utils import timezone
 from django.utils.translation import ugettext_lazy as _
 from django_lifecycle import AFTER_CREATE, BEFORE_CREATE, LifecycleModel, hook
 from ordered_model.models import OrderedModelBase
@@ -19,7 +21,9 @@ from simple_history.models import HistoricalRecords
 from environments.identities.helpers import (
     get_hashed_percentage_for_object_ids,
 )
+from features.constants import ENVIRONMENT, FEATURE_SEGMENT, IDENTITY
 from features.custom_lifecycle import CustomLifecycleModelMixin
+from features.exceptions import FeatureStateVersionAlreadyExistsError
 from features.feature_states.models import AbstractBaseFeatureValueModel
 from features.feature_types import MULTIVARIATE
 from features.helpers import get_correctly_typed_value
@@ -231,22 +235,29 @@ class FeatureState(LifecycleModel, models.Model):
     enabled = models.BooleanField(default=False)
     history = HistoricalRecords()
 
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    version = models.IntegerField(default=1)
+    live_from = models.DateTimeField(null=True)
+
     class Meta:
-        # Note: this is manually overridden in the migrations for Oracle DBs to include
-        # all 4 unique fields in each of these constraints. See migration 0025.
+        # Note: these constraints are applied manually using SQL so that we can split
+        # out postgres and other database technologies (and hence we can apply the
+        # indexes concurrently to Postgres databases). See migrations features.0036 and
+        # feature.0038 for further information.
         constraints = [
             UniqueConstraint(
-                fields=["environment", "feature", "feature_segment"],
+                fields=["environment", "feature", "feature_segment", "version"],
                 condition=Q(identity__isnull=True),
                 name="unique_for_feature_segment",
             ),
             UniqueConstraint(
-                fields=["environment", "feature", "identity"],
+                fields=["environment", "feature", "identity", "version"],
                 condition=Q(feature_segment__isnull=True),
                 name="unique_for_identity",
             ),
             UniqueConstraint(
-                fields=["environment", "feature"],
+                fields=["environment", "feature", "version"],
                 condition=Q(identity__isnull=True, feature_segment__isnull=True),
                 name="unique_for_environment",
             ),
@@ -287,9 +298,14 @@ class FeatureState(LifecycleModel, models.Model):
         # it has a feature_segment or an identity
         return not (other.feature_segment or other.identity)
 
-    def clone(self, env: "Environment") -> "FeatureState":
-        # Clonning the Identity is not allowed because they are closely tied
-        # to the enviroment
+    def clone(
+        self,
+        env: "Environment",
+        version: int = None,
+        live_from: datetime.datetime = None,
+    ) -> "FeatureState":
+        # Cloning the Identity is not allowed because they are closely tied
+        # to the environment
         assert self.identity is None
         clone = deepcopy(self)
         clone.id = None
@@ -303,6 +319,8 @@ class FeatureState(LifecycleModel, models.Model):
             else None
         )
         clone.environment = env
+        clone.version = version or self.version
+        clone.live_from = live_from
         clone.save()
         # clone the related objects
         self.feature_state_value.clone(clone)
@@ -370,11 +388,26 @@ class FeatureState(LifecycleModel, models.Model):
         except ObjectDoesNotExist:
             return None
 
+    @property
+    def type(self) -> str:
+        if self.identity_id and self.feature_segment_id is None:
+            return IDENTITY
+        elif self.feature_segment_id and self.identity_id is None:
+            return FEATURE_SEGMENT
+        elif self.identity_id and self.feature_segment_id is None:
+            return ENVIRONMENT
+
+        logger.error(
+            "FeatureState %d does not have a valid type. Defaulting to environment.",
+            self.id,
+        )
+        return ENVIRONMENT
+
     @hook(BEFORE_CREATE)
     def check_for_existing_env_feature_state(self):
         # prevent duplicate feature states being created for an environment
         if FeatureState.objects.filter(
-            environment=self.environment, feature=self.feature
+            environment=self.environment, feature=self.feature, version=self.version
         ).exists() and not (self.identity or self.feature_segment):
             raise ValidationError(
                 "Feature state already exists for this environment and feature"
@@ -458,6 +491,71 @@ class FeatureState(LifecycleModel, models.Model):
         elif self.identity is not None:
             s = f"Identity {self.identity.identifier} - {s}"
         return s
+
+    @classmethod
+    def get_environment_flags(
+        cls, environment: "Environment", feature_name: str = None
+    ) -> typing.List["FeatureState"]:
+        """
+        Get a list of the latest committed versions of FeatureState objects that are
+        associated with the given environment only (i.e. not identity or segment).
+        """
+
+        # Get all feature states for a given environment with a valid live_from in the
+        # past. Note: includes all versions for a given environment / feature
+        # combination. We filter for the latest version later on.
+        feature_states = cls.objects.filter(
+            environment=environment,
+            identity=None,
+            feature_segment=None,
+            live_from__isnull=False,
+            live_from__lte=timezone.now(),
+        ).exclude(
+            feature__project__hide_disabled_flags=True,
+            enabled=False,
+        )
+
+        if feature_name:
+            feature_states = feature_states.filter(feature__name__iexact=feature_name)
+
+        # Build up a dictionary in the form {feature: feature_state} and only keep the
+        # latest version for each feature.
+        feature_states_dict = {}
+        for feature_state in feature_states:
+            current_feature_state = feature_states_dict.get(feature_state.feature)
+            if (
+                not current_feature_state
+                or feature_state.version > current_feature_state.version
+            ):
+                feature_states_dict[feature_state.feature] = feature_state
+
+        return list(feature_states_dict.values())
+
+    def create_new_version(self, live_from: datetime.datetime = None):
+        """
+        Create a new version of this feature state by incrementing the version
+        number by 1.
+        """
+
+        new_version_number = self.version + 1
+
+        if FeatureState.objects.filter(version=new_version_number).exists():
+            raise FeatureStateVersionAlreadyExistsError(version=new_version_number)
+
+        return self.clone(
+            env=self.environment,
+            version=new_version_number,
+            live_from=live_from,
+        )
+
+    @hook(BEFORE_CREATE)
+    def set_live_from_for_version_1(self):
+        """
+        Set the live_from date on newly created, version 1 feature states to maintain
+        the previous behaviour.
+        """
+        if self.version == 1 and not self.live_from:
+            self.live_from = timezone.now()
 
 
 class FeatureStateValue(AbstractBaseFeatureValueModel):
