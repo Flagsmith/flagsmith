@@ -8,13 +8,14 @@ $dark-bg-0: #232533;
 $dark-bg-2: #1a1c26;
 $dark-bg-5: #1a1c26;
 $dark-bg-10: #252836;
+$dark-bg-15: #323242;
 $dark-bg-20: #3A3D4A;
 $dark-bg-50: #B3B3B3;
 $dark-highlight: #424b72;
 $dark-highlight2: $dark-bg-20;
 $dark-highlight3: #f18e7f;
 
-$dark-highlight-color: #f1f1f1;
+$dark-highlight-color: #e1e1e1;
 $dark-color: #747484;
 
 
@@ -59,7 +60,7 @@ $bt-brand-red: #f2576e;
 $body-text-faint: #717186;
 $body-text-faint-dark: darken(#e3e3e3,10);
 $body-text: #43424f;
-$body-text-dark: $dark-color;
+$body-text-dark: $dark-highlight-color;
 $header-color: #1E0D26; // for headers and labels
 $header-color-dark: #d2d2d2; // for headers and labels
 $bt-link-color: $bt-brand-primary-dark; // for headers and labels
@@ -82,7 +83,7 @@ $nav-icon-color-dark: $dark-highlight;
 // Input
 $input-bg: #fff;
 $input-bg-alt: #f7f7f7;
-$input-bg-dark: $dark-bg-0;
+$input-bg-dark: $dark-bg-15;
 $input-color-dark: $body-text-dark;
 
 $bt-input-border: #d9d9e9;
