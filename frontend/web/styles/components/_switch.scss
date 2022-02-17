@@ -10,13 +10,11 @@ $switch-width: 60px;
 }
 .dark {
   .rc-switch {
-
     &:after {
       background: $panel-heading-bg-dark;
     }
     background-color: $bt-switch-dark;
     border: 1px solid $bt-switch-dark;
-
   }
   .rc-switch-checked {
     border: 1px solid $bt-switch-active-dark;
