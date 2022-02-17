@@ -11,6 +11,7 @@ from rest_framework.response import Response
 from rest_framework.schemas import AutoSchema
 
 from app.pagination import CustomPagination, EdgeIdentityPagination
+from edge_api.identities.mixins import MigrateIdentitiesUsingRequestsMixin
 from environments.identities.models import Identity
 from environments.identities.serializers import (
     EdgeIdentitySerializer,
@@ -206,7 +207,7 @@ class SDKIdentitiesDeprecated(SDKAPIView):
         return Response(serializer.data, status=status.HTTP_200_OK)
 
 
-class SDKIdentities(SDKAPIView):
+class SDKIdentities(SDKAPIView, MigrateIdentitiesUsingRequestsMixin):
     serializer_class = IdentifyWithTraitsSerializer
     pagination_class = None  # set here to ensure documentation is correct
 
@@ -229,6 +230,8 @@ class SDKIdentities(SDKAPIView):
             .prefetch_related("identity_traits")
             .get_or_create(identifier=identifier, environment=request.environment)
         )
+        # Send identity to data to edge
+        self.migrate_identity(request)
 
         feature_name = request.query_params.get("feature")
         if feature_name:
@@ -248,6 +251,8 @@ class SDKIdentities(SDKAPIView):
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         instance = serializer.save()
+        # Send identity to data to edge
+        self.migrate_identity(request)
 
         # we need to serialize the response again to ensure that the
         # trait values are serialized correctly

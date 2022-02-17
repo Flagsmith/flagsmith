@@ -559,3 +559,4 @@ if SAML_INSTALLED:
 
 
 DEFAULT_AUTO_FIELD = "django.db.models.AutoField"
+EDGE_API_URL = env.str("EDGE_API_URL", None)

@@ -7,6 +7,7 @@ from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework.schemas import AutoSchema
 
+from edge_api.identities.mixins import MigrateTraitsUsingRequestMixin
 from environments.authentication import EnvironmentKeyAuthentication
 from environments.identities.models import Identity
 from environments.identities.traits.models import Trait
@@ -240,7 +241,9 @@ class SDKTraitsDeprecated(SDKAPIView):
             )
 
 
-class SDKTraits(mixins.CreateModelMixin, viewsets.GenericViewSet):
+class SDKTraits(
+    mixins.CreateModelMixin, viewsets.GenericViewSet, MigrateTraitsUsingRequestMixin
+):
     permission_classes = (EnvironmentKeyPermissions, TraitPersistencePermissions)
     authentication_classes = (EnvironmentKeyAuthentication,)
 
@@ -261,6 +264,8 @@ class SDKTraits(mixins.CreateModelMixin, viewsets.GenericViewSet):
     def create(self, request, *args, **kwargs):
         response = super(SDKTraits, self).create(request, *args, **kwargs)
         response.status_code = status.HTTP_200_OK
+        # Migrate trait to edge
+        self.migrate_trait(request)
         return response
 
     @swagger_auto_schema(
@@ -272,6 +277,10 @@ class SDKTraits(mixins.CreateModelMixin, viewsets.GenericViewSet):
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         serializer.save()
+
+        # Migrate trait to edge(use serializer.data instead of request.data
+        # because we want to use /traits endpoint )
+        self.migrate_trait(serializer.data)
         return Response(serializer.data, status=200)
 
     @swagger_auto_schema(request_body=SDKCreateUpdateTraitSerializer(many=True))
