@@ -21,6 +21,10 @@
 }
 .dark {
   .react-select {
+    input[type="text"] {
+      color: white !important;
+      border: none !important;
+    }
     &__control {
       background: $input-bg-dark;
       border: none;
@@ -36,6 +40,7 @@
       color: $input-color-dark;
     }
     &__option {
+      color: white !important;;
       background: $dark-bg-0 !important;
       &:hover {
         background: darken($dark-bg-0,2) !important;
