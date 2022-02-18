@@ -23,7 +23,7 @@ class _Headway extends React.Component {
                     Headway.show()
                 }}>
                     <SparklesIcon />
-                    What's New
+                    Updates
                 </Row>
                 <span id="headway"/>
             </Row>
