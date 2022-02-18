@@ -65,7 +65,7 @@ REST calls to the API.
 You can run the entire Flagsmith with Docker by running the following command:
 
 ```bash
-docker-compose -f docker/docker-compose.yml up
+docker-compose -f docker-compose.yml up
 ```
 
 This will use some default settings created in the `docker/docker-compose.yml` file. These should be changed before
