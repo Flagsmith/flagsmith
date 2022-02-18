@@ -109,6 +109,10 @@ class Environment(LifecycleModel):
     @classmethod
     def get_from_cache(cls, api_key):
         try:
+            if not api_key:
+                logger.warning("Requested environment with null api_key.")
+                return None
+
             environment = environment_cache.get(api_key)
             if not environment:
                 select_related_args = (
