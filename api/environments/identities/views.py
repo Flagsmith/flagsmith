@@ -231,7 +231,7 @@ class SDKIdentities(SDKAPIView, MigrateIdentitiesUsingRequestsMixin):
             .get_or_create(identifier=identifier, environment=request.environment)
         )
         # Send identity to data to edge
-        self.migrate_identity(request)
+        self.migrate_identity(request, request.environment)
 
         feature_name = request.query_params.get("feature")
         if feature_name:
@@ -252,7 +252,7 @@ class SDKIdentities(SDKAPIView, MigrateIdentitiesUsingRequestsMixin):
         serializer.is_valid(raise_exception=True)
         instance = serializer.save()
         # Send identity to data to edge
-        self.migrate_identity(request)
+        self.migrate_identity(request, request.environment)
 
         # we need to serialize the response again to ensure that the
         # trait values are serialized correctly
