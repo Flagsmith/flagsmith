@@ -291,8 +291,7 @@ const App = class extends Component {
                                                                     Upgrade
                                                                 </a>
                                                             )}
-                                                            <SparklesIcon />
-                                                            <Headway className={"nav-link"}/>
+                                                            <Headway className={"nav-link cursor-pointer"}/>
                                                             <a
                                                               href="https://docs.flagsmith.com"
                                                               target="_blank" className="nav-link p-2"

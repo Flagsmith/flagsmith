@@ -1,4 +1,5 @@
 import React from "react";
+import SparklesIcon from "./svg/SparklesIcon";
 
 
 class _Headway extends React.Component {
@@ -16,9 +17,15 @@ class _Headway extends React.Component {
 
     render() {
         return (
-            <Row id="headway" className={this.props.className}
+            <Row className={this.props.className}
             >
-                What's New
+                <Row onClick={()=>{
+                    Headway.show()
+                }}>
+                    <SparklesIcon />
+                    What's New
+                </Row>
+                <span id="headway"/>
             </Row>
         );
     }
