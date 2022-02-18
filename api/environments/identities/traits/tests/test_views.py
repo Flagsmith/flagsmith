@@ -1,10 +1,12 @@
 import json
+from unittest import mock
 from unittest.case import TestCase
 
 import pytest
 from core.constants import INTEGER, STRING
 from django.urls import reverse
 from rest_framework import status
+from rest_framework.request import Request
 from rest_framework.test import APIClient, APITestCase
 
 from environments.identities.models import Identity
@@ -448,6 +450,74 @@ class SDKTraitsTest(APITestCase):
             ).get_trait_value()
             == float_trait_value
         )
+
+    @mock.patch(
+        "environments.identities.traits.views.MigrateTraitsUsingRequestMixin.migrate_trait"
+    )
+    def test_post_trait_call_migrate_trait_with_correct_arguments(
+        self, mocked_migrate_trait
+    ):
+        # Given
+        url = reverse("api-v1:sdk-traits-list")
+
+        # When
+        self.client.post(
+            url, data=self._generate_json_trait_data(), content_type=self.JSON
+        )
+
+        # Then
+        args, kwargs = mocked_migrate_trait.call_args_list[0]
+        assert kwargs == {}
+        assert isinstance(args[0], Request)
+        assert args[1] == self.environment
+
+    @mock.patch(
+        "environments.identities.traits.views.MigrateTraitsUsingRequestMixin.migrate_trait"
+    )
+    def test_increment_value_calls_migrate_with_correct_argument(
+        self, mocked_migrate_trait
+    ):
+        # Given
+        url = reverse("api-v1:sdk-traits-increment-value")
+        data = {
+            "trait_key": self.trait_key,
+            "identifier": self.identity.identifier,
+            "increment_by": 1,
+        }
+
+        # When
+        self.client.post(url, data=data)
+
+        # Then
+        args, kwargs = mocked_migrate_trait.call_args_list[0]
+        assert kwargs == {}
+        assert isinstance(args[0], Request)
+        assert args[1] == self.environment
+        assert args[2]["identity"]["identifier"]
+        assert args[2]["trait_value"]
+
+    @mock.patch(
+        "environments.identities.traits.views.MigrateTraitsUsingRequestMixin.migrate_trait_bulk"
+    )
+    def test_bulk_create_traits_calls_migrate_trait_bulk(
+        self, mocked_migrate_trait_bulk
+    ):
+        # Given
+        num_traits = 20
+        url = reverse("api-v1:sdk-traits-bulk-create")
+        traits = [
+            self._generate_trait_data(trait_key=f"trait_{i}") for i in range(num_traits)
+        ]
+
+        # When
+        self.client.put(url, data=json.dumps(traits), content_type="application/json")
+
+        # Then
+        # Then
+        args, kwargs = mocked_migrate_trait_bulk.call_args_list[0]
+        assert kwargs == {}
+        assert isinstance(args[0], Request)
+        assert args[1] == self.environment
 
     def _generate_trait_data(self, identifier=None, trait_key=None, trait_value=None):
         identifier = identifier or self.identity.identifier

@@ -265,7 +265,7 @@ class SDKTraits(
         response = super(SDKTraits, self).create(request, *args, **kwargs)
         response.status_code = status.HTTP_200_OK
         # Migrate trait to edge
-        self.migrate_trait(request)
+        self.migrate_trait(request, request.environment)
         return response
 
     @swagger_auto_schema(
@@ -278,11 +278,13 @@ class SDKTraits(
         serializer.is_valid(raise_exception=True)
         serializer.save()
 
-        # Migrate trait to edge(use serializer.data instead of request.data
-        # because we want to use /traits endpoint )
+        # Migrate trait to edge
+        # because edge only have /traits endpoint we need to update the payload to
+        # match that
         payload = serializer.data.copy()
         payload.update({"identity": {"identifier": payload.pop("identifier")}})
-        self.migrate_trait(request, payload)
+
+        self.migrate_trait(request, request.environment, payload)
         return Response(serializer.data, status=200)
 
     @swagger_auto_schema(request_body=SDKCreateUpdateTraitSerializer(many=True))
@@ -310,7 +312,7 @@ class SDKTraits(
             serializer = self.get_serializer(data=traits, many=True)
             serializer.is_valid(raise_exception=True)
             serializer.save()
-            self.migrate_trait_bulk(request)
+            self.migrate_trait_bulk(request, request.environment)
             return Response(serializer.data, status=200)
 
         except (TypeError, AttributeError) as excinfo:
