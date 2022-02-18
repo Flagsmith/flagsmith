@@ -68,7 +68,7 @@ You can run the entire Flagsmith with Docker by running the following command:
 docker-compose -f docker-compose.yml up
 ```
 
-This will use some default settings created in the `docker/docker-compose.yml` file. These should be changed before
+This will use some default settings created in the `docker-compose.yml` file. These should be changed before
 running in any sort of production environments.
 
 ## Resources
