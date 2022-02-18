@@ -18,6 +18,7 @@ import DocumentationIcon from './svg/DocumentationIcon';
 import ArrowUpIcon from './svg/ArrowUpIcon';
 import RebrandBanner from './RebrandBanner';
 import UpgradeIcon from './svg/UpgradeIcon';
+import SparklesIcon from './svg/SparklesIcon';
 import AccountSettingsPage from './pages/AccountSettingsPage';
 import Headway from "./Headway";
 
@@ -290,6 +291,7 @@ const App = class extends Component {
                                                                     Upgrade
                                                                 </a>
                                                             )}
+                                                            <SparklesIcon />
                                                             <Headway className={"nav-link"}/>
                                                             <a
                                                               href="https://docs.flagsmith.com"
