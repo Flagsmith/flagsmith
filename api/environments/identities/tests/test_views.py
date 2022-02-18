@@ -6,6 +6,7 @@ from unittest.case import TestCase
 import pytest
 from django.urls import reverse
 from rest_framework import status
+from rest_framework.request import Request
 from rest_framework.test import APIClient, APITestCase
 
 from environments.identities.helpers import (
@@ -643,3 +644,49 @@ class SDKIdentitiesTestCase(APITestCase):
 
         # and the traits ARE NOT persisted
         assert self.identity.identity_traits.count() == 0
+
+    @mock.patch(
+        "environments.identities.views.MigrateIdentitiesUsingRequestsMixin.migrate_identity"
+    )
+    def test_post_identities_calls_migrate_identity_with_correct_arguments(
+        self, mocked_migrate_identity
+    ):
+        # Given
+        url = reverse("api-v1:sdk-identities")
+
+        # a payload for an identity with 2 traits
+        data = {
+            "identifier": self.identity.identifier,
+            "traits": [
+                {"trait_key": "my_trait", "trait_value": 123},
+                {"trait_key": "my_other_trait", "trait_value": "a value"},
+            ],
+        }
+
+        # When
+        self.client.post(url, data=json.dumps(data), content_type="application/json")
+
+        # Then
+        args, kwargs = mocked_migrate_identity.call_args_list[0]
+        assert kwargs == {}
+        assert isinstance(args[0], Request)
+        assert args[1] == self.environment
+
+    @mock.patch(
+        "environments.identities.views.MigrateIdentitiesUsingRequestsMixin.migrate_identity"
+    )
+    def test_get_identities_calls_migrate_identity_with_correct_arguments(
+        self, mocked_migrate_identity
+    ):
+        # Given
+        base_url = reverse("api-v1:sdk-identities")
+        url = base_url + "?identifier=" + self.identity.identifier
+
+        # When
+        self.client.get(url)
+
+        # Then
+        args, kwargs = mocked_migrate_identity.call_args_list[0]
+        assert kwargs == {}
+        assert isinstance(args[0], Request)
+        assert args[1] == self.environment
