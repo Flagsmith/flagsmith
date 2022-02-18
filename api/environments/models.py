@@ -11,7 +11,6 @@ from django.core.cache import caches
 from django.db import models
 from django.db.models import Q
 from django.utils import timezone
-from django.utils.encoding import python_2_unicode_compatible
 from django.utils.translation import ugettext_lazy as _
 from django_lifecycle import AFTER_CREATE, AFTER_SAVE, LifecycleModel, hook
 from flag_engine.django_transform.document_builders import (
@@ -33,7 +32,6 @@ logger = logging.getLogger(__name__)
 environment_cache = caches[settings.ENVIRONMENT_CACHE_LOCATION]
 
 
-@python_2_unicode_compatible
 class Environment(LifecycleModel):
     name = models.CharField(max_length=2000)
     created_date = models.DateTimeField("DateCreated", auto_now_add=True)

@@ -7,15 +7,19 @@ COPY . .
 
 RUN cd frontend && npm install --quiet --production
 ENV ENV=prod
-ENV ASSET_URL=/
+ENV STATIC_ASSET_CDN_URL=/static/
 RUN cd frontend && npm run bundledjango
 
 
 # Step 2 - Build Django Application
-FROM python:3.9-slim as application
+FROM python:3.10-slim as application
 
 WORKDIR /app
 COPY api /app/
+
+# arm architecture platform builds need postgres drivers installing via apt
+ARG TARGETARCH
+RUN if [ "$TARGETARCH" != "amd64" ]; then apt-get update && apt-get install -y gcc libpq-dev && rm -rf /var/lib/apt/lists/*; fi;
 
 # Install python dependencies
 RUN pip install -r requirements.txt --no-cache-dir --compile

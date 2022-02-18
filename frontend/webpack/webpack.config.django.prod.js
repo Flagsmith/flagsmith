@@ -42,7 +42,7 @@ module.exports = {
     },
     output: {
         path: path.join(__dirname, '../../api/static'),
-        publicPath: '/',
+        publicPath: '/static/',
         filename: '[name].[hash].js',
     },
 

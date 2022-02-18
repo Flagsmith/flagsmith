@@ -27,7 +27,6 @@ a, .btn, button{
         &.btn-link {
             background: transparent;
         }
-        background: $button-bg-dark;
 
         &:hover, &:disabled:hover {
             background: $button-bg-dark-hover;

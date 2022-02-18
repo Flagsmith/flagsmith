@@ -11,3 +11,4 @@ Dockerfile
 .elasticbeanstalk
 .ebignore
 .ebextensions
+.direnv
