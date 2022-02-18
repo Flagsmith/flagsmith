@@ -10,7 +10,6 @@ componentDidMount() {
             selector: "#headway",
             account: "yErY2x"
         });
-        Headway.show()
 
     } catch (e) {}
 
@@ -19,18 +18,9 @@ componentDidMount() {
     render() {
 
         return (
-            <span
-                onLoad={()=>{
-                    var config = {
-                        selector: ".js-headway",
-                        account: "yErY2x"
-                    };
-                    Headway.init(config);
-                }}
-                href="https://docs.flagsmith.com"
-                target="_blank" id="headway" className={this.props.className}
+            <Row id="headway" className={this.props.className}
             >
-            </span>
+            </Row>
         );
     }
 }
