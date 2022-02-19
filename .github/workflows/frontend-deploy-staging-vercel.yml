@@ -24,13 +24,21 @@ jobs:
               with:
                   node-version: 14.x
 
+            - name: Cache dependencies
+              uses: actions/cache@v2
+              with:
+                path: ~/.npm
+                key: npm-${{ hashFiles('package-lock.json') }}
+                restore-keys: npm-
+
+
             - name: Deploy to Vercel
               env:
                 VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
                 VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
                 ENV: staging
               run: |
-                npm install --only=prod
+                npm ci --only=prod
                 npm run env
                 npm run dotenv
                 npm run bundlevercel
