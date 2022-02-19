@@ -138,13 +138,10 @@ app.get('*', (req, res) => {
 
     var linkedin = process.env.LINKEDIN || "";
     var isDev = false;
-    res.send("here");
-    /*
     return res.render('index', {
         isDev,
         linkedin,
     });
-    */
 });
 
 port=8000;
