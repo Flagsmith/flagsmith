@@ -1,9 +1,8 @@
-name: Frontend Deploy to Staging
+name: Frontend Deploy to Vercel Staging 
 
 on:
-    pull_request:
-        types: [opened, synchronize, reopened, ready_for_review]
-
+    pull_request
+    
 defaults:
     run:
         working-directory: frontend
