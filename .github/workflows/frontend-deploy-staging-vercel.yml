@@ -29,4 +29,7 @@ jobs:
                 VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
                 VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
               run: |
+                npm i
+                npm run dotenv
+                npm run bundlevercel
                 vercel --prod --token ${{ secrets.VERCEL_TOKEN }}
