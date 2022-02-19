@@ -13,7 +13,7 @@
     "dev": "cross-env npm run env && node_modules/.bin/nodemon --watch server --ignore server/config/config.json --watch webpack --exec node ./api",
     "dotenv": "node ./bin/dotenv.js && node ./bin/yaml-env.js",
     "bundle": "node node_modules/.bin/webpack --config ./webpack/webpack.config.prod.js",
-    "bundlevercel": "node node_modules/.bin/webpack --config ./webpack/webpack.config.prod.js && mv build public && mkdir handlebars && cp public/static/index.handlebars handlebars/",
+    "bundlevercel": "node node_modules/.bin/webpack --config ./webpack/webpack.config.staging.js && mv build public && mkdir handlebars && cp public/static/index.handlebars handlebars/",
     "bundledjango": "mkdir -p ../api/app/templates/webpack/ && node node_modules/.bin/webpack --config ./webpack/webpack.config.django.prod.js && rm -f ../api/app/templates/webpack/index.html && rm -f ../api/static/static/project-overrides.js && cp ../api/static/index.html ../api/app/templates/webpack/index.html",
     "bundlestaging": "node node_modules/.bin/webpack -p --progress --config ./webpack/webpack.config.staging.js",
     "bundledev": "node node_modules/.bin/webpack -p --progress --config ./webpack/webpack.config.dev.js"
