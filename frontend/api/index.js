@@ -1,13 +1,16 @@
 const app = require('express')();
 const exphbs = require('express-handlebars');
+const slackClient = require('./slack-client');
+const spm = require('./middleware/single-page-middleware');
+const webpackMiddleware = require('./middleware/webpack-middleware');
 
-var hbs = exphbs.create({
-    defaultLayout: 'index',
-    layoutsDir:  "handlebars",
-});
-app.engine('handlebars', hbs.engine);
-app.set('view engine', 'handlebars');
-app.set('views', 'handlebars');
+const SLACK_TOKEN = process.env.SLACK_TOKEN;
+const slackMessage = SLACK_TOKEN && require('./slack-client');
+const E2E_SLACK_CHANNEL_NAME = process.env.E2E_SLACK_CHANNEL_NAME;
+
+port=8000;
+
+app.use(spm);
 
 app.get('/config/project-overrides', (req, res) => {
     const getVariable = ({ name, value }) => {
@@ -136,6 +139,23 @@ app.get('*', (req, res) => {
     });
     });
 
+    var hbs;
+    if (process.env.VERCEL) {
+        hbs = exphbs.create({
+            defaultLayout: 'index',
+            layoutsDir:  "handlebars",
+        });
+        app.set('views', 'handlebars');
+    } else {
+        hbs = exphbs.create({
+            defaultLayout: 'index',
+            layoutsDir:  "web",
+        });
+        app.set('views', 'web');
+    }
+    app.engine('handlebars', hbs.engine);
+    app.set('view engine', 'handlebars');
+
     var linkedin = process.env.LINKEDIN || "";
     var isDev = false;
     return res.render('index', {
@@ -144,7 +164,6 @@ app.get('*', (req, res) => {
     });
 });
 
-port=8000;
 app.listen(port, () => {
     console.log(`Server listening on: ${port}`);
 });
