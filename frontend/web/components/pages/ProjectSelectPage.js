@@ -41,7 +41,7 @@ const ProjectSelectPage = class extends Component {
                                     <div className="col-md-9 pl-0 pr-0">
                                         <h3>Your projects</h3>
                                         <p>
-                                            Projects let you create OOOOOF and manage a set of features and configure them between
+                                            Projects let you create and manage a set of features and configure them between
                                             multiple
                                             app environments.
                                         </p>
