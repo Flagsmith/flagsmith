@@ -1,8 +1,8 @@
-name: Frontend Deploy to Vercel Staging 
+name: Frontend Deploy to Vercel Staging
 
 on:
     pull_request
-    
+
 defaults:
     run:
         working-directory: frontend
@@ -10,7 +10,7 @@ defaults:
 jobs:
     deploy-staging:
         runs-on: ubuntu-latest
-        name: Deploy to Staging
+        name: Deploy to Vercel Staging
         environment: staging
 
         steps:
@@ -24,11 +24,12 @@ jobs:
               with:
                   node-version: 14.x
 
-            - uses: amondnet/vercel-action@v20
-              with:
-                vercel-token: ${{ secrets.VERCEL_TOKEN }} # Required
-                #github-token: ${{ secrets.GITHUB_TOKEN }} #Optional
-                vercel-args: "--prod" #Optional
-                vercel-org-id: ${{ secrets.VERCEL_ORG_ID}} #Required
-                vercel-project-id: ${{ secrets.VERCEL_PROJECT_ID}} #Required
-                working-directory: .
+            - name: Deploy to Vercel
+              run: |
+                  mkdir .vercel
+                  echo $VERCEL_PROJECT_JSON > .vercel/project.json
+                  npm i -g vercel
+                  npm i
+                  npm run dotenv
+                  npm run bundlevercel
+
