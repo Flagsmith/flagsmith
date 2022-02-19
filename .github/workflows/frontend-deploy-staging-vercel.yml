@@ -28,8 +28,7 @@ jobs:
               run: |
                   mkdir .vercel
                   echo $VERCEL_PROJECT_JSON > .vercel/project.json
-                  npm i -g vercel
-                  npm i
-                  npm run dotenv
-                  npm run bundlevercel
+                  ls -l
+                  ls -l .vercel
+                  more .vercel/project.json
                   vercel --prod --token ${{ secrets.VERCEL_TOKEN }}
