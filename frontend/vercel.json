@@ -1,4 +1,17 @@
 {
     "version": 2,
-    "rewrites": [{ "source": "/api/(.*)", "destination": "/api" }]
+    "github": {
+        "enabled": false
+    },
+    "functions": {
+        "api/index.js": {
+            "includeFiles": "handlebars/**"
+        }
+    },
+    "rewrites": [
+        {
+            "source": "/(.*)",
+            "destination": "/api"
+        }
+    ]
 }
