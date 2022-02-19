@@ -16,20 +16,20 @@ if (process.env.SLACK_TOKEN && process.env.DEPLOYMENT_SLACK_CHANNEL && postToSla
     slackClient('Server started', process.env.DEPLOYMENT_SLACK_CHANNEL);
 }
 
-hbs = exphbs.create({
-    defaultLayout: 'index',
-    layoutsDir:  "web",
-});
-app.set('views', 'web');
 app.engine('handlebars', hbs.engine);
 app.set('view engine', 'handlebars');
-
 if (process.env.VERCEL) {
     hbs = exphbs.create({
         defaultLayout: 'index',
         layoutsDir:  "handlebars",
     });
     app.set('views', 'handlebars');
+} else {
+    hbs = exphbs.create({
+        defaultLayout: 'index',
+        layoutsDir:  "web",
+    });
+    app.set('views', 'web');    
 }
 
 app.get('/config/project-overrides', (req, res) => {
