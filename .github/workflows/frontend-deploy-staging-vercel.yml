@@ -27,7 +27,7 @@ jobs:
             - name: Deploy to Vercel
               run: |
                   mkdir .vercel
-                  echo $VERCEL_PROJECT_JSON > .vercel/project.json
+                  echo ${{ secrets.VERCEL_PROJECT_JSON }} > .vercel/project.json
                   ls -l
                   ls -l .vercel
                   more .vercel/project.json
