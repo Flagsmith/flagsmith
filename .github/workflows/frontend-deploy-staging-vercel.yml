@@ -30,7 +30,7 @@ jobs:
                 VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
                 ENV: staging
               run: |
-                npm i
+                npm install --only=prod
                 npm run env
                 npm run dotenv
                 npm run bundlevercel

@@ -2,7 +2,7 @@ const app = require('express')();
 const exphbs = require('express-handlebars');
 const slackClient = require('./slack-client');
 const spm = require('./middleware/single-page-middleware');
-const webpackMiddleware = require('./middleware/webpack-middleware');
+//const webpackMiddleware = require('./middleware/webpack-middleware');
 
 const SLACK_TOKEN = process.env.SLACK_TOKEN;
 const slackMessage = SLACK_TOKEN && require('./slack-client');
