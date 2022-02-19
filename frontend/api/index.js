@@ -12,6 +12,26 @@ const E2E_SLACK_CHANNEL_NAME = process.env.E2E_SLACK_CHANNEL_NAME;
 
 port=8000;
 
+if (process.env.SLACK_TOKEN && process.env.DEPLOYMENT_SLACK_CHANNEL && postToSlack) {
+    slackClient('Server started', process.env.DEPLOYMENT_SLACK_CHANNEL);
+}
+
+hbs = exphbs.create({
+    defaultLayout: 'index',
+    layoutsDir:  "web",
+});
+app.set('views', 'web');
+app.engine('handlebars', hbs.engine);
+app.set('view engine', 'handlebars');
+
+if (process.env.VERCEL) {
+    hbs = exphbs.create({
+        defaultLayout: 'index',
+        layoutsDir:  "handlebars",
+    });
+    app.set('views', 'handlebars');
+}
+
 app.get('/config/project-overrides', (req, res) => {
     const getVariable = ({ name, value }) => {
         if (!value || value === 'undefined') {
@@ -121,41 +141,8 @@ app.post('/api/webhook', (req, res) => {
     }
 });
 
-
-if (process.env.SLACK_TOKEN && process.env.DEPLOYMENT_SLACK_CHANNEL && postToSlack) {
-    slackClient('Server started', process.env.DEPLOYMENT_SLACK_CHANNEL);
-}
-
 // Catch all to render index template
 app.get('*', (req, res) => {
-    console.log("in /api/index.js");
-    console.log("CWD:" + process.cwd());
-    const testFolder = '.';
-    const fs = require('fs');
-
-    fs.readdir(testFolder, (err, files) => {
-    files.forEach(file => {
-        console.log(file);
-    });
-    });
-
-    var hbs;
-    if (process.env.VERCEL) {
-        hbs = exphbs.create({
-            defaultLayout: 'index',
-            layoutsDir:  "handlebars",
-        });
-        app.set('views', 'handlebars');
-    } else {
-        hbs = exphbs.create({
-            defaultLayout: 'index',
-            layoutsDir:  "web",
-        });
-        app.set('views', 'web');
-    }
-    app.engine('handlebars', hbs.engine);
-    app.set('view engine', 'handlebars');
-
     var linkedin = process.env.LINKEDIN || "";
     var isDev = false;
     return res.render('index', {
