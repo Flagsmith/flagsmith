@@ -32,4 +32,4 @@ jobs:
                   npm i
                   npm run dotenv
                   npm run bundlevercel
-
+                  vercel --prod
