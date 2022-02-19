@@ -1,16 +1,16 @@
 const app = require('express')();
 const exphbs = require('express-handlebars');
 const slackClient = require('./slack-client');
-const spm = require('./middleware/single-page-middleware');
+
+//const spm = require('./middleware/single-page-middleware');
 //const webpackMiddleware = require('./middleware/webpack-middleware');
+//app.use(spm);
 
 const SLACK_TOKEN = process.env.SLACK_TOKEN;
 const slackMessage = SLACK_TOKEN && require('./slack-client');
 const E2E_SLACK_CHANNEL_NAME = process.env.E2E_SLACK_CHANNEL_NAME;
 
 port=8000;
-
-app.use(spm);
 
 app.get('/config/project-overrides', (req, res) => {
     const getVariable = ({ name, value }) => {
