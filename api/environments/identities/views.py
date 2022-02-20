@@ -230,7 +230,7 @@ class SDKIdentities(SDKAPIView, MigrateIdentitiesUsingRequestsMixin):
             .prefetch_related("identity_traits")
             .get_or_create(identifier=identifier, environment=request.environment)
         )
-        # Send identity to data to edge
+        # Migrate identity to edge
         self.migrate_identity(request, request.environment)
 
         feature_name = request.query_params.get("feature")
@@ -251,7 +251,7 @@ class SDKIdentities(SDKAPIView, MigrateIdentitiesUsingRequestsMixin):
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         instance = serializer.save()
-        # Send identity to data to edge
+        # Migrate identity to edge
         self.migrate_identity(request, request.environment)
 
         # we need to serialize the response again to ensure that the

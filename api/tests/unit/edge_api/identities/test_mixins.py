@@ -105,9 +105,9 @@ def test_migrate_identity_sync_for_post_request_makes_correct_post_request(
 ):
     # Given
     identities_url = "http//localhost/identities/"
-    payload = {"key": "value"}
+    request_data = {"key": "value"}
     request = rf.post("/identities")
-    request.data = payload
+    request.data = request_data
     mocked_should_migrate = mocker.patch(
         "edge_api.identities.mixins._should_migrate",
         return_value=True,
@@ -127,7 +127,7 @@ def test_migrate_identity_sync_for_post_request_makes_correct_post_request(
     mocked_should_migrate.assert_called_with(environment.project.id)
     args, kwargs = mocked_requests.post.call_args
     assert args[0] == identities_url
-    assert kwargs["data"] == json.dumps(payload)
+    assert kwargs["data"] == json.dumps(request_data)
     assert kwargs["headers"]["X-Environment-Key"] == environment.api_key
     assert kwargs["headers"]["Content-Type"] == "application/json"
 
@@ -192,8 +192,8 @@ def test_migrate_trait_sync_makes_correct_post_request_when_payload_is_none(
     MigrateTraitsUsingRequestMixin()._migrate_trait_sync(
         request, environment, payload=None
     )
-    # Then
 
+    # Then
     mocked_should_migrate.assert_called_with(environment.project.id)
     args, kwargs = mocked_requests.post.call_args
     assert args[0] == traits_url
@@ -202,7 +202,7 @@ def test_migrate_trait_sync_makes_correct_post_request_when_payload_is_none(
     assert kwargs["headers"]["Content-Type"] == "application/json"
 
 
-def test_migrate_trait_sync_when_making_post_request_uses_payload_over_request_data(
+def test_migrate_trait_sync_post_request_uses_payload_over_request_data_if_not_none(
     mocker, rf, environment
 ):
     # Given
@@ -231,8 +231,8 @@ def test_migrate_trait_sync_when_making_post_request_uses_payload_over_request_d
     MigrateTraitsUsingRequestMixin()._migrate_trait_sync(
         request, environment, payload=payload
     )
-    # Then
 
+    # Then
     mocked_should_migrate.assert_called_with(environment.project.id)
     args, kwargs = mocked_requests.post.call_args
     assert args[0] == traits_url

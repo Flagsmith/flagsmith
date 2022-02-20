@@ -454,7 +454,7 @@ class SDKTraitsTest(APITestCase):
     @mock.patch(
         "environments.identities.traits.views.MigrateTraitsUsingRequestMixin.migrate_trait"
     )
-    def test_post_trait_call_migrate_trait_with_correct_arguments(
+    def test_post_trait_calls_migrate_trait_with_correct_arguments(
         self, mocked_migrate_trait
     ):
         # Given
@@ -474,7 +474,7 @@ class SDKTraitsTest(APITestCase):
     @mock.patch(
         "environments.identities.traits.views.MigrateTraitsUsingRequestMixin.migrate_trait"
     )
-    def test_increment_value_calls_migrate_with_correct_argument(
+    def test_increment_value_calls_migrate_with_correct_arguments(
         self, mocked_migrate_trait
     ):
         # Given
@@ -512,7 +512,6 @@ class SDKTraitsTest(APITestCase):
         # When
         self.client.put(url, data=json.dumps(traits), content_type="application/json")
 
-        # Then
         # Then
         args, kwargs = mocked_migrate_trait_bulk.call_args_list[0]
         assert kwargs == {}

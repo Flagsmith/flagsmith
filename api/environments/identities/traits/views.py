@@ -278,7 +278,6 @@ class SDKTraits(
         serializer.is_valid(raise_exception=True)
         serializer.save()
 
-        # Migrate trait to edge
         # because edge only have /traits endpoint we need to update the payload to
         # match that
         payload = serializer.data.copy()
