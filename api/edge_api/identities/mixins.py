@@ -5,30 +5,35 @@ from django.conf import settings
 from rest_framework.request import Request
 
 from environments.dynamodb import DynamoIdentityWrapper
+from environments.models import Environment
 from util.util import postpone
+
+
+def _should_migrate(project_id: int) -> bool:
+    if not settings.EDGE_API_URL:
+        return False
+    dynamo_identity_wrapper = DynamoIdentityWrapper()
+    return dynamo_identity_wrapper.is_migration_done(project_id)
 
 
 class MigrateIdentitiesUsingRequestsMixin:
     identities_url = settings.EDGE_API_URL + "identities/"
 
     def migrate_identity(self, request: Request, environment):
-        if not settings.EDGE_API_URL:
-            return
-        self._migrate_identity_async(
-            request, environment.api_key, environment.project.id
-        )
-
-    def _migrate_identity_sync(self, request: Request, api_key: str, project_id: int):
-        dynamo_identity_wrapper = DynamoIdentityWrapper()
-        if not dynamo_identity_wrapper.is_migration_done(project_id):
-            return
-        if request.method == "POST":
-            return self._make_migrate_identity_post_request(request, api_key)
-        self._make_migrate_identity_get_request(request, api_key)
+        self._migrate_identity_async(request, environment)
 
     @postpone
-    def _migrate_identity_async(self, request: Request, api_key: str, project_id: int):
-        return self._migrate_identity_sync(request, api_key, project_id)
+    def _migrate_identity_async(self, request: Request, environment: Environment):
+        return self._migrate_identity_sync(request, environment)
+
+    def _migrate_identity_sync(self, request: Request, environment: Environment):
+        if not _should_migrate(environment.project.id):
+            return
+        if request.method == "POST":
+            return self._make_migrate_identity_post_request(
+                request, environment.api_key
+            )
+        self._make_migrate_identity_get_request(request, environment.api_key)
 
     def _make_migrate_identity_get_request(self, request: Request, api_key: str):
         return requests.get(
@@ -49,40 +54,39 @@ class MigrateTraitsUsingRequestMixin:
 
     traits_url = settings.EDGE_API_URL + "traits/"
 
-    def migrate_trait(self, request: Request, environment, payload: dict = None):
-        if not settings.EDGE_API_URL:
-            return
-        dynamo_identity_wrapper = DynamoIdentityWrapper()
-        if not dynamo_identity_wrapper.is_migration_done(environment.project_id):
-            return
-        self._migrate_trait_async(request, payload)
+    def migrate_trait(
+        self, request: Request, environment: Environment, payload: dict = None
+    ):
+        self._migrate_trait_async(request, environment, payload)
 
-    def _migrate_trait_sync(self, request: Request, api_key: str, payload: dict = None):
+    @postpone
+    def _migrate_trait_async(
+        self, request: Request, environment: Environment, payload: dict = None
+    ):
+        return self._migrate_trait_sync(request, environment, payload)
+
+    def _migrate_trait_sync(
+        self, request: Request, environment: Environment, payload: dict = None
+    ):
+        if not _should_migrate(environment.project.id):
+            return
         payload = payload if payload else request.data
         requests.post(
             self.traits_url,
             data=json.dumps(payload),
-            headers=_request_headers(api_key),
+            headers=_request_headers(environment.api_key),
         )
 
+    def migrate_trait_bulk(self, request: Request, environment: Environment):
+        return self._migrate_trait_bulk_async(request, environment)
+
     @postpone
-    def _migrate_trait_async(
-        self, request: Request, api_key: str, payload: dict = None
-    ):
-        return self._migrate_trait_sync(request, payload)
+    def _migrate_trait_bulk_async(self, request: Request, environment: Environment):
+        self._migrate_trait_bulk_sync(request, environment)
 
-    def migrate_trait_bulk(self, request: Request, environment):
-        if not settings.EDGE_API_URL:
-            return
-        return self._migrate_trait_bulk_async(request, environment.api_key)
-
-    def _migrate_trait_bulk_sync(self, request: Request, api_key: str):
+    def _migrate_trait_bulk_sync(self, request: Request, environment: Environment):
         for trait in request.data:
-            self._migrate_trait_sync(request, api_key, trait)
-
-    @postpone
-    def _migrate_trait_bulk_async(self, request: Request, api_key: str):
-        self._migrate_trait_bulk_sync(request, api_key)
+            self._migrate_trait_sync(request, environment, trait)
 
 
 def _request_headers(api_key: str) -> dict:
