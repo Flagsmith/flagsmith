@@ -314,6 +314,24 @@ class ProjectFeatureTestCase(TestCase):
             == 1
         )
 
+    def test_audit_log_created_when_feature_deleted(self):
+        # Given
+        feature = Feature.objects.create(name="test feature", project=self.project)
+
+        # When
+        response = self.client.delete(
+            self.project_feature_detail_url % (self.project.id, feature.id)
+        )
+
+        # Then
+        assert response.status_code == status.HTTP_204_NO_CONTENT
+        assert (
+            AuditLog.objects.filter(
+                related_object_type=RelatedObjectType.FEATURE.name
+            ).count()
+            == 1
+        )
+
     def test_add_owners_adds_owner(self):
         # Given
         feature = Feature.objects.create(name="Test Feature", project=self.project)

@@ -12,10 +12,17 @@ from django.core.exceptions import (
 from django.db import models
 from django.db.models import Q, UniqueConstraint
 from django.utils.translation import ugettext_lazy as _
-from django_lifecycle import AFTER_CREATE, BEFORE_CREATE, LifecycleModel, hook
+from django_lifecycle import (
+    AFTER_CREATE,
+    AFTER_DELETE,
+    BEFORE_CREATE,
+    LifecycleModel,
+    hook,
+)
 from ordered_model.models import OrderedModelBase
 from simple_history.models import HistoricalRecords
 
+from audit.models import FEATURE_DELETED_MESSAGE, AuditLog, RelatedObjectType
 from environments.identities.helpers import (
     get_hashed_percentage_for_object_ids,
 )
@@ -90,6 +97,15 @@ class Feature(CustomLifecycleModelMixin, models.Model):
                 feature_segment=None,
                 enabled=self.default_enabled,
             )
+
+    @hook(AFTER_DELETE)
+    def create_feature_deleted_audit_log(self):
+        message = FEATURE_DELETED_MESSAGE % self.name
+        AuditLog.objects.create(
+            project=self.project,
+            related_object_type=RelatedObjectType.FEATURE.name,
+            log=message,
+        )
 
     def validate_unique(self, *args, **kwargs):
         """
