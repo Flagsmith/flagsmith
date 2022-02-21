@@ -17,6 +17,14 @@
                 {
                     "name": "DJANGO_SETTINGS_MODULE",
                     "value": "app.settings.production"
+                },
+                {
+                    "name":"IDENTITIES_TABLE_NAME_DYNAMO",
+                    "value":"flagsmith_identities"
+                },
+                {
+                    "name": "PROJECT_METADATA_TABLE_NAME_DYNAMO",
+                    "value": "flagsmith_project_metadata"
                 }
             ],
             "secrets": [
