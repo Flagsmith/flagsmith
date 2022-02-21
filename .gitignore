@@ -12,7 +12,6 @@ checkstyle.txt
 .envrc
 .tool-versions
 .elasticbeanstalk/
-frontend/node_modules
 
 # These get baked into the docker container on build
 src/CI_COMMIT_REF_NAME
