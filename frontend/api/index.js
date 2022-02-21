@@ -10,7 +10,6 @@ const slackMessage = SLACK_TOKEN && require('./slack-client');
 const E2E_SLACK_CHANNEL_NAME = process.env.E2E_SLACK_CHANNEL_NAME;
 
 const isDev = process.env.NODE_ENV !== 'production';
-console.log('isDev=' + isDev);
 const port = process.env.PORT || 8080;
 
 if (process.env.SLACK_TOKEN && process.env.DEPLOYMENT_SLACK_CHANNEL && postToSlack) {
