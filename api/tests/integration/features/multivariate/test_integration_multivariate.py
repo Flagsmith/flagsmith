@@ -94,6 +94,11 @@ def test_create_and_update_multivariate_feature_with_2_variations_50_percent(
 def test_modify_weight_of_2_variations_in_single_request(
     project, environment, environment_api_key, admin_client
 ):
+    """
+    Specific test to reproduce issue #807 in Github
+    https://github.com/Flagsmith/flagsmith/issues/807
+    """
+
     # Create an MV feature with 2 variations, one with 100% weighting
     create_feature_data = {
         "name": "mv_feature",
