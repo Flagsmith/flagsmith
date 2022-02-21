@@ -7,7 +7,9 @@ from features.models import Feature
 from segments.models import EQUAL, Condition, Segment, SegmentRule
 
 
-def test_get_environment_document(organisation_one, organisation_one_project_one):
+def test_get_environment_document(
+    organisation_one, organisation_one_project_one, django_assert_num_queries
+):
     # Given
     project = organisation_one_project_one
 
@@ -19,19 +21,33 @@ def test_get_environment_document(organisation_one, organisation_one_project_one
 
     # and some other sample data to make sure we're testing all of the document
     Feature.objects.create(name="test_feature", project=project)
-    segment = Segment.objects.create(project=project)
-    segment_rule = SegmentRule.objects.create(
-        segment=segment, type=SegmentRule.ALL_RULE
-    )
-    Condition.objects.create(
-        operator=EQUAL, property="property", value="value", rule=segment_rule
-    )
+    for i in range(10):
+        segment = Segment.objects.create(project=project)
+        segment_rule = SegmentRule.objects.create(
+            segment=segment, type=SegmentRule.ALL_RULE
+        )
+        Condition.objects.create(
+            operator=EQUAL,
+            property=f"property_{i}",
+            value=f"value_{i}",
+            rule=segment_rule,
+        )
+        nested_rule = SegmentRule.objects.create(
+            segment=segment, rule=segment_rule, type=SegmentRule.ALL_RULE
+        )
+        Condition.objects.create(
+            operator=EQUAL,
+            property=f"nested_prop_{i}",
+            value=f"nested_value_{i}",
+            rule=nested_rule,
+        )
 
     # and the relevant URL to get an environment document
     url = reverse("api-v1:environment-document")
 
     # When
-    response = client.get(url)
+    with django_assert_num_queries(11):
+        response = client.get(url)
 
     # Then
     assert response.status_code == status.HTTP_200_OK

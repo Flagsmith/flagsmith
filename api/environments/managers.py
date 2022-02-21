@@ -33,6 +33,8 @@ class EnvironmentManager(Manager):
                 "project__segments__rules",
                 "project__segments__rules__rules",
                 "project__segments__rules__conditions",
+                "project__segments__rules__rules__conditions",
+                "project__segments__rules__rules__rules",
                 Prefetch(
                     "project__segments__feature_segments",
                     queryset=FeatureSegment.objects.select_related("segment"),
