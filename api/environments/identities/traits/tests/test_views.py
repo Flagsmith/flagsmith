@@ -459,16 +459,16 @@ class SDKTraitsTest(APITestCase):
     ):
         # Given
         url = reverse("api-v1:sdk-traits-list")
+        data = self._generate_json_trait_data()
 
         # When
-        self.client.post(
-            url, data=self._generate_json_trait_data(), content_type=self.JSON
-        )
+        self.client.post(url, data=data, content_type=self.JSON)
 
         # Then
         args, kwargs = mocked_migrate_trait.call_args_list[0]
         assert kwargs == {}
         assert isinstance(args[0], Request)
+        assert args[0].data == json.loads(data)
         assert args[1] == self.environment
 
     @mock.patch(
@@ -493,7 +493,10 @@ class SDKTraitsTest(APITestCase):
         assert kwargs == {}
         assert isinstance(args[0], Request)
         assert args[1] == self.environment
-        assert args[2]["identity"]["identifier"]
+
+        # and the structure of payload was correct
+        assert args[2]["identity"]["identifier"] == data["identifier"]
+        assert args[2]["trait_key"] == data["trait_key"]
         assert args[2]["trait_value"]
 
     @mock.patch(
@@ -516,6 +519,7 @@ class SDKTraitsTest(APITestCase):
         args, kwargs = mocked_migrate_trait_bulk.call_args_list[0]
         assert kwargs == {}
         assert isinstance(args[0], Request)
+        assert args[0].data == traits
         assert args[1] == self.environment
 
     def _generate_trait_data(self, identifier=None, trait_key=None, trait_value=None):

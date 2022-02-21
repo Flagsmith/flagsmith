@@ -670,6 +670,7 @@ class SDKIdentitiesTestCase(APITestCase):
         args, kwargs = mocked_migrate_identity.call_args_list[0]
         assert kwargs == {}
         assert isinstance(args[0], Request)
+        assert args[0].data == data
         assert args[1] == self.environment
 
     @mock.patch(
