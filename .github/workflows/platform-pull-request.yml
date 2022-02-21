@@ -86,6 +86,8 @@ jobs:
                   node -v
                   npm i
                   npm run env
+                  echo "Testing API is available at http://127.0.0.1:8000/health:"
+                  curl  -s -D - "http://127.0.0.1:8000/health?format=json"
                   npm run test
 
     docker-build-unified:

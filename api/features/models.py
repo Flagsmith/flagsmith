@@ -11,7 +11,6 @@ from django.core.exceptions import (
 )
 from django.db import models
 from django.db.models import Q, UniqueConstraint
-from django.utils.encoding import python_2_unicode_compatible
 from django.utils.translation import ugettext_lazy as _
 from django_lifecycle import AFTER_CREATE, BEFORE_CREATE, LifecycleModel, hook
 from ordered_model.models import OrderedModelBase
@@ -46,7 +45,6 @@ if typing.TYPE_CHECKING:
     from environments.models import Environment
 
 
-@python_2_unicode_compatible
 class Feature(CustomLifecycleModelMixin, models.Model):
     name = models.CharField(max_length=2000)
     created_date = models.DateTimeField("DateCreated", auto_now_add=True)
@@ -129,7 +127,6 @@ def get_next_segment_priority(feature):
         return feature_segments.first().priority + 1
 
 
-@python_2_unicode_compatible
 class FeatureSegment(OrderedModelBase):
     feature = models.ForeignKey(
         Feature, on_delete=models.CASCADE, related_name="feature_segments"
@@ -203,7 +200,6 @@ class FeatureSegment(OrderedModelBase):
         return get_correctly_typed_value(self.value_type, self.value)
 
 
-@python_2_unicode_compatible
 class FeatureState(LifecycleModel, models.Model):
     feature = models.ForeignKey(
         Feature, related_name="feature_states", on_delete=models.CASCADE

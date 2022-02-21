@@ -5,10 +5,10 @@ on:
         branches:
             - main
         tags:
-            - '*'
+            - "*"
         paths:
-            - 'api/**'
-            - '.github/**'
+            - "api/**"
+            - ".github/**"
 
 jobs:
     build-api-dockerhub:
@@ -59,6 +59,7 @@ jobs:
               with:
                   file: api/Dockerfile
                   context: api/
+                  platforms: linux/amd64,linux/arm64,linux/arm/v7
                   push: true
                   tags: ${{ steps.meta.outputs.tags }}
 

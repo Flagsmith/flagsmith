@@ -11,7 +11,6 @@ from django.core.cache import caches
 from django.db import models
 from django.db.models import Q
 from django.utils import timezone
-from django.utils.encoding import python_2_unicode_compatible
 from django.utils.translation import ugettext_lazy as _
 from django_lifecycle import AFTER_CREATE, AFTER_SAVE, LifecycleModel, hook
 from flag_engine.django_transform.document_builders import (
@@ -33,7 +32,6 @@ logger = logging.getLogger(__name__)
 environment_cache = caches[settings.ENVIRONMENT_CACHE_LOCATION]
 
 
-@python_2_unicode_compatible
 class Environment(LifecycleModel):
     name = models.CharField(max_length=2000)
     created_date = models.DateTimeField("DateCreated", auto_now_add=True)
@@ -111,6 +109,10 @@ class Environment(LifecycleModel):
     @classmethod
     def get_from_cache(cls, api_key):
         try:
+            if not api_key:
+                logger.warning("Requested environment with null api_key.")
+                return None
+
             environment = environment_cache.get(api_key)
             if not environment:
                 select_related_args = (
@@ -118,8 +120,11 @@ class Environment(LifecycleModel):
                     "project__organisation",
                     "amplitude_config",
                 )
-                environment = cls.objects.select_related(*select_related_args).get(
-                    Q(api_key=api_key) | Q(api_keys__key=api_key)
+                environment = (
+                    cls.objects.select_related(*select_related_args)
+                    .filter(Q(api_key=api_key) | Q(api_keys__key=api_key))
+                    .distinct()
+                    .get()
                 )
                 environment_cache.set(environment.api_key, environment, timeout=60)
             return environment

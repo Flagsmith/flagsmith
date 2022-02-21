@@ -132,6 +132,7 @@ INSTALLED_APPS = [
     "integrations.mixpanel",
     "integrations.rudderstack",
     "integrations.slack",
+    "integrations.webhook",
     # Rate limiting admin endpoints
     "axes",
     "telemetry",
@@ -270,8 +271,10 @@ USE_TZ = True
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/1.9/howto/static-files/
 
-STATIC_URL = "/"
+STATIC_URL = "/static/"
 STATIC_ROOT = os.path.join(PROJECT_ROOT, "../../static/")
+
+MEDIA_URL = "/media/"  # unused but needs to be different from STATIC_URL in django 3
 
 # CORS settings
 
@@ -508,6 +511,9 @@ ENVIRONMENTS_API_KEY_TABLE_NAME_DYNAMO = env.str(
     "ENVIRONMENTS_API_KEY_TABLE_NAME_DYNAMO", None
 )
 
+# DynamoDB table name for storing project metadata(currently only used for identity migration)
+PROJECT_METADATA_TABLE_NAME_DYNAMO = env.str("PROJECT_METADATA_TABLE_NAME_DYNAMO", None)
+
 # Front end environment variables
 API_URL = env("API_URL", default="/api/v1/")
 ASSET_URL = env("ASSET_URL", default="/")
@@ -550,3 +556,6 @@ if SAML_INSTALLED:
     INSTALLED_APPS += ["saml"]
     SAML_ACCEPTED_TIME_DIFF = env.int("SAML_ACCEPTED_TIME_DIFF", default=60)
     DJOSER["SERIALIZERS"]["current_user"] = "saml.serializers.SamlCurrentUserSerializer"
+
+
+DEFAULT_AUTO_FIELD = "django.db.models.AutoField"

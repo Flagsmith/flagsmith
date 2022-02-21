@@ -6,7 +6,6 @@ import enum
 from django.conf import settings
 from django.db import models
 from django.utils import timezone
-from django.utils.encoding import python_2_unicode_compatible
 from django_lifecycle import AFTER_CREATE, AFTER_SAVE, LifecycleModel, hook
 
 from organisations.chargebee import (
@@ -26,7 +25,6 @@ class OrganisationRole(enum.Enum):
 organisation_roles = ((tag.name, tag.value) for tag in OrganisationRole)
 
 
-@python_2_unicode_compatible
 class Organisation(models.Model):
     name = models.CharField(max_length=2000)
     has_requested_features = models.BooleanField(default=False)

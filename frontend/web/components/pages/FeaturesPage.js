@@ -23,14 +23,11 @@ const FeaturesPage = class extends Component {
         super(props, context);
         this.state = {
             tags: [],
-            includeArchived: false,
+            showArchived: false,
         };
         ES6Component(this);
         this.listenTo(TagStore, 'loaded', () => {
             const tags = TagStore.model && TagStore.model[parseInt(this.props.match.params.projectId)];
-            if (this.state.tags.length === 0 && tags && tags.length > 0) {
-                this.setState({ tags: tags.map(v => v.id).concat('') });
-            }
         });
         AppActions.getFeatures(this.props.match.params.projectId, this.props.match.params.environmentId);
     }
@@ -66,13 +63,13 @@ const FeaturesPage = class extends Component {
 
     getTags = (projectId) => {
         AppActions.getTags(projectId);
-        AsyncStorage.getItem(`${projectId}tags`).then((res) => {
-            if (res) {
-                this.setState({
-                    tags: JSON.parse(res),
-                });
-            }
-        });
+        // AsyncStorage.getItem(`${projectId}tags`).then((res) => {
+        //     if (res) {
+        //         this.setState({
+        //             tags: JSON.parse(res),
+        //         });
+        //     }
+        // });
     }
 
     componentWillReceiveProps(newProps) {
@@ -99,14 +96,19 @@ const FeaturesPage = class extends Component {
     }
 
     filter = flags => _.filter(flags, (flag) => {
-        let isArchivedFlagFilter = this.state.includeArchived && flag.is_archived;
-        if (!this.state.includeArchived && (!flag.tags || !flag.tags.length)) {
+
+        if (!this.state.showArchived && flag.is_archived) {
+            return false
+        }
+        if(!this.state.tags || !this.state.tags.length) {
             return true
         }
-        if (this.state.tags.includes('') && (!flag.tags || !flag.tags.length)) {
-            return true;
+        if(this.state.tags.includes('') && (!flag.tags || !flag.tags.length)) {
+            return true
         }
-        return _.intersection(flag.tags || [], this.state.tags).length || isArchivedFlagFilter;
+
+        return _.intersection(flag.tags || [], this.state.tags).length;
+
     }) || []
 
     createFeaturePermission(el) {
@@ -202,10 +204,10 @@ const FeaturesPage = class extends Component {
                                                                           {!!archivedLength && (
                                                                               <div className="mr-2 mb-2">
                                                                                   <Tag
-                                                                                    selected={this.state.includeArchived}
-                                                                                    onClick={() => this.setState({ includeArchived: !this.state.includeArchived })}
+                                                                                    selected={this.state.showArchived}
+                                                                                    onClick={() => this.setState({ showArchived: !this.state.showArchived })}
                                                                                     className="px-2 py-2 ml-2 mr-2"
-                                                                                    tag={{ label: `Archived (${archivedLength})` }}
+                                                                                    tag={{ label: `Include Archived` }}
                                                                                   />
                                                                               </div>
 

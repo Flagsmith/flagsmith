@@ -5,10 +5,10 @@ on:
         branches:
             - main
         tags:
-            - '*'
+            - "*"
         paths:
-            - 'frontend/**'
-            - '.github/**'
+            - "frontend/**"
+            - ".github/**"
 
 jobs:
     build-frontend-dockerhub:
@@ -65,9 +65,8 @@ jobs:
 
             - name: Download features
               run: >
-                curl --location --request GET 'https://api.flagsmith.com/api/v1/flags/'
-                --header 'X-Environment-Key: ${{ secrets.FLAGSMITH_ENVIRONMENT_KEY }}' > frontend/flags.json
-
+                  curl --location --request GET 'https://api.flagsmith.com/api/v1/flags/'
+                  --header 'X-Environment-Key: ${{ secrets.FLAGSMITH_ENVIRONMENT_KEY }}' > frontend/flags.json
 
             - name: Build and push
               id: docker_build
@@ -75,6 +74,7 @@ jobs:
               with:
                   file: frontend/Dockerfile
                   context: frontend/
+                  platforms: linux/amd64,linux/arm64,linux/arm/v7
                   push: true
                   tags: ${{ steps.meta.outputs.tags }}
 

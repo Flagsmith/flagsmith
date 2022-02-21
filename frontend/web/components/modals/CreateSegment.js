@@ -34,6 +34,7 @@ const CreateSegment = class extends Component {
             name,
             rules,
             id,
+            isValid:this.validateRules(rules),
             data: '{\n}',
         };
         this.listenTo(SegmentStore, 'saved', () => {
@@ -44,6 +45,19 @@ const CreateSegment = class extends Component {
         });
     }
 
+    validateRules = (rules) =>{
+        if(!rules || !rules[0] || !rules[0].rules) {
+            return false
+        }
+        const res = rules[0].rules.find((v)=>{
+            return v.conditions.find((c)=>{
+                return (!c.property&&c.operator!=='PERCENTAGE_SPLIT') || c.value===""
+            })
+        })
+
+        return !res
+    }
+
     addRule = (type = 'ANY') => {
         const rules = this.state.rules;
         rules[0].rules = rules[0].rules.concat({
@@ -52,14 +66,14 @@ const CreateSegment = class extends Component {
                 { ...Constants.defaultRule },
             ],
         });
-        this.setState({ rules });
+        this.setState({ rules, isValid:this.validateRules(rules) });
     }
 
     updateRule = (rulesIndex, elementNumber, newValue) => {
         const { rules } = this.state;
         rules[0].rules[elementNumber] = newValue;
         this.setData(this.state.exampleData);
-        this.setState({ rules });
+        this.setState({ rules, isValid:this.validateRules(rules) });
     }
 
     removeRule = (rulesIndex, elementNumber) => {
@@ -256,7 +270,7 @@ const CreateSegment = class extends Component {
                                 {isEdit ? (
                                     <Button
                                       type="submit" data-test="update-segment" id="update-feature-btn"
-                                      disabled={isSaving || !name}
+                                      disabled={isSaving || !name || !this.state.isValid}
                                     >
                                         {isSaving ? 'Creating' : 'Update Segment'}
                                     </Button>
@@ -264,7 +278,7 @@ const CreateSegment = class extends Component {
                                     <Button
                                       type="submit" data-test="create-segment" disabled
                                       id="create-feature-btn"
-                                      disabled={isSaving || !name}
+                                      disabled={isSaving || !name || !this.state.isValid}
                                     >
                                         {isSaving ? 'Creating' : 'Create Segment'}
                                     </Button>

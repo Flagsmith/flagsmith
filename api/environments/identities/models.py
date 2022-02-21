@@ -2,7 +2,6 @@ import typing
 
 from django.db import models
 from django.db.models import Prefetch, Q
-from django.utils.encoding import python_2_unicode_compatible
 
 from environments.dynamodb import DynamoIdentityWrapper
 from environments.identities.traits.models import Trait
@@ -11,7 +10,6 @@ from features.models import FeatureState
 from features.multivariate.models import MultivariateFeatureStateValue
 
 
-@python_2_unicode_compatible
 class Identity(models.Model):
     identifier = models.CharField(max_length=2000)
     created_date = models.DateTimeField("DateCreated", auto_now_add=True)

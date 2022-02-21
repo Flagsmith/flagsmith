@@ -1,4 +1,7 @@
 from boto3.dynamodb.conditions import Key
+from flag_engine.django_transform.document_builders import (
+    build_identity_document,
+)
 
 from environments.dynamodb import DynamoIdentityWrapper
 
@@ -108,3 +111,90 @@ def test_search_items_with_identifier_calls_query_with_correct_arguments(mocker)
         & search_function(identifier),
         ExclusiveStartKey=start_key,
     )
+
+
+def test_migrate_identities_calls_internal_methods_with_correct_arguments(
+    mocker, project, identity
+):
+    # Given
+    dynamo_identity_wrapper = DynamoIdentityWrapper()
+    mocked_dynamo_table = mocker.patch.object(dynamo_identity_wrapper, "_table")
+    mocked_project_metadata = mocker.patch(
+        "environments.dynamodb.dynamodb_wrapper.DynamoProjectMetadata"
+    )
+
+    expected_identity_document = build_identity_document(identity)
+    # When
+    dynamo_identity_wrapper.migrate_identities(project.id)
+
+    # Then
+    mocked_dynamo_table.batch_writer.assert_called_with()
+
+    mocked_put_item = (
+        mocked_dynamo_table.batch_writer.return_value.__enter__.return_value.put_item
+    )
+    _, kwargs = mocked_put_item.call_args
+    actual_identity_document = kwargs["Item"]
+
+    # Remove identity_uuid from the document since it will be different
+    actual_identity_document.pop("identity_uuid")
+    expected_identity_document.pop("identity_uuid")
+
+    assert actual_identity_document == expected_identity_document
+
+    # Make sure that Project Metadata Wrapper was called correctly
+    mocked_project_metadata.get_or_new.assert_called_with(project.id)
+    # and `is_identity_migration_done` was updated successfully
+    assert (
+        mocked_project_metadata.get_or_new.return_value.is_identity_migration_done
+        is True
+    )
+    mocked_project_metadata.get_or_new.return_value.save.assert_called_with()
+
+
+def test_is_migration_done_calls_dynamo_project_metadata_wrapper_with_correct_arguments(
+    mocker,
+):
+    # Given
+    project_id = 1
+    mocked_project_metadata = mocker.patch(
+        "environments.dynamodb.dynamodb_wrapper.DynamoProjectMetadata"
+    )
+    dynamo_identity_wrapper = DynamoIdentityWrapper()
+
+    # When
+
+    result = dynamo_identity_wrapper.is_migration_done(project_id)
+    # Then
+
+    mocked_project_metadata.get_or_new.assert_called_with(project_id)
+    assert (
+        result
+        == mocked_project_metadata.get_or_new.return_value.is_identity_migration_done
+    )
+
+
+def test_is_enabled_is_false_if_dynamo_table_name_is_not_set(settings):
+    # Given
+    settings.IDENTITIES_TABLE_NAME_DYNAMO = None
+
+    # When
+    dynamo_identity_wrapper = DynamoIdentityWrapper()
+
+    # Then
+    assert dynamo_identity_wrapper.is_enabled is False
+
+
+def test_is_enabled_is_true_if_dynamo_table_name_is_set(settings, mocker):
+    # Given
+    table_name = "random_table_name"
+    settings.IDENTITIES_TABLE_NAME_DYNAMO = table_name
+    mocked_boto3 = mocker.patch("environments.dynamodb.dynamodb_wrapper.boto3")
+
+    # When
+    dynamo_identity_wrapper = DynamoIdentityWrapper()
+    # Then
+
+    assert dynamo_identity_wrapper.is_enabled is True
+    mocked_boto3.resource.assert_called_with("dynamodb")
+    mocked_boto3.resource.return_value.Table.assert_called_with(table_name)

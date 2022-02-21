@@ -249,7 +249,7 @@ const HomePage = class extends React.Component {
                                                                         this.setState({ email: Utils.safeParseEventValue(e) });
                                                                     }}
                                                                     className="input-default full-width mb-2 "
-                                                                    type="email"
+                                                                    type="text"
                                                                     name="email" id="email"
                                                                 />
                                                                 {error && error.password ? (
@@ -272,11 +272,12 @@ const HomePage = class extends React.Component {
                                                                     }}
                                                                     rightComponent={(
                                                                         <Link
+                                                                            tabIndex={-1}
                                                                             className="float-right"
                                                                             to={`/password-recovery${redirect}`}
                                                                             onClick={this.showForgotPassword}
                                                                         >
-                                                                            <ButtonLink type="button" buttonText="Forgot password?" />
+                                                                            <ButtonLink tabIndex={-1} type="button" buttonText="Forgot password?" />
                                                                         </Link>
                                                                     )}
                                                                     className="input-default full-width mb-2"

@@ -29,10 +29,10 @@ class TelemetryData:
         return cls(
             **Organisation.objects.aggregate(
                 organisations=Count("id", distinct=True),
-                projects=Count("projects", distinct=True),
                 environments=Count("projects__environments", distinct=True),
                 features=Count("projects__features", distinct=True),
                 segments=Count("projects__segments", distinct=True),
+                projects=Count("projects", distinct=True),
             ),
             # users don't _have_ to be associated with an organisation
             users=FFAdminUser.objects.count(),

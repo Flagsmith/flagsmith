@@ -9,9 +9,13 @@
         <main role="main" class="col-md-9 ml-sm-auto col-lg-10 px-md-4">
             <div
                 class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
-                <h1 class="h2">Organisation: <strong>{{organisation.name}}</strong> - Plan: <strong>{{ organisation.subscription.plan|default:"Free"}}</strong></h1>
+                <h1 class="h2">
+                    Organisation: <strong>{{organisation.name}}</strong> 
+                    - Plan: <strong>{{ organisation.subscription.plan|default:"Free"}}</strong>
+                    {% if organisation.has_subscription and not organisation.is_paid %}<span class="badge badge-danger">Subscription Cancelled</button>{% endif %}
+                </h1>
             </div>
-            
+
             {% if organisation.has_subscription %}
                 <form method="POST" action="{% url 'sales_dashboard:update_seats' organisation.id %}">
                     {% csrf_token %}
@@ -40,7 +44,7 @@
                     <tr>
                         <td>{{api_calls.24h|intcomma}}</td>
                         <td>{{api_calls.7d|intcomma}}</td>
-                        <td>{{api_calls.30d|intcomma}}</td>             
+                        <td>{{api_calls.30d|intcomma}}</td>
                         </tr>
                 </tbody>
             </table>
@@ -56,18 +60,33 @@
                             <th>Environments</th>
                             <th>Features</th>
                             <th>Segments</th>
+                            <th>Dynamo DB Enabled</th>
+                            <th>Identity Count</th>
+                            <th>Is Identity Migration Done</th>
+                            <th>Migrate Identity</th>
+
                         </tr>
                     </thead>
                     <tbody>
                         {% for project in organisation.projects.all %}
+
                         <tr>
                             <td>{{project.id}}</td>
                             <td>{{project.created_date}}</td>
-                            <td>{{project.name}}</td>             
-                            <td>{{project.environments.all.count}}</td>             
-                            <td>{{project.features.all.count}}</td>             
-                            <td>{{project.segments.all.count}}</td>             
-                          </tr>
+                            <td>{{project.name}}</td>
+                            <td>{{project.environments.all.count}}</td>
+                            <td>{{project.features.all.count}}</td>
+                            <td>{{project.segments.all.count}}</td>
+                            <td>{{project.enable_dynamo_db}}</td>
+                            <td>{{identity_count_dict|get_item:project.id}}</td>
+                            <td>{{identity_migration_status_dict|get_item:project.id}}</td>
+                            <td>
+                            <form method="POST" class="form-inline" action="{% url 'sales_dashboard:migrate_identities' project.id %}">
+                                {% csrf_token %}
+                                <input value="migrate identities" {% if identity_count_dict|get_item:project.id > max_migratable_identities or identity_migration_status_dict|get_item:project.id  %} {{'disabled'}} {% endif %} type="submit"/>
+                            </form>
+                            </td>
+                        </tr>
                         {% endfor %}
                     </tbody>
                 </table>

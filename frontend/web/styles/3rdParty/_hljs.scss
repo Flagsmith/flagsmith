@@ -45,7 +45,6 @@
     .select-language {
       span {
         color: $body-text;
-
       }
     }
   }
@@ -65,6 +64,9 @@
       &.active {
         color: $btn-code-button-color-alt;
         opacity: 1;
+      }
+      &.primary {
+        color: $bt-brand-primary !important;
       }
     }
   }

@@ -1,7 +1,7 @@
 [![Feature Flag, Remote Config and A/B Testing platform, Flagsmith](static-files/hero.png)](https://www.flagsmith.com/)
 
 [![Stars](https://img.shields.io/github/stars/flagsmith/flagsmith)](https://github.com/Flagsmith/flagsmith/stargazers)
-[![Docker Pulls](https://img.shields.io/docker/pulls/flagsmith/flagsmith-api)](https://hub.docker.com/u/flagsmith)
+[![Docker Pulls](https://img.shields.io/docker/pulls/flagsmith/flagsmith)](https://hub.docker.com/u/flagsmith)
 [![Docker Image Size](https://img.shields.io/docker/image-size/flagsmith/flagsmith)](https://hub.docker.com/u/flagsmith/flagsmith)
 [![Join the Discord chat](https://img.shields.io/discord/517647859495993347)](https://discord.gg/hFhxNtXzgm)
 
@@ -65,10 +65,10 @@ REST calls to the API.
 You can run the entire Flagsmith with Docker by running the following command:
 
 ```bash
-docker-compose -f docker/docker-compose.yml up
+docker-compose -f docker-compose.yml up
 ```
 
-This will use some default settings created in the `docker/docker-compose.yml` file. These should be changed before
+This will use some default settings created in the `docker-compose.yml` file. These should be changed before
 running in any sort of production environments.
 
 ## Resources

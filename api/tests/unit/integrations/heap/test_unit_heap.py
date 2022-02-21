@@ -4,6 +4,7 @@ from environments.identities.models import Identity
 from environments.models import Environment
 from features.models import Feature, FeatureState
 from integrations.heap.heap import HeapWrapper
+from integrations.heap.models import HeapConfiguration
 from organisations.models import Organisation
 from projects.models import Project
 
@@ -12,8 +13,9 @@ from projects.models import Project
 def test_heap_when_generate_user_data_with_correct_values_then_success():
     # Given
     api_key = "123key"
+    config = HeapConfiguration(api_key=api_key)
     identity = Identity(identifier="user123")
-    heap_wrapper = HeapWrapper(api_key=api_key)
+    heap_wrapper = HeapWrapper(config)
 
     organisation = Organisation.objects.create(name="Test Org")
     project = Project.objects.create(name="Test Project", organisation=organisation)
