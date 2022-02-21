@@ -295,8 +295,8 @@ class FFAdminUser(LifecycleModel, AbstractUser):
             % (
                 str(organisation.name),
                 organisation.num_seats,
-                organisation.subscription.max_seats,
-                organisation.subscription.plan,
+                organisation.subscription.max_seats if organisation.subscription else 0,
+                organisation.subscription.plan if organisation.subscription else "Free",
             ),
         )
 
