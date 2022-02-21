@@ -289,7 +289,7 @@ class TheComponent extends PureComponent {
                                                 <span className="icon ion-md-settings"/>
                                             </div>
                                             <div onClick={() => this.deleteTag(tag)} className="ml-2 px-2 py-2 clickable">
-                                                <img width={16} src="/images/icons/bin.svg" />
+                                                <img width={16} src="/static/images/icons/bin.svg" />
                                             </div>
                                         </>
                                       )}
