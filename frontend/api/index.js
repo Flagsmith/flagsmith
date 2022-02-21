@@ -1,16 +1,18 @@
-const app = require('express')();
 const exphbs = require('express-handlebars');
+const express = require('express');
 const slackClient = require('./slack-client');
+const spm = require('./middleware/single-page-middleware');
+const webpackMiddleware = require('./middleware/webpack-middleware');
 
-//const spm = require('./middleware/single-page-middleware');
-//const webpackMiddleware = require('./middleware/webpack-middleware');
-//app.use(spm);
+const app = express();
+app.use(spm);
 
 const SLACK_TOKEN = process.env.SLACK_TOKEN;
 const slackMessage = SLACK_TOKEN && require('./slack-client');
 const E2E_SLACK_CHANNEL_NAME = process.env.E2E_SLACK_CHANNEL_NAME;
 
-port=8000;
+const isDev = process.env.NODE_ENV !== 'production';
+const port = process.env.PORT || 8080;
 
 if (process.env.SLACK_TOKEN && process.env.DEPLOYMENT_SLACK_CHANNEL && postToSlack) {
     slackClient('Server started', process.env.DEPLOYMENT_SLACK_CHANNEL);
@@ -33,6 +35,7 @@ app.engine('handlebars', hbs.engine);
 app.set('view engine', 'handlebars');
 
 app.get('/config/project-overrides', (req, res) => {
+    console.log("BOOM");
     const getVariable = ({ name, value }) => {
         if (!value || value === 'undefined') {
             if (typeof value === 'boolean') {
@@ -144,7 +147,6 @@ app.post('/api/webhook', (req, res) => {
 // Catch all to render index template
 app.get('*', (req, res) => {
     var linkedin = process.env.LINKEDIN || "";
-    var isDev = false;
     return res.render('index', {
         isDev,
         linkedin,
@@ -154,5 +156,12 @@ app.get('*', (req, res) => {
 app.listen(port, () => {
     console.log(`Server listening on: ${port}`);
 });
+
+if (isDev) { // Serve files from src directory and use webpack-dev-server
+    console.log('Enabled Webpack Hot Reloading');
+    webpackMiddleware(app);
+    app.set('views', 'web/');
+    app.use(express.static('web'));
+}
 
 module.exports = app;
