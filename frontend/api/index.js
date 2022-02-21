@@ -2,40 +2,22 @@ const exphbs = require('express-handlebars');
 const express = require('express');
 const slackClient = require('./slack-client');
 const spm = require('./middleware/single-page-middleware');
-const webpackMiddleware = require('./middleware/webpack-middleware');
 
 const app = express();
-app.use(spm);
 
 const SLACK_TOKEN = process.env.SLACK_TOKEN;
 const slackMessage = SLACK_TOKEN && require('./slack-client');
 const E2E_SLACK_CHANNEL_NAME = process.env.E2E_SLACK_CHANNEL_NAME;
 
 const isDev = process.env.NODE_ENV !== 'production';
+console.log('isDev=' + isDev);
 const port = process.env.PORT || 8080;
 
 if (process.env.SLACK_TOKEN && process.env.DEPLOYMENT_SLACK_CHANNEL && postToSlack) {
     slackClient('Server started', process.env.DEPLOYMENT_SLACK_CHANNEL);
 }
 
-if (process.env.VERCEL) {
-    var hbs = exphbs.create({
-        defaultLayout: 'index',
-        layoutsDir:  "handlebars",
-    });
-    app.set('views', 'handlebars');
-} else {
-    var hbs = exphbs.create({
-        defaultLayout: 'index',
-        layoutsDir:  "web",
-    });
-    app.set('views', 'web');
-}
-app.engine('handlebars', hbs.engine);
-app.set('view engine', 'handlebars');
-
 app.get('/config/project-overrides', (req, res) => {
-    console.log("BOOM");
     const getVariable = ({ name, value }) => {
         if (!value || value === 'undefined') {
             if (typeof value === 'boolean') {
@@ -98,9 +80,35 @@ app.get('/config/project-overrides', (req, res) => {
     `);
 });
 
+if (isDev) { // Serve files from src directory and use webpack-dev-server
+    console.log('Enabled Webpack Hot Reloading');
+    const webpackMiddleware = require('./middleware/webpack-middleware');
+    webpackMiddleware(app);
+    app.set('views', 'web/');
+    app.use(express.static('web'));
+}
+
+if (process.env.VERCEL) {
+    var hbs = exphbs.create({
+        defaultLayout: 'index',
+        layoutsDir:  "handlebars",
+    });
+    app.set('views', 'handlebars');
+} else {
+    var hbs = exphbs.create({
+        defaultLayout: 'index',
+        layoutsDir:  "web",
+    });
+    app.set('views', 'web');
+}
+app.engine('handlebars', hbs.engine);
+app.set('view engine', 'handlebars');
+
 app.get('/robots.txt', (req, res) => {
     res.send('User-agent: *\r\nDisallow: /');
 });
+
+app.use(spm);
 
 app.post('/api/event', (req, res) => {
     res.json({ });
@@ -145,7 +153,7 @@ app.post('/api/webhook', (req, res) => {
 });
 
 // Catch all to render index template
-app.get('*', (req, res) => {
+app.get('/', (req, res) => {
     var linkedin = process.env.LINKEDIN || "";
     return res.render('index', {
         isDev,
@@ -155,13 +163,9 @@ app.get('*', (req, res) => {
 
 app.listen(port, () => {
     console.log(`Server listening on: ${port}`);
+    if (!isDev && process.send) {
+        process.send({ done: true });
+    }
 });
-
-if (isDev) { // Serve files from src directory and use webpack-dev-server
-    console.log('Enabled Webpack Hot Reloading');
-    webpackMiddleware(app);
-    app.set('views', 'web/');
-    app.use(express.static('web'));
-}
 
 module.exports = app;
