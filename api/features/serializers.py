@@ -240,7 +240,16 @@ class FeatureStateSerializerBasic(WritableNestedModelSerializer):
         if queryset.exists():
             raise serializers.ValidationError("Feature state already exists.")
 
+        self._validate_multivariate_percentage_values()
+
         return attrs
+
+    def _validate_multivariate_percentage_values(self):
+        mv_values = self.initial_data.get("multivariate_feature_state_values", [])
+        if sum([v["percentage_allocation"] for v in mv_values]) > 100:
+            raise serializers.ValidationError(
+                "Multivariate percentage values exceed 100%."
+            )
 
 
 class FeatureStateSerializerWithIdentity(FeatureStateSerializerBasic):
