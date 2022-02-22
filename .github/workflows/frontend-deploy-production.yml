@@ -1,12 +1,13 @@
 name: Frontend Deploy to Production
 
-on:
-    push:
-        branches:
-            - main
-        paths:
-            - 'frontend/**'
-            - '.github/**'
+on: pull_request
+#todo: update to main
+#    push:
+#        branches:
+#            - main
+#        paths:
+#            - 'frontend/**'
+#            - '.github/**'
 
 defaults:
     run:
@@ -41,9 +42,8 @@ jobs:
 
     deploy-production:
         runs-on: ubuntu-latest
-        name: Deploy to Production
+        name: Deploy to Vercel Production
         environment: production
-        needs: run-tests
 
         steps:
             - name: Cloning repo
@@ -56,33 +56,21 @@ jobs:
               with:
                   node-version: 14.x
 
-            - name: Setup Cloud SDK
-              uses: google-github-actions/setup-gcloud@v0.2.0
+            - name: Cache dependencies
+              uses: actions/cache@v2
               with:
-                  project_id: bullet-train-front-end-prod
-                  service_account_key: ${{ secrets.FRONTEND_GOOGLECLOUD_SERVICEACCOUNT_KEY }}
+                  path: ~/.npm
+                  key: npm-${{ hashFiles('package-lock.json') }}
+                  restore-keys: npm-
 
-            - name: Deploy to App Engine
+            - name: Deploy to Vercel
               env:
-                  STATIC_ASSET_CDN_URL: https://cdn.flagsmith.com
+                  VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
+                  VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
                   ENV: prod
-                  AMPLITUDE_API_KEY: ${{ secrets.AMPLITUDE_API_KEY }}
-                  DELIGHTED_API_KEY: ${{ secrets.DELIGHTED_API_KEY }}
-                  CRISP_WEBSITE_ID: ${{ secrets.CRISP_WEBSITE_ID }}
-                  CAPTERRA_API_KEY: ${{ secrets.CAPTERRA_API_KEY }}
-                  DEPLOYMENT_SLACK_CHANNEL: ${ secrets.DEPLOYMENT_SLACK_CHANNEL }}
-                  E2E_SLACK_CHANNEL: ${{ secrets.E2E_SLACK_CHANNEL }}
-                  EVENTS_SLACK_CHANNEL: ${{ secrets.EVENTS_SLACK_CHANNEL }}
-                  ENABLE_FLAG_EVALUATION_ANALYTICS: ${{ secrets.ENABLE_FLAG_EVALUATION_ANALYTICS }}
-                  ENABLE_INFLUXDB_FEATURES: ${{ secrets.ENABLE_INFLUXDB_FEATURES }}
-                  GOOGLE_ANALYTICS_API_KEY: ${{ secrets.GOOGLE_ANALYTICS_API_KEY }}
-                  HEAP_API_KEY: ${{ secrets.HEAP_API_KEY }}
-                  LINKEDIN: ${{ secrets.LINKEDIN }}
-                  MIXPANEL_API_KEY: ${{ secrets.MIXPANEL_API_KEY }}
-                  SLACK_TOKEN: ${{ secrets.SLACK_TOKEN }}
               run: |
-                  npm i
+                  npm ci --only=prod
                   npm run env
                   npm run dotenv
-                  npm run bundle
-                  gcloud app deploy --quiet
+                  npm run bundlevercel
+                  vercel --prod --token ${{ secrets.VERCEL_TOKEN }}
