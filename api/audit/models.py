@@ -5,7 +5,7 @@ from django.db import models
 from projects.models import Project
 
 FEATURE_CREATED_MESSAGE = "New Flag / Remote Config created: %s"
-FEATURE_DELETED_MESSAGE = "Flag / Remove Config Deleted: %s"
+FEATURE_DELETED_MESSAGE = "Flag / Remote Config Deleted: %s"
 FEATURE_UPDATED_MESSAGE = "Flag / Remote Config updated: %s"
 SEGMENT_CREATED_MESSAGE = "New Segment created: %s"
 SEGMENT_UPDATED_MESSAGE = "Segment updated: %s"
