@@ -18,15 +18,15 @@ const LegalAside = class extends Component {
         <div className="brand-container text-center">
             <Link to="/">
                 <Row>
-                    <img height={34} src="/images/icon-2.png" alt="Bullet Train Logo"/>
-							Bullet Train
+                    <img height={34} src="/static/images/icon-2.png" alt="Flagsmith Logo"/>
+							Flagsmith
 
                 </Row>
             </Link>
         </div>
         <Flex>
             <Flex className="links">
-                <h3 className="link-header">Agreeements</h3>
+                <h3 className="link-header">Agreements</h3>
                 <Link
                   activeClassName="active"
                   to="/legal/tos"

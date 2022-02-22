@@ -85,7 +85,7 @@ const PaymentModal = class extends Component {
                                                         <p className="pricing-price">Start-Up</p>
 
                                                         <img
-                                                          src="/images/startup.svg" alt="Startup icon"
+                                                          src="/static/images/startup.svg" alt="Startup icon"
                                                           className="pricing-icon"
                                                         />
                                                         <p className="pricing-type">$45</p>
@@ -134,7 +134,7 @@ const PaymentModal = class extends Component {
                                                         <p className="featured">Most Popular</p>
                                                         <p className="pricing-price">Scale-Up</p>
                                                         <img
-                                                          src="/images/pricing-scale-up.svg" alt="Scale-up icon"
+                                                          src="/static/images/pricing-scale-up.svg" alt="Scale-up icon"
                                                           className="pricing-icon"
                                                         />
                                                         <p className="pricing-type">$200</p>
@@ -180,7 +180,7 @@ const PaymentModal = class extends Component {
                                                         <p className="featured">Optional On-Prem Install</p>
                                                         <p className="pricing-price">Enterprise</p>
                                                         <img
-                                                          src="/images/cubes.svg" alt="Enterprise icon"
+                                                          src="/static/images/cubes.svg" alt="Enterprise icon"
                                                           className="pricing-icon"
                                                         />
                                                         <p className="pricing-type">Contact Us</p>

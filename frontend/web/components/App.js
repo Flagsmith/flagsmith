@@ -263,7 +263,7 @@ const App = class extends Component {
                                                         <a href={user ? '/projects' : 'https://flagsmith.com'}>
                                                             <img
                                                               title="Flagsmith" height={24}
-                                                              src="/images/nav-logo.svg"
+                                                              src="/static/images/nav-logo.svg"
                                                               className="brand" alt="Flagsmith logo"
                                                             />
                                                         </a>
@@ -378,7 +378,7 @@ const App = class extends Component {
                                                                           className="popover-bt__list-item"
                                                                         >
                                                                             <img
-                                                                              src="/images/icons/aside/logout-dark.svg"
+                                                                              src="/static/images/icons/aside/logout-dark.svg"
                                                                               className="mr-2"
                                                                             />
                                                                             Logout
