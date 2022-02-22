@@ -327,7 +327,8 @@ class ProjectFeatureTestCase(TestCase):
         assert response.status_code == status.HTTP_204_NO_CONTENT
         assert (
             AuditLog.objects.filter(
-                related_object_type=RelatedObjectType.FEATURE.name
+                related_object_type=RelatedObjectType.FEATURE.name,
+                related_object_id=feature.id,
             ).count()
             == 1
         )

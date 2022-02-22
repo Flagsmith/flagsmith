@@ -115,6 +115,7 @@ class FeatureViewSet(viewsets.ModelViewSet):
             author=self.request.user,
             project=instance.project,
             related_object_type=RelatedObjectType.FEATURE.name,
+            related_object_id=instance.id,
             log=message,
         )
         instance.delete()
