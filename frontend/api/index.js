@@ -111,8 +111,12 @@ app.post('/api/event', (req, res) => {
     res.json({ });
     try {
         const body = req.body;
-        const channel = body.tag ? `infra_${body.tag.replace(/ /g, '').toLowerCase()}` : process.env.EVENTS_SLACK_CHANNEL;
+        console.log("body:" + body);
 
+        const channel = body.tag ? `infra_${body.tag.replace(/ /g, '').toLowerCase()}` : process.env.EVENTS_SLACK_CHANNEL;
+        console.log("channel:" + channel);
+
+        console.log("postToSlack:" + postToSlack);
         if (process.env.SLACK_TOKEN && channel && postToSlack && !body.event.includes('Bullet Train')) {
             const match = body.event.match(/([a-zA-Z0-9_\-\.]+)@([a-zA-Z0-9_\-\.]+)\.([a-zA-Z]{2,5})/);
             let url = '';
