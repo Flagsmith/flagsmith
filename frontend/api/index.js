@@ -2,6 +2,7 @@ const exphbs = require('express-handlebars');
 const express = require('express');
 const slackClient = require('./slack-client');
 const spm = require('./middleware/single-page-middleware');
+const bodyParser = require('body-parser');
 
 const app = express();
 
@@ -103,10 +104,10 @@ app.get('/robots.txt', (req, res) => {
     res.send('User-agent: *\r\nDisallow: /');
 });
 
+app.use(bodyParser.json());
 app.use(spm);
 
 app.post('/api/event', (req, res) => {
-    console.log("erk");
     res.json({ });
     try {
         const body = req.body;
