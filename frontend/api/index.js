@@ -15,6 +15,8 @@ const isDev = process.env.NODE_ENV !== 'production';
 const port = process.env.PORT || 8080;
 
 app.get('/config/project-overrides', (req, res) => {
+    slackClient("New Organisation Dyte test(ravindra@dyte.io Ravindra Rathor) https://www.similarweb.com/website/dyte.io", "infra_events");
+
     const getVariable = ({ name, value }) => {
         if (!value || value === 'undefined') {
             if (typeof value === 'boolean') {
