@@ -18,7 +18,9 @@ import DocumentationIcon from './svg/DocumentationIcon';
 import ArrowUpIcon from './svg/ArrowUpIcon';
 import RebrandBanner from './RebrandBanner';
 import UpgradeIcon from './svg/UpgradeIcon';
+import SparklesIcon from './svg/SparklesIcon';
 import AccountSettingsPage from './pages/AccountSettingsPage';
+import Headway from "./Headway";
 
 const App = class extends Component {
     static propTypes = {
@@ -289,6 +291,7 @@ const App = class extends Component {
                                                                     Upgrade
                                                                 </a>
                                                             )}
+                                                            <Headway className={"nav-link cursor-pointer"}/>
                                                             <a
                                                               href="https://docs.flagsmith.com"
                                                               target="_blank" className="nav-link p-2"
