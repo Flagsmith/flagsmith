@@ -59,7 +59,8 @@ class OrganisationList(ListView):
                 queryset = queryset.filter(subscription__plan__icontains=filter_plan)
 
         # Annotate the queryset with the organisations usage for the given time periods
-        # and order the queryset with it.
+        # and order the queryset with it. Note: this is done as late as possible to
+        # reduce the impact of the query.
         if settings.INFLUXDB_TOKEN:
             for date_range, limit in (("30d", ""), ("7d", ""), ("24h", "100")):
                 key = f"num_{date_range}_calls"
@@ -92,6 +93,10 @@ class OrganisationList(ListView):
             )[:20]
             data["users"] = users
             data["search"] = search_term
+
+        data["filter_plan"] = self.request.GET.get("filter_plan")
+        data["sort_field"] = self.request.GET.get("sort_field")
+        data["sort_direction"] = self.request.GET.get("sort_direction")
 
         return data
 
