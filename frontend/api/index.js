@@ -12,8 +12,9 @@ const E2E_SLACK_CHANNEL_NAME = process.env.E2E_SLACK_CHANNEL_NAME;
 const isDev = process.env.NODE_ENV !== 'production';
 const port = process.env.PORT || 8080;
 
+const postToSlack = process.env.VERCEL_ENV === 'production';
 if (process.env.SLACK_TOKEN && process.env.DEPLOYMENT_SLACK_CHANNEL && postToSlack) {
-    slackClient('Server started', process.env.DEPLOYMENT_SLACK_CHANNEL);
+    slackClient('Vercel Front End Server started', process.env.DEPLOYMENT_SLACK_CHANNEL);
 }
 
 app.get('/config/project-overrides', (req, res) => {
@@ -109,6 +110,7 @@ app.get('/robots.txt', (req, res) => {
 app.use(spm);
 
 app.post('/api/event', (req, res) => {
+    console.log("erk");
     res.json({ });
     try {
         const body = req.body;
