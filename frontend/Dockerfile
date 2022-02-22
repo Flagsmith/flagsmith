@@ -11,7 +11,6 @@ COPY --chown=node:node . .
 
 RUN npm install --quiet --production
 ENV ENV=prod
-ENV STATIC_ASSET_CDN_URL=/
 RUN npm run bundle
 
 

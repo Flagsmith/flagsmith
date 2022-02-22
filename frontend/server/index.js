@@ -68,7 +68,6 @@ app.get('/config/project-overrides', (req, res) => {
         { name: 'sentry', value: process.env.SENTRY_API_KEY },
         { name: 'api', value: process.env.FLAGSMITH_PROXY_API_URL ? '/api/v1/' : process.env.FLAGSMITH_API_URL },
         { name: 'maintenance', value: process.env.ENABLE_MAINTENANCE_MODE },
-        { name: 'assetURL', value: process.env.STATIC_ASSET_CDN_URL },
         { name: 'flagsmithClientAPI', value: process.env.FLAGSMITH_ON_FLAGSMITH_API_URL },
         { name: 'disableInflux', value: !envToBool('ENABLE_INFLUXDB_FEATURES', true) },
         { name: 'flagsmithAnalytics', value: envToBool('ENABLE_FLAG_EVALUATION_ANALYTICS', true) },

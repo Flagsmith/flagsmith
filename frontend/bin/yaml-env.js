@@ -29,7 +29,6 @@ env_variables:
   DELIGHTED_API_KEY: ${process.env.DELIGHTED_API_KEY}
   ENABLE_MAINTENANCE_MODE: ${process.env.ENABLE_MAINTENANCE_MODE}
   ENABLE_INFLUXDB_FEATURES: ${process.env.ENABLE_INFLUXDB_FEATURES}
-  STATIC_ASSET_CDN_URL: ${process.env.STATIC_ASSET_CDN_URL}
 `;
 
 fs.writeFileSync(src, str);

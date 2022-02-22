@@ -12,7 +12,6 @@ WORKDIR /srv/flagsmith
 COPY --chown=node:node . .
 
 RUN npm install --quiet
-ENV STATIC_ASSET_CDN_URL=/
 ENV ENV=e2e
 RUN npm i && npm run env
 
