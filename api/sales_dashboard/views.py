@@ -45,19 +45,7 @@ class OrganisationList(ListView):
             num_segments=Count("projects__segments", distinct=True),
         )
 
-        # Annotate the queryset with the organisations usage for the given time periods
-        # and order the queryset with it.
-        if settings.INFLUXDB_TOKEN:
-            for date_range, limit in (("30d", ""), ("7d", ""), ("24h", "100")):
-                key = f"num_{date_range}_calls"
-                org_calls = get_top_organisations(date_range, limit)
-                if org_calls:
-                    whens = [When(id=k, then=Value(v)) for k, v in org_calls.items()]
-                    queryset = queryset.annotate(
-                        **{key: Case(*whens, default=0, output_field=IntegerField())}
-                    ).order_by(f"-{key}")
-
-        if "search" in self.request.GET:
+        if self.request.GET.get("search"):
             search_term = self.request.GET["search"]
             queryset = queryset.filter(
                 Q(name__icontains=search_term) | Q(users__email__icontains=search_term)
@@ -69,6 +57,18 @@ class OrganisationList(ListView):
                 queryset = queryset.filter(subscription__isnull=True)
             else:
                 queryset = queryset.filter(subscription__plan__icontains=filter_plan)
+
+        # Annotate the queryset with the organisations usage for the given time periods
+        # and order the queryset with it.
+        if settings.INFLUXDB_TOKEN:
+            for date_range, limit in (("30d", ""), ("7d", ""), ("24h", "100")):
+                key = f"num_{date_range}_calls"
+                org_calls = get_top_organisations(date_range, limit)
+                if org_calls:
+                    whens = [When(id=k, then=Value(v)) for k, v in org_calls.items()]
+                    queryset = queryset.annotate(
+                        **{key: Case(*whens, default=0, output_field=IntegerField())}
+                    ).order_by(f"-{key}")
 
         if self.request.GET.get("sort_field"):
             sort_field = self.request.GET["sort_field"]
@@ -91,6 +91,7 @@ class OrganisationList(ListView):
                 Q(last_name__icontains=search_term) | Q(email__icontains=search_term)
             )[:20]
             data["users"] = users
+            data["search"] = search_term
 
         return data
 
