@@ -122,7 +122,7 @@ app.post('/api/event', (req, res) => {
             slackClient(body.event + url, channel);
         }
     } catch (e) {
-        console.log("Error posting to from /api/event:" + error);
+        console.log("Error posting to from /api/event:" + e);
     }
 });
 
