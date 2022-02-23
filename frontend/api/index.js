@@ -9,7 +9,6 @@ const app = express();
 
 const SLACK_TOKEN = process.env.SLACK_TOKEN;
 const slackClient = SLACK_TOKEN && require('./slack-client');
-const E2E_SLACK_CHANNEL_NAME = process.env.E2E_SLACK_CHANNEL_NAME;
 const postToSlack = process.env.VERCEL_ENV === 'production';
 
 const isDev = process.env.NODE_ENV !== 'production';
@@ -110,16 +109,9 @@ app.use(bodyParser.json());
 app.use(spm);
 
 app.post('/api/event', (req, res) => {
-    res.json({ });
     try {
         const body = req.body;
-        console.log("body:" + JSON.stringify(body));
-
-        console.log(body.tag)
         const channel = body.tag ? `infra_${body.tag.replace(/ /g, '').toLowerCase()}` : process.env.EVENTS_SLACK_CHANNEL;
-        console.log("channel:" + channel);
-
-        console.log("postToSlack:" + postToSlack);
         if (process.env.SLACK_TOKEN && channel && postToSlack && !body.event.includes('Bullet Train')) {
             const match = body.event.match(/([a-zA-Z0-9_\-\.]+)@([a-zA-Z0-9_\-\.]+)\.([a-zA-Z]{2,5})/);
             let url = '';
@@ -127,7 +119,11 @@ app.post('/api/event', (req, res) => {
                 const urlMatch = match[0].split('@')[1];
                 url = ` https://www.similarweb.com/website/${urlMatch}`;
             }
-            slackClient(body.event + url, channel);
+            slackClient(body.event + url, channel).finally(()=>{
+                res.json({})
+            })
+        } else {
+            res.json({})
         }
     } catch (e) {
         console.log("Error posting to from /api/event:" + e);
