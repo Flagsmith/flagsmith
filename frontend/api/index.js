@@ -1,13 +1,14 @@
+require('dotenv').config();
+
 const exphbs = require('express-handlebars');
 const express = require('express');
-const slackClient = require('./slack-client');
 const spm = require('./middleware/single-page-middleware');
 const bodyParser = require('body-parser');
 
 const app = express();
 
 const SLACK_TOKEN = process.env.SLACK_TOKEN;
-const slackMessage = SLACK_TOKEN && require('./slack-client');
+const slackClient = SLACK_TOKEN && require('./slack-client');
 const E2E_SLACK_CHANNEL_NAME = process.env.E2E_SLACK_CHANNEL_NAME;
 const postToSlack = process.env.VERCEL_ENV === 'production';
 
@@ -15,7 +16,6 @@ const isDev = process.env.NODE_ENV !== 'production';
 const port = process.env.PORT || 8080;
 
 app.get('/config/project-overrides', (req, res) => {
-    slackClient("New Organisation Dyte test(ravindra@dyte.io Ravindra Rathor) https://www.similarweb.com/website/dyte.io", "infra_events");
 
     const getVariable = ({ name, value }) => {
         if (!value || value === 'undefined') {
@@ -113,8 +113,9 @@ app.post('/api/event', (req, res) => {
     res.json({ });
     try {
         const body = req.body;
-        console.log("body:" + body);
+        console.log("body:" + JSON.stringify(body));
 
+        console.log(body.tag)
         const channel = body.tag ? `infra_${body.tag.replace(/ /g, '').toLowerCase()}` : process.env.EVENTS_SLACK_CHANNEL;
         console.log("channel:" + channel);
 
