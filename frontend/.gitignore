@@ -22,5 +22,4 @@ coverage/*
 .env
 env.yaml
 .envrc
-
 .vercel
