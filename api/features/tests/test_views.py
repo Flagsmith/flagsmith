@@ -314,7 +314,7 @@ class ProjectFeatureTestCase(TestCase):
             == 1
         )
 
-    def test_audit_log_created_when_feature_deleted(self):
+    def test_audit_logs_created_when_feature_deleted(self):
         # Given
         feature = Feature.objects.create(name="test feature", project=self.project)
 
@@ -330,7 +330,7 @@ class ProjectFeatureTestCase(TestCase):
                 related_object_type=RelatedObjectType.FEATURE.name,
                 related_object_id=feature.id,
             ).count()
-            == 1
+            == feature.project.environments.count() + 1
         )
 
     def test_add_owners_adds_owner(self):

@@ -110,15 +110,31 @@ class FeatureViewSet(viewsets.ModelViewSet):
         serializer.save(project_id=self.kwargs.get("project_pk"))
 
     def perform_destroy(self, instance):
-        message = FEATURE_DELETED_MESSAGE % self.name
-        AuditLog.objects.create(
+        self._create_feature_delete_audit_log(instance)
+        instance.delete()
+
+    def _create_feature_delete_audit_log(self, feature: Feature):
+        message = FEATURE_DELETED_MESSAGE % feature.name
+        project_audit_log = AuditLog(
             author=self.request.user,
-            project=instance.project,
+            project=feature.project,
             related_object_type=RelatedObjectType.FEATURE.name,
-            related_object_id=instance.id,
+            related_object_id=feature.id,
             log=message,
         )
-        instance.delete()
+        audit_logs = [project_audit_log]
+        for environment in feature.project.environments.all():
+            audit_logs.append(
+                AuditLog(
+                    author=self.request.user,
+                    project=feature.project,
+                    environment=environment,
+                    related_object_type=RelatedObjectType.FEATURE.name,
+                    related_object_id=feature.id,
+                    log=message,
+                )
+            )
+        AuditLog.objects.bulk_create(audit_logs)
 
     @swagger_auto_schema(
         query_serializer=GetInfluxDataQuerySerializer(),
