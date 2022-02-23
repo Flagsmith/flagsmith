@@ -4,6 +4,7 @@ from unittest.case import TestCase
 
 import pytest
 from core.constants import INTEGER, STRING
+from django.test import override_settings
 from django.urls import reverse
 from rest_framework import status
 from rest_framework.request import Request
@@ -451,11 +452,10 @@ class SDKTraitsTest(APITestCase):
             == float_trait_value
         )
 
-    @mock.patch(
-        "environments.identities.traits.views.MigrateTraitsUsingRequestMixin.migrate_trait"
-    )
-    def test_post_trait_calls_migrate_trait_with_correct_arguments(
-        self, mocked_migrate_trait
+    @override_settings(EDGE_API_URL="http://localhost")
+    @mock.patch("environments.identities.traits.views.forward_trait_request")
+    def test_post_trait_calls_forward_trait_request_with_correct_arguments(
+        self, mocked_forward_trait_request
     ):
         # Given
         url = reverse("api-v1:sdk-traits-list")
@@ -465,19 +465,19 @@ class SDKTraitsTest(APITestCase):
         self.client.post(url, data=data, content_type=self.JSON)
 
         # Then
-        args, kwargs = mocked_migrate_trait.call_args_list[0]
+        args, kwargs = mocked_forward_trait_request.call_args_list[0]
         assert kwargs == {}
         assert isinstance(args[0], Request)
         assert args[0].data == json.loads(data)
-        assert args[1] == self.environment
+        assert args[1] == self.environment.project.id
 
-    @mock.patch(
-        "environments.identities.traits.views.MigrateTraitsUsingRequestMixin.migrate_trait"
-    )
-    def test_increment_value_calls_migrate_with_correct_arguments(
-        self, mocked_migrate_trait
+    @override_settings(EDGE_API_URL="http://localhost")
+    @mock.patch("environments.identities.traits.views.forward_trait_request")
+    def test_increment_value_calls_forward_trait_request_with_correct_arguments(
+        self, mocked_forward_trait_request
     ):
         # Given
+        url = reverse("api-v1:sdk-traits-list")
         url = reverse("api-v1:sdk-traits-increment-value")
         data = {
             "trait_key": self.trait_key,
@@ -489,38 +489,55 @@ class SDKTraitsTest(APITestCase):
         self.client.post(url, data=data)
 
         # Then
-        args, kwargs = mocked_migrate_trait.call_args_list[0]
+        args, kwargs = mocked_forward_trait_request.call_args_list[0]
         assert kwargs == {}
         assert isinstance(args[0], Request)
-        assert args[1] == self.environment
+        assert args[1] == self.environment.project.id
 
         # and the structure of payload was correct
         assert args[2]["identity"]["identifier"] == data["identifier"]
         assert args[2]["trait_key"] == data["trait_key"]
         assert args[2]["trait_value"]
 
-    @mock.patch(
-        "environments.identities.traits.views.MigrateTraitsUsingRequestMixin.migrate_trait_bulk"
-    )
-    def test_bulk_create_traits_calls_migrate_trait_bulk(
-        self, mocked_migrate_trait_bulk
+    @override_settings(EDGE_API_URL="http://localhost")
+    @mock.patch("environments.identities.traits.views.forward_trait_request")
+    def test_bulk_create_traits_calls_forward_trait_request_with_correct_arguments(
+        self, mocked_forward_trait_request
     ):
         # Given
-        num_traits = 20
         url = reverse("api-v1:sdk-traits-bulk-create")
-        traits = [
-            self._generate_trait_data(trait_key=f"trait_{i}") for i in range(num_traits)
+        request_data = [
+            {
+                "identity": {"identifier": "test_user_123"},
+                "trait_key": "key",
+                "trait_value": "value",
+            },
+            {
+                "identity": {"identifier": "test_user_123"},
+                "trait_key": "key1",
+                "trait_value": "value1",
+            },
         ]
-
         # When
-        self.client.put(url, data=json.dumps(traits), content_type="application/json")
+        self.client.put(
+            url, data=json.dumps(request_data), content_type="application/json"
+        )
 
         # Then
-        args, kwargs = mocked_migrate_trait_bulk.call_args_list[0]
+        assert mocked_forward_trait_request.call_count == 2
+
+        args, kwargs = mocked_forward_trait_request.call_args_list[0]
         assert kwargs == {}
         assert isinstance(args[0], Request)
-        assert args[0].data == traits
-        assert args[1] == self.environment
+        assert args[1] == self.environment.project.id
+        assert args[2] == request_data[0]
+
+        # and the second call
+        args, kwargs = mocked_forward_trait_request.call_args_list[1]
+        assert kwargs == {}
+        assert isinstance(args[0], Request)
+        assert args[1] == self.environment.project.id
+        assert args[2] == request_data[1]
 
     def _generate_trait_data(self, identifier=None, trait_key=None, trait_value=None):
         identifier = identifier or self.identity.identifier

@@ -1,4 +1,5 @@
 import coreapi
+from django.conf import settings
 from django.db.models import Q
 from drf_yasg2 import openapi
 from drf_yasg2.utils import swagger_auto_schema
@@ -7,7 +8,7 @@ from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework.schemas import AutoSchema
 
-from edge_api.identities.mixins import MigrateTraitsUsingRequestMixin
+from edge_api.identities.forwarder import forward_trait_request
 from environments.authentication import EnvironmentKeyAuthentication
 from environments.identities.models import Identity
 from environments.identities.traits.models import Trait
@@ -241,9 +242,7 @@ class SDKTraitsDeprecated(SDKAPIView):
             )
 
 
-class SDKTraits(
-    mixins.CreateModelMixin, viewsets.GenericViewSet, MigrateTraitsUsingRequestMixin
-):
+class SDKTraits(mixins.CreateModelMixin, viewsets.GenericViewSet):
     permission_classes = (EnvironmentKeyPermissions, TraitPersistencePermissions)
     authentication_classes = (EnvironmentKeyAuthentication,)
 
@@ -264,8 +263,8 @@ class SDKTraits(
     def create(self, request, *args, **kwargs):
         response = super(SDKTraits, self).create(request, *args, **kwargs)
         response.status_code = status.HTTP_200_OK
-        # Migrate trait to edge
-        self.migrate_trait(request, request.environment)
+        if settings.EDGE_API_URL:
+            forward_trait_request(request, request.environment.project.id)
         return response
 
     @swagger_auto_schema(
@@ -278,12 +277,13 @@ class SDKTraits(
         serializer.is_valid(raise_exception=True)
         serializer.save()
 
-        # because edge only have /traits endpoint we need to update the payload to
-        # match that
-        payload = serializer.data.copy()
-        payload.update({"identity": {"identifier": payload.pop("identifier")}})
+        if settings.EDGE_API_URL:
+            # because edge only have /traits endpoint we need to update the payload to
+            # match that
+            payload = serializer.data.copy()
+            payload.update({"identity": {"identifier": payload.pop("identifier")}})
+            forward_trait_request(request, request.environment.project.id, payload)
 
-        self.migrate_trait(request, request.environment, payload)
         return Response(serializer.data, status=200)
 
     @swagger_auto_schema(request_body=SDKCreateUpdateTraitSerializer(many=True))
@@ -311,7 +311,13 @@ class SDKTraits(
             serializer = self.get_serializer(data=traits, many=True)
             serializer.is_valid(raise_exception=True)
             serializer.save()
-            self.migrate_trait_bulk(request, request.environment)
+
+            if settings.EDGE_API_URL:
+                for trait in request.data:
+                    forward_trait_request(
+                        request, request.environment.project.id, trait
+                    )
+
             return Response(serializer.data, status=200)
 
         except (TypeError, AttributeError) as excinfo:
