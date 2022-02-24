@@ -12,7 +12,7 @@ from edge_api.identities.forwarder import (
     "forwarder_function", [forward_identity_request_sync, forward_trait_request_sync]
 )
 def test_forwarder_sync_function_makes_no_request_if_migration_is_not_yet_done(
-    mocker, rf, settings, forwarder_dynamo_wrapper, forwarder_function
+    mocker, rf, forwarder_dynamo_wrapper, forwarder_function
 ):
     # Given
     request = rf.get("/url")
@@ -34,10 +34,12 @@ def test_forwarder_sync_function_makes_no_request_if_migration_is_not_yet_done(
 
 
 def test_forward_identity_request_sync_makes_correct_get_request(
-    mocker, rf, settings, forwarder_dynamo_wrapper
+    mocker,
+    rf,
+    forward_enable_settings,
+    forwarder_dynamo_wrapper,
 ):
     # Given
-    settings.EDGE_API_URL = "http//localhost"
     project_id = 1
 
     query_params = {"identifier": "test_123"}
@@ -54,7 +56,7 @@ def test_forward_identity_request_sync_makes_correct_get_request(
 
     # Then
     args, kwargs = mocked_requests.get.call_args
-    assert args[0] == settings.EDGE_API_URL + "identities/"
+    assert args[0] == forward_enable_settings.EDGE_API_URL + "identities/"
     assert kwargs["params"] == query_params
     assert kwargs["headers"]["X-Environment-Key"] == api_key
 
@@ -63,10 +65,9 @@ def test_forward_identity_request_sync_makes_correct_get_request(
 
 
 def test_forward_identity_request_sync_makes_correct_post_request(
-    mocker, rf, settings, forwarder_dynamo_wrapper
+    mocker, rf, forward_enable_settings, forwarder_dynamo_wrapper
 ):
     # Given
-    settings.EDGE_API_URL = "http//localhost"
     project_id = 1
 
     request_data = {"key": "value"}
@@ -84,7 +85,7 @@ def test_forward_identity_request_sync_makes_correct_post_request(
 
     # Then
     args, kwargs = mocked_requests.post.call_args
-    assert args[0] == settings.EDGE_API_URL + "identities/"
+    assert args[0] == forward_enable_settings.EDGE_API_URL + "identities/"
 
     assert kwargs["data"] == json.dumps(request_data)
     assert kwargs["headers"]["X-Environment-Key"] == api_key
@@ -94,10 +95,9 @@ def test_forward_identity_request_sync_makes_correct_post_request(
 
 
 def test_forward_trait_request_sync_makes_correct_post_request_when_payload_is_none(
-    mocker, rf, settings, forwarder_dynamo_wrapper
+    mocker, rf, forward_enable_settings, forwarder_dynamo_wrapper
 ):
     # Given
-    settings.EDGE_API_URL = "http//localhost"
     project_id = 1
     request_data = {
         "identity": {"identifier": "test_user_123"},
@@ -117,7 +117,7 @@ def test_forward_trait_request_sync_makes_correct_post_request_when_payload_is_n
 
     # Then
     args, kwargs = mocked_requests.post.call_args
-    assert args[0] == settings.EDGE_API_URL + "traits/"
+    assert args[0] == forward_enable_settings.EDGE_API_URL + "traits/"
 
     assert kwargs["data"] == json.dumps(request_data)
     assert kwargs["headers"]["X-Environment-Key"] == api_key
@@ -127,10 +127,9 @@ def test_forward_trait_request_sync_makes_correct_post_request_when_payload_is_n
 
 
 def test_forward_trait_request_sync_uses_payload_over_request_data_if_not_none(
-    mocker, rf, settings, forwarder_dynamo_wrapper
+    mocker, rf, forward_enable_settings, forwarder_dynamo_wrapper
 ):
     # Given
-    settings.EDGE_API_URL = "http//localhost"
     project_id = 1
     payload = {
         "identity": {"identifier": "test_user_123"},
@@ -152,7 +151,7 @@ def test_forward_trait_request_sync_uses_payload_over_request_data_if_not_none(
 
     # Then
     args, kwargs = mocked_requests.post.call_args
-    assert args[0] == settings.EDGE_API_URL + "traits/"
+    assert args[0] == forward_enable_settings.EDGE_API_URL + "traits/"
 
     assert kwargs["data"] == json.dumps(payload)
     assert kwargs["headers"]["X-Environment-Key"] == api_key

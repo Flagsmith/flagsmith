@@ -562,3 +562,5 @@ DEFAULT_AUTO_FIELD = "django.db.models.AutoField"
 
 # Used to keep edge identities in sync by forwarding the http requests
 EDGE_API_URL = env.str("EDGE_API_URL", None)
+# Used for signing forwarded request to edge
+EDGE_REQUEST_SIGNING_KEY = env.str("EDGE_REQUEST_SIGNING_KEY", None)

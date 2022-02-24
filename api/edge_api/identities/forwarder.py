@@ -1,6 +1,8 @@
 import json
 
 import requests
+from core.constants import FLAGSMITH_SIGNATURE_HEADER
+from core.signing import sign_payload
 from django.conf import settings
 from rest_framework.request import Request
 
@@ -33,15 +35,16 @@ def _forward_identity_get_request(request: Request, url: str):
     requests.get(
         url,
         params=request.GET.dict(),
-        headers=request.headers,
+        headers=_get_headers(request),
     )
 
 
 def _forward_identity_post_request(request: Request, url: str):
+    payload = json.dumps(request.data)
     requests.post(
         url,
-        data=json.dumps(request.data),
-        headers=request.headers,
+        data=payload,
+        headers=_get_headers(request, payload),
     )
 
 
@@ -56,8 +59,16 @@ def forward_trait_request_sync(request: Request, project_id: int, payload: dict 
 
     url = settings.EDGE_API_URL + "traits/"
     payload = payload if payload else request.data
+    payload = json.dumps(payload)
     requests.post(
         url,
-        data=json.dumps(payload),
-        headers=request.headers,
+        data=payload,
+        headers=_get_headers(request, payload),
     )
+
+
+def _get_headers(request: Request, payload: str = "") -> dict:
+    headers = {k: v for k, v in request.headers.items()}
+    signature = sign_payload(payload, settings.EDGE_REQUEST_SIGNING_KEY)
+    headers[FLAGSMITH_SIGNATURE_HEADER] = signature
+    return headers
