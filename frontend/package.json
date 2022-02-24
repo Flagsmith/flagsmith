@@ -73,7 +73,6 @@
     "moment": "2.22.2",
     "node-fetch": "2.6.7",
     "node-sass": "6.0.1",
-    "nodejslack": "^1.4.0",
     "polyfill-react-native": "1.0.5",
     "postcss-loader": "3.0.0",
     "prettier": "1.19.1",
