@@ -58,7 +58,7 @@ module.exports = {
     output: {
         path: path.join(__dirname, '../public/static'),
         filename: '[name].[hash].js',
-        publicPath: "static/"
+        publicPath: "/static/"
     },
 
     plugins: require('./plugins')

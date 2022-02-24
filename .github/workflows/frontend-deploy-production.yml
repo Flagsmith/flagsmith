@@ -72,5 +72,5 @@ jobs:
               run: |
                   npm ci --only=prod
                   npm run env
-                  npm run bundlevercel
+                  npm run bundle
                   vercel --prod --token ${{ secrets.VERCEL_TOKEN }}

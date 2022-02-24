@@ -1,4 +1,4 @@
-// webpack.config.dev.js
+// webpack.config.prod.js
 // Watches + deploys files minified + cachebusted
 
 const path = require('path');
@@ -36,14 +36,14 @@ module.exports = {
         'jquery': 'jQuery',
     },
     output: {
-        path: path.join(__dirname, '../build/static'),
+        path: path.join(__dirname, '../public'),
         filename: '[name].[hash].js',
         publicPath: '/static/'
     },
 
     plugins: require('./plugins')
         .concat([
-            // Clear out build folder
+            // Clear out public folder
             new CleanWebpackPlugin(['public'], { root: path.join(__dirname, '../') }),
 
             new webpack.DefinePlugin({
