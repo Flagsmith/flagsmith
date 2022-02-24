@@ -16,6 +16,7 @@ from rest_framework.response import Response
 from rest_framework.schemas import AutoSchema
 
 from audit.models import (
+    FEATURE_DELETED_MESSAGE,
     IDENTITY_FEATURE_STATE_DELETED_MESSAGE,
     AuditLog,
     RelatedObjectType,
@@ -107,6 +108,35 @@ class FeatureViewSet(viewsets.ModelViewSet):
 
     def perform_update(self, serializer):
         serializer.save(project_id=self.kwargs.get("project_pk"))
+
+    def perform_destroy(self, instance):
+        self._create_feature_delete_audit_log(instance)
+        instance.delete()
+
+    def _create_feature_delete_audit_log(self, feature: Feature):
+        message = FEATURE_DELETED_MESSAGE % feature.name
+        project_audit_log = AuditLog(
+            author=self.request.user,
+            project=feature.project,
+            related_object_type=RelatedObjectType.FEATURE.name,
+            related_object_id=feature.id,
+            log=message,
+        )
+        audit_logs = [project_audit_log]
+        for feature_state in feature.feature_states.filter(
+            identity=None, feature_segment=None
+        ):
+            audit_logs.append(
+                AuditLog(
+                    author=self.request.user,
+                    project=feature.project,
+                    environment=feature_state.environment,
+                    related_object_type=RelatedObjectType.FEATURE_STATE.name,
+                    related_object_id=feature_state.id,
+                    log=message,
+                )
+            )
+        AuditLog.objects.bulk_create(audit_logs)
 
     @swagger_auto_schema(
         query_serializer=GetInfluxDataQuerySerializer(),
