@@ -13,7 +13,7 @@
     "dev": "cross-env npm run env && node_modules/.bin/nodemon --watch ./api --ignore server/config/config.json --watch webpack --exec node ./api",
     "bundle": "node node_modules/.bin/webpack --config ./webpack/webpack.config.prod.js",
     "bundlevercel": "node node_modules/.bin/webpack --config ./webpack/webpack.config.prod.js",
-    "bundledjango": "mkdir -p ../api/app/templates/webpack/ && node node_modules/.bin/webpack --config ./webpack/webpack.config.django.prod.js && rm -f ../api/app/templates/webpack/index.html && rm -f ../api/static/static/project-overrides.js && cp ../api/static/index.html ../api/app/templates/webpack/index.html",
+    "bundledjango": "mkdir -p ../api/app/templates/webpack/ && node node_modules/.bin/webpack --config ./webpack/webpack.config.django.prod.js && rm -f ../api/app/templates/webpack/index.html && rm -f ../api/static/static/project-overrides.js && cp ../api/static/index.html ../api/app/templates/webpack/index.html"
   },
   "engines": {
     "node": "14.x",
