@@ -19,6 +19,6 @@ module.exports = [
 
     // Copy static content
     new CopyWebpackPlugin([
-        { from: path.join(__dirname, '../web/static'), to: path.join(__dirname, '../build/static') },
+        { from: path.join(__dirname, '../web/static'), to: path.join(__dirname, '../public/static') },
     ]),
 ];

@@ -83,22 +83,14 @@ if (isDev) { // Serve files from src directory and use webpack-dev-server
     webpackMiddleware(app);
     app.set('views', 'web/');
     app.use(express.static('web'));
+} else {
+    if (!process.env.VERCEL) {
+        app.use(express.static('public'));
+    }
+    app.set('views', 'public/static');
 }
 
-if (process.env.VERCEL) {
-    var hbs = exphbs.create({
-        defaultLayout: 'index',
-        layoutsDir:  "handlebars",
-    });
-    app.set('views', 'handlebars');
-} else {
-    var hbs = exphbs.create({
-        defaultLayout: 'index',
-        layoutsDir:  "web",
-    });
-    app.set('views', 'web');
-}
-app.engine('handlebars', hbs.engine);
+app.engine('handlebars', exphbs());
 app.set('view engine', 'handlebars');
 
 app.get('/robots.txt', (req, res) => {

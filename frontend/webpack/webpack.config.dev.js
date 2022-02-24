@@ -44,7 +44,7 @@ module.exports = {
     plugins: require('./plugins')
         .concat([
             // Clear out build folder
-            new CleanWebpackPlugin(['build'], { root: path.join(__dirname, '../') }),
+            new CleanWebpackPlugin(['public'], { root: path.join(__dirname, '../') }),
 
             new webpack.DefinePlugin({
                 __DEV__: false,

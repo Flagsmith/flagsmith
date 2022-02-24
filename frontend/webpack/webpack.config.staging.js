@@ -36,15 +36,15 @@ module.exports = {
         'jquery': 'jQuery',
     },
     output: {
-        path: path.join(__dirname, '../build/static'),
+        path: path.join(__dirname, '../public'),
         filename: '[name].[hash].js',
         publicPath: '/static/'
     },
 
     plugins: require('./plugins')
         .concat([
-            // Clear out build folder
-            new CleanWebpackPlugin(['build'], { root: path.join(__dirname, '../') }),
+            // Clear out public folder
+            new CleanWebpackPlugin(['public'], { root: path.join(__dirname, '../') }),
 
             new webpack.DefinePlugin({
                 __DEV__: false,

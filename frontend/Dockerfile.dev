@@ -32,4 +32,4 @@ ENV ENV=prod
 
 EXPOSE 8080
 
-CMD ["node",  "./server/index.js"]
+CMD ["node",  "./api/index.js"]
