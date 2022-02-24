@@ -15,24 +15,24 @@
       <div class="sort-form">
         <form action="{% url 'sales_dashboard:index' %}" method="get" class="form-inline float-right">
           <select name="filter_plan" id="filter-plan" class="custom-select m-1">
-            <option value="">Filter Plan</option>
-            <option value="free">Free</option>
-            <option value="start">Start Up</option>
-            <option value="scale">Scale Up</option>
+            <option value="" {% if not filter_plan %}selected{% endif %}>Filter Plan</option>
+            <option value="free" {% if filter_plan == "free" %}selected{% endif %}>Free</option>
+            <option value="start" {% if filter_plan == "start" %}selected{% endif %}>Start Up</option>
+            <option value="scale" {% if filter_plan == "scale" %}selected{% endif %}>Scale Up</option>
           </select>
-          <select name="sort_field" id="sort-field" class="custom-select m-1">
-            <option value="">Sort by...</option>
-            <option value="num_users">Seats</option>
-            <option value="num_projects">Projects</option>
-            <option value="num_features">Flags</option>
-            <option value="num_segments">Segments</option>
-            <option value="num_24h_calls">24h API calls</option>
-            <option value="num_7d_calls">7d API calls</option>
-            <option value="num_30d_calls">30d API calls</option>
+          <select name="sort_field" id="sort-field" class="custom-select m-1" value="{{ sort_field }}">
+            <option value="" {% if not sort_field %}selected{% endif %}>Sort by...</option>
+            <option value="num_users" {% if sort_field == "num_users" %}selected{% endif %}>Seats</option>
+            <option value="num_projects" {% if sort_field == "num_projects" %}selected{% endif %}>Projects</option>
+            <option value="num_features" {% if sort_field == "num_features" %}selected{% endif %}>Flags</option>
+            <option value="num_segments" {% if sort_field == "num_segments" %}selected{% endif %}>Segments</option>
+            <option value="num_24h_calls" {% if sort_field == "num_24h_calls" %}selected{% endif %}>24h API calls</option>
+            <option value="num_7d_calls" {% if sort_field == "num_7d_calls" %}selected{% endif %}>7d API calls</option>
+            <option value="num_30d_calls" {% if sort_field == "num_30d_calls" %}selected{% endif %}>30d API calls</option>
           </select>
           <select name="sort_direction" id="sort-direction" class="custom-select m-1">
-            <option value="ASC">Ascending</option>
-            <option value="DESC">Descending</option>
+            <option value="ASC" {% if not sort_direction or sort_direction == "ASC" %}selected{% endif %}>Ascending</option>
+            <option value="DESC" {% if sort_direction == "DESC" %}selected{% endif %}>Descending</option>
           </select>
           <button type="submit" class="btn btn-primary m-1">Apply</button>
         </form>
