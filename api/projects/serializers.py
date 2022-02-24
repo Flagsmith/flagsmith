@@ -1,5 +1,6 @@
 from rest_framework import serializers
 
+from environments.dynamodb import DynamoIdentityWrapper
 from permissions.serializers import CreateUpdateUserPermissionSerializerABC
 from projects.models import (
     Project,
@@ -13,6 +14,8 @@ from users.serializers import (
 
 
 class ProjectSerializer(serializers.ModelSerializer):
+    is_identity_migration_done = serializers.SerializerMethodField()
+
     class Meta:
         model = Project
         fields = (
@@ -21,7 +24,14 @@ class ProjectSerializer(serializers.ModelSerializer):
             "organisation",
             "hide_disabled_flags",
             "enable_dynamo_db",
+            "is_identity_migration_done",
         )
+
+    def get_is_identity_migration_done(self, obj: Project) -> bool:
+        identity_wrapper = DynamoIdentityWrapper()
+        if identity_wrapper.is_enabled:
+            identity_wrapper.is_migration_done(obj.id)
+        return False
 
 
 class CreateUpdateUserProjectPermissionSerializer(
