@@ -1,6 +1,7 @@
 import json
 
 import pytest
+from core.constants import FLAGSMITH_SIGNATURE_HEADER
 
 from edge_api.identities.edge_request_forwarder import (
     forward_identity_request_sync,
@@ -63,6 +64,7 @@ def test_forward_identity_request_sync_makes_correct_get_request(
     assert args[0] == forward_enable_settings.EDGE_API_URL + "identities/"
     assert kwargs["params"] == query_params
     assert kwargs["headers"]["X-Environment-Key"] == api_key
+    assert kwargs["headers"][FLAGSMITH_SIGNATURE_HEADER]
 
     forwarder_dynamo_wrapper.assert_called_with()
     mocked_migration_done.assert_called_with(project_id)
@@ -95,6 +97,7 @@ def test_forward_identity_request_sync_makes_correct_post_request(
 
     assert kwargs["data"] == json.dumps(request_data)
     assert kwargs["headers"]["X-Environment-Key"] == api_key
+    assert kwargs["headers"][FLAGSMITH_SIGNATURE_HEADER]
 
     forwarder_dynamo_wrapper.assert_called_with()
     mocked_migration_done.assert_called_with(project_id)
@@ -129,6 +132,7 @@ def test_forward_trait_request_sync_makes_correct_post_request_when_payload_is_n
 
     assert kwargs["data"] == json.dumps(request_data)
     assert kwargs["headers"]["X-Environment-Key"] == api_key
+    assert kwargs["headers"][FLAGSMITH_SIGNATURE_HEADER]
 
     forwarder_dynamo_wrapper.assert_called_with()
     mocked_migration_done.assert_called_with(project_id)
@@ -165,5 +169,7 @@ def test_forward_trait_request_sync_uses_payload_over_request_data_if_not_none(
 
     assert kwargs["data"] == json.dumps(payload)
     assert kwargs["headers"]["X-Environment-Key"] == api_key
+    assert kwargs["headers"][FLAGSMITH_SIGNATURE_HEADER]
+
     forwarder_dynamo_wrapper.assert_called_with()
     mocked_migration_done.assert_called_with(project_id)

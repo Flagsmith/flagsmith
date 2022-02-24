@@ -5,4 +5,4 @@ STRING = "unicode"
 BOOLEAN = "bool"
 FLOAT = "float"
 
-FLAGSMITH_SIGNATURE_HEADER = "x-flagsmith-signature"
+FLAGSMITH_SIGNATURE_HEADER = "X-Flagsmith-Signature"
