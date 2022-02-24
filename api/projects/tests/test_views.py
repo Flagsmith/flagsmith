@@ -40,6 +40,15 @@ class ProjectTestCase(TestCase):
     def _get_detail_url(self, project_id):
         return reverse("api-v1:projects:project-detail", args=[project_id])
 
+    def test_project_response_have_is_migration_done(self):
+        project_name = "project1"
+        data = {"name": project_name, "organisation": self.organisation.id}
+
+        # When
+        response = self.client.post(self.list_url, data=data)
+        # Then
+        assert response.json()["is_identity_migration_done"] is False
+
     def test_should_create_a_project(self):
         # Given
         project_name = "project1"
