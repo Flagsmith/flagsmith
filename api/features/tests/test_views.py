@@ -331,7 +331,7 @@ class ProjectFeatureTestCase(TestCase):
         # and audit logs exists for all feature states for that feature
         assert (
             AuditLog.objects.filter(
-                related_object_type=RelatedObjectType.FEATURE.name,
+                related_object_type=RelatedObjectType.FEATURE_STATE.name,
                 related_object_id__in=feature_states_ids,
             ).count()
             == feature.feature_states.count()
