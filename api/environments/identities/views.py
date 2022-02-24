@@ -12,7 +12,7 @@ from rest_framework.response import Response
 from rest_framework.schemas import AutoSchema
 
 from app.pagination import CustomPagination, EdgeIdentityPagination
-from edge_api.identities.forwarder import forward_identity_request
+from edge_api.identities.edge_request_forwarder import forward_identity_request
 from environments.identities.models import Identity
 from environments.identities.serializers import (
     EdgeIdentitySerializer,

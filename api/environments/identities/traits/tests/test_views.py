@@ -500,9 +500,9 @@ class SDKTraitsTest(APITestCase):
         assert args[2]["trait_value"]
 
     @override_settings(EDGE_API_URL="http://localhost")
-    @mock.patch("environments.identities.traits.views.forward_trait_request")
+    @mock.patch("environments.identities.traits.views.forward_trait_requests")
     def test_bulk_create_traits_calls_forward_trait_request_with_correct_arguments(
-        self, mocked_forward_trait_request
+        self, mocked_forward_trait_requests
     ):
         # Given
         url = reverse("api-v1:sdk-traits-bulk-create")
@@ -518,27 +518,18 @@ class SDKTraitsTest(APITestCase):
                 "trait_value": "value1",
             },
         ]
+
         # When
         self.client.put(
             url, data=json.dumps(request_data), content_type="application/json"
         )
 
         # Then
-        assert mocked_forward_trait_request.call_count == 2
-
-        # assert that first call was correct
-        args, kwargs = mocked_forward_trait_request.call_args_list[0]
+        args, kwargs = mocked_forward_trait_requests.call_args_list[0]
         assert kwargs == {}
         assert isinstance(args[0], Request)
+        assert args[0].data == request_data
         assert args[1] == self.environment.project.id
-        assert args[2] == request_data[0]
-
-        # assert that second call was correct
-        args, kwargs = mocked_forward_trait_request.call_args_list[1]
-        assert kwargs == {}
-        assert isinstance(args[0], Request)
-        assert args[1] == self.environment.project.id
-        assert args[2] == request_data[1]
 
     def _generate_trait_data(self, identifier=None, trait_key=None, trait_value=None):
         identifier = identifier or self.identity.identifier

@@ -25,10 +25,12 @@ def forward_identity_request_sync(request, project_id: int):
         return
 
     url = settings.EDGE_API_URL + "identities/"
-    if request.method == "POST":
-        _forward_identity_post_request(request, url)
-        return
-    _forward_identity_get_request(request, url)
+    forwarding_method = (
+        _forward_identity_post_request
+        if request.method == "POST"
+        else _forward_identity_get_request
+    )
+    forwarding_method(request, url)
 
 
 def _forward_identity_get_request(request: Request, url: str):
@@ -65,6 +67,12 @@ def forward_trait_request_sync(request: Request, project_id: int, payload: dict 
         data=payload,
         headers=_get_headers(request, payload),
     )
+
+
+@postpone
+def forward_trait_requests(request: Request, project_id: int):
+    for trait_data in request.data:
+        return forward_trait_request_sync(request, project_id, payload=trait_data)
 
 
 def _get_headers(request: Request, payload: str = "") -> dict:

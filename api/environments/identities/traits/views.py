@@ -8,7 +8,10 @@ from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework.schemas import AutoSchema
 
-from edge_api.identities.forwarder import forward_trait_request
+from edge_api.identities.edge_request_forwarder import (
+    forward_trait_request,
+    forward_trait_requests,
+)
 from environments.authentication import EnvironmentKeyAuthentication
 from environments.identities.models import Identity
 from environments.identities.traits.models import Trait
@@ -312,10 +315,7 @@ class SDKTraits(mixins.CreateModelMixin, viewsets.GenericViewSet):
             serializer.save()
 
             if settings.EDGE_API_URL:
-                for trait in request.data:
-                    forward_trait_request(
-                        request, request.environment.project.id, trait
-                    )
+                forward_trait_requests(request, request.environment.project.id)
 
             return Response(serializer.data, status=200)
 
