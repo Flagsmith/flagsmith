@@ -123,14 +123,16 @@ class FeatureViewSet(viewsets.ModelViewSet):
             log=message,
         )
         audit_logs = [project_audit_log]
-        for environment in feature.project.environments.all():
+        for feature_state in feature.feature_states.filter(
+            identity=None, feature_segment=None
+        ):
             audit_logs.append(
                 AuditLog(
                     author=self.request.user,
                     project=feature.project,
-                    environment=environment,
-                    related_object_type=RelatedObjectType.FEATURE.name,
-                    related_object_id=feature.id,
+                    environment=feature_state.environment,
+                    related_object_type=RelatedObjectType.FEATURE_STATE.name,
+                    related_object_id=feature_state.id,
                     log=message,
                 )
             )

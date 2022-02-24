@@ -317,20 +317,24 @@ class ProjectFeatureTestCase(TestCase):
     def test_audit_logs_created_when_feature_deleted(self):
         # Given
         feature = Feature.objects.create(name="test feature", project=self.project)
-
+        feature_states_ids = feature.feature_states.values_list("id", flat=True)
         # When
-        response = self.client.delete(
+        self.client.delete(
             self.project_feature_detail_url % (self.project.id, feature.id)
         )
-
         # Then
-        assert response.status_code == status.HTTP_204_NO_CONTENT
+        # Audit log exists for the feature
+        assert AuditLog.objects.get(
+            related_object_type=RelatedObjectType.FEATURE.name,
+            related_object_id=feature.id,
+        )
+        # and audit logs exists for all feature states for that feature
         assert (
             AuditLog.objects.filter(
                 related_object_type=RelatedObjectType.FEATURE.name,
-                related_object_id=feature.id,
+                related_object_id__in=feature_states_ids,
             ).count()
-            == feature.project.environments.count() + 1
+            == feature.feature_states.count()
         )
 
     def test_add_owners_adds_owner(self):
