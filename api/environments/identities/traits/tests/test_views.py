@@ -526,13 +526,14 @@ class SDKTraitsTest(APITestCase):
         # Then
         assert mocked_forward_trait_request.call_count == 2
 
+        # assert that first call was correct
         args, kwargs = mocked_forward_trait_request.call_args_list[0]
         assert kwargs == {}
         assert isinstance(args[0], Request)
         assert args[1] == self.environment.project.id
         assert args[2] == request_data[0]
 
-        # and the second call
+        # assert that second call was correct
         args, kwargs = mocked_forward_trait_request.call_args_list[1]
         assert kwargs == {}
         assert isinstance(args[0], Request)

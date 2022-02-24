@@ -15,7 +15,7 @@ def _should_forward(project_id: int) -> bool:
 
 @postpone
 def forward_identity_request(request, project_id: int):
-    return forward_identity_request_sync(request, project_id)
+    forward_identity_request_sync(request, project_id)
 
 
 def forward_identity_request_sync(request, project_id: int):
@@ -24,19 +24,20 @@ def forward_identity_request_sync(request, project_id: int):
 
     url = settings.EDGE_API_URL + "identities/"
     if request.method == "POST":
-        return _forward_identity_post_request(request, url)
+        _forward_identity_post_request(request, url)
+        return
     _forward_identity_get_request(request, url)
 
 
-def _forward_identity_get_request(request: Request, url):
-    return requests.get(
+def _forward_identity_get_request(request: Request, url: str):
+    requests.get(
         url,
         params=request.GET.dict(),
         headers=request.headers,
     )
 
 
-def _forward_identity_post_request(request: Request, url):
+def _forward_identity_post_request(request: Request, url: str):
     requests.post(
         url,
         data=json.dumps(request.data),
@@ -45,11 +46,11 @@ def _forward_identity_post_request(request: Request, url):
 
 
 @postpone
-def forward_trait_request(request, project_id, payload=None):
+def forward_trait_request(request: Request, project_id: int, payload: dict = None):
     return forward_trait_request_sync(request, project_id, payload)
 
 
-def forward_trait_request_sync(request: Request, project_id: int, payload=None):
+def forward_trait_request_sync(request: Request, project_id: int, payload: dict = None):
     if not _should_forward(project_id):
         return
 

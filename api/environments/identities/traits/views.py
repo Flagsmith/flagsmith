@@ -278,8 +278,7 @@ class SDKTraits(mixins.CreateModelMixin, viewsets.GenericViewSet):
         serializer.save()
 
         if settings.EDGE_API_URL:
-            # because edge only have /traits endpoint we need to update the payload to
-            # match that
+            # Convert the payload to the structure expected by /traits
             payload = serializer.data.copy()
             payload.update({"identity": {"identifier": payload.pop("identifier")}})
             forward_trait_request(request, request.environment.project.id, payload)

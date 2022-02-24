@@ -654,7 +654,6 @@ class SDKIdentitiesTestCase(APITestCase):
         # Given
         url = reverse("api-v1:sdk-identities")
 
-        # a payload for an identity with 2 traits
         data = {
             "identifier": self.identity.identifier,
             "traits": [
