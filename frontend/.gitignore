@@ -3,6 +3,7 @@
 *.iml
 node_modules/
 build/
+public/
 *.log*
 npm-debug.log
 mobile/common-mobile/
