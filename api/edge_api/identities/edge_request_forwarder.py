@@ -77,6 +77,12 @@ def forward_trait_requests(request: Request, project_id: int):
 
 def _get_headers(request: Request, payload: str = "") -> dict:
     headers = {k: v for k, v in request.headers.items()}
+    # Django by default sets the content-length to "", which in the case of get request(lack of content body)
+    # Remains an empty string - an invalid value(according to edge alb and HTTP spec).
+    # Hence, we need to remove this header to turn this into a valid request
+    # ref: https://groups.google.com/g/django-developers/c/xjYVJN-RguA/m/G9krDqawchQJ
+    if request.method == "GET":
+        headers.pop("Content-Length", None)
     signature = sign_payload(payload, settings.EDGE_REQUEST_SIGNING_KEY)
     headers[FLAGSMITH_SIGNATURE_HEADER] = signature
     return headers
