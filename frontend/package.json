@@ -15,7 +15,7 @@
     "bundledjango": "mkdir -p ../api/app/templates/webpack/ && node node_modules/.bin/webpack --config ./webpack/webpack.config.django.prod.js && rm -f ../api/app/templates/webpack/index.html && rm -f ../api/static/static/project-overrides.js && cp ../api/static/index.html ../api/app/templates/webpack/index.html"
   },
   "engines": {
-    "node": "16.x",
+    "node": "14.x",
     "npm": "6.x"
   },
   "dependencies": {

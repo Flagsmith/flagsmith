@@ -11,10 +11,10 @@ module.exports = function (path) {
     }
 
     const parts = path.split('/');
-    file = fs.createReadStream(path); // Optional, via multipart/form-data. If omitting this parameter, you MUST submit content
-    filename = parts[parts.length - 1]; // Required
-    title = 'Test Run'; // Optional
-    channelId = 'C0102JZRG3G'; // infra_tests channel ID
+    const file = fs.createReadStream(path); // Optional, via multipart/form-data. If omitting this parameter, you MUST submit content
+    const filename = parts[parts.length - 1]; // Required
+    const title = 'Test Run'; // Optional
+    const channelId = 'C0102JZRG3G'; // infra_tests channel ID
 
     console.log(`Uploading ${path}`);
     const slackClient = new WebClient(process.env.SLACK_TOKEN);
