@@ -42,8 +42,6 @@ const FeaturesPage = class extends Component {
     }
 
     componentDidMount = () => {
-        API.postEvent(`Test`, "tests");
-
         API.trackPage(Constants.pages.FEATURES);
         const { match: { params } } = this.props;
         this.getTags(params.projectId);
