@@ -1,3 +1,4 @@
+import enum
 from dataclasses import asdict, dataclass
 from datetime import datetime
 
@@ -12,13 +13,21 @@ if settings.PROJECT_METADATA_TABLE_NAME_DYNAMO:
     )
 
 
+class ProjectIdentityMigrationStatus(enum.Enum):
+    MIGRATION_COMPLETED = "MIGRATION_COMPLETED"
+    MIGRATION_IN_PROGRESS = "MIGRATION_IN_PROGRESS"
+    MIGRATION_NOT_STARTED = "MIGRATION_NOT_STARTED"
+
+
 @dataclass
 class DynamoProjectMetadata:
     """Internal class used by `DynamoIdentityWrapper` to track wether Identity
     data(for a given project) has been migrated or not"""
 
     id: int
-    is_identity_migration_done: bool = False
+    identity_migration_status: str = (
+        ProjectIdentityMigrationStatus.MIGRATION_NOT_STARTED.name
+    )
     migration_start_time: datetime = None
 
     @classmethod
@@ -28,5 +37,18 @@ class DynamoProjectMetadata:
             return cls(**document)
         return cls(id=project_id)
 
-    def save(self):
+    def start_identity_migration(self):
+        self.migration_start_time = datetime.now()
+        self.identity_migration_status = (
+            ProjectIdentityMigrationStatus.MIGRATION_IN_PROGRESS.name
+        )
+        self._save()
+
+    def finish_identity_migration(self):
+        self.identity_migration_status = (
+            ProjectIdentityMigrationStatus.MIGRATION_COMPLETED.name
+        )
+        self._save()
+
+    def _save(self):
         return project_metadata_table.put_item(Item=asdict(self))
