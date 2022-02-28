@@ -90,6 +90,10 @@ class DynamoIdentityWrapper:
         return project_metadata.is_identity_migration_done
 
     def migrate_identities(self, project_id: int):
+        project_metadata = DynamoProjectMetadata.get_or_new(project_id)
+        project_metadata.migration_in_progress = True
+        project_metadata.save()
+
         with self._table.batch_writer() as batch:
             for environment in Environment.objects.filter(project_id=project_id):
                 for identity in environment.identities.all().prefetch_related(
@@ -110,6 +114,5 @@ class DynamoIdentityWrapper:
                     identity_document = build_identity_document(identity)
                     batch.put_item(Item=identity_document)
 
-        project_metadata = DynamoProjectMetadata.get_or_new(project_id)
         project_metadata.is_identity_migration_done = True
         project_metadata.save()

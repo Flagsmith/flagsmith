@@ -1,4 +1,5 @@
 from dataclasses import asdict, dataclass
+from datetime import datetime
 
 import boto3
 from django.conf import settings
@@ -18,6 +19,7 @@ class DynamoProjectMetadata:
 
     id: int
     is_identity_migration_done: bool = False
+    migration_start_time: datetime = None
 
     @classmethod
     def get_or_new(cls, project_id: int) -> "DynamoProjectMetadata":
