@@ -4,6 +4,7 @@ import json
 from unittest import TestCase, mock
 
 import pytest
+from core.constants import FLAGSMITH_SIGNATURE_HEADER
 
 from environments.models import Environment, Webhook
 from organisations.models import Organisation, OrganisationWebhook
@@ -127,7 +128,7 @@ class WebhooksTestCase(TestCase):
         # When
         _, kwargs = mock_requests.post.call_args_list[0]
         # Then
-        received_signature = kwargs["headers"]["x-flagsmith-signature"]
+        received_signature = kwargs["headers"][FLAGSMITH_SIGNATURE_HEADER]
         assert hmac.compare_digest(expected_signature, received_signature) is True
 
     @mock.patch("webhooks.webhooks.requests")
@@ -147,4 +148,4 @@ class WebhooksTestCase(TestCase):
 
         # Then
         _, kwargs = mock_requests.post.call_args_list[0]
-        assert "x-flagsmith-signature" not in kwargs["headers"]
+        assert FLAGSMITH_SIGNATURE_HEADER not in kwargs["headers"]
