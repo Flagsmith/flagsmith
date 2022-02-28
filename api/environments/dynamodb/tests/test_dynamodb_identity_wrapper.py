@@ -4,6 +4,7 @@ from flag_engine.django_transform.document_builders import (
 )
 
 from environments.dynamodb import DynamoIdentityWrapper
+from environments.dynamodb.types import ProjectIdentityMigrationStatus
 
 
 def test_get_item_from_uuid_calls_query_with_correct_argument(mocker):
@@ -122,6 +123,8 @@ def test_migrate_identities_calls_internal_methods_with_correct_arguments(
     mocked_project_metadata = mocker.patch(
         "environments.dynamodb.dynamodb_wrapper.DynamoProjectMetadata"
     )
+    mocked_project_metadata_instance = mocker.MagicMock()
+    mocked_project_metadata.get_or_new.return_value = mocked_project_metadata_instance
 
     expected_identity_document = build_identity_document(identity)
     # When
@@ -144,12 +147,8 @@ def test_migrate_identities_calls_internal_methods_with_correct_arguments(
 
     # Make sure that Project Metadata Wrapper was called correctly
     mocked_project_metadata.get_or_new.assert_called_with(project.id)
-    # and `is_identity_migration_done` was updated successfully
-    assert (
-        mocked_project_metadata.get_or_new.return_value.is_identity_migration_done
-        is True
-    )
-    mocked_project_metadata.get_or_new.return_value.save.assert_called_with()
+    mocked_project_metadata_instance.start_identity_migration.assert_called_with()
+    mocked_project_metadata_instance.finish_identity_migration.assert_called_with()
 
 
 def test_is_migration_done_calls_dynamo_project_metadata_wrapper_with_correct_arguments(
@@ -160,18 +159,40 @@ def test_is_migration_done_calls_dynamo_project_metadata_wrapper_with_correct_ar
     mocked_project_metadata = mocker.patch(
         "environments.dynamodb.dynamodb_wrapper.DynamoProjectMetadata"
     )
+    mocked_project_metadata_instance = mocker.MagicMock()
+    mocked_project_metadata.get_or_new.return_value = mocked_project_metadata_instance
+    mocked_project_metadata_instance.identity_migration_status = (
+        ProjectIdentityMigrationStatus.MIGRATION_COMPLETED.name
+    )
+
     dynamo_identity_wrapper = DynamoIdentityWrapper()
 
     # When
-
     result = dynamo_identity_wrapper.is_migration_done(project_id)
-    # Then
 
+    # Then
+    assert result is True
     mocked_project_metadata.get_or_new.assert_called_with(project_id)
-    assert (
-        result
-        == mocked_project_metadata.get_or_new.return_value.is_identity_migration_done
+
+
+def test_get_migration_status_calls_dynamo_project_metadata_wrapper_with_correct_arguments(
+    mocker,
+):
+    project_id = 1
+    mocked_project_metadata = mocker.patch(
+        "environments.dynamodb.dynamodb_wrapper.DynamoProjectMetadata"
     )
+    mocked_project_metadata_instance = mocker.MagicMock()
+    mocked_project_metadata.get_or_new.return_value = mocked_project_metadata_instance
+
+    dynamo_identity_wrapper = DynamoIdentityWrapper()
+
+    # When
+    status = dynamo_identity_wrapper.get_migration_status(project_id)
+
+    # Then
+    mocked_project_metadata.get_or_new.assert_called_with(project_id)
+    status == mocked_project_metadata_instance.identity_migration_status
 
 
 def test_is_enabled_is_false_if_dynamo_table_name_is_not_set(settings):

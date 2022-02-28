@@ -13,7 +13,7 @@ from environments.models import Environment
 from features.models import FeatureState
 from features.multivariate.models import MultivariateFeatureStateValue
 
-from .types import DynamoProjectMetadata
+from .types import DynamoProjectMetadata, ProjectIdentityMigrationStatus
 
 
 class DynamoIdentityWrapper:
@@ -85,14 +85,23 @@ class DynamoIdentityWrapper:
             query_kwargs.update(ExclusiveStartKey=start_key)
         return self.query_items(**query_kwargs)
 
-    def is_migration_done(self, project_id: int) -> bool:
+    def get_migration_status(self, project_id: int) -> str:
         project_metadata = DynamoProjectMetadata.get_or_new(project_id)
-        return project_metadata.is_identity_migration_done
+        return project_metadata.identity_migration_status
+
+    def is_migration_done(self, project_id: int) -> bool:
+        migration_status = self.get_migration_status(project_id)
+        return (
+            migration_status == ProjectIdentityMigrationStatus.MIGRATION_COMPLETED.name
+        )
+
+    def can_migrate(self, project_id: int) -> bool:
+        migration_status = self.get_migration_status(project_id)
+        return migration_status == ProjectIdentityMigrationStatus.MIGRATION_NOT_STARTED
 
     def migrate_identities(self, project_id: int):
         project_metadata = DynamoProjectMetadata.get_or_new(project_id)
-        project_metadata.migration_in_progress = True
-        project_metadata.save()
+        project_metadata.start_identity_migration()
 
         with self._table.batch_writer() as batch:
             for environment in Environment.objects.filter(project_id=project_id):
@@ -114,5 +123,4 @@ class DynamoIdentityWrapper:
                     identity_document = build_identity_document(identity)
                     batch.put_item(Item=identity_document)
 
-        project_metadata.is_identity_migration_done = True
-        project_metadata.save()
+        project_metadata.finish_identity_migration()

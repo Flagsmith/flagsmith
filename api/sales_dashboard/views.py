@@ -137,7 +137,7 @@ def organisation_info(request, organisation_id):
         if identity_wrapper.is_enabled:
             identity_migration_status_dict[
                 project.id
-            ] = identity_wrapper.is_migration_done(project.id)
+            ] = identity_wrapper.get_migration_status(project.id)
 
     context = {
         "organisation": organisation,
@@ -155,7 +155,6 @@ def organisation_info(request, organisation_id):
             for range_ in ("24h", "7d", "30d")
         },
         "identity_count_dict": identity_count_dict,
-        "max_migratable_identities": MAX_MIGRATABLE_IDENTITIES,
         "identity_migration_status_dict": identity_migration_status_dict,
     }
 
@@ -197,8 +196,7 @@ def migrate_identities_to_edge(request, project_id):
 
     if not identity_wrapper.is_enabled:
         return HttpResponseBadRequest("DynamoDB is not enabled")
-
-    if not identity_wrapper.is_migration_done(project_id):
+    if not identity_wrapper.can_migrate(project_id):
         identity_wrapper.migrate_identities(project_id)
     return HttpResponseRedirect(reverse("sales_dashboard:index"))
 
