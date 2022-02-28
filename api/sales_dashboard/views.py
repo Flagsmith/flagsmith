@@ -29,7 +29,6 @@ from users.models import FFAdminUser
 from .forms import EmailUsageForm, MaxAPICallsForm, MaxSeatsForm
 
 OBJECTS_PER_PAGE = 50
-MAX_MIGRATABLE_IDENTITIES = 1000
 
 
 class OrganisationList(ListView):

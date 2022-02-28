@@ -40,7 +40,7 @@ def test_migrate_identities_to_edge_calls_migrate_identity_with_correct_argument
     mocked_dynamo_wrapper.return_value.migrate_identities.assert_called_with(project)
 
 
-def test_migrate_identities_to_edge_does_not_call_migrate_identity_with_correct_arguments_if_migration_is_already_done(
+def test_migrate_identities_to_edge_does_not_call_migrate_identity_if_migration_is_already_done(
     superuser_authenticated_client, mocker, project
 ):
     # Given

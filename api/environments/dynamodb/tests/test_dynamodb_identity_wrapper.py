@@ -202,6 +202,7 @@ def test_can_migrate_calls_dynamo_project_metadata_wrapper_with_correct_argument
 def test_get_migration_status_calls_dynamo_project_metadata_wrapper_with_correct_arguments(
     mocker,
 ):
+    # Given
     project_id = 1
     mocked_project_metadata = mocker.patch(
         "environments.dynamodb.dynamodb_wrapper.DynamoProjectMetadata"
@@ -215,8 +216,8 @@ def test_get_migration_status_calls_dynamo_project_metadata_wrapper_with_correct
     status = dynamo_identity_wrapper.get_migration_status(project_id)
 
     # Then
+    assert status == mocked_project_metadata_instance.identity_migration_status
     mocked_project_metadata.get_or_new.assert_called_with(project_id)
-    status == mocked_project_metadata_instance.identity_migration_status
 
 
 def test_is_enabled_is_false_if_dynamo_table_name_is_not_set(settings):
