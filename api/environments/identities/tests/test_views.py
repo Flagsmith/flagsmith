@@ -4,8 +4,10 @@ from unittest import mock
 from unittest.case import TestCase
 
 import pytest
+from django.test import override_settings
 from django.urls import reverse
 from rest_framework import status
+from rest_framework.request import Request
 from rest_framework.test import APIClient, APITestCase
 
 from environments.identities.helpers import (
@@ -643,3 +645,47 @@ class SDKIdentitiesTestCase(APITestCase):
 
         # and the traits ARE NOT persisted
         assert self.identity.identity_traits.count() == 0
+
+    @override_settings(EDGE_API_URL="http://localhost")
+    @mock.patch("environments.identities.views.forward_identity_request")
+    def test_post_identities_calls_forward_identity_request_with_correct_arguments(
+        self, mocked_forward_identity_request
+    ):
+        # Given
+        url = reverse("api-v1:sdk-identities")
+
+        data = {
+            "identifier": self.identity.identifier,
+            "traits": [
+                {"trait_key": "my_trait", "trait_value": 123},
+                {"trait_key": "my_other_trait", "trait_value": "a value"},
+            ],
+        }
+
+        # When
+        self.client.post(url, data=json.dumps(data), content_type="application/json")
+
+        # Then
+        args, kwargs = mocked_forward_identity_request.call_args_list[0]
+        assert kwargs == {}
+        assert isinstance(args[0], Request)
+        assert args[0].data == data
+        assert args[1] == self.environment.project.id
+
+    @override_settings(EDGE_API_URL="http://localhost")
+    @mock.patch("environments.identities.views.forward_identity_request")
+    def test_get_identities_calls_forward_identity_request_with_correct_arguments(
+        self, mocked_forward_identity_request
+    ):
+        # Given
+        base_url = reverse("api-v1:sdk-identities")
+        url = base_url + "?identifier=" + self.identity.identifier
+
+        # When
+        self.client.get(url)
+
+        # Then
+        args, kwargs = mocked_forward_identity_request.call_args_list[0]
+        assert kwargs == {}
+        assert isinstance(args[0], Request)
+        assert args[1] == self.environment.project.id

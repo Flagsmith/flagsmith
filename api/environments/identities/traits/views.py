@@ -1,4 +1,5 @@
 import coreapi
+from django.conf import settings
 from django.db.models import Q
 from drf_yasg2 import openapi
 from drf_yasg2.utils import swagger_auto_schema
@@ -7,6 +8,10 @@ from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework.schemas import AutoSchema
 
+from edge_api.identities.edge_request_forwarder import (
+    forward_trait_request,
+    forward_trait_requests,
+)
 from environments.authentication import EnvironmentKeyAuthentication
 from environments.identities.models import Identity
 from environments.identities.traits.models import Trait
@@ -261,6 +266,8 @@ class SDKTraits(mixins.CreateModelMixin, viewsets.GenericViewSet):
     def create(self, request, *args, **kwargs):
         response = super(SDKTraits, self).create(request, *args, **kwargs)
         response.status_code = status.HTTP_200_OK
+        if settings.EDGE_API_URL:
+            forward_trait_request(request, request.environment.project.id)
         return response
 
     @swagger_auto_schema(
@@ -272,6 +279,13 @@ class SDKTraits(mixins.CreateModelMixin, viewsets.GenericViewSet):
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         serializer.save()
+
+        if settings.EDGE_API_URL:
+            # Convert the payload to the structure expected by /traits
+            payload = serializer.data.copy()
+            payload.update({"identity": {"identifier": payload.pop("identifier")}})
+            forward_trait_request(request, request.environment.project.id, payload)
+
         return Response(serializer.data, status=200)
 
     @swagger_auto_schema(request_body=SDKCreateUpdateTraitSerializer(many=True))
@@ -299,6 +313,10 @@ class SDKTraits(mixins.CreateModelMixin, viewsets.GenericViewSet):
             serializer = self.get_serializer(data=traits, many=True)
             serializer.is_valid(raise_exception=True)
             serializer.save()
+
+            if settings.EDGE_API_URL:
+                forward_trait_requests(request, request.environment.project.id)
+
             return Response(serializer.data, status=200)
 
         except (TypeError, AttributeError) as excinfo:

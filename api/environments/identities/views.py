@@ -5,12 +5,14 @@ from collections import namedtuple
 
 import coreapi
 from boto3.dynamodb.conditions import Key
+from django.conf import settings
 from rest_framework import status, viewsets
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.schemas import AutoSchema
 
 from app.pagination import CustomPagination, EdgeIdentityPagination
+from edge_api.identities.edge_request_forwarder import forward_identity_request
 from environments.identities.models import Identity
 from environments.identities.serializers import (
     EdgeIdentitySerializer,
@@ -229,6 +231,8 @@ class SDKIdentities(SDKAPIView):
             .prefetch_related("identity_traits")
             .get_or_create(identifier=identifier, environment=request.environment)
         )
+        if settings.EDGE_API_URL:
+            forward_identity_request(request, request.environment.project.id)
 
         feature_name = request.query_params.get("feature")
         if feature_name:
@@ -248,6 +252,9 @@ class SDKIdentities(SDKAPIView):
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         instance = serializer.save()
+
+        if settings.EDGE_API_URL:
+            forward_identity_request(request, request.environment.project.id)
 
         # we need to serialize the response again to ensure that the
         # trait values are serialized correctly
