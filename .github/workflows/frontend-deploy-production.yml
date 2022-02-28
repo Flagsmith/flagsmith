@@ -43,7 +43,7 @@ jobs:
         runs-on: ubuntu-latest
         name: Deploy to Vercel Production
         environment: production
-        #needs: run-tests # todo: revert
+        needs: run-tests
 
         steps:
             - name: Cloning repo
