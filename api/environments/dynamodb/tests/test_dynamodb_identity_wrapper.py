@@ -175,6 +175,30 @@ def test_is_migration_done_calls_dynamo_project_metadata_wrapper_with_correct_ar
     mocked_project_metadata.get_or_new.assert_called_with(project_id)
 
 
+def test_can_migrate_calls_dynamo_project_metadata_wrapper_with_correct_arguments(
+    mocker,
+):
+    # Given
+    project_id = 1
+    mocked_project_metadata = mocker.patch(
+        "environments.dynamodb.dynamodb_wrapper.DynamoProjectMetadata"
+    )
+    mocked_project_metadata_instance = mocker.MagicMock()
+    mocked_project_metadata.get_or_new.return_value = mocked_project_metadata_instance
+    mocked_project_metadata_instance.identity_migration_status = (
+        ProjectIdentityMigrationStatus.MIGRATION_NOT_STARTED.name
+    )
+
+    dynamo_identity_wrapper = DynamoIdentityWrapper()
+
+    # When
+    result = dynamo_identity_wrapper.can_migrate(project_id)
+
+    # Then
+    assert result is True
+    mocked_project_metadata.get_or_new.assert_called_with(project_id)
+
+
 def test_get_migration_status_calls_dynamo_project_metadata_wrapper_with_correct_arguments(
     mocker,
 ):

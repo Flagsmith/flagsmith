@@ -97,7 +97,10 @@ class DynamoIdentityWrapper:
 
     def can_migrate(self, project_id: int) -> bool:
         migration_status = self.get_migration_status(project_id)
-        return migration_status == ProjectIdentityMigrationStatus.MIGRATION_NOT_STARTED
+        return (
+            migration_status
+            == ProjectIdentityMigrationStatus.MIGRATION_NOT_STARTED.name
+        )
 
     def migrate_identities(self, project_id: int):
         project_metadata = DynamoProjectMetadata.get_or_new(project_id)
