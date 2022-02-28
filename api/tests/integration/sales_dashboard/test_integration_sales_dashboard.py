@@ -47,7 +47,7 @@ def test_migrate_identities_to_edge_does_not_call_migrate_identity_with_correct_
     url = reverse("sales_dashboard:migrate_identities", args=[project])
 
     mocked_dynamo_wrapper = mocker.patch("sales_dashboard.views.DynamoIdentityWrapper")
-    mocked_can_migrate = mocker.MagicMock(return_value=True)
+    mocked_can_migrate = mocker.MagicMock(return_value=False)
     mocked_dynamo_wrapper.return_value.can_migrate = mocked_can_migrate
 
     # When
