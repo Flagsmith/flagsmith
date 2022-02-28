@@ -1,13 +1,12 @@
 name: Frontend Deploy to Production
 
-on: pull_request
-#todo: update to main
-#    push:
-#        branches:
-#            - main
-#        paths:
-#            - 'frontend/**'
-#            - '.github/**'
+on:
+    push:
+        branches:
+            - main
+        paths:
+            - "frontend/**"
+            - ".github/**"
 
 defaults:
     run:
