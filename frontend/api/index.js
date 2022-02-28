@@ -105,6 +105,11 @@ app.get('/robots.txt', (req, res) => {
     res.send('User-agent: *\r\nDisallow: /');
 });
 
+app.get('/health', (req, res) => {
+    console.log('Healthcheck complete');
+    res.send('OK');
+});
+
 app.use(bodyParser.json());
 app.use(spm);
 
