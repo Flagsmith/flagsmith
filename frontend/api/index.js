@@ -42,7 +42,7 @@ app.get('/config/project-overrides', (req, res) => {
     };
     let sha = '';
     /*
-    todo: fix?
+    todo: implement across docker and vercel
     if (fs.existsSync(path.join(__dirname, 'CI_COMMIT_SHA'))) {
         sha = fs.readFileSync(path.join(__dirname, 'CI_COMMIT_SHA'));
     }
@@ -76,6 +76,14 @@ app.get('/config/project-overrides', (req, res) => {
     };
     `);
 });
+
+// Optionally proxy the API to get around CSRF issues, exposing the API to the world
+// FLAGSMITH_PROXY_API_URL should end with the hostname and not /api/v1/
+// e.g. FLAGSMITH_PROXY_API_URL=http://api.flagsmith.com/
+if (process.env.FLAGSMITH_PROXY_API_URL) {
+    const { createProxyMiddleware } = require('http-proxy-middleware');
+    app.use('/api/v1/', createProxyMiddleware({ target: process.env.FLAGSMITH_PROXY_API_URL, changeOrigin: true }));
+}
 
 if (isDev) { // Serve files from src directory and use webpack-dev-server
     console.log('Enabled Webpack Hot Reloading');
