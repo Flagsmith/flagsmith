@@ -18,9 +18,11 @@ def test_sales_dashboard_index(superuser_authenticated_client):
 
 
 def test_migrate_identities_to_edge_calls_migrate_identity_with_correct_arguments_if_migration_is_not_done(
-    superuser_authenticated_client, mocker, project
+    superuser_authenticated_client, mocker, project, settings
 ):
     # Given
+
+    settings.IDENTITIES_TABLE_NAME_DYNAMO = "test_table"
     url = reverse("sales_dashboard:migrate_identities", args=[project])
 
     mocked_dynamo_wrapper = mocker.patch("sales_dashboard.views.DynamoIdentityWrapper")

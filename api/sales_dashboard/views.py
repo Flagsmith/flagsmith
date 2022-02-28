@@ -193,10 +193,9 @@ def update_max_api_calls(request, organisation_id):
 @staff_member_required
 def migrate_identities_to_edge(request, project_id):
     identity_wrapper = DynamoIdentityWrapper()
-
     if not identity_wrapper.is_enabled:
         return HttpResponseBadRequest("DynamoDB is not enabled")
-    if not identity_wrapper.can_migrate(project_id):
+    if identity_wrapper.can_migrate(project_id):
         identity_wrapper.migrate_identities(project_id)
     return HttpResponseRedirect(reverse("sales_dashboard:index"))
 
