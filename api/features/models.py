@@ -22,7 +22,10 @@ from environments.identities.helpers import (
 )
 from features.constants import ENVIRONMENT, FEATURE_SEGMENT, IDENTITY
 from features.custom_lifecycle import CustomLifecycleModelMixin
-from features.exceptions import FeatureStateVersionAlreadyExistsError
+from features.exceptions import (
+    FeatureStateVersionAlreadyExistsError,
+    FeatureStateVersionError,
+)
 from features.feature_states.models import AbstractBaseFeatureValueModel
 from features.feature_types import MULTIVARIATE
 from features.helpers import get_correctly_typed_value
@@ -236,7 +239,7 @@ class FeatureState(LifecycleModel, models.Model):
 
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
-    version = models.IntegerField(default=1)
+    version = models.IntegerField(default=1, null=True)
     live_from = models.DateTimeField(null=True)
 
     class Meta:
@@ -384,6 +387,9 @@ class FeatureState(LifecycleModel, models.Model):
     @hook(BEFORE_CREATE)
     def check_for_existing_feature_state(self):
         # prevent duplicate feature states being created for an environment
+        if self.version is None:
+            return
+
         if FeatureState.objects.filter(
             environment=self.environment,
             feature=self.feature,
@@ -493,6 +499,7 @@ class FeatureState(LifecycleModel, models.Model):
             feature_segment=None,
             live_from__isnull=False,
             live_from__lte=timezone.now(),
+            version__isnull=False,
         ).exclude(
             feature__project__hide_disabled_flags=True,
             enabled=False,
@@ -519,6 +526,10 @@ class FeatureState(LifecycleModel, models.Model):
         Create a new version of this feature state by incrementing the version
         number by 1.
         """
+        if self.version is None:
+            raise FeatureStateVersionError(
+                "Cannot create new version from non-versioned feature state"
+            )
 
         new_version_number = self.version + 1
 
