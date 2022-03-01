@@ -314,6 +314,29 @@ class ProjectFeatureTestCase(TestCase):
             == 1
         )
 
+    def test_audit_logs_created_when_feature_deleted(self):
+        # Given
+        feature = Feature.objects.create(name="test feature", project=self.project)
+        feature_states_ids = feature.feature_states.values_list("id", flat=True)
+        # When
+        self.client.delete(
+            self.project_feature_detail_url % (self.project.id, feature.id)
+        )
+        # Then
+        # Audit log exists for the feature
+        assert AuditLog.objects.get(
+            related_object_type=RelatedObjectType.FEATURE.name,
+            related_object_id=feature.id,
+        )
+        # and audit logs exists for all feature states for that feature
+        assert (
+            AuditLog.objects.filter(
+                related_object_type=RelatedObjectType.FEATURE_STATE.name,
+                related_object_id__in=feature_states_ids,
+            ).count()
+            == feature.feature_states.count()
+        )
+
     def test_add_owners_adds_owner(self):
         # Given
         feature = Feature.objects.create(name="Test Feature", project=self.project)

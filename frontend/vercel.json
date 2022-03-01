@@ -1,0 +1,17 @@
+{
+    "version": 2,
+    "github": {
+        "enabled": false
+    },
+    "functions": {
+        "api/index.js": {
+            "includeFiles": "handlebars/**"
+        }
+    },
+    "rewrites": [
+        {
+            "source": "/(.*)",
+            "destination": "/api"
+        }
+    ]
+}

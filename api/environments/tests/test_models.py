@@ -161,6 +161,16 @@ class EnvironmentTestCase(TestCase):
         # Then
         assert environment_from_cache == self.environment
 
+    def test_get_from_cache_with_null_environment_key_returns_null(self):
+        # Given
+        self.environment.save()
+
+        # When
+        environment = Environment.get_from_cache(None)
+
+        # Then
+        assert environment is None
+
 
 def test_saving_environment_api_key_calls_put_item_with_correct_arguments(
     environment, mocker

@@ -15,6 +15,7 @@
     <script src="https://secure.aadcdn.microsoftonline-p.com/lib/1.0.0/js/msal.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/languages/ini.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/languages/yaml.min.js"></script>
+    <script src="//cdn.headwayapp.co/widget.js"></script>
     <script src="https://browser.sentry-cdn.com/4.3.0/bundle.min.js" crossorigin="anonymous"></script>
     <script
             src="https://code.jquery.com/jquery-3.4.1.min.js"
@@ -28,9 +29,9 @@
         @font-face {
             font-family: 'OpenSans';
                 src: local('OpenSans'),
-                url('/fonts/OpenSans-Regular.ttf') format('ttf'),
-                url('/fonts/OpenSans-Regular.woff2') format('woff2'),
-                url('/fonts/OpenSans-Regular.woff') format('woff');
+                url('/static/fonts/OpenSans-Regular.ttf') format('ttf'),
+                url('/static/fonts/OpenSans-Regular.woff2') format('woff2'),
+                url('/static/fonts/OpenSans-Regular.woff') format('woff');
             font-weight: normal;
             font-display:swap;
         }
@@ -38,8 +39,8 @@
         @font-face {
             font-family: 'OpenSans';
             src: local('OpenSans'),
-                url('/fonts/OpenSans-Regular.woff2') format('woff2'),
-                url('/fonts/OpenSans-Regular.woff') format('woff');
+                url('/static/fonts/OpenSans-Regular.woff2') format('woff2'),
+                url('/static/fonts/OpenSans-Regular.woff') format('woff');
             font-weight: 400;
             font-display:swap;
         }
@@ -47,8 +48,8 @@
         @font-face {
             font-family: 'OpenSans';
             src: local('OpenSans'),
-                url('/fonts/OpenSans-Light.woff2') format('woff2'),
-                url('/fonts/OpenSans-Light.woff') format('woff');
+                url('/static/fonts/OpenSans-Light.woff2') format('woff2'),
+                url('/static/fonts/OpenSans-Light.woff') format('woff');
             font-weight: 300;
             font-display:swap;
         }
@@ -56,9 +57,9 @@
         @font-face {
             font-family: 'OpenSans';
             src: local('OpenSans'),
-                url('/fonts/OpenSans-Light.ttf') format('ttf'),
-                url('/fonts/OpenSans-Light.woff2') format('woff2'),
-                url('/fonts/OpenSans-Light.woff') format('woff');
+                url('/static/fonts/OpenSans-Light.ttf') format('ttf'),
+                url('/static/fonts/OpenSans-Light.woff2') format('woff2'),
+                url('/static/fonts/OpenSans-Light.woff') format('woff');
             font-weight: 100;
             font-display:swap;
         }
@@ -66,9 +67,9 @@
         @font-face {
             font-family: 'OpenSans';
             src: local('OpenSans'),
-                url('/fonts/OpenSans-Light.ttf') format('ttf'),
-                url('/fonts/OpenSans-Light.woff2') format('woff2'),
-                url('/fonts/OpenSans-Light.woff') format('woff');
+                url('/static/fonts/OpenSans-Light.ttf') format('ttf'),
+                url('/static/fonts/OpenSans-Light.woff2') format('woff2'),
+                url('/static/fonts/OpenSans-Light.woff') format('woff');
             font-weight: 200;
             font-display:swap;
         }
@@ -76,9 +77,9 @@
         @font-face {
             font-family: 'OpenSans';
             src: local('OpenSans'),
-                url('/fonts/OpenSans-Light.ttf') format('ttf'),
-                url('/fonts/OpenSans-Light.woff2') format('woff2'),
-                url('/fonts/OpenSans-Light.woff') format('woff');
+                url('/static/fonts/OpenSans-Light.ttf') format('ttf'),
+                url('/static/fonts/OpenSans-Light.woff2') format('woff2'),
+                url('/static/fonts/OpenSans-Light.woff') format('woff');
             font-weight:bold;
             font-display:swap;
         }
@@ -87,9 +88,9 @@
         @font-face {
             font-family: 'OpenSans';
             src: local('OpenSans'),
-                url('/fonts/OpenSans-Bold.ttf') format('ttf'),
-                url('/fonts/OpenSans-Bold.woff2') format('woff2'),
-                url('/fonts/OpenSans-Bold.woff') format('woff');
+                url('/static/fonts/OpenSans-Bold.ttf') format('ttf'),
+                url('/static/fonts/OpenSans-Bold.woff2') format('woff2'),
+                url('/static/fonts/OpenSans-Bold.woff') format('woff');
             font-weight:bold;
             font-display:swap;
         }
@@ -97,9 +98,9 @@
         @font-face {
             font-family: 'OpenSans';
             src: local('OpenSans'),
-                url('/fonts/OpenSans-SemiBold.ttf') format('ttf'),
-                url('/fonts/OpenSans-SemiBold.woff2') format('woff2'),
-                url('/fonts/OpenSans-SemiBold.woff') format('woff');
+                url('/static/fonts/OpenSans-SemiBold.ttf') format('ttf'),
+                url('/static/fonts/OpenSans-SemiBold.woff2') format('woff2'),
+                url('/static/fonts/OpenSans-SemiBold.woff') format('woff');
             font-weight:500;
             font-display:swap;
         }
@@ -107,16 +108,16 @@
         @font-face {
             font-family: 'OpenSans';
             src: local('OpenSans'),
-                url('/fonts/OpenSans-Bold.ttf') format('ttf'),
-                url('/fonts/OpenSans-Bold.woff2') format('woff2'),
-                url('/fonts/OpenSans-Bold.woff') format('woff');
+                url('/static/fonts/OpenSans-Bold.ttf') format('ttf'),
+                url('/static/fonts/OpenSans-Bold.woff2') format('woff2'),
+                url('/static/fonts/OpenSans-Bold.woff') format('woff');
             font-weight:600;
             font-display:swap;
         }
     </style>
 
     <title>Flagsmith - Feature Flags, Feature Toggles and Remote Config</title>
-    <link rel="shortcut icon" href="/images/favicon.ico">
+    <link rel="shortcut icon" href="/static/images/favicon.ico">
 </head>
 <body>
     <div id="app"></div>

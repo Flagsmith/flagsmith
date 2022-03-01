@@ -18,7 +18,9 @@ import DocumentationIcon from './svg/DocumentationIcon';
 import ArrowUpIcon from './svg/ArrowUpIcon';
 import RebrandBanner from './RebrandBanner';
 import UpgradeIcon from './svg/UpgradeIcon';
+import SparklesIcon from './svg/SparklesIcon';
 import AccountSettingsPage from './pages/AccountSettingsPage';
+import Headway from "./Headway";
 
 const App = class extends Component {
     static propTypes = {
@@ -263,7 +265,7 @@ const App = class extends Component {
                                                         <a href={user ? '/projects' : 'https://flagsmith.com'}>
                                                             <img
                                                               title="Flagsmith" height={24}
-                                                              src="/images/nav-logo.svg"
+                                                              src="/static/images/nav-logo.svg"
                                                               className="brand" alt="Flagsmith logo"
                                                             />
                                                         </a>
@@ -289,6 +291,7 @@ const App = class extends Component {
                                                                     Upgrade
                                                                 </a>
                                                             )}
+                                                            <Headway className={"nav-link cursor-pointer"}/>
                                                             <a
                                                               href="https://docs.flagsmith.com"
                                                               target="_blank" className="nav-link p-2"
@@ -378,7 +381,7 @@ const App = class extends Component {
                                                                           className="popover-bt__list-item"
                                                                         >
                                                                             <img
-                                                                              src="/images/icons/aside/logout-dark.svg"
+                                                                              src="/static/images/icons/aside/logout-dark.svg"
                                                                               className="mr-2"
                                                                             />
                                                                             Logout

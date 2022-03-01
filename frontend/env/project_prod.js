@@ -14,5 +14,4 @@ module.exports = global.Project = {
     chargebee: {
         site: 'flagsmith',
     },
-    assetUrl: 'https://cdn.flagsmith.com', // Location of the static files from build/, should contain a directory called static/
 };
