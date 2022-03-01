@@ -1,4 +1,4 @@
-name: API Deploy to Staging ECS
+name: API Deploy to Production ECS
 
 on:
     pull_request: #todo: remove
@@ -14,17 +14,17 @@ on:
             - ".github/**"
 
 env:
-    ECS_CLUSTER: flagsmith-api-cluster-eu-west-2-7c9bc9d
-    ECS_CLUSTER_ARN: arn:aws:ecs:eu-west-2:302456015006:cluster/flagsmith-api-cluster-eu-west-2-7c9bc9d
-    ECS_SERVICE: flagsmith-svc-eu-west-2-894f4ae
-    VPC_SUBNET: subnet-1b0b8861
-    ECS_SECURITY_GROUP: sg-08632d6fb4cb0fdf3
+    ECS_CLUSTER: flagsmith-api-cluster-eu-west-2-f0b0108Update
+    ECS_CLUSTER_ARN: arn:aws:ecs:eu-west-2:084060095745:cluster/flagsmith-api-cluster-eu-west-2-f0b0108
+    ECS_SERVICE: flagsmith-svc-eu-west-2-c3cd356
+    VPC_SUBNET: subnet-40fd6629
+    ECS_SECURITY_GROUP: sg-0ef0e8f66f890b80c
 
 jobs:
-    deploy-staging-ecs:
+    deploy-production-ecs:
         runs-on: ubuntu-latest
-        name: API Deploy to Staging ECS
-        environment: staging
+        name: API Deploy to Production ECS
+        environment: production
 
         steps:
             - name: Cloning repo
