@@ -1,3 +1,5 @@
+import typing
+
 from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import models
 from django_lifecycle import (
@@ -8,6 +10,9 @@ from django_lifecycle import (
 )
 
 from features.feature_states.models import AbstractBaseFeatureValueModel
+
+if typing.TYPE_CHECKING:
+    from features.models import FeatureState
 
 
 class MultivariateFeatureOption(LifecycleModelMixin, AbstractBaseFeatureValueModel):
@@ -60,3 +65,15 @@ class MultivariateFeatureStateValue(LifecycleModelMixin, models.Model):
         Override validate_unique method, so we can add the BEFORE_SAVE hook.
         """
         super(MultivariateFeatureStateValue, self).validate_unique(exclude=exclude)
+
+    def clone(self, feature_state: "FeatureState", persist: bool = True):
+        clone = MultivariateFeatureStateValue(
+            feature_state=feature_state,
+            multivariate_feature_option=self.multivariate_feature_option,
+            percentage_allocation=self.percentage_allocation,
+        )
+
+        if persist:
+            clone.save()
+
+        return clone
