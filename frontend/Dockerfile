@@ -11,7 +11,6 @@ COPY --chown=node:node . .
 
 RUN npm install --quiet --production
 ENV ENV=prod
-ENV STATIC_ASSET_CDN_URL=/
 RUN npm run bundle
 
 
@@ -26,4 +25,4 @@ ENV ENV=prod
 ENV NODE_ENV=production
 
 EXPOSE 8080
-CMD ["node",  "./server/index.js"]
+CMD ["node",  "./api/index.js"]

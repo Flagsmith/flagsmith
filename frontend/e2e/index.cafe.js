@@ -17,7 +17,7 @@ createTestCafe()
         testcafe = tc;
         await new Promise((resolve) => {
             process.env.PORT = 3000;
-            server = fork('./server');
+            server = fork('./api/index');
             server.on('message', () => {
                 resolve();
             });
@@ -25,7 +25,7 @@ createTestCafe()
         const runner = testcafe.createRunner();
         return runner
             .src(['./e2e/init.cafe.js'])
-            .browsers(process.env.E2E_DEV ? ['chrome:headless'] : ['chrome:headless']) // always headless
+            .browsers(process.env.E2E_DEV ? ['chrome'] : ['chrome:headless']) // always headless
             .run()
             .then((v) => {
                 if (!v) {
