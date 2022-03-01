@@ -17,7 +17,7 @@ module.exports = {
         outputPath: __dirname,
     },
     output: {
-        path: path.join(__dirname, '../build'),
+        path: path.join(__dirname, '../public'),
         filename: '[name].js',
         publicPath: '/',
         devtoolModuleFilenameTemplate: 'file://[absolute-resource-path]',

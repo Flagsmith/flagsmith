@@ -14,7 +14,7 @@ const Project = require('../common/project');
 
 const extraPlugins = [
     // Clear out build folder
-    new CleanWebpackPlugin(['build'], { root: path.join(__dirname, '../') }),
+    new CleanWebpackPlugin(['public'], { root: path.join(__dirname, '../') }),
 
     new webpack.DefinePlugin({
         __DEV__: false,
@@ -56,9 +56,9 @@ module.exports = {
         'jquery': 'jQuery',
     },
     output: {
-        path: path.join(__dirname, '../build/static'),
+        path: path.join(__dirname, '../public/static'),
         filename: '[name].[hash].js',
-        publicPath: url.resolve(process.env.STATIC_ASSET_CDN_URL || Project.assetUrl || 'https://cdn.flagsmith.com', 'static/'),
+        publicPath: "/static/"
     },
 
     plugins: require('./plugins')
