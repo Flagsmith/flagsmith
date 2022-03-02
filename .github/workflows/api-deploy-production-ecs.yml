@@ -98,7 +98,7 @@ jobs:
                 aws events put-targets --event-bus-name identity_migration --rule identity_migration --targets '[{
                 "Id": "identity_migrate_rule_target",
                 "Arn": "${{env.ECS_CLUSTER_ARN}}",
-                "RoleArn": "arn:aws:iam::302456015006:role/task-exec-role-5512471",
+                "RoleArn": "arn:aws:iam::084060095745:role/task-exec-role-741a7e3",
                 "EcsParameters": {
                   "TaskDefinitionArn": ${{ steps.register_migrate_task.outputs.task_definition_arn }},
                   "TaskCount": 1,
