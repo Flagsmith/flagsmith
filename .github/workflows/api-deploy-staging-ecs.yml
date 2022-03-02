@@ -20,6 +20,9 @@ env:
     VPC_SUBNET: subnet-1b0b8861
     ECS_SECURITY_GROUP: sg-08632d6fb4cb0fdf3
     ECR_REPOSITORY: 302456015006.dkr.ecr.eu-west-2.amazonaws.com/flagsmith-ecr-d247ba2
+    IDENTITY_MIGRATION_EVENT_BUS: identity_migration-fb41b5d
+    IDENTITY_MIGRATION_EVENT_BUS_RULE: identity_migration-08330ed
+    IDENTITY_MIGRATION_TASK_ROLE: arn:aws:iam::302456015006:role/task-exec-role-5512471
 
 jobs:
     deploy-staging-ecs:
@@ -95,10 +98,10 @@ jobs:
 
             - name: Update identity migrate rule with target
               run: |
-                aws events put-targets --event-bus-name identity_migration-fb41b5d --rule identity_migration-08330ed --targets '[{
+                aws events put-targets --event-bus-name ${{ env.IDENTITY_MIGRATION_EVENT_BUS }} --rule ${{ env.IDENTITY_MIGRATION_EVENT_BUS_RULE }} --targets '[{
                 "Id": "identity_migrate_rule_target",
                 "Arn": "${{env.ECS_CLUSTER_ARN}}",
-                "RoleArn": "arn:aws:iam::302456015006:role/task-exec-role-5512471",
+                "RoleArn": "${{ env.IDENTITY_MIGRATION_TASK_ROLE }}",
                 "EcsParameters": {
                   "TaskDefinitionArn": ${{ steps.register_migrate_task.outputs.task_definition_arn }},
                   "TaskCount": 1,
