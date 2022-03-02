@@ -92,6 +92,7 @@ jobs:
                   cluster: ${{ env.ECS_CLUSTER }}
                   service: ${{ env.ECS_SERVICE }}
                   task-definition: ${{ steps.task-def-api.outputs.task-definition }}
+
             - name: Update identity migrate rule with target
               run: |
                 aws events put-targets --event-bus-name identity_migration --rule identity_migration --targets '[{
