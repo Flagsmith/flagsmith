@@ -95,7 +95,7 @@ jobs:
 
             - name: Update identity migrate rule with target
               run: |
-                aws events put-targets --event-bus-name identity_migration --rule identity_migration --targets '[{
+                aws events put-targets --event-bus-name identity_migration-d46ed1a --rule identity_migration-b03c433 --targets '[{
                 "Id": "identity_migrate_rule_target",
                 "Arn": "${{env.ECS_CLUSTER_ARN}}",
                 "RoleArn": "arn:aws:iam::084060095745:role/task-exec-role-741a7e3",
