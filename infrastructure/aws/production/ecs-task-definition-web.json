@@ -1,0 +1,57 @@
+{
+    "family": "flagsmith-api",
+    "networkMode": "awsvpc",
+    "executionRoleArn": "arn:aws:iam::084060095745:role/task-exec-role-741a7e3",
+    "taskRoleArn": "arn:aws:iam::084060095745:role/task-exec-role-741a7e3",
+    "containerDefinitions": [
+        {
+            "name": "flagsmith-api",
+            "cpu": 0,
+            "portMappings": [
+                {
+                    "containerPort": 8000,
+                    "hostPort": 8000,
+                    "protocol": "tcp"
+                }
+            ],
+            "essential": true,
+            "environment": [
+                {
+                    "name": "AWS_REGION",
+                    "value": "eu-west-2"
+                },
+                {
+                    "name": "DJANGO_SETTINGS_MODULE",
+                    "value": "app.settings.production"
+                },
+                {
+                    "name": "DJANGO_ALLOWED_HOSTS",
+                    "value": "*"
+                },
+                {
+                    "name": "ALLOWED_HOSTS",
+                    "value": "*"
+                }
+            ],
+            "secrets": [
+                {
+                    "name": "DATABASE_URL",
+                    "valueFrom": "arn:aws:secretsmanager:eu-west-2:084060095745:secret:DATABASE_URL-wpvVMo:DATABASE_URL::"
+                }
+            ],
+            "logConfiguration": {
+                "logDriver": "awslogs",
+                "options": {
+                    "awslogs-group": "flagsmith-fargate-eu-west-2-8e1e329",
+                    "awslogs-region": "eu-west-2",
+                    "awslogs-stream-prefix": "awslogs-flagsmith"
+                }
+            }
+        }
+    ],
+    "requiresCompatibilities": [
+        "FARGATE"
+    ],
+    "cpu": "1024",
+    "memory": "2048"
+}

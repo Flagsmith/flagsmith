@@ -14,7 +14,7 @@ on:
             - ".github/**"
 
 env:
-    ECS_CLUSTER: flagsmith-api-cluster-eu-west-2-f0b0108Update
+    ECS_CLUSTER: flagsmith-api-cluster-eu-west-2-f0b0108
     ECS_CLUSTER_ARN: arn:aws:ecs:eu-west-2:084060095745:cluster/flagsmith-api-cluster-eu-west-2-f0b0108
     ECS_SERVICE: flagsmith-svc-eu-west-2-c3cd356
     VPC_SUBNET: subnet-40fd6629
