@@ -1,21 +1,19 @@
-import typing
 from threading import Thread
 
+from features.models import FeatureState
 from webhooks.webhooks import (
     WebhookEventType,
     call_environment_webhooks,
     call_organisation_webhooks,
 )
 
-if typing.TYPE_CHECKING:
-    from features.models import FeatureState
-
+from .models import HistoricalFeatureState
 
 date_format = "%Y-%m-%dT%H:%M:%S.%fZ"
 
 
 def trigger_feature_state_change_webhooks(
-    instance: "FeatureState", deleted: bool = False
+    instance: FeatureState, deleted: bool = False
 ):
     history_instance = instance.history.first()
     timestamp = (
@@ -53,7 +51,9 @@ def trigger_feature_state_change_webhooks(
     ).start()
 
 
-def _get_previous_state(history_instance, deleted: bool) -> dict:
+def _get_previous_state(
+    history_instance: HistoricalFeatureState, deleted: bool
+) -> dict:
     if deleted:
         return _get_feature_state_webhook_data(history_instance.instance)
     if history_instance.prev_record:
