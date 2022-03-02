@@ -14,9 +14,9 @@ on:
             - ".github/**"
 
 env:
-    ECS_CLUSTER: flagsmith-api-cluster-eu-west-2-7c9bc9d
-    ECS_CLUSTER_ARN: arn:aws:ecs:eu-west-2:302456015006:cluster/flagsmith-api-cluster-eu-west-2-7c9bc9d
-    ECS_SERVICE: flagsmith-svc-eu-west-2-894f4ae
+    ECS_CLUSTER: flagsmith-api-cluster-eu-west-2-f241261
+    ECS_CLUSTER_ARN: arn:aws:ecs:eu-west-2:302456015006:cluster/flagsmith-api-cluster-eu-west-2-f241261
+    ECS_SERVICE: flagsmith-svc-eu-west-2-8bb18de
     VPC_SUBNET: subnet-1b0b8861
     ECS_SECURITY_GROUP: sg-08632d6fb4cb0fdf3
     ECR_REPOSITORY: 302456015006.dkr.ecr.eu-west-2.amazonaws.com/flagsmith-ecr-d247ba2
