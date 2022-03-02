@@ -28,6 +28,7 @@ WebhookModels = typing.Union[OrganisationWebhook, "environments.models.Webhook"]
 
 class WebhookEventType(enum.Enum):
     FLAG_UPDATED = "FLAG_UPDATED"
+    FLAG_DELETED = "FLAG_DELETED"
     AUDIT_LOG_CREATED = "AUDIT_LOG_CREATED"
 
 

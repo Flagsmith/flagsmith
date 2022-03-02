@@ -11,7 +11,11 @@ from audit.models import (
 )
 
 # noinspection PyUnresolvedReferences
-from .models import FeatureState, HistoricalFeatureSegment
+from .models import (
+    FeatureState,
+    HistoricalFeatureSegment,
+    HistoricalFeatureState,
+)
 from .tasks import trigger_feature_state_change_webhooks
 
 logger = logging.getLogger(__name__)
@@ -37,6 +41,14 @@ def create_feature_segment_audit_log(
         author=history_user,
         project=project,
     )
+
+
+@receiver(post_create_historical_record, sender=HistoricalFeatureState)
+def trigger_feature_state_delete_webhook(
+    instance, history_user, history_instance, **kwargs
+):
+    if history_instance.history_type == "-":
+        trigger_feature_state_change_webhooks(instance)
 
 
 @receiver(post_save, sender=FeatureState)

@@ -1,3 +1,4 @@
+import typing
 from threading import Thread
 
 from webhooks.webhooks import (
@@ -6,37 +7,40 @@ from webhooks.webhooks import (
     call_organisation_webhooks,
 )
 
+if typing.TYPE_CHECKING:
+    from features.models import FeatureState
+
+
 date_format = "%Y-%m-%dT%H:%M:%S.%fZ"
 
 
-def trigger_feature_state_change_webhooks(instance):
+def trigger_feature_state_change_webhooks(
+    instance: "FeatureState", deleted: bool = False
+):
     history_instance = instance.history.first()
     timestamp = (
         history_instance.history_date.strftime(date_format)
         if history_instance and history_instance.history_date
         else ""
     )
-
     changed_by = (
         str(history_instance.history_user)
         if history_instance and history_instance.history_user
         else ""
     )
 
-    data = {
-        "new_state": _get_feature_state_webhook_data(instance),
-        "changed_by": changed_by,
-        "timestamp": timestamp,
-    }
+    new_state = _get_feature_state_webhook_data(instance) if not deleted else None
+    event_type = (
+        WebhookEventType.FLAG_DELETED if deleted else WebhookEventType.FLAG_UPDATED
+    )
 
-    if history_instance.prev_record:
-        data["previous_state"] = _get_feature_state_webhook_data(
-            history_instance.prev_record.instance, previous=True
-        )
-
+    data = {"new_state": new_state, "changed_by": changed_by, "timestamp": timestamp}
+    previous_state = _get_previous_state(history_instance, deleted)
+    if previous_state:
+        data.update(previous_state=previous_state)
     Thread(
         target=call_environment_webhooks,
-        args=(instance.environment, data, WebhookEventType.FLAG_UPDATED),
+        args=(instance.environment, data, event_type),
     ).start()
 
     Thread(
@@ -44,9 +48,19 @@ def trigger_feature_state_change_webhooks(instance):
         args=(
             instance.environment.project.organisation,
             data,
-            WebhookEventType.FLAG_UPDATED,
+            event_type,
         ),
     ).start()
+
+
+def _get_previous_state(history_instance, deleted: bool) -> dict:
+    if deleted:
+        return _get_feature_state_webhook_data(history_instance.instance)
+    if history_instance.prev_record:
+        return _get_feature_state_webhook_data(
+            history_instance.prev_record.instance, previous=True
+        )
+    return None
 
 
 def _get_feature_state_webhook_data(feature_state, previous=False):
