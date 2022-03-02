@@ -22,6 +22,6 @@ module.exports = function (path) {
     return slackClient.files.upload({
         channels: channelId,
         initial_comment: title,
-        file: fs.createReadStream(filename),
+        file: fs.createReadStream(path),
     });
 };
