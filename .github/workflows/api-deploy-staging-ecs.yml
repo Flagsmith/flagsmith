@@ -19,6 +19,7 @@ env:
     ECS_SERVICE: flagsmith-svc-eu-west-2-894f4ae
     VPC_SUBNET: subnet-1b0b8861
     ECS_SECURITY_GROUP: sg-08632d6fb4cb0fdf3
+    ECR_REPOSITORY: 302456015006.dkr.ecr.eu-west-2.amazonaws.com/flagsmith-ecr-d247ba2
 
 jobs:
     deploy-staging-ecs:
@@ -46,7 +47,6 @@ jobs:
             - name: Build, tag, and push image to Amazon ECR
               id: build-image
               env:
-                  ECR_REPOSITORY: ${{ secrets.ECR_REPOSITORY }}
                   IMAGE_TAG: ${{ github.sha }}
               run: |
                   cd api
