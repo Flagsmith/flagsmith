@@ -2,6 +2,7 @@ from datetime import timedelta
 from unittest import mock
 
 import pytest
+from core.constants import STRING
 from django.test import TestCase
 from django.utils import timezone
 from flag_engine.django_transform.document_builders import (
@@ -10,7 +11,9 @@ from flag_engine.django_transform.document_builders import (
 
 from environments.identities.models import Identity
 from environments.models import Environment, EnvironmentAPIKey
+from features.feature_types import MULTIVARIATE
 from features.models import Feature, FeatureState
+from features.multivariate.models import MultivariateFeatureOption
 from organisations.models import Organisation
 from projects.models import Project
 
@@ -122,6 +125,49 @@ class EnvironmentTestCase(TestCase):
 
         # Then
         assert clone.feature_states.first().enabled is True
+
+    def test_clone_clones_multivariate_feature_state_values(self):
+        # Given
+        self.environment.save()
+
+        mv_feature = Feature.objects.create(
+            type=MULTIVARIATE,
+            name="mv_feature",
+            initial_value="foo",
+            project=self.project,
+        )
+        variant_1 = MultivariateFeatureOption.objects.create(
+            feature=mv_feature,
+            default_percentage_allocation=10,
+            type=STRING,
+            string_value="bar",
+        )
+
+        # When
+        clone = self.environment.clone(name="Cloned env")
+
+        # Then
+        cloned_mv_feature_state = clone.feature_states.get(feature=mv_feature)
+        assert cloned_mv_feature_state.multivariate_feature_state_values.count() == 1
+
+        original_mv_fs_value = FeatureState.objects.get(
+            environment=self.environment, feature=mv_feature
+        ).multivariate_feature_state_values.first()
+        cloned_mv_fs_value = (
+            cloned_mv_feature_state.multivariate_feature_state_values.first()
+        )
+
+        assert original_mv_fs_value != cloned_mv_fs_value
+        assert (
+            original_mv_fs_value.multivariate_feature_option
+            == cloned_mv_fs_value.multivariate_feature_option
+            == variant_1
+        )
+        assert (
+            original_mv_fs_value.percentage_allocation
+            == cloned_mv_fs_value.percentage_allocation
+            == 10
+        )
 
     @mock.patch("environments.models.environment_cache")
     def test_get_from_cache_stores_environment_in_cache_on_success(self, mock_cache):
