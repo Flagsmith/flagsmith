@@ -20,9 +20,9 @@ function migrate_identities(){
 if [ "$1" == "migrate" ]; then
     migrate
 elif [ "$1" == "serve" ]; then
-    serve;
+    serve
 elif [ "$1" == "migrate_identities" ]; then
-    migrate_identities $2;
+    migrate_identities $2
 elif [ "$1" == "migrate-and-serve" ]; then
     migrate
     serve
