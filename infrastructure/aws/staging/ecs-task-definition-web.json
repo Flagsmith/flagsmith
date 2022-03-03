@@ -17,11 +17,11 @@
             "essential": true,
             "environment": [
                 {
-                    "name": "ALLOWED_HOSTS",
-                    "value": "*"
+                    "name": "AWS_REGION",
+                    "value": "eu-west-2"
                 },
                 {
-                    "name": "AWS_REGION",
+                    "name": "AWS_DEFAULT_REGION",
                     "value": "eu-west-2"
                 },
                 {
