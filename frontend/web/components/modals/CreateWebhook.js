@@ -18,6 +18,7 @@ const CreateWebhook = class extends Component {
       this.state = {
           enabled: this.props.isEdit ? this.props.webhook.enabled : true,
           url: this.props.isEdit ? this.props.webhook.url : '',
+          secret: this.props.isEdit ? this.props.webhook.secret : '',
           error: false,
       };
   }
@@ -25,6 +26,7 @@ const CreateWebhook = class extends Component {
   save = () => {
       const webhook = {
           url: this.state.url,
+          secret: this.state.secret,
           enabled: this.state.enabled,
       };
       if (this.props.isEdit) {
@@ -56,7 +58,7 @@ const CreateWebhook = class extends Component {
                       <Row space>
                           <Flex className="mb-4 mr-4">
                               <div>
-                                  <label>URL (Expects a 200 response from POST)</label>
+                                  <label>*URL (Expects a 200 response from POST)</label>
                               </div>
                               <Input
                                 ref={e => this.input = e}
@@ -81,6 +83,20 @@ const CreateWebhook = class extends Component {
                               </div>
                           </FormGroup>
                       </Row>
+                      <Flex className="mb-4 mr-4">
+                          <div>
+                              <label>Secret (Optional) - <a className="text-info" target="_blank" href="https://docs.flagsmith.com/advanced-use/system-administration#validating-signature">More info</a> </label>
+                          </div>
+                          <Input
+                            ref={e => this.input = e}
+                            value={this.state.secret}
+                            onChange={e => this.setState({ secret: Utils.safeParseEventValue(e) })}
+                            isValid={url && url.length}
+                            type="text"
+                            inputClassName="input--wide"
+                            placeholder="Secret"
+                          />
+                      </Flex>
                       <FormGroup className="mb-4 ml-1">
                           <div>
                               <label>Example Payload </label>
