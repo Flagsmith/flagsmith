@@ -14,6 +14,7 @@ on:
             - ".github/**"
 
 env:
+    AWS_ACCESS_KEY_ID: AKIARHES7IUA4IU3T5VX
     ECS_CLUSTER: flagsmith-api-cluster-eu-west-2-f0b0108
     ECS_CLUSTER_ARN: arn:aws:ecs:eu-west-2:084060095745:cluster/flagsmith-api-cluster-eu-west-2-f0b0108
     ECS_SERVICE: flagsmith-svc-eu-west-2-c3cd356
@@ -39,7 +40,7 @@ jobs:
             - name: Configure AWS Credentials
               uses: aws-actions/configure-aws-credentials@v1
               with:
-                  aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+                  aws-access-key-id: ${{ env.AWS_ACCESS_KEY_ID }}
                   aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
                   aws-region: eu-west-2
 
@@ -65,16 +66,16 @@ jobs:
                   container-name: flagsmith-api
                   image: ${{ steps.build-image.outputs.image }}
 
-            - name: Fill in the new image ID in the Amazon ECS migration task definition
+            - name: Fill in the new image ID in the Amazon ECS SQL Schema migration task definition
               id: task-def-api-migration
               uses: aws-actions/amazon-ecs-render-task-definition@v1
               with:
-                  task-definition: infrastructure/aws/production/ecs-task-definition-migration.json
+                  task-definition: infrastructure/aws/production/ecs-task-definition-sql-schema-migration.json
                   container-name: flagsmith-api-migration
                   image: ${{ steps.build-image.outputs.image }}
 
-            - name: Perform migrations
-              id: register_migrate_task
+            - name: Perform SQL Schema migrations
+              id: execute-sql-schema-migration-task
               run: |
                   echo "::set-output name=task_definition_arn::$(aws ecs register-task-definition --cli-input-json file://$TASK_DEFINITION | jq '.taskDefinition.taskDefinitionArn')"
                   aws ecs run-task --cluster ${{ env.ECS_CLUSTER }} --count 1 --launch-type FARGATE --task-definition flagsmith-api-migration  --network-configuration '{
@@ -135,8 +136,8 @@ jobs:
 #    run-tests:
 #        runs-on: ubuntu-latest
 #        name: Run E2E Tests
-#        environment: staging
-#        needs: deploy-staging
+#        environment: production
+#        needs: deploy-production-ecs
 #
 #        steps:
 #            - name: Cloning repo
@@ -156,7 +157,7 @@ jobs:
 #                  google-chrome --version
 #                  node -v
 #                  npm i
-#                  export ENV=staging;
+#                  export ENV=production;
 #                  npm run env
 #                  npm run test
 #
