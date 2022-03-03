@@ -1,17 +1,13 @@
 name: API Deploy to Production ECS
 
 on:
-    pull_request: #todo: remove
-        paths:
-            - "api/**"
-            - ".github/**"
-        types: [opened, synchronize, reopened, ready_for_review]
     push:
-        branches:
-            - main
+        tags:
+            - '*'
         paths:
-            - "api/**"
-            - ".github/**"
+            - 'api/**'
+            - '.github/**'
+            - 'infrastructure/aws/production/**'
 
 env:
     AWS_ACCESS_KEY_ID: AKIARHES7IUA4IU3T5VX

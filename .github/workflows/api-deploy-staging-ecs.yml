@@ -1,17 +1,13 @@
 name: API Deploy to Staging ECS
 
 on:
-    pull_request: #todo: remove
-        paths:
-            - "api/**"
-            - ".github/**"
-        types: [opened, synchronize, reopened, ready_for_review]
     push:
         branches:
             - main
         paths:
             - "api/**"
             - ".github/**"
+            - 'infrastructure/aws/staging/**'
 
 env:
     AWS_ACCESS_KEY_ID: AKIAUM26IRCPASKFW2X5
