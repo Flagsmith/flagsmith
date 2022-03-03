@@ -1,0 +1,51 @@
+{
+    "family": "flagsmith-api-migration",
+    "networkMode": "awsvpc",
+    "executionRoleArn": "arn:aws:iam::084060095745:role/task-exec-role-741a7e3",
+    "taskRoleArn": "arn:aws:iam::084060095745:role/task-exec-role-741a7e3",
+    "containerDefinitions": [
+        {
+            "name": "flagsmith-api-migration",
+            "command": [
+                "migrate"
+            ],
+            "environment": [
+                {
+                    "name": "AWS_REGION",
+                    "value": "eu-west-2"
+                },
+                {
+                    "name": "DJANGO_SETTINGS_MODULE",
+                    "value": "app.settings.production"
+                },
+                {
+                    "name":"IDENTITIES_TABLE_NAME_DYNAMO",
+                    "value":"flagsmith_identities"
+                },
+                {
+                    "name": "PROJECT_METADATA_TABLE_NAME_DYNAMO",
+                    "value": "flagsmith_project_metadata"
+                }
+            ],
+            "secrets": [
+                {
+                    "name": "DATABASE_URL",
+                    "valueFrom": "arn:aws:secretsmanager:eu-west-2:084060095745:secret:DATABASE_URL-wpvVMo:DATABASE_URL::"
+                }
+            ],
+            "logConfiguration": {
+                "logDriver": "awslogs",
+                "options": {
+                    "awslogs-group": "flagsmith-fargate-eu-west-2-8e1e329",
+                    "awslogs-region": "eu-west-2",
+                    "awslogs-stream-prefix": "awslogs-flagsmith"
+                }
+            }
+        }
+    ],
+    "requiresCompatibilities": [
+        "FARGATE"
+    ],
+    "cpu": "1024",
+    "memory": "2048"
+}
