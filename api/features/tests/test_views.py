@@ -317,7 +317,7 @@ class ProjectFeatureTestCase(TestCase):
     def test_audit_logs_created_when_feature_deleted(self):
         # Given
         feature = Feature.objects.create(name="test feature", project=self.project)
-        feature_states_ids = feature.feature_states.values_list("id", flat=True)
+        feature_states_ids = list(feature.feature_states.values_list("id", flat=True))
         # When
         self.client.delete(
             self.project_feature_detail_url % (self.project.id, feature.id)
@@ -334,8 +334,23 @@ class ProjectFeatureTestCase(TestCase):
                 related_object_type=RelatedObjectType.FEATURE_STATE.name,
                 related_object_id__in=feature_states_ids,
             ).count()
-            == feature.feature_states.count()
+            == len(feature_states_ids)
         )
+
+    @mock.patch("features.views.trigger_feature_state_change_webhooks")
+    def test_feature_state_webhook_triggered_when_feature_deleted(
+        self, mocked_trigger_fs_change_webhook
+    ):
+        # Given
+        feature = Feature.objects.create(name="test feature", project=self.project)
+        feature_states = list(feature.feature_states.all())
+        # When
+        self.client.delete(
+            self.project_feature_detail_url % (self.project.id, feature.id)
+        )
+        # Then
+        mock_calls = [mock.call(fs, deleted=True) for fs in feature_states]
+        mocked_trigger_fs_change_webhook.has_calls(mock_calls)
 
     def test_add_owners_adds_owner(self):
         # Given

@@ -50,6 +50,7 @@ from .serializers import (
     UpdateFeatureSerializer,
     WritableNestedFeatureStateSerializer,
 )
+from .tasks import trigger_feature_state_change_webhooks
 
 logger = logging.getLogger()
 logger.setLevel(logging.INFO)
@@ -110,10 +111,19 @@ class FeatureViewSet(viewsets.ModelViewSet):
         serializer.save(project_id=self.kwargs.get("project_pk"))
 
     def perform_destroy(self, instance):
-        self._create_feature_delete_audit_log(instance)
+        feature_states = instance.feature_states.filter(
+            identity=None, feature_segment=None
+        )
+        self._create_feature_delete_audit_log(feature_states)
+        self._trigger_feature_state_change_webhooks(feature_states)
         instance.delete()
 
-    def _create_feature_delete_audit_log(self, feature: Feature):
+    def _trigger_feature_state_change_webhooks(self, feature_states: FeatureState):
+        for feature_state in feature_states:
+            trigger_feature_state_change_webhooks(feature_state, deleted=True)
+
+    def _create_feature_delete_audit_log(self, feature_states: FeatureState):
+        feature = feature_states[0].feature
         message = FEATURE_DELETED_MESSAGE % feature.name
         project_audit_log = AuditLog(
             author=self.request.user,
@@ -123,9 +133,7 @@ class FeatureViewSet(viewsets.ModelViewSet):
             log=message,
         )
         audit_logs = [project_audit_log]
-        for feature_state in feature.feature_states.filter(
-            identity=None, feature_segment=None
-        ):
+        for feature_state in feature_states:
             audit_logs.append(
                 AuditLog(
                     author=self.request.user,

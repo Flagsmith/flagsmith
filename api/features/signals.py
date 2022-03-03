@@ -43,14 +43,6 @@ def create_feature_segment_audit_log(
     )
 
 
-@receiver(post_create_historical_record, sender=HistoricalFeatureState)
-def trigger_feature_state_delete_webhook(
-    instance, history_user, history_instance, **kwargs
-):
-    if history_instance.history_type == "-":
-        trigger_feature_state_change_webhooks(instance)
-
-
 @receiver(post_save, sender=FeatureState)
 def trigger_feature_state_change_webhooks_signal(instance, **kwargs):
     trigger_feature_state_change_webhooks(instance)
