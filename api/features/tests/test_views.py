@@ -329,13 +329,10 @@ class ProjectFeatureTestCase(TestCase):
             related_object_id=feature.id,
         )
         # and audit logs exists for all feature states for that feature
-        assert (
-            AuditLog.objects.filter(
-                related_object_type=RelatedObjectType.FEATURE_STATE.name,
-                related_object_id__in=feature_states_ids,
-            ).count()  # fmt: skip
-            == len(feature_states_ids)
-        )
+        assert AuditLog.objects.filter(
+            related_object_type=RelatedObjectType.FEATURE_STATE.name,
+            related_object_id__in=feature_states_ids,
+        ).count() == len(feature_states_ids)
 
     @mock.patch("features.views.trigger_feature_state_change_webhooks")
     def test_feature_state_webhook_triggered_when_feature_deleted(
