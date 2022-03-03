@@ -75,7 +75,7 @@ jobs:
                   container-name: flagsmith-api-migration
                   image: ${{ steps.build-image.outputs.image }}
 
-            - name: Perform migrations
+            - name: Register and perform SQL schema migration
               id: register-migrate-task
               env:
                   AWS_ACCESS_KEY_ID: ${{ env.AWS_ACCESS_KEY_ID }}
