@@ -17,26 +17,154 @@
             "essential": true,
             "environment": [
                 {
-                    "name": "AWS_REGION",
-                    "value": "eu-west-2"
+                    "name": "ALLOWED_HOSTS",
+                    "value": "*"
                 },
                 {
-                    "name": "DJANGO_SETTINGS_MODULE",
-                    "value": "app.settings.production"
+                    "name": "AWS_REGION",
+                    "value": "eu-west-2"
                 },
                 {
                     "name": "DJANGO_ALLOWED_HOSTS",
                     "value": "*"
                 },
                 {
-                    "name": "ALLOWED_HOSTS",
-                    "value": "*"
+                    "name": "DJANGO_SETTINGS_MODULE",
+                    "value": "app.settings.production"
+                },
+                {
+                    "name": "CACHE_FLAGS_SECONDS",
+                    "value": "0"
+                },
+                {
+                    "name": "CACHE_PROJECT_SEGMENTS_SECONDS",
+                    "value": "0"
+                },
+                {
+                    "name": "CHARGEBEE_SITE",
+                    "value": "flagsmith-test"
+                },
+                {
+                    "name": "DJANGO_SETTINGS_MODULE",
+                    "value": "app.settings.production"
+                },
+                {
+                    "name": "ENABLE_CHARGEBEE",
+                    "value": "True"
+                },
+                {
+                    "name": "ENABLE_EMAIL_ACTIVATION",
+                    "value": "False"
+                },
+                {
+                    "name": "ENABLE_TELEMETRY",
+                    "value": "False"
+                },
+                {
+                    "name": "ENVIRONMENT",
+                    "valueFrom": "staging"
+                },
+                {
+                    "name": "ENVIRONMENTS_TABLE_NAME_DYNAMO",
+                    "valueFrom": "flagsmith_environments"
+                },
+                {
+                    "name": "FE_E2E_TEST_USER_EMAIL",
+                    "valueFrom": "nightwatch@solidstategroup.com"
+                },
+                {
+                    "name": "GITHUB_CLIENT_ID",
+                    "valueFrom": "cd16a9c1574074756876"
+                },
+                {
+                    "name": "GUNICORN_WORKERS",
+                    "valueFrom": "3"
+                },
+                {
+                    "name": "IDENTITIES_TABLE_NAME_DYNAMO",
+                    "valueFrom": "flagsmith_identities"
+                },
+                {
+                    "name": "INFLUXDB_BUCKET",
+                    "valueFrom": "api_staging"
+                },
+                {
+                    "name": "INFLUXDB_ORG",
+                    "valueFrom": "ben.rometsch@bullet-train.io"
+                },
+                {
+                    "name": "INFLUXDB_URL",
+                    "valueFrom": "https://eu-central-1-1.aws.cloud2.influxdata.com"
+                },
+                {
+                    "name": "OAUTH_CLIENT_ID",
+                    "valueFrom": "232959427810-br6ltnrgouktp0ngsbs04o14ueb9rch0.apps.googleusercontent.com"
+                },
+                {
+                    "name": "PROJECT_METADATA_TABLE_NAME_DYNAMO",
+                    "valueFrom": "flagsmith_project_metadata"
+                },
+                {
+                    "name": "SECURE_PROXY_SSL_HEADER_NAME",
+                    "valueFrom": "HTTP_CLOUDFRONT_FORWARDED_PROTO"
+                },
+                {
+                    "name": "SENDER_EMAIL",
+                    "valueFrom": "support@flagsmith.com"
+                },
+                {
+                    "name": "SENTRY_TRACE_SAMPLE_RATE",
+                    "valueFrom": "0.1"
+                },
+                {
+                    "name": "SLACK_CLIENT_ID",
+                    "valueFrom": "937916178726.2904626318658"
                 }
             ],
             "secrets": [
                 {
                     "name": "DATABASE_URL",
-                    "valueFrom": "arn:aws:secretsmanager:eu-west-2:302456015006:secret:DATABASE_URL-EMaUaY:DATABASE_URL::"
+                    "valueFrom": "arn:aws:secretsmanager:eu-west-2:302456015006:secret:ECS-API-heAdoB:DATABASE_URL::"
+                },
+                {
+                    "name": "DJANGO_SECRET_KEY",
+                    "valueFrom": "arn:aws:secretsmanager:eu-west-2:302456015006:secret:ECS-API-heAdoB:DJANGO_SECRET_KEY::"
+                },
+                {
+                    "name": "E2E_TEST_AUTH_TOKEN",
+                    "valueFrom": "arn:aws:secretsmanager:eu-west-2:302456015006:secret:ECS-API-heAdoB:E2E_TEST_AUTH_TOKEN::"
+                },
+                {
+                    "name": "FORCE_SENTRY_TRACE_KEY",
+                    "valueFrom": "arn:aws:secretsmanager:eu-west-2:302456015006:secret:ECS-API-heAdoB:FORCE_SENTRY_TRACE_KEY::"
+                },
+                {
+                    "name": "GITHUB_CLIENT_SECRET",
+                    "valueFrom": "arn:aws:secretsmanager:eu-west-2:302456015006:secret:ECS-API-heAdoB:GITHUB_CLIENT_SECRET::"
+                },
+                {
+                    "name": "INFLUXDB_TOKEN",
+                    "valueFrom": "arn:aws:secretsmanager:eu-west-2:302456015006:secret:ECS-API-heAdoB:INFLUXDB_TOKEN::"
+                },
+                {
+                    "name": "MAILERLITE_API_KEY",
+                    "valueFrom": "arn:aws:secretsmanager:eu-west-2:302456015006:secret:ECS-API-heAdoB:MAILERLITE_API_KEY::"
+                },
+                {
+                    "name": "OAUTH_CLIENT_SECRET",
+                    "valueFrom": "arn:aws:secretsmanager:eu-west-2:302456015006:secret:ECS-API-heAdoB:OAUTH_CLIENT_SECRET::"
+                },
+                {
+                    "name": "SENDGRID_API_KEY",
+                    "valueFrom": "arn:aws:secretsmanager:eu-west-2:302456015006:secret:ECS-API-heAdoB:SENDGRID_API_KEY::"
+                },
+                {
+                    "name": "SENTRY_SDK_DSN",
+                    "valueFrom": "arn:aws:secretsmanager:eu-west-2:302456015006:secret:ECS-API-heAdoB:SENTRY_SDK_DSN::"
+                },
+                {
+                    "name": "SLACK_CLIENT_SECRET",
+                    "valueFrom": "arn:aws:secretsmanager:eu-west-2:302456015006:secret:ECS-API-heAdoB:SLACK_CLIENT_SECRET::"
                 }
             ],
             "logConfiguration": {
