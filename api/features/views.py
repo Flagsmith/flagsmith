@@ -1,4 +1,5 @@
 import logging
+import typing
 
 import coreapi
 from app_analytics.influxdb_wrapper import get_multiple_event_list_for_feature
@@ -28,6 +29,7 @@ from environments.permissions.permissions import (
     EnvironmentKeyPermissions,
     NestedEnvironmentPermissions,
 )
+from webhooks.webhooks import WebhookEventType
 
 from .models import Feature, FeatureState
 from .permissions import (
@@ -111,18 +113,24 @@ class FeatureViewSet(viewsets.ModelViewSet):
         serializer.save(project_id=self.kwargs.get("project_pk"))
 
     def perform_destroy(self, instance):
-        feature_states = instance.feature_states.filter(
-            identity=None, feature_segment=None
+        feature_states = list(
+            instance.feature_states.filter(identity=None, feature_segment=None)
         )
         self._create_feature_delete_audit_log(feature_states)
         self._trigger_feature_state_change_webhooks(feature_states)
         instance.delete()
 
-    def _trigger_feature_state_change_webhooks(self, feature_states: FeatureState):
+    def _trigger_feature_state_change_webhooks(
+        self, feature_states: typing.List[FeatureState]
+    ):
         for feature_state in feature_states:
-            trigger_feature_state_change_webhooks(feature_state, deleted=True)
+            trigger_feature_state_change_webhooks(
+                feature_state, WebhookEventType.FLAG_DELETED
+            )
 
-    def _create_feature_delete_audit_log(self, feature_states: FeatureState):
+    def _create_feature_delete_audit_log(
+        self, feature_states: typing.List[FeatureState]
+    ):
         feature = feature_states[0].feature
         message = FEATURE_DELETED_MESSAGE % feature.name
         project_audit_log = AuditLog(

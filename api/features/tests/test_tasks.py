@@ -56,7 +56,7 @@ def test_trigger_feature_state_change_webhooks(MockThread):
 
 @pytest.mark.django_db
 @mock.patch("features.tasks.Thread")
-def test_trigger_feature_state_change_webhooks_when_deleted_is_True(
+def test_trigger_feature_state_change_webhooks_for_deleted_flag(
     MockThread, organisation, project, environment, feature
 ):
     # Given
@@ -69,7 +69,7 @@ def test_trigger_feature_state_change_webhooks_when_deleted_is_True(
     feature_state.save()
 
     MockThread.reset_mock()  # reset mock as it will have been called when setting up the data
-    trigger_feature_state_change_webhooks(feature_state, deleted=True)
+    trigger_feature_state_change_webhooks(feature_state, WebhookEventType.FLAG_DELETED)
 
     # Then
     call_list = MockThread.call_args_list

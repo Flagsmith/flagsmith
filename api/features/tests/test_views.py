@@ -31,6 +31,7 @@ from projects.tags.models import Tag
 from segments.models import Segment
 from users.models import FFAdminUser
 from util.tests import Helper
+from webhooks.webhooks import WebhookEventType
 
 # patch this function as it's triggering extra threads and causing errors
 mock.patch("features.signals.trigger_feature_state_change_webhooks").start()
@@ -346,7 +347,9 @@ class ProjectFeatureTestCase(TestCase):
             self.project_feature_detail_url % (self.project.id, feature.id)
         )
         # Then
-        mock_calls = [mock.call(fs, deleted=True) for fs in feature_states]
+        mock_calls = [
+            mock.call(fs, WebhookEventType.FLAG_DELETED) for fs in feature_states
+        ]
         mocked_trigger_fs_change_webhook.has_calls(mock_calls)
 
     def test_add_owners_adds_owner(self):

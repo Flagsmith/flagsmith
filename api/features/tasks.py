@@ -13,7 +13,7 @@ date_format = "%Y-%m-%dT%H:%M:%S.%fZ"
 
 
 def trigger_feature_state_change_webhooks(
-    instance: FeatureState, deleted: bool = False
+    instance: FeatureState, event_type: WebhookEventType = WebhookEventType.FLAG_UPDATED
 ):
     history_instance = instance.history.first()
     timestamp = (
@@ -27,13 +27,13 @@ def trigger_feature_state_change_webhooks(
         else ""
     )
 
-    new_state = _get_feature_state_webhook_data(instance) if not deleted else None
-    event_type = (
-        WebhookEventType.FLAG_DELETED if deleted else WebhookEventType.FLAG_UPDATED
+    new_state = (
+        None
+        if event_type == WebhookEventType.FLAG_DELETED
+        else _get_feature_state_webhook_data(instance)
     )
-
     data = {"new_state": new_state, "changed_by": changed_by, "timestamp": timestamp}
-    previous_state = _get_previous_state(history_instance, deleted)
+    previous_state = _get_previous_state(history_instance, event_type)
     if previous_state:
         data.update(previous_state=previous_state)
     Thread(
@@ -52,9 +52,9 @@ def trigger_feature_state_change_webhooks(
 
 
 def _get_previous_state(
-    history_instance: HistoricalFeatureState, deleted: bool
+    history_instance: HistoricalFeatureState, event_type: WebhookEventType
 ) -> dict:
-    if deleted:
+    if event_type == WebhookEventType.FLAG_DELETED:
         return _get_feature_state_webhook_data(history_instance.instance)
     if history_instance.prev_record:
         return _get_feature_state_webhook_data(
