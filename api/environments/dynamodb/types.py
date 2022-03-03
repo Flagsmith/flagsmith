@@ -25,10 +25,8 @@ class DynamoProjectMetadata:
     data(for a given project) has been migrated or not"""
 
     id: int
-    identity_migration_status: str = (
-        ProjectIdentityMigrationStatus.MIGRATION_NOT_STARTED.name
-    )
-    migration_start_time: datetime = None
+    migration_start_time: str = None
+    migration_end_time: str = None
 
     @classmethod
     def get_or_new(cls, project_id: int) -> "DynamoProjectMetadata":
@@ -38,16 +36,11 @@ class DynamoProjectMetadata:
         return cls(id=project_id)
 
     def start_identity_migration(self):
-        self.migration_start_time = datetime.now()
-        self.identity_migration_status = (
-            ProjectIdentityMigrationStatus.MIGRATION_IN_PROGRESS.name
-        )
+        self.migration_start_time = datetime.now().isoformat()
         self._save()
 
     def finish_identity_migration(self):
-        self.identity_migration_status = (
-            ProjectIdentityMigrationStatus.MIGRATION_COMPLETED.name
-        )
+        self.migration_end_time = datetime.now().isoformat()
         self._save()
 
     def _save(self):

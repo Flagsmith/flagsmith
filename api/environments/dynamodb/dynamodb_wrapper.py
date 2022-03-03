@@ -85,22 +85,25 @@ class DynamoIdentityWrapper:
             query_kwargs.update(ExclusiveStartKey=start_key)
         return self.query_items(**query_kwargs)
 
-    def get_migration_status(self, project_id: int) -> str:
+    def get_migration_status(self, project_id: int) -> ProjectIdentityMigrationStatus:
         project_metadata = DynamoProjectMetadata.get_or_new(project_id)
-        return project_metadata.identity_migration_status
+        if not project_metadata.migration_start_time:
+            return ProjectIdentityMigrationStatus.MIGRATION_NOT_STARTED
+        elif (
+            project_metadata.migration_start_time
+            and not project_metadata.migration_end_time
+        ):
+            return ProjectIdentityMigrationStatus.MIGRATION_IN_PROGRESS
+
+        return ProjectIdentityMigrationStatus.MIGRATION_COMPLETED
 
     def is_migration_done(self, project_id: int) -> bool:
         migration_status = self.get_migration_status(project_id)
-        return (
-            migration_status == ProjectIdentityMigrationStatus.MIGRATION_COMPLETED.name
-        )
+        return migration_status == ProjectIdentityMigrationStatus.MIGRATION_COMPLETED
 
     def can_migrate(self, project_id: int) -> bool:
         migration_status = self.get_migration_status(project_id)
-        return (
-            migration_status
-            == ProjectIdentityMigrationStatus.MIGRATION_NOT_STARTED.name
-        )
+        return migration_status == ProjectIdentityMigrationStatus.MIGRATION_NOT_STARTED
 
     def migrate_identities(self, project_id: int):
         project_metadata = DynamoProjectMetadata.get_or_new(project_id)

@@ -136,7 +136,7 @@ def organisation_info(request, organisation_id):
         if identity_wrapper.is_enabled:
             identity_migration_status_dict[
                 project.id
-            ] = identity_wrapper.get_migration_status(project.id)
+            ] = identity_wrapper.get_migration_status(project.id).name
 
     context = {
         "organisation": organisation,

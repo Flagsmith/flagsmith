@@ -23,17 +23,15 @@ def test_get_or_new_returns_instance_with_default_values_if_document_does_not_ex
     project_metadata = DynamoProjectMetadata.get_or_new(project_id)
     # Then
     assert project_metadata.id == project_id
-    assert (
-        project_metadata.identity_migration_status
-        == ProjectIdentityMigrationStatus.MIGRATION_NOT_STARTED.name
-    )
+    assert project_metadata.migration_start_time is None
+    assert project_metadata.migration_end_time is None
     mocked_dynamo_table.get_item.assert_called_with(Key={"id": project_id})
 
 
 def test_get_or_new_returns_instance_with_document_data_if_document_does_exists(mocker):
     # Given
     project_id = 1
-
+    migration_start_time = datetime.now().isoformat()
     mocked_dynamo_table = mocker.patch(
         "environments.dynamodb.types.project_metadata_table"
     )
@@ -41,7 +39,7 @@ def test_get_or_new_returns_instance_with_document_data_if_document_does_exists(
         "ResponseMetadata": {"some_key": "some_value"},
         "Item": {
             "id": Decimal(project_id),
-            "identity_migration_status": ProjectIdentityMigrationStatus.MIGRATION_IN_PROGRESS.name,
+            "migration_start_time": migration_start_time,
         },
     }
     # When
@@ -49,16 +47,16 @@ def test_get_or_new_returns_instance_with_document_data_if_document_does_exists(
 
     # Then
     assert project_metadata.id == project_id
-    assert (
-        project_metadata.identity_migration_status
-        == ProjectIdentityMigrationStatus.MIGRATION_IN_PROGRESS.name
-    )
+    assert project_metadata.migration_start_time == migration_start_time
+    assert project_metadata.migration_end_time is None
+
     mocked_dynamo_table.get_item.assert_called_with(Key={"id": project_id})
 
 
 def test_start_identity_migration_calls_put_item_with_correct_arguments(mocker):
     # Given
     project_id = 1
+
     migration_start_time = datetime.now()
     mocked_dynamo_table = mocker.patch(
         "environments.dynamodb.types.project_metadata_table"
@@ -68,6 +66,7 @@ def test_start_identity_migration_calls_put_item_with_correct_arguments(mocker):
     }
     mocked_datetime = mocker.patch("environments.dynamodb.types.datetime")
     mocked_datetime.now = mocker.MagicMock(return_value=migration_start_time)
+
     project_metadata = DynamoProjectMetadata.get_or_new(project_id)
 
     # When
@@ -77,8 +76,8 @@ def test_start_identity_migration_calls_put_item_with_correct_arguments(mocker):
     mocked_dynamo_table.put_item.assert_called_with(
         Item={
             "id": project_id,
-            "identity_migration_status": ProjectIdentityMigrationStatus.MIGRATION_IN_PROGRESS.name,
-            "migration_start_time": migration_start_time,
+            "migration_end_time": None,
+            "migration_start_time": migration_start_time.isoformat(),
         }
     )
 
@@ -88,11 +87,14 @@ def test_finish_identity_migration_calls_put_item_with_correct_arguments(
 ):
     # Given
     project_id = 1
-    migration_start_time = datetime.now()
+    migration_start_time = datetime.now().isoformat()
 
+    migration_end_time = datetime.now()
     mocked_dynamo_table = mocker.patch(
         "environments.dynamodb.types.project_metadata_table"
     )
+    mocked_datetime = mocker.patch("environments.dynamodb.types.datetime")
+    mocked_datetime.now = mocker.MagicMock(return_value=migration_end_time)
 
     project_metadata = DynamoProjectMetadata(
         id=project_id, migration_start_time=migration_start_time
@@ -105,7 +107,7 @@ def test_finish_identity_migration_calls_put_item_with_correct_arguments(
     mocked_dynamo_table.put_item.assert_called_with(
         Item={
             "id": project_id,
-            "identity_migration_status": ProjectIdentityMigrationStatus.MIGRATION_COMPLETED.name,
             "migration_start_time": migration_start_time,
+            "migration_end_time": migration_end_time.isoformat(),
         }
     )
