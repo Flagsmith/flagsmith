@@ -333,7 +333,7 @@ class ProjectFeatureTestCase(TestCase):
             AuditLog.objects.filter(
                 related_object_type=RelatedObjectType.FEATURE_STATE.name,
                 related_object_id__in=feature_states_ids,
-            ).count()
+            ).count()  # fmt: skip
             == len(feature_states_ids)
         )
 
