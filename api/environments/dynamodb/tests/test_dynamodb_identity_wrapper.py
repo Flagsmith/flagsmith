@@ -181,7 +181,7 @@ def test_is_migration_done_returns_true_if_migration_is_completed(
     mocked_project_metadata.get_or_new.assert_called_with(project_id)
 
 
-def test_can_migrate_return_true_if_migration_was_not_done(
+def test_can_migrate_returns_true_if_migration_was_not_done(
     mocker,
 ):
     # Given
