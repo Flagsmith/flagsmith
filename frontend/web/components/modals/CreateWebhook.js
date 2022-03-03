@@ -93,7 +93,7 @@ const CreateWebhook = class extends Component {
                             isValid={url && url.length}
                             type="text"
                             inputClassName="input--wide"
-                            placeholder="My secret"
+                            placeholder="Secret"
                           />
                       </Flex>
                       <FormGroup className="mb-4 ml-1">
