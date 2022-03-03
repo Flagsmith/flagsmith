@@ -62,63 +62,63 @@
                 },
                 {
                     "name": "ENVIRONMENT",
-                    "valueFrom": "staging"
+                    "value": "staging"
                 },
                 {
                     "name": "ENVIRONMENTS_TABLE_NAME_DYNAMO",
-                    "valueFrom": "flagsmith_environments"
+                    "value": "flagsmith_environments"
                 },
                 {
                     "name": "FE_E2E_TEST_USER_EMAIL",
-                    "valueFrom": "nightwatch@solidstategroup.com"
+                    "value": "nightwatch@solidstategroup.com"
                 },
                 {
                     "name": "GITHUB_CLIENT_ID",
-                    "valueFrom": "cd16a9c1574074756876"
+                    "value": "cd16a9c1574074756876"
                 },
                 {
                     "name": "GUNICORN_WORKERS",
-                    "valueFrom": "3"
+                    "value": "3"
                 },
                 {
                     "name": "IDENTITIES_TABLE_NAME_DYNAMO",
-                    "valueFrom": "flagsmith_identities"
+                    "value": "flagsmith_identities"
                 },
                 {
                     "name": "INFLUXDB_BUCKET",
-                    "valueFrom": "api_staging"
+                    "value": "api_staging"
                 },
                 {
                     "name": "INFLUXDB_ORG",
-                    "valueFrom": "ben.rometsch@bullet-train.io"
+                    "value": "ben.rometsch@bullet-train.io"
                 },
                 {
                     "name": "INFLUXDB_URL",
-                    "valueFrom": "https://eu-central-1-1.aws.cloud2.influxdata.com"
+                    "value": "https://eu-central-1-1.aws.cloud2.influxdata.com"
                 },
                 {
                     "name": "OAUTH_CLIENT_ID",
-                    "valueFrom": "232959427810-br6ltnrgouktp0ngsbs04o14ueb9rch0.apps.googleusercontent.com"
+                    "value": "232959427810-br6ltnrgouktp0ngsbs04o14ueb9rch0.apps.googleusercontent.com"
                 },
                 {
                     "name": "PROJECT_METADATA_TABLE_NAME_DYNAMO",
-                    "valueFrom": "flagsmith_project_metadata"
+                    "value": "flagsmith_project_metadata"
                 },
                 {
                     "name": "SECURE_PROXY_SSL_HEADER_NAME",
-                    "valueFrom": "HTTP_CLOUDFRONT_FORWARDED_PROTO"
+                    "value": "HTTP_CLOUDFRONT_FORWARDED_PROTO"
                 },
                 {
                     "name": "SENDER_EMAIL",
-                    "valueFrom": "support@flagsmith.com"
+                    "value": "support@flagsmith.com"
                 },
                 {
                     "name": "SENTRY_TRACE_SAMPLE_RATE",
-                    "valueFrom": "0.1"
+                    "value": "0.1"
                 },
                 {
                     "name": "SLACK_CLIENT_ID",
-                    "valueFrom": "937916178726.2904626318658"
+                    "value": "937916178726.2904626318658"
                 }
             ],
             "secrets": [
