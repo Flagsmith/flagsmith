@@ -1,3 +1,4 @@
+import typing
 from threading import Thread
 
 from features.models import FeatureState
@@ -11,9 +12,13 @@ from .models import HistoricalFeatureState
 
 date_format = "%Y-%m-%dT%H:%M:%S.%fZ"
 
+FSEventTypes = typing.Union[
+    WebhookEventType.FLAG_DELETED, WebhookEventType.FLAG_UPDATED
+]
+
 
 def trigger_feature_state_change_webhooks(
-    instance: FeatureState, event_type: WebhookEventType = WebhookEventType.FLAG_UPDATED
+    instance: FeatureState, event_type: FSEventTypes = WebhookEventType.FLAG_UPDATED
 ):
     history_instance = instance.history.first()
     timestamp = (
