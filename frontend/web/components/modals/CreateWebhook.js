@@ -18,6 +18,7 @@ const CreateWebhook = class extends Component {
       this.state = {
           enabled: this.props.isEdit ? this.props.webhook.enabled : true,
           url: this.props.isEdit ? this.props.webhook.url : '',
+          secret: this.props.isEdit ? this.props.webhook.secret : '',
           error: false,
       };
   }
