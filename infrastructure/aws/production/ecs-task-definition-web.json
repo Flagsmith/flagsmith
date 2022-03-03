@@ -21,22 +21,154 @@
                     "value": "eu-west-2"
                 },
                 {
-                    "name": "DJANGO_SETTINGS_MODULE",
-                    "value": "app.settings.production"
+                    "name": "AWS_DEFAULT_REGION",
+                    "value": "eu-west-2"
                 },
                 {
                     "name": "DJANGO_ALLOWED_HOSTS",
                     "value": "*"
                 },
                 {
-                    "name": "ALLOWED_HOSTS",
-                    "value": "*"
+                    "name": "DJANGO_SETTINGS_MODULE",
+                    "value": "app.settings.production"
+                },
+                {
+                    "name": "CACHE_FLAGS_SECONDS",
+                    "value": "10"
+                },
+                {
+                    "name": "CACHE_PROJECT_SEGMENTS_SECONDS",
+                    "value": "10"
+                },
+                {
+                    "name": "CHARGEBEE_SITE",
+                    "value": "flagsmith"
+                },
+                {
+                    "name": "DJANGO_SETTINGS_MODULE",
+                    "value": "app.settings.production"
+                },
+                {
+                    "name": "ENABLE_CHARGEBEE",
+                    "value": "True"
+                },
+                {
+                    "name": "ENABLE_TELEMETRY",
+                    "value": "False"
+                },
+                {
+                    "name": "ENVIRONMENT",
+                    "value": "production"
+                },
+                {
+                    "name": "ENVIRONMENTS_TABLE_NAME_DYNAMO",
+                    "value": "flagsmith_environments"
+                },
+                {
+                    "name": "FE_E2E_TEST_USER_EMAIL",
+                    "value": "nightwatch@solidstategroup.com"
+                },
+                {
+                    "name": "GITHUB_CLIENT_ID",
+                    "value": "b706a0da3e9d3115ea9d"
+                },
+                {
+                    "name": "GUNICORN_WORKERS",
+                    "value": "3"
+                },
+                {
+                    "name": "IDENTITIES_TABLE_NAME_DYNAMO",
+                    "value": "flagsmith_identities"
+                },
+                {
+                    "name": "INFLUXDB_BUCKET",
+                    "value": "api_prod"
+                },
+                {
+                    "name": "INFLUXDB_ORG",
+                    "value": "ben.rometsch@bullet-train.io"
+                },
+                {
+                    "name": "INFLUXDB_URL",
+                    "value": "https://eu-central-1-1.aws.cloud2.influxdata.com"
+                },
+                {
+                    "name": "MAILERLITE_NEW_USER_GROUP_ID",
+                    "value": "110227625"
+                },
+                {
+                    "name": "OAUTH_CLIENT_ID",
+                    "value": "232959427810-br6ltnrgouktp0ngsbs04o14ueb9rch0.apps.googleusercontent.com"
+                },
+                {
+                    "name": "PROJECT_METADATA_TABLE_NAME_DYNAMO",
+                    "value": "flagsmith_project_metadata"
+                },
+                {
+                    "name": "SECURE_PROXY_SSL_HEADER_NAME",
+                    "value": "HTTP_CLOUDFRONT_FORWARDED_PROTO"
+                },
+                {
+                    "name": "SENDER_EMAIL",
+                    "value": "support@flagsmith.com"
+                },
+                {
+                    "name": "SENTRY_TRACE_SAMPLE_RATE",
+                    "value": "0.0005"
+                },
+                {
+                    "name": "SLACK_CLIENT_ID",
+                    "value": "937916178726.1924685747446"
                 }
             ],
             "secrets": [
                 {
+                    "name": "CHARGEBEE_API_KEY",
+                    "valueFrom": "arn:aws:secretsmanager:eu-west-2:084060095745:secret:ECS-API-LxUiIQ:CHARGEBEE_API_KEY::"
+                },
+                {
                     "name": "DATABASE_URL",
-                    "valueFrom": "arn:aws:secretsmanager:eu-west-2:084060095745:secret:DATABASE_URL-wpvVMo:DATABASE_URL::"
+                    "valueFrom": "arn:aws:secretsmanager:eu-west-2:084060095745:secret:ECS-API-LxUiIQ:DATABASE_URL::"
+                },
+                {
+                    "name": "DJANGO_SECRET_KEY",
+                    "valueFrom": "arn:aws:secretsmanager:eu-west-2:084060095745:secret:ECS-API-LxUiIQ:DJANGO_SECRET_KEY::"
+                },
+                {
+                    "name": "E2E_TEST_AUTH_TOKEN",
+                    "valueFrom": "arn:aws:secretsmanager:eu-west-2:084060095745:secret:ECS-API-LxUiIQ:E2E_TEST_AUTH_TOKEN::"
+                },
+                {
+                    "name": "FORCE_SENTRY_TRACE_KEY",
+                    "valueFrom": "arn:aws:secretsmanager:eu-west-2:084060095745:secret:ECS-API-LxUiIQ:FORCE_SENTRY_TRACE_KEY::"
+                },
+                {
+                    "name": "GITHUB_CLIENT_SECRET",
+                    "valueFrom": "arn:aws:secretsmanager:eu-west-2:084060095745:secret:ECS-API-LxUiIQ:GITHUB_CLIENT_SECRET::"
+                },
+                {
+                    "name": "INFLUXDB_TOKEN",
+                    "valueFrom": "arn:aws:secretsmanager:eu-west-2:084060095745:secret:ECS-API-LxUiIQ:INFLUXDB_TOKEN::"
+                },
+                {
+                    "name": "MAILERLITE_API_KEY",
+                    "valueFrom": "arn:aws:secretsmanager:eu-west-2:084060095745:secret:ECS-API-LxUiIQ:MAILERLITE_API_KEY::"
+                },
+                {
+                    "name": "OAUTH_CLIENT_SECRET",
+                    "valueFrom": "arn:aws:secretsmanager:eu-west-2:084060095745:secret:ECS-API-LxUiIQ:OAUTH_CLIENT_SECRET::"
+                },
+                {
+                    "name": "SENDGRID_API_KEY",
+                    "valueFrom": "arn:aws:secretsmanager:eu-west-2:084060095745:secret:ECS-API-LxUiIQ:SENDGRID_API_KEY::"
+                },
+                {
+                    "name": "SENTRY_SDK_DSN",
+                    "valueFrom": "arn:aws:secretsmanager:eu-west-2:084060095745:secret:ECS-API-LxUiIQ:SENTRY_SDK_DSN::"
+                },
+                {
+                    "name": "SLACK_CLIENT_SECRET",
+                    "valueFrom": "arn:aws:secretsmanager:eu-west-2:084060095745:secret:ECS-API-LxUiIQ:SLACK_CLIENT_SECRET::"
                 }
             ],
             "logConfiguration": {
