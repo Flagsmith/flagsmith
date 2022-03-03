@@ -11,11 +11,7 @@ from audit.models import (
 )
 
 # noinspection PyUnresolvedReferences
-from .models import (
-    FeatureState,
-    HistoricalFeatureSegment,
-    HistoricalFeatureState,
-)
+from .models import FeatureState, HistoricalFeatureSegment
 from .tasks import trigger_feature_state_change_webhooks
 
 logger = logging.getLogger(__name__)
