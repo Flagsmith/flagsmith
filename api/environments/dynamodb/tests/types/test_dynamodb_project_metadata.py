@@ -1,10 +1,7 @@
 from datetime import datetime
 from decimal import Decimal
 
-from environments.dynamodb.types import (
-    DynamoProjectMetadata,
-    ProjectIdentityMigrationStatus,
-)
+from environments.dynamodb.types import DynamoProjectMetadata
 
 
 def test_get_or_new_returns_instance_with_default_values_if_document_does_not_exists(
