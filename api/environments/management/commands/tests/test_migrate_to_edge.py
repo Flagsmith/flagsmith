@@ -8,19 +8,17 @@ def test_calling_migrate_to_edge_calls_migrate_identities_with_correct_arguments
 ):
     # Given
     project_id = 1
-    mocked_dynamo_wrapper = mocker.patch(
-        "environments.management.commands.migrate_to_edge.DynamoIdentityWrapper"
+    mocked_identity_migrator = mocker.patch(
+        "environments.management.commands.migrate_to_edge.IdentityMigrator"
     )
-    mocked_can_migrate = mocker.MagicMock(return_value=True)
-    mocked_dynamo_wrapper.return_value.can_migrate = mocked_can_migrate
+    mocked_identity_migrator.return_value.can_migrate = True
 
     # When
     call_command("migrate_to_edge", project_id)
 
     # Then
-    mocked_dynamo_wrapper.assert_called_with()
-    mocked_can_migrate.assert_called_with(project_id)
-    mocked_dynamo_wrapper.return_value.migrate_identities.assert_called_with(project_id)
+    mocked_identity_migrator.assert_called_with(project_id)
+    mocked_identity_migrator.return_value.migrate.assert_called_with()
 
 
 def test_calling_migrate_to_edge_raises_command_error_if_identities_are_already_migrated(
@@ -28,17 +26,16 @@ def test_calling_migrate_to_edge_raises_command_error_if_identities_are_already_
 ):
     # Given
     project_id = 1
-    mocked_dynamo_wrapper = mocker.patch(
-        "environments.management.commands.migrate_to_edge.DynamoIdentityWrapper"
+    project_id = 1
+    mocked_identity_migrator = mocker.patch(
+        "environments.management.commands.migrate_to_edge.IdentityMigrator"
     )
-    mocked_can_migrate = mocker.MagicMock(return_value=False)
-    mocked_dynamo_wrapper.return_value.can_migrate = mocked_can_migrate
+    mocked_identity_migrator.return_value.can_migrate = False
 
     # When
     with pytest.raises(CommandError):
         call_command("migrate_to_edge", project_id)
 
     # Then
-    mocked_dynamo_wrapper.assert_called_with()
-    mocked_can_migrate.assert_called_with(project_id)
-    mocked_dynamo_wrapper.return_value.migrate_identities.assert_not_called()
+    mocked_identity_migrator.assert_called_with(project_id)
+    mocked_identity_migrator.return_value.migrate.assert_not_called()

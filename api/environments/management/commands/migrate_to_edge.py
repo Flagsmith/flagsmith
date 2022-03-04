@@ -1,6 +1,6 @@
 from django.core.management.base import BaseCommand, CommandError
 
-from environments.dynamodb import DynamoIdentityWrapper
+from environments.dynamodb.migrator import IdentityMigrator
 
 
 class Command(BaseCommand):
@@ -13,9 +13,9 @@ class Command(BaseCommand):
 
     def handle(self, *args, **options):
         project_id = options["project"]
-        identity_wrapper = DynamoIdentityWrapper()
-        if not identity_wrapper.can_migrate(project_id):
+        identity_migrator = IdentityMigrator(project_id)
+        if not identity_migrator.can_migrate:
             raise CommandError(
                 "Identities migration for this project is either done or is in progress"
             )
-        identity_wrapper.migrate_identities(project_id)
+        identity_migrator.migrate()

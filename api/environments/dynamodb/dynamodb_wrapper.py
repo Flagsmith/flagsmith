@@ -4,16 +4,6 @@ import boto3
 from boto3.dynamodb.conditions import Key
 from django.conf import settings
 from django.core.exceptions import ObjectDoesNotExist
-from django.db.models import Prefetch
-from flag_engine.django_transform.document_builders import (
-    build_identity_document,
-)
-
-from environments.models import Environment
-from features.models import FeatureState
-from features.multivariate.models import MultivariateFeatureStateValue
-
-from .types import DynamoProjectMetadata, ProjectIdentityMigrationStatus
 
 
 class DynamoIdentityWrapper:
@@ -84,49 +74,3 @@ class DynamoIdentityWrapper:
         if start_key:
             query_kwargs.update(ExclusiveStartKey=start_key)
         return self.query_items(**query_kwargs)
-
-    def get_migration_status(self, project_id: int) -> ProjectIdentityMigrationStatus:
-        project_metadata = DynamoProjectMetadata.get_or_new(project_id)
-        if not project_metadata.migration_start_time:
-            return ProjectIdentityMigrationStatus.MIGRATION_NOT_STARTED
-        elif (
-            project_metadata.migration_start_time
-            and not project_metadata.migration_end_time
-        ):
-            return ProjectIdentityMigrationStatus.MIGRATION_IN_PROGRESS
-
-        return ProjectIdentityMigrationStatus.MIGRATION_COMPLETED
-
-    def is_migration_done(self, project_id: int) -> bool:
-        migration_status = self.get_migration_status(project_id)
-        return migration_status == ProjectIdentityMigrationStatus.MIGRATION_COMPLETED
-
-    def can_migrate(self, project_id: int) -> bool:
-        migration_status = self.get_migration_status(project_id)
-        return migration_status == ProjectIdentityMigrationStatus.MIGRATION_NOT_STARTED
-
-    def migrate_identities(self, project_id: int):
-        project_metadata = DynamoProjectMetadata.get_or_new(project_id)
-        project_metadata.start_identity_migration()
-
-        with self._table.batch_writer() as batch:
-            for environment in Environment.objects.filter(project_id=project_id):
-                for identity in environment.identities.all().prefetch_related(
-                    "identity_traits",
-                    Prefetch(
-                        "identity_features",
-                        queryset=FeatureState.objects.select_related(
-                            "feature", "feature_state_value"
-                        ),
-                    ),
-                    Prefetch(
-                        "identity_features__multivariate_feature_state_values",
-                        queryset=MultivariateFeatureStateValue.objects.select_related(
-                            "multivariate_feature_option"
-                        ),
-                    ),
-                ):
-                    identity_document = build_identity_document(identity)
-                    batch.put_item(Item=identity_document)
-
-        project_metadata.finish_identity_migration()
