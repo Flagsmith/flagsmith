@@ -34,6 +34,14 @@ class DynamoProjectMetadata:
             return cls(**document)
         return cls(id=project_id)
 
+    @property
+    def identity_migration_status(self) -> ProjectIdentityMigrationStatus:
+        if not self.migration_start_time:
+            return ProjectIdentityMigrationStatus.MIGRATION_NOT_STARTED
+        elif self.migration_start_time and not self.migration_end_time:
+            return ProjectIdentityMigrationStatus.MIGRATION_IN_PROGRESS
+        return ProjectIdentityMigrationStatus.MIGRATION_COMPLETED
+
     def start_identity_migration(self):
         self.migration_start_time = datetime.now().isoformat()
         self._save()

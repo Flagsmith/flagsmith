@@ -3,7 +3,7 @@ from flag_engine.django_transform.document_builders import (
     build_identity_document,
 )
 
-from environments.models import Environment
+from environments.identities.models import Identity
 from features.models import FeatureState
 from features.multivariate.models import MultivariateFeatureStateValue
 
@@ -17,15 +17,7 @@ class IdentityMigrator:
 
     @property
     def migration_status(self) -> ProjectIdentityMigrationStatus:
-        if not self.project_metadata.migration_start_time:
-            return ProjectIdentityMigrationStatus.MIGRATION_NOT_STARTED
-        elif (
-            self.project_metadata.migration_start_time
-            and not self.project_metadata.migration_end_time
-        ):
-            return ProjectIdentityMigrationStatus.MIGRATION_IN_PROGRESS
-
-        return ProjectIdentityMigrationStatus.MIGRATION_COMPLETED
+        return self.project_metadata.identity_migration_status
 
     @property
     def is_migration_done(self) -> bool:
@@ -41,24 +33,22 @@ class IdentityMigrator:
         self.project_metadata.start_identity_migration()
         project_id = self.project_metadata.id
         identity_wrapper = DynamoIdentityWrapper()
-        with identity_wrapper.table.batch_writer() as batch:
-            for environment in Environment.objects.filter(project_id=project_id):
-                for identity in environment.identities.all().prefetch_related(
-                    "identity_traits",
-                    Prefetch(
-                        "identity_features",
-                        queryset=FeatureState.objects.select_related(
-                            "feature", "feature_state_value"
-                        ),
-                    ),
-                    Prefetch(
-                        "identity_features__multivariate_feature_state_values",
-                        queryset=MultivariateFeatureStateValue.objects.select_related(
-                            "multivariate_feature_option"
-                        ),
-                    ),
-                ):
-                    identity_document = build_identity_document(identity)
-                    batch.put_item(Item=identity_document)
-
+        identities = Identity.objects.filter(
+            environment__project__id=project_id
+        ).prefetch_related(
+            "identity_traits",
+            Prefetch(
+                "identity_features",
+                queryset=FeatureState.objects.select_related(
+                    "feature", "feature_state_value"
+                ),
+            ),
+            Prefetch(
+                "identity_features__multivariate_feature_state_values",
+                queryset=MultivariateFeatureStateValue.objects.select_related(
+                    "multivariate_feature_option"
+                ),
+            ),
+        )
+        identity_wrapper.write_identities(identities)
         self.project_metadata.finish_identity_migration()

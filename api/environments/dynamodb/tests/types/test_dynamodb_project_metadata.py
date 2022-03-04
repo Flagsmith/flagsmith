@@ -1,7 +1,12 @@
 from datetime import datetime
 from decimal import Decimal
 
-from environments.dynamodb.types import DynamoProjectMetadata
+import pytest
+
+from environments.dynamodb.types import (
+    DynamoProjectMetadata,
+    ProjectIdentityMigrationStatus,
+)
 
 
 def test_get_or_new_returns_instance_with_default_values_if_document_does_not_exists(
@@ -77,6 +82,33 @@ def test_start_identity_migration_calls_put_item_with_correct_arguments(mocker):
             "migration_start_time": migration_start_time.isoformat(),
         }
     )
+
+
+@pytest.mark.parametrize(
+    "instance, status",
+    (
+        (
+            DynamoProjectMetadata(id=1),
+            ProjectIdentityMigrationStatus.MIGRATION_NOT_STARTED,
+        ),
+        (
+            DynamoProjectMetadata(
+                id=1, migration_start_time=datetime.now().isoformat()
+            ),
+            ProjectIdentityMigrationStatus.MIGRATION_IN_PROGRESS,
+        ),
+        (
+            DynamoProjectMetadata(
+                id=1,
+                migration_start_time=datetime.now().isoformat(),
+                migration_end_time=datetime.now().isoformat(),
+            ),
+            ProjectIdentityMigrationStatus.MIGRATION_COMPLETED,
+        ),
+    ),
+)
+def test_identity_migration_status(mocker, instance, status):
+    assert instance.identity_migration_status == status
 
 
 def test_finish_identity_migration_calls_put_item_with_correct_arguments(
