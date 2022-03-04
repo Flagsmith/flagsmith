@@ -62,7 +62,7 @@ def test_start_identity_migration_calls_put_item_with_correct_arguments(mocker):
         "ResponseMetadata": {"some_key": "some_value"}
     }
     mocked_datetime = mocker.patch("environments.dynamodb.types.datetime")
-    mocked_datetime.now = mocker.MagicMock(return_value=migration_start_time)
+    mocked_datetime.now.return_value = migration_start_time
 
     project_metadata = DynamoProjectMetadata.get_or_new(project_id)
 
@@ -91,7 +91,7 @@ def test_finish_identity_migration_calls_put_item_with_correct_arguments(
         "environments.dynamodb.types.project_metadata_table"
     )
     mocked_datetime = mocker.patch("environments.dynamodb.types.datetime")
-    mocked_datetime.now = mocker.MagicMock(return_value=migration_end_time)
+    mocked_datetime.now.return_value = migration_end_time
 
     project_metadata = DynamoProjectMetadata(
         id=project_id, migration_start_time=migration_start_time

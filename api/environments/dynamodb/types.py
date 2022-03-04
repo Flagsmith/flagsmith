@@ -21,8 +21,7 @@ class ProjectIdentityMigrationStatus(enum.Enum):
 
 @dataclass
 class DynamoProjectMetadata:
-    """Internal class used by `DynamoIdentityWrapper` to track wether Identity
-    data(for a given project) has been migrated or not"""
+    """Internal class used by `IdentityMigrator` to store identity migration state"""
 
     id: int
     migration_start_time: str = None

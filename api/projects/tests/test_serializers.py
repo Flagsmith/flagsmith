@@ -2,7 +2,7 @@ from environments.dynamodb.migrator import IdentityMigrator
 from projects.serializers import ProjectSerializer
 
 
-def test_ProjectSerializer_get_is_identity_migration_done_calls_dynamo_wrapper_with_correct_arguments(
+def test_ProjectSerializer_get_is_identity_migration_done_calls_migrator_with_correct_arguments(
     mocker, project, settings
 ):
     # Given

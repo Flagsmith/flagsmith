@@ -41,7 +41,7 @@ class IdentityMigrator:
         self.project_metadata.start_identity_migration()
         project_id = self.project_metadata.id
         identity_wrapper = DynamoIdentityWrapper()
-        with identity_wrapper._table.batch_writer() as batch:
+        with identity_wrapper.table.batch_writer() as batch:
             for environment in Environment.objects.filter(project_id=project_id):
                 for identity in environment.identities.all().prefetch_related(
                     "identity_traits",

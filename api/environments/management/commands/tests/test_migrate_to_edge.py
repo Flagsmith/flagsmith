@@ -2,6 +2,8 @@ import pytest
 from django.core.management import call_command
 from django.core.management.base import CommandError
 
+from environments.dynamodb.migrator import IdentityMigrator
+
 
 def test_calling_migrate_to_edge_calls_migrate_identities_with_correct_arguments(
     mocker,
@@ -9,7 +11,8 @@ def test_calling_migrate_to_edge_calls_migrate_identities_with_correct_arguments
     # Given
     project_id = 1
     mocked_identity_migrator = mocker.patch(
-        "environments.management.commands.migrate_to_edge.IdentityMigrator"
+        "environments.management.commands.migrate_to_edge.IdentityMigrator",
+        spec=IdentityMigrator,
     )
     mocked_identity_migrator.return_value.can_migrate = True
 
@@ -26,9 +29,9 @@ def test_calling_migrate_to_edge_raises_command_error_if_identities_are_already_
 ):
     # Given
     project_id = 1
-    project_id = 1
     mocked_identity_migrator = mocker.patch(
-        "environments.management.commands.migrate_to_edge.IdentityMigrator"
+        "environments.management.commands.migrate_to_edge.IdentityMigrator",
+        spec=IdentityMigrator,
     )
     mocked_identity_migrator.return_value.can_migrate = False
 

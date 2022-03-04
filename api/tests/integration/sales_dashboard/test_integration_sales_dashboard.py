@@ -40,7 +40,7 @@ def test_migrate_identities_to_edge_calls_identity_migrator_with_correct_argumen
     mocked_identity_migrator.assert_called_with(project)
 
 
-def test_migrate_identities_to_edge_does_not_call_migrate_identity_if_migration_is_already_done(
+def test_migrate_identities_to_edge_does_not_call_migrate_if_migration_is_already_done(
     superuser_authenticated_client, mocker, project, settings
 ):
     # Given
@@ -59,7 +59,7 @@ def test_migrate_identities_to_edge_does_not_call_migrate_identity_if_migration_
     # Then
     assert response.status_code == status.HTTP_302_FOUND
     mocked_identity_migrator.assert_called_with(project)
-    mocked_identity_migrator.return_value.migrate_identities.assert_not_called()
+    mocked_identity_migrator.return_value.migrate.assert_not_called()
 
 
 def test_migrate_identities_to_edge_returns_400_if_dynamodb_is_not_enabled(
