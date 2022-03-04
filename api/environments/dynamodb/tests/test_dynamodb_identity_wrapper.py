@@ -6,7 +6,7 @@ from environments.dynamodb import DynamoIdentityWrapper
 def test_get_item_from_uuid_calls_query_with_correct_argument(mocker):
     # Given
     dynamo_identity_wrapper = DynamoIdentityWrapper()
-    mocked_dynamo_table = mocker.patch.object(dynamo_identity_wrapper, "_table")
+    mocked_dynamo_table = mocker.patch.object(dynamo_identity_wrapper, "table")
     environment_key = "environment_key"
     identity_uuid = "test_uuid"
 
@@ -24,7 +24,7 @@ def test_delete_item_calls_dynamo_delete_item_with_correct_arguments(mocker):
     # Given
     dynamo_identity_wrapper = DynamoIdentityWrapper()
     composite_key = "test_key"
-    mocked_dynamo_table = mocker.patch.object(dynamo_identity_wrapper, "_table")
+    mocked_dynamo_table = mocker.patch.object(dynamo_identity_wrapper, "table")
 
     # When
     dynamo_identity_wrapper.delete_item(composite_key)
@@ -39,7 +39,7 @@ def test_get_item_calls_dynamo_get_item_with_correct_arguments(mocker):
     # Given
     dynamo_identity_wrapper = DynamoIdentityWrapper()
     composite_key = "test_key"
-    mocked_dynamo_table = mocker.patch.object(dynamo_identity_wrapper, "_table")
+    mocked_dynamo_table = mocker.patch.object(dynamo_identity_wrapper, "table")
 
     # When
     dynamo_identity_wrapper.get_item(composite_key)
@@ -54,7 +54,7 @@ def test_get_all_items_without_start_key_calls_query_with_correct_arguments(mock
     # Given
     dynamo_identity_wrapper = DynamoIdentityWrapper()
     environment_key = "environment_key"
-    mocked_dynamo_table = mocker.patch.object(dynamo_identity_wrapper, "_table")
+    mocked_dynamo_table = mocker.patch.object(dynamo_identity_wrapper, "table")
 
     # When
     dynamo_identity_wrapper.get_all_items(environment_key, 999)
@@ -72,7 +72,7 @@ def test_get_all_items_with_start_key_calls_query_with_correct_arguments(mocker)
     dynamo_identity_wrapper = DynamoIdentityWrapper()
 
     environment_key = "environment_key"
-    mocked_dynamo_table = mocker.patch.object(dynamo_identity_wrapper, "_table")
+    mocked_dynamo_table = mocker.patch.object(dynamo_identity_wrapper, "table")
     start_key = {"key": "value"}
 
     # When
@@ -91,7 +91,7 @@ def test_search_items_with_identifier_calls_query_with_correct_arguments(mocker)
     dynamo_identity_wrapper = DynamoIdentityWrapper()
     environment_key = "environment_key"
     identifier = "test_user"
-    mocked_dynamo_table = mocker.patch.object(dynamo_identity_wrapper, "_table")
+    mocked_dynamo_table = mocker.patch.object(dynamo_identity_wrapper, "table")
     start_key = {"key": "value"}
     search_function = lambda x: Key("identifier").eq(x)  # noqa: E731
 

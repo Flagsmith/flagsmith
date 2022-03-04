@@ -8,27 +8,27 @@ from django.core.exceptions import ObjectDoesNotExist
 
 class DynamoIdentityWrapper:
     def __init__(self):
-        self._table = None
+        self.table = None
         if settings.IDENTITIES_TABLE_NAME_DYNAMO:
-            self._table = boto3.resource("dynamodb").Table(
+            self.table = boto3.resource("dynamodb").Table(
                 settings.IDENTITIES_TABLE_NAME_DYNAMO
             )
 
     @property
     def is_enabled(self) -> bool:
-        return self._table is not None
+        return self.table is not None
 
     def query_items(self, *args, **kwargs):
-        return self._table.query(*args, **kwargs)
+        return self.table.query(*args, **kwargs)
 
     def put_item(self, identity_dict: dict):
-        self._table.put_item(Item=identity_dict)
+        self.table.put_item(Item=identity_dict)
 
     def get_item(self, composite_key: str) -> typing.Optional[dict]:
-        return self._table.get_item(Key={"composite_key": composite_key}).get("Item")
+        return self.table.get_item(Key={"composite_key": composite_key}).get("Item")
 
     def delete_item(self, composite_key: str):
-        self._table.delete_item(Key={"composite_key": composite_key})
+        self.table.delete_item(Key={"composite_key": composite_key})
 
     def get_item_from_uuid(self, environment_api_key: str, uuid: str):
         filter_expression = Key("identity_uuid").eq(uuid)

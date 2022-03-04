@@ -18,14 +18,15 @@ def test_migrate_identities_calls_internal_methods_with_correct_arguments(
     mocked_project_metadata = mocker.patch(
         "environments.dynamodb.migrator.DynamoProjectMetadata"
     )
-    mocked_project_metadata_instance = mocker.MagicMock(spec=DynamoProjectMetadata)
-    mocked_project_metadata_instance.id = project.id
+    mocked_project_metadata_instance = mocker.MagicMock(
+        spec=DynamoProjectMetadata, id=project.id
+    )
     mocked_project_metadata.get_or_new.return_value = mocked_project_metadata_instance
     mocked_dynamo_table = mocker.MagicMock()
     dynamo_identity_wrapper = mocker.patch(
         "environments.dynamodb.migrator.DynamoIdentityWrapper"
     )
-    dynamo_identity_wrapper.return_value._table = mocked_dynamo_table
+    dynamo_identity_wrapper.return_value.table = mocked_dynamo_table
     expected_identity_document = build_identity_document(identity)
 
     identity_migrator = IdentityMigrator(project.id)
