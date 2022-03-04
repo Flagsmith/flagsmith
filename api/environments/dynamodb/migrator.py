@@ -1,7 +1,4 @@
 from django.db.models import Prefetch
-from flag_engine.django_transform.document_builders import (
-    build_identity_document,
-)
 
 from environments.identities.models import Identity
 from features.models import FeatureState
