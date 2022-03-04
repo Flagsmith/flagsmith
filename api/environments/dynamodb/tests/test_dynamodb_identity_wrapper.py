@@ -1,9 +1,4 @@
-from datetime import datetime
-
 from boto3.dynamodb.conditions import Key
-from flag_engine.django_transform.document_builders import (
-    build_identity_document,
-)
 
 from environments.dynamodb import DynamoIdentityWrapper
 
