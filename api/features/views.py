@@ -224,8 +224,10 @@ class BaseFeatureStateViewSet(viewsets.ModelViewSet):
             api_key=environment_api_key,
         )
 
-        queryset = FeatureState.objects.filter(
-            environment=environment, feature_segment=None
+        queryset = (
+            FeatureState.objects.filter(environment=environment, feature_segment=None)
+            .select_related("feature", "feature_state_value")
+            .prefetch_related("multivariate_feature_state_values")
         )
 
         if identity_pk:
