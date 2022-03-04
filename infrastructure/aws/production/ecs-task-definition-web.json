@@ -77,6 +77,10 @@
                     "value": "3"
                 },
                 {
+                    "name": "GUNICORN_THREADS",
+                    "value": "15"
+                },
+                {
                     "name": "IDENTITIES_TABLE_NAME_DYNAMO",
                     "value": "flagsmith_identities"
                 },
