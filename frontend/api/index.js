@@ -2,20 +2,20 @@ require('dotenv').config();
 
 const exphbs = require('express-handlebars');
 const express = require('express');
-const spm = require('./middleware/single-page-middleware');
 const bodyParser = require('body-parser');
+const spm = require('./middleware/single-page-middleware');
 
 const app = express();
 
 const SLACK_TOKEN = process.env.SLACK_TOKEN;
 const slackClient = SLACK_TOKEN && require('./slack-client');
+
 const postToSlack = process.env.VERCEL_ENV === 'production';
 
 const isDev = process.env.NODE_ENV !== 'production';
 const port = process.env.PORT || 8080;
 
 app.get('/config/project-overrides', (req, res) => {
-
     const getVariable = ({ name, value }) => {
         if (!value || value === 'undefined') {
             if (typeof value === 'boolean') {
@@ -40,7 +40,7 @@ app.get('/config/project-overrides', (req, res) => {
         }
         return envVar === 'true' || envVar === '1';
     };
-    let sha = '';
+    const sha = '';
     /*
     todo: implement across docker and vercel
     if (fs.existsSync(path.join(__dirname, 'CI_COMMIT_SHA'))) {
@@ -49,7 +49,7 @@ app.get('/config/project-overrides', (req, res) => {
     */
 
     const values = [
-        { name: 'preventSignup', value: envToBool('PREVENT_SIGNUP', false) ||  !envToBool('ALLOW_SIGNUPS', true) }, // todo:  deprecate ALLOW_SIGNUPS
+        { name: 'preventSignup', value: envToBool('PREVENT_SIGNUP', false) || !envToBool('ALLOW_SIGNUPS', true) }, // todo:  deprecate ALLOW_SIGNUPS
         { name: 'superUserCreateOnly', value: envToBool('ONLY_SUPERUSERS_CAN_CREATE_ORGANISATIONS', false) },
         { name: 'flagsmith', value: process.env.FLAGSMITH_ON_FLAGSMITH_API_KEY },
         { name: 'heap', value: process.env.HEAP_API_KEY },
@@ -112,7 +112,13 @@ app.get('/health', (req, res) => {
 
 app.use(bodyParser.json());
 app.use(spm);
-
+const genericWebsite = (url) => {
+    if (!url) return true;
+    if (url.includes('hotmail.') || url.includes('gmail.') || url.includes('icloud.') || url.includes('flagsmith.com')) {
+        return true;
+    }
+    return false;
+};
 app.post('/api/event', (req, res) => {
     try {
         const body = req.body;
@@ -122,22 +128,24 @@ app.post('/api/event', (req, res) => {
             let url = '';
             if (match && match[0]) {
                 const urlMatch = match[0].split('@')[1];
-                url = ` https://www.similarweb.com/website/${urlMatch}`;
+                if (!genericWebsite(urlMatch)) {
+                    url = ` https://www.similarweb.com/website/${urlMatch}`;
+                }
             }
-            slackClient(body.event + url, channel).finally(()=>{
-                res.json({})
-            })
+            slackClient(body.event + url, channel).finally(() => {
+                res.json({});
+            });
         } else {
-            res.json({})
+            res.json({});
         }
     } catch (e) {
-        console.log("Error posting to from /api/event:" + e);
+        console.log(`Error posting to from /api/event:${e}`);
     }
 });
 
 // Catch all to render index template
 app.get('/', (req, res) => {
-    var linkedin = process.env.LINKEDIN || "";
+    const linkedin = process.env.LINKEDIN || '';
     return res.render('index', {
         isDev,
         linkedin,
