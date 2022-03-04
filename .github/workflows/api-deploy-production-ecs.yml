@@ -47,7 +47,7 @@ jobs:
             - name: Build, tag, and push image to Amazon ECR
               id: build-image
               env:
-                  IMAGE_TAG: ${{ github.sha }}
+                  IMAGE_TAG: ${{ github.event.release.tag_name }}
               run: |
                   cd api
                   docker build -t $ECR_REPOSITORY:$IMAGE_TAG -f Dockerfile .
