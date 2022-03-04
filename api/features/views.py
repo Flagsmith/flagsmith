@@ -99,7 +99,9 @@ class FeatureViewSet(viewsets.ModelViewSet):
     def get_queryset(self):
         user_projects = self.request.user.get_permitted_projects(["VIEW_PROJECT"])
         project = get_object_or_404(user_projects, pk=self.kwargs["project_pk"])
-        return project.features.all().prefetch_related("multivariate_options")
+        return project.features.all().prefetch_related(
+            "multivariate_options", "owners", "tags"
+        )
 
     def perform_create(self, serializer):
         serializer.save(
