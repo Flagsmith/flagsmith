@@ -1,6 +1,6 @@
 from django.core.management.base import BaseCommand, CommandError
 
-from environments.dynamodb import DynamoIdentityWrapper
+from environments.dynamodb.migrator import IdentityMigrator
 
 
 class Command(BaseCommand):
@@ -10,18 +10,12 @@ class Command(BaseCommand):
         parser.add_argument(
             "project", type=int, help="Id of the project being migrated"
         )
-        parser.add_argument(
-            "-f",
-            "--force",
-            action="store_true",
-            help="Force migrate Identities of the project",
-        )
 
     def handle(self, *args, **options):
         project_id = options["project"]
-        identity_wrapper = DynamoIdentityWrapper()
-        if identity_wrapper.is_migration_done(project_id) and not options["force"]:
+        identity_migrator = IdentityMigrator(project_id)
+        if not identity_migrator.can_migrate:
             raise CommandError(
-                "Identities for this project are already migrated. Use -f to force migrate"
+                "Identities migration for this project is either done or is in progress"
             )
-        identity_wrapper.migrate_identities(project_id)
+        identity_migrator.migrate()
