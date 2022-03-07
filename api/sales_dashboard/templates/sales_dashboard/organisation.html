@@ -62,7 +62,7 @@
                             <th>Segments</th>
                             <th>Dynamo DB Enabled</th>
                             <th>Identity Count</th>
-                            <th>Is Identity Migration Done</th>
+                            <th>Identity Migration Status</th>
                             <th>Migrate Identity</th>
 
                         </tr>
@@ -83,7 +83,7 @@
                             <td>
                             <form method="POST" class="form-inline" action="{% url 'sales_dashboard:migrate_identities' project.id %}">
                                 {% csrf_token %}
-                                <input value="migrate identities" {% if identity_count_dict|get_item:project.id > max_migratable_identities or identity_migration_status_dict|get_item:project.id  %} {{'disabled'}} {% endif %} type="submit"/>
+                                <input value="migrate identities" {% if identity_migration_status_dict|get_item:project.id != "MIGRATION_NOT_STARTED" %} {{'disabled'}} {% endif %} type="submit"/>
                             </form>
                             </td>
                         </tr>

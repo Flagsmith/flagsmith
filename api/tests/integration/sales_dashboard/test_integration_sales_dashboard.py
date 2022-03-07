@@ -1,6 +1,8 @@
 from django.urls import reverse
 from rest_framework import status
 
+from environments.dynamodb.migrator import IdentityMigrator
+
 
 def test_sales_dashboard_index(superuser_authenticated_client):
     """
@@ -17,51 +19,54 @@ def test_sales_dashboard_index(superuser_authenticated_client):
     assert response.status_code == 200
 
 
-def test_migrate_identities_to_edge_calls_migrate_identity_with_correct_arguments_if_migration_is_not_done(
-    superuser_authenticated_client, mocker, project
+def test_migrate_identities_to_edge_calls_identity_migrator_with_correct_arguments_if_migration_is_not_done(
+    superuser_authenticated_client, mocker, project, settings
 ):
     # Given
+    settings.PROJECT_METADATA_TABLE_NAME_DYNAMO = "project_metadata_table"
     url = reverse("sales_dashboard:migrate_identities", args=[project])
 
-    mocked_dynamo_wrapper = mocker.patch("sales_dashboard.views.DynamoIdentityWrapper")
-    mocked_is_migration_done = mocker.MagicMock(return_value=False)
-    mocked_dynamo_wrapper.return_value.is_migration_done = mocked_is_migration_done
+    mocked_identity_migrator = mocker.patch(
+        "sales_dashboard.views.IdentityMigrator", spec=IdentityMigrator
+    )
+
+    mocked_identity_migrator.return_value.can_migrate = True
 
     # When
     response = superuser_authenticated_client.post(url)
 
     # Then
     assert response.status_code == status.HTTP_302_FOUND
-    mocked_dynamo_wrapper.assert_called_with()
-    mocked_is_migration_done.assert_called_with(project)
-    mocked_dynamo_wrapper.return_value.migrate_identities.assert_called_with(project)
+    mocked_identity_migrator.assert_called_with(project)
 
 
-def test_migrate_identities_to_edge_does_not_call_migrate_identity_with_correct_arguments_if_migration_is_already_done(
-    superuser_authenticated_client, mocker, project
+def test_migrate_identities_to_edge_does_not_call_migrate_if_migration_is_already_done(
+    superuser_authenticated_client, mocker, project, settings
 ):
     # Given
+    settings.PROJECT_METADATA_TABLE_NAME_DYNAMO = "project_metadata_table"
     url = reverse("sales_dashboard:migrate_identities", args=[project])
 
-    mocked_dynamo_wrapper = mocker.patch("sales_dashboard.views.DynamoIdentityWrapper")
-    mocked_is_migration_done = mocker.MagicMock(return_value=True)
-    mocked_dynamo_wrapper.return_value.is_migration_done = mocked_is_migration_done
+    mocked_identity_migrator = mocker.patch(
+        "sales_dashboard.views.IdentityMigrator", spec=IdentityMigrator
+    )
+
+    mocked_identity_migrator.return_value.can_migrate = False
 
     # When
     response = superuser_authenticated_client.post(url)
 
     # Then
     assert response.status_code == status.HTTP_302_FOUND
-    mocked_dynamo_wrapper.assert_called_with()
-    mocked_is_migration_done.assert_called_with(project)
-    mocked_dynamo_wrapper.return_value.migrate_identities.assert_not_called()
+    mocked_identity_migrator.assert_called_with(project)
+    mocked_identity_migrator.return_value.migrate.assert_not_called()
 
 
 def test_migrate_identities_to_edge_returns_400_if_dynamodb_is_not_enabled(
     superuser_authenticated_client, mocker, project, settings
 ):
     # Given
-    settings.IDENTITIES_TABLE_NAME_DYNAMO = None
+    settings.PROJECT_METADATA_TABLE_NAME_DYNAMO = None
     url = reverse("sales_dashboard:migrate_identities", args=[project])
 
     # When

@@ -1,6 +1,7 @@
+from django.conf import settings
 from rest_framework import serializers
 
-from environments.dynamodb import DynamoIdentityWrapper
+from environments.dynamodb.migrator import IdentityMigrator
 from permissions.serializers import CreateUpdateUserPermissionSerializerABC
 from projects.models import (
     Project,
@@ -28,9 +29,9 @@ class ProjectSerializer(serializers.ModelSerializer):
         )
 
     def get_is_identity_migration_done(self, obj: Project) -> bool:
-        identity_wrapper = DynamoIdentityWrapper()
-        if identity_wrapper.is_enabled:
-            identity_wrapper.is_migration_done(obj.id)
+        if settings.PROJECT_METADATA_TABLE_NAME_DYNAMO:
+            identity_migrator = IdentityMigrator(obj.id)
+            return identity_migrator.is_migration_done
         return False
 
 
