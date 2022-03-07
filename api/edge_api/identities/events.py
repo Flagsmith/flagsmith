@@ -3,7 +3,9 @@ import json
 import boto3
 from django.conf import settings
 
-client = boto3.client("events")
+events_client = None
+if settings.IDENTITY_MIGRATION_EVENT_BUS:
+    events_client = boto3.client("events")
 
 
 def send_migration_event(project_id: int):
@@ -14,4 +16,4 @@ def send_migration_event(project_id: int):
         "Detail": json.dumps({"project_id": project_id}),
     }
 
-    client.put_events(Entries=[event])
+    events_client.put_events(Entries=[event])

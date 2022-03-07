@@ -6,7 +6,7 @@ from edge_api.identities.events import send_migration_event
 def test_send_migration_event_calls_put_events_with_correct_arguments(mocker, settings):
     # Given
     project_id = 1
-    mocked_client = mocker.patch("edge_api.identities.events.client")
+    mocked_client = mocker.patch("edge_api.identities.events.events_client")
     event_bus_name = "identity_migration"
     settings.IDENTITY_MIGRATION_EVENT_BUS = event_bus_name
 
