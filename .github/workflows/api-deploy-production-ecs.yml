@@ -34,8 +34,10 @@ jobs:
               id: clone
               with:
                   fetch-depth: 0
-              run: |
-                echo ::set-output name=tag::${GITHUB_REF#refs/*/}
+
+            - name: Set ECR tag
+              id: vars
+              run: echo ::set-output name=tag::${GITHUB_REF#refs/*/}
 
             - name: Configure AWS Credentials
               uses: aws-actions/configure-aws-credentials@v1
@@ -51,7 +53,7 @@ jobs:
             - name: Build, tag, and push image to Amazon ECR
               id: build-image
               env:
-                  IMAGE_TAG: ${{ steps.clone.outputs.tag }}
+                  IMAGE_TAG: ${{ steps.vars.outputs.tag }}
               run: |
                   echo "Building docker image with URL: "
                   echo $ECR_REPOSITORY:$IMAGE_TAG
