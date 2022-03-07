@@ -20,7 +20,7 @@ from django.utils.safestring import mark_safe
 from django.views.generic import ListView
 from django.views.generic.edit import FormView
 
-from environments.dynamodb import DynamoIdentityWrapper
+from environments.dynamodb.migrator import IdentityMigrator
 from environments.identities.models import Identity
 from organisations.models import Organisation
 from projects.models import Project
@@ -29,7 +29,6 @@ from users.models import FFAdminUser
 from .forms import EmailUsageForm, MaxAPICallsForm, MaxSeatsForm
 
 OBJECTS_PER_PAGE = 50
-MAX_MIGRATABLE_IDENTITIES = 1000
 
 
 class OrganisationList(ListView):
@@ -127,17 +126,16 @@ def organisation_info(request, organisation_id):
 
     event_list, labels = get_event_list_for_organisation(organisation_id)
 
-    identity_wrapper = DynamoIdentityWrapper()
     identity_count_dict = {}
     identity_migration_status_dict = {}
     for project in organisation.projects.all():
         identity_count_dict[project.id] = Identity.objects.filter(
             environment__project=project
         ).count()
-        if identity_wrapper.is_enabled:
-            identity_migration_status_dict[
+        if settings.PROJECT_METADATA_TABLE_NAME_DYNAMO:
+            identity_migration_status_dict[project.id] = IdentityMigrator(
                 project.id
-            ] = identity_wrapper.is_migration_done(project.id)
+            ).migration_status.name
 
     context = {
         "organisation": organisation,
@@ -155,7 +153,6 @@ def organisation_info(request, organisation_id):
             for range_ in ("24h", "7d", "30d")
         },
         "identity_count_dict": identity_count_dict,
-        "max_migratable_identities": MAX_MIGRATABLE_IDENTITIES,
         "identity_migration_status_dict": identity_migration_status_dict,
     }
 
@@ -193,13 +190,11 @@ def update_max_api_calls(request, organisation_id):
 
 @staff_member_required
 def migrate_identities_to_edge(request, project_id):
-    identity_wrapper = DynamoIdentityWrapper()
-
-    if not identity_wrapper.is_enabled:
+    if not settings.PROJECT_METADATA_TABLE_NAME_DYNAMO:
         return HttpResponseBadRequest("DynamoDB is not enabled")
-
-    if not identity_wrapper.is_migration_done(project_id):
-        identity_wrapper.migrate_identities(project_id)
+    identity_migrator = IdentityMigrator(project_id)
+    if identity_migrator.can_migrate:
+        identity_migrator.migrate()
     return HttpResponseRedirect(reverse("sales_dashboard:index"))
 
 
