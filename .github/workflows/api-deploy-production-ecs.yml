@@ -28,10 +28,8 @@ jobs:
         environment: production
 
         steps:
-            #  Also get the release tag name to tag the Docker image with
             - name: Cloning repo
               uses: actions/checkout@v2
-              id: clone
               with:
                   fetch-depth: 0
 
