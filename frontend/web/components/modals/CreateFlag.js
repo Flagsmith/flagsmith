@@ -505,7 +505,6 @@ const CreateFlag = class extends Component {
                                   removeVariation={this.removeVariation}
                                 />
                             )}
-
                         </FormGroup>
                         <AddVariationButton onClick={this.addVariation}/>
                     </div>
