@@ -33,6 +33,10 @@ jobs:
               with:
                   fetch-depth: 0
 
+            - name: Set ECR tag
+              id: ecr-tag-variable
+              run: echo ::set-output name=tag::${GITHUB_REF#refs/*/}
+
             - name: Configure AWS Credentials
               uses: aws-actions/configure-aws-credentials@v1
               with:
@@ -47,8 +51,10 @@ jobs:
             - name: Build, tag, and push image to Amazon ECR
               id: build-image
               env:
-                  IMAGE_TAG: ${{ github.event.release.tag_name }}
+                  IMAGE_TAG: ${{ steps.ecr-tag-variable.outputs.tag }}
               run: |
+                  echo "Building docker image with URL: "
+                  echo $ECR_REPOSITORY:$IMAGE_TAG
                   cd api
                   docker build -t $ECR_REPOSITORY:$IMAGE_TAG -f Dockerfile .
                   docker push $ECR_REPOSITORY:$IMAGE_TAG
