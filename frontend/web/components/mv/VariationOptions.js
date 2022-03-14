@@ -16,15 +16,7 @@ export default function VariationOptions({ multivariateOptions, select, controlV
                     Your variation percentage splits total to over 100%
                 </div>
             )}
-            <Tooltip
-              title={(
-                  <label>{select ? 'Value' : 'Variations'} <span className="icon ion-ios-information-circle"/></label>
-                )}
-              html
-              place="right"
-            >
-                {Constants.strings.MULTIVARIATE_DESCRIPTION}
-            </Tooltip>
+            <p>{Constants.strings.MULTIVARIATE_DESCRIPTION}</p>
             {select && (
                 <div className="panel panel--flat panel-without-heading mb-2">
                     <div className="panel-content">
