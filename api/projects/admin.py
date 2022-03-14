@@ -43,10 +43,6 @@ class ProjectAdmin(admin.ModelAdmin):
         "organisation",
         "created_date",
     )
-    list_filter = (
-        "created_date",
-        "organisation",
-        "environments",
-    )
+    list_filter = ("created_date", "enable_dynamo_db")
     list_select_related = ("organisation",)
     search_fields = ("organisation__name",)
