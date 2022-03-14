@@ -158,27 +158,19 @@ const EnvironmentSettingsPage = class extends Component {
                                                 </form>
                                             </FormGroup>
                                             <FormGroup className="m-t-1">
-                                                <label className="m-b-0">API Key</label>
+                                                <label className="m-b-0">Client Side Environment Key</label>
                                                 <Row>
                                                     <Input
                                                         value={this.props.match.params.environmentId}
                                                         inputClassName="input input--wide"
-                                                        type="text" title={<h3>API Key</h3>}
-                                                        placeholder="API Key"
+                                                        type="text" title={<h3>Client Side Environment Key</h3>}
+                                                        placeholder="Client Side Environment Key"
                                                     />
                                                 </Row>
                                             </FormGroup>
                                         </div>
                                         {this.props.hasFeature("serverside_sdk_keys") && (
-                                            <FormGroup className="m-t-3">
-                                                <h3 className="m-b-0">Server Side SDK Keys</h3>
-                                                Flags can be evaluated locally within your own Server environments using
-                                                our <a href="https://docs.flagsmith.com/clients/overview"
-                                                       target="__blank"
-                                            >Server Side SDKs</a>. These SDKs need to be initialised with a Server Side
-                                                SDK Key. You can manage these keys below.
-                                                <ServerSideSDKKeys environmentId={this.props.match.params.environmentId}/>
-                                            </FormGroup>
+                                            <ServerSideSDKKeys environmentId={this.props.match.params.environmentId}/>
                                         )}
 
                                         <FormGroup className="mt-1">
