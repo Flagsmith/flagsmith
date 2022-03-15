@@ -11,7 +11,6 @@ from django.core.exceptions import (
     ValidationError,
 )
 from django.db import models
-from django.db.models import Q, UniqueConstraint
 from django.utils import timezone
 from django.utils.translation import ugettext_lazy as _
 from django_lifecycle import AFTER_CREATE, BEFORE_CREATE, LifecycleModel, hook
@@ -241,27 +240,6 @@ class FeatureState(LifecycleModel, models.Model):
     live_from = models.DateTimeField(null=True)
 
     class Meta:
-        # Note: these constraints are applied manually using SQL so that we can split
-        # out postgres and other database technologies (and hence we can apply the
-        # indexes concurrently to Postgres databases). See migrations features.0036 and
-        # feature.0038 for further information.
-        constraints = [
-            UniqueConstraint(
-                fields=["environment", "feature", "feature_segment", "version"],
-                condition=Q(identity__isnull=True),
-                name="unique_for_feature_segment",
-            ),
-            UniqueConstraint(
-                fields=["environment", "feature", "identity", "version"],
-                condition=Q(feature_segment__isnull=True),
-                name="unique_for_identity",
-            ),
-            UniqueConstraint(
-                fields=["environment", "feature", "version"],
-                condition=Q(identity__isnull=True, feature_segment__isnull=True),
-                name="unique_for_environment",
-            ),
-        ]
         ordering = ["id"]
 
     def __gt__(self, other):
@@ -404,13 +382,18 @@ class FeatureState(LifecycleModel, models.Model):
         return ENVIRONMENT
 
     @hook(BEFORE_CREATE)
-    def check_for_existing_env_feature_state(self):
+    def check_for_existing_feature_state(self):
         # prevent duplicate feature states being created for an environment
         if FeatureState.objects.filter(
-            environment=self.environment, feature=self.feature, version=self.version
-        ).exists() and not (self.identity or self.feature_segment):
+            environment=self.environment,
+            feature=self.feature,
+            version=self.version,
+            feature_segment=self.feature_segment,
+            identity=self.identity,
+        ).exists():
             raise ValidationError(
-                "Feature state already exists for this environment and feature"
+                "Feature state already exists for this environment, feature, "
+                "version, segment & identity combination"
             )
 
     @hook(AFTER_CREATE)
