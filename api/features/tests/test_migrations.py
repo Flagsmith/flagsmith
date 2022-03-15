@@ -136,7 +136,7 @@ def test_migrate_feature_segments_reverse(migrator):
 def test_revert_feature_state_versioning_migrations(migrator):
     # Given
     old_state = migrator.apply_initial_migration(
-        ("features", "0039_add_new_unique_indexes")
+        ("features", "0038_remove_old_versions_and_drafts")
     )
 
     Organisation = old_state.apps.get_model("organisations", "Organisation")
