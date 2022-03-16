@@ -11,6 +11,7 @@ from django.core.exceptions import (
     ValidationError,
 )
 from django.db import models
+from django.db.models import Max
 from django.utils import timezone
 from django.utils.translation import ugettext_lazy as _
 from django_lifecycle import AFTER_CREATE, BEFORE_CREATE, LifecycleModel, hook
@@ -550,6 +551,26 @@ class FeatureState(LifecycleModel, models.Model):
         """
         if self.version == 1 and not self.live_from:
             self.live_from = timezone.now()
+
+    @classmethod
+    def get_next_version_number(
+        cls,
+        environment_id: int,
+        feature_id: int,
+        feature_segment_id: int,
+        identity_id: int,
+    ):
+        return (
+            cls.objects.filter(
+                environment__id=environment_id,
+                feature__id=feature_id,
+                feature_segment__id=feature_segment_id,
+                identity__id=identity_id,
+            )
+            .aggregate(max_version=Max("version"))
+            .get("max_version", 0)
+            + 1
+        )
 
 
 class FeatureStateValue(AbstractBaseFeatureValueModel):

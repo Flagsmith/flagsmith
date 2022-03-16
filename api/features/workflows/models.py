@@ -17,6 +17,7 @@ class ChangeRequest(models.Model):
 
     title = models.CharField(max_length=500)
     description = models.TextField(blank=True, null=True)
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
 
     from_feature_state = models.ForeignKey(
         "features.FeatureState",
@@ -29,12 +30,13 @@ class ChangeRequest(models.Model):
         related_name="inbound_change_requests",
     )
 
-    deleted = models.BooleanField(default=False)
+    deleted_at = models.DateTimeField(null=True)
+    committed_at = models.DateTimeField(null=True)
 
     def approve(self, user: "FFAdminUser"):
         # TODO: tests
         ChangeRequestApproval.objects.update_or_create(
-            change_request=self, user=user, defaults={"approved_at": timezone.now()}
+            approved_at=timezone.now(), defaults={"change_request": self, "user": user}
         )
 
     def commit(self):
@@ -50,7 +52,9 @@ class ChangeRequest(models.Model):
             == getattr(self.from_feature_state, attr)
             for attr in ("environment", "feature", "feature_segment", "identity")
         ):
-            raise RuntimeError("Cannot Change Request: to_feature_state is not valid.")
+            raise RuntimeError(
+                "Cannot commit change request: to_feature_state is not valid."
+            )
 
         if not self.to_feature_state.live_from:
             self.to_feature_state.live_from = timezone.now()
@@ -62,6 +66,9 @@ class ChangeRequest(models.Model):
             identity_id=self.to_feature_state.identity_id,
         )
         self.to_feature_state.save()
+
+        self.committed_at = timezone.now()
+        self.save()
 
 
 class ChangeRequestApproval(models.Model):

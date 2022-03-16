@@ -72,7 +72,8 @@ class ChangeRequestSerializer(WritableNestedModelSerializer):
             "description",
             "from_feature_state",
             "to_feature_state",
-            "deleted",
+            "deleted_at",
+            "committed_at",
             "approvals",
         )
         read_only_fields = ("id", "created_at", "updated_at")

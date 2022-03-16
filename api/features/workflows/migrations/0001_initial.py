@@ -23,9 +23,11 @@ class Migration(migrations.Migration):
                 ('updated_at', models.DateTimeField(auto_now=True)),
                 ('title', models.CharField(max_length=500)),
                 ('description', models.TextField(blank=True, null=True)),
-                ('deleted', models.BooleanField(default=False)),
+                ('deleted_at', models.DateTimeField(null=True)),
+                ('committed_at', models.DateTimeField(null=True)),
                 ('from_feature_state', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='outbound_change_requests', to='features.featurestate')),
                 ('to_feature_state', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='inbound_change_requests', to='features.featurestate')),
+                ('user', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to=settings.AUTH_USER_MODEL)),
             ],
         ),
         migrations.CreateModel(
