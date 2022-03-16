@@ -205,7 +205,7 @@ class FeatureStateSerializerBasic(WritableNestedModelSerializer):
 
     def save(self, **kwargs):
         try:
-            super().save(**kwargs)
+            return super().save(**kwargs)
         except django.core.exceptions.ValidationError as e:
             raise serializers.ValidationError(e.message)
 
