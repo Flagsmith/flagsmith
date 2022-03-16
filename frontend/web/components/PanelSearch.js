@@ -1,5 +1,6 @@
 import React, { Component } from 'react';
 import Popover from './base/Popover';
+import { FixedSizeList as List } from 'react-window';
 
 const PanelSearch = class extends Component {
     static displayName = 'PanelSearch'
@@ -58,6 +59,29 @@ const PanelSearch = class extends Component {
             this.setState({ sortOrder: sortOrder === 'asc' ? 'desc' : 'asc' });
         } else {
             this.setState({ sortBy: sortOption.value, sortOrder: sortOption.order });
+        }
+    }
+
+    renderContainer = (children) => {
+        const renderRow = ({index,style})=> (
+            <div style={style}>
+                {this.props.renderRow(children[index])}
+            </div>
+        )
+        if(children && children.length > 100 && this.props.itemHeight) {
+            return (
+                <List
+                    style={{overflowX:"hidden"}}
+                    height={this.props.itemHeight*10}
+                    itemCount={children.length}
+                    itemSize={this.props.itemHeight}
+                    width="100%"
+                >
+                    {renderRow}
+                </List>
+            )
+        } else {
+            return children.map(this.props.renderRow)
         }
     }
 
@@ -187,7 +211,7 @@ const PanelSearch = class extends Component {
                     {this.props.header}
                     {this.props.isLoading && <div className="text-center"><Loader/></div> }
                     {!this.props.isLoading && filteredItems && filteredItems.length
-                        ? filteredItems.map(renderRow) : (renderNoResults && !search) ? renderNoResults : (
+                        ? this.renderContainer(filteredItems) : (renderNoResults && !search) ? renderNoResults : (
                             <Column>
                                 <div className="mx-2 mb-2">
                                     {'No results '}

@@ -186,6 +186,7 @@ const FeaturesPage = class extends Component {
                                                               icon="ion-ios-rocket"
                                                               title="Features"
                                                               renderSearchWithNoResults
+                                                              itemHeight={65}
                                                               sorting={[
                                                                   { label: 'Name', value: 'name', order: 'asc', default: true },
                                                                   { label: 'Created Date', value: 'created_date', order: 'asc' },
