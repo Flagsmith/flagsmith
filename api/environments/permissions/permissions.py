@@ -1,6 +1,9 @@
+import typing
+
 from django.db.models import Q
 from rest_framework import exceptions
 from rest_framework.permissions import BasePermission
+from rest_framework.request import Request
 
 from environments.models import Environment
 from projects.models import Project
@@ -130,3 +133,37 @@ class EnvironmentAdminPermission(BasePermission):
 
     def has_object_permission(self, request, view, obj):
         return request.user.is_environment_admin(obj.environment)
+
+
+class HasEnvironmentPermission(BasePermission):
+    def __init__(
+        self,
+        permission: str,
+        retrieve_environment_from_request_callable: typing.Callable[
+            [Request], Environment
+        ] = None,
+        retrieve_environment_from_object_callable: typing.Callable[
+            [Request], Environment
+        ] = None,
+    ):
+        self.permission = permission
+        self.retrieve_environment_from_request_callable = (
+            retrieve_environment_from_request_callable
+        )
+        self.retrieve_environment_from_object_callable = (
+            retrieve_environment_from_object_callable
+        )
+
+    def has_permission(self, request, view):
+        if not self.retrieve_environment_from_request_callable:
+            return False
+
+        environment = self.retrieve_environment_from_request_callable(request)
+        return request.user.has_environment_permission(self.permission, environment)
+
+    def has_object_permission(self, request, view, obj):
+        if not self.retrieve_environment_from_object_callable:
+            return False
+
+        environment = self.retrieve_environment_from_object_callable(obj)
+        return request.user.has_environment_permission(self.permission, environment)
