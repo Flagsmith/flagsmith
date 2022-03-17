@@ -1,6 +1,9 @@
 from drf_writable_nested import WritableNestedModelSerializer
 
 from features.models import FeatureState
+from features.multivariate.serializers import (
+    MultivariateFeatureStateValueSerializer,
+)
 from features.serializers import FeatureStateValueSerializer
 from features.workflows.models import ChangeRequest, ChangeRequestApproval
 
@@ -25,6 +28,9 @@ class ChangeRequestSerializer(WritableNestedModelSerializer):
         """
 
         feature_state_value = FeatureStateValueSerializer(required=False)
+        multivariate_feature_state_values = MultivariateFeatureStateValueSerializer(
+            many=True, required=False
+        )
 
         class Meta:
             model = FeatureState

@@ -36,7 +36,7 @@ class ChangeRequest(models.Model):
     def approve(self, user: "FFAdminUser"):
         # TODO: tests
         ChangeRequestApproval.objects.update_or_create(
-            approved_at=timezone.now(), defaults={"change_request": self, "user": user}
+            change_request=self, user=user, defaults={"approved_at": timezone.now()}
         )
 
     def commit(self):
@@ -79,6 +79,9 @@ class ChangeRequestApproval(models.Model):
     required = models.BooleanField(default=True)
     created_at = models.DateTimeField(auto_now_add=True)
     approved_at = models.DateTimeField(null=True)
+
+    class Meta:
+        unique_together = ("user", "change_request")
 
 
 class ChangeRequestComment(models.Model):
