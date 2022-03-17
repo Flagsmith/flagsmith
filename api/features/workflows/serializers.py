@@ -1,4 +1,5 @@
 from drf_writable_nested import WritableNestedModelSerializer
+from rest_framework import serializers
 
 from features.models import FeatureState
 from features.multivariate.serializers import (
@@ -88,3 +89,7 @@ class ChangeRequestSerializer(WritableNestedModelSerializer):
         validated_data = super().validate(attrs)
         self.context["from_feature_state"] = validated_data["from_feature_state"]
         return validated_data
+
+
+class ChangeRequestListQuerySerializer(serializers.Serializer):
+    feature_state = serializers.IntegerField(required=True)

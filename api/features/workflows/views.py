@@ -5,13 +5,27 @@ from rest_framework.request import Request
 from rest_framework.response import Response
 
 from features.workflows.models import ChangeRequest
-from features.workflows.serializers import ChangeRequestSerializer
+from features.workflows.serializers import (
+    ChangeRequestListQuerySerializer,
+    ChangeRequestSerializer,
+)
 
 
-class ChangeRequestViewSet(mixins.CreateModelMixin, viewsets.GenericViewSet):
+class ChangeRequestViewSet(viewsets.ModelViewSet):
     permission_classes = (IsAuthenticated,)  # TODO: permissions
     serializer_class = ChangeRequestSerializer
-    queryset = ChangeRequest.objects.all()  # TODO: restrict queryset
+
+    def get_queryset(self):
+        queryset = ChangeRequest.objects.all()
+
+        if self.action == "list":
+            query_serializer = ChangeRequestListQuerySerializer(
+                data=self.request.query_params
+            )
+            query_serializer.is_valid(raise_exception=True)
+            queryset = queryset.filter(**query_serializer.data)
+
+        return queryset
 
     @action(detail=True, methods=["POST"])
     def approve(self, request: Request, pk: int = None) -> Response:
