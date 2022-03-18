@@ -8,6 +8,8 @@ on:
             - "api/**"
             - ".github/**"
             - 'infrastructure/aws/staging/**'
+    pull_request:
+        types: [opened, synchronize, reopened, ready_for_review]
 
 env:
     AWS_ACCESS_KEY_ID: AKIAUM26IRCPASKFW2X5
