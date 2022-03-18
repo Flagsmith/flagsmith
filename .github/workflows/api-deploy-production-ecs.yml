@@ -53,7 +53,7 @@ jobs:
             - name: Build, tag, and push image to Amazon ECR
               id: build-image
               env:
-                  IMAGE_TAG: ${{ steps.ecr-tag-variable.outputs.tag }}
+                  IMAGE_TAG: ${{ github.sha }}
               run: |
                   echo "Building docker image with URL: "
                   echo $ECR_REPOSITORY:$IMAGE_TAG
