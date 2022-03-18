@@ -93,7 +93,7 @@
     "react-sortable-hoc": "1.9.1",
     "react-tooltip": "3.7.0",
     "react-virtualized-auto-sizer": "1.0.2",
-    "react-window": "1",
+    "react-window": "^1.8.6",
     "recharts": "^1.8.5",
     "sass-loader": "10.2.0",
     "ssg-node-express": "4.16.4",
