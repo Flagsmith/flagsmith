@@ -8,6 +8,8 @@ on:
             - 'api/**'
             - '.github/**'
             - 'infrastructure/aws/production/**'
+    pull_request:
+        types: [opened, synchronize, reopened, ready_for_review]
 
 env:
     AWS_ACCESS_KEY_ID: AKIARHES7IUA4IU3T5VX
