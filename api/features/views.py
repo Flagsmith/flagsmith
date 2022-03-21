@@ -57,6 +57,7 @@ from .serializers import (
     WritableNestedFeatureStateSerializer,
 )
 from .tasks import trigger_feature_state_change_webhooks
+from .workflows.mixins import CreateChangeRequestMixin
 
 logger = logging.getLogger()
 logger.setLevel(logging.INFO)
@@ -414,7 +415,7 @@ class BaseFeatureStateViewSet(viewsets.ModelViewSet):
         return feature_state_value
 
 
-class EnvironmentFeatureStateViewSet(BaseFeatureStateViewSet):
+class EnvironmentFeatureStateViewSet(BaseFeatureStateViewSet, CreateChangeRequestMixin):
     permission_classes = [IsAuthenticated, EnvironmentFeatureStatePermissions]
 
     def get_queryset(self):

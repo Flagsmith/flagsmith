@@ -46,7 +46,10 @@ def test_4_eyes_workflow(
         pre_cr_responses[url] = flags
 
     # Now let's create a CR and add a required approval for the registered user
-    create_cr_url = reverse("api-v1:features:workflows:change-requests-list")
+    create_cr_url = reverse(
+        "api-v1:environments:environment-featurestates-create-change-request",
+        args=(environment_api_key, feature_state_id),
+    )
     registered_user_id, registered_user_token = registered_user
     data = {
         "title": "My Change Request",

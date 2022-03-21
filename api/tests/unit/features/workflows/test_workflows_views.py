@@ -18,7 +18,7 @@ def test_create_change_request(
     data = {
         "title": "My change request",
         "description": "Some useful description",
-        "from_feature_state": feature_state.id,
+        # "from_feature_state": feature_state.id,
         "to_feature_state": {
             "enabled": True,
             "feature_state_value": {"type": "unicode", "string_value": "foobar"},

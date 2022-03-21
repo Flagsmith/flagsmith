@@ -130,23 +130,3 @@ class EnvironmentAdminPermission(BasePermission):
 
     def has_object_permission(self, request, view, obj):
         return request.user.is_environment_admin(obj.environment)
-
-
-class HasEnvironmentPermission(BasePermission):
-    def __init__(
-        self,
-        permission: str,
-        environment: Environment,
-    ):
-        self._permission = permission
-        self._environment = environment
-
-    def has_permission(self, request, view):
-        return request.user.has_environment_permission(
-            self._permission, self._environment
-        )
-
-    def has_object_permission(self, request, view, obj):
-        return request.user.has_environment_permission(
-            self._permission, self._environment
-        )
