@@ -120,6 +120,7 @@ INSTALLED_APPS = [
     # health check plugins
     "health_check",
     "health_check.db",
+    "health_check.contrib.migrations",
     # Used for ordering models (e.g. FeatureSegment)
     "ordered_model",
     # Third party integrations
