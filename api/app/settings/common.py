@@ -354,11 +354,17 @@ LOGOUT_URL = "/admin/logout/"
 # Email associated with user that is used by front end for end to end testing purposes
 FE_E2E_TEST_USER_EMAIL = "nightwatch@solidstategroup.com"
 
+# SSL handling in Django
 SECURE_PROXY_SSL_HEADER_NAME = env.str(
     "SECURE_PROXY_SSL_HEADER_NAME", "HTTP_X_FORWARDED_PROTO"
 )
 SECURE_PROXY_SSL_HEADER_VALUE = env.str("SECURE_PROXY_SSL_HEADER_VALUE", "https")
 SECURE_PROXY_SSL_HEADER = (SECURE_PROXY_SSL_HEADER_NAME, SECURE_PROXY_SSL_HEADER_VALUE)
+
+SECURE_REDIRECT_EXEMPT = env.list("DJANGO_SECURE_REDIRECT_EXEMPT", default=[])
+SECURE_REFERRER_POLICY = env.str("DJANGO_SECURE_REFERRER_POLICY", default="same-origin")
+SECURE_SSL_HOST = env.str("DJANGO_SECURE_SSL_HOST", default=None)
+SECURE_SSL_REDIRECT = env.bool("DJANGO_SECURE_SSL_REDIRECT", default=False)
 
 # Chargebee
 ENABLE_CHARGEBEE = env.bool("ENABLE_CHARGEBEE", default=False)
