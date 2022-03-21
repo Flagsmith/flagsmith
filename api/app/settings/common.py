@@ -565,3 +565,6 @@ DEFAULT_AUTO_FIELD = "django.db.models.AutoField"
 EDGE_API_URL = env.str("EDGE_API_URL", None)
 # Used for signing forwarded request to edge
 EDGE_REQUEST_SIGNING_KEY = env.str("EDGE_REQUEST_SIGNING_KEY", None)
+
+# Aws Event bus used for sending identity migration events
+IDENTITY_MIGRATION_EVENT_BUS_NAME = env.str("IDENTITY_MIGRATION_EVENT_BUS_NAME", None)

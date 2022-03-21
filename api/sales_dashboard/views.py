@@ -1,4 +1,5 @@
 import json
+from functools import partial
 
 from app_analytics.influxdb_wrapper import (
     get_event_list_for_organisation,
@@ -20,6 +21,7 @@ from django.utils.safestring import mark_safe
 from django.views.generic import ListView
 from django.views.generic.edit import FormView
 
+from edge_api.identities.events import send_migration_event
 from environments.dynamodb.migrator import IdentityMigrator
 from environments.identities.models import Identity
 from organisations.models import Organisation
@@ -29,6 +31,8 @@ from users.models import FFAdminUser
 from .forms import EmailUsageForm, MaxAPICallsForm, MaxSeatsForm
 
 OBJECTS_PER_PAGE = 50
+
+MAX_MIGRATABLE_IDENTITIES_SYNC = 1000
 
 
 class OrganisationList(ListView):
@@ -193,8 +197,19 @@ def migrate_identities_to_edge(request, project_id):
     if not settings.PROJECT_METADATA_TABLE_NAME_DYNAMO:
         return HttpResponseBadRequest("DynamoDB is not enabled")
     identity_migrator = IdentityMigrator(project_id)
-    if identity_migrator.can_migrate:
-        identity_migrator.migrate()
+    if not identity_migrator.can_migrate:
+        return HttpResponseBadRequest(
+            "Migration is either already done or is in progress"
+        )
+
+    identity_count = Identity.objects.filter(environment__project_id=project_id).count()
+    migrator_function = (
+        identity_migrator.migrate
+        if identity_count < MAX_MIGRATABLE_IDENTITIES_SYNC
+        else partial(send_migration_event, project_id)
+    )
+
+    migrator_function()
     return HttpResponseRedirect(reverse("sales_dashboard:index"))
 
 
