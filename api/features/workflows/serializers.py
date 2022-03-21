@@ -46,7 +46,6 @@ class ChangeRequestSerializer(WritableNestedModelSerializer):
             "updated_at",
             "title",
             "description",
-            "from_feature_state",
             "to_feature_state",
             "deleted_at",
             "committed_at",
@@ -54,12 +53,18 @@ class ChangeRequestSerializer(WritableNestedModelSerializer):
             "user",
             "committed_by",
         )
-        read_only_fields = ("id", "created_at", "updated_at", "user", "committed_by")
+        read_only_fields = (
+            "id",
+            "created_at",
+            "updated_at",
+            "user",
+            "committed_by",
+        )
 
     def _get_save_kwargs(self, field_name):
         kwargs = super()._get_save_kwargs(field_name)
         if field_name == "to_feature_state":
-            from_feature_state = self.validated_data["from_feature_state"]
+            from_feature_state = self._save_kwargs["from_feature_state"]
             kwargs.update(
                 feature=from_feature_state.feature,
                 environment=from_feature_state.environment,
