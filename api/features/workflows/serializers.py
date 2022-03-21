@@ -92,4 +92,6 @@ class ChangeRequestSerializer(WritableNestedModelSerializer):
 
 
 class ChangeRequestListQuerySerializer(serializers.Serializer):
-    feature_state = serializers.IntegerField(required=True)
+    environment = serializers.IntegerField(
+        required=True, help_text="ID of the environment to filter by"
+    )
