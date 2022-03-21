@@ -19,7 +19,7 @@ def add_update_feature_state_permission(apps, schema_editor):
 def remove_update_feature_state_permission(apps, schema_editor):
     PermissionModel = apps.get_model("permissions", "PermissionModel")
 
-    PermissionModel.filter(key=UPDATE_FEATURE_STATE).delete()
+    PermissionModel.objects.filter(key=UPDATE_FEATURE_STATE).delete()
 
 
 class Migration(migrations.Migration):
