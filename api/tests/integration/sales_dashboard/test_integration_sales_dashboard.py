@@ -57,7 +57,7 @@ def test_migrate_identities_to_edge_does_not_call_migrate_if_migration_is_alread
     response = superuser_authenticated_client.post(url)
 
     # Then
-    assert response.status_code == status.HTTP_302_FOUND
+    assert response.status_code == status.HTTP_400_BAD_REQUEST
     mocked_identity_migrator.assert_called_with(project)
     mocked_identity_migrator.return_value.migrate.assert_not_called()
 
@@ -74,3 +74,32 @@ def test_migrate_identities_to_edge_returns_400_if_dynamodb_is_not_enabled(
 
     # Then
     assert response.status_code == status.HTTP_400_BAD_REQUEST
+
+
+def test_migrate_identities_to_edge_calls_send_migration_event_with_correct_arguments(
+    superuser_authenticated_client, mocker, project, settings, identity
+):
+    # Given
+    settings.PROJECT_METADATA_TABLE_NAME_DYNAMO = "project_metadata_table"
+    url = reverse("sales_dashboard:migrate_identities", args=[project])
+
+    # update the `MAX_MIGRATABLE_IDENTITIES_SYNC` to trigger send_migration_event
+    mocker.patch("sales_dashboard.views.MAX_MIGRATABLE_IDENTITIES_SYNC", 1)
+    mocked_send_migrate_event = mocker.patch(
+        "sales_dashboard.views.send_migration_event"
+    )
+    mocked_identity_migrator = mocker.patch(
+        "sales_dashboard.views.IdentityMigrator", spec=IdentityMigrator
+    )
+
+    mocked_identity_migrator.return_value.can_migrate = True
+
+    # When
+    response = superuser_authenticated_client.post(url)
+
+    # Then
+    assert response.status_code == status.HTTP_302_FOUND
+    mocked_send_migrate_event.assert_called_with(project)
+
+    mocked_identity_migrator.assert_called_with(project)
+    mocked_identity_migrator.return_value.migrate.assert_not_called()
