@@ -16,56 +16,25 @@ class ChangeRequestApprovalSerializer(WritableNestedModelSerializer):
         read_only_fields = ("id", "approved_at")
 
 
-class ChangeRequestSerializer(WritableNestedModelSerializer):
-    class ToFeatureStateSerializer(WritableNestedModelSerializer):
-        """
-        FeatureState serializer used only by ChangeRequest serializer (and hence
-        declared locally).
+class ToFeatureStateSerializer(WritableNestedModelSerializer):
+    feature_state_value = FeatureStateValueSerializer(required=False)
+    multivariate_feature_state_values = MultivariateFeatureStateValueSerializer(
+        many=True, required=False
+    )
 
-        Expects the from_feature_state attribute to be set in the context by its parent.
-
-        Uses the from_feature_state to set the feature, environment, feature_segment
-        and identity attributes on the to_feature_state.
-        """
-
-        feature_state_value = FeatureStateValueSerializer(required=False)
-        multivariate_feature_state_values = MultivariateFeatureStateValueSerializer(
-            many=True, required=False
+    class Meta:
+        model = FeatureState
+        fields = (
+            "id",
+            "enabled",
+            "feature_state_value",
+            "multivariate_feature_state_values",
+            "live_from",
         )
+        read_only_fields = ("id",)
 
-        class Meta:
-            model = FeatureState
-            fields = (
-                "id",
-                "enabled",
-                "feature_state_value",
-                "multivariate_feature_state_values",
-                "live_from",
-            )
-            read_only_fields = ("id",)
 
-        def save(self, **kwargs):
-            if "from_feature_state" not in self.context:
-                raise RuntimeError("`from_feature_state` must be set in context.")
-
-            # set the environment, feature, feature_segment and identity attributes on
-            # the to_feature_state by retrieving from from_feature_state
-            # TODO: can this be handled better? For example:
-            #  - should we make this an action on FS viewset?
-            #  - or should this code live in the view?
-            kwargs.update(
-                {
-                    attr: getattr(self.context["from_feature_state"], attr)
-                    for attr in (
-                        "feature",
-                        "environment",
-                        "feature_segment",
-                        "identity",
-                    )
-                }
-            )
-            return super().save(**kwargs, version=None)
-
+class ChangeRequestSerializer(WritableNestedModelSerializer):
     to_feature_state = ToFeatureStateSerializer()
     approvals = ChangeRequestApprovalSerializer(many=True, required=False)
 
@@ -85,12 +54,20 @@ class ChangeRequestSerializer(WritableNestedModelSerializer):
             "user",
             "committed_by",
         )
-        read_only_fields = ("id", "created_at", "updated_at")
+        read_only_fields = ("id", "created_at", "updated_at", "user", "committed_by")
 
-    def validate(self, attrs):
-        validated_data = super().validate(attrs)
-        self.context["from_feature_state"] = validated_data["from_feature_state"]
-        return validated_data
+    def _get_save_kwargs(self, field_name):
+        kwargs = super()._get_save_kwargs(field_name)
+        if field_name == "to_feature_state":
+            from_feature_state = self.validated_data["from_feature_state"]
+            kwargs.update(
+                feature=from_feature_state.feature,
+                environment=from_feature_state.environment,
+                feature_segment=from_feature_state.feature_segment,
+                identity=from_feature_state.identity,
+                version=None,
+            )
+        return kwargs
 
 
 class ChangeRequestListQuerySerializer(serializers.Serializer):

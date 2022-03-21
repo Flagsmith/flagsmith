@@ -14,8 +14,8 @@ def test_4_eyes_workflow(
     environment,
     default_feature_value,
     feature,
-    registered_user_email,
-    registered_user,
+    registered_org_admin_user_email,
+    registered_org_admin_user,
     settings,
 ):
     settings.CACHE_FLAGS_SECONDS = 0  # ensure no caching of flags
@@ -50,7 +50,7 @@ def test_4_eyes_workflow(
         "api-v1:environments:environment-featurestates-create-change-request",
         args=(environment_api_key, feature_state_id),
     )
-    registered_user_id, registered_user_token = registered_user
+    registered_user_id, registered_user_token = registered_org_admin_user
     data = {
         "title": "My Change Request",
         "from_feature_state": feature_state_id,

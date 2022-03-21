@@ -52,7 +52,7 @@ class ChangeRequestViewSet(
     @action(detail=True, methods=["POST"])
     def commit(self, request: Request, pk: int = None) -> Response:
         change_request = self.get_object()
-        change_request.commit()
+        change_request.commit(committed_by=request.user)
         return Response(self.get_serializer(instance=change_request).data)
 
     def perform_destroy(self, instance):

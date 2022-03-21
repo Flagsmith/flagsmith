@@ -252,11 +252,11 @@ def identity_document_without_fs(identity_document):
 
 
 @pytest.fixture()
-def invite_link_hash(admin_client, organisation):
+def admin_invite_link_hash(admin_client, organisation):
     invite_link_url = reverse(
         "api-v1:organisations:organisation-invite-links-list", args=(organisation,)
     )
-    data = {"role": "USER"}
+    data = {"role": "ADMIN"}
     response = admin_client.post(
         invite_link_url, data=json.dumps(data), content_type="application/json"
     )
@@ -266,21 +266,21 @@ def invite_link_hash(admin_client, organisation):
 
 
 @pytest.fixture()
-def registered_user_email():
-    return "registered_user@example.com"
+def registered_org_admin_user_email():
+    return "registered_admin_user@example.com"
 
 
 @pytest.fixture()
-def registered_user(registered_user_email, invite_link_hash):
+def registered_org_admin_user(registered_org_admin_user_email, admin_invite_link_hash):
     password = FFAdminUser.objects.make_random_password()
     api_client = APIClient()
 
     register_url = reverse("api-v1:custom_auth:ffadminuser-list")
     data = {
-        "email": registered_user_email,
+        "email": registered_org_admin_user_email,
         "password": password,
         "first_name": "Registered",
-        "last_name": "User",
+        "last_name": "Admin-User",
     }
     response = api_client.post(
         register_url, data=json.dumps(data), content_type="application/json"
@@ -293,7 +293,7 @@ def registered_user(registered_user_email, invite_link_hash):
 
     # now we join the organisation
     accept_invite_url = reverse(
-        "api-v1:users:user-join-organisation-link", args=(invite_link_hash,)
+        "api-v1:users:user-join-organisation-link", args=(admin_invite_link_hash,)
     )
     response = api_client.post(accept_invite_url)
     assert response.status_code == status.HTTP_200_OK
