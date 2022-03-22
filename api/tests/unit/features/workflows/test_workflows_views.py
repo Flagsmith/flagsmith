@@ -1,5 +1,3 @@
-import json
-
 from django.urls import reverse
 from django.utils import timezone
 from rest_framework import status
@@ -10,19 +8,16 @@ from users.models import FFAdminUser
 
 
 def test_approve_change_request_when_no_required_approvals(
-    change_request_no_required_approvals, organisation_one_admin_user, environment
+    change_request_no_required_approvals, admin_client, admin_user, environment
 ):
     # Given
-    organisation_one_user_client = APIClient()
-    organisation_one_user_client.force_authenticate(organisation_one_admin_user)
-
     url = reverse(
         "api-v1:features:workflows:change-requests-approve",
         args=(change_request_no_required_approvals.id,),
     )
 
     # When
-    response = organisation_one_user_client.post(url)
+    response = admin_client.post(url)
 
     # Then
     assert response.status_code == status.HTTP_200_OK
@@ -30,19 +25,16 @@ def test_approve_change_request_when_no_required_approvals(
     # a new approval object exists for the change request now
     assert change_request_no_required_approvals.approvals.count() == 1
     approval = change_request_no_required_approvals.approvals.first()
-    assert approval.user == organisation_one_admin_user
+    assert approval.user == admin_user
     assert approval.approved_at
 
 
 def test_approve_change_request_when_required_approvals_for_same_user(
-    change_request_no_required_approvals, organisation_one_admin_user
+    change_request_no_required_approvals, admin_client, admin_user
 ):
     # Given
-    organisation_one_user_client = APIClient()
-    organisation_one_user_client.force_authenticate(organisation_one_admin_user)
-
     approval = ChangeRequestApproval.objects.create(
-        user=organisation_one_admin_user,
+        user=admin_user,
         change_request=change_request_no_required_approvals,
     )
 
@@ -52,7 +44,7 @@ def test_approve_change_request_when_required_approvals_for_same_user(
     )
 
     # When
-    response = organisation_one_user_client.post(url)
+    response = admin_client.post(url)
 
     # Then
     assert response.status_code == status.HTTP_200_OK
@@ -64,17 +56,14 @@ def test_approve_change_request_when_required_approvals_for_same_user(
 
 
 def test_approve_change_request_when_required_approvals_for_another_user(
-    change_request_no_required_approvals, organisation_one_admin_user, organisation_one
+    change_request_no_required_approvals, admin_client, admin_user, organisation_one
 ):
     # Given
-    organisation_one_user_client = APIClient()
-    organisation_one_user_client.force_authenticate(organisation_one_admin_user)
-
     another_user = FFAdminUser.objects.create(email="another_user@organisationone.com")
     another_user.add_organisation(organisation_one)
 
     existing_approval = ChangeRequestApproval.objects.create(
-        user=organisation_one_admin_user,
+        user=another_user,
         change_request=change_request_no_required_approvals,
     )
 
@@ -84,7 +73,7 @@ def test_approve_change_request_when_required_approvals_for_another_user(
     )
 
     # When
-    response = organisation_one_user_client.post(url)
+    response = admin_client.post(url)
 
     # Then
     assert response.status_code == status.HTTP_200_OK
@@ -96,7 +85,7 @@ def test_approve_change_request_when_required_approvals_for_another_user(
     assert existing_approval.approved_at is None
 
     created_approval = change_request_no_required_approvals.approvals.last()
-    assert created_approval.user == organisation_one_admin_user
+    assert created_approval.user == admin_user
     assert created_approval.approved_at
 
 
