@@ -1,15 +1,12 @@
-module.exports = (envId, { LIB_NAME, FEATURE_NAME, FEATURE_FUNCTION,NPM_RN_CLIENT, FEATURE_NAME_ALT, FEATURE_NAME_ALT_VALUE, NPM_CLIENT }, customFeature) => `// App root
-import ${LIB_NAME} from "${NPM_RN_CLIENT}";
+module.exports = (envId, { LIB_NAME, FEATURE_NAME, FEATURE_FUNCTION, FEATURE_NAME_ALT, FEATURE_NAME_ALT_VALUE, NPM_CLIENT }, customFeature) => `// App root
+import ${LIB_NAME} from "${NPM_CLIENT}";
 import { FlagsmithProvider } from 'flagsmith/react';
-import AsyncStorage from '@react-native-async-storage/async-storage';
 
 export default function App() {
   return (
     &lt;FlagsmithProvider
       options={{
         environmentID: '${envId}',
-        cacheFlags: true,
-        AsyncStorage: AsyncStorage, // Pass in whatever storage you use if you wish to cache flag values
       }}
       flagsmith={flagsmith}&gt;
       {...Your app}
