@@ -3,6 +3,7 @@ from django.utils import timezone
 from rest_framework import status
 
 from features.workflows.models import ChangeRequestApproval
+from organisations.models import OrganisationRole
 from users.models import FFAdminUser
 
 
@@ -113,12 +114,14 @@ def test_commit_change_request_missing_required_approvals(
 
 
 def test_commit_approved_change_request(
-    change_request_no_required_approvals, admin_client, organisation_one_user, mocker
+    change_request_no_required_approvals, admin_client, organisation, mocker
 ):
     # Given
     now = timezone.now()
+    another_user = FFAdminUser.objects.create(email="another_user@example.com")
+    another_user.add_organisation(organisation, role=OrganisationRole.ADMIN)
     ChangeRequestApproval.objects.create(
-        user=organisation_one_user,
+        user=another_user,
         change_request=change_request_no_required_approvals,
         required=True,
         approved_at=now,
@@ -141,3 +144,51 @@ def test_commit_approved_change_request(
     assert change_request_no_required_approvals.committed_at == now
     assert change_request_no_required_approvals.to_feature_state.version == 2
     assert change_request_no_required_approvals.to_feature_state.live_from == now
+
+
+def test_retrieve_change_request(
+    change_request_no_required_approvals, admin_client, organisation
+):
+    # Given
+    now = timezone.now()
+    another_user = FFAdminUser.objects.create(email="another_user@example.com")
+    another_user.add_organisation(organisation, role=OrganisationRole.ADMIN)
+    ChangeRequestApproval.objects.create(
+        user=another_user,
+        change_request=change_request_no_required_approvals,
+        required=True,
+        approved_at=now,
+    )
+
+    url = reverse(
+        "api-v1:features:workflows:change-requests-detail",
+        args=(change_request_no_required_approvals.id,),
+    )
+
+    # When
+    response = admin_client.get(url)
+
+    # Then
+    assert response.status_code == status.HTTP_200_OK
+
+    response_json = response.json()
+    assert response_json["id"]
+    assert len(response_json["approvals"]) == 1
+    assert response_json["approvals"][0]["user"] == another_user.id
+    assert response_json["is_approved"]
+    assert not response_json["is_committed"]
+
+
+def test_list_change_request(
+    change_request_no_required_approvals, admin_client, organisation
+):
+    # Given
+    # TODO: this returns 403 because it's missing the `environment` query param
+    #  - should we move this endpoint to a detail route on the feature state viewset?
+    url = reverse("api-v1:features:workflows:change-requests-list")
+
+    # When
+    response = admin_client.get(url)
+
+    # Then
+    assert response.status_code == status.HTTP_200_OK

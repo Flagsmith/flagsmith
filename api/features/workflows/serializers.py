@@ -34,7 +34,7 @@ class ToFeatureStateSerializer(WritableNestedModelSerializer):
         read_only_fields = ("id",)
 
 
-class ChangeRequestSerializer(WritableNestedModelSerializer):
+class CreateChangeRequestSerializer(WritableNestedModelSerializer):
     to_feature_state = ToFeatureStateSerializer()
     approvals = ChangeRequestApprovalSerializer(many=True, required=False)
 
@@ -58,7 +58,9 @@ class ChangeRequestSerializer(WritableNestedModelSerializer):
             "created_at",
             "updated_at",
             "user",
+            "committed_at",
             "committed_by",
+            "deleted_at",
         )
 
     def _get_save_kwargs(self, field_name):
@@ -75,7 +77,62 @@ class ChangeRequestSerializer(WritableNestedModelSerializer):
         return kwargs
 
 
+class ChangeRequestListSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = ChangeRequest
+        fields = (
+            "id",
+            "created_at",
+            "updated_at",
+            "title",
+            "description",
+            "from_feature_state",
+            "to_feature_state",
+            "user",
+            "committed_at",
+            "committed_by",
+            "deleted_at",
+        )
+        read_only_fields = fields
+
+
+class ChangeRequestRetrieveSerializer(serializers.ModelSerializer):
+    approvals = ChangeRequestApprovalSerializer(many=True)
+    is_approved = serializers.SerializerMethodField()
+
+    class Meta:
+        model = ChangeRequest
+        fields = (
+            "id",
+            "created_at",
+            "updated_at",
+            "title",
+            "description",
+            "from_feature_state",
+            "to_feature_state",
+            "user",
+            "committed_at",
+            "committed_by",
+            "deleted_at",
+            "approvals",
+            "is_approved",
+            "is_committed",
+        )
+        read_only_fields = fields
+
+    def get_is_approved(self, instance):  # noqa
+        return instance.is_approved()
+
+
 class ChangeRequestListQuerySerializer(serializers.Serializer):
     environment = serializers.IntegerField(
         required=True, help_text="ID of the environment to filter by"
+    )
+    include_committed = serializers.BooleanField(
+        required=False,
+        help_text="Include change requests that have already been committed.",
+        default=False,
+    )
+    search = serializers.CharField(
+        required=False, help_text="Fuzzy search across Change Request titles."
     )

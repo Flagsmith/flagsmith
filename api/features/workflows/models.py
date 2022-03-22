@@ -53,7 +53,7 @@ class ChangeRequest(LifecycleModel):
         )
 
     def commit(self, committed_by: "FFAdminUser"):
-        if not self._is_approved():
+        if not self.is_approved():
             raise ChangeRequestNotApprovedError(
                 "Change request has not been approved by all required approvers."
             )
@@ -90,9 +90,13 @@ class ChangeRequest(LifecycleModel):
                 "Cannot save change request: to_feature_state is not valid."
             )
 
-    def _is_approved(self):
+    def is_approved(self):
         required_approvals = self.approvals.filter(required=True)
         return all(approval.approved_at for approval in required_approvals)
+
+    @property
+    def is_committed(self):
+        return self.committed_at is not None
 
 
 class ChangeRequestApproval(models.Model):
