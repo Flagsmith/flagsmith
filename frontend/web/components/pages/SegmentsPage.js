@@ -218,7 +218,7 @@ const SegmentsPage = class extends Component {
                                                 <FormGroup className="mt-4">
                                                     <CodeHelp
                                                       title="Using segments"
-                                                      snippets={Constants.codeHelp.SEGMENTS(environmentId)}
+                                                      snippets={Constants.codeHelp.USER_TRAITS(environmentId)}
                                                     />
                                                 </FormGroup>
                                             </div>
@@ -262,7 +262,7 @@ const SegmentsPage = class extends Component {
                                     <FormGroup>
                                         <CodeHelp
                                           title="Managing user traits and segments"
-                                          snippets={Constants.codeHelp.USER_TRAITS(this.props.match.params.environmentId, this.props.match.params.id)}
+                                          snippets={Constants.codeHelp.USER_TRAITS(this.props.match.params.environmentId)}
                                         />
                                     </FormGroup>
                                 </div>
