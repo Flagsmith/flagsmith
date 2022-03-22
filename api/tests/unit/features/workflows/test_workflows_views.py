@@ -1,7 +1,6 @@
 from django.urls import reverse
 from django.utils import timezone
 from rest_framework import status
-from rest_framework.test import APIClient
 
 from features.workflows.models import ChangeRequestApproval
 from users.models import FFAdminUser
