@@ -1,7 +1,7 @@
 module.exports = (envId, { LIB_NAME, NPM_CLIENT, TRAIT_NAME, USER_ID, USER_FEATURE_FUNCTION, FEATURE_NAME, FEATURE_NAME_ALT }) => `
 // Option 1: Identify clientside
 //Home Page
-import flagsmith from '${LIB_NAME}';
+import flagsmith from '${LIB_NAME}/isomorphic';
 import { useFlags, useFlagsmith } from 'flagsmith/react';
 
 export default function HomePage() {

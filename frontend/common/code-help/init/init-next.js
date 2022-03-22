@@ -1,5 +1,5 @@
 module.exports = (envId, { LIB_NAME, FEATURE_NAME, FEATURE_FUNCTION, FEATURE_NAME_ALT, FEATURE_NAME_ALT_VALUE, NPM_CLIENT }, customFeature) => `// pages/_app.js
-import ${LIB_NAME} from "${NPM_CLIENT}";
+import ${LIB_NAME} from "${NPM_CLIENT}/isomorphic";
 import { FlagsmithProvider } from 'flagsmith/react';
 
 export default function App({ Component, pageProps, flagsmithState } {
@@ -23,7 +23,7 @@ App.getInitialProps = async () => {
 }
 
 // pages/index.js
-import flagsmith from 'flagsmith';
+import flagsmith from 'flagsmith/isomorphic';
 import { useFlags, useFlagsmith } from 'flagsmith/react';
 
 export default function HomePage() {
