@@ -53,7 +53,6 @@ def test_4_eyes_workflow(
     registered_user_id, registered_user_token = registered_org_admin_user
     data = {
         "title": "My Change Request",
-        "from_feature_state": feature_state_id,
         "to_feature_state": {
             "enabled": True,
             "feature_state_value": {"type": "unicode", "string_value": "foobar"},
