@@ -43,7 +43,7 @@ const FeatureListProvider = class extends Component {
     }
 
     toggleFlag = (i, environments, comment, environmentFlags) => {
-        AppActions.toggleFlag(i, environments, comment,environmentFlags);
+        AppActions.toggleFlag(i, environments, comment, environmentFlags);
     };
 
     setFlag = (i, flag, environments) => {
@@ -68,6 +68,20 @@ const FeatureListProvider = class extends Component {
                 ...environmentFlag,
                 multivariate_feature_state_values: flag.multivariate_options,
             }, segmentOverrides);
+        });
+    };
+
+    createChangeRequest = (projectId, environmentId, flag, projectFlag, environmentFlag, segmentOverrides) => {
+        AppActions.editFlag(projectId, Object.assign({}, projectFlag, flag, {
+            multivariate_options: flag.multivariate_options && flag.multivariate_options.map((v) => {
+                const matchingProjectVariate = (projectFlag.multivariate_options && projectFlag.multivariate_options.find(p => p.id === v.id)) || v;
+                return {
+                    ...v,
+                    default_percentage_allocation: matchingProjectVariate.default_percentage_allocation,
+                };
+            }),
+        }), (newProjectFlag) => {
+            debugger;
         });
     };
 

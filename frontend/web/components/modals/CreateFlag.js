@@ -13,7 +13,9 @@ import VariationValue from '../mv/VariationValue';
 import AddVariationButton from '../mv/AddVariationButton';
 import VariationOptions from '../mv/VariationOptions';
 import FlagOwners from '../FlagOwners';
-import FeatureListStore from '../../../common/stores/feature-list-store'
+import FeatureListStore from '../../../common/stores/feature-list-store';
+import ChangeRequestModal from './ChangeRequestModal';
+
 const FEATURE_ID_MAXLENGTH = Constants.forms.maxLength.FEATURE_ID;
 
 const CreateFlag = class extends Component {
@@ -144,7 +146,7 @@ const CreateFlag = class extends Component {
             });
         } else {
             FeatureListStore.isSaving = true;
-            FeatureListStore.trigger("change")
+            FeatureListStore.trigger('change');
             !isSaving && name && func(this.props.projectId, this.props.environmentId, {
                 name,
                 initial_value,
@@ -320,7 +322,7 @@ const CreateFlag = class extends Component {
         const valueString = identity ? 'User override' : !!multivariate_options && multivariate_options.length ? `Control Value - ${controlValue}%` : `Value (optional)${' - these can be set per environment'}`;
         const enabledString = isEdit ? 'Enabled' : 'Enabled by default';
         const environmentVariations = this.props.environmentVariations;
-
+        const is4Eyes = flagsmith.hasFeature('4eyes'); // todo: base on environment settings too
         const invalid = !!multivariate_options && multivariate_options.length && controlValue < 0;
         const Settings = (
             <>
@@ -523,14 +525,30 @@ const CreateFlag = class extends Component {
                         AppActions.getFeatures(this.props.projectId, this.props.environmentId, true);
                     }}
                     >
-                        {({ isLoading, isSaving, error, influxData }, { createFlag, editFlag }) => (
+                        {({ isLoading, isSaving, error, influxData }, { createFlag, editFlag, createChangeRequest }) => (
                             <form
                               id="create-feature-modal"
                               onSubmit={(e) => {
                                   e.stopPropagation();
                                   e.preventDefault();
-                                  const func = isEdit ? editFlag : createFlag;
-                                  this.save(func, isSaving);
+                                  const func = isEdit ? is4Eyes ? () => {
+
+                                  } : editFlag : createFlag;
+                                  if (is4Eyes) {
+                                      openModal2('New Change Request', <ChangeRequestModal onSave={({
+                                          title, description, approvals,
+                                      }) => {
+                                          this.save((projectId, environmentId, flag, projectFlag, environmentFlag, segmentOverrides) => {
+                                              console.log({
+                                                  title, description, approvals,
+                                              });
+                                              createChangeRequest(projectId, environmentId, flag, projectFlag, environmentFlag, segmentOverrides, requestData);
+                                          });
+                                      }}
+                                      />);
+                                  } else {
+                                      this.save(func, isSaving);
+                                  }
                               }}
                             >
                                 {isEdit && !identity ? (
@@ -553,8 +571,8 @@ const CreateFlag = class extends Component {
                                         <TabItem data-test="overrides" tabLabel="Overrides">
                                             {!identity && isEdit && (
                                                 <FormGroup className="mb-4 mr-3 ml-3">
-                                                <Permission level="environment" permission={Utils.getManageFeaturePermission()} id={this.props.environmentId}>
-                                                    {({ permission: environmentAdmin }) => environmentAdmin ? (
+                                                    <Permission level="environment" permission={Utils.getManageFeaturePermission()} id={this.props.environmentId}>
+                                                        {({ permission: environmentAdmin }) => (environmentAdmin ? (
 
                                                             <Panel
                                                               icon="ion-ios-settings"
@@ -592,22 +610,22 @@ const CreateFlag = class extends Component {
                                                                 )}
 
                                                             </Panel>
-                                                    ) : (
-                                                        <Panel
-                                                            icon="ion-ios-settings"
-                                                            title={(
-                                                                <Tooltip
+                                                        ) : (
+                                                            <Panel
+                                                              icon="ion-ios-settings"
+                                                              title={(
+                                                                  <Tooltip
                                                                     title={<h6 className="mb-0">Segment Overrides <span className="icon ion-ios-information-circle"/></h6>}
                                                                     place="right"
-                                                                >
-                                                                    {Constants.strings.SEGMENT_OVERRIDES_DESCRIPTION}
-                                                                </Tooltip>
+                                                                  >
+                                                                      {Constants.strings.SEGMENT_OVERRIDES_DESCRIPTION}
+                                                                  </Tooltip>
                                                             )}
-                                                        >
-                                                            <div dangerouslySetInnerHTML={{__html:Constants.environmentPermissions(Utils.getManageFeaturePermission())}}/>
-                                                        </Panel>
-                                                    )}
-                                                </Permission>
+                                                            >
+                                                                <div dangerouslySetInnerHTML={{ __html: Constants.environmentPermissions(Utils.getManageFeaturePermission()) }}/>
+                                                            </Panel>
+                                                        ))}
+                                                    </Permission>
                                                 </FormGroup>
                                             )}
                                             {
@@ -784,7 +802,7 @@ const CreateFlag = class extends Component {
                                             </p>
                                         ) : isEdit ? (
                                             <p className="text-right">
-                                                This will update the feature value for the environment
+                                                {is4Eyes ? 'This will create a change request for the environment' : 'This will update the feature value for the environment'}
                                                 {' '}
                                                 <strong>
                                                     {
@@ -801,9 +819,17 @@ const CreateFlag = class extends Component {
                                     </div>
                                     <div className="text-right mb-2">
                                         {isEdit ? (
-                                            <Button data-test="update-feature-btn" id="update-feature-btn" disabled={isSaving || !name || invalid}>
-                                                {isSaving ? 'Updating' : 'Update Feature'}
-                                            </Button>
+                                            <div>
+                                                {is4Eyes ? (
+                                                    <Button data-test="update-feature-btn" id="update-feature-btn" disabled={isSaving || !name || invalid}>
+                                                        {isSaving ? 'Creating Change Request' : 'Create Change Request'}
+                                                    </Button>
+                                                ) : (
+                                                    <Button data-test="update-feature-btn" id="update-feature-btn" disabled={isSaving || !name || invalid}>
+                                                        {isSaving ? 'Updating' : 'Update Feature'}
+                                                    </Button>
+                                                )}
+                                            </div>
                                         ) : (
                                             <Button data-test="create-feature-btn" id="create-feature-btn" disabled={isSaving || !name}>
                                                 {isSaving ? 'Creating' : 'Create Feature'}
