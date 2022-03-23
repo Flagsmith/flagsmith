@@ -170,7 +170,7 @@ const AppActions = Object.assign({}, require('./base/_app-actions'), {
             segmentOverrides,
         });
     },
-    editEnvironmentFlag(projectId, environmentId, flag, projectFlag, environmentFlag, segmentOverrides) {
+    editEnvironmentFlag(projectId, environmentId, flag, projectFlag, environmentFlag, segmentOverrides, mode) {
         Dispatcher.handleViewAction({
             actionType: Actions.EDIT_ENVIRONMENT_FLAG,
             projectId,
@@ -178,6 +178,19 @@ const AppActions = Object.assign({}, require('./base/_app-actions'), {
             flag,
             projectFlag,
             environmentFlag,
+            segmentOverrides,
+            mode,
+        });
+    },
+    editEnvironmentFlagChangeRequest(projectId, environmentId, flag, projectFlag, environmentFlag, segmentOverrides, changeRequest) {
+        Dispatcher.handleViewAction({
+            actionType: Actions.EDIT_ENVIRONMENT_FLAG_CHANGE_REQUEST,
+            projectId,
+            environmentId,
+            flag,
+            projectFlag,
+            environmentFlag,
+            changeRequest,
             segmentOverrides,
         });
     },

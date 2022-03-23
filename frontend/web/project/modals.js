@@ -4,7 +4,11 @@ import React from 'react';
 const Provider = class extends React.Component {
     componentDidMount() {
         if (this.props.type !== 'confirm') {
-            window.closeModal = this.close;
+            if (this.props.isModal2) {
+                window.closeModal2 = this.close;
+            } else {
+                window.closeModal = this.close;
+            }
         }
         $(ReactDOM.findDOMNode(this)).on('hidden.bs.modal', this._closed);
         $(ReactDOM.findDOMNode(this)).on('shown.bs.modal', this._shown);
@@ -23,20 +27,20 @@ const Provider = class extends React.Component {
       if (!E2E) {
           $(ReactDOM.findDOMNode(this)).modal('hide');
           setTimeout(() => {
-              ReactDOM.unmountComponentAtNode(document.getElementById(this.props.type == 'confirm' ? 'confirm' : 'modal'));
+              ReactDOM.unmountComponentAtNode(document.getElementById(this.props.type == 'confirm' ? 'confirm' : this.props.isModal2 ? 'modal2' : 'modal'));
               document.body.classList.remove('modal-open');
           }, E2E ? 0 : 500);
       } else {
           // for e2e we disable any animations and immediately remove from the DOM
           $('.modal-backdrop').remove();
-          ReactDOM.unmountComponentAtNode(document.getElementById(this.props.type == 'confirm' ? 'confirm' : 'modal'));
+          ReactDOM.unmountComponentAtNode(document.getElementById(this.props.type == 'confirm' ? 'confirm' : this.props.isModal2 ? 'modal2' : 'modal'));
           document.body.classList.remove('modal-open');
       }
   }
 
   _closed = () => {
       this.props.onClose && this.props.onClose();
-      ReactDOM.unmountComponentAtNode(document.getElementById(this.props.type == 'confirm' ? 'confirm' : 'modal'));
+      ReactDOM.unmountComponentAtNode(document.getElementById(this.props.type == 'confirm' ? 'confirm' : this.props.isModal2 ? 'modal2' : 'modal'));
       document.body.classList.remove('modal-open');
   }
 
@@ -68,12 +72,16 @@ const Modal = class extends React.Component {
     }
 
   close = () => {
-      closeModal();
+      if (this.props.isModal2) {
+          closeModal2();
+      } else {
+          closeModal();
+      }
   }
 
   render() {
       return (
-          <Provider ref="modal">
+          <Provider isModal2={this.props.isModal2} ref="modal">
               <div
                 tabIndex="-1" className={`modal ${E2E ? 'transition-none ' : ''}${this.props.className ? this.props.className : 'alert fade expand'}`} role="dialog"
                 aria-hidden="true"
@@ -191,6 +199,14 @@ exports.openModal = (header, body, footer, other) => {
       header={header} footer={footer} body={body}
       {...other}
     />, document.getElementById('modal'));
+};
+
+exports.openModal2 = (header, body, footer, other) => {
+    render(<Modal
+      isModal2
+      header={header} footer={footer} body={body}
+      {...other}
+    />, document.getElementById('modal2'));
 };
 
 exports.openConfirm = (header, body, onYes, onNo) => {
