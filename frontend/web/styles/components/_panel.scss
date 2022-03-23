@@ -101,9 +101,6 @@
 		&.text-white {
 			color: white;
 		}
-		&.ion-ios-information-circle {
-			color: $panel-icon-background-color;
-		}
 	}
 	.panel-icon {
 		display: inline-block;
@@ -164,6 +161,9 @@
 			color: $header-color-dark;
 
 			background-color: $panel-heading-bg-dark;
+			.ion-ios-information-circle {
+				color: $panel-icon-background-color;
+			}
 		}
 		border: none;
 		color: $panel-heading-color-dark;
