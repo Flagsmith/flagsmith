@@ -243,6 +243,13 @@ class FeatureState(LifecycleModel, models.Model):
     version = models.IntegerField(default=1, null=True)
     live_from = models.DateTimeField(null=True)
 
+    change_request = models.ForeignKey(
+        "workflows.ChangeRequest",
+        on_delete=models.SET_NULL,
+        null=True,
+        related_name="feature_states",
+    )
+
     class Meta:
         ordering = ["id"]
 
@@ -283,7 +290,7 @@ class FeatureState(LifecycleModel, models.Model):
     def clone(
         self,
         env: "Environment",
-        version: int = None,
+        draft: bool = False,
         live_from: datetime.datetime = None,
     ) -> "FeatureState":
         # Cloning the Identity is not allowed because they are closely tied
@@ -301,7 +308,7 @@ class FeatureState(LifecycleModel, models.Model):
             else None
         )
         clone.environment = env
-        clone.version = version or self.version
+        clone.version = None if draft else self.version
         clone.live_from = live_from
         clone.save()
         # clone the related objects
@@ -522,7 +529,9 @@ class FeatureState(LifecycleModel, models.Model):
 
         return list(feature_states_dict.values())
 
-    def create_new_version(self, live_from: datetime.datetime = None):
+    def create_new_version(
+        self, live_from: datetime.datetime = None, draft: bool = False
+    ):
         """
         Create a new version of this feature state by incrementing the version
         number by 1.
@@ -532,14 +541,23 @@ class FeatureState(LifecycleModel, models.Model):
                 "Cannot create new version from non-versioned feature state"
             )
 
-        new_version_number = self.version + 1
+        new_version_number = None if draft else self.version + 1
 
-        if FeatureState.objects.filter(version=new_version_number).exists():
+        if (
+            new_version_number
+            and FeatureState.objects.filter(
+                environment=self.environment,
+                feature=self.feature,
+                feature_segment=self.feature_segment,
+                identity=self.identity,
+                version=new_version_number,
+            ).exists()
+        ):
             raise FeatureStateVersionAlreadyExistsError(version=new_version_number)
 
         return self.clone(
             env=self.environment,
-            version=new_version_number,
+            draft=draft,
             live_from=live_from,
         )
 

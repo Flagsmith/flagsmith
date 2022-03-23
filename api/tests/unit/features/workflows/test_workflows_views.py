@@ -110,7 +110,7 @@ def test_commit_change_request_missing_required_approvals(
 
     change_request_no_required_approvals.refresh_from_db()
     assert change_request_no_required_approvals.committed_at is None
-    assert change_request_no_required_approvals.to_feature_state.version is None
+    assert change_request_no_required_approvals.feature_states.first().version is None
 
 
 def test_commit_approved_change_request(
@@ -142,8 +142,8 @@ def test_commit_approved_change_request(
 
     change_request_no_required_approvals.refresh_from_db()
     assert change_request_no_required_approvals.committed_at == now
-    assert change_request_no_required_approvals.to_feature_state.version == 2
-    assert change_request_no_required_approvals.to_feature_state.live_from == now
+    assert change_request_no_required_approvals.feature_states.first().version == 2
+    assert change_request_no_required_approvals.feature_states.first().live_from == now
 
 
 def test_retrieve_change_request(
@@ -184,7 +184,7 @@ def test_list_change_request(
 ):
     # Given
     # TODO: this returns 403 because it's missing the `environment` query param
-    #  - should we move this endpoint to a detail route on the feature state viewset?
+    #  - should we move this endpoint to a detail route on the environment viewset?
     url = reverse("api-v1:features:workflows:change-requests-list")
 
     # When

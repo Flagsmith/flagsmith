@@ -19,5 +19,5 @@ class ChangeRequestPermissions(BasePermission):
 
     def has_object_permission(self, request, view, obj):
         return request.user.has_environment_permission(
-            UPDATE_FEATURE_STATE, obj.from_feature_state.environment
+            UPDATE_FEATURE_STATE, obj.environment
         )

@@ -16,7 +16,7 @@ class ChangeRequestApprovalSerializer(WritableNestedModelSerializer):
         read_only_fields = ("id", "approved_at")
 
 
-class ToFeatureStateSerializer(WritableNestedModelSerializer):
+class ChangeRequestFeatureStateSerializer(WritableNestedModelSerializer):
     feature_state_value = FeatureStateValueSerializer(required=False)
     multivariate_feature_state_values = MultivariateFeatureStateValueSerializer(
         many=True, required=False
@@ -26,6 +26,8 @@ class ToFeatureStateSerializer(WritableNestedModelSerializer):
         model = FeatureState
         fields = (
             "id",
+            "feature",
+            "feature_segment",
             "enabled",
             "feature_state_value",
             "multivariate_feature_state_values",
@@ -35,7 +37,7 @@ class ToFeatureStateSerializer(WritableNestedModelSerializer):
 
 
 class CreateChangeRequestSerializer(WritableNestedModelSerializer):
-    to_feature_state = ToFeatureStateSerializer()
+    feature_states = ChangeRequestFeatureStateSerializer(many=True)
     approvals = ChangeRequestApprovalSerializer(many=True, required=False)
 
     class Meta:
@@ -46,7 +48,7 @@ class CreateChangeRequestSerializer(WritableNestedModelSerializer):
             "updated_at",
             "title",
             "description",
-            "to_feature_state",
+            "feature_states",
             "deleted_at",
             "committed_at",
             "approvals",
@@ -65,15 +67,9 @@ class CreateChangeRequestSerializer(WritableNestedModelSerializer):
 
     def _get_save_kwargs(self, field_name):
         kwargs = super()._get_save_kwargs(field_name)
-        if field_name == "to_feature_state":
-            from_feature_state = self._save_kwargs["from_feature_state"]
-            kwargs.update(
-                feature=from_feature_state.feature,
-                environment=from_feature_state.environment,
-                feature_segment=from_feature_state.feature_segment,
-                identity=from_feature_state.identity,
-                version=None,
-            )
+        if field_name == "feature_states":
+            environment = self._save_kwargs["environment"]
+            kwargs.update(environment=environment, version=None)
         return kwargs
 
 
@@ -86,8 +82,6 @@ class ChangeRequestListSerializer(serializers.ModelSerializer):
             "updated_at",
             "title",
             "description",
-            "from_feature_state",
-            "to_feature_state",
             "user",
             "committed_at",
             "committed_by",
@@ -99,6 +93,7 @@ class ChangeRequestListSerializer(serializers.ModelSerializer):
 class ChangeRequestRetrieveSerializer(serializers.ModelSerializer):
     approvals = ChangeRequestApprovalSerializer(many=True)
     is_approved = serializers.SerializerMethodField()
+    feature_states = ChangeRequestFeatureStateSerializer(many=True)
 
     class Meta:
         model = ChangeRequest
@@ -108,8 +103,7 @@ class ChangeRequestRetrieveSerializer(serializers.ModelSerializer):
             "updated_at",
             "title",
             "description",
-            "from_feature_state",
-            "to_feature_state",
+            "feature_states",
             "user",
             "committed_at",
             "committed_by",

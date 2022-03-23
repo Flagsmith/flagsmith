@@ -415,7 +415,7 @@ class BaseFeatureStateViewSet(viewsets.ModelViewSet):
         return feature_state_value
 
 
-class EnvironmentFeatureStateViewSet(BaseFeatureStateViewSet, CreateChangeRequestMixin):
+class EnvironmentFeatureStateViewSet(BaseFeatureStateViewSet):
     permission_classes = [IsAuthenticated, EnvironmentFeatureStatePermissions]
 
     def get_queryset(self):

@@ -9,11 +9,6 @@ from features.workflows.serializers import CreateChangeRequestSerializer
 
 
 class CreateChangeRequestMixin:
-    def get_serializer_context(self):
-        context = super().get_serializer_context()
-        context["from_feature_state"] = self.get_object()
-        return context
-
     @swagger_auto_schema(
         method="POST",
         request_body=CreateChangeRequestSerializer(),
@@ -25,5 +20,5 @@ class CreateChangeRequestMixin:
             data=request.data, context=self.get_serializer_context()
         )
         serializer.is_valid(raise_exception=True)
-        serializer.save(from_feature_state=self.get_object(), user=request.user)
+        serializer.save(environment=self.get_object(), user=request.user)
         return Response(serializer.data, status=status.HTTP_201_CREATED)

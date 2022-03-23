@@ -27,15 +27,10 @@ class ChangeRequest(LifecycleModel):
         related_name="change_requests",
     )
 
-    from_feature_state = models.ForeignKey(
-        "features.FeatureState",
+    environment = models.ForeignKey(
+        "environments.Environment",
         on_delete=models.CASCADE,
-        related_name="outbound_change_requests",
-    )
-    to_feature_state = models.ForeignKey(
-        "features.FeatureState",
-        on_delete=models.CASCADE,
-        related_name="inbound_change_requests",
+        related_name="change_requests",
     )
 
     deleted_at = models.DateTimeField(null=True)
@@ -58,37 +53,26 @@ class ChangeRequest(LifecycleModel):
                 "Change request has not been approved by all required approvers."
             )
 
-        if not self.to_feature_state.live_from:
-            self.to_feature_state.live_from = timezone.now()
+        feature_states = list(self.feature_states.all())
 
-        self.to_feature_state.version = FeatureState.get_next_version_number(
-            environment_id=self.to_feature_state.environment_id,
-            feature_id=self.to_feature_state.feature_id,
-            feature_segment_id=self.to_feature_state.feature_segment_id,
-            identity_id=self.to_feature_state.identity_id,
+        for feature_state in feature_states:
+            if not feature_state.live_from:
+                feature_state.live_from = timezone.now()
+
+            feature_state.version = FeatureState.get_next_version_number(
+                environment_id=feature_state.environment_id,
+                feature_id=feature_state.feature_id,
+                feature_segment_id=feature_state.feature_segment_id,
+                identity_id=feature_state.identity_id,
+            )
+
+        FeatureState.objects.bulk_update(
+            feature_states, fields=["live_from", "version"]
         )
-        self.to_feature_state.save()
 
         self.committed_at = timezone.now()
         self.committed_by = committed_by
         self.save()
-
-    @hook(BEFORE_SAVE)
-    def validate_feature_states(self):
-        required_matching_attrs = (
-            "environment_id",
-            "feature_id",
-            "feature_segment_id",
-            "identity_id",
-        )
-        if not all(
-            getattr(self.to_feature_state, attr)
-            == getattr(self.from_feature_state, attr)
-            for attr in required_matching_attrs
-        ):
-            raise ChangeRequestNotValid(
-                "Cannot save change request: to_feature_state is not valid."
-            )
 
     def is_approved(self):
         required_approvals = self.approvals.filter(required=True)

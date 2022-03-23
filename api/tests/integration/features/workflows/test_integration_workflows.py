@@ -20,17 +20,6 @@ def test_4_eyes_workflow(
 ):
     settings.CACHE_FLAGS_SECONDS = 0  # ensure no caching of flags
 
-    # First, let's get the feature state for the given feature in the given environment
-    get_environment_feature_states_url = reverse(
-        "api-v1:environments:environment-featurestates-list",
-        args=(environment_api_key,),
-    )
-    get_feature_states_response = admin_client.get(get_environment_feature_states_url)
-    assert get_feature_states_response.status_code == status.HTTP_200_OK
-    response_json = get_feature_states_response.json()
-    assert response_json["count"] == 1
-    feature_state_id = response_json["results"][0]["id"]
-
     # Now let's verify the responses from the SDK flags & identities endpoint before
     # we create a CR
     flags_url = reverse("api-v1:flags")
@@ -47,16 +36,20 @@ def test_4_eyes_workflow(
 
     # Now let's create a CR and add a required approval for the registered user
     create_cr_url = reverse(
-        "api-v1:environments:environment-featurestates-create-change-request",
-        args=(environment_api_key, feature_state_id),
+        "api-v1:environments:environment-create-change-request",
+        args=(environment_api_key,),
     )
     registered_user_id, registered_user_token = registered_org_admin_user
     data = {
         "title": "My Change Request",
-        "to_feature_state": {
-            "enabled": True,
-            "feature_state_value": {"type": "unicode", "string_value": "foobar"},
-        },
+        "feature_states": [
+            {
+                "feature": feature,
+                "feature_segment": None,
+                "enabled": True,
+                "feature_state_value": {"type": "unicode", "string_value": "foobar"},
+            }
+        ],
         "approvals": [{"user": registered_user_id, "required": True}],
     }
     create_cr_response = admin_client.post(

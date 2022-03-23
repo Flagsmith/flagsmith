@@ -104,8 +104,8 @@ def test_change_request_commit_not_scheduled(
     assert change_request_no_required_approvals.committed_at == now
     assert change_request_no_required_approvals.committed_by == user
 
-    assert change_request_no_required_approvals.to_feature_state.version == 2
-    assert change_request_no_required_approvals.to_feature_state.live_from == now
+    assert change_request_no_required_approvals.feature_states.first().version == 2
+    assert change_request_no_required_approvals.feature_states.first().live_from == now
 
 
 def test_change_request_commit_scheduled(
@@ -115,8 +115,7 @@ def test_change_request_commit_scheduled(
     # Given
     now = timezone.now()
     tomorrow = now + timedelta(days=1)
-    change_request_no_required_approvals.to_feature_state.live_from = tomorrow
-    change_request_no_required_approvals.to_feature_state.save()
+    change_request_no_required_approvals.feature_states.update(live_from=tomorrow)
 
     user = FFAdminUser.objects.create(email="approver@example.com")
 
@@ -129,5 +128,8 @@ def test_change_request_commit_scheduled(
     assert change_request_no_required_approvals.committed_at == now
     assert change_request_no_required_approvals.committed_by == user
 
-    assert change_request_no_required_approvals.to_feature_state.version == 2
-    assert change_request_no_required_approvals.to_feature_state.live_from == tomorrow
+    assert change_request_no_required_approvals.feature_states.first().version == 2
+    assert (
+        change_request_no_required_approvals.feature_states.first().live_from
+        == tomorrow
+    )

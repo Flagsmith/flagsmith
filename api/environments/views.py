@@ -19,6 +19,7 @@ from environments.permissions.permissions import (
     EnvironmentPermissions,
     NestedEnvironmentPermissions,
 )
+from features.workflows.mixins import CreateChangeRequestMixin
 from permissions.serializers import (
     MyUserObjectPermissionsSerializer,
     PermissionModelSerializer,
@@ -61,7 +62,7 @@ logger = logging.getLogger(__name__)
         ]
     ),
 )
-class EnvironmentViewSet(viewsets.ModelViewSet):
+class EnvironmentViewSet(viewsets.ModelViewSet, CreateChangeRequestMixin):
     lookup_field = "api_key"
     permission_classes = [IsAuthenticated, EnvironmentPermissions]
 

@@ -34,27 +34,18 @@ class ChangeRequestViewSet(
         if self.action == "list":
             queryset = self._apply_query_filters(queryset)
 
-        return queryset.select_related(
-            "from_feature_state",
-            "from_feature_state__environment",
-            "from_feature_state__environment__project",
-            "from_feature_state__environment__project__organisation",
-            "to_feature_state",
-            "user",
-            "committed_by",
-        ).prefetch_related("approvals")
+        return queryset.select_related("user", "committed_by").prefetch_related(
+            "approvals"
+        )
 
     def _apply_query_filters(self, queryset):
         query_serializer = ChangeRequestListQuerySerializer(
             data=self.request.query_params
         )
         query_serializer.is_valid(raise_exception=True)
-
         query_filters = query_serializer.data
 
-        queryset = queryset.filter(
-            from_feature_state__environment__id=query_filters["environment"]
-        )
+        queryset = queryset.filter(environment=query_filters["environment"])
 
         if not query_filters.get("include_committed"):
             queryset.filter(committed_at__isnull=True)
