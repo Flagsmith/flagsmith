@@ -119,9 +119,6 @@ class ChangeRequestRetrieveSerializer(serializers.ModelSerializer):
 
 
 class ChangeRequestListQuerySerializer(serializers.Serializer):
-    environment = serializers.IntegerField(
-        required=True, help_text="ID of the environment to filter by"
-    )
     include_committed = serializers.BooleanField(
         required=False,
         help_text="Include change requests that have already been committed.",

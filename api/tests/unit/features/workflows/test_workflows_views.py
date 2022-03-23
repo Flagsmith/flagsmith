@@ -179,16 +179,22 @@ def test_retrieve_change_request(
     assert not response_json["is_committed"]
 
 
-def test_list_change_request(
-    change_request_no_required_approvals, admin_client, organisation
+def test_list_change_requests(
+    change_request_no_required_approvals, admin_client, organisation, environment
 ):
     # Given
-    # TODO: this returns 403 because it's missing the `environment` query param
-    #  - should we move this endpoint to a detail route on the environment viewset?
-    url = reverse("api-v1:features:workflows:change-requests-list")
+    base_url = reverse(
+        "api-v1:environments:environment-list-change-requests",
+        args=(environment.api_key,),
+    )
+    url = f"{base_url}?search={change_request_no_required_approvals.title[:5]}"
 
     # When
     response = admin_client.get(url)
 
     # Then
     assert response.status_code == status.HTTP_200_OK
+
+    response_json = response.json()
+    assert len(response_json) == 1
+    assert response_json[0]["id"] == change_request_no_required_approvals.id

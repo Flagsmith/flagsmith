@@ -1,3 +1,5 @@
+import typing
+
 from django.db.models import Q
 from rest_framework import exceptions
 from rest_framework.permissions import BasePermission
@@ -23,38 +25,27 @@ class EnvironmentKeyPermissions(BasePermission):
 
 class EnvironmentPermissions(BasePermission):
     def has_permission(self, request, view):
-        if view.action not in ["clone", "create"]:
-            # return true as all users can list and specific object permissions will be handled later
-            return True
-        try:
-
-            if view.action == "clone":
-                api_key = request.path_info.split("/")[-3]
-                project_lookup = Q(environments__api_key=api_key)
-
-            elif view.action == "create":
+        if view.action == "create":
+            try:
                 project_id = request.data.get("project")
                 project_lookup = Q(id=project_id)
+                project = Project.objects.get(project_lookup)
+                return request.user.has_project_permission(
+                    "CREATE_ENVIRONMENT", project
+                )
+            except Project.DoesNotExist:
+                return False
 
-            project = Project.objects.get(project_lookup)
-            return request.user.has_project_permission("CREATE_ENVIRONMENT", project)
-
-        except Project.DoesNotExist:
-            return False
+        # return true as all users can list and obj permissions will be handled later
+        return True
 
     def has_object_permission(self, request, view, obj):
-        if request.user.is_admin(obj.project.organisation):
-            return True
+        if view.action == "clone":
+            return request.user.is_project_admin(obj.project)
 
-        if request.user.is_environment_admin(obj):
-            return True
-
-        if request.user.is_project_admin(obj.project):
-            return True
-
-        if view.action == "user_permissions":
-            return True
-        return False
+        return request.user.is_environment_admin(obj) or view.action in [
+            "user_permissions"
+        ]
 
 
 class IdentityPermissions(BasePermission):
@@ -130,3 +121,14 @@ class EnvironmentAdminPermission(BasePermission):
 
     def has_object_permission(self, request, view, obj):
         return request.user.is_environment_admin(obj.environment)
+
+
+class HasEnvironmentPermission(BasePermission):
+    def __init__(self, environment_permissions: typing.List[str] = None):
+        self.environment_permissions = environment_permissions or []
+
+    def has_object_permission(self, request, view, obj):
+        return all(
+            request.user.has_environment_permission(permission, obj)
+            for permission in self.environment_permissions
+        )
