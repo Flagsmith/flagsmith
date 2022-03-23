@@ -11,7 +11,9 @@ const ChangeRequestModal = class extends Component {
         router: propTypes.object.isRequired,
     };
 
-    state = {}
+    state = {
+        approvals:[]
+    }
 
     addOwner = (id) => {
         this.setState({ approvals: (this.state.approvals || []).concat(id) });
@@ -26,7 +28,7 @@ const ChangeRequestModal = class extends Component {
     save = () => {
         const { title, description, approvals } = this.state;
         this.props.onSave({
-            title, description, approvals,
+            title, description, approvals: approvals.map((user)=>({user, required:false})),
         });
     }
 
@@ -74,14 +76,16 @@ const ChangeRequestModal = class extends Component {
                                                       <span className="chip-icon ion ion-ios-close"/>
                                                   </Row>
                                               ))}
-                                              <Button onClick={() => this.setState({ showUsers: true })}>Add Assignee</Button>
+                                              <Button className="btn--link btn--link-primary" onClick={() => this.setState({ showUsers: true })}>Add Assignee</Button>
                                           </Row>
 
                                       </div>
                                     )}
                                   onChange={e => this.setState({ description: Utils.safeParseEventValue(e) })}
                                   type="text"
-                                  title="Assign to"
+                                  title="Assignees"
+                                  tooltipPlace="top"
+                                  tooltip="Assignees will be able to review and approve the change request"
                                   inputProps={{ className: 'full-width', style: { minHeight: 80 } }}
                                   className="full-width"
                                   placeholder="Add an optional description..."
@@ -98,7 +102,7 @@ const ChangeRequestModal = class extends Component {
                                 <Button
                                   id="confirm-cancel-plan"
                                   className="btn btn-primary"
-                                  disabled={!title}
+                                  disabled={!title || !this.state.approvals.length}
                                   onClick={this.save}
                                 >
                                     Create

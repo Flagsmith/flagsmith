@@ -3,12 +3,12 @@ import {
     addSegmentOverrideConfig,
     assertTextContent,
     byId,
-    click, createFeature, createRemoteConfig,
+    click, closeModal, createFeature, createRemoteConfig,
     createSegment, createTrait, deleteFeature, gotoFeature,
     gotoFeatures,
     gotoSegments, goToUser,
     log,
-    login, saveFeature, setSegmentOverrideIndex,
+    login, saveFeature, saveFeatureSegments, setSegmentOverrideIndex,
     setText, viewFeature,
     waitForElementVisible,
 } from '../helpers.cafe';
@@ -58,12 +58,12 @@ test('Segments Test', async () => {
     await addSegmentOverrideConfig(0, 3, 2);
     await addSegmentOverrideConfig(1, 2, 1);
     await addSegmentOverrideConfig(2, 1, 0);
-    await saveFeature();
+    await saveFeatureSegments();
     await viewFeature(1);
     await addSegmentOverride(0, true, 2);
     await addSegmentOverride(1, false, 1);
     await addSegmentOverride(2, true, 0);
-    await saveFeature();
+    await saveFeatureSegments();
 
     log('Set user in segment_1', 'Segment Test');
     await goToUser(0);
@@ -78,10 +78,10 @@ test('Segments Test', async () => {
     await gotoFeatures();
     await gotoFeature(0);
     await setSegmentOverrideIndex(1, 0);
-    await saveFeature();
+    await saveFeatureSegments();
     await gotoFeature(1);
     await setSegmentOverrideIndex(1, 0);
-    await saveFeature();
+    await saveFeatureSegments();
     await goToUser(0);
     await waitForElementVisible(byId('user-feature-switch-1-off'));
     await assertTextContent(byId('user-feature-value-0'), '2');
@@ -90,10 +90,10 @@ test('Segments Test', async () => {
     await gotoFeatures();
     await gotoFeature(0);
     await setSegmentOverrideIndex(2, 0);
-    await saveFeature();
+    await saveFeatureSegments();
     await gotoFeature(1);
     await setSegmentOverrideIndex(2, 0);
-    await saveFeature();
+    await saveFeatureSegments();
     await goToUser(0);
     await waitForElementVisible(byId('user-feature-switch-1-on'));
     await assertTextContent(byId('user-feature-value-0'), '3');

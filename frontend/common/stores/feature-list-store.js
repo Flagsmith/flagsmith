@@ -120,10 +120,93 @@ const controller = {
                 store.saved();
             });
     },
-    editFeatureState: (projectId, environmentId, flag, projectFlag, environmentFlag, segmentOverrides) => {
+    editFeatureState: (projectId, environmentId, flag, projectFlag, environmentFlag, segmentOverrides, mode) => {
         let prom;
         store.saving();
         API.trackEvent(Constants.events.EDIT_FEATURE);
+        if (mode !== "VALUE") {
+            prom = Promise.resolve()
+        } else {
+            if (environmentFlag) {
+                prom = data.get(`${Project.api}environments/${environmentId}/featurestates/${environmentFlag.id}/`)
+                    .then((environmentFeatureStates) => {
+                        const multivariate_feature_state_values = environmentFeatureStates.multivariate_feature_state_values && environmentFeatureStates.multivariate_feature_state_values.map((v) => {
+                            const matching = flag.multivariate_options.find(m => m.id === v.multivariate_feature_option);
+                            if (!matching) { // multivariate is new, meaning the value is already correct from the default allocation
+                                return v;
+                            }
+                            // multivariate is existing, override the existing with the new value
+                            return { ...v, percentage_allocation: matching.default_percentage_allocation };
+                        });
+                        environmentFlag.multivariate_feature_state_values = multivariate_feature_state_values;
+                        return data.put(`${Project.api}environments/${environmentId}/featurestates/${environmentFlag.id}/`, Object.assign({}, environmentFlag, {
+                            feature_state_value: flag.initial_value,
+                            hide_from_client: flag.hide_from_client,
+                            enabled: flag.default_enabled,
+                        }));
+                    });
+            } else {
+                prom = data.post(`${Project.api}environments/${environmentId}/featurestates/`, Object.assign({}, flag, {
+                    enabled: false,
+                    environment: environmentId,
+                    feature: projectFlag,
+                }));
+            }
+
+        }
+
+        const segmentOverridesRequest = mode === "SEGMENT" && segmentOverrides
+            ? data.post(`${Project.api}features/feature-segments/update-priorities/`, segmentOverrides.map((override, index) => ({
+                id: override.id,
+                priority: index,
+            }))).then(() => Promise.all(segmentOverrides.map(override => data.put(`${Project.api}features/featurestates/${override.feature_segment_value.id}/`, {
+                ...override.feature_segment_value,
+                multivariate_feature_state_values: override.multivariate_options && override.multivariate_options.map((o) => {
+                    if (o.multivariate_feature_option) return o;
+                    return {
+                        multivariate_feature_option: environmentFlag.multivariate_feature_state_values[o.multivariate_feature_option_index].multivariate_feature_option,
+                        percentage_allocation: o.percentage_allocation,
+                    };
+                }),
+                feature_state_value: Utils.valueToFeatureState(override.value),
+                enabled: override.enabled,
+            })))) : Promise.resolve();
+
+
+        Promise.all([prom, segmentOverridesRequest]).then(([res, segmentRes]) => {
+            store.model.keyedEnvironmentFeatures[projectFlag.id] = res;
+            if (segmentRes) {
+                const feature = _.find(store.model.features, f => f.id === projectFlag.id);
+                if (feature) feature.feature_segments = _.map(segmentRes.feature_segments, segment => ({ ...segment, segment: segment.segment.id }));
+            }
+            store.model.lastSaved = new Date().valueOf();
+            store.saved();
+        });
+    },
+    editFeatureStateChangeRequest: (projectId, environmentId, flag, projectFlag, environmentFlag, segmentOverrides, changeRequest) => {
+        let prom;
+        store.saving();
+        API.trackEvent(Constants.events.EDIT_FEATURE);
+
+        const data = {
+            featurestates:[{
+                feature: projectFlag,
+                enabled: flag.default_enabled,
+                feature_state_value: Utils.valueToFeatureState(flag.initial_value)
+            }],
+            live_from: new Date().toISOString(),
+            ...changeRequest,
+        }
+        prom = data.post(`${Project.api}environments/${environmentId}/create-change-request`, {
+            featurestates:[{
+                feature: projectFlag,
+                enabled: flag.default_enabled,
+                feature_state_value: Utils.valueToFeatureState(flag.initial_value)
+            }],
+            live_from: new Date().toISOString(),
+            ...changeRequest,
+        })
+
         if (environmentFlag) {
             prom = data.get(`${Project.api}environments/${environmentId}/featurestates/${environmentFlag.id}/`)
                 .then((environmentFeatureStates) => {
@@ -231,7 +314,10 @@ store.dispatcherIndex = Dispatcher.register(store, (payload) => {
             controller.createFlag(action.projectId, action.environmentId, action.flag, action.segmentOverrides);
             break;
         case Actions.EDIT_ENVIRONMENT_FLAG:
-            controller.editFeatureState(action.projectId, action.environmentId, action.flag, action.projectFlag, action.environmentFlag, action.segmentOverrides);
+            controller.editFeatureState(action.projectId, action.environmentId, action.flag, action.projectFlag, action.environmentFlag, action.segmentOverrides, action.mode);
+            break;
+        case Actions.EDIT_ENVIRONMENT_FLAG_CHANGE_REQUEST:
+            controller.editFeatureStateChangeRequest(action.projectId, action.environmentId, action.flag, action.projectFlag, action.environmentFlag, action.segmentOverrides, action.changeRequest);
             break;
         case Actions.EDIT_FLAG:
             controller.editFlag(action.projectId, action.flag, action.onComplete);
