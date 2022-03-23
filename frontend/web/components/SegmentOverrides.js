@@ -224,7 +224,7 @@ class TheComponent extends Component {
                         <Flex className="text-left">
                             <Select
                               data-test="select-segment"
-                              placeholder="Select a segment"
+                              placeholder="Create a Segment Override..."
                               value={this.state.selectedSegment}
                               onChange={selectedSegment => this.setState({ selectedSegment }, this.addItem)}
                               options={

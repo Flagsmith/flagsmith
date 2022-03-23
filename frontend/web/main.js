@@ -16,6 +16,7 @@ window.Utils = require('../common/utils/utils');
 window.Constants = require('../common/constants');
 
 window.openModal = require('./project/modals').openModal;
+window.openModal2 = require('./project/modals').openModal2;
 window.openConfirm = require('./project/modals').openConfirm;
 
 const rootElement = document.getElementById('app');

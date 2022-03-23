@@ -78,6 +78,9 @@ a, .btn, button{
                 background-color: transparent;
                 color: $dark-highlight-color;
             }
+            &-primary {
+                color: $bt-brand-primary-dark;
+            }
         }
         &__oauth {
             color: $header-color-dark !important;
@@ -177,6 +180,10 @@ a, .btn, button{
     }
 
     &--link {
+
+        &-primary {
+            color: $bt-brand-primary;
+        }
         vertical-align: baseline;
         font-family: $font-family;
         background: transparent;

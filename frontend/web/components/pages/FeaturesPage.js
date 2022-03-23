@@ -79,7 +79,7 @@ const FeaturesPage = class extends Component {
     }
 
     onSave = () => {
-        toast('Environment Saved');
+        toast('Saved');
     };
 
     editIdentity = (id, envFlags) => {

@@ -43,7 +43,7 @@ const FeatureListProvider = class extends Component {
     }
 
     toggleFlag = (i, environments, comment, environmentFlags) => {
-        AppActions.toggleFlag(i, environments, comment,environmentFlags);
+        AppActions.toggleFlag(i, environments, comment, environmentFlags);
     };
 
     setFlag = (i, flag, environments) => {
@@ -71,6 +71,73 @@ const FeatureListProvider = class extends Component {
         });
     };
 
+    editFlagValue = (projectId, environmentId, flag, projectFlag, environmentFlag, segmentOverrides) => {
+        AppActions.editFlag(projectId, Object.assign({}, projectFlag, {
+            multivariate_options: flag.multivariate_options && flag.multivariate_options.map((v) => {
+                const matchingProjectVariate = (projectFlag.multivariate_options && projectFlag.multivariate_options.find(p => p.id === v.id)) || v;
+                return {
+                    ...v,
+                    default_percentage_allocation: matchingProjectVariate.default_percentage_allocation,
+                };
+            }),
+        }), (newProjectFlag) => {
+            AppActions.editEnvironmentFlag(projectId, environmentId, flag, newProjectFlag, {
+                ...environmentFlag,
+                multivariate_feature_state_values: flag.multivariate_options,
+            }, null, "VALUE");
+        });
+    };
+
+    editFlagSegments = (projectId, environmentId, flag, projectFlag, environmentFlag, segmentOverrides) => {
+        AppActions.editFlag(projectId, Object.assign({}, projectFlag, {
+            multivariate_options: flag.multivariate_options && flag.multivariate_options.map((v) => {
+                const matchingProjectVariate = (projectFlag.multivariate_options && projectFlag.multivariate_options.find(p => p.id === v.id)) || v;
+                return {
+                    ...v,
+                    default_percentage_allocation: matchingProjectVariate.default_percentage_allocation,
+                };
+            }),
+        }), (newProjectFlag) => {
+            AppActions.editEnvironmentFlag(projectId, environmentId, flag, newProjectFlag, {
+                ...environmentFlag,
+                multivariate_feature_state_values: flag.multivariate_options,
+            }, segmentOverrides, "SEGMENT");
+        });
+    };
+
+    editFlagSettings = (projectId, environmentId, flag, projectFlag, environmentFlag, segmentOverrides) => {
+        AppActions.editFlag(projectId, Object.assign({}, projectFlag, flag, {
+            multivariate_options: flag.multivariate_options && flag.multivariate_options.map((v) => {
+                const matchingProjectVariate = (projectFlag.multivariate_options && projectFlag.multivariate_options.find(p => p.id === v.id)) || v;
+                return {
+                    ...v,
+                    default_percentage_allocation: matchingProjectVariate.default_percentage_allocation,
+                };
+            }),
+        }), ()=>{
+            FeatureListStore.isSaving = false;
+            FeatureListStore.trigger("saved")
+            FeatureListStore.trigger("change")
+        });
+    };
+
+    createChangeRequest = (projectId, environmentId, flag, projectFlag, environmentFlag, segmentOverrides, changeRequest) => {
+        AppActions.editFlag(projectId, Object.assign({}, projectFlag, flag, {
+            multivariate_options: flag.multivariate_options && flag.multivariate_options.map((v) => {
+                const matchingProjectVariate = (projectFlag.multivariate_options && projectFlag.multivariate_options.find(p => p.id === v.id)) || v;
+                return {
+                    ...v,
+                    default_percentage_allocation: matchingProjectVariate.default_percentage_allocation,
+                };
+            }),
+        }), (newProjectFlag) => {
+            AppActions.editEnvironmentFlagChangeRequest(projectId, environmentId, flag, newProjectFlag, {
+                ...environmentFlag,
+                multivariate_feature_state_values: flag.multivariate_options,
+            }, segmentOverrides, changeRequest);
+        });
+    };
+
     removeFlag = (projectId, flag) => {
         AppActions.removeFlag(projectId, flag);
     };
@@ -86,7 +153,11 @@ const FeatureListProvider = class extends Component {
                     toggleFlag: this.toggleFlag,
                     setFlag: this.setFlag,
                     createFlag: this.createFlag,
+                    createChangeRequest: this.createChangeRequest,
                     editFlag: this.editFlag,
+                    editFlagValue: this.editFlagValue,
+                    editFlagSettings: this.editFlagSettings,
+                    editFlagSegments: this.editFlagSegments,
                     removeFlag: this.removeFlag,
                 },
             )

@@ -3,7 +3,7 @@ import fetch from 'node-fetch';
 import Project from '../common/project';
 import {
     assertTextContent,
-    byId, click,
+    byId, click, closeModal,
     createFeature,
     createRemoteConfig, createSegment, createTrait,
     deleteFeature, deleteSegment, deleteTrait, getText, gotoSegments, gotoTraits, log,
@@ -94,6 +94,8 @@ test('[Initialise]', async () => {
     await setText(byId('featureValue'), '12');
     await click('#update-feature-btn');
     await assertTextContent(byId('feature-value-1'), '12');
+    await t.pressKey('esc');
+    await closeModal()
 
     log('Try it again');
     await click('#try-it-btn');
@@ -107,8 +109,9 @@ test('[Initialise]', async () => {
     await setText(byId('featureValue'), 'false');
     await click('#update-feature-btn');
     await assertTextContent(byId('feature-value-1'), 'false');
+    await closeModal()
 
-    log('Change feature value to boolean');
+    log('Try it again 2');
     await click('#try-it-btn');
     await t.wait(500)
     text = await getText('#try-it-results');
