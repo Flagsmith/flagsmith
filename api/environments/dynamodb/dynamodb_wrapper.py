@@ -1,13 +1,16 @@
 import typing
+from typing import Iterable
 
 import boto3
 from boto3.dynamodb.conditions import Key
 from django.conf import settings
 from django.core.exceptions import ObjectDoesNotExist
-from django.db.models import QuerySet
 from flag_engine.django_transform.document_builders import (
     build_identity_document,
 )
+
+if typing.TYPE_CHECKING:
+    from environments.identities.models import Identity
 
 
 class DynamoIdentityWrapper:
@@ -28,7 +31,7 @@ class DynamoIdentityWrapper:
     def put_item(self, identity_dict: dict):
         self._table.put_item(Item=identity_dict)
 
-    def write_identities(self, identities: QuerySet):
+    def write_identities(self, identities: Iterable["Identity"]):
         with self._table.batch_writer() as batch:
             for identity in identities:
                 identity_document = build_identity_document(identity)

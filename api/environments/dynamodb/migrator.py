@@ -3,6 +3,7 @@ from django.db.models import Prefetch
 from environments.identities.models import Identity
 from features.models import FeatureState
 from features.multivariate.models import MultivariateFeatureStateValue
+from util.queryset import iterator_with_prefetch
 
 from .dynamodb_wrapper import DynamoIdentityWrapper
 from .types import DynamoProjectMetadata, ProjectIdentityMigrationStatus
@@ -30,22 +31,24 @@ class IdentityMigrator:
         self.project_metadata.start_identity_migration()
         project_id = self.project_metadata.id
         identity_wrapper = DynamoIdentityWrapper()
-        identities = Identity.objects.filter(
-            environment__project__id=project_id
-        ).prefetch_related(
-            "identity_traits",
-            Prefetch(
-                "identity_features",
-                queryset=FeatureState.objects.select_related(
-                    "feature", "feature_state_value"
+        identities = (
+            Identity.objects.filter(environment__project__id=project_id)
+            .select_related("environment")
+            .prefetch_related(
+                "identity_traits",
+                Prefetch(
+                    "identity_features",
+                    queryset=FeatureState.objects.select_related(
+                        "feature", "feature_state_value"
+                    ),
                 ),
-            ),
-            Prefetch(
-                "identity_features__multivariate_feature_state_values",
-                queryset=MultivariateFeatureStateValue.objects.select_related(
-                    "multivariate_feature_option"
+                Prefetch(
+                    "identity_features__multivariate_feature_state_values",
+                    queryset=MultivariateFeatureStateValue.objects.select_related(
+                        "multivariate_feature_option"
+                    ),
                 ),
-            ),
+            )
         )
-        identity_wrapper.write_identities(identities)
+        identity_wrapper.write_identities(iterator_with_prefetch(identities))
         self.project_metadata.finish_identity_migration()
