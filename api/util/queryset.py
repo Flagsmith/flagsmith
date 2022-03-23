@@ -7,7 +7,6 @@ def iterator_with_prefetch(queryset, chunk_size=2000):
     Using Paginator() we can mimic the (somewhat)same behavior
     https://docs.djangoproject.com/en/3.2/ref/models/querysets/#iterator
     """
-
     if not queryset.query.order_by:
         # Paginator() throws a warning if there is no sorting attached to the queryset
         queryset = queryset.order_by("pk")
