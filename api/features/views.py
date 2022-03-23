@@ -57,7 +57,6 @@ from .serializers import (
     WritableNestedFeatureStateSerializer,
 )
 from .tasks import trigger_feature_state_change_webhooks
-from .workflows.mixins import CreateChangeRequestMixin
 
 logger = logging.getLogger()
 logger.setLevel(logging.INFO)

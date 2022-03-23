@@ -3,13 +3,10 @@ import typing
 from django.conf import settings
 from django.db import models
 from django.utils import timezone
-from django_lifecycle import BEFORE_SAVE, LifecycleModel, hook
+from django_lifecycle import LifecycleModel
 
 from features.models import FeatureState
-from features.workflows.exceptions import (
-    ChangeRequestNotApprovedError,
-    ChangeRequestNotValid,
-)
+from features.workflows.exceptions import ChangeRequestNotApprovedError
 
 if typing.TYPE_CHECKING:
     from users.models import FFAdminUser
