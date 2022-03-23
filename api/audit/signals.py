@@ -13,6 +13,7 @@ from audit.models import AuditLog, RelatedObjectType
 from audit.serializers import AuditLogSerializer
 from environments.models import Environment
 from integrations.datadog.datadog import DataDogWrapper
+from integrations.dynatrace.dynatrace import DynatraceWrapper
 from integrations.new_relic.new_relic import NewRelicWrapper
 from integrations.slack.slack import SlackWrapper
 from webhooks.webhooks import WebhookEventType, call_organisation_webhooks
@@ -97,6 +98,22 @@ def send_audit_log_event_to_new_relic(sender, instance, **kwargs):
         app_id=new_relic_config.app_id,
     )
     _track_event_async(instance, new_relic)
+
+
+@receiver(post_save, sender=AuditLog)
+@track_only_feature_related_events
+def send_audit_log_event_to_dynatrace(sender, instance, **kwargs):
+
+    dynatrace_config = _get_integration_config(instance, "dynatrace_config")
+    if not dynatrace_config:
+        return
+
+    dynatrace = DynatraceWrapper(
+        base_url=dynatrace_config.base_url,
+        api_key=dynatrace_config.api_key,
+        app_id=dynatrace_config.app_id,
+    )
+    _track_event_async(instance, dynatrace)
 
 
 # Intialize the dynamo client globally
