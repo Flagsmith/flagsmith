@@ -13,6 +13,7 @@ from audit.constants import (
 from audit.models import AuditLog
 from audit.related_object_type import RelatedObjectType
 from features.models import FeatureState
+from features.versioning.versioning import get_environment_flags_list
 from features.workflows.core.exceptions import (
     CannotApproveOwnChangeRequest,
     ChangeRequestDeletionError,
@@ -567,9 +568,7 @@ def test_committing_scheduled_change_requests_results_in_correct_versions(
 
     # Then
     # the feature state in the latest scheduled cr should be the one that is returned
-    feature_states = FeatureState.get_environment_flags_list(
-        environment_id=environment.id
-    )
+    feature_states = get_environment_flags_list(environment_id=environment.id)
     assert len(feature_states) == 1
     assert feature_states[0] == cr_2_fs
 

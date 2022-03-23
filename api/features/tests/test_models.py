@@ -2,10 +2,8 @@ from unittest import mock
 
 import pytest
 from django.core.exceptions import ValidationError
-from django.db.models import Q
 from django.db.utils import IntegrityError
 from django.test import TestCase
-from django.utils import timezone
 
 from environments.identities.models import Identity
 from environments.models import Environment
@@ -430,46 +428,6 @@ class FeatureStateTest(TestCase):
 
         # Then
         mock_trigger_webhooks.assert_called_with(feature_state)
-
-    def test_get_environment_flags_returns_latest_live_versions_of_feature_states(
-        self,
-    ):
-        # Given
-        feature_2 = Feature.objects.create(name="feature_2", project=self.project)
-        feature_2_v1_feature_state = FeatureState.objects.get(feature=feature_2)
-
-        feature_1_v2_feature_state = FeatureState.objects.create(
-            feature=self.feature,
-            enabled=True,
-            version=2,
-            environment=self.environment,
-            live_from=timezone.now(),
-        )
-        FeatureState.objects.create(
-            feature=self.feature,
-            enabled=False,
-            version=3,
-            environment=self.environment,
-        )
-
-        identity = Identity.objects.create(
-            identifier="identity", environment=self.environment
-        )
-        FeatureState.objects.create(
-            feature=self.feature, identity=identity, environment=self.environment
-        )
-
-        # When
-        environment_feature_states = FeatureState.get_environment_flags_list(
-            environment_id=self.environment.id,
-            additional_filters=Q(feature_segment=None, identity=None),
-        )
-
-        # Then
-        assert set(environment_feature_states) == {
-            feature_1_v2_feature_state,
-            feature_2_v1_feature_state,
-        }
 
     def test_feature_state_type_environment(self):
         # Given

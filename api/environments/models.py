@@ -122,6 +122,8 @@ class Environment(
 
     objects = EnvironmentManager()
 
+    use_v2_feature_versioning = models.BooleanField(default=False)
+
     class Meta:
         ordering = ["id"]
 

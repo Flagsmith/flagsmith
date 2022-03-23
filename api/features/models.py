@@ -74,13 +74,13 @@ from projects.models import Project
 from projects.tags.models import Tag
 
 from . import audit_helpers
-from .dataclasses import EnvironmentFeatureOverridesData
 
 logger = logging.getLogger(__name__)
 
 if typing.TYPE_CHECKING:
     from environments.identities.models import Identity
     from environments.models import Environment
+    from features.versioning.models import EnvironmentFeatureVersion
 
 
 class Feature(
@@ -123,34 +123,6 @@ class Feature(
         # Note: uniqueness index is added in explicit SQL in the migrations (See 0005, 0050)
         # TODO: after upgrade to Django 4.0 use UniqueConstraint()
         ordering = ("id",)  # explicit ordering to prevent pagination warnings
-
-    @staticmethod
-    def get_overrides_data(
-        environment_id: int,
-    ) -> typing.Dict[int, EnvironmentFeatureOverridesData]:
-        """
-        Get the number of identity / segment overrides in a given environment for each feature in the
-        project.
-
-        :param environment_id: the id of the environment to get the overrides data for
-        :return: dictionary of {feature_id: EnvironmentFeatureOverridesData}
-        """
-        environment_feature_states_list = FeatureState.get_environment_flags_list(
-            environment_id
-        )
-        all_overrides_data = {}
-
-        for feature_state in environment_feature_states_list:
-            env_feature_overrides_data = all_overrides_data.setdefault(
-                feature_state.feature_id, EnvironmentFeatureOverridesData()
-            )
-            if feature_state.feature_segment_id:
-                env_feature_overrides_data.num_segment_overrides += 1
-            elif feature_state.identity_id:
-                env_feature_overrides_data.add_identity_override()
-            all_overrides_data[feature_state.feature_id] = env_feature_overrides_data
-
-        return all_overrides_data  # noqa
 
     @hook(AFTER_CREATE)
     def create_feature_states(self):
@@ -424,7 +396,6 @@ class FeatureState(
 
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
-    version = models.IntegerField(default=1, null=True)
     live_from = models.DateTimeField(null=True)
 
     change_request = models.ForeignKey(
@@ -436,10 +407,20 @@ class FeatureState(
 
     objects = FeatureStateManager()
 
+    environment_feature_version = models.ForeignKey(
+        "feature_versioning.EnvironmentFeatureVersion",
+        on_delete=models.SET_NULL,
+        null=True,
+        related_name="feature_states",
+    )
+
+    # to be deprecated!
+    version = models.IntegerField(default=1, null=True)
+
     class Meta:
         ordering = ["id"]
 
-    def __gt__(self, other):
+    def __gt__(self, other: "FeatureState") -> bool:
         """
         Checks if the current feature state is higher priority that the provided feature state.
 
@@ -472,17 +453,22 @@ class FeatureState(
             )
 
         if self.type == other.type:
-            # we use live_from here as a priority over the version since
-            # the version is given when change requests are committed,
-            # hence the version for a feature state that is scheduled
-            # further in the future can be lower than a feature state
-            # whose live_from value is earlier.
-            # See: https://github.com/Flagsmith/flagsmith/issues/2030
-            is_more_recent_live_from = self.is_more_recent_live_from(other)
-            is_more_recent_version = self._is_more_recent_version(other)
-            return self.version is not None and (
-                is_more_recent_live_from or is_more_recent_version
-            )
+            if self.environment.use_v2_feature_versioning:
+                return (
+                    self.environment_feature_version > other.environment_feature_version
+                )
+            else:
+                # we use live_from here as a priority over the version since
+                # the version is given when change requests are committed,
+                # hence the version for a feature state that is scheduled
+                # further in the future can be lower than a feature state
+                # whose live_from value is earlier.
+                # See: https://github.com/Flagsmith/flagsmith/issues/2030
+                is_more_recent_live_from = self.is_more_recent_live_from(other)
+                is_more_recent_version = self._is_more_recent_version(other)
+                return self.version is not None and (
+                    is_more_recent_live_from or is_more_recent_version
+                )
 
         # if we've reached here, then self is just the environment default. In this case, other is higher priority if
         # it has a feature_segment or an identity
@@ -525,11 +511,14 @@ class FeatureState(
 
     @property
     def is_live(self) -> bool:
-        return (
-            self.version is not None
-            and self.live_from is not None
-            and self.live_from <= timezone.now()
-        )
+        if self.environment.use_v2_feature_versioning:
+            return self.environment_feature_version.is_live
+        else:
+            return (
+                self.version is not None
+                and self.live_from is not None
+                and self.live_from <= timezone.now()
+            )
 
     @property
     def is_scheduled(self) -> bool:
@@ -541,6 +530,7 @@ class FeatureState(
         live_from: datetime.datetime = None,
         as_draft: bool = False,
         version: int = None,
+        environment_feature_version: "EnvironmentFeatureVersion" = None,
     ) -> "FeatureState":
         # Cloning the Identity is not allowed because they are closely tied
         # to the environment
@@ -560,6 +550,7 @@ class FeatureState(
         clone.environment = env
         clone.version = None if as_draft else version or self.version
         clone.live_from = live_from
+        clone.environment_feature_version = environment_feature_version
         clone.save()
         # clone the related objects
         self.feature_state_value.clone(clone)
@@ -659,13 +650,19 @@ class FeatureState(
         if self.version is None:
             return
 
-        if FeatureState.objects.filter(
+        q = Q(
             environment=self.environment,
             feature=self.feature,
-            version=self.version,
             feature_segment=self.feature_segment,
             identity=self.identity,
-        ).exists():
+        )
+
+        if self.environment.use_v2_feature_versioning:
+            q = q & Q(environment_feature_version=self.environment_feature_version)
+        else:
+            q = q & Q(version=self.version)
+
+        if FeatureState.objects.filter(q).exists():
             raise ValidationError(
                 "Feature state already exists for this environment, feature, "
                 "version, segment & identity combination"
@@ -677,6 +674,15 @@ class FeatureState(
         Set the live_from date on newly created, version 1 feature states to maintain
         the previous behaviour.
         """
+        if self.environment.use_v2_feature_versioning:
+            # TODO:
+            #  - verify this logic
+            #  - determine if we need to change the behaviour which creates new feature states when a new
+            #  environment / feature is created?
+            # We don't need to do anything since, with the new behaviour, the expectation is that the
+            # FE will create the initial version.
+            return
+
         if self.version == 1 and not self.live_from:
             self.live_from = timezone.now()
 
@@ -721,77 +727,6 @@ class FeatureState(
 
         # Default to string if not an anticipate type value to keep backwards compatibility.
         return fsv_type if fsv_type in accepted_types else STRING
-
-    @classmethod
-    def get_environment_flags_list(
-        cls,
-        environment_id: int,
-        feature_name: str = None,
-        additional_filters: Q = None,
-    ) -> typing.List["FeatureState"]:
-        """
-        Get a list of the latest committed versions of FeatureState objects that are
-        associated with the given environment. Can be filtered to remove segment /
-        identity overrides using additional_filters argument.
-
-        Note: uses a single query to get all valid versions of a given environment's
-        feature states. The logic to grab the latest version is then handled in python
-        by building a dictionary. Returns a list of FeatureState objects.
-        """
-        # Get all feature states for a given environment with a valid live_from in the
-        # past. Note: includes all versions for a given environment / feature
-        # combination. We filter for the latest version later on.
-        feature_states = cls.objects.select_related(
-            "feature", "feature_state_value"
-        ).filter(
-            environment_id=environment_id,
-            live_from__isnull=False,
-            live_from__lte=timezone.now(),
-            version__isnull=False,
-            deleted_at__isnull=True,
-        )
-        if feature_name:
-            feature_states = feature_states.filter(feature__name__iexact=feature_name)
-
-        if additional_filters:
-            feature_states = feature_states.filter(additional_filters)
-
-        # Build up a dictionary in the form
-        # {(feature_id, feature_segment_id, identity_id): feature_state}
-        # and only keep the latest version for each feature.
-        feature_states_dict = {}
-        for feature_state in feature_states:
-            key = (
-                feature_state.feature_id,
-                feature_state.feature_segment_id,
-                feature_state.identity_id,
-            )
-            current_feature_state = feature_states_dict.get(key)
-            # we use live_from here as a priority over the version since
-            # the version is given when change requests are committed,
-            # hence the version for a feature state that is scheduled
-            # further in the future can be lower than a feature state
-            # whose live_from value is earlier.
-            # See: https://github.com/Flagsmith/flagsmith/issues/2030
-            if not current_feature_state or feature_state.is_more_recent_live_from(
-                current_feature_state
-            ):
-                feature_states_dict[key] = feature_state
-
-        return list(feature_states_dict.values())
-
-    @classmethod
-    def get_environment_flags_queryset(
-        cls, environment_id: int, feature_name: str = None
-    ) -> QuerySet:
-        """
-        Get a queryset of the latest live versions of an environments' feature states
-        """
-
-        feature_states_list = cls.get_environment_flags_list(
-            environment_id, feature_name
-        )
-        return FeatureState.objects.filter(id__in=[fs.id for fs in feature_states_list])
 
     @classmethod
     def get_next_version_number(

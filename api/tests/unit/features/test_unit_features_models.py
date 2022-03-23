@@ -3,7 +3,6 @@ from datetime import timedelta
 import pytest
 from django.utils import timezone
 
-from environments.identities.models import Identity
 from environments.models import Environment
 from features.models import Feature, FeatureSegment, FeatureState
 from features.workflows.core.models import ChangeRequest
@@ -12,65 +11,6 @@ from segments.models import Segment
 now = timezone.now()
 yesterday = now - timedelta(days=1)
 tomorrow = now + timedelta(days=1)
-
-
-def test_feature_state_get_environment_flags_queryset_returns_only_latest_versions(
-    feature, environment
-):
-    # Given
-    feature_state_v1 = FeatureState.objects.get(
-        feature=feature, environment=environment, feature_segment=None, identity=None
-    )
-
-    feature_state_v2 = feature_state_v1.clone(
-        env=environment, live_from=timezone.now(), version=2
-    )
-    feature_state_v1.clone(env=environment, as_draft=True)  # draft feature state
-
-    # When
-    feature_states = FeatureState.get_environment_flags_queryset(
-        environment_id=environment.id
-    )
-
-    # Then
-    assert feature_states.count() == 1
-    assert feature_states.first() == feature_state_v2
-
-
-def test_project_hide_disabled_flags_have_no_effect_on_feature_state_get_environment_flags_queryset(
-    environment, project
-):
-    # Given
-    project.hide_disabled_flags = True
-    project.save()
-    # two flags - one disable on enabled
-    Feature.objects.create(default_enabled=False, name="disable_flag", project=project)
-    Feature.objects.create(default_enabled=True, name="enabled_flag", project=project)
-
-    # When
-    feature_states = FeatureState.get_environment_flags_queryset(
-        environment_id=environment.id
-    )
-    # Then
-    assert feature_states.count() == 2
-
-
-def test_feature_states_get_environment_flags_queryset_filter_using_feature_name(
-    environment, project
-):
-    # Given
-    flag_1_name = "flag_1"
-    Feature.objects.create(default_enabled=True, name=flag_1_name, project=project)
-    Feature.objects.create(default_enabled=True, name="flag_2", project=project)
-
-    # When
-    feature_states = FeatureState.get_environment_flags_queryset(
-        environment_id=environment.id, feature_name=flag_1_name
-    )
-
-    # Then
-    assert feature_states.count() == 1
-    assert feature_states.first().feature.name == "flag_1"
 
 
 @pytest.mark.parametrize(
@@ -115,9 +55,12 @@ def test_feature_state_gt_operator_for_live_from(feature_state_live_from_generat
         (1, tomorrow, False),
     ),
 )
-def test_feature_state_is_live(version, live_from, expected_is_live):
+def test_feature_state_is_live(version, live_from, expected_is_live, environment):
     assert (
-        FeatureState(version=version, live_from=live_from).is_live == expected_is_live
+        FeatureState(
+            version=version, live_from=live_from, environment=environment
+        ).is_live
+        == expected_is_live
     )
 
 
@@ -330,53 +273,3 @@ def test_feature_segment_update_priorities_when_changes(
             "master_api_key_id": mocked_request.master_api_key.id,
         }
     )
-
-
-def test_feature_get_overrides_data(
-    feature,
-    environment,
-    identity,
-    segment,
-    feature_segment,
-    identity_featurestate,
-    segment_featurestate,
-):
-    # Given
-    # we create some other features with overrides to ensure we're only getting data
-    # for each individual feature
-    feature_2 = Feature.objects.create(project=feature.project, name="feature_2")
-    FeatureState.objects.create(
-        feature=feature_2, environment=environment, identity=identity
-    )
-
-    feature_3 = Feature.objects.create(project=feature.project, name="feature_3")
-    feature_segment_for_feature_3 = FeatureSegment.objects.create(
-        feature=feature_3, segment=segment, environment=environment
-    )
-    FeatureState.objects.create(
-        feature=feature_3,
-        environment=environment,
-        feature_segment=feature_segment_for_feature_3,
-    )
-
-    # and an override for another identity that has been deleted
-    another_identity = Identity.objects.create(
-        identifier="another-identity", environment=environment
-    )
-    fs_to_delete = FeatureState.objects.create(
-        feature=feature, environment=environment, identity=another_identity
-    )
-    fs_to_delete.delete()
-
-    # When
-    overrides_data = Feature.get_overrides_data(environment.id)
-
-    # Then
-    assert overrides_data[feature.id].num_identity_overrides == 1
-    assert overrides_data[feature.id].num_segment_overrides == 1
-
-    assert overrides_data[feature_2.id].num_identity_overrides == 1
-    assert overrides_data[feature_2.id].num_segment_overrides == 0
-
-    assert overrides_data[feature_3.id].num_identity_overrides is None
-    assert overrides_data[feature_3.id].num_segment_overrides == 1
