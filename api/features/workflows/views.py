@@ -14,6 +14,7 @@ from features.workflows.serializers import (
     ChangeRequestListQuerySerializer,
     ChangeRequestListSerializer,
     ChangeRequestRetrieveSerializer,
+    ChangeRequestUpdateSerializer,
     CreateChangeRequestSerializer,
 )
 
@@ -26,7 +27,6 @@ class ChangeRequestViewSet(
     viewsets.GenericViewSet,
 ):
     permission_classes = (IsAuthenticated, ChangeRequestPermissions)
-    serializer_class = CreateChangeRequestSerializer
 
     def get_queryset(self):
         queryset = ChangeRequest.objects.filter(deleted_at__isnull=True)
@@ -58,8 +58,8 @@ class ChangeRequestViewSet(
     def get_serializer_class(self):
         return {
             "retrieve": ChangeRequestRetrieveSerializer,
-            "update": CreateChangeRequestSerializer,
-            "partial_update": CreateChangeRequestSerializer,
+            "update": ChangeRequestUpdateSerializer,
+            "partial_update": ChangeRequestUpdateSerializer,
             "approve": ChangeRequestRetrieveSerializer,
             "commit": ChangeRequestRetrieveSerializer,
         }.get(self.action, ChangeRequestListSerializer)
