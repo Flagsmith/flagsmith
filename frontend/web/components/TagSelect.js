@@ -66,7 +66,7 @@ class TagSelect extends PureComponent {
                                     }
                                 }} style={{ marginBottom: 10 }} className="btn--link mr-2"
                             >
-                                Toggle all
+                                Clear Filters
                             </Button>
                         )}
                     </Row>
