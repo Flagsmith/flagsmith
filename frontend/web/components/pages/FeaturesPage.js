@@ -196,7 +196,7 @@ const FeaturesPage = class extends Component {
                                                                   <Row className="px-0 pt-0 pb-2">
                                                                       <TagSelect
                                                                         showUntagged
-                                                                        showClearAll
+                                                                        showClearAll={this.state.tags && !!this.state.tags.length}
                                                                         projectId={projectId} value={this.state.tags} onChange={(tags) => {
                                                                             this.setState({ tags });
                                                                             AsyncStorage.setItem(`${projectId}tags`, JSON.stringify(tags));
