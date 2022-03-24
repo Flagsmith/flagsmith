@@ -31,7 +31,7 @@ const VariationValue = ({
                       title="Value"
                     />
                 </div>
-                <div className="ml-2" style={{ width: 200 }}>
+                <div className="ml-2" style={{ width: 210 }}>
                     <InputGroup
                       type="text"
                       onChange={(e) => {
