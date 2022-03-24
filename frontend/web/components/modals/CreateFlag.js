@@ -534,6 +534,7 @@ const CreateFlag = class extends Component {
                                     openModal2('New Change Request', <ChangeRequestModal onSave={({
                                         title, description, approvals,
                                     }) => {
+                                        closeModal2();
                                         this.save((projectId, environmentId, flag, projectFlag, environmentFlag, segmentOverrides) => {
                                             createChangeRequest(projectId, environmentId, flag, projectFlag, environmentFlag, segmentOverrides, {
                                                 title, description, approvals,

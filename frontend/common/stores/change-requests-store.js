@@ -21,7 +21,7 @@ const controller = {
         store.loading();
         data.put(`${Project.api}features/workflows/change-requests/${changeRequest.id}/`,changeRequest)
             .then((res) => {
-                store.model[id] = res;
+                store.model[changeRequest.id] = res;
                 store.loaded();
             });
     },
