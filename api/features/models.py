@@ -290,7 +290,7 @@ class FeatureState(LifecycleModel, models.Model):
     def clone(
         self,
         env: "Environment",
-        draft: bool = False,
+        version: int = None,
         live_from: datetime.datetime = None,
     ) -> "FeatureState":
         # Cloning the Identity is not allowed because they are closely tied
@@ -308,7 +308,7 @@ class FeatureState(LifecycleModel, models.Model):
             else None
         )
         clone.environment = env
-        clone.version = None if draft else self.version
+        clone.version = version or self.version
         clone.live_from = live_from
         clone.save()
         # clone the related objects
@@ -530,7 +530,7 @@ class FeatureState(LifecycleModel, models.Model):
         return list(feature_states_dict.values())
 
     def create_new_version(
-        self, live_from: datetime.datetime = None, draft: bool = False
+        self, live_from: datetime.datetime = None, version: int = None
     ):
         """
         Create a new version of this feature state by incrementing the version
@@ -541,7 +541,7 @@ class FeatureState(LifecycleModel, models.Model):
                 "Cannot create new version from non-versioned feature state"
             )
 
-        new_version_number = None if draft else self.version + 1
+        new_version_number = version or self.version + 1
 
         if (
             new_version_number
@@ -557,7 +557,7 @@ class FeatureState(LifecycleModel, models.Model):
 
         return self.clone(
             env=self.environment,
-            draft=draft,
+            version=new_version_number,
             live_from=live_from,
         )
 

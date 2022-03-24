@@ -1,3 +1,5 @@
+import json
+
 from django.urls import reverse
 from django.utils import timezone
 from rest_framework import status
@@ -198,3 +200,59 @@ def test_list_change_requests(
     response_json = response.json()
     assert len(response_json) == 1
     assert response_json[0]["id"] == change_request_no_required_approvals.id
+
+
+def test_partial_update_change_request(
+    change_request_no_required_approvals, admin_client, organisation, environment
+):
+    # Given
+    url = reverse(
+        "api-v1:features:workflows:change-requests-detail",
+        args=(change_request_no_required_approvals.id,),
+    )
+
+    another_user = FFAdminUser.objects.create(email="another_user@example.com")
+    another_user.add_organisation(organisation, role=OrganisationRole.ADMIN)
+
+    data = {"approvals": [{"user": another_user.id, "required": True}]}
+
+    # When
+    response = admin_client.patch(
+        url, data=json.dumps(data), content_type="application/json"
+    )
+
+    # Then
+    assert response.status_code == status.HTTP_200_OK
+
+    assert change_request_no_required_approvals.approvals.count() == 1
+
+
+def test_full_update_change_request(
+    change_request_no_required_approvals, admin_client, organisation, environment
+):
+    # Given
+    url = reverse(
+        "api-v1:features:workflows:change-requests-detail",
+        args=(change_request_no_required_approvals.id,),
+    )
+
+    existing_change_request_json = admin_client.get(url).json()
+
+    another_user = FFAdminUser.objects.create(email="another_user@example.com")
+    another_user.add_organisation(organisation, role=OrganisationRole.ADMIN)
+
+    existing_change_request_json["approvals"] = [
+        {"user": another_user.id, "required": True}
+    ]
+
+    # When
+    response = admin_client.patch(
+        url,
+        data=json.dumps(existing_change_request_json),
+        content_type="application/json",
+    )
+
+    # Then
+    assert response.status_code == status.HTTP_200_OK
+
+    assert change_request_no_required_approvals.approvals.count() == 1

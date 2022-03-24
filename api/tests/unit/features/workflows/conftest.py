@@ -19,7 +19,7 @@ def change_request_no_required_approvals(environment, feature):
         user=user,
     )
 
-    new_feature_state = existing_feature_state.create_new_version(draft=True)
+    new_feature_state = existing_feature_state.create_new_version()
     new_feature_state.change_request = change_request
     new_feature_state.save()
 
