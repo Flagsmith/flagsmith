@@ -210,13 +210,6 @@ const AppActions = Object.assign({}, require('./base/_app-actions'), {
             project,
         });
     },
-    getChangeRequests(environment) {
-        Dispatcher.handleViewAction({
-            actionType: Actions.EDIT_PROJECT,
-            id,
-            project,
-        });
-    },
     removeUserFlag({ environmentId, identity, identityFlag }) {
         Dispatcher.handleViewAction({
             actionType: Actions.REMOVE_USER_FLAG,
@@ -443,7 +436,7 @@ const AppActions = Object.assign({}, require('./base/_app-actions'), {
         Dispatcher.handleViewAction({
             actionType: Actions.GET_AUDIT_LOG,
             projectId,
-            search
+            search,
         });
     },
     getAuditLogPage(projectId, page) {
@@ -503,27 +496,27 @@ const AppActions = Object.assign({}, require('./base/_app-actions'), {
     getChangeRequest(id) {
         Dispatcher.handleViewAction({
             actionType: Actions.GET_CHANGE_REQUEST,
-            id
+            id,
         });
     },
     updateChangeRequest(changeRequest) {
         Dispatcher.handleViewAction({
             actionType: Actions.UPDATE_CHANGE_REQUEST,
-            changeRequest
+            changeRequest,
         });
     },
 
     deleteChangeRequest(id) {
         Dispatcher.handleViewAction({
             actionType: Actions.DELETE_CHANGE_REQUEST,
-            id
+            id,
         });
     },
-    actionChangeRequest(id, actionType) {
+    actionChangeRequest(id, action) {
         Dispatcher.handleViewAction({
             actionType: Actions.ACTION_CHANGE_REQUEST,
             id,
-            actionType
+            action,
         });
     },
 });

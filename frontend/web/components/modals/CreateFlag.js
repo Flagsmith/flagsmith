@@ -529,38 +529,38 @@ const CreateFlag = class extends Component {
                     }}
                     >
                         {({ isLoading, isSaving, error, influxData }, { createFlag, editFlagSettings, editFlagValue, editFlagSegments, createChangeRequest }) => {
-                            const saveFeatureValue = ()=> {
-                                    if (is4Eyes) {
-                                        openModal2('New Change Request', <ChangeRequestModal onSave={({
-                                                                                                          title, description, approvals,
-                                                                                                      }) => {
-                                            this.save((projectId, environmentId, flag, projectFlag, environmentFlag, segmentOverrides) => {
-                                                createChangeRequest(projectId, environmentId, flag, projectFlag, environmentFlag, segmentOverrides, {
-                                                    title, description, approvals,
-                                                });
+                            const saveFeatureValue = () => {
+                                if (is4Eyes) {
+                                    openModal2('New Change Request', <ChangeRequestModal onSave={({
+                                        title, description, approvals,
+                                    }) => {
+                                        this.save((projectId, environmentId, flag, projectFlag, environmentFlag, segmentOverrides) => {
+                                            createChangeRequest(projectId, environmentId, flag, projectFlag, environmentFlag, segmentOverrides, {
+                                                title, description, approvals,
                                             });
-                                        }}
-                                        />);
-                                    } else {
-                                        this.save(editFlagValue, isSaving);
-                                    }
-                            }
+                                        });
+                                    }}
+                                    />);
+                                } else {
+                                    this.save(editFlagValue, isSaving);
+                                }
+                            };
 
-                            const saveSettings = ()=> {
+                            const saveSettings = () => {
                                 this.save(editFlagSettings, isSaving);
-                            }
+                            };
 
-                            const saveFeatureSegments = ()=> {
+                            const saveFeatureSegments = () => {
                                 this.save(editFlagSegments, isSaving);
-                            }
+                            };
 
-                             const createFeature = ()=> {
-                                 this.save(createFlag, isSaving);
-                             }
+                            const createFeature = () => {
+                                this.save(createFlag, isSaving);
+                            };
 
                             return (
                                 <div
-                                    id="create-feature-modal"
+                                  id="create-feature-modal"
                                 >
                                     {isEdit && !identity ? (
                                         <Tabs value={this.state.tab} onChange={tab => this.setState({ tab })}>
@@ -568,8 +568,8 @@ const CreateFlag = class extends Component {
                                                 <FormGroup className="mr-3 ml-3">
                                                     <Panel title={(
                                                         <Tooltip
-                                                            title={<h6 className="mb-0">Environment Value <span className="icon ion-ios-information-circle"/></h6>}
-                                                            place="top"
+                                                          title={<h6 className="mb-0">Environment Value <span className="icon ion-ios-information-circle"/></h6>}
+                                                          place="top"
                                                         >
                                                             {Constants.strings.ENVIRONMENT_OVERRIDE_DESCRIPTION(_.find(project.environments, { api_key: this.props.environmentId }).name)}
                                                         </Tooltip>
@@ -588,11 +588,17 @@ const CreateFlag = class extends Component {
                                                     </p>
                                                     <div className="text-right">
                                                         {is4Eyes ? (
-                                                            <Button onClick={saveFeatureValue} type="button" data-test="update-feature-btn" id="update-feature-btn" disabled={isSaving || !name || invalid}>
+                                                            <Button
+                                                              onClick={saveFeatureValue} type="button" data-test="update-feature-btn"
+                                                              id="update-feature-btn" disabled={isSaving || !name || invalid}
+                                                            >
                                                                 {isSaving ? 'Creating Change Request' : 'Create Change Request'}
                                                             </Button>
                                                         ) : (
-                                                            <Button onClick={saveFeatureValue} type="button" data-test="update-feature-btn" id="update-feature-btn" disabled={isSaving || !name || invalid}>
+                                                            <Button
+                                                              onClick={saveFeatureValue} type="button" data-test="update-feature-btn"
+                                                              id="update-feature-btn" disabled={isSaving || !name || invalid}
+                                                            >
                                                                 {isSaving ? 'Updating' : 'Update Feature Value'}
                                                             </Button>
                                                         )}
@@ -606,16 +612,16 @@ const CreateFlag = class extends Component {
                                                             {({ permission: environmentAdmin }) => (environmentAdmin ? (
                                                                 <div>
                                                                     <Panel
-                                                                        icon="ion-ios-settings"
-                                                                        title={(
-                                                                            <Tooltip
-                                                                                title={<h6 className="mb-0">Segment Overrides <span className="icon ion-ios-information-circle"/></h6>}
-                                                                                place="right"
-                                                                            >
-                                                                                {Constants.strings.SEGMENT_OVERRIDES_DESCRIPTION}
-                                                                            </Tooltip>
+                                                                      icon="ion-ios-settings"
+                                                                      title={(
+                                                                          <Tooltip
+                                                                            title={<h6 className="mb-0">Segment Overrides <span className="icon ion-ios-information-circle"/></h6>}
+                                                                            place="right"
+                                                                          >
+                                                                              {Constants.strings.SEGMENT_OVERRIDES_DESCRIPTION}
+                                                                          </Tooltip>
                                                                         )}
-                                                                        action={
+                                                                      action={
                                                                             (
                                                                                 <Button onClick={() => this.changeSegment(this.props.segmentOverrides)} type="button" className={`btn--outline${enabledSegment ? '' : '-red'}`}>
                                                                                     {enabledSegment ? 'Enable All' : 'Disable All'}
@@ -625,14 +631,14 @@ const CreateFlag = class extends Component {
                                                                     >
                                                                         {this.props.segmentOverrides ? (
                                                                             <SegmentOverrides
-                                                                                feature={projectFlag.id}
-                                                                                projectId={this.props.projectId}
-                                                                                multivariateOptions={multivariate_options}
-                                                                                environmentId={this.props.environmentId}
-                                                                                value={this.props.segmentOverrides}
-                                                                                controlValue={initial_value}
-                                                                                segments={this.props.segments}
-                                                                                onChange={this.props.updateSegments}
+                                                                              feature={projectFlag.id}
+                                                                              projectId={this.props.projectId}
+                                                                              multivariateOptions={multivariate_options}
+                                                                              environmentId={this.props.environmentId}
+                                                                              value={this.props.segmentOverrides}
+                                                                              controlValue={initial_value}
+                                                                              segments={this.props.segments}
+                                                                              onChange={this.props.updateSegments}
                                                                             />
                                                                         ) : (
                                                                             <div className="text-center">
@@ -650,7 +656,10 @@ const CreateFlag = class extends Component {
                                                                         </strong>
                                                                     </p>
                                                                     <div className="text-right">
-                                                                        <Button onClick={saveFeatureSegments} type="button" data-test="update-feature-segments-btn" id="update-feature-segments-btn" disabled={isSaving || !name || invalid}>
+                                                                        <Button
+                                                                          onClick={saveFeatureSegments} type="button" data-test="update-feature-segments-btn"
+                                                                          id="update-feature-segments-btn" disabled={isSaving || !name || invalid}
+                                                                        >
                                                                             {isSaving ? 'Updating' : 'Update Segment Overrides'}
                                                                         </Button>
                                                                     </div>
@@ -659,14 +668,14 @@ const CreateFlag = class extends Component {
 
                                                             ) : (
                                                                 <Panel
-                                                                    icon="ion-ios-settings"
-                                                                    title={(
-                                                                        <Tooltip
-                                                                            title={<h6 className="mb-0">Segment Overrides <span className="icon ion-ios-information-circle"/></h6>}
-                                                                            place="right"
-                                                                        >
-                                                                            {Constants.strings.SEGMENT_OVERRIDES_DESCRIPTION}
-                                                                        </Tooltip>
+                                                                  icon="ion-ios-settings"
+                                                                  title={(
+                                                                      <Tooltip
+                                                                        title={<h6 className="mb-0">Segment Overrides <span className="icon ion-ios-information-circle"/></h6>}
+                                                                        place="right"
+                                                                      >
+                                                                          {Constants.strings.SEGMENT_OVERRIDES_DESCRIPTION}
+                                                                      </Tooltip>
                                                                     )}
                                                                 >
                                                                     <div dangerouslySetInnerHTML={{ __html: Constants.environmentPermissions(Utils.getManageFeaturePermission()) }}/>
@@ -682,38 +691,106 @@ const CreateFlag = class extends Component {
                                                     <TabItem data-test="identity_overrides" tabLabel="Identity Overrides">
                                                         <FormGroup className="mb-4 mr-3 ml-3">
                                                             <PanelSearch
-                                                                id="users-list"
-                                                                title={(
-                                                                    <Tooltip
-                                                                        title={<h6 className="mb-0">Identity Overrides <span className="icon ion-ios-information-circle"/></h6>}
-                                                                        place="right"
-                                                                    >
-                                                                        {Constants.strings.IDENTITY_OVERRIDES_DESCRIPTION}
-                                                                    </Tooltip>
+                                                              id="users-list"
+                                                              title={(
+                                                                  <Tooltip
+                                                                    title={<h6 className="mb-0">Identity Overrides <span className="icon ion-ios-information-circle"/></h6>}
+                                                                    place="right"
+                                                                  >
+                                                                      {Constants.strings.IDENTITY_OVERRIDES_DESCRIPTION}
+                                                                  </Tooltip>
                                                                 )}
-                                                                action={
+                                                              action={
                                                                     (
                                                                         <Button onClick={() => this.changeIdentity(this.state.userOverrides)} type="button" className={`btn--outline${enabledIndentity ? '' : '-red'}`}>
                                                                             {enabledIndentity ? 'Enable All' : 'Disable All'}
                                                                         </Button>
                                                                     )
                                                                 }
-                                                                icon="ion-md-person"
-                                                                items={this.state.userOverrides}
-                                                                paging={this.state.userOverridesPaging}
-                                                                nextPage={() => this.userOverridesPage(this.state.userOverridesPaging.currentPage + 1)}
-                                                                prevPage={() => this.userOverridesPage(this.state.userOverridesPaging.currentPage - 1)}
-                                                                goToPage={page => this.userOverridesPage(page)}
-                                                                searchPanel={
+                                                              icon="ion-md-person"
+                                                              items={this.state.userOverrides}
+                                                              paging={this.state.userOverridesPaging}
+                                                              nextPage={() => this.userOverridesPage(this.state.userOverridesPaging.currentPage + 1)}
+                                                              prevPage={() => this.userOverridesPage(this.state.userOverridesPaging.currentPage - 1)}
+                                                              goToPage={page => this.userOverridesPage(page)}
+                                                              searchPanel={
                                                                     (
                                                                         <div className="text-center mt-2 mb-2">
                                                                             <IdentityListProvider>
                                                                                 {({ isLoading, identities }) => (
                                                                                     <Flex className="text-left">
                                                                                         <Select
-                                                                                            onInputChange={this.onSearchIdentityChange}
+                                                                                          onInputChange={this.onSearchIdentityChange}
+                                                                                          data-test="select-identity"
+                                                                                          placeholder="Create an Identity Override..."
+                                                                                          value={this.state.selectedIdentity}
+                                                                                          onChange={selectedIdentity => this.setState({ selectedIdentity }, this.addItem)}
+                                                                                          options={this.identityOptions(identities, this.state.userOverrides, isLoading)}
+                                                                                          styles={{
+                                                                                              control: base => ({
+                                                                                                  ...base,
+                                                                                                  '&:hover': { borderColor: '$bt-brand-secondary' },
+                                                                                                  border: '1px solid $bt-brand-secondary',
+                                                                                              }),
+                                                                                          }}
+                                                                                        />
+                                                                                    </Flex>
+                                                                                )}
+                                                                            </IdentityListProvider>
+                                                                        </div>
+                                                                    )
+                                                                }
+                                                              renderRow={({ id, feature_state_value, enabled, identity }) => (
+                                                                  <Row
+                                                                    onClick={() => {
+                                                                        window.open(`${document.location.origin}/project/${this.props.projectId}/environment/${this.props.environmentId}/users/${identity.identifier}/${identity.id}?flag=${projectFlag.name}`, '_blank');
+                                                                    }} space className="list-item cursor-pointer"
+                                                                    key={id}
+                                                                  >
+                                                                      <Flex>
+                                                                          {identity.identifier}
+                                                                      </Flex>
+                                                                      <Switch disabled checked={enabled}/>
+                                                                      <div className="ml-2">
+                                                                          {feature_state_value && (
+                                                                          <FeatureValue
+                                                                            value={feature_state_value}
+                                                                          />
+                                                                          )}
+                                                                      </div>
+
+
+                                                                      <a
+                                                                        target="_blank"
+                                                                        href={`/project/${this.props.projectId}/environment/${this.props.environmentId}/users/${identity.identifier}/${identity.id}?flag=${projectFlag.name}`}
+                                                                        className="ml-2 btn btn-link btn--link" onClick={() => {
+                                                                        }}
+                                                                      >
+                                                                            Edit
+                                                                      </a>
+                                                                  </Row>
+                                                              )}
+                                                              renderNoResults={(
+                                                                  <Panel
+                                                                    id="users-list"
+                                                                    title={(
+                                                                        <Tooltip
+                                                                          title={<h6 className="mb-0">Identity Overrides <span className="icon ion-ios-information-circle"/></h6>}
+                                                                          place="right"
+                                                                        >
+                                                                            {Constants.strings.IDENTITY_OVERRIDES_DESCRIPTION}
+                                                                        </Tooltip>
+                                                                        )}
+                                                                  >
+                                                                      { (
+                                                                          <IdentityListProvider>
+                                                                              {({ isLoading, identities }) => (
+                                                                                  <div>
+                                                                                      <Flex className="text-left">
+                                                                                          <Select
                                                                                             data-test="select-identity"
-                                                                                            placeholder="Create an Identity Override..."
+                                                                                            placeholder="Search"
+                                                                                            onInputChange={this.onSearchIdentityChange}
                                                                                             value={this.state.selectedIdentity}
                                                                                             onChange={selectedIdentity => this.setState({ selectedIdentity }, this.addItem)}
                                                                                             options={this.identityOptions(identities, this.state.userOverrides, isLoading)}
@@ -724,86 +801,18 @@ const CreateFlag = class extends Component {
                                                                                                     border: '1px solid $bt-brand-secondary',
                                                                                                 }),
                                                                                             }}
-                                                                                        />
-                                                                                    </Flex>
-                                                                                )}
-                                                                            </IdentityListProvider>
-                                                                        </div>
-                                                                    )
-                                                                }
-                                                                renderRow={({ id, feature_state_value, enabled, identity }) => (
-                                                                    <Row
-                                                                        onClick={() => {
-                                                                            window.open(`${document.location.origin}/project/${this.props.projectId}/environment/${this.props.environmentId}/users/${identity.identifier}/${identity.id}?flag=${projectFlag.name}`, '_blank');
-                                                                        }} space className="list-item cursor-pointer"
-                                                                        key={id}
-                                                                    >
-                                                                        <Flex>
-                                                                            {identity.identifier}
-                                                                        </Flex>
-                                                                        <Switch disabled checked={enabled}/>
-                                                                        <div className="ml-2">
-                                                                            {feature_state_value && (
-                                                                                <FeatureValue
-                                                                                    value={feature_state_value}
-                                                                                />
-                                                                            )}
-                                                                        </div>
-
-
-                                                                        <a
-                                                                            target="_blank"
-                                                                            href={`/project/${this.props.projectId}/environment/${this.props.environmentId}/users/${identity.identifier}/${identity.id}?flag=${projectFlag.name}`}
-                                                                            className="ml-2 btn btn-link btn--link" onClick={() => {
-                                                                        }}
-                                                                        >
-                                                                            Edit
-                                                                        </a>
-                                                                    </Row>
-                                                                )}
-                                                                renderNoResults={(
-                                                                    <Panel
-                                                                        id="users-list"
-                                                                        title={(
-                                                                            <Tooltip
-                                                                                title={<h6 className="mb-0">Identity Overrides <span className="icon ion-ios-information-circle"/></h6>}
-                                                                                place="right"
-                                                                            >
-                                                                                {Constants.strings.IDENTITY_OVERRIDES_DESCRIPTION}
-                                                                            </Tooltip>
-                                                                        )}
-                                                                    >
-                                                                        { (
-                                                                            <IdentityListProvider>
-                                                                                {({ isLoading, identities }) => (
-                                                                                    <div>
-                                                                                        <Flex className="text-left">
-                                                                                            <Select
-                                                                                                data-test="select-identity"
-                                                                                                placeholder="Search"
-                                                                                                onInputChange={this.onSearchIdentityChange}
-                                                                                                value={this.state.selectedIdentity}
-                                                                                                onChange={selectedIdentity => this.setState({ selectedIdentity }, this.addItem)}
-                                                                                                options={this.identityOptions(identities, this.state.userOverrides, isLoading)}
-                                                                                                styles={{
-                                                                                                    control: base => ({
-                                                                                                        ...base,
-                                                                                                        '&:hover': { borderColor: '$bt-brand-secondary' },
-                                                                                                        border: '1px solid $bt-brand-secondary',
-                                                                                                    }),
-                                                                                                }}
-                                                                                            />
-                                                                                        </Flex>
-                                                                                        <div className="mt-2">
+                                                                                          />
+                                                                                      </Flex>
+                                                                                      <div className="mt-2">
                                                                                             No identities are overriding this feature.
-                                                                                        </div>
-                                                                                    </div>
-                                                                                )}
-                                                                            </IdentityListProvider>
+                                                                                      </div>
+                                                                                  </div>
+                                                                              )}
+                                                                          </IdentityListProvider>
                                                                         )}
-                                                                    </Panel>
+                                                                  </Panel>
                                                                 )}
-                                                                isLoading={!this.state.userOverrides}
+                                                              isLoading={!this.state.userOverrides}
                                                             />
                                                         </FormGroup>
                                                     </TabItem>
@@ -813,7 +822,7 @@ const CreateFlag = class extends Component {
                                                 <TabItem data-test="analytics" tabLabel="Analytics">
                                                     <FormGroup className="mb-4 mr-3 ml-3">
                                                         <Panel
-                                                            title={<h6 className="mb-0">Flag events for last {this.state.period}</h6>}
+                                                          title={<h6 className="mb-0">Flag events for last {this.state.period}</h6>}
                                                         >
                                                             {this.drawChart(influxData)}
                                                         </Panel>
@@ -828,7 +837,10 @@ const CreateFlag = class extends Component {
                                                         <p className="text-right">
                                                             This will save the above settings <strong>all environments</strong>.
                                                         </p>
-                                                        <Button onClick={saveSettings} data-test="update-feature-btn" id="update-feature-btn" disabled={isSaving || !name || invalid}>
+                                                        <Button
+                                                          onClick={saveSettings} data-test="update-feature-btn" id="update-feature-btn"
+                                                          disabled={isSaving || !name || invalid}
+                                                        >
                                                             {isSaving ? 'Updating' : 'Update Settings'}
                                                         </Button>
                                                     </div>
@@ -843,7 +855,10 @@ const CreateFlag = class extends Component {
                                                     <p className="text-right">
                                                         This will create the feature for <strong>all environments</strong>, you can edit this feature per environment once the feature is created.
                                                     </p>
-                                                    <Button onClick={createFeature} data-test="create-feature-btn" id="create-feature-btn" disabled={isSaving || !name || invalid}>
+                                                    <Button
+                                                      onClick={createFeature} data-test="create-feature-btn" id="create-feature-btn"
+                                                      disabled={isSaving || !name || invalid}
+                                                    >
                                                         {isSaving ? 'Creating' : 'Create Feature'}
                                                     </Button>
                                                 </div>
@@ -854,7 +869,7 @@ const CreateFlag = class extends Component {
 
                                     {error && <Error error={error}/>}
                                     {identity && (
-                                        <div className={'pr-3'}>
+                                        <div className="pr-3">
                                             {identity ? (
                                                 <div className="mb-3">
                                                     <p className="text-left ml-3">
@@ -872,12 +887,15 @@ const CreateFlag = class extends Component {
                                                         {' Any segment overrides for this feature will now be ignored.'}
                                                     </p>
                                                 </div>
-                                            ) : ""}
+                                            ) : ''}
 
                                             <div className="text-right mb-2">
                                                 {identity && (
                                                     <div>
-                                                        <Button onClick={saveFeatureValue} data-test="update-feature-btn" id="update-feature-btn" disabled={isSaving || !name || invalid}>
+                                                        <Button
+                                                          onClick={saveFeatureValue} data-test="update-feature-btn" id="update-feature-btn"
+                                                          disabled={isSaving || !name || invalid}
+                                                        >
                                                             {isSaving ? 'Updating' : 'Update Feature'}
                                                         </Button>
                                                     </div>
@@ -886,7 +904,7 @@ const CreateFlag = class extends Component {
                                         </div>
                                     )}
                                 </div>
-                            )
+                            );
                         }}
 
                     </Provider>

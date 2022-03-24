@@ -77,15 +77,15 @@ const controller = {
                 store.model.lastSaved = new Date().valueOf();
                 store.changed();
             })
-            .catch(e => {
+            .catch((e) => {
                 if (onComplete) {
                     onComplete({
                         ...flag,
                         type: flag.multivariate_options && flag.multivariate_options.length ? 'MULTIVARIATE' : 'STANDARD',
                         project: projectId,
-                    })
+                    });
                 } else {
-                    API.ajaxHandler(store, e)
+                    API.ajaxHandler(store, e);
                 }
             });
     },
@@ -124,38 +124,35 @@ const controller = {
         let prom;
         store.saving();
         API.trackEvent(Constants.events.EDIT_FEATURE);
-        if (mode !== "VALUE") {
-            prom = Promise.resolve()
-        } else {
-            if (environmentFlag) {
-                prom = data.get(`${Project.api}environments/${environmentId}/featurestates/${environmentFlag.id}/`)
-                    .then((environmentFeatureStates) => {
-                        const multivariate_feature_state_values = environmentFeatureStates.multivariate_feature_state_values && environmentFeatureStates.multivariate_feature_state_values.map((v) => {
-                            const matching = flag.multivariate_options.find(m => m.id === v.multivariate_feature_option);
-                            if (!matching) { // multivariate is new, meaning the value is already correct from the default allocation
-                                return v;
-                            }
-                            // multivariate is existing, override the existing with the new value
-                            return { ...v, percentage_allocation: matching.default_percentage_allocation };
-                        });
-                        environmentFlag.multivariate_feature_state_values = multivariate_feature_state_values;
-                        return data.put(`${Project.api}environments/${environmentId}/featurestates/${environmentFlag.id}/`, Object.assign({}, environmentFlag, {
-                            feature_state_value: flag.initial_value,
-                            hide_from_client: flag.hide_from_client,
-                            enabled: flag.default_enabled,
-                        }));
+        if (mode !== 'VALUE') {
+            prom = Promise.resolve();
+        } else if (environmentFlag) {
+            prom = data.get(`${Project.api}environments/${environmentId}/featurestates/${environmentFlag.id}/`)
+                .then((environmentFeatureStates) => {
+                    const multivariate_feature_state_values = environmentFeatureStates.multivariate_feature_state_values && environmentFeatureStates.multivariate_feature_state_values.map((v) => {
+                        const matching = flag.multivariate_options.find(m => m.id === v.multivariate_feature_option);
+                        if (!matching) { // multivariate is new, meaning the value is already correct from the default allocation
+                            return v;
+                        }
+                        // multivariate is existing, override the existing with the new value
+                        return { ...v, percentage_allocation: matching.default_percentage_allocation };
                     });
-            } else {
-                prom = data.post(`${Project.api}environments/${environmentId}/featurestates/`, Object.assign({}, flag, {
-                    enabled: false,
-                    environment: environmentId,
-                    feature: projectFlag,
-                }));
-            }
-
+                    environmentFlag.multivariate_feature_state_values = multivariate_feature_state_values;
+                    return data.put(`${Project.api}environments/${environmentId}/featurestates/${environmentFlag.id}/`, Object.assign({}, environmentFlag, {
+                        feature_state_value: flag.initial_value,
+                        hide_from_client: flag.hide_from_client,
+                        enabled: flag.default_enabled,
+                    }));
+                });
+        } else {
+            prom = data.post(`${Project.api}environments/${environmentId}/featurestates/`, Object.assign({}, flag, {
+                enabled: false,
+                environment: environmentId,
+                feature: projectFlag,
+            }));
         }
 
-        const segmentOverridesRequest = mode === "SEGMENT" && segmentOverrides
+        const segmentOverridesRequest = mode === 'SEGMENT' && segmentOverrides
             ? data.post(`${Project.api}features/feature-segments/update-priorities/`, segmentOverrides.map((override, index) => ({
                 id: override.id,
                 priority: index,
@@ -184,11 +181,10 @@ const controller = {
         });
     },
     editFeatureStateChangeRequest: (projectId, environmentId, flag, projectFlag, environmentFlag, segmentOverrides, changeRequest) => {
-        let prom;
         store.saving();
         API.trackEvent(Constants.events.EDIT_FEATURE);
 
-        data.get(`${Project.api}environments/${environmentId}/featurestates/${environmentFlag.id}/`)
+        const prom = data.get(`${Project.api}environments/${environmentId}/featurestates/${environmentFlag.id}/`)
             .then((environmentFeatureStates) => {
                 const multivariate_feature_state_values = environmentFeatureStates.multivariate_feature_state_values && environmentFeatureStates.multivariate_feature_state_values.map((v) => {
                     const matching = flag.multivariate_options.find(m => m.id === v.multivariate_feature_option);
@@ -198,22 +194,21 @@ const controller = {
                     // multivariate is existing, override the existing with the new value
                     return { ...v, percentage_allocation: matching.default_percentage_allocation };
                 });
-                debugger
                 const req = {
-                    featurestates: [{
-                        feature: projectFlag,
+                    feature_states: [{
+                        feature: projectFlag.id,
                         enabled: flag.default_enabled,
                         feature_state_value: Utils.valueToFeatureState(flag.initial_value),
                         live_from: new Date().toISOString(),
                         multivariate_feature_state_values,
                     }],
                     ...changeRequest,
-                }
-                data.post(`${Project.api}environments/${environmentId}/create-change-request`, req)
-            })
+                };
+                return data.post(`${Project.api}environments/${environmentId}/create-change-request/`, req);
+            });
 
 
-        Promise.all([prom, segmentOverridesRequest]).then(([res, segmentRes]) => {
+        Promise.all([prom]).then(([res, segmentRes]) => {
             store.model.keyedEnvironmentFeatures[projectFlag.id] = res;
             if (segmentRes) {
                 const feature = _.find(store.model.features, f => f.id === projectFlag.id);
