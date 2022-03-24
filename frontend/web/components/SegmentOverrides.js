@@ -86,7 +86,7 @@ const SegmentOverride = ConfigProvider(SortableElement(({ hasFeature, controlVal
                         <FormGroup className="mb-4">
                             <VariationOptions
                                 disabled
-                                select
+                                select={flagsmith.hasFeature("segment_mv_percentages")?false: true}
                                 controlValue={controlValue}
                                 variationOverrides={v.multivariate_options}
                                 setVariations={setVariations}
@@ -118,7 +118,9 @@ const SegmentOverrideList = SortableContainer(({ disabled, multivariateOptions, 
               controlValue={controlValue}
               toggle={() => toggle(index)}
               setVariations={newVariations => setVariations(index, newVariations)}
-              setValue={value => setValue(index, value)}
+              setValue={value => {
+                  setValue(index, value)
+              }}
             />
         ))}
     </div>

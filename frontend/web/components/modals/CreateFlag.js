@@ -853,36 +853,38 @@ const CreateFlag = class extends Component {
                                     )}
 
                                     {error && <Error error={error}/>}
-                                    <div className={identity ? 'pr-3' : 'side-modal__footer pr-5'}>
-                                        <div className="mb-3">
+                                    {identity && (
+                                        <div className={'pr-3'}>
                                             {identity ? (
-                                                <p className="text-left ml-3">
-                                                    This will update the feature value for the user
-                                                    {' '}
-                                                    <strong>{identityName}</strong>
-                                                    {' '}
-                                                    in
-                                                    <strong>
+                                                <div className="mb-3">
+                                                    <p className="text-left ml-3">
+                                                        This will update the feature value for the user
                                                         {' '}
-                                                        {
-                                                            _.find(project.environments, { api_key: this.props.environmentId }).name
-                                                        }.
-                                                    </strong>
-                                                    {' Any segment overrides for this feature will now be ignored.'}
-                                                </p>
+                                                        <strong>{identityName}</strong>
+                                                        {' '}
+                                                        in
+                                                        <strong>
+                                                            {' '}
+                                                            {
+                                                                _.find(project.environments, { api_key: this.props.environmentId }).name
+                                                            }.
+                                                        </strong>
+                                                        {' Any segment overrides for this feature will now be ignored.'}
+                                                    </p>
+                                                </div>
                                             ) : ""}
 
+                                            <div className="text-right mb-2">
+                                                {identity && (
+                                                    <div>
+                                                        <Button onClick={saveFeatureValue} data-test="update-feature-btn" id="update-feature-btn" disabled={isSaving || !name || invalid}>
+                                                            {isSaving ? 'Updating' : 'Update Feature'}
+                                                        </Button>
+                                                    </div>
+                                                )}
+                                            </div>
                                         </div>
-                                        <div className="text-right mb-2">
-                                            {identity && (
-                                                <div>
-                                                    <Button onClick={saveFeatureValue} data-test="update-feature-btn" id="update-feature-btn" disabled={isSaving || !name || invalid}>
-                                                        {isSaving ? 'Updating' : 'Update Feature'}
-                                                    </Button>
-                                                </div>
-                                            )}
-                                        </div>
-                                    </div>
+                                    )}
                                 </div>
                             )
                         }}
