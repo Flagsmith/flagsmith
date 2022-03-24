@@ -119,7 +119,6 @@ const SegmentOverrideList = SortableContainer(({ disabled, multivariateOptions, 
               toggle={() => toggle(index)}
               setVariations={newVariations => setVariations(index, newVariations)}
               setValue={value => {
-                  debugger
                   setValue(index, value)
               }}
             />
