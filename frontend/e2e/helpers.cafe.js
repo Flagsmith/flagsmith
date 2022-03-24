@@ -83,6 +83,8 @@ export const addSegmentOverride = async (index, value, selectionIndex = 0) => {
 
 export const saveFeature = async () => {
     await click('#update-feature-btn');
+    await waitForElementVisible('.toast-message');
+    await waitForElementNotExist('.toast-message');
     await closeModal()
     await waitForElementNotExist('#create-feature-modal');
 };
@@ -90,6 +92,8 @@ export const saveFeature = async () => {
 
 export const saveFeatureSegments = async () => {
     await click('#update-feature-segments-btn');
+    await waitForElementVisible('.toast-message');
+    await waitForElementNotExist('.toast-message');
     await closeModal()
     await waitForElementNotExist('#create-feature-modal');
 };
