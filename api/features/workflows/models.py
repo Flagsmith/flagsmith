@@ -72,8 +72,10 @@ class ChangeRequest(LifecycleModel):
         self.save()
 
     def is_approved(self):
-        required_approvals = self.approvals.filter(required=True)
-        return all(approval.approved_at for approval in required_approvals)
+        return self.environment.minimum_change_request_approvals and (
+            self.approvals.filter(approved_at__isnull=False).count()
+            >= self.environment.minimum_change_request_approvals
+        )
 
     @property
     def is_committed(self):
@@ -85,20 +87,8 @@ class ChangeRequestApproval(models.Model):
     change_request = models.ForeignKey(
         ChangeRequest, on_delete=models.CASCADE, related_name="approvals"
     )
-    required = models.BooleanField(default=True)
     created_at = models.DateTimeField(auto_now_add=True)
     approved_at = models.DateTimeField(null=True)
 
     class Meta:
         unique_together = ("user", "change_request")
-
-
-class ChangeRequestComment(models.Model):
-    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
-    change_request = models.ForeignKey(
-        ChangeRequest, on_delete=models.CASCADE, related_name="comments"
-    )
-    created_at = models.DateTimeField(auto_now_add=True)
-    updated_at = models.DateTimeField(auto_now=True)
-
-    body = models.TextField()

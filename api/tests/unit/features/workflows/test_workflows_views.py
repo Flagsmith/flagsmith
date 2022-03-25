@@ -125,7 +125,6 @@ def test_commit_approved_change_request(
     ChangeRequestApproval.objects.create(
         user=another_user,
         change_request=change_request_no_required_approvals,
-        required=True,
         approved_at=now,
     )
 
@@ -158,7 +157,6 @@ def test_retrieve_change_request(
     ChangeRequestApproval.objects.create(
         user=another_user,
         change_request=change_request_no_required_approvals,
-        required=True,
         approved_at=now,
     )
 

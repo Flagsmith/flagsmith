@@ -24,3 +24,10 @@ def change_request_no_required_approvals(environment, feature):
     new_feature_state.save()
 
     return change_request
+
+
+@pytest.fixture()
+def environment_with_1_required_cr_approval(environment):
+    environment.minimum_change_request_approvals = 1
+    environment.save()
+    return environment

@@ -14,7 +14,7 @@ def test_change_request_approve_by_required_approver(
     # Given
     user = FFAdminUser.objects.create(email="approver@example.com")
     approval = ChangeRequestApproval.objects.create(
-        user=user, required=True, change_request=change_request_no_required_approvals
+        user=user, change_request=change_request_no_required_approvals
     )
     now = timezone.now()
     mocker.patch("features.workflows.models.timezone.now", return_value=now)
@@ -46,14 +46,14 @@ def test_change_request_approve_by_new_approver_when_no_approvals_exist(
     assert approval.user == user
 
 
-def test_change_request_approve_by_new_approver_when_required_approvals_exist(
+def test_change_request_approve_by_new_approver_when_approvals_exist(
     change_request_no_required_approvals, mocker
 ):
     # Given
     user_1 = FFAdminUser.objects.create(email="user_1@example.com")
     user_2 = FFAdminUser.objects.create(email="user_2@example.com")
     approval = ChangeRequestApproval.objects.create(
-        user=user_1, required=True, change_request=change_request_no_required_approvals
+        user=user_1, change_request=change_request_no_required_approvals
     )
     now = timezone.now()
     mocker.patch("features.workflows.models.timezone.now", return_value=now)
@@ -79,7 +79,7 @@ def test_change_request_commit_raises_exception_when_not_approved(
     user_1 = FFAdminUser.objects.create(email="user_1@example.com")
     user_2 = FFAdminUser.objects.create(email="user_2@example.com")
     ChangeRequestApproval.objects.create(
-        user=user_1, required=True, change_request=change_request_no_required_approvals
+        user=user_1, change_request=change_request_no_required_approvals
     )
 
     # When
@@ -132,3 +132,39 @@ def test_change_request_commit_scheduled(
         change_request_no_required_approvals.feature_states.first().live_from
         == tomorrow
     )
+
+
+def test_change_request_is_approved_false_when_no_approvals(
+    change_request_no_required_approvals, environment_with_1_required_cr_approval
+):
+    assert change_request_no_required_approvals.is_approved() is False
+
+
+def test_change_request_is_approved_false_when_unapproved_approvals(
+    change_request_no_required_approvals,
+    environment_with_1_required_cr_approval,
+    django_user_model,
+    organisation,
+):
+    # Given
+    user = django_user_model.objects.create(email="user@example.com")
+    ChangeRequestApproval.objects.create(
+        change_request=change_request_no_required_approvals, user=user
+    )
+
+    # Then
+    assert change_request_no_required_approvals.is_approved() is False
+
+
+def test_change_request_is_approved_true_when_enough_approved_approvals(
+    change_request_no_required_approvals,
+    environment_with_1_required_cr_approval,
+    django_user_model,
+    organisation,
+):
+    # Given
+    user = django_user_model.objects.create(email="user@example.com")
+    change_request_no_required_approvals.approve(user)
+
+    # Then
+    assert change_request_no_required_approvals.is_approved() is True
