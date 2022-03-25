@@ -13,9 +13,9 @@ from environments.permissions.constants import (
 )
 from environments.permissions.permissions import HasEnvironmentPermission
 from features.workflows.serializers import (
+    ChangeRequestCreateSerializer,
     ChangeRequestListQuerySerializer,
     ChangeRequestListSerializer,
-    CreateChangeRequestSerializer,
 )
 
 
@@ -33,12 +33,12 @@ class CreateChangeRequestMixin:
 
     @swagger_auto_schema(
         method="POST",
-        request_body=CreateChangeRequestSerializer(),
-        responses={201: CreateChangeRequestSerializer(), 400: ErrorSerializer()},
+        request_body=ChangeRequestCreateSerializer(),
+        responses={201: ChangeRequestCreateSerializer(), 400: ErrorSerializer()},
     )
     @action(detail=True, methods=["POST"], url_path="create-change-request")
     def create_change_request(self, request: Request, **kwargs) -> Response:
-        serializer = CreateChangeRequestSerializer(
+        serializer = ChangeRequestCreateSerializer(
             data=request.data, context=self.get_serializer_context()
         )
         serializer.is_valid(raise_exception=True)

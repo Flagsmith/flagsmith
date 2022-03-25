@@ -16,7 +16,7 @@ class ChangeRequestApprovalSerializer(WritableNestedModelSerializer):
         read_only_fields = ("id", "approved_at")
 
 
-class ChangeRequestFeatureStateSerializer(WritableNestedModelSerializer):
+class UpdateChangeRequestFeatureStateSerializer(WritableNestedModelSerializer):
     feature_state_value = FeatureStateValueSerializer(required=False)
     multivariate_feature_state_values = MultivariateFeatureStateValueSerializer(
         many=True, required=False
@@ -36,8 +36,18 @@ class ChangeRequestFeatureStateSerializer(WritableNestedModelSerializer):
         read_only_fields = ("id",)
 
 
+class CreateChangeRequestFeatureStateSerializer(
+    UpdateChangeRequestFeatureStateSerializer
+):
+    class Meta(UpdateChangeRequestFeatureStateSerializer.Meta):
+        read_only_fields = (
+            UpdateChangeRequestFeatureStateSerializer.Meta.read_only_fields
+            + ("multivariate_feature_state_values",)
+        )
+
+
 class ChangeRequestUpdateSerializer(WritableNestedModelSerializer):
-    feature_states = ChangeRequestFeatureStateSerializer(many=True)
+    feature_states = UpdateChangeRequestFeatureStateSerializer(many=True)
     approvals = ChangeRequestApprovalSerializer(many=True, required=False)
 
     class Meta:
@@ -68,7 +78,9 @@ class ChangeRequestUpdateSerializer(WritableNestedModelSerializer):
         )
 
 
-class CreateChangeRequestSerializer(ChangeRequestUpdateSerializer):
+class ChangeRequestCreateSerializer(ChangeRequestUpdateSerializer):
+    feature_states = CreateChangeRequestFeatureStateSerializer(many=True)
+
     def _get_save_kwargs(self, field_name):
         kwargs = super()._get_save_kwargs(field_name)
         if field_name == "feature_states":
@@ -97,7 +109,7 @@ class ChangeRequestListSerializer(serializers.ModelSerializer):
 class ChangeRequestRetrieveSerializer(serializers.ModelSerializer):
     approvals = ChangeRequestApprovalSerializer(many=True)
     is_approved = serializers.SerializerMethodField()
-    feature_states = ChangeRequestFeatureStateSerializer(many=True)
+    feature_states = CreateChangeRequestFeatureStateSerializer(many=True)
 
     class Meta:
         model = ChangeRequest
