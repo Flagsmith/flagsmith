@@ -9,7 +9,6 @@ from django.utils import timezone
 from environments.identities.models import Identity
 from environments.models import Environment
 from features.constants import ENVIRONMENT, FEATURE_SEGMENT, IDENTITY
-from features.exceptions import FeatureStateVersionAlreadyExistsError
 from features.models import Feature, FeatureSegment, FeatureState
 from organisations.models import Organisation
 from projects.models import Project

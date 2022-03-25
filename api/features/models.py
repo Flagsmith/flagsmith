@@ -23,10 +23,6 @@ from environments.identities.helpers import (
 )
 from features.constants import ENVIRONMENT, FEATURE_SEGMENT, IDENTITY
 from features.custom_lifecycle import CustomLifecycleModelMixin
-from features.exceptions import (
-    FeatureStateVersionAlreadyExistsError,
-    FeatureStateVersionError,
-)
 from features.feature_states.models import AbstractBaseFeatureValueModel
 from features.feature_types import MULTIVARIATE
 from features.helpers import get_correctly_typed_value
