@@ -24,8 +24,14 @@ class DynatraceWrapper(AbstractBaseEventIntegrationWrapper):
 
     @staticmethod
     def generate_event_data(log: str, email: str, environment_name: str) -> dict:
+        flag_properties = {
+            "event": f"{log} by user {email}",
+            "environment": environment_name,
+        }
+
         return {
-            "text": f"{log} by user {email}",
-            "title": "Flagsmith Feature Flag Event",
-            "tags": [f"env:{environment_name}"],
+            "entitySelector": None,
+            "title": "Flagsmith flag change.",
+            "eventType": "CUSTOM_DEPLOYMENT",
+            "properties": flag_properties,
         }
