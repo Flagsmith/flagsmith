@@ -53,13 +53,27 @@ jobs:
                   username: ${{ secrets.DOCKERHUB_USERNAME }}
                   password: ${{ secrets.DOCKERHUB_TOKEN }}
 
-            - name: Build and push
+            - name: Build and push amd64 images
               id: docker_build
+              # only build amd images for latest tag
+              if: ${{ !startsWith(github.ref, 'refs/tags/') }}
               uses: docker/build-push-action@v2
               with:
+                  platforms: linux/amd64
                   file: api/Dockerfile
                   context: api/
+                  push: true
+                  tags: ${{ steps.meta.outputs.tags }}
+
+            - name: Build and push all architecture images on tags
+              id: docker_build_arm
+              # only build arm images on tags as they are slow to build
+              if: ${{ startsWith(github.ref, 'refs/tags/') }}
+              uses: docker/build-push-action@v2
+              with:
                   platforms: linux/amd64,linux/arm64,linux/arm/v7
+                  file: api/Dockerfile
+                  context: api/
                   push: true
                   tags: ${{ steps.meta.outputs.tags }}
 
