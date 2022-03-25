@@ -11,12 +11,14 @@ EVENTS_API_URI = "api/v2/events/ingest"
 
 
 class DynatraceWrapper(AbstractBaseEventIntegrationWrapper):
-    def __init__(self, base_url: str, api_key: str):
+    def __init__(self, base_url: str, api_key: str, entity_selector: str):
         self.base_url = base_url
         self.api_key = api_key
+        self.entity_selector = entity_selector
         self.url = f"{self.base_url}{EVENTS_API_URI}?api-token={self.api_key}"
 
     def _track_event(self, event: dict) -> None:
+        event["entitySelector"] = self.entity_selector
         response = requests.post(self.url, data=json.dumps(event))
         logger.debug(
             "Sent event to Dynatrace. Response code was %s" % response.status_code
@@ -33,7 +35,6 @@ class DynatraceWrapper(AbstractBaseEventIntegrationWrapper):
         }
 
         return {
-            "entitySelector": None,
             "title": "Flagsmith flag change.",
             "eventType": "CUSTOM_DEPLOYMENT",
             "properties": flag_properties,

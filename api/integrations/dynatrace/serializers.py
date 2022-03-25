@@ -6,4 +6,4 @@ from .models import DynatraceConfiguration
 class DynatraceConfigurationSerializer(serializers.ModelSerializer):
     class Meta:
         model = DynatraceConfiguration
-        fields = ("id", "base_url", "api_key")
+        fields = ("id", "base_url", "api_key", "entity_selector")
