@@ -15,6 +15,7 @@ import VariationOptions from '../mv/VariationOptions';
 import FlagOwners from '../FlagOwners';
 import FeatureListStore from '../../../common/stores/feature-list-store';
 import ChangeRequestModal from './ChangeRequestModal';
+import Feature from "../Feature";
 
 const FEATURE_ID_MAXLENGTH = Constants.forms.maxLength.FEATURE_ID;
 
@@ -283,14 +284,12 @@ const CreateFlag = class extends Component {
 
     removeVariation = (i) => {
         if (this.state.multivariate_options[i].id) {
-            openConfirm('Please confirm', 'This will remove the variation on your feature for all environments, if you wish to turn it off just for this environment you can set the % value to 0.', () => {
-                const idToRemove = this.state.multivariate_options[i].id;
-                if (idToRemove) {
-                    this.props.removeMultiVariateOption(idToRemove);
-                }
-                this.state.multivariate_options.splice(i, 1);
-                this.forceUpdate();
-            });
+            const idToRemove = this.state.multivariate_options[i].id;
+            if (idToRemove) {
+                this.props.removeMultiVariateOption(idToRemove);
+            }
+            this.state.multivariate_options.splice(i, 1);
+            this.forceUpdate();
         } else {
             this.state.multivariate_options.splice(i, 1);
             this.forceUpdate();
@@ -318,12 +317,10 @@ const CreateFlag = class extends Component {
         } = this.state;
         const { isEdit, hasFeature, projectFlag, identity, identityName } = this.props;
         const Provider = identity ? IdentityProvider : FeatureListProvider;
-        const controlValue = Utils.calculateControl(multivariate_options, environmentVariations);
-        const valueString = identity ? 'User override' : !!multivariate_options && multivariate_options.length ? `Control Value - ${controlValue}%` : `Value (optional)${' - these can be set per environment'}`;
-        const enabledString = isEdit ? 'Enabled' : 'Enabled by default';
         const environmentVariations = this.props.environmentVariations;
-        const is4Eyes = flagsmith.hasFeature('4eyes'); // todo: base on environment settings too
+        const is4Eyes = false && flagsmith.hasFeature('4eyes'); // todo: base on environment settings too
         const is4EyesSegmentOverrides = flagsmith.hasFeature('4eyes'); // todo: base on environment settings too
+        const controlValue = Utils.calculateControl(multivariate_options, environmentVariations);
         const invalid = !!multivariate_options && multivariate_options.length && controlValue < 0;
         const Settings = (
             <>
@@ -443,76 +440,28 @@ const CreateFlag = class extends Component {
                         />
                     </FormGroup>
                 )}
-                <FormGroup className="mb-4 mr-3 ml-3">
-                    <div>
-                        <label>{enabledString}</label>
-                    </div>
-                    <Switch
-                      data-test="toggle-feature-button"
-                      defaultChecked={default_enabled}
-                      disabled={hide_from_client}
-                      checked={!hide_from_client && default_enabled}
-                      onChange={default_enabled => this.setState({ default_enabled })}
-                    />
-                </FormGroup>
-
-                {!(!!identity && (multivariate_options && !!multivariate_options.length)) && (
-                    <FormGroup className="mx-3 mb-4 mr-3">
-                        <InputGroup
-                          component={(
-                              <ValueEditor
-                                data-test="featureValue"
-                                name="featureValue" className="full-width"
-                                value={`${typeof initial_value === 'undefined' || initial_value === null ? '' : initial_value}`}
-                                onChange={e => this.setState({ initial_value: Utils.getTypedValue(Utils.safeParseEventValue(e)) })}
-                                disabled={hide_from_client}
-                                placeholder="e.g. 'big' "
-                              />
-                            )}
-                          tooltip={Constants.strings.REMOTE_CONFIG_DESCRIPTION}
-                          title={`${valueString}`}
-                        />
-                    </FormGroup>
-                ) }
-
-                {!!identity && (
-                    <div>
-                        <FormGroup className="mb-4 mx-3">
-                            <VariationOptions
-                              disabled
-                              select
-                              controlValue={this.props.environmentFlag.feature_state_value}
-                              variationOverrides={this.state.identityVariations}
-                              setVariations={(identityVariations) => {
-                                  this.setState({ identityVariations });
-                              }}
-                              updateVariation={() => {}}
-                              weightTitle="Override Weight %"
-                              multivariateOptions={projectFlag.multivariate_options}
-                              removeVariation={() => {}}
-                            />
-                        </FormGroup>
-                    </div>
-                )}
-                {!identity && (
-                    <div>
-                        <FormGroup className="ml-3 mb-4 mr-3">
-                            {(!!environmentVariations || !isEdit) && (
-                                <VariationOptions
-                                  disabled={!!identity}
-                                  controlValue={controlValue}
-                                  variationOverrides={environmentVariations}
-                                  updateVariation={this.updateVariation}
-                                  weightTitle={isEdit ? 'Environment Weight %' : 'Default Weight %'}
-                                  multivariateOptions={multivariate_options}
-                                  removeVariation={this.removeVariation}
-                                />
-                            )}
-                        </FormGroup>
-                        <AddVariationButton onClick={this.addVariation}/>
-                    </div>
-
-                )}
+                <Feature
+                    hide_from_client={hide_from_client}
+                    multivariate_options={multivariate_options}
+                    environmentVariations={environmentVariations}
+                    isEdit={isEdit}
+                    identity={identity}
+                    removeVariation={this.removeVariation}
+                    updateVariation={this.updateVariation}
+                    addVariation={this.addVariation}
+                    checked={default_enabled}
+                    value={initial_value}
+                    identityVariations={this.state.identityVariations}
+                    onChangeIdentityVariations={(identityVariations) => {
+                        this.setState({ identityVariations });
+                    }}
+                    environmentFlag={this.props.environmentFlag}
+                    onValueChange={(e)=>{
+                        debugger
+                        this.setState({ initial_value: Utils.getTypedValue(Utils.safeParseEventValue(e)) })
+                    }}
+                    onCheckedChange={default_enabled => this.setState({ default_enabled })}
+                />
                 {!isEdit && !identity && Settings}
             </>
         );
