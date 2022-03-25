@@ -12,7 +12,7 @@ from features.workflows.models import ChangeRequest, ChangeRequestApproval
 class ChangeRequestApprovalSerializer(WritableNestedModelSerializer):
     class Meta:
         model = ChangeRequestApproval
-        fields = ("id", "user", "required", "approved_at")
+        fields = ("id", "user", "approved_at")
         read_only_fields = ("id", "approved_at")
 
 
