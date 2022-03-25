@@ -15,7 +15,6 @@ from features.workflows.serializers import (
     ChangeRequestListSerializer,
     ChangeRequestRetrieveSerializer,
     ChangeRequestUpdateSerializer,
-    CreateChangeRequestSerializer,
 )
 
 

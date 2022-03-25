@@ -904,33 +904,14 @@ class FeatureStateViewSetTestCase(TestCase):
         # and
         assert res.json()["results"][0]["identity"]["identifier"] == identifier
 
-    def test_create_new_version(self):
-        # Given
-        feature_state = FeatureState.objects.get(
-            environment=self.environment, feature=self.feature
-        )
-
-        url = reverse(
-            "api-v1:environments:environment-featurestates-create-new-version",
-            args=[self.environment.api_key, feature_state.id],
-        )
-
-        # When
-        response = self.client.post(url)
-
-        # Then
-        assert response.status_code == status.HTTP_201_CREATED
-
-        response_json = response.json()
-        assert response_json["id"] != feature_state.id
-        assert response_json["version"] == feature_state.version + 1
-
     def test_get_feature_states_only_returns_latest_versions(self):
         # Given
         feature_state = FeatureState.objects.get(
             environment=self.environment, feature=self.feature
         )
-        feature_state_v2 = feature_state.create_new_version(live_from=timezone.now())
+        feature_state_v2 = feature_state.clone(
+            env=self.environment, live_from=timezone.now(), version=2
+        )
 
         url = reverse(
             "api-v1:environments:environment-featurestates-list",
@@ -957,16 +938,22 @@ class FeatureStateViewSetTestCase(TestCase):
         data = {
             "title": "My change request",
             "description": "Some useful description",
-            "to_feature_state": {
-                "enabled": True,
-                "feature_state_value": {"type": "unicode", "string_value": "foobar"},
-                "multivariate_feature_state_values": [],
-            },
+            "feature_states": [
+                {
+                    "enabled": True,
+                    "feature": self.feature.id,
+                    "feature_state_value": {
+                        "type": "unicode",
+                        "string_value": "foobar",
+                    },
+                    "multivariate_feature_state_values": [],
+                }
+            ],
             "approvals": [{"user": another_user.id, "required": True}],
         }
         url = reverse(
-            "api-v1:environments:environment-featurestates-create-change-request",
-            args=(self.environment.api_key, feature_state.id),
+            "api-v1:environments:environment-create-change-request",
+            args=(self.environment.api_key,),
         )
 
         # When
@@ -990,17 +977,17 @@ class FeatureStateViewSetTestCase(TestCase):
         assert change_request.approvals.first().user == another_user
 
         # and the to_feature_state object is created with the expected information
-        to_feature_state_id = response_json["to_feature_state"]["id"]
-        to_feature_state = FeatureState.objects.get(id=to_feature_state_id)
-        assert to_feature_state.environment == feature_state.environment
-        assert to_feature_state.feature == feature_state.feature
-        assert to_feature_state.feature_segment == feature_state.feature_segment
-        assert to_feature_state.identity == feature_state.identity
-        assert to_feature_state.version is None
-        assert to_feature_state.live_from is None
+        created_feature_state_id = response_json["feature_states"][0]["id"]
+        created_feature_state = FeatureState.objects.get(id=created_feature_state_id)
+        assert created_feature_state.environment == feature_state.environment
+        assert created_feature_state.feature == feature_state.feature
+        assert created_feature_state.feature_segment == feature_state.feature_segment
+        assert created_feature_state.identity == feature_state.identity
+        assert created_feature_state.version is None
+        assert created_feature_state.live_from is None
         assert (
-            to_feature_state.get_feature_state_value()
-            == data["to_feature_state"]["feature_state_value"]["string_value"]
+            created_feature_state.get_feature_state_value()
+            == data["feature_states"][0]["feature_state_value"]["string_value"]
         )
 
 

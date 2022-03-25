@@ -429,20 +429,6 @@ class EnvironmentFeatureStateViewSet(BaseFeatureStateViewSet):
             return FeatureStateSerializerBasic
         return super().get_serializer_class()
 
-    @swagger_auto_schema(
-        method="POST",
-        request_body=EmptySerializer(),
-        responses={201: FeatureStateSerializerBasic(), 400: ErrorSerializer()},
-    )
-    @action(detail=True, methods=["POST"], url_path="create-new-version")
-    def create_new_version(self, *args, **kwargs) -> Response:
-        current_version = self.get_object()
-        new_version = current_version.create_new_version()
-        return Response(
-            self.get_serializer(instance=new_version).data,
-            status=status.HTTP_201_CREATED,
-        )
-
 
 class IdentityFeatureStateViewSet(BaseFeatureStateViewSet):
     permission_classes = [IsAuthenticated, IdentityFeatureStatePermissions]

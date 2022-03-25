@@ -290,8 +290,9 @@ class FeatureState(LifecycleModel, models.Model):
     def clone(
         self,
         env: "Environment",
-        version: int = None,
         live_from: datetime.datetime = None,
+        as_draft: bool = False,
+        version: int = None,
     ) -> "FeatureState":
         # Cloning the Identity is not allowed because they are closely tied
         # to the environment
@@ -308,7 +309,7 @@ class FeatureState(LifecycleModel, models.Model):
             else None
         )
         clone.environment = env
-        clone.version = version or self.version
+        clone.version = None if as_draft else version or self.version
         clone.live_from = live_from
         clone.save()
         # clone the related objects
@@ -528,38 +529,6 @@ class FeatureState(LifecycleModel, models.Model):
                 feature_states_dict[feature_state.feature] = feature_state
 
         return list(feature_states_dict.values())
-
-    def create_new_version(
-        self, live_from: datetime.datetime = None, version: int = None
-    ):
-        """
-        Create a new version of this feature state by incrementing the version
-        number by 1.
-        """
-        if self.version is None:
-            raise FeatureStateVersionError(
-                "Cannot create new version from non-versioned feature state"
-            )
-
-        new_version_number = version or self.version + 1
-
-        if (
-            new_version_number
-            and FeatureState.objects.filter(
-                environment=self.environment,
-                feature=self.feature,
-                feature_segment=self.feature_segment,
-                identity=self.identity,
-                version=new_version_number,
-            ).exists()
-        ):
-            raise FeatureStateVersionAlreadyExistsError(version=new_version_number)
-
-        return self.clone(
-            env=self.environment,
-            version=new_version_number,
-            live_from=live_from,
-        )
 
     @hook(BEFORE_CREATE)
     def set_live_from_for_version_1(self):

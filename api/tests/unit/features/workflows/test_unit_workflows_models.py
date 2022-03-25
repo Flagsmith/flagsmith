@@ -88,8 +88,7 @@ def test_change_request_commit_raises_exception_when_not_approved(
 
 
 def test_change_request_commit_not_scheduled(
-    change_request_no_required_approvals,
-    mocker,
+    change_request_no_required_approvals, mocker
 ):
     # Given
     user = FFAdminUser.objects.create(email="approver@example.com")
