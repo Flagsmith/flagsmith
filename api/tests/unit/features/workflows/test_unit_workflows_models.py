@@ -73,18 +73,14 @@ def test_change_request_approve_by_new_approver_when_approvals_exist(
 
 
 def test_change_request_commit_raises_exception_when_not_approved(
-    change_request_no_required_approvals,
+    change_request_1_required_approvals,
 ):
     # Given
-    user_1 = FFAdminUser.objects.create(email="user_1@example.com")
     user_2 = FFAdminUser.objects.create(email="user_2@example.com")
-    ChangeRequestApproval.objects.create(
-        user=user_1, change_request=change_request_no_required_approvals
-    )
 
     # When
     with pytest.raises(ChangeRequestNotApprovedError):
-        change_request_no_required_approvals.commit(committed_by=user_2)
+        change_request_1_required_approvals.commit(committed_by=user_2)
 
 
 def test_change_request_commit_not_scheduled(

@@ -92,16 +92,16 @@ def test_approve_change_request_when_required_approvals_for_another_user(
 
 
 def test_commit_change_request_missing_required_approvals(
-    change_request_no_required_approvals, admin_client, organisation_one_user
+    change_request_1_required_approvals, admin_client, organisation_one_user
 ):
     # Given
     ChangeRequestApproval.objects.create(
-        user=organisation_one_user, change_request=change_request_no_required_approvals
+        user=organisation_one_user, change_request=change_request_1_required_approvals
     )
 
     url = reverse(
         "api-v1:features:workflows:change-requests-commit",
-        args=(change_request_no_required_approvals.id,),
+        args=(change_request_1_required_approvals.id,),
     )
 
     # When
@@ -110,9 +110,9 @@ def test_commit_change_request_missing_required_approvals(
     # Then
     assert response.status_code == status.HTTP_400_BAD_REQUEST
 
-    change_request_no_required_approvals.refresh_from_db()
-    assert change_request_no_required_approvals.committed_at is None
-    assert change_request_no_required_approvals.feature_states.first().version is None
+    change_request_1_required_approvals.refresh_from_db()
+    assert change_request_1_required_approvals.committed_at is None
+    assert change_request_1_required_approvals.feature_states.first().version is None
 
 
 def test_commit_approved_change_request(
