@@ -22,6 +22,9 @@ class DynatraceWrapper(AbstractBaseEventIntegrationWrapper):
             "Sent event to Dynatrace. Response code was %s" % response.status_code
         )
 
+    def _headers(self) -> dict:
+        return {"Content-Type": "application/json"}
+
     @staticmethod
     def generate_event_data(log: str, email: str, environment_name: str) -> dict:
         flag_properties = {
