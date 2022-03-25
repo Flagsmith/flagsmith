@@ -3,7 +3,6 @@ import typing
 
 import coreapi
 from app_analytics.influxdb_wrapper import get_multiple_event_list_for_feature
-from core.serializers import EmptySerializer
 from django.conf import settings
 from django.core.cache import caches
 from django.db.models import Max, Q, QuerySet
@@ -19,7 +18,6 @@ from rest_framework.renderers import JSONRenderer
 from rest_framework.response import Response
 from rest_framework.schemas import AutoSchema
 
-from api.serializers import ErrorSerializer
 from audit.models import (
     FEATURE_DELETED_MESSAGE,
     IDENTITY_FEATURE_STATE_DELETED_MESSAGE,
