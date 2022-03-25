@@ -59,13 +59,15 @@ class ListChangeRequestsMixin:
     @swagger_auto_schema(
         method="GET",
         responses={200: ChangeRequestListSerializer(), 400: ErrorSerializer()},
+        query_serializer=ChangeRequestListQuerySerializer(),
     )
     @action(detail=True, methods=["GET"], url_path="list-change-requests")
     def list_change_requests(self, request: Request, **kwargs) -> Response:
         environment = self.get_object()
         serializer = ChangeRequestListSerializer(
             instance=environment.change_requests.filter(
-                self._get_queryset_filter_from_query_params()
+                self._get_queryset_filter_from_query_params(),
+                deleted_at__isnull=True,
             ),
             many=True,
         )
