@@ -101,3 +101,21 @@ def test_4_eyes_workflow(
         assert len(flags) == 1
         assert flags[0]["enabled"] is True  # new value
         assert flags[0]["feature_state_value"] == "foobar"  # new value
+
+    # Finally, let's test retrieving and updating a change request
+    cr_detail_url = reverse(
+        "api-v1:features:workflows:change-requests-detail", args=(change_request_id,)
+    )
+    retrieve_response = admin_client.get(cr_detail_url)
+    assert retrieve_response.status_code == status.HTTP_200_OK
+
+    # when we update, let's just change the title
+    change_request_json = retrieve_response.json()
+    new_title = "%s (edit)" % change_request_json["title"]
+    change_request_json["title"] = new_title
+    update_response = admin_client.put(
+        cr_detail_url,
+        data=json.dumps(change_request_json),
+        content_type="application/json",
+    )
+    assert update_response.status_code == status.HTTP_200_OK
