@@ -1,17 +1,14 @@
 import React, { Component } from 'react';
-import { BarChart, ResponsiveContainer, Bar, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, Legend } from 'recharts';
+import { Bar, BarChart, CartesianGrid, ResponsiveContainer, Tooltip as RechartsTooltip, XAxis, YAxis } from 'recharts';
 import Tabs from '../base/forms/Tabs';
 import TabItem from '../base/forms/TabItem';
 import withSegmentOverrides from '../../../common/providers/withSegmentOverrides';
 import data from '../../../common/data/base/_data';
+import ProjectStore from '../../../common/stores/project-store';
+import _data from '../../../common/data/base/_data';
 import SegmentOverrides from '../SegmentOverrides';
 import AddEditTags from '../AddEditTags';
 import Constants from '../../../common/constants';
-import _data from '../../../common/data/base/_data';
-import ValueEditor from '../ValueEditor';
-import VariationValue from '../mv/VariationValue';
-import AddVariationButton from '../mv/AddVariationButton';
-import VariationOptions from '../mv/VariationOptions';
 import FlagOwners from '../FlagOwners';
 import FeatureListStore from '../../../common/stores/feature-list-store';
 import ChangeRequestModal from './ChangeRequestModal';
@@ -318,8 +315,9 @@ const CreateFlag = class extends Component {
         const { isEdit, hasFeature, projectFlag, identity, identityName } = this.props;
         const Provider = identity ? IdentityProvider : FeatureListProvider;
         const environmentVariations = this.props.environmentVariations;
-        const is4Eyes = flagsmith.hasFeature('4eyes'); // todo: base on environment settings too
-        const is4EyesSegmentOverrides = flagsmith.hasFeature('4eyes'); // todo: base on environment settings too
+        const environment = ProjectStore.getEnvironment(this.props.environmentId)
+        const is4Eyes = !!environment && !!environment.minimum_change_request_approvals && flagsmith.hasFeature('4eyes'); // todo: base on environment settings too
+        const is4EyesSegmentOverrides = is4Eyes && flagsmith.hasFeature('4eyes_segment_overrides'); //
         const controlValue = Utils.calculateControl(multivariate_options, environmentVariations);
         const invalid = !!multivariate_options && multivariate_options.length && controlValue < 0;
         const existingChangeRequest = this.props.changeRequest;
