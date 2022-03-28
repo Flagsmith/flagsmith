@@ -37,11 +37,6 @@ projects_router.register(
     basename="integrations-datadog",
 )
 projects_router.register(
-    r"integrations/dynatrace",
-    DynatraceConfigurationViewSet,
-    basename="integrations-dynatrace",
-)
-projects_router.register(
     r"integrations/new-relic",
     NewRelicConfigurationViewSet,
     basename="integrations-new-relic",
