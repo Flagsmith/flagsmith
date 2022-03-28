@@ -325,8 +325,11 @@ const ChangeRequestsPage = class extends Component {
                                                     <Flex className="mr-2">
                                                         {
                                                             mvData.map((v, i)=>(
-                                                                <div className="mb-2" style={{opacity: mvChanged && !v.changed? 0.25: 1}}>
+                                                                <div className="mb-4" style={{opacity: mvChanged && !v.changed? 0.25: 1}}>
                                                                     <div>
+                                                                        <div className="mb-2">
+                                                                            <strong>Variation {i+1}</strong>
+                                                                        </div>
                                                                         <Row>
                                                                             <Flex>
                                                                                 <ValueEditor value={Utils.getTypedValue(v.value)}/>
