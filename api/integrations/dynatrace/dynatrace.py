@@ -19,7 +19,9 @@ class DynatraceWrapper(AbstractBaseEventIntegrationWrapper):
 
     def _track_event(self, event: dict) -> None:
         event["entitySelector"] = self.entity_selector
-        response = requests.post(self.url, data=json.dumps(event))
+        response = requests.post(
+            self.url, headers=self._headers(), data=json.dumps(event)
+        )
         logger.debug(
             "Sent event to Dynatrace. Response code was %s" % response.status_code
         )
