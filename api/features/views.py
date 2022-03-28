@@ -225,29 +225,8 @@ class BaseFeatureStateViewSet(viewsets.ModelViewSet):
             api_key=environment_api_key,
         )
 
-        latest_versions_qs = (
-            FeatureState.objects.filter(
-                environment=environment,
-                live_from__lte=timezone.now(),
-                version__isnull=False,
-            )
-            .values("feature", "feature_segment", "identity")
-            .annotate(max_version=Max("version"))
-            .order_by()
-        )
-        q = Q()
-        for latest_version_dict in latest_versions_qs:
-            q = q | Q(
-                feature_id=latest_version_dict["feature"],
-                identity_id=latest_version_dict["identity"],
-                feature_segment_id=latest_version_dict["feature_segment"],
-                version=latest_version_dict["max_version"],
-            )
-
-        queryset = (
-            FeatureState.objects.filter(Q(environment=environment) & q)
-            .select_related("feature", "feature_state_value")
-            .prefetch_related("multivariate_feature_state_values")
+        queryset = FeatureState.get_environment_flags_queryset(
+            environments=[environment]
         )
         queryset = self._apply_query_param_filters(queryset)
 
@@ -449,11 +428,13 @@ class SimpleFeatureStateViewSet(
     filterset_fields = ["environment", "feature", "feature_segment"]
 
     def get_queryset(self):
-        return self.queryset.filter(
-            environment__in=self.request.user.get_permitted_environments(
-                permissions=["VIEW_ENVIRONMENT"]
-            )
+        permitted_environments = self.request.user.get_permitted_environments(
+            permissions=["VIEW_ENVIRONMENT"]
         )
+        queryset = FeatureState.get_environment_flags_queryset(
+            environments=permitted_environments
+        )
+        return queryset.select_related("feature_state_value")
 
 
 class SDKFeatureStates(GenericAPIView):
@@ -486,7 +467,7 @@ class SDKFeatureStates(GenericAPIView):
             return self._get_flags_response_with_identifier(request, identifier)
 
         if "feature" in request.GET:
-            feature_states = FeatureState.get_environment_flags(
+            feature_states = FeatureState.get_environment_flags_list(
                 environment=request.environment, feature_name=request.GET["feature"]
             )
             if len(feature_states) != 1:
@@ -502,7 +483,9 @@ class SDKFeatureStates(GenericAPIView):
             data = self._get_flags_from_cache(request.environment)
         else:
             data = self.get_serializer(
-                FeatureState.get_environment_flags(environment=request.environment),
+                FeatureState.get_environment_flags_list(
+                    environment=request.environment
+                ),
                 many=True,
             ).data
 
@@ -512,7 +495,8 @@ class SDKFeatureStates(GenericAPIView):
         data = flags_cache.get(environment.api_key)
         if not data:
             data = self.get_serializer(
-                FeatureState.get_environment_flags(environment=environment), many=True
+                FeatureState.get_environment_flags_list(environment=environment),
+                many=True,
             ).data
             flags_cache.set(environment.api_key, data, settings.CACHE_FLAGS_SECONDS)
 

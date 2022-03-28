@@ -382,7 +382,7 @@ class FeatureStateTest(TestCase):
         )
 
         # When
-        environment_feature_states = FeatureState.get_environment_flags(
+        environment_feature_states = FeatureState.get_environment_flags_list(
             environment=self.environment
         )
 

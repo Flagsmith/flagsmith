@@ -11,7 +11,7 @@ from django.core.exceptions import (
     ValidationError,
 )
 from django.db import models
-from django.db.models import Max
+from django.db.models import Max, Q, QuerySet
 from django.utils import timezone
 from django.utils.translation import ugettext_lazy as _
 from django_lifecycle import AFTER_CREATE, BEFORE_CREATE, LifecycleModel, hook
@@ -487,12 +487,16 @@ class FeatureState(LifecycleModel, models.Model):
         return s
 
     @classmethod
-    def get_environment_flags(
+    def get_environment_flags_list(
         cls, environment: "Environment", feature_name: str = None
     ) -> typing.List["FeatureState"]:
         """
         Get a list of the latest committed versions of FeatureState objects that are
         associated with the given environment only (i.e. not identity or segment).
+
+        Note: uses a single query to get all valid versions of a given environment's
+        feature states. The logic to grab the latest version is then handled in python
+        by building a dictionary. Returns a list of FeatureState objects.
         """
 
         # Get all feature states for a given environment with a valid live_from in the
@@ -525,6 +529,42 @@ class FeatureState(LifecycleModel, models.Model):
                 feature_states_dict[feature_state.feature] = feature_state
 
         return list(feature_states_dict.values())
+
+    @classmethod
+    def get_environment_flags_queryset(
+        cls, environments: typing.List["Environment"]
+    ) -> QuerySet["FeatureState"]:
+        """
+        Get a queryset of the latest committed versions of an environments feature
+        states, including those that are associated with a feature segment or identity.
+
+        Note: This method uses 2 queries. The first gets a dictionary containing the ids
+        of each of the combinations of identity, feature_segment & feature plus the
+        latest version number for that combination. This information is then used to
+        build a query to get the correct feature states. Returns a QuerySet.
+        """
+
+        latest_versions_qs = (
+            cls.objects.filter(
+                environment__in=environments,
+                live_from__lte=timezone.now(),
+                version__isnull=False,
+            )
+            .values("environment", "feature", "feature_segment", "identity")
+            .annotate(max_version=Max("version"))
+            .order_by()
+        )
+        q = Q()
+        for latest_version_dict in latest_versions_qs:
+            q = q | Q(
+                environment_id=latest_version_dict["environment"],
+                feature_id=latest_version_dict["feature"],
+                identity_id=latest_version_dict["identity"],
+                feature_segment_id=latest_version_dict["feature_segment"],
+                version=latest_version_dict["max_version"],
+            )
+
+        return cls.objects.filter(Q(environment__in=environments) & q)
 
     @hook(BEFORE_CREATE)
     def set_live_from_for_version_1(self):

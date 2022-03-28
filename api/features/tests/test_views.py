@@ -928,6 +928,36 @@ class FeatureStateViewSetTestCase(TestCase):
         assert len(response_json["results"]) == 1
         assert response_json["results"][0]["id"] == feature_state_v2.id
 
+    def test_get_feature_states_does_not_return_null_versions(self):
+        # Given
+        feature_state = FeatureState.objects.get(
+            environment=self.environment, feature=self.feature
+        )
+
+        change_request = ChangeRequest.objects.create(
+            title="Some CR", environment=self.environment, user=self.user
+        )
+        draft_feature_state = feature_state.clone(
+            env=self.environment, live_from=timezone.now(), as_draft=True
+        )
+        draft_feature_state.change_request = change_request
+        draft_feature_state.save()
+
+        url = reverse(
+            "api-v1:environments:environment-featurestates-list",
+            args=[self.environment.api_key],
+        )
+
+        # When
+        response = self.client.get(url)
+
+        # Then
+        assert response.status_code == status.HTTP_200_OK
+
+        response_json = response.json()
+        assert len(response_json["results"]) == 1
+        assert response_json["results"][0]["id"] == feature_state.id
+
     def test_create_change_request(self):
         # Given
         feature_state = FeatureState.objects.get(

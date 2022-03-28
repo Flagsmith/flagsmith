@@ -93,7 +93,7 @@ class Environment(LifecycleModel):
         # it does not make much sense to clone them, hence
         # only clone feature states without identities
         for feature_state in self.feature_states.filter(identity=None):
-            feature_state.clone(clone)
+            feature_state.clone(clone, live_from=feature_state.live_from)
 
         return clone
 
