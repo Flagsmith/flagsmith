@@ -38,10 +38,12 @@ def call_webhooks(sender, instance, **kwargs):
 
 
 def _get_integration_config(instance, integration_name):
-    if not hasattr(instance.project, integration_name):
-        return None
+    if hasattr(instance.project, integration_name):
+        return getattr(instance.project, integration_name)
+    elif hasattr(instance.environment, integration_name):
+        return getattr(instance.environment, integration_name)
 
-    return getattr(instance.project, integration_name)
+    return None
 
 
 def track_only_feature_related_events(signal_function):
@@ -111,7 +113,7 @@ def send_audit_log_event_to_dynatrace(sender, instance, **kwargs):
     dynatrace = DynatraceWrapper(
         base_url=dynatrace_config.base_url,
         api_key=dynatrace_config.api_key,
-        app_id=dynatrace_config.app_id,
+        entity_selector=dynatrace_config.entity_selector,
     )
     _track_event_async(instance, dynatrace)
 
