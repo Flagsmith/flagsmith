@@ -3,7 +3,6 @@ from rest_framework_nested import routers
 
 from features.views import FeatureViewSet
 from integrations.datadog.views import DataDogConfigurationViewSet
-from integrations.dynatrace.views import DynatraceConfigurationViewSet
 from integrations.new_relic.views import NewRelicConfigurationViewSet
 from projects.tags.views import TagViewSet
 from segments.views import SegmentViewSet
