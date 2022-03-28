@@ -1,6 +1,7 @@
 import React from 'react';
 import Constants from '../../../common/constants';
 import VariationValue from './VariationValue';
+import ValueEditor from "../ValueEditor";
 
 export default function VariationOptions({ multivariateOptions, select, controlValue, weightTitle, variationOverrides, removeVariation, updateVariation, setVariations, setValue }) {
     const invalid = multivariateOptions.length && controlValue < 0;
@@ -21,9 +22,9 @@ export default function VariationOptions({ multivariateOptions, select, controlV
                 <div className="panel panel--flat panel-without-heading mb-2">
                     <div className="panel-content">
                         <Row>
-                            <div className="flex flex-1 align-start">
-                                <FeatureValue value={Utils.getTypedValue(controlValue)}/>
-                            </div>
+                            <Flex>
+                                <ValueEditor value={Utils.getTypedValue(controlValue)}/>
+                            </Flex>
                             <div
                               onMouseDown={(e) => {
                                   e.stopPropagation();
@@ -45,9 +46,9 @@ export default function VariationOptions({ multivariateOptions, select, controlV
                         <div className="panel panel--flat panel-without-heading mb-2">
                             <div className="panel-content">
                                 <Row>
-                                    <div className="flex flex-1 align-start">
-                                        <FeatureValue value={Utils.getTypedValue(Utils.featureStateToValue(theValue))}/>
-                                    </div>
+                                    <Flex>
+                                        <ValueEditor value={Utils.getTypedValue(Utils.featureStateToValue(theValue))}/>
+                                    </Flex>
                                     <div
                                       onMouseDown={(e) => {
                                           e.stopPropagation();
