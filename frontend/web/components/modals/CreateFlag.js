@@ -321,7 +321,7 @@ const CreateFlag = class extends Component {
         const controlValue = Utils.calculateControl(multivariate_options, environmentVariations);
         const invalid = !!multivariate_options && multivariate_options.length && controlValue < 0;
         const existingChangeRequest = this.props.changeRequest;
-        const Settings = (
+        const Settings = (projectAdmin)=> (
             <>
                 {!identity && this.state.tags && (
                     <FormGroup className="mb-4 mr-3 ml-3" >
@@ -330,7 +330,7 @@ const CreateFlag = class extends Component {
                           tooltip={Constants.strings.TAGS_DESCRIPTION}
                           component={(
                               <AddEditTags
-                                readOnly={!!identity} projectId={this.props.projectId} value={this.state.tags}
+                                readOnly={!!identity|| !projectAdmin} projectId={this.props.projectId} value={this.state.tags}
                                 onChange={tags => this.setState({ tags })}
                               />
                             )}
@@ -353,11 +353,12 @@ const CreateFlag = class extends Component {
                       data-test="featureDesc"
                       inputProps={{
                           className: 'full-width',
-                          readOnly: !!identity,
+                          readOnly: !!identity || !projectAdmin,
                           name: 'featureDesc',
                       }}
                       onChange={e => this.setState({ description: Utils.safeParseEventValue(e) })}
                       isValid={name && name.length}
+                      ds
                       type="text" title={identity ? 'Description' : 'Description (optional)'}
                       placeholder="e.g. 'This determines what size the header is' "
                     />
@@ -367,7 +368,7 @@ const CreateFlag = class extends Component {
                         <InputGroup
                           value={description}
                           component={(
-                              <Switch checked={this.state.is_archived} onChange={is_archived => this.setState({ is_archived })}/>
+                              <Switch disabled={!projectAdmin} checked={this.state.is_archived} onChange={is_archived => this.setState({ is_archived })}/>
                           )}
                           onChange={e => this.setState({ description: Utils.safeParseEventValue(e) })}
                           isValid={name && name.length}
@@ -400,7 +401,7 @@ const CreateFlag = class extends Component {
                 )}
             </>
         );
-        const Value = (
+        const Value = (projectAdmin)=> (
             <>
                 {!isEdit && (
                     <FormGroup className="mb-4 mr-3 ml-3">
@@ -461,7 +462,7 @@ const CreateFlag = class extends Component {
                     }}
                     onCheckedChange={default_enabled => this.setState({ default_enabled })}
                 />
-                {!isEdit && !identity && Settings}
+                {!isEdit && !identity && Settings(projectAdmin)}
             </>
         );
         return (
@@ -522,6 +523,9 @@ const CreateFlag = class extends Component {
                             };
 
                             return (
+
+                                <Permission level="project" permission="ADMIN" id={this.props.projectId}>
+                                    {({ permission: projectAdmin }) => !existingChangeRequest && (
                                 <div
                                   id="create-feature-modal"
                                 >
@@ -538,7 +542,7 @@ const CreateFlag = class extends Component {
                                                         </Tooltip>
                                                     )}
                                                     >
-                                                        {Value}
+                                                        {Value(projectAdmin)}
                                                     </Panel>
                                                     <p className="text-right mt-4">
                                                         {is4Eyes ? 'This will create a change request for the environment' : 'This will update the feature value for the environment'}
@@ -796,28 +800,36 @@ const CreateFlag = class extends Component {
                                                 </TabItem>
                                             )}
 
-                                            {!existingChangeRequest && (
-                                                <TabItem data-test="settings" tabLabel="Settings">
-                                                    {Settings}
-                                                    {isEdit && (
-                                                        <div className="text-right">
-                                                            <p className="text-right">
-                                                                This will save the above settings <strong>all environments</strong>.
-                                                            </p>
-                                                            <Button
-                                                                onClick={saveSettings} data-test="update-feature-btn" id="update-feature-btn"
-                                                                disabled={isSaving || !name || invalid}
-                                                            >
-                                                                {isSaving ? 'Updating' : 'Update Settings'}
-                                                            </Button>
-                                                        </div>
-                                                    )}
-                                                </TabItem>
-                                            )}
+                                                    <TabItem data-test="settings" tabLabel="Settings">
+                                                        {Settings(projectAdmin)}
+                                                        {isEdit && (
+                                                            <div className="text-right">
+                                                                {!projectAdmin? (
+                                                                    <p className="text-right">
+                                                                        To edit this feature's settings, you will need <strong>Project Administrator permissions</strong>. Please contact your project administrator.
+                                                                    </p>
+                                                                ): (
+                                                                    <p className="text-right">
+                                                                        This will save the above settings <strong>all environments</strong>.
+                                                                    </p>
+                                                                )}
+
+                                                                {!!projectAdmin && (
+                                                                    <Button
+                                                                        onClick={saveSettings} data-test="update-feature-btn" id="update-feature-btn"
+                                                                        disabled={(isSaving || !name || invalid)}
+                                                                    >
+                                                                        {isSaving ? 'Updating' : 'Update Settings'}
+                                                                    </Button>
+                                                                )}
+
+                                                            </div>
+                                                        )}
+                                                    </TabItem>
                                         </Tabs>
                                     ) : (
                                         <div>
-                                            {Value}
+                                            {Value(projectAdmin)}
                                             {!identity && (
                                                 <div className="text-right">
                                                     <p className="text-right">
@@ -872,6 +884,8 @@ const CreateFlag = class extends Component {
                                         </div>
                                     )}
                                 </div>
+                                    )}
+                                </Permission>
                             );
                         }}
 
