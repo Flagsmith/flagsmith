@@ -58,7 +58,7 @@ const EnvironmentSettingsPage = class extends Component {
     };
 
     saveEnv = (e) => {
-        e.preventDefault();
+        e && e.preventDefault();
         const { name } = this.state;
         if (ProjectStore.isSaving || (!name)) {
             return;
@@ -66,6 +66,7 @@ const EnvironmentSettingsPage = class extends Component {
         const env = _.find(ProjectStore.getEnvs(), { api_key: this.props.match.params.environmentId });
         AppActions.editEnv(Object.assign({}, env, {
             name: name || env.name,
+            minimum_change_request_approvals: this.state.minimum_change_request_approvals,
         }));
     }
 
@@ -117,6 +118,7 @@ const EnvironmentSettingsPage = class extends Component {
 
     render() {
         const { props: { webhooks, webhooksLoading }, state: { name } } = this;
+
         return (
             <div className="app-container container">
                 <ProjectProvider
@@ -125,6 +127,12 @@ const EnvironmentSettingsPage = class extends Component {
                 >
                     {({ isLoading, isSaving, editProject, editEnv, deleteProject, deleteEnv, project }) => {
                         const env = _.find(project.environments, { api_key: this.props.match.params.environmentId });
+                        if (env && (typeof this.state.minimum_change_request_approvals !== "number")) {
+                                this.setState({
+                                    name:env.name,
+                                    minimum_change_request_approvals:env.minimum_change_request_approvals || 0,
+                                })
+                        }
                         return (
                             <div>
                                 {isLoading && <div className="centered-container"><Loader/></div>}
@@ -182,6 +190,62 @@ const EnvironmentSettingsPage = class extends Component {
                                                 id={this.props.match.params.environmentId}
                                                 level="environment"
                                             />
+                                        </FormGroup>
+                                        <FormGroup className="m-y-3">
+                                            <Row space>
+                                                <div className="col-md-8 pl-0">
+                                                    <h3 className="m-b-0">Four Eyes Change Request Approvals</h3>
+                                                    <p>
+                                                        Require a minumim number of people to approve changes to features.
+                                                        {' '}
+                                                        <ButtonLink
+                                                            href="https://docs.flagsmith.com/advanced-use/4-eyes"
+                                                            target="_blank"
+                                                        >Learn about Four Eyes.</ButtonLink>
+                                                    </p>
+                                                </div>
+                                                <div className="col-md-4 pr-0 text-right">
+                                                    <div>
+                                                        <Switch className="float-right" checked={!!this.state.minimum_change_request_approvals} onChange={(v)=>this.setState({minimum_change_request_approvals: v?1:0}, this.saveEnv)} />
+                                                    </div>
+                                                </div>
+                                            </Row>
+                                            {!!this.state.minimum_change_request_approvals && (
+                                                <div>
+                                                    <div className="mb-2">
+                                                        <strong>Minimum number of approvals</strong>
+
+                                                    </div>
+                                                    <Row>
+                                                        <Column className="m-l-0">
+                                                            <Input
+                                                                ref={e => this.input = e}
+                                                                value={`${this.state.minimum_change_request_approvals}`}
+                                                                inputClassName="input input--wide"
+                                                                name="env-name"
+                                                                style={{minWidth:50}}
+                                                                onChange={e => {
+                                                                    if(!Utils.safeParseEventValue(e)) return
+                                                                    this.setState({
+                                                                        minimum_change_request_approvals: parseInt(Utils.safeParseEventValue(e))
+                                                                    })
+                                                                }}
+                                                                isValid={name && name.length}
+                                                                type="number"
+                                                                placeholder="Minimum number of approvals"
+                                                            />
+                                                        </Column>
+                                                        <Button
+                                                            type="button"
+                                                            onClick={this.saveEnv}
+                                                            id="save-env-btn" className="float-right"
+                                                            disabled={this.saveDisabled()||isSaving||isLoading}
+                                                        >
+                                                            {isSaving || isLoading ? 'Saving' : 'Save'}
+                                                        </Button>
+                                                    </Row>
+                                                </div>
+                                            )}
                                         </FormGroup>
                                         <FormGroup className="m-y-3">
                                             <Row className="mb-3" space>

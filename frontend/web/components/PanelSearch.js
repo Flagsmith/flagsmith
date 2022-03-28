@@ -1,6 +1,6 @@
 import React, { Component } from 'react';
-import Popover from './base/Popover';
 import { FixedSizeList as List } from 'react-window';
+import Popover from './base/Popover';
 
 const PanelSearch = class extends Component {
     static displayName = 'PanelSearch'
@@ -31,7 +31,7 @@ const PanelSearch = class extends Component {
     }
 
     filter() {
-        let search = this.props.search || this.state.search || "";
+        let search = this.props.search || this.state.search || '';
         if (this.state.exact) {
             search = search.replace(/^"+|"+$/g, '');
         }
@@ -63,26 +63,25 @@ const PanelSearch = class extends Component {
     }
 
     renderContainer = (children) => {
-        const renderRow = ({index,style})=> (
+        const renderRow = ({ index, style }) => (
             <div style={style}>
                 {this.props.renderRow(children[index])}
             </div>
-        )
-        if(children && children.length > 100 && this.props.itemHeight) {
+        );
+        if (children && children.length > 100 && this.props.itemHeight) {
             return (
                 <List
-                    style={{overflowX:"hidden"}}
-                    height={this.props.itemHeight*10}
-                    itemCount={children.length}
-                    itemSize={this.props.itemHeight}
-                    width="100%"
+                  style={{ overflowX: 'hidden' }}
+                  height={this.props.itemHeight * 10}
+                  itemCount={children.length}
+                  itemSize={this.props.itemHeight}
+                  width="100%"
                 >
                     {renderRow}
                 </List>
-            )
-        } else {
-            return children.map(this.props.renderRow)
+            );
         }
+        return children.map(this.props.renderRow);
     }
 
     render() {
@@ -91,7 +90,7 @@ const PanelSearch = class extends Component {
         const filteredItems = this.filter(items);
         const currentSort = _.find(sorting, { value: sortBy });
 
-        let search = this.props.search || this.state.search || "";
+        let search = this.props.search || this.state.search || '';
         if (this.state.exact) {
             search = search.replace(/^"+|"+$/g, '');
         }
@@ -213,17 +212,19 @@ const PanelSearch = class extends Component {
                     {!this.props.isLoading && filteredItems && filteredItems.length
                         ? this.renderContainer(filteredItems) : (renderNoResults && !search) ? renderNoResults : (
                             <Column>
-                                <div className="mx-2 mb-2">
-                                    {'No results '}
-                                    {search && (
-                                    <span>
+                                {!isLoading && (
+                                    <div className="mx-2 mt-1 mb-2">
+                                        {'No results '}
+                                        {search && (
+                                            <span>
                                     for
-                                        <strong>
-                                            {` "${search}"`}
-                                        </strong>
-                                    </span>
-                                    )}
-                                </div>
+                                                <strong>
+                                                    {` "${search}"`}
+                                                </strong>
+                                            </span>
+                                        )}
+                                    </div>
+                                )}
                             </Column>
                         )}
                 </div>
