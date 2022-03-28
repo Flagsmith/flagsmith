@@ -7,14 +7,14 @@ from rest_framework import status
 from rest_framework.test import APIClient
 
 from environments.models import Environment
-from integrations.datadog.models import DataDogConfiguration
+from integrations.dynatrace.models import DynatraceConfiguration
 from organisations.models import Organisation, OrganisationRole
 from projects.models import Project
 from util.tests import Helper
 
 
 @pytest.mark.django_db
-class DatadogConfigurationTestCase(TestCase):
+class DynatraceConfigurationTestCase(TestCase):
     def setUp(self):
         self.client = APIClient()
         user = Helper.create_ffadminuser()
@@ -32,12 +32,17 @@ class DatadogConfigurationTestCase(TestCase):
             name="Test Environment", project=self.project
         )
         self.list_url = reverse(
-            "api-v1:projects:integrations-datadog-list", args=[self.project.id]
+            "api-v1:environments:integrations-dynatrace-list",
+            args=[self.environment.api_key],
         )
 
-    def test_should_create_datadog_config_when_post(self):
+    def test_should_create_dynatrace_config_when_post(self):
         # Given setup data
-        data = {"base_url": "http://test.com", "api_key": "abc-123"}
+        data = {
+            "base_url": "http://test.com",
+            "api_key": "abc-123",
+            "entity_selector": "type(APPLICATION),entityName(docs)",
+        }
 
         # When
         response = self.client.post(
@@ -49,14 +54,21 @@ class DatadogConfigurationTestCase(TestCase):
         # Then
         assert response.status_code == status.HTTP_201_CREATED
         # and
-        assert DataDogConfiguration.objects.filter(project=self.project).count() == 1
-
-    def test_should_return_BadRequest_when_duplicate_datadog_config_is_posted(self):
-        # Given
-        DataDogConfiguration.objects.create(
-            base_url="http://test.com", api_key="api_123", project=self.project
+        assert (
+            DynatraceConfiguration.objects.filter(environment=self.environment).count()
+            == 1
         )
-        data = {"base_url": "http://test.com", "api_key": "abc-123"}
+
+    def test_should_return_BadRequest_when_duplicate_dynatrace_config_is_posted(self):
+        # Given
+        DynatraceConfiguration.objects.create(
+            base_url="http://test.com", api_key="api_123", environment=self.environment
+        )
+        data = {
+            "base_url": "http://test.com",
+            "api_key": "abc-123",
+            "entity_selector": "type(APPLICATION),entityName(docs)",
+        }
 
         # When
         response = self.client.post(
@@ -67,21 +79,28 @@ class DatadogConfigurationTestCase(TestCase):
 
         # Then
         assert response.status_code == status.HTTP_400_BAD_REQUEST
-        assert DataDogConfiguration.objects.filter(project=self.project).count() == 1
+        assert (
+            DynatraceConfiguration.objects.filter(environment=self.environment).count()
+            == 1
+        )
 
     #
     def test_should_update_configuration_when_put(self):
         # Given
-        config = DataDogConfiguration.objects.create(
-            base_url="http://test.com", api_key="api_123", project=self.project
+        config = DynatraceConfiguration.objects.create(
+            base_url="http://test.com", api_key="api_123", environment=self.environment
         )
         api_key_updated = "new api"
-        data = {"base_url": config.base_url, "api_key": api_key_updated}
+        data = {
+            "base_url": "http://test.com",
+            "api_key": "new api",
+            "entity_selector": "type(APPLICATION),entityName(docs)",
+        }
 
         # When
         url = reverse(
-            "api-v1:projects:integrations-datadog-detail",
-            args=[self.project.id, config.id],
+            "api-v1:environments:integrations-dynatrace-detail",
+            args=[self.environment.api_key, config.id],
         )
         response = self.client.put(
             url,
@@ -94,7 +113,7 @@ class DatadogConfigurationTestCase(TestCase):
         assert response.status_code == status.HTTP_200_OK
         assert config.api_key == api_key_updated
 
-    def test_should_return_datadog_config_list_when_requested(self):
+    def test_should_return_dynatrace_config_list_when_requested(self):
         # Given - set up data
 
         # When
@@ -105,17 +124,19 @@ class DatadogConfigurationTestCase(TestCase):
 
     def test_should_remove_configuration_when_delete(self):
         # Given
-        config = DataDogConfiguration.objects.create(
-            base_url="http://test.com", api_key="api_123", project=self.project
+        config = DynatraceConfiguration.objects.create(
+            base_url="http://test.com", api_key="api_123", environment=self.environment
         )
         # When
         url = reverse(
-            "api-v1:projects:integrations-datadog-detail",
-            args=[self.project.id, config.id],
+            "api-v1:environments:integrations-dynatrace-detail",
+            args=[self.environment.api_key, config.id],
         )
         res = self.client.delete(url)
 
         # Then
         assert res.status_code == status.HTTP_204_NO_CONTENT
         #  and
-        assert not DataDogConfiguration.objects.filter(project=self.project).exists()
+        assert not DynatraceConfiguration.objects.filter(
+            environment=self.environment
+        ).exists()
