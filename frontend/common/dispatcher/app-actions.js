@@ -506,17 +506,19 @@ const AppActions = Object.assign({}, require('./base/_app-actions'), {
         });
     },
 
-    deleteChangeRequest(id) {
+    deleteChangeRequest(id,cb) {
         Dispatcher.handleViewAction({
             actionType: Actions.DELETE_CHANGE_REQUEST,
             id,
+            cb
         });
     },
-    actionChangeRequest(id, action) {
+    actionChangeRequest(id, action, cb) {
         Dispatcher.handleViewAction({
             actionType: Actions.ACTION_CHANGE_REQUEST,
             id,
             action,
+            cb
         });
     },
 });

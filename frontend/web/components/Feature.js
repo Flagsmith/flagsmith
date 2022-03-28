@@ -28,6 +28,7 @@ export default class Feature extends PureComponent {
             onCheckedChange,
             isEdit,
             environmentFlag,
+            readOnly,
             projectFlag,
             multivariate_options,
             value,
@@ -50,7 +51,7 @@ export default class Feature extends PureComponent {
                     <Switch
                         data-test="toggle-feature-button"
                         defaultChecked={checked}
-                        disabled={disabled}
+                        disabled={disabled || readOnly}
                         checked={!disabled && checked}
                         onChange={onCheckedChange}
                     />
@@ -108,7 +109,9 @@ export default class Feature extends PureComponent {
                                 />
                             )}
                         </FormGroup>
-                        <AddVariationButton onClick={this.props.addVariation}/>
+                        {!this.props.hideAddVariation && (
+                            <AddVariationButton onClick={this.props.addVariation}/>
+                        )}
                     </div>
 
                 )}

@@ -34,7 +34,6 @@ export default (WrappedComponent) => {
                         const results = res.results;
                         const featureStates = res2.results;
                         const environmentOverride = res2.results.find(v => !v.feature_segment && !v.identity);
-
                         _.each(featureStates, (f) => {
                             if (f.feature_segment) {
                                 const index = _.findIndex(results, { id: f.feature_segment });

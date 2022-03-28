@@ -194,28 +194,50 @@ const controller = {
                     // multivariate is existing, override the existing with the new value
                     return { ...v, percentage_allocation: matching.default_percentage_allocation };
                 });
+                const {featureStateId,multivariate_options, ...changeRequestData} = changeRequest
                 const req = {
                     feature_states: [{
+                        id:featureStateId,
                         feature: projectFlag.id,
                         enabled: flag.default_enabled,
                         feature_state_value: Utils.valueToFeatureState(flag.initial_value),
                         live_from: new Date().toISOString(),
-                        multivariate_feature_state_values,
                     }],
-                    ...changeRequest,
+                    ...changeRequestData,
                 };
-                return data.post(`${Project.api}environments/${environmentId}/create-change-request/`, req);
+                const reqType = req.id?"put":"post";
+                const url = req.id? `${Project.api}features/workflows/change-requests/${req.id}/` : `${Project.api}environments/${environmentId}/create-change-request/`
+                return data[reqType](url, req).then((v)=>{
+                    let prom = Promise.resolve()
+                    if (multivariate_options) {
+                        v.feature_states[0].multivariate_feature_state_values = v.feature_states[0].multivariate_feature_state_values.map(
+                            (v)=>{
+                                const matching = multivariate_options.find((m)=>(v.multivariate_feature_option||v.id) === (m.multivariate_feature_option||m.id))
+                                return ({...v,
+                                    percentage_allocation: matching.percentage_allocation || matching.default_percentage_allocation
+                                })
+                            })
+                    }
+
+
+                        prom = data['put']( `${Project.api}features/workflows/change-requests/${v.id}/`, {
+                            ...v,
+                        })
+                    prom.then(()=>{
+                        if (featureStateId) {
+                            AppActions.getChangeRequest(changeRequestData.id)
+                        }
+                    })
+
+                });
             });
 
 
         Promise.all([prom]).then(([res, segmentRes]) => {
-            store.model.keyedEnvironmentFeatures[projectFlag.id] = res;
-            if (segmentRes) {
-                const feature = _.find(store.model.features, f => f.id === projectFlag.id);
-                if (feature) feature.feature_segments = _.map(segmentRes.feature_segments, segment => ({ ...segment, segment: segment.segment.id }));
-            }
-            store.model.lastSaved = new Date().valueOf();
             store.saved();
+            if (typeof closeModal !=='undefined') {
+                closeModal()
+            }
         });
     },
     removeFlag: (projectId, flag) => {
