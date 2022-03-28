@@ -88,7 +88,7 @@ module.exports = Object.assign({}, require('./base/_utils'), {
             string_value: val || '',
         };
     },
-    getFlagValue(projectFlag, environmentFlag, identityFlag) {
+    getFlagValue(projectFlag, environmentFlag, identityFlag, multivariate_options) {
         if (!environmentFlag) {
             return {
                 name: projectFlag.name,
@@ -120,7 +120,13 @@ module.exports = Object.assign({}, require('./base/_utils'), {
             tags: projectFlag.tags,
             hide_from_client: environmentFlag.hide_from_client,
             feature_state_value: environmentFlag.feature_state_value,
-            multivariate_options: projectFlag.multivariate_options,
+            multivariate_options: projectFlag.multivariate_options.map((v)=>{
+                const matching = multivariate_options && multivariate_options.find((m)=>v.id === m.multivariate_feature_option)
+                return {
+                    ...v,
+                    default_percentage_allocation: matching? matching.percentage_allocation : v.default_percentage_allocation
+                }
+            }),
             enabled: environmentFlag.enabled,
             description: projectFlag.description,
             is_archived: projectFlag.is_archived,
@@ -202,25 +208,31 @@ module.exports = Object.assign({}, require('./base/_utils'), {
             .valueOf() < cutOff.valueOf()) {
             return true;
         }
+        const isSideProjectOrGreater = !plan.includes('side-project');
+        const isScaleupOrGreater = !plan.includes('side-project') && !plan.includes('startup');
         switch (permission) {
             case 'FLAG_OWNERS': {
                 valid = true;
                 break;
             }
             case '2FA': {
-                valid = !plan.includes('side-project');
+                valid = isSideProjectOrGreater
                 break;
             }
             case 'RBAC': {
-                valid = !plan.includes('side-project');
+                valid = isSideProjectOrGreater
                 break;
             }
             case 'AUDIT': {
-                valid = !plan.includes('side-project') && !plan.includes('startup');
+                valid = isScaleupOrGreater
                 break;
             }
             case 'FORCE_2FA': {
-                valid = !plan.includes('side-project') && !plan.includes('startup');
+                valid = isScaleupOrGreater
+                break;
+            }
+            case '4_EYES': {
+                valid = isScaleupOrGreater
                 break;
             }
             default:
