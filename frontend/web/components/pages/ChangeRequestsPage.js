@@ -36,7 +36,7 @@ const ChangeRequestsPage = class extends Component {
         const { projectId, environmentId, envId } = this.props.match.params;
         const readOnly = this.props.hasFeature('read_only_mode');
         const data = ChangeRequestStore.model && ChangeRequestStore.model[environmentId];
-        const hasPermission = true ||Utils.getPlansPermission(AccountStore.getPlans(), 'FLAG_OWNERS');
+        const hasPermission  = Utils.getPlansPermission(AccountStore.getPlans(), 'FLAG_OWNERS');
         const environment = ProjectStore.getEnvironment(environmentId);
         return (
             <div data-test="change-requests-page" id="change-requests-page" className="app-container container">
