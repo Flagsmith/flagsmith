@@ -227,7 +227,9 @@ class BaseFeatureStateViewSet(viewsets.ModelViewSet):
 
         latest_versions_qs = (
             FeatureState.objects.filter(
-                environment=environment, live_from__lte=timezone.now()
+                environment=environment,
+                live_from__lte=timezone.now(),
+                version__isnull=False,
             )
             .values("feature", "feature_segment", "identity")
             .annotate(max_version=Max("version"))
