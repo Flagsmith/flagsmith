@@ -533,7 +533,7 @@ class FeatureState(LifecycleModel, models.Model):
     @classmethod
     def get_environment_flags_queryset(
         cls, environments: typing.List["Environment"]
-    ) -> QuerySet["FeatureState"]:
+    ) -> QuerySet:
         """
         Get a queryset of the latest committed versions of an environments feature
         states, including those that are associated with a feature segment or identity.
