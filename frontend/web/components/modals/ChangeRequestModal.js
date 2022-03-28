@@ -25,7 +25,7 @@ const ChangeRequestModal = class extends Component {
         this.setState({ approvals: (this.state.approvals || []).filter(v => v.user !== id) });
     }
 
-    getApprovals = (users, approvals) => users.filter(v => approvals.includes(v.id))
+    getApprovals = (users, approvals) => users.filter(v => approvals.find((a)=>a.user === v.id))
 
     save = () => {
         const { title, description, approvals } = this.state;

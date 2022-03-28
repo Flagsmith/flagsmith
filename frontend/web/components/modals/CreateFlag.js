@@ -457,6 +457,7 @@ const CreateFlag = class extends Component {
                         this.setState({ identityVariations });
                     }}
                     environmentFlag={this.props.environmentFlag}
+                    projectFlag={projectFlag}
                     onValueChange={(e)=>{
                         this.setState({ initial_value: Utils.getTypedValue(Utils.safeParseEventValue(e)) })
                     }}

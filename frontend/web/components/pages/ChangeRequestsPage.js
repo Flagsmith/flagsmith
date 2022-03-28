@@ -36,7 +36,7 @@ const ChangeRequestsPage = class extends Component {
         const { projectId, environmentId, envId } = this.props.match.params;
         const readOnly = this.props.hasFeature('read_only_mode');
         const data = ChangeRequestStore.model && ChangeRequestStore.model[environmentId];
-        const hasPermission = Utils.getPlansPermission(AccountStore.getPlans(), 'FLAG_OWNERS');
+        const hasPermission = true ||Utils.getPlansPermission(AccountStore.getPlans(), 'FLAG_OWNERS');
         const environment = ProjectStore.getEnvironment(environmentId);
         return (
             <div data-test="change-requests-page" id="change-requests-page" className="app-container container">
@@ -58,7 +58,13 @@ const ChangeRequestsPage = class extends Component {
                                     To enable this feature set a minimum number of approvals in <Link to={`/project/${projectId}/environment/${environmentId}/settings`}>Environment Settings</Link>
                                 </span>
                             ): (
-                                "View and manage requests to change feature flags"
+                                <div>
+                                    View and manage requests to change feature flags with  <ButtonLink
+                                    href="https://docs.flagsmith.com/advanced-use/4-eyes"
+                                    target="_blank"
+                                >Four Eyes Approval</ButtonLink>.
+                                </div>
+
                             )}
                         </p>
                     )}

@@ -70,7 +70,7 @@ const ChangeRequestsPage = class extends Component {
     };
 
     deleteChangeRequest = () => {
-        openConfirm(<h3>Delete Trait</h3>, (
+        openConfirm(<h3>Delete Change Request</h3>, (
             <p>
                 Are you sure you want to delete this change request?
             </p>
@@ -106,7 +106,7 @@ const ChangeRequestsPage = class extends Component {
        AppActions.actionChangeRequest(this.props.match.params.id, "approve")
     }
     publishChangeRequest = () => {
-        openConfirm(<h3>Delete Trait</h3>, (
+        openConfirm(<h3>Publish Change Request</h3>, (
             <p>
                 Are you sure you want to publish this change request? This will adjust the feature for your environment.
             </p>
@@ -131,7 +131,7 @@ const ChangeRequestsPage = class extends Component {
         }
         const orgUsers = OrganisationStore.model && OrganisationStore.model.users;
         const ownerUsers = changeRequest && this.getApprovals(orgUsers, changeRequest.approvals.map(v => v.user));
-        const featureId = changeRequest && changeRequest.feature_states[0].feature
+        const featureId = changeRequest && changeRequest.feature_states[0] && changeRequest.feature_states[0].feature
         if (featureId!== this.activeFeature) {
             this.fetchFeature(featureId)
         }
@@ -141,10 +141,10 @@ const ChangeRequestsPage = class extends Component {
         return (
             <FeatureListProvider onSave={this.onSave} onError={this.onError}>
                 {({ isLoading, projectFlags, environmentFlags }) => {
-                    const environmentFlag = environmentFlags[changeRequest.feature_states[0].feature]
-                    const projectFlag = projectFlags.find((v)=>v.id === changeRequest.feature_states[0].feature)
+                    const environmentFlag = environmentFlags[changeRequest.feature_states[0] && changeRequest.feature_states[0].feature]
+                    const projectFlag = environmentFlag && projectFlags.find((v)=>v.id === changeRequest.feature_states[0].feature)
                     const isMv = projectFlag && projectFlag.multivariate_options && !!projectFlag.multivariate_options.length;
-                    const { name, feature_state_value, description, is_archived, tags, enabled, hide_from_client, multivariate_options } = true ? Utils.getFlagValue(projectFlag, environmentFlag, null)
+                    const { name, feature_state_value, description, is_archived, tags, enabled, hide_from_client, multivariate_options } = projectFlag ? Utils.getFlagValue(projectFlag, environmentFlag, null)
                         : {
                             multivariate_options: [],
                         };
@@ -158,10 +158,10 @@ const ChangeRequestsPage = class extends Component {
                     const environment = ProjectStore.getEnvironment(this.props.match.params.environmentId);
 
                     const minApprovals = environment.minimum_change_request_approvals || 0;
-                    const newValue = Utils.featureStateToValue(changeRequest.feature_states[0].feature_state_value);
-                    const oldValue = environmentFlag.feature_state_value
-                    const newEnabled = changeRequest.feature_states[0].enabled
-                    const oldEnabled = environmentFlag.enabled
+                    const newValue = changeRequest.feature_states[0] && Utils.featureStateToValue(changeRequest.feature_states[0].feature_state_value);
+                    const oldValue = environmentFlag && environmentFlag.feature_state_value
+                    const newEnabled = changeRequest.feature_states[0] && changeRequest.feature_states[0].enabled
+                    const oldEnabled = environmentFlag && environmentFlag.enabled
                     let mvData = []
                     let mvChanged = false;
                     if (isMv) {
@@ -374,7 +374,7 @@ const ChangeRequestsPage = class extends Component {
 
                                                     {changeRequest.committed_at? (
                                                         <div className="text-right">
-                                                            <span className="ion icon-primary icon ion-ios-git-merge mr-2"/>
+                                                            <span className="ion icon-primary text-primary icon ion-ios-git-merge mr-2"/>
                                                             Committed at {moment(changeRequest.committed_at).format('Do MMM YYYY HH:mma')} by {committedBy.first_name} {committedBy.last_name}
                                                         </div>
                                                     ): (
