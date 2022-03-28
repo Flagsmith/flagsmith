@@ -5,8 +5,7 @@ import coreapi
 from app_analytics.influxdb_wrapper import get_multiple_event_list_for_feature
 from django.conf import settings
 from django.core.cache import caches
-from django.db.models import Max, Q, QuerySet
-from django.utils import timezone
+from django.db.models import QuerySet
 from django.utils.decorators import method_decorator
 from drf_yasg2 import openapi
 from drf_yasg2.utils import swagger_auto_schema
