@@ -5,11 +5,7 @@ from django.template.loader import get_template
 from django.utils import timezone
 
 from app.utils import create_hash
-from organisations.models import (
-    Organisation,
-    OrganisationRole,
-    organisation_roles,
-)
+from organisations.models import Organisation, OrganisationRole
 from users.models import FFAdminUser
 
 
@@ -18,7 +14,9 @@ class AbstractBaseInviteModel(models.Model):
     date_created = models.DateTimeField("DateCreated", auto_now_add=True)
     organisation = models.ForeignKey(Organisation, on_delete=models.CASCADE)
     role = models.CharField(
-        choices=organisation_roles, max_length=50, default=OrganisationRole.USER.name
+        choices=OrganisationRole.choices,
+        max_length=50,
+        default=OrganisationRole.USER,
     )
 
     class Meta:
