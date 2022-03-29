@@ -45,7 +45,7 @@ const UserPage = class extends Component {
 
     editSegment = (segment) => {
         API.trackEvent(Constants.events.VIEW_SEGMENT);
-        openModal('Edit Segment', <CreateSegmentModal
+        openModal(`Edit Segment - ${segment.name}`, <CreateSegmentModal
           segment={segment}
           isEdit
           environmentId={this.props.match.params.environmentId}

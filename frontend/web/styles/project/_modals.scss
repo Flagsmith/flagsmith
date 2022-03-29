@@ -85,6 +85,7 @@ $side-width: 66%;
     .modal-body {
         padding: 0;
         height: 100%;
+        overflow-y: auto;
     }
 
     z-index: 10000000;

@@ -47,7 +47,7 @@ const SegmentsPage = class extends Component {
 
     editSegment = (segment, readOnly) => {
         API.trackEvent(Constants.events.VIEW_SEGMENT);
-        openModal('Edit Segment', <CreateSegmentModal
+        openModal(`Edit Segment - ${segment.name}`, <CreateSegmentModal
           segment={segment}
           isEdit
           readOnly={readOnly}
