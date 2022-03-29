@@ -15,7 +15,7 @@ const IdentitySegmentsProvider = class extends Component {
     }
 
     componentDidMount() {
-        if (this.props.fetch && !this.state.segments) {
+        if (this.props.fetch) {
             AppActions.getIdentitySegments(this.props.projectId, this.props.id)
         }
         this.listenTo(IdentitySegmentsStore, 'change', () => {
