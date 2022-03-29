@@ -111,11 +111,8 @@ const UsersPage = class extends Component {
                             <FormGroup>
                                 <IdentityListProvider>
                                     {({ isLoading, identities, identitiesPaging }) => {
-                                        const fullReload = ((identitiesPaging && this.state.search === null && identitiesPaging.currentPage === 1) || !identities || (!identities.length && !this.state.search)) && isLoading;
                                         return (
                                             <div>
-
-
                                                     <FormGroup>
                                                         <PanelSearch
                                                             renderSearchWithNoResults
