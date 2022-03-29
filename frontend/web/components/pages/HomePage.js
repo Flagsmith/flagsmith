@@ -96,6 +96,7 @@ const HomePage = class extends React.Component {
         const isInvite = document.location.href.indexOf('invite') != -1;
         const isSignup = (!projectOverrides.preventSignup || isInvite) && ((isInvite && document.location.href.indexOf('login') === -1) || document.location.href.indexOf('signup') != -1);
         const disableSignup = Project.preventSignup && !isInvite && isSignup;
+        const disableForgotPassword = Project.preventForgotPassword;
         const oauths = [];
         const disableOauthRegister = this.props.hasFeature('disable_oauth_registration');
 
@@ -270,7 +271,7 @@ const HomePage = class extends React.Component {
                                                                     onChange={(e) => {
                                                                         this.setState({ password: Utils.safeParseEventValue(e) });
                                                                     }}
-                                                                    rightComponent={(
+                                                                    rightComponent={!disableForgotPassword && (
                                                                         <Link
                                                                             tabIndex={-1}
                                                                             className="float-right"
