@@ -119,3 +119,5 @@ def test_4_eyes_workflow(
         content_type="application/json",
     )
     assert update_response.status_code == status.HTTP_200_OK
+    update_response_json = update_response.json()
+    assert update_response_json["title"] == new_title
