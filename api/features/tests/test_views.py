@@ -6,6 +6,7 @@ import pytest
 import pytz
 from django.forms import model_to_dict
 from django.urls import reverse
+from django.utils import timezone
 from rest_framework import status
 from rest_framework.test import APIClient, APITestCase
 
@@ -901,6 +902,49 @@ class FeatureStateViewSetTestCase(TestCase):
 
         # and
         assert res.json()["results"][0]["identity"]["identifier"] == identifier
+
+    def test_create_new_version(self):
+        # Given
+        feature_state = FeatureState.objects.get(
+            environment=self.environment, feature=self.feature
+        )
+
+        url = reverse(
+            "api-v1:environments:environment-featurestates-create-new-version",
+            args=[self.environment.api_key, feature_state.id],
+        )
+
+        # When
+        response = self.client.post(url)
+
+        # Then
+        assert response.status_code == status.HTTP_201_CREATED
+
+        response_json = response.json()
+        assert response_json["id"] != feature_state.id
+        assert response_json["version"] == feature_state.version + 1
+
+    def test_get_feature_states_only_returns_latest_versions(self):
+        # Given
+        feature_state = FeatureState.objects.get(
+            environment=self.environment, feature=self.feature
+        )
+        feature_state_v2 = feature_state.create_new_version(live_from=timezone.now())
+
+        url = reverse(
+            "api-v1:environments:environment-featurestates-list",
+            args=[self.environment.api_key],
+        )
+
+        # When
+        response = self.client.get(url)
+
+        # Then
+        assert response.status_code == status.HTTP_200_OK
+
+        response_json = response.json()
+        assert len(response_json["results"]) == 1
+        assert response_json["results"][0]["id"] == feature_state_v2.id
 
 
 @pytest.mark.django_db
