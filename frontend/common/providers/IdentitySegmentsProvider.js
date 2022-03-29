@@ -8,17 +8,20 @@ const IdentitySegmentsProvider = class extends Component {
         super(props, context);
         this.state = {
             isLoading: IdentitySegmentsStore.isLoading,
-            segments: IdentitySegmentsStore.model,
+            segments: IdentitySegmentsStore.model[props.id],
             segmentsPaging: IdentitySegmentsStore.paging,
         };
         ES6Component(this);
     }
 
     componentDidMount() {
+        if (this.props.fetch && !this.state.segments) {
+            AppActions.getIdentitySegments(this.props.projectId, this.props.id)
+        }
         this.listenTo(IdentitySegmentsStore, 'change', () => {
             this.setState({
                 isLoading: IdentitySegmentsStore.isLoading,
-                segments: IdentitySegmentsStore.model,
+                segments: IdentitySegmentsStore.model[this.props.id],
                 segmentsPaging: IdentitySegmentsStore.paging,
             });
         });

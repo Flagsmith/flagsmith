@@ -41,20 +41,20 @@ const SegmentsPage = class extends Component {
           flags={flags}
           environmentId={this.props.match.params.environmentId}
           projectId={this.props.match.params.projectId}
-        />, null, { className: 'alert fade expand create-segment-modal' });
+        />, null, { className: 'fade side-modal create-segment-modal' });
     };
 
 
     editSegment = (segment, readOnly) => {
         API.trackEvent(Constants.events.VIEW_SEGMENT);
-        openModal('Edit Segment', <CreateSegmentModal
+        openModal(`Edit Segment - ${segment.name}`, <CreateSegmentModal
           segment={segment}
           isEdit
           readOnly={readOnly}
           environmentId={this.props.match.params.environmentId}
           projectId={this.props.match.params.projectId}
           projectFlag={segment}
-        />, null, { className: 'alert fade expand create-segment-modal' });
+        />, null, { className: 'fade side-modal create-segment-modal' });
     };
 
 
