@@ -15,6 +15,7 @@ class EnvironmentManager(Manager):
                 "segment_config",
                 "amplitude_config",
                 "heap_config",
+                "dynatrace_config",
             )
             .prefetch_related(
                 Prefetch(
