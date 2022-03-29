@@ -3,8 +3,11 @@ import typing
 
 import coreapi
 from app_analytics.influxdb_wrapper import get_multiple_event_list_for_feature
+from core.serializers import EmptySerializer
 from django.conf import settings
 from django.core.cache import caches
+from django.db.models import Max, Q, QuerySet
+from django.utils import timezone
 from django.utils.decorators import method_decorator
 from drf_yasg2 import openapi
 from drf_yasg2.utils import swagger_auto_schema
@@ -16,6 +19,7 @@ from rest_framework.renderers import JSONRenderer
 from rest_framework.response import Response
 from rest_framework.schemas import AutoSchema
 
+from api.serializers import ErrorSerializer
 from audit.models import (
     FEATURE_DELETED_MESSAGE,
     IDENTITY_FEATURE_STATE_DELETED_MESSAGE,
@@ -218,30 +222,42 @@ class BaseFeatureStateViewSet(viewsets.ModelViewSet):
         Override queryset to filter based on provided URL parameters.
         """
         environment_api_key = self.kwargs["environment_api_key"]
-        identity_pk = self.kwargs.get("identity_pk")
         environment = get_object_or_404(
             self.request.user.get_permitted_environments(["VIEW_ENVIRONMENT"]),
             api_key=environment_api_key,
         )
 
+        latest_versions_qs = (
+            FeatureState.objects.filter(
+                environment=environment, live_from__lte=timezone.now()
+            )
+            .values("feature", "feature_segment", "identity")
+            .annotate(max_version=Max("version"))
+            .order_by()
+        )
+        q = Q()
+        for latest_version_dict in latest_versions_qs:
+            q = q | Q(
+                feature_id=latest_version_dict["feature"],
+                identity_id=latest_version_dict["identity"],
+                feature_segment_id=latest_version_dict["feature_segment"],
+                version=latest_version_dict["max_version"],
+            )
+
         queryset = (
-            FeatureState.objects.filter(environment=environment, feature_segment=None)
+            FeatureState.objects.filter(Q(environment=environment) & q)
             .select_related("feature", "feature_state_value")
             .prefetch_related("multivariate_feature_state_values")
         )
+        queryset = self._apply_query_param_filters(queryset)
 
-        if identity_pk:
-            queryset = queryset.filter(identity__pk=identity_pk)
-        elif "anyIdentity" in self.request.query_params:
-            queryset = queryset.exclude(identity=None)
-        else:
-            queryset = queryset.filter(identity=None, feature_segment=None)
+        return queryset
 
+    def _apply_query_param_filters(self, queryset: QuerySet) -> QuerySet:
         if self.request.query_params.get("feature"):
             queryset = queryset.filter(
-                feature__id=int(self.request.query_params.get("feature"))
+                feature__id=int(self.request.query_params["feature"])
             )
-
         return queryset
 
     def get_environment_from_request(self):
@@ -401,9 +417,38 @@ class BaseFeatureStateViewSet(viewsets.ModelViewSet):
 class EnvironmentFeatureStateViewSet(BaseFeatureStateViewSet):
     permission_classes = [IsAuthenticated, EnvironmentFeatureStatePermissions]
 
+    def get_queryset(self):
+        queryset = super().get_queryset().filter(feature_segment=None)
+        if "anyIdentity" in self.request.query_params:
+            # TODO: deprecate anyIdentity query parameter
+            return queryset.exclude(identity=None)
+        return queryset.filter(identity=None)
+
+    def get_serializer_class(self):
+        if self.action == "create_new_version":
+            return FeatureStateSerializerBasic
+        return super().get_serializer_class()
+
+    @swagger_auto_schema(
+        method="POST",
+        request_body=EmptySerializer(),
+        responses={201: FeatureStateSerializerBasic(), 400: ErrorSerializer()},
+    )
+    @action(detail=True, methods=["POST"], url_path="create-new-version")
+    def create_new_version(self, *args, **kwargs) -> Response:
+        current_version = self.get_object()
+        new_version = current_version.create_new_version()
+        return Response(
+            self.get_serializer(instance=new_version).data,
+            status=status.HTTP_201_CREATED,
+        )
+
 
 class IdentityFeatureStateViewSet(BaseFeatureStateViewSet):
     permission_classes = [IsAuthenticated, IdentityFeatureStatePermissions]
+
+    def get_queryset(self):
+        return super().get_queryset().filter(identity__pk=self.kwargs["identity_pk"])
 
 
 class SimpleFeatureStateViewSet(
@@ -454,52 +499,34 @@ class SDKFeatureStates(GenericAPIView):
         if identifier:
             return self._get_flags_response_with_identifier(request, identifier)
 
-        filter_args = {
-            "identity": None,
-            "environment": request.environment,
-            "feature_segment": None,
-        }
-
         if "feature" in request.GET:
-            filter_args["feature__name__iexact"] = request.GET["feature"]
-            try:
-                feature_state = FeatureState.objects.get(**filter_args)
-            except FeatureState.DoesNotExist:
+            feature_states = FeatureState.get_environment_flags(
+                environment=request.environment, feature_name=request.GET["feature"]
+            )
+            if len(feature_states) != 1:
+                # TODO: what if more than one?
                 return Response(
                     {"detail": "Given feature not found"},
                     status=status.HTTP_404_NOT_FOUND,
                 )
 
-            return Response(self.get_serializer(feature_state).data)
+            return Response(self.get_serializer(feature_states[0]).data)
 
         if settings.CACHE_FLAGS_SECONDS > 0:
-            data = self._get_flags_from_cache(filter_args, request.environment)
+            data = self._get_flags_from_cache(request.environment)
         else:
             data = self.get_serializer(
-                # ignore disabled Flags when project hide_disabled_flags is enabled
-                FeatureState.objects.filter(**filter_args)
-                .exclude(
-                    feature__project__hide_disabled_flags=True,
-                    enabled=False,
-                )
-                .select_related("feature", "feature_state_value"),
+                FeatureState.get_environment_flags(environment=request.environment),
                 many=True,
             ).data
 
         return Response(data)
 
-    def _get_flags_from_cache(self, filter_args, environment):
+    def _get_flags_from_cache(self, environment):
         data = flags_cache.get(environment.api_key)
         if not data:
             data = self.get_serializer(
-                # ignore disabled Flags when project hide_disabled_flags is enabled
-                FeatureState.objects.filter(**filter_args)
-                .exclude(
-                    feature__project__hide_disabled_flags=True,
-                    enabled=False,
-                )
-                .select_related("feature", "feature_state_value"),
-                many=True,
+                FeatureState.get_environment_flags(environment=environment), many=True
             ).data
             flags_cache.set(environment.api_key, data, settings.CACHE_FLAGS_SECONDS)
 

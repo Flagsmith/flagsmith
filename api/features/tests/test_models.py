@@ -4,9 +4,12 @@ import pytest
 from django.core.exceptions import ValidationError
 from django.db.utils import IntegrityError
 from django.test import TestCase
+from django.utils import timezone
 
 from environments.identities.models import Identity
 from environments.models import Environment
+from features.constants import ENVIRONMENT, FEATURE_SEGMENT, IDENTITY
+from features.exceptions import FeatureStateVersionAlreadyExistsError
 from features.models import Feature, FeatureSegment, FeatureState
 from organisations.models import Organisation
 from projects.models import Project
@@ -208,9 +211,10 @@ class FeatureStateTest(TestCase):
         self, mock_trigger_webhooks
     ):
         """
-        Note that although the mock isn't used in this test, it throws an exception on it's thread so we mock it
-        here anyway.
+        Note that although the mock isn't used in this test, it throws an exception on
+        it's thread so we mock it here anyway.
         """
+
         # Given
         duplicate_feature_state = FeatureState(
             feature=self.feature, environment=self.environment, enabled=True
@@ -224,6 +228,83 @@ class FeatureStateTest(TestCase):
         assert (
             FeatureState.objects.filter(
                 feature=self.feature, environment=self.environment
+            ).count()
+            == 1
+        )
+
+    @mock.patch("features.signals.trigger_feature_state_change_webhooks")
+    def test_cannot_create_duplicate_feature_state_in_an_environment_for_segment(
+        self, mock_trigger_webhooks
+    ):
+        """
+        Note that although the mock isn't used in this test, it throws an exception on
+        it's thread so we mock it here anyway.
+        """
+
+        # Given
+        segment = Segment.objects.create(project=self.project)
+        feature_segment = FeatureSegment.objects.create(
+            feature=self.feature, environment=self.environment, segment=segment
+        )
+        FeatureState.objects.create(
+            feature=self.feature,
+            environment=self.environment,
+            feature_segment=feature_segment,
+        )
+
+        duplicate_feature_state = FeatureState(
+            feature=self.feature,
+            environment=self.environment,
+            enabled=True,
+            feature_segment=feature_segment,
+        )
+
+        # When
+        with pytest.raises(ValidationError):
+            duplicate_feature_state.save()
+
+        # Then
+        assert (
+            FeatureState.objects.filter(
+                feature=self.feature,
+                environment=self.environment,
+                feature_segment=feature_segment,
+            ).count()
+            == 1
+        )
+
+    @mock.patch("features.signals.trigger_feature_state_change_webhooks")
+    def test_cannot_create_duplicate_feature_state_in_an_environment_for_identity(
+        self, mock_trigger_webhooks
+    ):
+        """
+        Note that although the mock isn't used in this test, it throws an exception on
+        it's thread so we mock it here anyway.
+        """
+
+        # Given
+        identity = Identity.objects.create(
+            identifier="identifier", environment=self.environment
+        )
+        FeatureState.objects.create(
+            feature=self.feature, environment=self.environment, identity=identity
+        )
+
+        duplicate_feature_state = FeatureState(
+            feature=self.feature,
+            environment=self.environment,
+            enabled=True,
+            identity=identity,
+        )
+
+        # When
+        with pytest.raises(ValidationError):
+            duplicate_feature_state.save()
+
+        # Then
+        assert (
+            FeatureState.objects.filter(
+                feature=self.feature, environment=self.environment, identity=identity
             ).count()
             == 1
         )
@@ -350,6 +431,172 @@ class FeatureStateTest(TestCase):
 
         # Then
         mock_trigger_webhooks.assert_called_with(feature_state)
+
+    def test_get_environment_flags_returns_latest_live_versions_of_feature_states(
+        self,
+    ):
+        # Given
+        feature_2 = Feature.objects.create(name="feature_2", project=self.project)
+        feature_2_v1_feature_state = FeatureState.objects.get(feature=feature_2)
+
+        feature_1_v2_feature_state = FeatureState.objects.create(
+            feature=self.feature,
+            enabled=True,
+            version=2,
+            environment=self.environment,
+            live_from=timezone.now(),
+        )
+        FeatureState.objects.create(
+            feature=self.feature,
+            enabled=False,
+            version=3,
+            environment=self.environment,
+        )
+
+        identity = Identity.objects.create(
+            identifier="identity", environment=self.environment
+        )
+        FeatureState.objects.create(
+            feature=self.feature, identity=identity, environment=self.environment
+        )
+
+        # When
+        environment_feature_states = FeatureState.get_environment_flags(
+            environment=self.environment
+        )
+
+        # Then
+        assert set(environment_feature_states) == {
+            feature_1_v2_feature_state,
+            feature_2_v1_feature_state,
+        }
+
+    def test_create_new_version_creates_new_version_if_does_not_exist_already(self):
+        # Given
+        current_version = FeatureState.objects.get(
+            feature=self.feature, environment=self.environment
+        )
+
+        # When
+        new_version = current_version.create_new_version()
+
+        # Then
+        assert new_version.version == current_version.version + 1
+        assert current_version.feature_state_value != new_version.feature_state_value
+        assert (
+            FeatureState.objects.filter(
+                feature=self.feature,
+                environment=self.environment,
+                feature_segment=None,
+                identity=None,
+            ).count()
+            == 2
+        )
+
+    def test_create_new_version_raises_exception_if_version_already_exists(self):
+        # Given
+        current_version = FeatureState.objects.get(
+            feature=self.feature, environment=self.environment
+        )
+        new_version = current_version.create_new_version()
+
+        # When
+        with pytest.raises(FeatureStateVersionAlreadyExistsError) as e:
+            current_version.create_new_version()
+
+        # Then
+        assert (
+            FeatureState.objects.filter(
+                feature=self.feature,
+                environment=self.environment,
+                feature_segment=None,
+                identity=None,
+            ).count()
+            == 2
+        )
+        assert (
+            e.value.detail
+            == f"Version {new_version.version} already exists for FeatureState."
+        )
+
+    def test_feature_state_type_environment(self):
+        # Given
+        feature_state = FeatureState.objects.get(
+            environment=self.environment,
+            feature=self.feature,
+            identity=None,
+            feature_segment=None,
+        )
+
+        # Then
+        assert feature_state.type == ENVIRONMENT
+
+    def test_feature_state_type_identity(self):
+        # Given
+        identity = Identity.objects.create(
+            identifier="identity", environment=self.environment
+        )
+        feature_state = FeatureState.objects.create(
+            environment=self.environment,
+            feature=self.feature,
+            identity=identity,
+            feature_segment=None,
+        )
+
+        # Then
+        assert feature_state.type == IDENTITY
+
+    def test_feature_state_type_feature_segment(self):
+        # Given
+        segment = Segment.objects.create(project=self.project)
+        feature_segment = FeatureSegment.objects.create(
+            feature=self.feature, segment=segment, environment=self.environment
+        )
+        feature_state = FeatureState.objects.create(
+            environment=self.environment,
+            feature=self.feature,
+            identity=None,
+            feature_segment=feature_segment,
+        )
+
+        # Then
+        assert feature_state.type == FEATURE_SEGMENT
+
+    def test_feature_state_type_unknown(self):
+        # Note: this test is a case which should never, ever happen in real life
+        # as it's not possible to create a feature state that has both an identity
+        # and a feature segment via the API, however, it's useful to have the logic
+        # defined in case it ever does happen
+
+        # Given
+        # a feature state with both identity and feature segment
+        identity = Identity.objects.create(
+            identifier="identity", environment=self.environment
+        )
+        segment = Segment.objects.create(project=self.project)
+        feature_segment = FeatureSegment.objects.create(
+            feature=self.feature, segment=segment, environment=self.environment
+        )
+        feature_state = FeatureState.objects.create(
+            environment=self.environment,
+            feature=self.feature,
+            identity=identity,
+            feature_segment=feature_segment,
+        )
+
+        # Then
+        # we default to environment type
+        with self.assertLogs() as caplog:
+            assert feature_state.type == ENVIRONMENT
+
+        # and an error is logged
+        assert len(caplog.records) == 1
+        assert caplog.records[0].levelname == "ERROR"
+        assert (
+            caplog.records[0].message
+            == f"FeatureState {feature_state.id} does not have a valid type. "
+            f"Defaulting to environment."
+        )
 
 
 @pytest.mark.parametrize("hashed_percentage", (0.0, 0.3, 0.5, 0.8, 0.999999))
