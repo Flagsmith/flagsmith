@@ -41,20 +41,20 @@ const SegmentsPage = class extends Component {
           flags={flags}
           environmentId={this.props.match.params.environmentId}
           projectId={this.props.match.params.projectId}
-        />, null, { className: 'alert fade expand create-segment-modal' });
+        />, null, { className: 'fade side-modal create-segment-modal' });
     };
 
 
     editSegment = (segment, readOnly) => {
         API.trackEvent(Constants.events.VIEW_SEGMENT);
-        openModal('Edit Segment', <CreateSegmentModal
+        openModal(`Edit Segment - ${segment.name}`, <CreateSegmentModal
           segment={segment}
           isEdit
           readOnly={readOnly}
           environmentId={this.props.match.params.environmentId}
           projectId={this.props.match.params.projectId}
           projectFlag={segment}
-        />, null, { className: 'alert fade expand create-segment-modal' });
+        />, null, { className: 'fade side-modal create-segment-modal' });
     };
 
 
@@ -218,7 +218,7 @@ const SegmentsPage = class extends Component {
                                                 <FormGroup className="mt-4">
                                                     <CodeHelp
                                                       title="Using segments"
-                                                      snippets={Constants.codeHelp.SEGMENTS(environmentId)}
+                                                      snippets={Constants.codeHelp.USER_TRAITS(environmentId)}
                                                     />
                                                 </FormGroup>
                                             </div>
@@ -262,7 +262,7 @@ const SegmentsPage = class extends Component {
                                     <FormGroup>
                                         <CodeHelp
                                           title="Managing user traits and segments"
-                                          snippets={Constants.codeHelp.USER_TRAITS(this.props.match.params.environmentId, this.props.match.params.id)}
+                                          snippets={Constants.codeHelp.USER_TRAITS(this.props.match.params.environmentId)}
                                         />
                                     </FormGroup>
                                 </div>

@@ -170,7 +170,7 @@ const AppActions = Object.assign({}, require('./base/_app-actions'), {
             segmentOverrides,
         });
     },
-    editEnvironmentFlag(projectId, environmentId, flag, projectFlag, environmentFlag, segmentOverrides) {
+    editEnvironmentFlag(projectId, environmentId, flag, projectFlag, environmentFlag, segmentOverrides, mode) {
         Dispatcher.handleViewAction({
             actionType: Actions.EDIT_ENVIRONMENT_FLAG,
             projectId,
@@ -178,6 +178,19 @@ const AppActions = Object.assign({}, require('./base/_app-actions'), {
             flag,
             projectFlag,
             environmentFlag,
+            segmentOverrides,
+            mode,
+        });
+    },
+    editEnvironmentFlagChangeRequest(projectId, environmentId, flag, projectFlag, environmentFlag, segmentOverrides, changeRequest) {
+        Dispatcher.handleViewAction({
+            actionType: Actions.EDIT_ENVIRONMENT_FLAG_CHANGE_REQUEST,
+            projectId,
+            environmentId,
+            flag,
+            projectFlag,
+            environmentFlag,
+            changeRequest,
             segmentOverrides,
         });
     },
@@ -423,7 +436,7 @@ const AppActions = Object.assign({}, require('./base/_app-actions'), {
         Dispatcher.handleViewAction({
             actionType: Actions.GET_AUDIT_LOG,
             projectId,
-            search
+            search,
         });
     },
     getAuditLogPage(projectId, page) {
@@ -471,6 +484,41 @@ const AppActions = Object.assign({}, require('./base/_app-actions'), {
         Dispatcher.handleViewAction({
             actionType: Actions.GET_INFLUX_DATA,
             id: organisationId,
+        });
+    },
+    getChangeRequests(environment, page) {
+        Dispatcher.handleViewAction({
+            actionType: Actions.GET_CHANGE_REQUESTS,
+            environment,
+            page,
+        });
+    },
+    getChangeRequest(id) {
+        Dispatcher.handleViewAction({
+            actionType: Actions.GET_CHANGE_REQUEST,
+            id,
+        });
+    },
+    updateChangeRequest(changeRequest) {
+        Dispatcher.handleViewAction({
+            actionType: Actions.UPDATE_CHANGE_REQUEST,
+            changeRequest,
+        });
+    },
+
+    deleteChangeRequest(id,cb) {
+        Dispatcher.handleViewAction({
+            actionType: Actions.DELETE_CHANGE_REQUEST,
+            id,
+            cb
+        });
+    },
+    actionChangeRequest(id, action, cb) {
+        Dispatcher.handleViewAction({
+            actionType: Actions.ACTION_CHANGE_REQUEST,
+            id,
+            action,
+            cb
         });
     },
 });

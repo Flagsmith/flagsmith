@@ -1,4 +1,5 @@
 import React, { Component } from 'react';
+import { FixedSizeList as List } from 'react-window';
 import Popover from './base/Popover';
 
 const PanelSearch = class extends Component {
@@ -30,7 +31,7 @@ const PanelSearch = class extends Component {
     }
 
     filter() {
-        let search = this.props.search || this.state.search || "";
+        let search = this.props.search || this.state.search || '';
         if (this.state.exact) {
             search = search.replace(/^"+|"+$/g, '');
         }
@@ -61,13 +62,35 @@ const PanelSearch = class extends Component {
         }
     }
 
+    renderContainer = (children) => {
+        const renderRow = ({ index, style }) => (
+            <div style={style}>
+                {this.props.renderRow(children[index])}
+            </div>
+        );
+        if (children && children.length > 100 && this.props.itemHeight) {
+            return (
+                <List
+                  style={{ overflowX: 'hidden' }}
+                  height={this.props.itemHeight * 10}
+                  itemCount={children.length}
+                  itemSize={this.props.itemHeight}
+                  width="100%"
+                >
+                    {renderRow}
+                </List>
+            );
+        }
+        return children.map(this.props.renderRow);
+    }
+
     render() {
         const { sortBy, sortOrder } = this.state;
         const { title, items, renderRow, renderNoResults, paging, goToPage, isLoading, sorting, action } = this.props;
         const filteredItems = this.filter(items);
         const currentSort = _.find(sorting, { value: sortBy });
 
-        let search = this.props.search || this.state.search || "";
+        let search = this.props.search || this.state.search || '';
         if (this.state.exact) {
             search = search.replace(/^"+|"+$/g, '');
         }
@@ -187,19 +210,21 @@ const PanelSearch = class extends Component {
                     {this.props.header}
                     {this.props.isLoading && <div className="text-center"><Loader/></div> }
                     {!this.props.isLoading && filteredItems && filteredItems.length
-                        ? filteredItems.map(renderRow) : (renderNoResults && !search) ? renderNoResults : (
+                        ? this.renderContainer(filteredItems) : (renderNoResults && !search) ? renderNoResults : (
                             <Column>
-                                <div className="mx-2 mb-2">
-                                    {'No results '}
-                                    {search && (
-                                    <span>
+                                {!isLoading && (
+                                    <div className="mx-2 mt-1 mb-2">
+                                        {'No results '}
+                                        {search && (
+                                            <span>
                                     for
-                                        <strong>
-                                            {` "${search}"`}
-                                        </strong>
-                                    </span>
-                                    )}
-                                </div>
+                                                <strong>
+                                                    {` "${search}"`}
+                                                </strong>
+                                            </span>
+                                        )}
+                                    </div>
+                                )}
                             </Column>
                         )}
                 </div>

@@ -18,7 +18,9 @@
 .float-right{
     float:right;
 }
-
+.text-light {
+    color: white !important;
+}
 .form-cta {
     text-align: right;
 }
@@ -99,4 +101,12 @@
     .modal-content {
         transition: none !important;
     }
+}
+
+.text-primary {
+    color: $bt-brand-primary !important;
+}
+
+.text-primary {
+    color: $bt-brand-primary !important;
 }

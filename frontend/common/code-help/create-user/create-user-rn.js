@@ -1,29 +1,18 @@
-module.exports = (envId, { LIB_NAME, NPM_RN_CLIENT, USER_ID, USER_FEATURE_FUNCTION, USER_FEATURE_NAME }, userId) => `import ${LIB_NAME} from '${NPM_RN_CLIENT}';
+module.exports = (envId, { NPM_RN_CLIENT, TRAIT_NAME, NPM_CLIENT, USER_ID, USER_FEATURE_FUNCTION, FEATURE_NAME, FEATURE_NAME_ALT }, userId) => `
+// Home Page
+import flagsmith from '${NPM_RN_CLIENT}';
+import { useFlags, useFlagsmith } from 'flagsmith/react';
 
-${LIB_NAME}.init({
-    environmentID: "${envId}",
-        onChange: (oldFlags, params) => { // Occurs whenever flags are changed
-        // Determines if the update came from the server or local cached storage
-        const { isFromServer } = params;
-
-        // Check for a feature
-        if (${LIB_NAME}.hasFeature("${USER_FEATURE_NAME}")) {
-            ${USER_FEATURE_FUNCTION}();
-        }
-
-        // Or, use the value of a feature
-        const ${USER_FEATURE_NAME} = ${LIB_NAME}.getValue("${USER_FEATURE_NAME}");
-
-        // Check whether value has changed
-        const ${USER_FEATURE_NAME}Old = oldFlags["${USER_FEATURE_NAME}"] 
-        && oldFlags["${USER_FEATURE_NAME}"].value;
-        if (${USER_FEATURE_NAME} !== ${USER_FEATURE_NAME}Old) {
-            // Value has changed, do something here
-        }
-    }
-});
-
-// This will create a user in the dashboard if they don't already exist.
-${LIB_NAME}.identify("${userId || USER_ID}"); 
-
-`;
+export default function HomePage() {
+  const flags = useFlags(['${FEATURE_NAME}','${FEATURE_NAME_ALT}']]); // only causes re-render if specified flag values / traits change
+  const ${FEATURE_NAME} = flags.${FEATURE_NAME}.enabled
+  const ${FEATURE_NAME_ALT} = flags.${FEATURE_NAME_ALT}.value
+  
+  const identify = () => {
+    flagsmith.identify('${USER_ID}', {${TRAIT_NAME}: 21}); // only causes re-render if the user has overrides / segment overrides for ${FEATURE_NAME} or ${FEATURE_NAME_ALT}
+  };
+  
+  return (
+    &lt;>{...}&lt;/>
+  );
+}`;

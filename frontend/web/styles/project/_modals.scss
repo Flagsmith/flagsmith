@@ -1,3 +1,11 @@
+#modal2 {
+    .modal {
+        z-index: 20000000;
+        background-color: rgba(0, 0, 0, 0.25);
+    }
+}
+
+
 .modal{
     z-index: 100000;
     .modal-content {
@@ -76,7 +84,8 @@ $side-width: 66%;
 
     .modal-body {
         padding: 0;
-        height: 100%;
+        height: calc(100% - 60px);
+        overflow-y: auto;
     }
 
     z-index: 10000000;
@@ -146,7 +155,7 @@ $side-width: 66%;
         position: relative;
         padding-left: 10px;
         padding-right: 10px;
-        height: calc(100% - 190px);
+        height: calc(100% - 50px);
         overflow-y: scroll;
         .tabs {
             margin-top: 10px;

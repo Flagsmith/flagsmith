@@ -210,9 +210,10 @@ class FeatureStateTest(TestCase):
         self, mock_trigger_webhooks
     ):
         """
-        Note that although the mock isn't used in this test, it throws an exception on it's thread so we mock it
-        here anyway.
+        Note that although the mock isn't used in this test, it throws an exception on
+        it's thread so we mock it here anyway.
         """
+
         # Given
         duplicate_feature_state = FeatureState(
             feature=self.feature, environment=self.environment, enabled=True
@@ -226,6 +227,83 @@ class FeatureStateTest(TestCase):
         assert (
             FeatureState.objects.filter(
                 feature=self.feature, environment=self.environment
+            ).count()
+            == 1
+        )
+
+    @mock.patch("features.signals.trigger_feature_state_change_webhooks")
+    def test_cannot_create_duplicate_feature_state_in_an_environment_for_segment(
+        self, mock_trigger_webhooks
+    ):
+        """
+        Note that although the mock isn't used in this test, it throws an exception on
+        it's thread so we mock it here anyway.
+        """
+
+        # Given
+        segment = Segment.objects.create(project=self.project)
+        feature_segment = FeatureSegment.objects.create(
+            feature=self.feature, environment=self.environment, segment=segment
+        )
+        FeatureState.objects.create(
+            feature=self.feature,
+            environment=self.environment,
+            feature_segment=feature_segment,
+        )
+
+        duplicate_feature_state = FeatureState(
+            feature=self.feature,
+            environment=self.environment,
+            enabled=True,
+            feature_segment=feature_segment,
+        )
+
+        # When
+        with pytest.raises(ValidationError):
+            duplicate_feature_state.save()
+
+        # Then
+        assert (
+            FeatureState.objects.filter(
+                feature=self.feature,
+                environment=self.environment,
+                feature_segment=feature_segment,
+            ).count()
+            == 1
+        )
+
+    @mock.patch("features.signals.trigger_feature_state_change_webhooks")
+    def test_cannot_create_duplicate_feature_state_in_an_environment_for_identity(
+        self, mock_trigger_webhooks
+    ):
+        """
+        Note that although the mock isn't used in this test, it throws an exception on
+        it's thread so we mock it here anyway.
+        """
+
+        # Given
+        identity = Identity.objects.create(
+            identifier="identifier", environment=self.environment
+        )
+        FeatureState.objects.create(
+            feature=self.feature, environment=self.environment, identity=identity
+        )
+
+        duplicate_feature_state = FeatureState(
+            feature=self.feature,
+            environment=self.environment,
+            enabled=True,
+            identity=identity,
+        )
+
+        # When
+        with pytest.raises(ValidationError):
+            duplicate_feature_state.save()
+
+        # Then
+        assert (
+            FeatureState.objects.filter(
+                feature=self.feature, environment=self.environment, identity=identity
             ).count()
             == 1
         )

@@ -45,7 +45,7 @@ const UserPage = class extends Component {
 
     editSegment = (segment) => {
         API.trackEvent(Constants.events.VIEW_SEGMENT);
-        openModal('Edit Segment', <CreateSegmentModal
+        openModal(`Edit Segment - ${segment.name}`, <CreateSegmentModal
           segment={segment}
           isEdit
           environmentId={this.props.match.params.environmentId}
@@ -431,7 +431,7 @@ const UserPage = class extends Component {
                                                     />
                                                 </FormGroup>
                                             )}
-                                            <IdentitySegmentsProvider>
+                                            <IdentitySegmentsProvider id={this.props.match.params.id}>
                                                 {({ isLoading: segmentsLoading, segments }) => (segmentsLoading ? <div className="text-center"><Loader/></div> : (
                                                     <FormGroup>
                                                         <PanelSearch
@@ -490,8 +490,8 @@ const UserPage = class extends Component {
                                     <div className="col-md-12 mt-2">
                                         <FormGroup>
                                             <CodeHelp
-                                              title="Managing user traits and segments"
-                                              snippets={Constants.codeHelp.USER_TRAITS(this.props.match.params.environmentId, this.props.match.params.id)}
+                                                title="Managing user traits and segments"
+                                                snippets={Constants.codeHelp.USER_TRAITS(this.props.match.params.environmentId, this.props.match.params.identity)}
                                             />
                                         </FormGroup>
                                         <FormGroup>

@@ -50,6 +50,7 @@ app.get('/config/project-overrides', (req, res) => {
 
     const values = [
         { name: 'preventSignup', value: envToBool('PREVENT_SIGNUP', false) || !envToBool('ALLOW_SIGNUPS', true) }, // todo:  deprecate ALLOW_SIGNUPS
+        { name: 'preventForgotPassword', value: envToBool('PREVENT_FORGOT_PASSWORD', false) }, // todo:  deprecate ALLOW_SIGNUPS
         { name: 'superUserCreateOnly', value: envToBool('ONLY_SUPERUSERS_CAN_CREATE_ORGANISATIONS', false) },
         { name: 'flagsmith', value: process.env.FLAGSMITH_ON_FLAGSMITH_API_KEY },
         { name: 'heap', value: process.env.HEAP_API_KEY },

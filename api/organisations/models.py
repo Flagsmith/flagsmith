@@ -1,8 +1,6 @@
 # -*- coding: utf-8 -*-
 from __future__ import unicode_literals
 
-import enum
-
 from django.conf import settings
 from django.db import models
 from django.utils import timezone
@@ -17,12 +15,9 @@ from users.utils.mailer_lite import MailerLite
 from webhooks.models import AbstractBaseWebhookModel
 
 
-class OrganisationRole(enum.Enum):
-    ADMIN = "ADMIN"
-    USER = "USER"
-
-
-organisation_roles = ((tag.name, tag.value) for tag in OrganisationRole)
+class OrganisationRole(models.TextChoices):
+    ADMIN = ("ADMIN", "Admin")
+    USER = ("USER", "User")
 
 
 class Organisation(models.Model):
@@ -89,7 +84,7 @@ class UserOrganisation(models.Model):
     user = models.ForeignKey("users.FFAdminUser", on_delete=models.CASCADE)
     organisation = models.ForeignKey(Organisation, on_delete=models.CASCADE)
     date_joined = models.DateTimeField(auto_now_add=True)
-    role = models.CharField(max_length=50, choices=organisation_roles)
+    role = models.CharField(max_length=50, choices=OrganisationRole.choices)
 
     class Meta:
         unique_together = (

@@ -288,6 +288,8 @@ class FFAdminUser(LifecycleModel, AbstractUser):
 
     @classmethod
     def send_organisation_over_limit_alert(cls, organisation):
+        subscription = getattr(organisation, "subscription", None)
+
         cls.send_alert_to_admin_users(
             subject="Organisation over number of seats",
             message="Organisation %s has used %d seats which is over their plan limit of %d "
@@ -295,8 +297,8 @@ class FFAdminUser(LifecycleModel, AbstractUser):
             % (
                 str(organisation.name),
                 organisation.num_seats,
-                organisation.subscription.max_seats if organisation.subscription else 0,
-                organisation.subscription.plan if organisation.subscription else "Free",
+                organisation.subscription.max_seats if subscription else 0,
+                organisation.subscription.plan if subscription else "Free",
             ),
         )
 

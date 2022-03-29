@@ -121,6 +121,7 @@ INSTALLED_APPS = [
     # health check plugins
     "health_check",
     "health_check.db",
+    "health_check.contrib.migrations",
     # Used for ordering models (e.g. FeatureSegment)
     "ordered_model",
     # Third party integrations
@@ -134,6 +135,7 @@ INSTALLED_APPS = [
     "integrations.rudderstack",
     "integrations.slack",
     "integrations.webhook",
+    "integrations.dynatrace",
     # Rate limiting admin endpoints
     "axes",
     "telemetry",
@@ -354,11 +356,17 @@ LOGOUT_URL = "/admin/logout/"
 # Email associated with user that is used by front end for end to end testing purposes
 FE_E2E_TEST_USER_EMAIL = "nightwatch@solidstategroup.com"
 
+# SSL handling in Django
 SECURE_PROXY_SSL_HEADER_NAME = env.str(
     "SECURE_PROXY_SSL_HEADER_NAME", "HTTP_X_FORWARDED_PROTO"
 )
 SECURE_PROXY_SSL_HEADER_VALUE = env.str("SECURE_PROXY_SSL_HEADER_VALUE", "https")
 SECURE_PROXY_SSL_HEADER = (SECURE_PROXY_SSL_HEADER_NAME, SECURE_PROXY_SSL_HEADER_VALUE)
+
+SECURE_REDIRECT_EXEMPT = env.list("DJANGO_SECURE_REDIRECT_EXEMPT", default=[])
+SECURE_REFERRER_POLICY = env.str("DJANGO_SECURE_REFERRER_POLICY", default="same-origin")
+SECURE_SSL_HOST = env.str("DJANGO_SECURE_SSL_HOST", default=None)
+SECURE_SSL_REDIRECT = env.bool("DJANGO_SECURE_SSL_REDIRECT", default=False)
 
 # Chargebee
 ENABLE_CHARGEBEE = env.bool("ENABLE_CHARGEBEE", default=False)
@@ -565,3 +573,6 @@ DEFAULT_AUTO_FIELD = "django.db.models.AutoField"
 EDGE_API_URL = env.str("EDGE_API_URL", None)
 # Used for signing forwarded request to edge
 EDGE_REQUEST_SIGNING_KEY = env.str("EDGE_REQUEST_SIGNING_KEY", None)
+
+# Aws Event bus used for sending identity migration events
+IDENTITY_MIGRATION_EVENT_BUS_NAME = env.str("IDENTITY_MIGRATION_EVENT_BUS_NAME", None)

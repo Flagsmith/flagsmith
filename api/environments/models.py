@@ -120,7 +120,11 @@ class Environment(LifecycleModel):
                 select_related_args = (
                     "project",
                     "project__organisation",
+                    "mixpanel_config",
+                    "segment_config",
                     "amplitude_config",
+                    "heap_config",
+                    "dynatrace_config",
                 )
                 environment = (
                     cls.objects.select_related(*select_related_args)

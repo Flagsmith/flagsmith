@@ -25,7 +25,7 @@ const FormGroup = class extends Component {
                 {this.props.tooltip ? (
                     <Tooltip
                       title={<label htmlFor={id} className="cols-sm-2 control-label">{props.title} <span className="icon ion-ios-information-circle"/></label>}
-                      place="right"
+                      place={this.props.tooltipPlace || "right"}
                     >
                         {this.props.tooltip}
                     </Tooltip>

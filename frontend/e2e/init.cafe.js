@@ -3,7 +3,7 @@ import fetch from 'node-fetch';
 import Project from '../common/project';
 import {
     assertTextContent,
-    byId, click,
+    byId, click, closeModal,
     createFeature,
     createRemoteConfig, createSegment, createTrait,
     deleteFeature, deleteSegment, deleteTrait, getText, gotoSegments, gotoTraits, log,
@@ -82,7 +82,7 @@ test('[Initialise]', async () => {
 
     log('Try it');
     await click('#try-it-btn');
-    await t.wait(500)
+    await t.wait(3000)
     let text = await getText('#try-it-results');
     let json;
     try { json = JSON.parse(text); } catch (e) { throw new Error('Try it results are not valid JSON'); }
@@ -94,10 +94,12 @@ test('[Initialise]', async () => {
     await setText(byId('featureValue'), '12');
     await click('#update-feature-btn');
     await assertTextContent(byId('feature-value-1'), '12');
+    await t.pressKey('esc');
+    await closeModal()
 
     log('Try it again');
     await click('#try-it-btn');
-    await t.wait(500)
+    await t.wait(3000)
     text = await getText('#try-it-results');
     try { json = JSON.parse(text); } catch (e) { throw new Error('Try it results are not valid JSON'); }
     await t.expect(json.header_size.value).eql(12);
@@ -107,10 +109,11 @@ test('[Initialise]', async () => {
     await setText(byId('featureValue'), 'false');
     await click('#update-feature-btn');
     await assertTextContent(byId('feature-value-1'), 'false');
+    await closeModal()
 
-    log('Change feature value to boolean');
+    log('Try it again 2');
     await click('#try-it-btn');
-    await t.wait(500)
+    await t.wait(3000)
     text = await getText('#try-it-results');
     try { json = JSON.parse(text); } catch (e) { throw new Error('Try it results are not valid JSON'); }
     await t.expect(json.header_size.value).eql(false);
