@@ -1,13 +1,1 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<svg width="15px" height="14px" viewBox="0 0 15 14" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
-    <title>Path</title>
-    <g id="Symbols" stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
-        <g id="Projects-Sidebar" transform="translate(-32.000000, -277.000000)" fill="#FFFFFF" fill-rule="nonzero">
-            <g id="Group-3">
-                <g transform="translate(7.000000, 24.000000)">
-                    <path d="M38.8,258.5 L33.4,258.5 L33.4,253.55 C33.4,253.246125 33.1315,253 32.8,253 L31.6,253 C31.2685,253 31,253.246125 31,253.55 L31,258.5 L25.6,258.5 C25.2685,258.5 25,258.746125 25,259.05 L25,260.15 C25,260.453875 25.2685,260.7 25.6,260.7 L31,260.7 L31,265.65 C31,265.953875 31.2685,266.2 31.6,266.2 L32.8,266.2 C33.1315,266.2 33.4,265.953875 33.4,265.65 L33.4,260.7 L38.8,260.7 C39.1315,260.7 39.4,260.453875 39.4,260.15 L39.4,259.05 C39.4,258.746125 39.1315,258.5 38.8,258.5 Z" id="Path"></path>
-                </g>
-            </g>
-        </g>
-    </g>
-</svg>
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="15" height="14" version="1.1" viewBox="0 0 15 14"><title>Path</title><g id="Symbols" fill="none" fill-rule="evenodd" stroke="none" stroke-width="1"><g id="Projects-Sidebar" fill="#FFF" fill-rule="nonzero" transform="translate(-32.000000, -277.000000)"><g id="Group-3"><g transform="translate(7.000000, 24.000000)"><path id="Path" d="M38.8,258.5 L33.4,258.5 L33.4,253.55 C33.4,253.246125 33.1315,253 32.8,253 L31.6,253 C31.2685,253 31,253.246125 31,253.55 L31,258.5 L25.6,258.5 C25.2685,258.5 25,258.746125 25,259.05 L25,260.15 C25,260.453875 25.2685,260.7 25.6,260.7 L31,260.7 L31,265.65 C31,265.953875 31.2685,266.2 31.6,266.2 L32.8,266.2 C33.1315,266.2 33.4,265.953875 33.4,265.65 L33.4,260.7 L38.8,260.7 C39.1315,260.7 39.4,260.453875 39.4,260.15 L39.4,259.05 C39.4,258.746125 39.1315,258.5 38.8,258.5 Z"/></g></g></g></g></svg>
