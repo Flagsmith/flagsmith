@@ -12,4 +12,7 @@ router.register(r"feature-segments", FeatureSegmentViewSet, basename="feature-se
 
 app_name = "features"
 
-urlpatterns = [path("", include(router.urls))]
+urlpatterns = [
+    path("", include(router.urls)),
+    path("workflows/", include("features.workflows.urls", namespace="workflows")),
+]

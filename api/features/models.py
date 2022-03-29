@@ -11,6 +11,7 @@ from django.core.exceptions import (
     ValidationError,
 )
 from django.db import models
+from django.db.models import Max, Q, QuerySet
 from django.utils import timezone
 from django.utils.translation import ugettext_lazy as _
 from django_lifecycle import AFTER_CREATE, BEFORE_CREATE, LifecycleModel, hook
@@ -22,7 +23,6 @@ from environments.identities.helpers import (
 )
 from features.constants import ENVIRONMENT, FEATURE_SEGMENT, IDENTITY
 from features.custom_lifecycle import CustomLifecycleModelMixin
-from features.exceptions import FeatureStateVersionAlreadyExistsError
 from features.feature_states.models import AbstractBaseFeatureValueModel
 from features.feature_types import MULTIVARIATE
 from features.helpers import get_correctly_typed_value
@@ -236,8 +236,15 @@ class FeatureState(LifecycleModel, models.Model):
 
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
-    version = models.IntegerField(default=1)
+    version = models.IntegerField(default=1, null=True)
     live_from = models.DateTimeField(null=True)
+
+    change_request = models.ForeignKey(
+        "workflows.ChangeRequest",
+        on_delete=models.SET_NULL,
+        null=True,
+        related_name="feature_states",
+    )
 
     class Meta:
         ordering = ["id"]
@@ -279,8 +286,9 @@ class FeatureState(LifecycleModel, models.Model):
     def clone(
         self,
         env: "Environment",
-        version: int = None,
         live_from: datetime.datetime = None,
+        as_draft: bool = False,
+        version: int = None,
     ) -> "FeatureState":
         # Cloning the Identity is not allowed because they are closely tied
         # to the environment
@@ -297,7 +305,7 @@ class FeatureState(LifecycleModel, models.Model):
             else None
         )
         clone.environment = env
-        clone.version = version or self.version
+        clone.version = None if as_draft else version or self.version
         clone.live_from = live_from
         clone.save()
         # clone the related objects
@@ -384,6 +392,9 @@ class FeatureState(LifecycleModel, models.Model):
     @hook(BEFORE_CREATE)
     def check_for_existing_feature_state(self):
         # prevent duplicate feature states being created for an environment
+        if self.version is None:
+            return
+
         if FeatureState.objects.filter(
             environment=self.environment,
             feature=self.feature,
@@ -476,12 +487,16 @@ class FeatureState(LifecycleModel, models.Model):
         return s
 
     @classmethod
-    def get_environment_flags(
+    def get_environment_flags_list(
         cls, environment: "Environment", feature_name: str = None
     ) -> typing.List["FeatureState"]:
         """
         Get a list of the latest committed versions of FeatureState objects that are
         associated with the given environment only (i.e. not identity or segment).
+
+        Note: uses a single query to get all valid versions of a given environment's
+        feature states. The logic to grab the latest version is then handled in python
+        by building a dictionary. Returns a list of FeatureState objects.
         """
 
         # Get all feature states for a given environment with a valid live_from in the
@@ -495,6 +510,7 @@ class FeatureState(LifecycleModel, models.Model):
                 feature_segment=None,
                 live_from__isnull=False,
                 live_from__lte=timezone.now(),
+                version__isnull=False,
             )
             .exclude(
                 feature__project__hide_disabled_flags=True,
@@ -518,22 +534,41 @@ class FeatureState(LifecycleModel, models.Model):
 
         return list(feature_states_dict.values())
 
-    def create_new_version(self, live_from: datetime.datetime = None):
+    @classmethod
+    def get_environment_flags_queryset(
+        cls, environments: typing.List["Environment"]
+    ) -> QuerySet:
         """
-        Create a new version of this feature state by incrementing the version
-        number by 1.
+        Get a queryset of the latest committed versions of an environments feature
+        states, including those that are associated with a feature segment or identity.
+
+        Note: This method uses 2 queries. The first gets a dictionary containing the ids
+        of each of the combinations of identity, feature_segment & feature plus the
+        latest version number for that combination. This information is then used to
+        build a query to get the correct feature states. Returns a QuerySet.
         """
 
-        new_version_number = self.version + 1
-
-        if FeatureState.objects.filter(version=new_version_number).exists():
-            raise FeatureStateVersionAlreadyExistsError(version=new_version_number)
-
-        return self.clone(
-            env=self.environment,
-            version=new_version_number,
-            live_from=live_from,
+        latest_versions_qs = (
+            cls.objects.filter(
+                environment__in=environments,
+                live_from__lte=timezone.now(),
+                version__isnull=False,
+            )
+            .values("environment", "feature", "feature_segment", "identity")
+            .annotate(max_version=Max("version"))
+            .order_by()
         )
+        q = Q()
+        for latest_version_dict in latest_versions_qs:
+            q = q | Q(
+                environment_id=latest_version_dict["environment"],
+                feature_id=latest_version_dict["feature"],
+                identity_id=latest_version_dict["identity"],
+                feature_segment_id=latest_version_dict["feature_segment"],
+                version=latest_version_dict["max_version"],
+            )
+
+        return cls.objects.filter(Q(environment__in=environments) & q)
 
     @hook(BEFORE_CREATE)
     def set_live_from_for_version_1(self):
@@ -543,6 +578,26 @@ class FeatureState(LifecycleModel, models.Model):
         """
         if self.version == 1 and not self.live_from:
             self.live_from = timezone.now()
+
+    @classmethod
+    def get_next_version_number(
+        cls,
+        environment_id: int,
+        feature_id: int,
+        feature_segment_id: int,
+        identity_id: int,
+    ):
+        return (
+            cls.objects.filter(
+                environment__id=environment_id,
+                feature__id=feature_id,
+                feature_segment__id=feature_segment_id,
+                identity__id=identity_id,
+            )
+            .aggregate(max_version=Max("version"))
+            .get("max_version", 0)
+            + 1
+        )
 
 
 class FeatureStateValue(AbstractBaseFeatureValueModel):

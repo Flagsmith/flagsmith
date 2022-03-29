@@ -9,7 +9,6 @@ from django.utils import timezone
 from environments.identities.models import Identity
 from environments.models import Environment
 from features.constants import ENVIRONMENT, FEATURE_SEGMENT, IDENTITY
-from features.exceptions import FeatureStateVersionAlreadyExistsError
 from features.models import Feature, FeatureSegment, FeatureState
 from organisations.models import Organisation
 from projects.models import Project
@@ -461,7 +460,7 @@ class FeatureStateTest(TestCase):
         )
 
         # When
-        environment_feature_states = FeatureState.get_environment_flags(
+        environment_feature_states = FeatureState.get_environment_flags_list(
             environment=self.environment
         )
 
@@ -470,54 +469,6 @@ class FeatureStateTest(TestCase):
             feature_1_v2_feature_state,
             feature_2_v1_feature_state,
         }
-
-    def test_create_new_version_creates_new_version_if_does_not_exist_already(self):
-        # Given
-        current_version = FeatureState.objects.get(
-            feature=self.feature, environment=self.environment
-        )
-
-        # When
-        new_version = current_version.create_new_version()
-
-        # Then
-        assert new_version.version == current_version.version + 1
-        assert current_version.feature_state_value != new_version.feature_state_value
-        assert (
-            FeatureState.objects.filter(
-                feature=self.feature,
-                environment=self.environment,
-                feature_segment=None,
-                identity=None,
-            ).count()
-            == 2
-        )
-
-    def test_create_new_version_raises_exception_if_version_already_exists(self):
-        # Given
-        current_version = FeatureState.objects.get(
-            feature=self.feature, environment=self.environment
-        )
-        new_version = current_version.create_new_version()
-
-        # When
-        with pytest.raises(FeatureStateVersionAlreadyExistsError) as e:
-            current_version.create_new_version()
-
-        # Then
-        assert (
-            FeatureState.objects.filter(
-                feature=self.feature,
-                environment=self.environment,
-                feature_segment=None,
-                identity=None,
-            ).count()
-            == 2
-        )
-        assert (
-            e.value.detail
-            == f"Version {new_version.version} already exists for FeatureState."
-        )
 
     def test_feature_state_type_environment(self):
         # Given
