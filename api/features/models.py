@@ -487,15 +487,19 @@ class FeatureState(LifecycleModel, models.Model):
         # Get all feature states for a given environment with a valid live_from in the
         # past. Note: includes all versions for a given environment / feature
         # combination. We filter for the latest version later on.
-        feature_states = cls.objects.filter(
-            environment=environment,
-            identity=None,
-            feature_segment=None,
-            live_from__isnull=False,
-            live_from__lte=timezone.now(),
-        ).exclude(
-            feature__project__hide_disabled_flags=True,
-            enabled=False,
+        feature_states = (
+            cls.objects.select_related("feature", "feature_state_value")
+            .filter(
+                environment=environment,
+                identity=None,
+                feature_segment=None,
+                live_from__isnull=False,
+                live_from__lte=timezone.now(),
+            )
+            .exclude(
+                feature__project__hide_disabled_flags=True,
+                enabled=False,
+            )
         )
 
         if feature_name:
