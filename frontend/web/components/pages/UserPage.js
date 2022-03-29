@@ -431,7 +431,7 @@ const UserPage = class extends Component {
                                                     />
                                                 </FormGroup>
                                             )}
-                                            <IdentitySegmentsProvider>
+                                            <IdentitySegmentsProvider id={this.props.match.params.id}>
                                                 {({ isLoading: segmentsLoading, segments }) => (segmentsLoading ? <div className="text-center"><Loader/></div> : (
                                                     <FormGroup>
                                                         <PanelSearch
