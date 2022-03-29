@@ -7,6 +7,7 @@ from features.views import (
     IdentityFeatureStateViewSet,
 )
 from integrations.amplitude.views import AmplitudeConfigurationViewSet
+from integrations.dynatrace.views import DynatraceConfigurationViewSet
 from integrations.heap.views import HeapConfigurationViewSet
 from integrations.mixpanel.views import MixpanelConfigurationViewSet
 from integrations.rudderstack.views import RudderstackConfigurationViewSet
@@ -67,6 +68,11 @@ environments_router.register(
     r"integrations/heap",
     HeapConfigurationViewSet,
     basename="integrations-heap",
+)
+environments_router.register(
+    r"integrations/dynatrace",
+    DynatraceConfigurationViewSet,
+    basename="integrations-dynatrace",
 )
 environments_router.register(
     r"integrations/mixpanel",
