@@ -64,7 +64,8 @@ runs:
 
       - name: Set ECR tag
         id: ecr-tag-variable
-        run: echo ::set-output name=tag::${GITHUB_REF#refs/*/}
+        # TODO: revert this to use ${GITHUB_REF#refs/*/}
+        run: echo ::set-output name=tag::chore-saas-ecs-deployment
         shell: bash
 
       - name: Configure AWS Credentials
