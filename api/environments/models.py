@@ -51,6 +51,8 @@ class Environment(LifecycleModel):
         default=generate_client_api_key, unique=True, max_length=100
     )
 
+    minimum_change_request_approvals = models.IntegerField(null=True)
+
     webhooks_enabled = models.BooleanField(default=False, help_text="DEPRECATED FIELD.")
     webhook_url = models.URLField(null=True, blank=True, help_text="DEPRECATED FIELD.")
 
@@ -91,7 +93,7 @@ class Environment(LifecycleModel):
         # it does not make much sense to clone them, hence
         # only clone feature states without identities
         for feature_state in self.feature_states.filter(identity=None):
-            feature_state.clone(clone)
+            feature_state.clone(clone, live_from=feature_state.live_from)
 
         return clone
 

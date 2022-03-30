@@ -51,7 +51,7 @@ class FeatureStatePermissions(BasePermission):
                 environment = Environment.objects.get(id=request.data["environment"])
                 is_environment_admin = request.user.is_environment_admin(environment)
                 return is_environment_admin or request.user.has_environment_permission(
-                    UPDATE_FEATURE_STATE
+                    UPDATE_FEATURE_STATE, environment
                 )
 
             # - detail view means we can just defer to object permissions
@@ -64,7 +64,7 @@ class FeatureStatePermissions(BasePermission):
     def has_object_permission(self, request, view, obj):
         is_environment_admin = request.user.is_environment_admin(obj.environment)
         return is_environment_admin or request.user.has_environment_permission(
-            UPDATE_FEATURE_STATE
+            UPDATE_FEATURE_STATE, environment=obj.environment
         )
 
 

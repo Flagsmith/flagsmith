@@ -17,13 +17,26 @@ class EnvironmentSerializerFull(serializers.ModelSerializer):
 
     class Meta:
         model = Environment
-        fields = ("id", "name", "feature_states", "project", "api_key")
+        fields = (
+            "id",
+            "name",
+            "feature_states",
+            "project",
+            "api_key",
+            "minimum_change_request_approvals",
+        )
 
 
 class EnvironmentSerializerLight(serializers.ModelSerializer):
     class Meta:
         model = Environment
-        fields = ("id", "name", "api_key", "project")
+        fields = (
+            "id",
+            "name",
+            "api_key",
+            "project",
+            "minimum_change_request_approvals",
+        )
 
     def create(self, validated_data):
         instance = super(EnvironmentSerializerLight, self).create(validated_data)
