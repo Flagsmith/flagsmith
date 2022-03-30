@@ -1,3 +1,4 @@
+import django.core.exceptions
 from rest_framework import serializers
 
 from audit.models import (
@@ -202,6 +203,12 @@ class FeatureStateSerializerBasic(WritableNestedModelSerializer):
     def get_feature_state_value(self, obj):
         return obj.get_feature_state_value(identity=self.context.get("identity"))
 
+    def save(self, **kwargs):
+        try:
+            return super().save(**kwargs)
+        except django.core.exceptions.ValidationError as e:
+            raise serializers.ValidationError(e.message)
+
     def create(self, validated_data):
         instance = super(FeatureStateSerializerBasic, self).create(validated_data)
         self._create_audit_log(instance=instance)
@@ -230,35 +237,13 @@ class FeatureStateSerializerBasic(WritableNestedModelSerializer):
                 "Feature Segment does not belong to environment."
             )
 
-        # validate uniqueness
-        # Note: we get the attribute from the instance if it's not in attrs to handle
-        # the case of a partial update
-        environment = environment or getattr(self.instance, "environment", None)
-        identity = identity or getattr(self.instance, "identity", None)
-        feature_segment = attrs.get("feature_segment") or getattr(
-            self.instance, "feature_segment", None
-        )
-        feature = attrs.get("feature") or getattr(self.instance, "feature", None)
-        queryset = FeatureState.objects.filter(
-            environment=environment,
-            feature=feature,
-            identity=identity,
-            feature_segment=feature_segment,
-        ).exclude(pk=getattr(self.instance, "pk", None))
-
-        if queryset.exists():
-            raise serializers.ValidationError("Feature state already exists.")
-
-        self._validate_multivariate_percentage_values()
-
-        return attrs
-
-    def _validate_multivariate_percentage_values(self):
-        mv_values = self.initial_data.get("multivariate_feature_state_values", [])
+        mv_values = attrs.get("multivariate_feature_state_values", [])
         if sum([v["percentage_allocation"] for v in mv_values]) > 100:
             raise serializers.ValidationError(
                 "Multivariate percentage values exceed 100%."
             )
+
+        return attrs
 
 
 class FeatureStateSerializerWithIdentity(FeatureStateSerializerBasic):

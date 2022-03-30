@@ -2,7 +2,7 @@ import pytest
 
 from environments.models import Environment
 from features.models import Feature
-from organisations.models import Organisation
+from organisations.models import Organisation, OrganisationRole
 from projects.models import Project
 from users.models import FFAdminUser
 
@@ -74,6 +74,17 @@ def user_one():
 def organisation_one_user(user_one, organisation_one):
     user_one.add_organisation(organisation_one)
     return user_one
+
+
+@pytest.fixture()
+def organisation_one_admin_user(organisation_one):
+    organisation_one_admin_user = FFAdminUser.objects.create(
+        email="org1_admin@example.com"
+    )
+    organisation_one_admin_user.add_organisation(
+        organisation_one, role=OrganisationRole.ADMIN
+    )
+    return organisation_one_admin_user
 
 
 @pytest.fixture()
