@@ -203,7 +203,7 @@ const ChangeRequestsPage = class extends Component {
                                     </Row>
                                     <div className="list-item-footer faint">
                                         Created
-                                        at {moment(changeRequest.created_date).format('Do MMM YYYY HH:mma')} by {changeRequest.user && user.first_name} {user && user.last_name}
+                                        at {moment(changeRequest.created_at).format('Do MMM YYYY HH:mma')} by {changeRequest.user && user.first_name} {user && user.last_name}
                                     </div>
                                     <p className="mt-2">
                                         {changeRequest.description}
