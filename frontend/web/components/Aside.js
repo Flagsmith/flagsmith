@@ -77,7 +77,7 @@ const Aside = class extends Component {
         const hasRbacPermission = !this.props.hasFeature('plan_based_access') || Utils.getPlansPermission(AccountStore.getPlans(), 'AUDIT') || !this.props.hasFeature('scaleup_audit');
         const has4Eyes = flagsmith.hasFeature('4eyes');
         const changeRequest = ChangeRequestStore.model[this.props.environmentId];
-        const changeRequests = `${(changeRequest && changeRequest.length) || 0}`;
+        const changeRequests = (changeRequest && changeRequest.length) || 0;
         return (
             <OrganisationProvider>
                 {({ isLoading: isLoadingOrg, projects }) => (
@@ -305,7 +305,7 @@ const Aside = class extends Component {
                                                                                             to={`/project/${project.id}/environment/${environment.api_key}/change-requests/`}
                                                                                           >
                                                                                               <span className="ion icon ion-md-git-pull-request aside__environment-list-item--icon"/>
-                                                                                                    Change Requests {changeRequests && <span className="unread">{changeRequests}</span>}
+                                                                                                    Change Requests {changeRequests ? <span className="unread">{changeRequests}</span> : null}
                                                                                           </NavLink>
                                                                                       )}
                                                                                       <NavLink
