@@ -65,6 +65,7 @@ runs:
       - name: Set ECR tag
         id: ecr-tag-variable
         run: echo ::set-output name=tag::${GITHUB_REF#refs/*/}
+        shell: bash
 
       - name: Configure AWS Credentials
         uses: aws-actions/configure-aws-credentials@v1
@@ -89,6 +90,7 @@ runs:
           docker build -t $ECR_REPOSITORY:$IMAGE_TAG -f Dockerfile .
           docker push $ECR_REPOSITORY:$IMAGE_TAG
           echo "::set-output name=image::$ECR_REPOSITORY:$IMAGE_TAG"
+        shell: bash
 
       - name: Fill in the new image ID in the Amazon ECS API task definition
         id: task-def-api
@@ -122,6 +124,7 @@ runs:
               "securityGroups": ["${{ inputs.aws_ecs_security_group_id }}"],
               "assignPublicIp": "ENABLED"
             }}'
+        shell: bash
 
       - name: Deploy Amazon ECS web task definition
         uses: aws-actions/amazon-ecs-deploy-task-definition@v1
@@ -167,3 +170,4 @@ runs:
                   }
                   }
                   ]'
+        shell: bash
