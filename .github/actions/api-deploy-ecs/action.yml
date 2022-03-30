@@ -63,8 +63,8 @@ runs:
         shell: bash
 
       - name: Set ECR tag
-          id: ecr-tag-variable
-          run: echo ::set-output name=tag::${GITHUB_REF#refs/*/}
+        id: ecr-tag-variable
+        run: echo ::set-output name=tag::${GITHUB_REF#refs/*/}
 
       - name: Configure AWS Credentials
         uses: aws-actions/configure-aws-credentials@v1
