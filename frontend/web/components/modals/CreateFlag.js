@@ -525,7 +525,7 @@ const CreateFlag = class extends Component {
                             return (
 
                                 <Permission level="project" permission="ADMIN" id={this.props.projectId}>
-                                    {({ permission: projectAdmin }) => !existingChangeRequest && (
+                                    {({ permission: projectAdmin }) => (
                                 <div
                                   id="create-feature-modal"
                                 >
@@ -799,33 +799,34 @@ const CreateFlag = class extends Component {
                                                     </FormGroup>
                                                 </TabItem>
                                             )}
+                                            {!existingChangeRequest && (
+                                                <TabItem data-test="settings" tabLabel="Settings">
+                                                    {Settings(projectAdmin)}
+                                                    {isEdit && (
+                                                        <div className="text-right">
+                                                            {!projectAdmin? (
+                                                                <p className="text-right">
+                                                                    To edit this feature's settings, you will need <strong>Project Administrator permissions</strong>. Please contact your project administrator.
+                                                                </p>
+                                                            ): (
+                                                                <p className="text-right">
+                                                                    This will save the above settings <strong>all environments</strong>.
+                                                                </p>
+                                                            )}
 
-                                                    <TabItem data-test="settings" tabLabel="Settings">
-                                                        {Settings(projectAdmin)}
-                                                        {isEdit && (
-                                                            <div className="text-right">
-                                                                {!projectAdmin? (
-                                                                    <p className="text-right">
-                                                                        To edit this feature's settings, you will need <strong>Project Administrator permissions</strong>. Please contact your project administrator.
-                                                                    </p>
-                                                                ): (
-                                                                    <p className="text-right">
-                                                                        This will save the above settings <strong>all environments</strong>.
-                                                                    </p>
-                                                                )}
+                                                            {!!projectAdmin && (
+                                                                <Button
+                                                                    onClick={saveSettings} data-test="update-feature-btn" id="update-feature-btn"
+                                                                    disabled={(isSaving || !name || invalid)}
+                                                                >
+                                                                    {isSaving ? 'Updating' : 'Update Settings'}
+                                                                </Button>
+                                                            )}
 
-                                                                {!!projectAdmin && (
-                                                                    <Button
-                                                                        onClick={saveSettings} data-test="update-feature-btn" id="update-feature-btn"
-                                                                        disabled={(isSaving || !name || invalid)}
-                                                                    >
-                                                                        {isSaving ? 'Updating' : 'Update Settings'}
-                                                                    </Button>
-                                                                )}
-
-                                                            </div>
-                                                        )}
-                                                    </TabItem>
+                                                        </div>
+                                                    )}
+                                                </TabItem>
+                                            )}
                                         </Tabs>
                                     ) : (
                                         <div>
