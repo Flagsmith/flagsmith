@@ -39,6 +39,9 @@ inputs:
   aws_ecr_repository_arn:
     description: "The ARN of the ECR repository to deploy docker image to."
     required: true
+  aws_task_definitions_directory_path:
+    description: "The local path in the repository to the json file containing the task definition template"
+    required: true
   flagsmith_saml_revision:
     description: "The flagsmith-saml repo git revision to use when building deployment package."
     required: false
@@ -97,7 +100,7 @@ runs:
         id: task-def-api
         uses: aws-actions/amazon-ecs-render-task-definition@v1
         with:
-          task-definition: infrastructure/aws/production/ecs-task-definition-web.json
+          task-definition: ${{ inputs.aws_task_definitions_directory_path }}/ecs-task-definition-web.json
           container-name: flagsmith-api
           image: ${{ steps.build-image.outputs.image }}
 
@@ -106,7 +109,7 @@ runs:
         id: task-def-migration
         uses: aws-actions/amazon-ecs-render-task-definition@v1
         with:
-          task-definition: infrastructure/aws/production/ecs-task-definition-migration.json
+          task-definition: ${{ inputs.aws_task_definitions_directory_path }}/ecs-task-definition-migration.json
           container-name: flagsmith-api-migration
           image: ${{ steps.build-image.outputs.image }}
 
