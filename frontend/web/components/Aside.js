@@ -21,6 +21,7 @@ import UsersIcon from './svg/UsersIcon';
 import SegmentsIcon from './svg/SegmentsIcon';
 import EnvironmentSettingsIcon from './svg/EnvironmentSettingsIcon';
 import ProjectStore from '../../common/stores/project-store';
+import ChangeRequestStore from '../../common/stores/change-requests-store';
 
 const Aside = class extends Component {
     static displayName = 'Aside';
@@ -39,11 +40,15 @@ const Aside = class extends Component {
         super(props, context);
         this.state = {};
         AppActions.getProject(this.props.projectId);
+        AppActions.getChangeRequests(this.props.environmentId);
     }
 
     componentWillReceiveProps(newProps) {
         if (newProps.projectId !== this.props.projectId) {
             AppActions.getProject(this.props.projectId);
+        }
+        if (newProps.environmentId !== this.props.environmentId) {
+            AppActions.getChangeRequests(newProps.environmentId);
         }
     }
 
@@ -71,6 +76,8 @@ const Aside = class extends Component {
         const environmentId = (this.props.environmentId !== 'create' && this.props.environmentId) || (ProjectStore.model && ProjectStore.model.environments[0].api_key);
         const hasRbacPermission = !this.props.hasFeature('plan_based_access') || Utils.getPlansPermission(AccountStore.getPlans(), 'AUDIT') || !this.props.hasFeature('scaleup_audit');
         const has4Eyes = flagsmith.hasFeature('4eyes');
+        const changeRequest = ChangeRequestStore.model[this.props.environmentId];
+        const changeRequests = `${(changeRequest && changeRequest.length) || 0}`;
         return (
             <OrganisationProvider>
                 {({ isLoading: isLoadingOrg, projects }) => (
@@ -90,75 +97,75 @@ const Aside = class extends Component {
                                         </div>
                                     )}
                                     <div className="row ml-0 mr-0 aside__wrapper">
-                                        <div
-                                          className={`aside__projects-sidebar ${this.props.className || ''}`}
-                                        >
-                                            <div className="flex-row justify-content-center">
-                                                <div className="flex-column">
-                                                    <Link to="/projects">
-                                                        <NavIconSmall
-                                                          className="aside__logo"
-                                                        />
-                                                    </Link>
-                                                </div>
+                                  x        <div
+                                    className={`aside__projects-sidebar ${this.props.className || ''}`}
+                                  >
+                                      <div className="flex-row justify-content-center">
+                                          <div className="flex-column">
+                                              <Link to="/projects">
+                                                  <NavIconSmall
+                                                    className="aside__logo"
+                                                  />
+                                              </Link>
+                                          </div>
 
-                                                <div className="flex-column">
-                                                    <div className="aside__projects-item">
-                                                        <div className="flex-row justify-content-center">
-                                                            <div className="flex-column mb-3">
+                                          <div className="flex-column">
+                                              <div className="aside__projects-item">
+                                                  <div className="flex-row justify-content-center">
+                                                      <div className="flex-column mb-3">
 
-                                                                <Tooltip
-                                                                  title={(
-                                                                      <Button onClick={this.newProject} className="btn--transparent aside__add-btn">
-                                                                          <a
-                                                                            id="create-project-link"
-                                                                            to="/projects"
-                                                                            state={{ create: true }}
-                                                                          >
-                                                                              <PlusIcon width={18}/>
-                                                                          </a>
-                                                                      </Button>
+                                                          <Tooltip
+                                                            title={(
+                                                                <Button onClick={this.newProject} className="btn--transparent aside__add-btn">
+                                                                    <a
+                                                                      id="create-project-link"
+                                                                      to="/projects"
+                                                                      state={{ create: true }}
+                                                                    >
+                                                                        <PlusIcon width={18}/>
+                                                                    </a>
+                                                                </Button>
                                                                     )}
-                                                                  place="right"
-                                                                >
+                                                            place="right"
+                                                          >
                                                                     Create Project
-                                                                </Tooltip>
+                                                          </Tooltip>
 
-                                                            </div>
-                                                        </div>
-                                                    </div>
-                                                </div>
+                                                      </div>
+                                                  </div>
+                                              </div>
+                                          </div>
 
-                                                <ProjectSelect
-                                                  renderRow={(project, onClick) => (
-                                                      <AsideProjectButton
-                                                        data-test={`switch-project-${project.name.toLowerCase()}${this.props.projectId === (`${project.id}`) ? '-active' : ''}`}
-                                                        key={project.id}
-                                                        onClick={onClick}
-                                                        className={this.props.projectId === `${project.id}` ? 'active' : ''}
-                                                        name={project.name}
-                                                        projectLetter={(`${project.name[0]}`).toUpperCase()}
-                                                      />
-                                                  )}
-                                                  projectId={this.props.projectId}
-                                                  environmentId={environmentId}
-                                                  clearableValue={false}
-                                                  onChange={(project) => {
-                                                      AppActions.getProject(project.id);
-                                                      if (project.environments[0]) {
-                                                          this.context.router.history.push(`/project/${project.id}/environment/${project.environments[0].api_key}/features`);
-                                                      } else {
-                                                          this.context.router.history.push(`/project/${project.id}/environment/create`);
-                                                      }
-                                                      AsyncStorage.setItem('lastEnv', JSON.stringify({
-                                                          orgId: AccountStore.getOrganisation().id,
-                                                          projectId: project.id,
-                                                          environmentId: project.environments[0].api_key,
-                                                      }));
-                                                  }}
+                                          <ProjectSelect
+                                            renderRow={(project, onClick) => (
+                                                <AsideProjectButton
+                                                  data-test={`switch-project-${project.name.toLowerCase()}${this.props.projectId === (`${project.id}`) ? '-active' : ''}`}
+                                                  key={project.id}
+                                                  onClick={onClick}
+                                                  className={this.props.projectId === `${project.id}` ? 'active' : ''}
+                                                  name={project.name}
+                                                  projectLetter={(`${project.name[0]}`).toUpperCase()}
                                                 />
-                                            </div>
-                                        </div>
+                                            )}
+                                            projectId={this.props.projectId}
+                                            environmentId={environmentId}
+                                            clearableValue={false}
+                                            onChange={(project) => {
+                                                AppActions.getProject(project.id);
+                                                if (project.environments[0]) {
+                                                    this.context.router.history.push(`/project/${project.id}/environment/${project.environments[0].api_key}/features`);
+                                                } else {
+                                                    this.context.router.history.push(`/project/${project.id}/environment/create`);
+                                                }
+                                                AsyncStorage.setItem('lastEnv', JSON.stringify({
+                                                    orgId: AccountStore.getOrganisation().id,
+                                                    projectId: project.id,
+                                                    environmentId: project.environments[0].api_key,
+                                                }));
+                                            }}
+                                          />
+                                      </div>
+                                  </div>
                                         {(
                                             <React.Fragment>
                                                 <div className="aside__main-content" style={{ 'overflowY': 'auto' }}>
@@ -291,14 +298,14 @@ const Aside = class extends Component {
                                                                                       </NavLink>
                                                                                       {has4Eyes && (
                                                                                           <NavLink
-                                                                                              activeClassName="active"
+                                                                                            activeClassName="active"
 
-                                                                                              className="aside__environment-list-item"
+                                                                                            className="aside__environment-list-item"
                                                                                             id="change-requests-link"
                                                                                             to={`/project/${project.id}/environment/${environment.api_key}/change-requests/`}
                                                                                           >
                                                                                               <span className="ion icon ion-md-git-pull-request aside__environment-list-item--icon"/>
-                                                                                                    Change Requests
+                                                                                                    Change Requests {changeRequests && <span className="unread">{changeRequests}</span>}
                                                                                           </NavLink>
                                                                                       )}
                                                                                       <NavLink

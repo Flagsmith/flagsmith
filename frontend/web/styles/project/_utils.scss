@@ -110,3 +110,19 @@
 .text-primary {
     color: $bt-brand-primary !important;
 }
+
+.unread {
+    display: inline-block;
+    border-radius: 20px;
+    background: $bt-brand-primary;
+    height: 16px;
+    width: 16px;
+    color: #fff;
+    text-align: center;
+    line-height: 16px;
+    font-size: 11px;
+    cursor: pointer;
+    top: 8px;
+    left: 8px;
+    will-change: scale;
+}
