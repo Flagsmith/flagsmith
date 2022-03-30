@@ -5,6 +5,7 @@ import ConfirmToggleFeature from './modals/ConfirmToggleFeature';
 import ConfirmRemoveFeature from './modals/ConfirmRemoveFeature';
 import CreateFlagModal from './modals/CreateFlag';
 import TagStore from '../../common/stores/tags-store'; // we need this to make JSX compile
+import ProjectStore from '../../common/stores/project-store'; // we need this to make JSX compile
 
 
 class TheComponent extends Component {
@@ -49,7 +50,7 @@ class TheComponent extends Component {
         const { name, id, enabled, created_date, description, type } = this.props.projectFlag;
         const readOnly = flagsmith.hasFeature('read_only_mode');
         const isProtected = TagStore.hasProtectedTag(projectFlag, parseInt(projectId));
-
+        const environment = ProjectStore.getEnvironment(environmentId);
         if (this.props.condensed) {
             return Utils.renderWithPermission(permission, Constants.environmentPermissions(Utils.getManageFeaturePermissionDescription()), (
                 <Row>
@@ -58,9 +59,15 @@ class TheComponent extends Component {
                           disabled={!permission || readOnly}
                           data-test={`feature-switch-${this.props.index}${environmentFlags[id] && environmentFlags[id].enabled ? '-on' : '-off'}`}
                           checked={environmentFlags[id] && environmentFlags[id].enabled}
-                          onChange={() => this.confirmToggle(projectFlag, environmentFlags[id], (environments) => {
-                              toggleFlag(_.findIndex(projectFlags, { id }), environments, null, this.props.environmentFlags);
-                          })}
+                          onChange={() => {
+                              if (environment.minimum_change_request_approvals) {
+                                  this.editFlag(projectFlag, environmentFlags[id]);
+                                  return;
+                              }
+                              this.confirmToggle(projectFlag, environmentFlags[id], (environments) => {
+                                  toggleFlag(_.findIndex(projectFlags, { id }), environments, null, this.props.environmentFlags);
+                              });
+                          }}
                         />
                     </div>
                     <div className={`mr-2 clickable ${this.props.fadeValue && 'faded'}`}>
@@ -89,17 +96,19 @@ class TheComponent extends Component {
                         <ButtonLink>
                             {name}
                         </ButtonLink>
-                        {projectFlag.owners && !!projectFlag.owners.length? (
-                                <Tooltip
-                                    title={  <ButtonLink>
-                                        <ion className={"ion ion-md-person px-2"}/>
-                                    </ButtonLink>}
-                                    place="right"
-                                >
-                                    {`Flag assigned to ${projectFlag.owners.map((v)=>`${v.first_name} ${v.last_name}`).join(", ")}`}
-                                </Tooltip>
+                        {projectFlag.owners && !!projectFlag.owners.length ? (
+                            <Tooltip
+                              title={(
+                                  <ButtonLink>
+                                      <ion className="ion ion-md-person px-2"/>
+                                  </ButtonLink>
+)}
+                              place="right"
+                            >
+                                {`Flag assigned to ${projectFlag.owners.map(v => `${v.first_name} ${v.last_name}`).join(', ')}`}
+                            </Tooltip>
 
-                        ): (
+                        ) : (
                             <span/>
                         )}
                     </div>
@@ -136,9 +145,15 @@ class TheComponent extends Component {
                                   disabled={!permission || readOnly}
                                   data-test={`feature-switch-${this.props.index}${environmentFlags[id] && environmentFlags[id].enabled ? '-on' : '-off'}`}
                                   checked={environmentFlags[id] && environmentFlags[id].enabled}
-                                  onChange={() => this.confirmToggle(projectFlag, environmentFlags[id], (environments) => {
-                                      toggleFlag(_.findIndex(projectFlags, { id }), environments);
-                                  })}
+                                  onChange={() => {
+                                      if (environment.minimum_change_request_approvals) {
+                                          this.editFlag(projectFlag, environmentFlags[id]);
+                                          return;
+                                      }
+                                      this.confirmToggle(projectFlag, environmentFlags[id], (environments) => {
+                                          toggleFlag(_.findIndex(projectFlags, { id }), environments);
+                                      });
+                                  }}
                                 />
                             </Column>
                         </Row>
