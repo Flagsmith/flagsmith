@@ -1,4 +1,4 @@
-from contextlib import suppress
+import logging
 
 from django.core.exceptions import ObjectDoesNotExist
 from django.core.signing import BadSignature, TimestampSigner
@@ -7,6 +7,8 @@ from rest_framework.exceptions import AuthenticationFailed
 
 from users.models import FFAdminUser
 
+logger = logging.getLogger(__name__)
+
 
 class OauthInitAuthentication(BaseAuthentication):
     """
@@ -14,14 +16,21 @@ class OauthInitAuthentication(BaseAuthentication):
     """
 
     def authenticate(self, request):
+        signature = request.GET.get("signature")
         signer = TimestampSigner()
-        with suppress(BadSignature, ObjectDoesNotExist):
-            signature = request.GET.get("signature")
+        logger.debug(
+            "OauthInitAuthentication authenticate called with signature: %s", signature
+        )
+        try:
             if not signature:
                 raise AuthenticationFailed(
                     "Authentication credentials were not provided."
                 )
             user_id = signer.unsign(signature, max_age=30)
             user = FFAdminUser.objects.get(id=user_id)
+
+            logger.debug("OauthInitAuthentication normal return with user: %s", user)
             return user, None
+        except (BadSignature, ObjectDoesNotExist) as e:
+            logger.debug("OauthInitAuthentication raising exception: %s", e)
         raise AuthenticationFailed("No such user")
