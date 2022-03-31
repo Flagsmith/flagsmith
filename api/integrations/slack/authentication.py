@@ -19,7 +19,7 @@ class OauthInitAuthentication(BaseAuthentication):
         signature = request.GET.get("signature")
         signer = TimestampSigner()
         logger.debug(
-            f"OauthInitAuthentication authenticate called with signature {signature}"
+            "OauthInitAuthentication authenticate called with signature: %s", signature
         )
         try:
             if not signature:
@@ -29,7 +29,7 @@ class OauthInitAuthentication(BaseAuthentication):
             user_id = signer.unsign(signature, max_age=30)
             user = FFAdminUser.objects.get(id=user_id)
 
-            logger.debug(f"OauthInitAuthentication normal return with user {user}")
+            logger.debug("OauthInitAuthentication normal return with user: %s", user)
             return user, None
         except (BadSignature, ObjectDoesNotExist) as e:
             logger.debug("OauthInitAuthentication raising exception: %s", e)
