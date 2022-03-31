@@ -22,10 +22,10 @@ inputs:
     description: "The name of the ECS service to deploy to."
     required: true
   aws_vpc_subnet_id:
-    description: "The id of the AWS VPC subnet to use for running SQL migration task."
+    description: "The id of the AWS VPC subnet to use for running migration tasks."
     required: true
-  aws_security_group_id:
-    description: "The id of the AWS security group to use for running SQL migration task."
+  aws_ecs_security_group_id:
+    description: "The id of the AWS security group to use for running migration tasks."
     required: true
   aws_identity_migration_event_bus_name:
     description: "The name of the AWS event bus used by the identity migration task."
