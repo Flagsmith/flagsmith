@@ -1,9 +1,8 @@
 import json
 from datetime import timedelta
-from unittest import TestCase, mock
+from unittest import TestCase
 
 import pytest
-from django.test import override_settings
 from django.urls import reverse
 from django.utils import timezone
 from rest_framework import status
