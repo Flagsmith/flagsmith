@@ -16,10 +16,12 @@ class OauthInitAuthentication(BaseAuthentication):
     """
 
     def authenticate(self, request):
-        logger.debug("OauthInitAuthentication authenticate called")
+        signature = request.GET.get("signature")
         signer = TimestampSigner()
+        logger.debug(
+            f"OauthInitAuthentication authenticate called with signature {signature}"
+        )
         try:
-            signature = request.GET.get("signature")
             if not signature:
                 raise AuthenticationFailed(
                     "Authentication credentials were not provided."
@@ -29,6 +31,6 @@ class OauthInitAuthentication(BaseAuthentication):
 
             logger.debug(f"OauthInitAuthentication normal return with user {user}")
             return user, None
-        except (BadSignature, ObjectDoesNotExist):
-            logger.debug("OauthInitAuthentication raising an exception")
-            raise AuthenticationFailed("No such user")
+        except (BadSignature, ObjectDoesNotExist) as e:
+            logger.debug("OauthInitAuthentication raising exception: %s", e)
+        raise AuthenticationFailed("No such user")
