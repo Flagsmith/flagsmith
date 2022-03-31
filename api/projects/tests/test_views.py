@@ -1,8 +1,11 @@
 import json
-from unittest import TestCase
+from datetime import timedelta
+from unittest import TestCase, mock
 
 import pytest
+from django.test import override_settings
 from django.urls import reverse
+from django.utils import timezone
 from rest_framework import status
 from rest_framework.test import APIClient
 
@@ -19,6 +22,9 @@ from projects.models import (
     UserProjectPermission,
 )
 from users.models import FFAdminUser, UserPermissionGroup
+
+now = timezone.now()
+yesterday = now - timedelta(days=1)
 
 
 @pytest.mark.django_db
@@ -40,14 +46,61 @@ class ProjectTestCase(TestCase):
     def _get_detail_url(self, project_id):
         return reverse("api-v1:projects:project-detail", args=[project_id])
 
-    def test_project_response_have_is_migration_done(self):
+    def test_project_response_use_edge_identities_false(self):
+        # Given
         project_name = "project1"
         data = {"name": project_name, "organisation": self.organisation.id}
 
         # When
         response = self.client.post(self.list_url, data=data)
+
         # Then
-        assert response.json()["is_identity_migration_done"] is False
+        assert response.json()["use_edge_identities"] is False
+
+    @override_settings(PROJECT_METADATA_TABLE_NAME_DYNAMO="some-table-name")
+    @mock.patch("projects.serializers.IdentityMigrator")
+    def test_project_response_use_edge_identities_true_when_migration_done(
+        self, mock_identity_migrator_class
+    ):
+        # Given
+        project_name = "project1"
+        data = {"name": project_name, "organisation": self.organisation.id}
+
+        mock_identity_migrator = mock.MagicMock()
+        mock_identity_migrator_class.return_value = mock_identity_migrator
+        type(mock_identity_migrator).is_migration_done = mock.PropertyMock(
+            return_value=True
+        )
+
+        # When
+        response = self.client.post(self.list_url, data=data)
+
+        # Then
+        assert response.json()["use_edge_identities"] is True
+
+    @mock.patch("projects.serializers.IdentityMigrator")
+    @override_settings(
+        EDGE_RELEASE_DATETIME=yesterday,
+        PROJECT_METADATA_TABLE_NAME_DYNAMO="some-table-name",
+    )
+    def test_project_response_use_edge_identities_true_when_edge_release_date_passed(
+        self, mock_identity_migrator_class
+    ):
+        # Given
+        project_name = "project1"
+        data = {"name": project_name, "organisation": self.organisation.id}
+
+        mock_identity_migrator = mock.MagicMock()
+        mock_identity_migrator_class.return_value = mock_identity_migrator
+        type(mock_identity_migrator).is_migration_done = mock.PropertyMock(
+            return_value=False
+        )
+
+        # When
+        response = self.client.post(self.list_url, data=data)
+
+        # Then
+        assert response.json()["use_edge_identities"] is True
 
     def test_should_create_a_project(self):
         # Given
