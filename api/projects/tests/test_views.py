@@ -1,8 +1,10 @@
 import json
+from datetime import timedelta
 from unittest import TestCase
 
 import pytest
 from django.urls import reverse
+from django.utils import timezone
 from rest_framework import status
 from rest_framework.test import APIClient
 
@@ -19,6 +21,9 @@ from projects.models import (
     UserProjectPermission,
 )
 from users.models import FFAdminUser, UserPermissionGroup
+
+now = timezone.now()
+yesterday = now - timedelta(days=1)
 
 
 @pytest.mark.django_db
@@ -40,14 +45,16 @@ class ProjectTestCase(TestCase):
     def _get_detail_url(self, project_id):
         return reverse("api-v1:projects:project-detail", args=[project_id])
 
-    def test_project_response_have_is_migration_done(self):
+    def test_project_response_use_edge_identities(self):
+        # Given
         project_name = "project1"
         data = {"name": project_name, "organisation": self.organisation.id}
 
         # When
         response = self.client.post(self.list_url, data=data)
+
         # Then
-        assert response.json()["is_identity_migration_done"] is False
+        assert response.json()["use_edge_identities"] is False
 
     def test_should_create_a_project(self):
         # Given
