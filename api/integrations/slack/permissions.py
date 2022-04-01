@@ -1,15 +1,16 @@
 import logging
 
-from rest_framework.permissions import BasePermission
+from rest_framework.permissions import IsAuthenticated
 
 from environments.models import Environment
 
 logger = logging.getLogger(__name__)
 
 
-class OauthInitPermission(BasePermission):
+class OauthInitPermission(IsAuthenticated):
     def has_permission(self, request, view):
-
+        if not super().has_permission(request, view):
+            return False
         logger.debug(
             "OauthInitPermission called with user: %s and view: %s", request.user, view
         )
