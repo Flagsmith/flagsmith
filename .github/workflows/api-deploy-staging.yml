@@ -3,7 +3,7 @@ name: API Deploy to Staging
 on:
     push:
         branches:
-            - main
+            - temp/debug-with-error-log
         paths:
             - 'api/**'
             - '.github/**'
