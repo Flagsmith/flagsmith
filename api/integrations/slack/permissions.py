@@ -10,7 +10,7 @@ logger = logging.getLogger(__name__)
 class OauthInitPermission(BasePermission):
     def has_permission(self, request, view):
 
-        logger.debug(
+        logger.error(
             "OauthInitPermission called with user: %s and view: %s", request.user, view
         )
         environment = Environment.objects.get(
