@@ -2,7 +2,6 @@ from unittest import TestCase, mock
 
 import pytest
 from django.db.utils import IntegrityError
-from django.test.testcases import TransactionTestCase
 
 from environments.models import Environment
 from environments.permissions.models import (
@@ -27,7 +26,7 @@ from users.models import FFAdminUser, UserPermissionGroup
 
 
 @pytest.mark.django_db
-class FFAdminUserTestCase(TransactionTestCase):
+class FFAdminUserTestCase(TestCase):
     def setUp(self) -> None:
         self.user = FFAdminUser.objects.create(email="test@example.com")
         self.organisation = Organisation.objects.create(name="Test Organisation")

@@ -240,23 +240,25 @@ class FFAdminUser(LifecycleModel, AbstractUser):
             - User is an admin for the organisation the environment belongs to
         """
 
+        permission_groups = self.permission_groups.all()
+        admin_organisations = self.organisations.filter(
+            userorganisation__role=OrganisationRole.ADMIN
+        )
+
         user_query = Q(userpermission__user=self) & (
             Q(userpermission__permissions__key=permission_key)
             | Q(userpermission__admin=True)
         )
-        group_query = Q(grouppermission__group__in=self.permission_groups.all()) & (
+        group_query = Q(grouppermission__group__in=permission_groups) & (
             Q(grouppermission__permissions__key=permission_key)
             | Q(grouppermission__admin=True)
         )
-        organisation_query = Q(
-            project__organisation__userorganisation__user=self,
-            project__organisation__userorganisation__role=OrganisationRole.ADMIN.name,
-        )
+        organisation_query = Q(project__organisation__in=admin_organisations)
 
         project_admin_query = Q(
             project__userpermission__user=self, project__userpermission__admin=True
         ) | Q(
-            project__grouppermission__group__in=self.permission_groups.all(),
+            project__grouppermission__group__in=permission_groups,
             project__grouppermission__admin=True,
         )
 
