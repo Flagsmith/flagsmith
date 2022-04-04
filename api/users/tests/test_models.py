@@ -114,11 +114,10 @@ class FFAdminUserTestCase(TransactionTestCase):
         user_environment_permission.permissions.set([read_permission])
 
         # When
-        with self.assertNumQueries(2):
-            environments = self.user.get_permitted_environments("VIEW_ENVIRONMENT")
+        environments = self.user.get_permitted_environments("VIEW_ENVIRONMENT")
 
-            # Then
-            assert len(list(environments)) == 1
+        # Then
+        assert len(list(environments)) == 1
 
     def test_unique_user_organisation(self):
         # Given organisation and user

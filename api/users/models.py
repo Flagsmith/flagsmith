@@ -244,7 +244,7 @@ class FFAdminUser(LifecycleModel, AbstractUser):
             Q(userpermission__permissions__key=permission_key)
             | Q(userpermission__admin=True)
         )
-        group_query = Q(grouppermission__group__users=self) & (
+        group_query = Q(grouppermission__group__in=self.permission_groups.all()) & (
             Q(grouppermission__permissions__key=permission_key)
             | Q(grouppermission__admin=True)
         )
@@ -256,7 +256,7 @@ class FFAdminUser(LifecycleModel, AbstractUser):
         project_admin_query = Q(
             project__userpermission__user=self, project__userpermission__admin=True
         ) | Q(
-            project__grouppermission__group__users=self,
+            project__grouppermission__group__in=self.permission_groups.all(),
             project__grouppermission__admin=True,
         )
 
