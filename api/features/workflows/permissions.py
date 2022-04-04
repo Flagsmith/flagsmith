@@ -12,7 +12,7 @@ class ChangeRequestPermissions(BasePermission):
             environment_id = request.query_params.get("environment")
             return environment_id and environment_id in [
                 env.id
-                for env in request.user.get_permitted_environments([VIEW_ENVIRONMENT])
+                for env in request.user.get_permitted_environments(VIEW_ENVIRONMENT)
             ]
 
         return True

@@ -90,7 +90,7 @@ class EnvironmentViewSet(
         return context
 
     def get_queryset(self):
-        queryset = self.request.user.get_permitted_environments(["VIEW_ENVIRONMENT"])
+        queryset = self.request.user.get_permitted_environments("VIEW_ENVIRONMENT")
 
         project_id = self.request.query_params.get("project")
         if project_id:

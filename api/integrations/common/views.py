@@ -13,7 +13,7 @@ class IntegrationCommonViewSet(viewsets.ModelViewSet):
     def get_queryset(self):
         environment_api_key = self.kwargs["environment_api_key"]
         environment = get_object_or_404(
-            self.request.user.get_permitted_environments(["VIEW_ENVIRONMENT"]),
+            self.request.user.get_permitted_environments("VIEW_ENVIRONMENT"),
             api_key=environment_api_key,
         )
 
