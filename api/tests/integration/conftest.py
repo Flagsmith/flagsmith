@@ -69,7 +69,6 @@ def environment(admin_client, project, environment_api_key) -> int:
         "name": "Test Environment",
         "api_key": environment_api_key,
         "project": project,
-        "minimum_change_request_approvals": 1,
     }
     url = reverse("api-v1:environments:environment-list")
 

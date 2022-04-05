@@ -51,8 +51,6 @@ class Environment(LifecycleModel):
         default=generate_client_api_key, unique=True, max_length=100
     )
 
-    minimum_change_request_approvals = models.IntegerField(null=True)
-
     webhooks_enabled = models.BooleanField(default=False, help_text="DEPRECATED FIELD.")
     webhook_url = models.URLField(null=True, blank=True, help_text="DEPRECATED FIELD.")
 

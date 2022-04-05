@@ -23,7 +23,6 @@ class EnvironmentSerializerFull(serializers.ModelSerializer):
             "feature_states",
             "project",
             "api_key",
-            "minimum_change_request_approvals",
         )
 
 
@@ -35,7 +34,6 @@ class EnvironmentSerializerLight(serializers.ModelSerializer):
             "name",
             "api_key",
             "project",
-            "minimum_change_request_approvals",
         )
 
     def create(self, validated_data):
