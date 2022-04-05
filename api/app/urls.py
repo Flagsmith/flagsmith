@@ -30,8 +30,6 @@ urlpatterns = [
         name="project_overrides",
     ),
     path("", views.index, name="index"),
-    # Catch all for subfolder views on the front end
-    url(r"^.*/$", views.index, name="index"),
 ]
 
 if settings.DEBUG:
@@ -42,5 +40,26 @@ if settings.DEBUG:
     ] + urlpatterns
 
 if settings.SAML_INSTALLED:
-    # insert before final url pattern which catches all URLs that are not matched
-    urlpatterns.insert(-1, path("api/v1/auth/saml/", include("saml.urls")))
+    urlpatterns.append(path("api/v1/auth/saml/", include("saml.urls")))
+
+if settings.WORKFLOWS_INSTALLED:
+    workflow_views = __import__(f"{settings.WORKFLOWS_MODULE_PATH}.views")
+
+    urlpatterns.extend(
+        [
+            path("api/v1/features/workflows/", include("workflows.urls")),
+            path(
+                "api/v1/environments/<str:environment_api_key>/change-requests",
+                workflow_views.create_change_request,
+                name="create-change-request",
+            ),
+            path(
+                "api/v1/environments/<str:environment_api_key>/change-requests",
+                workflow_views.list_change_requests,
+                name="list-change-requests",
+            ),
+        ]
+    )
+
+# Catch all for subfolder views on the front end
+urlpatterns.append(url(r"^.*/$", views.index, name="index"))

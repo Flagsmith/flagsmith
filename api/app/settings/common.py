@@ -9,6 +9,7 @@ https://docs.djangoproject.com/en/1.9/topics/settings/
 For the full list of settings and their values, see
 https://docs.djangoproject.com/en/1.9/ref/settings/
 """
+import importlib
 import logging
 import os
 import sys
@@ -107,7 +108,6 @@ INSTALLED_APPS = [
     "environments.identities.traits",
     "features",
     "features.multivariate",
-    "features.workflows",
     "segments",
     "app",
     "e2etests",
@@ -562,10 +562,18 @@ if SAML_INSTALLED:
         "BACKEND": "django.core.cache.backends.db.DatabaseCache",
         "LOCATION": SAML_REQUESTS_CACHE_LOCATION,
     }
-    INSTALLED_APPS += ["saml"]
+    INSTALLED_APPS.append("saml")
     SAML_ACCEPTED_TIME_DIFF = env.int("SAML_ACCEPTED_TIME_DIFF", default=60)
     DJOSER["SERIALIZERS"]["current_user"] = "saml.serializers.SamlCurrentUserSerializer"
 
+
+# Additional functionality for using workflows in Flagsmith SaaS
+# python module path to the workflows module, e.g. "path.to.workflows"
+WORKFLOWS_MODULE_PATH = env("WORKFLOWS_MODULE_PATH", "workflows")
+WORKFLOWS_INSTALLED = importlib.util.find_spec(WORKFLOWS_MODULE_PATH) is not None
+
+if WORKFLOWS_INSTALLED:
+    INSTALLED_APPS.append("workflows")
 
 DEFAULT_AUTO_FIELD = "django.db.models.AutoField"
 
