@@ -1,3 +1,5 @@
+import importlib
+
 from django.conf import settings
 from django.conf.urls import include, url
 from django.contrib import admin
@@ -43,18 +45,17 @@ if settings.SAML_INSTALLED:
     urlpatterns.append(path("api/v1/auth/saml/", include("saml.urls")))
 
 if settings.WORKFLOWS_INSTALLED:
-    workflow_views = __import__(f"{settings.WORKFLOWS_MODULE_PATH}.views")
-
+    workflow_views = importlib.import_module(f"{settings.WORKFLOWS_MODULE_PATH}.views")
     urlpatterns.extend(
         [
             path("api/v1/features/workflows/", include("workflows.urls")),
             path(
-                "api/v1/environments/<str:environment_api_key>/change-requests",
+                "api/v1/environments/<str:environment_api_key>/create-change-request",
                 workflow_views.create_change_request,
                 name="create-change-request",
             ),
             path(
-                "api/v1/environments/<str:environment_api_key>/change-requests",
+                "api/v1/environments/<str:environment_api_key>/list-change-requests",
                 workflow_views.list_change_requests,
                 name="list-change-requests",
             ),
