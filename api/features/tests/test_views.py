@@ -26,7 +26,6 @@ from features.models import (
 )
 from features.multivariate.models import MultivariateFeatureOption
 from features.value_types import STRING
-from features.workflows.models import ChangeRequest
 from organisations.models import Organisation, OrganisationRole
 from projects.models import Project
 from projects.tags.models import Tag
@@ -934,14 +933,9 @@ class FeatureStateViewSetTestCase(TestCase):
             environment=self.environment, feature=self.feature
         )
 
-        change_request = ChangeRequest.objects.create(
-            title="Some CR", environment=self.environment, user=self.user
+        FeatureState.objects.create(
+            environment=self.environment, feature=self.feature, version=None
         )
-        draft_feature_state = feature_state.clone(
-            env=self.environment, live_from=timezone.now(), as_draft=True
-        )
-        draft_feature_state.change_request = change_request
-        draft_feature_state.save()
 
         url = reverse(
             "api-v1:environments:environment-featurestates-list",
