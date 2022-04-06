@@ -4,11 +4,9 @@ import uuid
 import pytest
 from django.test import Client as DjangoClient
 from django.urls import reverse
-from rest_framework import status
 from rest_framework.test import APIClient
 
 from app.utils import create_hash
-from users.models import FFAdminUser
 
 
 @pytest.fixture()
@@ -71,7 +69,6 @@ def environment(admin_client, project, environment_api_key) -> int:
         "name": "Test Environment",
         "api_key": environment_api_key,
         "project": project,
-        "minimum_change_request_approvals": 1,
     }
     url = reverse("api-v1:environments:environment-list")
 
@@ -250,53 +247,3 @@ def identity_document(environment_api_key, feature):
 def identity_document_without_fs(identity_document):
     identity_document["identity_features"].clear()
     return identity_document
-
-
-@pytest.fixture()
-def admin_invite_link_hash(admin_client, organisation):
-    invite_link_url = reverse(
-        "api-v1:organisations:organisation-invite-links-list", args=(organisation,)
-    )
-    data = {"role": "ADMIN"}
-    response = admin_client.post(
-        invite_link_url, data=json.dumps(data), content_type="application/json"
-    )
-    assert response.status_code == status.HTTP_201_CREATED
-    response_json = response.json()
-    return response_json["hash"]
-
-
-@pytest.fixture()
-def registered_org_admin_user_email():
-    return "registered_admin_user@example.com"
-
-
-@pytest.fixture()
-def registered_org_admin_user(registered_org_admin_user_email, admin_invite_link_hash):
-    password = FFAdminUser.objects.make_random_password()
-    api_client = APIClient()
-
-    register_url = reverse("api-v1:custom_auth:ffadminuser-list")
-    data = {
-        "email": registered_org_admin_user_email,
-        "password": password,
-        "first_name": "Registered",
-        "last_name": "Admin-User",
-    }
-    response = api_client.post(
-        register_url, data=json.dumps(data), content_type="application/json"
-    )
-    assert response.status_code == status.HTTP_201_CREATED
-    response_json = response.json()
-    token = response_json["key"]
-    user_id = response_json["id"]
-    api_client.credentials(HTTP_AUTHORIZATION=f"Token {token}")
-
-    # now we join the organisation
-    accept_invite_url = reverse(
-        "api-v1:users:user-join-organisation-link", args=(admin_invite_link_hash,)
-    )
-    response = api_client.post(accept_invite_url)
-    assert response.status_code == status.HTTP_200_OK
-
-    return user_id, token

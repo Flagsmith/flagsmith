@@ -3,8 +3,8 @@ from datetime import timedelta
 import pytest
 from django.utils import timezone
 
-from features.workflows.exceptions import ChangeRequestNotApprovedError
-from features.workflows.models import ChangeRequestApproval
+from features.workflows.core.exceptions import ChangeRequestNotApprovedError
+from features.workflows.core.models import ChangeRequestApproval
 from users.models import FFAdminUser
 
 
@@ -17,7 +17,7 @@ def test_change_request_approve_by_required_approver(
         user=user, change_request=change_request_no_required_approvals
     )
     now = timezone.now()
-    mocker.patch("features.workflows.models.timezone.now", return_value=now)
+    mocker.patch("features.workflows.core.models.timezone.now", return_value=now)
 
     # When
     change_request_no_required_approvals.approve(user=user)
@@ -35,7 +35,7 @@ def test_change_request_approve_by_new_approver_when_no_approvals_exist(
     # Given
     user = FFAdminUser.objects.create(email="approver@example.com")
     now = timezone.now()
-    mocker.patch("features.workflows.models.timezone.now", return_value=now)
+    mocker.patch("features.workflows.core.models.timezone.now", return_value=now)
 
     # When
     change_request_no_required_approvals.approve(user=user)
@@ -56,7 +56,7 @@ def test_change_request_approve_by_new_approver_when_approvals_exist(
         user=user_1, change_request=change_request_no_required_approvals
     )
     now = timezone.now()
-    mocker.patch("features.workflows.models.timezone.now", return_value=now)
+    mocker.patch("features.workflows.core.models.timezone.now", return_value=now)
 
     # When
     change_request_no_required_approvals.approve(user=user_2)
@@ -90,7 +90,7 @@ def test_change_request_commit_not_scheduled(
     user = FFAdminUser.objects.create(email="approver@example.com")
 
     now = timezone.now()
-    mocker.patch("features.workflows.models.timezone.now", return_value=now)
+    mocker.patch("features.workflows.core.models.timezone.now", return_value=now)
 
     # When
     change_request_no_required_approvals.commit(committed_by=user)
@@ -114,7 +114,7 @@ def test_change_request_commit_scheduled(
 
     user = FFAdminUser.objects.create(email="approver@example.com")
 
-    mocker.patch("features.workflows.models.timezone.now", return_value=now)
+    mocker.patch("features.workflows.core.models.timezone.now", return_value=now)
 
     # When
     change_request_no_required_approvals.commit(committed_by=user)

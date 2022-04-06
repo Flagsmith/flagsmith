@@ -7,7 +7,7 @@ import django.db.models.deletion
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('workflows', '0001_initial'),
+        ('workflows_core', '0001_initial'),
         ('features', '0039_allow_null_version'),
     ]
 
@@ -15,11 +15,11 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='featurestate',
             name='change_request',
-            field=models.ForeignKey(null=True, on_delete=django.db.models.deletion.SET_NULL, related_name='feature_states', to='workflows.changerequest'),
+            field=models.ForeignKey(null=True, on_delete=django.db.models.deletion.SET_NULL, related_name='feature_states', to='workflows_core.changerequest'),
         ),
         migrations.AddField(
             model_name='historicalfeaturestate',
             name='change_request',
-            field=models.ForeignKey(blank=True, db_constraint=False, null=True, on_delete=django.db.models.deletion.DO_NOTHING, related_name='+', to='workflows.changerequest'),
+            field=models.ForeignKey(blank=True, db_constraint=False, null=True, on_delete=django.db.models.deletion.DO_NOTHING, related_name='+', to='workflows_core.changerequest'),
         ),
     ]

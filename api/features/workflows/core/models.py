@@ -6,7 +6,8 @@ from django.utils import timezone
 from django_lifecycle import LifecycleModel
 
 from features.models import FeatureState
-from features.workflows.exceptions import ChangeRequestNotApprovedError
+
+from .exceptions import ChangeRequestNotApprovedError
 
 if typing.TYPE_CHECKING:
     from users.models import FFAdminUser
