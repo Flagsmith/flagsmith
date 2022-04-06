@@ -6,6 +6,9 @@
     "containerDefinitions": [
         {
             "name": "flagsmith-api",
+            "command": [
+                "serve"
+            ],
             "cpu": 0,
             "portMappings": [
                 {
