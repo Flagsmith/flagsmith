@@ -1,10 +1,8 @@
 FROM python:3.10-slim as application
 
-RUN apt-get update && apt-get upgrade -y
-
 # arm architecture platform builds need postgres drivers installing via apt
 ARG TARGETARCH
-RUN if [ "$TARGETARCH" != "amd64" ]; then apt-get install -y gcc libpq-dev && rm -rf /var/lib/apt/lists/*; fi;
+RUN if [ "$TARGETARCH" != "amd64" ]; then apt-get update && apt-get install -y gcc libpq-dev && rm -rf /var/lib/apt/lists/*; fi;
 
 # re2
 RUN apt-get update && apt-get install -y python-dev build-essential wget
