@@ -123,7 +123,16 @@
                 {
                     "name": "SLACK_CLIENT_ID",
                     "value": "937916178726.2904626318658"
+                },
+                {
+                    "name":"EDGE_API_URL",
+                    "value":"https://edge.bullet-train-staging.win/api/v1/"
+                },
+                {
+                    "name": "IDENTITY_MIGRATION_EVENT_BUS_NAME",
+                    "value": "identity_migration-fb41b5d"
                 }
+
             ],
             "secrets": [
                 {
@@ -169,7 +178,12 @@
                 {
                     "name": "SLACK_CLIENT_SECRET",
                     "valueFrom": "arn:aws:secretsmanager:eu-west-2:302456015006:secret:ECS-API-heAdoB:SLACK_CLIENT_SECRET::"
+                },
+                {
+                    "name": "EDGE_REQUEST_SIGNING_KEY",
+                    "valueFrom":"arn:aws:secretsmanager:eu-west-2:302456015006:secret:ECS-API-heAdoB:EDGE_REQUEST_SIGNING_KEY::"
                 }
+
             ],
             "logConfiguration": {
                 "logDriver": "awslogs",
