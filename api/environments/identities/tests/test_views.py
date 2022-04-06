@@ -584,6 +584,63 @@ class SDKIdentitiesTestCase(APITestCase):
         # and amplitude identify users should not be called
         mock_amplitude_wrapper.assert_not_called()
 
+    def test_post_identify_with_new_identity_work_with_null_trait_value(self):
+        # Given
+        url = reverse("api-v1:sdk-identities")
+        data = {
+            "identifier": "new_identity",
+            "traits": [
+                {"trait_key": "trait_that_does_not_exists", "trait_value": None},
+            ],
+        }
+
+        # When
+        self.client.credentials(HTTP_X_ENVIRONMENT_KEY=self.environment.api_key)
+        response = self.client.post(
+            url, data=json.dumps(data), content_type="application/json"
+        )
+
+        # Then
+        assert response.status_code == status.HTTP_200_OK
+        assert self.identity.identity_traits.count() == 0
+
+    def test_post_identify_deletes_a_trait_if_trait_value_is_none(self):
+        # Given
+        url = reverse("api-v1:sdk-identities")
+        trait_1 = Trait.objects.create(
+            identity=self.identity,
+            trait_key="trait_key_1",
+            value_type="STRING",
+            string_value="trait_value",
+        )
+        trait_2 = Trait.objects.create(
+            identity=self.identity,
+            trait_key="trait_key_2",
+            value_type="STRING",
+            string_value="trait_value",
+        )
+
+        data = {
+            "identifier": self.identity.identifier,
+            "traits": [
+                {"trait_key": trait_1.trait_key, "trait_value": None},
+                {"trait_key": "trait_that_does_not_exists", "trait_value": None},
+            ],
+        }
+
+        # When
+        self.client.credentials(HTTP_X_ENVIRONMENT_KEY=self.environment.api_key)
+        response = self.client.post(
+            url, data=json.dumps(data), content_type="application/json"
+        )
+
+        # Then
+        assert response.status_code == status.HTTP_200_OK
+        assert self.identity.identity_traits.count() == 1
+        assert self.identity.identity_traits.filter(
+            trait_key=trait_2.trait_key
+        ).exists()
+
     def test_post_identify_with_persistence(self):
         # Given
         url = reverse("api-v1:sdk-identities")

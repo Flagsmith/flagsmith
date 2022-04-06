@@ -21,7 +21,7 @@ class TraitSerializerFull(serializers.ModelSerializer):
 
 
 class TraitSerializerBasic(serializers.ModelSerializer):
-    trait_value = TraitValueField()
+    trait_value = TraitValueField(allow_null=True)
 
     class Meta:
         model = Trait

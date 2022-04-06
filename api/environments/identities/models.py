@@ -132,6 +132,11 @@ class Identity(models.Model):
         :return: list of TraitModels
         """
         trait_models = []
+
+        # Remove traits having Null(None) values
+        trait_data_items = filter(
+            lambda trait: trait["trait_value"] is not None, trait_data_items
+        )
         for trait_data_item in trait_data_items:
             trait_key = trait_data_item["trait_key"]
             trait_value = trait_data_item["trait_value"]
