@@ -123,6 +123,14 @@
                 {
                     "name": "SLACK_CLIENT_ID",
                     "value": "937916178726.1924685747446"
+                },
+                {
+                    "name": "EDGE_API_URL",
+                    "value": "https://edge.api.flagsmith.com/api/v1/"
+                },
+                {
+                    "name": "IDENTITY_MIGRATION_EVENT_BUS_NAME",
+                    "value": "identity_migration-d46ed1a"
                 }
             ],
             "secrets": [
@@ -173,6 +181,10 @@
                 {
                     "name": "SLACK_CLIENT_SECRET",
                     "valueFrom": "arn:aws:secretsmanager:eu-west-2:084060095745:secret:ECS-API-LxUiIQ:SLACK_CLIENT_SECRET::"
+                },
+                {
+                    "name": "EDGE_REQUEST_SIGNING_KEY",
+                    "valueFrom": "arn:aws:secretsmanager:eu-west-2:084060095745:secret:ECS-API-LxUiIQ:EDGE_REQUEST_SIGNING_KEY::"
                 }
             ],
             "logConfiguration": {
