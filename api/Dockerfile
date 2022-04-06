@@ -1,11 +1,21 @@
 FROM python:3.10-slim as application
 
-WORKDIR /app
-COPY . .
+RUN apt-get update && apt-get upgrade -y
 
 # arm architecture platform builds need postgres drivers installing via apt
 ARG TARGETARCH
-RUN if [ "$TARGETARCH" != "amd64" ]; then apt-get update && apt-get install -y gcc libpq-dev && rm -rf /var/lib/apt/lists/*; fi;
+RUN if [ "$TARGETARCH" != "amd64" ]; then apt-get install -y gcc libpq-dev && rm -rf /var/lib/apt/lists/*; fi;
+
+# re2
+RUN apt-get update && apt-get install -y python-dev build-essential wget
+RUN mkdir /tmp/re2 && mkdir /tmp/pyre2
+RUN wget -qO- https://github.com/google/re2/archive/refs/tags/2022-04-01.tar.gz | tar -xvz -C /tmp/re2
+RUN wget -qO- https://github.com/facebook/pyre2/archive/refs/tags/v1.0.7.tar.gz | tar -xvz -C /tmp/pyre2
+RUN cd /tmp/re2/re2-2022-04-01/ && make && make install && cd -
+RUN cd /tmp/pyre2/pyre2-1.0.7/ && python setup.py build && python setup.py install && cd -
+
+WORKDIR /app
+COPY . .
 
 # Install python dependencies
 RUN pip install -r requirements.txt --no-cache-dir --compile
