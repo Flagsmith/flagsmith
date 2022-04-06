@@ -9,6 +9,7 @@ https://docs.djangoproject.com/en/1.9/topics/settings/
 For the full list of settings and their values, see
 https://docs.djangoproject.com/en/1.9/ref/settings/
 """
+import importlib
 import logging
 import os
 import sys
@@ -107,7 +108,7 @@ INSTALLED_APPS = [
     "environments.identities.traits",
     "features",
     "features.multivariate",
-    "features.workflows",
+    "features.workflows.core",
     "segments",
     "app",
     "e2etests",
@@ -562,10 +563,22 @@ if SAML_INSTALLED:
         "BACKEND": "django.core.cache.backends.db.DatabaseCache",
         "LOCATION": SAML_REQUESTS_CACHE_LOCATION,
     }
-    INSTALLED_APPS += ["saml"]
+    INSTALLED_APPS.append("saml")
     SAML_ACCEPTED_TIME_DIFF = env.int("SAML_ACCEPTED_TIME_DIFF", default=60)
     DJOSER["SERIALIZERS"]["current_user"] = "saml.serializers.SamlCurrentUserSerializer"
 
+
+# Additional functionality needed for using workflows in Flagsmith SaaS
+# python module path to the workflows logic module, e.g. "path.to.workflows"
+WORKFLOWS_LOGIC_MODULE_PATH = env(
+    "WORKFLOWS_LOGIC_MODULE_PATH", "features.workflows.logic"
+)
+WORKFLOWS_LOGIC_INSTALLED = (
+    importlib.util.find_spec(WORKFLOWS_LOGIC_MODULE_PATH) is not None
+)
+
+if WORKFLOWS_LOGIC_INSTALLED:
+    INSTALLED_APPS.append("workflows_logic")
 
 DEFAULT_AUTO_FIELD = "django.db.models.AutoField"
 
@@ -576,3 +589,8 @@ EDGE_REQUEST_SIGNING_KEY = env.str("EDGE_REQUEST_SIGNING_KEY", None)
 
 # Aws Event bus used for sending identity migration events
 IDENTITY_MIGRATION_EVENT_BUS_NAME = env.str("IDENTITY_MIGRATION_EVENT_BUS_NAME", None)
+
+# Should be a string representing a timezone aware datetime, e.g. 2022-03-31T12:35:00Z
+EDGE_RELEASE_DATETIME = env.datetime("EDGE_RELEASE_DATETIME", None)
+
+DISABLE_WEBHOOKS = env.bool("DISABLE_WEBHOOKS", False)

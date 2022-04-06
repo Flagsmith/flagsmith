@@ -4,8 +4,22 @@ from django.urls import reverse
 from rest_framework import status
 
 
+def test_slack_oauth_flow_returns_401_if_secret_is_invalid(
+    environment_api_key, api_client
+):
+    # Given
+    base_url = reverse(
+        "api-v1:environments:integrations-slack-slack-oauth-init",
+        args=[environment_api_key],
+    )
+    url = f"{base_url}?signature=not_a_signature"
+    response = api_client.get(url)
+
+    assert response.status_code == status.HTTP_403_FORBIDDEN
+
+
 def test_slack_oauth_flow(
-    mocker, settings, admin_client, environment_api_key, environment
+    mocker, settings, api_client, admin_client, environment_api_key, environment
 ):
     # Given
     settings.SLACK_CLIENT_ID = "slack_id"
@@ -25,7 +39,7 @@ def test_slack_oauth_flow(
         args=[environment_api_key],
     )
     url = f"{base_url}?redirect_url={redirect_url}&signature={signature}"
-    response = admin_client.get(url)
+    response = api_client.get(url)
 
     # Verify the response
     assert response.status_code == status.HTTP_302_FOUND

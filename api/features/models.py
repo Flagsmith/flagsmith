@@ -240,7 +240,7 @@ class FeatureState(LifecycleModel, models.Model):
     live_from = models.DateTimeField(null=True)
 
     change_request = models.ForeignKey(
-        "workflows.ChangeRequest",
+        "workflows_core.ChangeRequest",
         on_delete=models.SET_NULL,
         null=True,
         related_name="feature_states",

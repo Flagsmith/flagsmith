@@ -8,7 +8,3 @@ class FeatureWorkflowError(APIException):
 
 class ChangeRequestNotApprovedError(FeatureWorkflowError):
     status_code = status.HTTP_400_BAD_REQUEST
-
-
-class ChangeRequestNotValid(FeatureWorkflowError):
-    status_code = status.HTTP_400_BAD_REQUEST

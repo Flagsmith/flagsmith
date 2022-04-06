@@ -15,7 +15,7 @@ from users.serializers import (
 
 
 class ProjectSerializer(serializers.ModelSerializer):
-    is_identity_migration_done = serializers.SerializerMethodField()
+    use_edge_identities = serializers.SerializerMethodField()
 
     class Meta:
         model = Project
@@ -25,13 +25,17 @@ class ProjectSerializer(serializers.ModelSerializer):
             "organisation",
             "hide_disabled_flags",
             "enable_dynamo_db",
-            "is_identity_migration_done",
+            "use_edge_identities",
         )
 
-    def get_is_identity_migration_done(self, obj: Project) -> bool:
+    def get_use_edge_identities(self, obj: Project) -> bool:
         if settings.PROJECT_METADATA_TABLE_NAME_DYNAMO:
             identity_migrator = IdentityMigrator(obj.id)
-            return identity_migrator.is_migration_done
+            return identity_migrator.is_migration_done or (
+                settings.EDGE_RELEASE_DATETIME
+                and obj.created_date >= settings.EDGE_RELEASE_DATETIME
+            )
+
         return False
 
 
