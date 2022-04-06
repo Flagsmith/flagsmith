@@ -1,7 +1,7 @@
 import pytest
 
 from features.models import FeatureState
-from features.workflows.models import ChangeRequest
+from features.workflows.core.models import ChangeRequest
 from users.models import FFAdminUser
 
 

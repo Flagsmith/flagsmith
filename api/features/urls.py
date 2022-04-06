@@ -1,3 +1,4 @@
+from django.conf import settings
 from django.conf.urls import include
 from django.urls import path
 from rest_framework_nested import routers
@@ -14,5 +15,9 @@ app_name = "features"
 
 urlpatterns = [
     path("", include(router.urls)),
-    path("workflows/", include("features.workflows.urls", namespace="workflows")),
 ]
+
+if settings.WORKFLOWS_LOGIC_INSTALLED:
+    urlpatterns.append(
+        path("workflows/", include("workflows_logic.urls", namespace="workflows"))
+    )
