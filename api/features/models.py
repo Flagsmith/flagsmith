@@ -239,6 +239,13 @@ class FeatureState(LifecycleModel, models.Model):
     version = models.IntegerField(default=1, null=True)
     live_from = models.DateTimeField(null=True)
 
+    change_request = models.ForeignKey(
+        "workflows_core.ChangeRequest",
+        on_delete=models.SET_NULL,
+        null=True,
+        related_name="feature_states",
+    )
+
     class Meta:
         ordering = ["id"]
 

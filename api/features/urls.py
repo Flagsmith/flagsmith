@@ -17,7 +17,7 @@ urlpatterns = [
     path("", include(router.urls)),
 ]
 
-if settings.WORKFLOWS_INSTALLED:
+if settings.WORKFLOWS_LOGIC_INSTALLED:
     urlpatterns.append(
-        path("workflows/", include("workflows.urls", namespace="workflows"))
+        path("workflows/", include("workflows_logic.urls", namespace="workflows"))
     )

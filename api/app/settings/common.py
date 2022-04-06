@@ -108,6 +108,7 @@ INSTALLED_APPS = [
     "environments.identities.traits",
     "features",
     "features.multivariate",
+    "features.workflows.core",
     "segments",
     "app",
     "e2etests",
@@ -567,13 +568,17 @@ if SAML_INSTALLED:
     DJOSER["SERIALIZERS"]["current_user"] = "saml.serializers.SamlCurrentUserSerializer"
 
 
-# Additional functionality for using workflows in Flagsmith SaaS
-# python module path to the workflows module, e.g. "path.to.workflows"
-WORKFLOWS_MODULE_PATH = env("WORKFLOWS_MODULE_PATH", "workflows")
-WORKFLOWS_INSTALLED = importlib.util.find_spec(WORKFLOWS_MODULE_PATH) is not None
+# Additional functionality needed for using workflows in Flagsmith SaaS
+# python module path to the workflows logic module, e.g. "path.to.workflows"
+WORKFLOWS_LOGIC_MODULE_PATH = env(
+    "WORKFLOWS_LOGIC_MODULE_PATH", "features.workflows.logic"
+)
+WORKFLOWS_LOGIC_INSTALLED = (
+    importlib.util.find_spec(WORKFLOWS_LOGIC_MODULE_PATH) is not None
+)
 
-if WORKFLOWS_INSTALLED:
-    INSTALLED_APPS.append("workflows")
+if WORKFLOWS_LOGIC_INSTALLED:
+    INSTALLED_APPS.append("workflows_logic")
 
 DEFAULT_AUTO_FIELD = "django.db.models.AutoField"
 
