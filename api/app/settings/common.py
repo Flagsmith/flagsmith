@@ -590,4 +590,7 @@ EDGE_REQUEST_SIGNING_KEY = env.str("EDGE_REQUEST_SIGNING_KEY", None)
 # Aws Event bus used for sending identity migration events
 IDENTITY_MIGRATION_EVENT_BUS_NAME = env.str("IDENTITY_MIGRATION_EVENT_BUS_NAME", None)
 
+# Should be a string representing a timezone aware datetime, e.g. 2022-03-31T12:35:00Z
+EDGE_RELEASE_DATETIME = env.datetime("EDGE_RELEASE_DATETIME", None)
+
 DISABLE_WEBHOOKS = env.bool("DISABLE_WEBHOOKS", False)
