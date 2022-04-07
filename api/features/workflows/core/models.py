@@ -7,7 +7,10 @@ from django_lifecycle import LifecycleModel
 
 from features.models import FeatureState
 
-from .exceptions import ChangeRequestNotApprovedError
+from .exceptions import (
+    CannotApproveOwnChangeRequest,
+    ChangeRequestNotApprovedError,
+)
 
 if typing.TYPE_CHECKING:
     from users.models import FFAdminUser
@@ -41,6 +44,11 @@ class ChangeRequest(LifecycleModel):
     )
 
     def approve(self, user: "FFAdminUser"):
+        if user.id == self.user_id:
+            raise CannotApproveOwnChangeRequest(
+                "User cannot approve their own Change Request."
+            )
+
         ChangeRequestApproval.objects.update_or_create(
             change_request=self, user=user, defaults={"approved_at": timezone.now()}
         )

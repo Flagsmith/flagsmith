@@ -127,3 +127,7 @@ class CustomCurrentUserSerializer(DjoserUserSerializer):
 
     class Meta(DjoserUserSerializer.Meta):
         fields = DjoserUserSerializer.Meta.fields + ("auth_type", "is_superuser")
+
+
+class ListUsersQuerySerializer(serializers.Serializer):
+    exclude_current = serializers.BooleanField(default=False)
