@@ -30,7 +30,7 @@
             "secrets": [
                 {
                     "name": "DATABASE_URL",
-                    "valueFrom": "arn:aws:secretsmanager:eu-west-2:084060095745:secret:DATABASE_URL-wpvVMo:DATABASE_URL::"
+                    "valueFrom": "arn:aws:secretsmanager:eu-west-2:084060095745:secret:ECS-API-LxUiIQ:DATABASE_URL::"
                 }
             ],
             "logConfiguration": {
