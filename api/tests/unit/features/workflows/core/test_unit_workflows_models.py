@@ -3,7 +3,10 @@ from datetime import timedelta
 import pytest
 from django.utils import timezone
 
-from features.workflows.core.exceptions import ChangeRequestNotApprovedError
+from features.workflows.core.exceptions import (
+    CannotApproveOwnChangeRequest,
+    ChangeRequestNotApprovedError,
+)
 from features.workflows.core.models import ChangeRequestApproval
 from users.models import FFAdminUser
 
@@ -164,3 +167,12 @@ def test_change_request_is_approved_true_when_enough_approved_approvals(
 
     # Then
     assert change_request_no_required_approvals.is_approved() is True
+
+
+def test_user_cannot_approve_their_own_change_requests(
+    change_request_no_required_approvals,
+):
+    with pytest.raises(CannotApproveOwnChangeRequest):
+        change_request_no_required_approvals.approve(
+            change_request_no_required_approvals.user
+        )
