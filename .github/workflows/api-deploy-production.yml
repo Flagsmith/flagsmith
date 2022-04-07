@@ -30,7 +30,7 @@ jobs:
                   aws_access_key_id: ${{ secrets.AWS_ACCESS_KEY_ID }}
                   aws_secret_access_key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
                   flagsmith_saml_revision: v0.1.1
-                  flagsmith_workflows_revision: v1.0.0
+                  flagsmith_workflows_revision: v1.0.1
 
     run-tests:
         runs-on: ubuntu-latest
