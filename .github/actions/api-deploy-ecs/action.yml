@@ -83,7 +83,7 @@ runs:
 
       - name: Set ECR tag
         id: ecr-tag-variable
-        run: echo ::set-output name=tag::feature-199-add-workflows-to-ECS-deployment
+        run: echo ::set-output name=tag::${GITHUB_REF#refs/*/}
         shell: bash
 
       - name: Configure AWS Credentials
