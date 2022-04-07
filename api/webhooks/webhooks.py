@@ -51,6 +51,9 @@ def get_webhook_model(webhook_type: WebhookType) -> typing.Union[WebhookModels]:
 
 
 def call_environment_webhooks(environment, data, event_type):
+    if settings.DISABLE_WEBHOOKS:
+        return
+
     _call_webhooks(
         environment.webhooks.filter(enabled=True),
         data,
@@ -60,6 +63,9 @@ def call_environment_webhooks(environment, data, event_type):
 
 
 def call_organisation_webhooks(organisation, data, event_type):
+    if settings.DISABLE_WEBHOOKS:
+        return
+
     _call_webhooks(
         organisation.webhooks.filter(enabled=True),
         data,

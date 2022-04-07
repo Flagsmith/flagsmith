@@ -13,7 +13,7 @@ from edge_api.identities.edge_request_forwarder import (
     "forwarder_function", [forward_identity_request_sync, forward_trait_request_sync]
 )
 def test_forwarder_sync_function_makes_no_request_if_migration_is_not_yet_done(
-    mocker, rf, forwarder_dynamo_wrapper, forwarder_function
+    mocker, rf, forwarder_mocked_migrator, forwarder_function
 ):
     # Given
     request = rf.get("/url")
@@ -23,8 +23,10 @@ def test_forwarder_sync_function_makes_no_request_if_migration_is_not_yet_done(
         "edge_api.identities.edge_request_forwarder.requests"
     )
 
-    mocked_migration_done = mocker.MagicMock(return_value=False)
-    forwarder_dynamo_wrapper.return_value.is_migration_done = mocked_migration_done
+    mocked_migration_done = mocker.PropertyMock(return_value=False)
+    type(
+        forwarder_mocked_migrator.return_value
+    ).is_migration_done = mocked_migration_done
 
     # When
     forwarder_function(request, project_id)
@@ -32,15 +34,14 @@ def test_forwarder_sync_function_makes_no_request_if_migration_is_not_yet_done(
     # Then
     assert mocked_requests.mock_calls == []
 
-    forwarder_dynamo_wrapper.assert_called_with()
-    mocked_migration_done.assert_called_with(project_id)
+    forwarder_mocked_migrator.assert_called_with(project_id)
 
 
 def test_forward_identity_request_sync_makes_correct_get_request(
     mocker,
     rf,
     forward_enable_settings,
-    forwarder_dynamo_wrapper,
+    forwarder_mocked_migrator,
 ):
     # Given
     project_id = 1
@@ -53,8 +54,10 @@ def test_forward_identity_request_sync_makes_correct_get_request(
         "edge_api.identities.edge_request_forwarder.requests"
     )
 
-    mocked_migration_done = mocker.MagicMock(return_value=True)
-    forwarder_dynamo_wrapper.return_value.is_migration_done = mocked_migration_done
+    mocked_migration_done = mocker.PropertyMock(return_value=True)
+    type(
+        forwarder_mocked_migrator.return_value
+    ).is_migration_done = mocked_migration_done
 
     # When
     forward_identity_request_sync(request, project_id)
@@ -66,12 +69,11 @@ def test_forward_identity_request_sync_makes_correct_get_request(
     assert kwargs["headers"]["X-Environment-Key"] == api_key
     assert kwargs["headers"][FLAGSMITH_SIGNATURE_HEADER]
 
-    forwarder_dynamo_wrapper.assert_called_with()
-    mocked_migration_done.assert_called_with(project_id)
+    forwarder_mocked_migrator.assert_called_with(project_id)
 
 
 def test_forward_identity_request_sync_makes_correct_post_request(
-    mocker, rf, forward_enable_settings, forwarder_dynamo_wrapper
+    mocker, rf, forward_enable_settings, forwarder_mocked_migrator
 ):
     # Given
     project_id = 1
@@ -86,7 +88,9 @@ def test_forward_identity_request_sync_makes_correct_post_request(
     )
 
     mocked_migration_done = mocker.MagicMock(return_value=True)
-    forwarder_dynamo_wrapper.return_value.is_migration_done = mocked_migration_done
+    type(
+        forwarder_mocked_migrator.return_value
+    ).is_migration_done = mocked_migration_done
 
     # When
     forward_identity_request_sync(request, project_id)
@@ -99,12 +103,11 @@ def test_forward_identity_request_sync_makes_correct_post_request(
     assert kwargs["headers"]["X-Environment-Key"] == api_key
     assert kwargs["headers"][FLAGSMITH_SIGNATURE_HEADER]
 
-    forwarder_dynamo_wrapper.assert_called_with()
-    mocked_migration_done.assert_called_with(project_id)
+    forwarder_mocked_migrator.assert_called_with(project_id)
 
 
 def test_forward_trait_request_sync_makes_correct_post_request_when_payload_is_none(
-    mocker, rf, forward_enable_settings, forwarder_dynamo_wrapper
+    mocker, rf, forward_enable_settings, forwarder_mocked_migrator
 ):
     # Given
     project_id = 1
@@ -121,7 +124,9 @@ def test_forward_trait_request_sync_makes_correct_post_request_when_payload_is_n
     )
 
     mocked_migration_done = mocker.MagicMock(return_value=True)
-    forwarder_dynamo_wrapper.return_value.is_migration_done = mocked_migration_done
+    type(
+        forwarder_mocked_migrator.return_value
+    ).is_migration_done = mocked_migration_done
 
     # When
     forward_trait_request_sync(request, project_id, payload=None)
@@ -134,12 +139,11 @@ def test_forward_trait_request_sync_makes_correct_post_request_when_payload_is_n
     assert kwargs["headers"]["X-Environment-Key"] == api_key
     assert kwargs["headers"][FLAGSMITH_SIGNATURE_HEADER]
 
-    forwarder_dynamo_wrapper.assert_called_with()
-    mocked_migration_done.assert_called_with(project_id)
+    forwarder_mocked_migrator.assert_called_with(project_id)
 
 
 def test_forward_trait_request_sync_uses_payload_over_request_data_if_not_none(
-    mocker, rf, forward_enable_settings, forwarder_dynamo_wrapper
+    mocker, rf, forward_enable_settings, forwarder_mocked_migrator
 ):
     # Given
     project_id = 1
@@ -155,7 +159,9 @@ def test_forward_trait_request_sync_uses_payload_over_request_data_if_not_none(
     request.data = request_data
 
     mocked_migration_done = mocker.MagicMock(return_value=True)
-    forwarder_dynamo_wrapper.return_value.is_migration_done = mocked_migration_done
+    type(
+        forwarder_mocked_migrator.return_value
+    ).is_migration_done = mocked_migration_done
 
     mocked_requests = mocker.patch(
         "edge_api.identities.edge_request_forwarder.requests"
@@ -171,5 +177,4 @@ def test_forward_trait_request_sync_uses_payload_over_request_data_if_not_none(
     assert kwargs["headers"]["X-Environment-Key"] == api_key
     assert kwargs["headers"][FLAGSMITH_SIGNATURE_HEADER]
 
-    forwarder_dynamo_wrapper.assert_called_with()
-    mocked_migration_done.assert_called_with(project_id)
+    forwarder_mocked_migrator.assert_called_with(project_id)

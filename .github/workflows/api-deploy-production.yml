@@ -23,13 +23,14 @@ jobs:
                   fetch-depth: 0
 
             - name: Deploy API to Production
-              uses: ./.github/actions/api-deploy
+              uses: ./.github/actions/api-deploy-eb
               with:
                   beanstalk_environment_name: production-api
                   github_access_token: ${{ secrets.GH_PRIVATE_ACCESS_TOKEN }}
                   aws_access_key_id: ${{ secrets.AWS_ACCESS_KEY_ID }}
                   aws_secret_access_key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
                   flagsmith_saml_revision: v0.1.1
+                  flagsmith_workflows_revision: v1.0.0
 
     run-tests:
         runs-on: ubuntu-latest
