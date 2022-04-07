@@ -51,4 +51,5 @@ class MixpanelWrapper(AbstractBaseIdentityIntegrationWrapper):
             "$token": self.api_key,
             "$distinct_id": identity.identifier,
             "$set": feature_properties,
+            "$ip": "0",
         }
