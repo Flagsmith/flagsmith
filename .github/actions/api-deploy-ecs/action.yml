@@ -46,6 +46,10 @@ inputs:
     description: "The flagsmith-saml repo git revision to use when building deployment package."
     required: false
     default: main
+  flagsmith_workflows_revision:
+    description: "The flagsmith-workflows repo git revision to use when building deployment package."
+    required: false
+    default: main
 
 runs:
     using: composite
@@ -63,6 +67,18 @@ runs:
         run: |
           mv ./flagsmith-saml/saml ./api
           cat ./flagsmith-saml/requirements.txt >> ./api/requirements.txt
+        shell: bash
+
+      - name: Checkout Workflows Logic package
+        uses: actions/checkout@v2
+        with:
+          repository: flagsmith/flagsmith-workflows
+          token: ${{ inputs.github_access_token }}
+          ref: ${{ inputs.flagsmith_workflows_revision }}
+          path: ./flagsmith-workflows
+
+      - name: Integrate Workflows Logic module
+        run: mv ./flagsmith-workflows/workflows_logic ./api/features/workflows/logic
         shell: bash
 
       - name: Set ECR tag

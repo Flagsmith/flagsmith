@@ -19,5 +19,10 @@ urlpatterns = [
 
 if settings.WORKFLOWS_LOGIC_INSTALLED:
     urlpatterns.append(
-        path("workflows/", include("workflows_logic.urls", namespace="workflows"))
+        path(
+            "workflows/",
+            include(
+                f"{settings.WORKFLOWS_LOGIC_MODULE_PATH}.urls", namespace="workflows"
+            ),
+        )
     )
