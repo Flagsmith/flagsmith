@@ -4,12 +4,9 @@ FROM python:3.10-slim as application
 ARG TARGETARCH
 RUN if [ "$TARGETARCH" != "amd64" ]; then apt-get update && apt-get install -y gcc libpq-dev && rm -rf /var/lib/apt/lists/*; fi;
 
-# re2
-RUN apt-get update && apt-get install -y python-dev build-essential wget
-RUN mkdir /tmp/re2
-RUN wget -qO- https://github.com/google/re2/archive/refs/tags/2022-04-01.tar.gz | tar -xvz -C /tmp/re2
-RUN cd /tmp/re2/re2-2022-04-01/ && make && make install && cd -
-RUN pip install google-re2==0.2.20220401
+# Install re2
+ARG GOOGLE_RE2_VERSION="0.2.20220401"
+RUN pip install google-re2==${GOOGLE_RE2_VERSION}
 
 WORKDIR /app
 COPY . .
