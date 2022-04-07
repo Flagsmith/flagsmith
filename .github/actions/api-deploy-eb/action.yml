@@ -50,7 +50,7 @@ runs:
           path: ./flagsmith-workflows
 
       - name: Integrate Workflows Logic module
-        run: mv ./flagsmith-workflows/flagsmith_workflows ./api/features/workflows/logic
+        run: mv ./flagsmith-workflows/workflows_logic ./api/features/workflows/logic
         shell: bash
 
       - name: Push to ElasticBeanstalk
