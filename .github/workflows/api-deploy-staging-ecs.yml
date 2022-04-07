@@ -4,6 +4,7 @@ on:
     push:
         branches:
             - main
+            - feature/199/add-workflows-to-ECS-deployment
         paths:
             - "api/**"
             - ".github/**"
