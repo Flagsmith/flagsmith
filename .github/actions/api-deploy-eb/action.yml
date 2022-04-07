@@ -1,4 +1,4 @@
-name: API Deploy
+name: API Deploy to EB
 description: "Deploy the Flagsmith API to Elastic Beanstalk"
 
 inputs:
