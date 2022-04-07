@@ -23,7 +23,7 @@ jobs:
                   fetch-depth: 0
 
             - name: Deploy API to Production
-              uses: ./.github/actions/api-deploy
+              uses: ./.github/actions/api-deploy-eb
               with:
                   beanstalk_environment_name: production-api
                   github_access_token: ${{ secrets.GH_PRIVATE_ACCESS_TOKEN }}

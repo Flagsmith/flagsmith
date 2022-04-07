@@ -1,0 +1,176 @@
+name: API Deploy to ECS
+description: "Deploy the Flagsmith API to ECS"
+
+inputs:
+  github_access_token:
+    description: "The Github access token to use to access external repositories (e.g. flagsmith-saml)"
+    required: true
+  aws_access_key_id:
+    description: "The AWS access key ID to use for deploying to ECS."
+    required: true
+  aws_secret_access_key:
+    description: "The AWS secret access key to use for deploying to ECS."
+    required: true
+  # TODO: do we need cluster name and ARN
+  aws_ecs_cluster_name:
+    description: "The name of the ECS cluster to deploy to."
+    required: true
+  aws_ecs_cluster_arn:
+    description: "The ARN of the AWS ECS cluster to deploy to."
+    required: true
+  aws_ecs_service_name:
+    description: "The name of the ECS service to deploy to."
+    required: true
+  aws_vpc_subnet_id:
+    description: "The id of the AWS VPC subnet to use for running migration tasks."
+    required: true
+  aws_ecs_security_group_id:
+    description: "The id of the AWS security group to use for running migration tasks."
+    required: true
+  aws_identity_migration_event_bus_name:
+    description: "The name of the AWS event bus used by the identity migration task."
+    required: true
+  aws_identity_migration_event_bus_rule_id:
+    description: "The id of the aws event bus rule used by the identity migration task."
+    required: true
+  aws_identity_migration_task_role_arn:
+    description: "The ARN of the role to run the identity migration task."
+    required: true
+  aws_ecr_repository_arn:
+    description: "The ARN of the ECR repository to deploy docker image to."
+    required: true
+  aws_task_definitions_directory_path:
+    description: "The local path in the repository to the json file containing the task definition template"
+    required: true
+  flagsmith_saml_revision:
+    description: "The flagsmith-saml repo git revision to use when building deployment package."
+    required: false
+    default: main
+
+runs:
+    using: composite
+
+    steps:
+      - name: Checkout SAML package
+        uses: actions/checkout@v2
+        with:
+            repository: flagsmith/flagsmith-saml
+            token: ${{ inputs.github_access_token }}
+            ref: ${{ inputs.flagsmith_saml_revision }}
+            path: ./flagsmith-saml
+
+      - name: Integrate SAML module
+        run: |
+          mv ./flagsmith-saml/saml ./api
+          cat ./flagsmith-saml/requirements.txt >> ./api/requirements.txt
+        shell: bash
+
+      - name: Set ECR tag
+        id: ecr-tag-variable
+        run: echo ::set-output name=tag::${GITHUB_REF#refs/*/}
+        shell: bash
+
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          aws-access-key-id: ${{ inputs.aws_access_key_id }}
+          aws-secret-access-key: ${{ inputs.aws_secret_access_key }}
+          aws-region: eu-west-2
+
+      - name: Login to Amazon ECR
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v1
+
+      - name: Build, tag, and push image to Amazon ECR
+        id: build-image
+        env:
+          IMAGE_TAG: ${{ steps.ecr-tag-variable.outputs.tag }}
+          ECR_REPOSITORY: ${{ inputs.aws_ecr_repository_arn }}
+        run: |
+          echo "Building docker image with URL: "
+          echo $ECR_REPOSITORY:$IMAGE_TAG
+          cd api
+          docker build -t $ECR_REPOSITORY:$IMAGE_TAG -f Dockerfile .
+          docker push $ECR_REPOSITORY:$IMAGE_TAG
+          echo "::set-output name=image::$ECR_REPOSITORY:$IMAGE_TAG"
+        shell: bash
+
+      - name: Fill in the new image ID in the Amazon ECS API task definition
+        id: task-def-api
+        uses: aws-actions/amazon-ecs-render-task-definition@v1
+        with:
+          task-definition: ${{ inputs.aws_task_definitions_directory_path }}/ecs-task-definition-web.json
+          container-name: flagsmith-api
+          image: ${{ steps.build-image.outputs.image }}
+
+      # This is used in both the SQL migrations and the Dynamo Identity Migrations
+      - name: Fill in the new image ID in the Amazon ECS migration task definition
+        id: task-def-migration
+        uses: aws-actions/amazon-ecs-render-task-definition@v1
+        with:
+          task-definition: ${{ inputs.aws_task_definitions_directory_path }}/ecs-task-definition-migration.json
+          container-name: flagsmith-api-migration
+          image: ${{ steps.build-image.outputs.image }}
+
+      - name: Register and perform SQL schema migration
+        id: register-migrate-task
+        env:
+          AWS_ACCESS_KEY_ID: ${{ inputs.aws_access_key_id }}
+          AWS_SECRET_ACCESS_KEY: ${{ inputs.aws_secret_access_key }}
+          AWS_DEFAULT_REGION: "eu-west-2"
+          TASK_DEFINITION: ${{ steps.task-def-migration.outputs.task-definition }}
+        run: |
+          echo "::set-output name=task_definition_arn::$(aws ecs register-task-definition --cli-input-json file://$TASK_DEFINITION | jq '.taskDefinition.taskDefinitionArn')"
+          aws ecs run-task --cluster ${{ inputs.aws_ecs_cluster_name }} --count 1 --launch-type FARGATE --task-definition flagsmith-api-migration  --network-configuration '{
+            "awsvpcConfiguration": {
+              "subnets": ["${{ inputs.aws_vpc_subnet_id }}"],
+              "securityGroups": ["${{ inputs.aws_ecs_security_group_id }}"],
+              "assignPublicIp": "ENABLED"
+            }}'
+        shell: bash
+
+      - name: Deploy Amazon ECS web task definition
+        uses: aws-actions/amazon-ecs-deploy-task-definition@v1
+        with:
+          cluster: ${{ inputs.aws_ecs_cluster_name }}
+          service: ${{ inputs.aws_ecs_service_name }}
+          task-definition: ${{ steps.task-def-api.outputs.task-definition }}
+
+      # The DynamoDB Identity Migrator uses the same task definition as the SQL schema migrator but overrides the container definition
+      # with the new django execute target
+      - name: Update Identity migrate rule with target
+        run: |
+          aws events put-targets --event-bus-name ${{ inputs.aws_identity_migration_event_bus_name }} --rule ${{ inputs.aws_identity_migration_event_bus_rule_id }} --targets '[{
+          "Id": "identity_migrate_rule_target",
+          "Arn": "${{ inputs.aws_ecs_cluster_arn }}",
+          "RoleArn": "${{ inputs.aws_identity_migration_task_role_arn }}",
+          "EcsParameters": {
+            "TaskDefinitionArn": ${{ steps.register-migrate-task.outputs.task_definition_arn }},
+            "TaskCount": 1,
+            "LaunchType": "FARGATE",
+            "NetworkConfiguration": {
+              "awsvpcConfiguration": {
+                "Subnets": ["${{ inputs.aws_vpc_subnet_id }}"],
+                "SecurityGroups": ["${{ inputs.aws_ecs_security_group_id }}"],
+              "AssignPublicIp": "ENABLED"
+              }
+              },
+              "PlatformVersion": "1.4.0",
+              "CapacityProviderStrategy": [],
+              "EnableECSManagedTags": true,
+              "EnableExecuteCommand": true,
+              "PlacementConstraints": [],
+              "PlacementStrategy": [],
+              "Tags": []
+              },
+              "RetryPolicy": {
+                "MaximumRetryAttempts": 1,
+                "MaximumEventAgeInSeconds": 3600
+                },
+                "InputTransformer": {
+                  "InputPathsMap":{"project_id":"$.detail.project_id"},
+                  "InputTemplate": "{ \"containerOverrides\": [ { \"name\": \"flagsmith-api-migration\", \"command\": [\"migrate_identities\", <project_id>], \" environment \":[{\"PROJECT_METADATA_TABLE_NAME_DYNAMO\":\"flagsmith_project_metadata\"}]}]}"
+                  }
+                  }
+                  ]'
+        shell: bash
