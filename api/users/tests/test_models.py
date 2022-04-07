@@ -96,7 +96,7 @@ class FFAdminUserTestCase(TestCase):
         self.user.add_organisation(self.organisation, OrganisationRole.ADMIN)
 
         # When
-        environments = self.user.get_permitted_environments(["VIEW_ENVIRONMENT"])
+        environments = self.user.get_permitted_environments("VIEW_ENVIRONMENT")
 
         # Then
         assert environments.count() == 2
@@ -113,12 +113,10 @@ class FFAdminUserTestCase(TestCase):
         user_environment_permission.permissions.set([read_permission])
 
         # When
-        environments = self.user.get_permitted_environments(
-            permissions=["VIEW_ENVIRONMENT"]
-        )
+        environments = self.user.get_permitted_environments("VIEW_ENVIRONMENT")
 
         # Then
-        assert environments.count() == 1
+        assert len(list(environments)) == 1
 
     def test_unique_user_organisation(self):
         # Given organisation and user

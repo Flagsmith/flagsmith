@@ -214,7 +214,7 @@ class FFAdminUser(LifecycleModel, AbstractUser):
         ):
             return True
 
-        return environment in self.get_permitted_environments([permission])
+        return environment in self.get_permitted_environments(permission)
 
     def is_project_admin(self, project):
         if self.is_admin(project.organisation):
@@ -229,39 +229,36 @@ class FFAdminUser(LifecycleModel, AbstractUser):
             ).exists()
         )
 
-    def get_permitted_environments(self, permissions):
+    def get_permitted_environments(self, permission_key: str):
         """
         Get all environments that the user has the given permissions for.
 
         Rules:
             - User has the required permissions directly (UserEnvironmentPermission)
             - User is in a UserPermissionGroup that has required permissions (UserPermissionGroupEnvironmentPermissions)
+            - User is an admin for the project the environment belongs to
             - User is an admin for the organisation the environment belongs to
         """
-        user_permission_query = Q()
-        group_permission_query = Q()
-        for permission in permissions:
-            user_permission_query = user_permission_query & Q(
-                userpermission__permissions__key=permission
-            )
-            group_permission_query = group_permission_query & Q(
-                grouppermission__permissions__key=permission
-            )
+
+        permission_groups = self.permission_groups.all()
+        admin_organisations = self.organisations.filter(
+            userorganisation__role=OrganisationRole.ADMIN
+        )
 
         user_query = Q(userpermission__user=self) & (
-            user_permission_query | Q(userpermission__admin=True)
+            Q(userpermission__permissions__key=permission_key)
+            | Q(userpermission__admin=True)
         )
-        group_query = Q(grouppermission__group__users=self) & (
-            group_permission_query | Q(grouppermission__admin=True)
+        group_query = Q(grouppermission__group__in=permission_groups) & (
+            Q(grouppermission__permissions__key=permission_key)
+            | Q(grouppermission__admin=True)
         )
-        organisation_query = Q(
-            project__organisation__userorganisation__user=self,
-            project__organisation__userorganisation__role=OrganisationRole.ADMIN.name,
-        )
+        organisation_query = Q(project__organisation__in=admin_organisations)
+
         project_admin_query = Q(
             project__userpermission__user=self, project__userpermission__admin=True
         ) | Q(
-            project__grouppermission__group__users=self,
+            project__grouppermission__group__in=permission_groups,
             project__grouppermission__admin=True,
         )
 
@@ -272,7 +269,7 @@ class FFAdminUser(LifecycleModel, AbstractUser):
     def get_permitted_identities(self):
         return Identity.objects.filter(
             environment__in=self.get_permitted_environments(
-                permissions=["VIEW_ENVIRONMENT"]
+                permission_key="VIEW_ENVIRONMENT"
             )
         )
 
