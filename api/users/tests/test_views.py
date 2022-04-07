@@ -214,6 +214,27 @@ class UserTestCase(TestCase):
         # Then
         assert res.status_code == status.HTTP_200_OK
 
+    def test_org_user_can_exclude_themself_when_getting_users_in_organisation(self):
+        # Given
+        self.user.add_organisation(self.organisation, OrganisationRole.USER)
+
+        organisation_user = FFAdminUser.objects.create(email="org_user@org.com")
+        organisation_user.add_organisation(self.organisation)
+        base_url = reverse(
+            "api-v1:organisations:organisation-users-list", args=[self.organisation.pk]
+        )
+        url = f"{base_url}?exclude_current=true"
+
+        # When
+        res = self.client.get(url)
+
+        # Then
+        assert res.status_code == status.HTTP_200_OK
+
+        response_json = res.json()
+        assert len(response_json) == 1
+        assert response_json[0]["id"] == organisation_user.id
+
 
 @pytest.mark.django_db
 class UserPermissionGroupViewSetTestCase(TestCase):
