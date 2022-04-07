@@ -51,12 +51,12 @@ if settings.WORKFLOWS_LOGIC_INSTALLED:
         [
             path("api/v1/features/workflows/", include(f"{module_path}.urls")),
             path(
-                "api/v1/environments/<str:environment_api_key>/create-change-request",
+                "api/v1/environments/<str:environment_api_key>/create-change-request/",
                 workflow_views.create_change_request,
                 name="create-change-request",
             ),
             path(
-                "api/v1/environments/<str:environment_api_key>/list-change-requests",
+                "api/v1/environments/<str:environment_api_key>/list-change-requests/",
                 workflow_views.list_change_requests,
                 name="list-change-requests",
             ),
