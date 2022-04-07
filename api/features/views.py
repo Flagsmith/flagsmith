@@ -220,7 +220,7 @@ class BaseFeatureStateViewSet(viewsets.ModelViewSet):
         """
         environment_api_key = self.kwargs["environment_api_key"]
         environment = get_object_or_404(
-            self.request.user.get_permitted_environments(["VIEW_ENVIRONMENT"]),
+            self.request.user.get_permitted_environments("VIEW_ENVIRONMENT"),
             api_key=environment_api_key,
         )
 
@@ -428,7 +428,7 @@ class SimpleFeatureStateViewSet(
 
     def get_queryset(self):
         permitted_environments = self.request.user.get_permitted_environments(
-            permissions=["VIEW_ENVIRONMENT"]
+            permission_key="VIEW_ENVIRONMENT"
         )
         queryset = FeatureState.get_environment_flags_queryset(
             environments=permitted_environments
