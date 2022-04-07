@@ -2,9 +2,11 @@ import pytest
 
 
 @pytest.fixture()
-def forwarder_dynamo_wrapper(mocker):
+def forwarder_mocked_migrator(mocker):
     return mocker.patch(
-        "edge_api.identities.edge_request_forwarder.DynamoIdentityWrapper"
+        "edge_api.identities.edge_request_forwarder.IdentityMigrator",
+        autospec=True,
+        spec_set=True,
     )
 
 

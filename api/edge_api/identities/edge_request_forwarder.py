@@ -6,13 +6,13 @@ from core.signing import sign_payload
 from django.conf import settings
 from rest_framework.request import Request
 
-from environments.dynamodb import DynamoIdentityWrapper
+from environments.dynamodb.migrator import IdentityMigrator
 from util.util import postpone
 
 
 def _should_forward(project_id: int) -> bool:
-    dynamo_identity_wrapper = DynamoIdentityWrapper()
-    return dynamo_identity_wrapper.is_migration_done(project_id)
+    migrator = IdentityMigrator(project_id)
+    return bool(migrator.is_migration_done)
 
 
 @postpone
