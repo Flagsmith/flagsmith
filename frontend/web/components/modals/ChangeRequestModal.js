@@ -98,7 +98,9 @@ const ChangeRequestModal = class extends Component {
                             )}
                             {!this.props.changeRequest && (
                                 <UserSelect
-                                    users={users} value={this.state.approvals.map((v)=>v.user)}
+                                    users={users.filter((v)=>{
+                                        return v.id !== AccountStore.getUser().id
+                                    })} value={this.state.approvals.map((v)=>v.user)}
                                     onAdd={this.addOwner}
                                     onRemove={this.removeOwner}
                                     isOpen={this.state.showUsers} onToggle={() => this.setState({ showUsers: !this.state.showUsers })}

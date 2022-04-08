@@ -224,6 +224,7 @@ const controller = {
                             ...v,
                         })
                     prom.then(()=>{
+                        AppActions.getChangeRequests(environmentId)
                         if (featureStateId) {
                             AppActions.getChangeRequest(changeRequestData.id)
                         }
