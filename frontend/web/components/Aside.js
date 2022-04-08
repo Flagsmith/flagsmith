@@ -39,8 +39,10 @@ const Aside = class extends Component {
     constructor(props, context) {
         super(props, context);
         this.state = {};
+        ES6Component(this)
         AppActions.getProject(this.props.projectId);
         AppActions.getChangeRequests(this.props.environmentId);
+        this.listenTo(ChangeRequestStore, 'change', ()=>this.forceUpdate())
     }
 
     componentWillReceiveProps(newProps) {

@@ -179,6 +179,7 @@ const ChangeRequestsPage = class extends Component {
                             }
                         })
                     }
+                    const isYourChangeRequest = changeRequest.user === AccountStore.getUser().id
                     return (
                         <div
                             style={{ opacity: ChangeRequestStore.isLoading ? 0.25 : 1 }} data-test="change-requests-page"
@@ -193,12 +194,6 @@ const ChangeRequestsPage = class extends Component {
                                                 {changeRequest.title}
                                             </h3>
                                         </Flex>
-                                        {!changeRequest.committed_at && (
-                                            <Row>
-                                                <Button onClick={this.deleteChangeRequest} className="btn btn--small btn-danger">Delete</Button>
-                                                <Button onClick={()=>this.editChangeRequest(projectFlag, environmentFlag)} className="btn btn--small ml-2">Edit</Button>
-                                            </Row>
-                                        )}
 
                                     </Row>
                                     <div className="list-item-footer faint">
@@ -209,37 +204,14 @@ const ChangeRequestsPage = class extends Component {
                                         {changeRequest.description}
                                     </p>
                                 </Flex>
-                                <div className="ml-4" style={{ width: 330 }}>
-                                    <InputGroup component={(
-                                        <div>
-                                            <Row>
-                                                <Button className="btn--link"
-                                                        onClick={() => this.setState({ showUsers: true })}
-                                                >Assignees <span className="ml-2 icon ion-md-cog"/> </Button>
-                                            </Row>
-                                            <Row className="mt-2">
-                                                {ownerUsers && ownerUsers.map(u => (
-                                                    <Row onClick={() => this.removeOwner(u.id)}
-                                                         className="chip chip--active"
-                                                    >
-                                                        <span className="font-weight-bold">
-                                                            {u.first_name} {u.last_name}
-                                                        </span>
-                                                        <span className="chip-icon ion ion-ios-close"/>
-                                                    </Row>
-                                                ))}
-                                            </Row>
-                                            <UserSelect
-                                                users={orgUsers}
-                                                value={ownerUsers && ownerUsers.map(v => v.id)}
-                                                onAdd={this.addOwner}
-                                                onRemove={this.removeOwner}
-                                                isOpen={this.state.showUsers}
-                                                onToggle={() => this.setState({ showUsers: !this.state.showUsers })}
-                                            />
-                                        </div>
+                                <div className="mr-4">
+
+                                    {!changeRequest.committed_at && (
+                                        <Row>
+                                            <Button onClick={this.deleteChangeRequest} className="btn btn--small btn-danger">Delete</Button>
+                                            <Button onClick={()=>this.editChangeRequest(projectFlag, environmentFlag)} className="btn btn--small ml-2">Edit</Button>
+                                        </Row>
                                     )}
-                                    />
                                 </div>
                             </div>
 
@@ -247,6 +219,37 @@ const ChangeRequestsPage = class extends Component {
                                 <div className="row">
 
                                     <div className="col-md-12">
+
+                                        <InputGroup component={(
+                                            <div>
+                                                <Row>
+                                                    <Button className="btn--link"
+                                                            onClick={() => this.setState({ showUsers: true })}
+                                                    >Assignees <span className="ml-2 icon ion-md-cog"/> </Button>
+                                                </Row>
+                                                <Row className="mt-2">
+                                                    {ownerUsers && ownerUsers.map(u => (
+                                                        <Row onClick={() => this.removeOwner(u.id)}
+                                                             className="chip chip--active"
+                                                        >
+                                                            <span className="font-weight-bold">
+                                                                {u.first_name} {u.last_name}
+                                                            </span>
+                                                            <span className="chip-icon ion ion-ios-close"/>
+                                                        </Row>
+                                                    ))}
+                                                </Row>
+                                                <UserSelect
+                                                    users={orgUsers}
+                                                    value={ownerUsers && ownerUsers.map(v => v.id)}
+                                                    onAdd={this.addOwner}
+                                                    onRemove={this.removeOwner}
+                                                    isOpen={this.state.showUsers}
+                                                    onToggle={() => this.setState({ showUsers: !this.state.showUsers })}
+                                                />
+                                            </div>
+                                        )}
+                                        />
                                         <Panel
                                             title={"Change Request"}>
 
@@ -257,11 +260,6 @@ const ChangeRequestsPage = class extends Component {
                                             }}
                                             >
                                                 <span style={{width:labelWidth}}/>
-                                                <Flex>
-                                                    <strong>
-                                                        Change Request
-                                                    </strong>
-                                                </Flex>
 
                                                 <Flex>
                                                     {!changeRequest.committed_at && (
@@ -269,6 +267,11 @@ const ChangeRequestsPage = class extends Component {
                                                             Live Version
                                                         </strong>
                                                     )}
+                                                </Flex>
+                                                <Flex>
+                                                    <strong>
+                                                        Change Request
+                                                    </strong>
                                                 </Flex>
                                             </Row>
 
@@ -283,13 +286,12 @@ const ChangeRequestsPage = class extends Component {
                                                     Enabled
                                                 </strong>
                                                 <Flex>
-                                                    <Switch checked={newEnabled}/>
-
-                                                </Flex>
-                                                <Flex>
                                                     {!changeRequest.committed_at&&(
                                                         <Switch checked={oldEnabled}/>
                                                     )}
+                                                </Flex>
+                                                <Flex>
+                                                    <Switch checked={newEnabled}/>
                                                 </Flex>
                                             </Row>
                                             <Row
@@ -303,12 +305,12 @@ const ChangeRequestsPage = class extends Component {
                                                     Value
                                                 </strong>
                                                 <Flex className="mr-2">
-                                                    <ValueEditor value={newValue}/>
-                                                </Flex>
-                                                <Flex className="ml-2">
                                                     {!changeRequest.committed_at&&(
                                                         <ValueEditor value={Utils.getTypedValue(oldValue)}/>
                                                     )}
+                                                </Flex>
+                                                <Flex className="ml-2">
+                                                    <ValueEditor value={newValue}/>
                                                 </Flex>
                                             </Row>
                                             {isMv && (
@@ -337,14 +339,14 @@ const ChangeRequestsPage = class extends Component {
                                                                         </Row>
                                                                     </div>
                                                                     <Row>
+                                                                        <Flex className="ml-4">
+                                                                            <span>
+                                                                                Environment weight: <strong>{v.oldValue}%</strong>
+                                                                            </span>
+                                                                        </Flex>
                                                                         <Flex className="mr-4">
                                                                                 <span>
                                                                                     Environment weight: <strong>{v.newValue}%</strong>
-                                                                                </span>
-                                                                        </Flex>
-                                                                        <Flex className="ml-4">
-                                                                                <span>
-                                                                                    Environment weight: <strong>{v.oldValue}%</strong>
                                                                                 </span>
                                                                         </Flex>
                                                                     </Row>
@@ -357,6 +359,8 @@ const ChangeRequestsPage = class extends Component {
 
                                             <Row className="mt-2">
                                                 <span style={{width:labelWidth}}/>
+
+                                                <Flex/>
                                                 <Flex>
                                                     {
                                                         approvedBy.length? (
@@ -365,7 +369,7 @@ const ChangeRequestsPage = class extends Component {
                                                                 Approved by {approvedBy.join(", ")}
                                                             </div>
                                                         ) : (
-                                                            <div className="text-right mb-2">
+                                                            <div className="text-right mb-2 mr-2">
                                                                 <span className="ion icon-primary text-primary icon ion-ios-information-circle mr-2"/>
                                                                 You need at least {minApprovals} approval{minApprovals!=1 ?"s":""} to publish this change
                                                             </div>
@@ -380,10 +384,13 @@ const ChangeRequestsPage = class extends Component {
                                                     ): (
                                                         <Row className="text-right mr-2">
                                                             <Flex/>
-                                                            <Button disabled={approved} onClick={this.approveChangeRequest} className="btn">
-                                                                <span className="ion icon ion-md-checkbox text-light mr-2"/>
-                                                                {approved? "Approved" :"Approve"}
-                                                            </Button>
+                                                            {!isYourChangeRequest && (
+                                                                <Button disabled={approved} onClick={this.approveChangeRequest} className="btn">
+                                                                    <span className="ion icon ion-md-checkbox text-light mr-2"/>
+                                                                    {approved? "Approved" :"Approve"}
+                                                                </Button>
+                                                            )}
+
                                                             <Button disabled={(approvedBy.length<minApprovals)} onClick={this.publishChangeRequest} className="btn ml-2">
                                                                 <span className="ion icon ion-ios-git-merge text-light mr-2"/>
 
@@ -393,7 +400,6 @@ const ChangeRequestsPage = class extends Component {
                                                     )}
 
                                                 </Flex>
-                                                <Flex/>
                                             </Row>
 
                                         </Panel>
