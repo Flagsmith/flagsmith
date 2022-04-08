@@ -55,7 +55,7 @@ const ChangeRequestsPage = class extends Component {
                                   />, null, { large: true });
                               }}
                             >Scaleup plan
-                            </a>.
+                            </a>. Find out more <a href="https://docs.flagsmith.com/advanced-use/change-requests" target="_blank">here</a>.
                         </p>
                     )}
                     {hasPermission && (

@@ -7,6 +7,7 @@ import CreateWebhookModal from '../modals/CreateWebhook';
 import ConfirmRemoveWebhook from '../modals/ConfirmRemoveWebhook';
 import EditPermissions from '../EditPermissions';
 import ServerSideSDKKeys from "../ServerSideSDKKeys";
+import PaymentModal from "../modals/Payment";
 
 const EnvironmentSettingsPage = class extends Component {
     static displayName = 'EnvironmentSettingsPage'
@@ -118,6 +119,7 @@ const EnvironmentSettingsPage = class extends Component {
 
     render() {
         const { props: { webhooks, webhooksLoading }, state: { name } } = this;
+        const has4EyesPermission = Utils.getPlansPermission(AccountStore.getPlans(), '4_EYES');
 
         return (
             <div className="app-container container">
@@ -196,23 +198,37 @@ const EnvironmentSettingsPage = class extends Component {
                                             <FormGroup className="m-y-3">
                                                 <Row space>
                                                     <div className="col-md-8 pl-0">
-                                                        <h3 className="m-b-0">Four Eyes Change Request Approvals</h3>
-                                                        <p>
-                                                            Require a minumim number of people to approve changes to features.
-                                                            {' '}
-                                                            <ButtonLink
-                                                                href="https://docs.flagsmith.com/advanced-use/4-eyes"
-                                                                target="_blank"
-                                                            >Learn about Four Eyes.</ButtonLink>
-                                                        </p>
+                                                        <h3 className="m-b-0">Change Requests</h3>
+                                                        {!has4EyesPermission? (
+                                                            <p>
+                                                                View and manage your feature changes with a Four Eyes approval flow with our <a
+                                                                href="#" onClick={() => {
+                                                                openModal('Payment plans', <PaymentModal
+                                                                    viewOnly={false}
+                                                                />, null, { large: true });
+                                                            }}
+                                                            >Scaleup plan
+                                                            </a>. Find out more <a href="https://docs.flagsmith.com/advanced-use/change-requests" target="_blank">here</a>.
+                                                            </p>
+                                                        ): (
+                                                            <p>
+                                                                Require a minumim number of people to approve changes to features.
+                                                                {' '}
+                                                                <ButtonLink
+                                                                    href="https://docs.flagsmith.com/advanced-use/4-eyes"
+                                                                    target="_blank"
+                                                                >Learn about Four Eyes.</ButtonLink>
+                                                            </p>
+                                                        )}
+
                                                     </div>
                                                     <div className="col-md-4 pr-0 text-right">
-                                                        <div>
-                                                            <Switch className="float-right" checked={!!this.state.minimum_change_request_approvals} onChange={(v)=>this.setState({minimum_change_request_approvals: v?1:0}, this.saveEnv)} />
-                                                        </div>
+                                                            <div>
+                                                                <Switch disabled={!has4EyesPermission} className="float-right" checked={has4EyesPermission && !!this.state.minimum_change_request_approvals} onChange={(v)=>this.setState({minimum_change_request_approvals: v?1:0}, this.saveEnv)} />
+                                                            </div>
                                                     </div>
                                                 </Row>
-                                                {!!this.state.minimum_change_request_approvals && (
+                                                {!!this.state.minimum_change_request_approvals && has4EyesPermission&& (
                                                     <div>
                                                         <div className="mb-2">
                                                             <strong>Minimum number of approvals</strong>
