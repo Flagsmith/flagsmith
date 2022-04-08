@@ -4,6 +4,7 @@ on:
     push:
         branches:
             - main
+            - improvement/workflow-improvements
         paths:
             - "api/**"
             - ".github/**"
