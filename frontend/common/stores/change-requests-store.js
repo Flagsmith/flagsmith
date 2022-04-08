@@ -22,7 +22,7 @@ const controller = {
     getChangeRequests: (envId, page) => {
         store.loading();
         store.envId = envId;
-        const endpoint = `${Project.api}environments/${envId}/list-change-requests`;
+        const endpoint = `${Project.api}environments/${envId}/list-change-requests/`;
         data.get(endpoint)
             .then((res) => {
                 store.model[envId] = res;
