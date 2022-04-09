@@ -139,7 +139,7 @@ const AuditLogPage = class extends Component {
                                                         onChange={(e)=>{
                                                             if (apiSearch) {
                                                                 this.setState({ search: Utils.safeParseEventValue(e) });
-                                                                AppActions.getAuditLog(this.props.match.params.projectId, Utils.safeParseEventValue(e), env);
+                                                                AppActions.searchAuditLog( Utils.safeParseEventValue(e), this.props.match.params.projectId, env);
                                                             } else {
                                                                 this.filterSearch(e)
                                                             }

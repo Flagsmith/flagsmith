@@ -27,7 +27,7 @@ const controller = {
     },
     searchAuditLog: _.throttle((search, projectId, environmentId) => {
         store.search = search;
-        controller.getAuditLog(projectId, environmentId);
+        controller.getAuditLog(0, projectId, environmentId);
     }, 1000),
 };
 

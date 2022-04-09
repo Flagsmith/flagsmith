@@ -448,9 +448,10 @@ const AppActions = Object.assign({}, require('./base/_app-actions'), {
             environmentId
         });
     },
-    searchAuditLog(search,environmentId) {
+    searchAuditLog(search,projectId,environmentId) {
         Dispatcher.handleViewAction({
             actionType: Actions.SEARCH_AUDIT_LOG,
+            projectId,
             search,
             environmentId
         });
