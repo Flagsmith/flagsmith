@@ -94,7 +94,7 @@ const PanelSearch = class extends Component {
         if (this.state.exact) {
             search = search.replace(/^"+|"+$/g, '');
         }
-        return (!search && (!filteredItems || !filteredItems.length)) && !this.props.renderSearchWithNoResults ? renderNoResults : (
+        return (!search && (!filteredItems || !filteredItems.length)) && !this.props.isLoading && !this.props.renderSearchWithNoResults ? renderNoResults : (
             <Panel
               className={this.props.className}
               title={this.props.title}
@@ -208,25 +208,26 @@ const PanelSearch = class extends Component {
                 {this.props.searchPanel}
                 <div id={this.props.id} className="search-list" style={isLoading ? { opacity: 0.5 } : {}}>
                     {this.props.header}
-                    {this.props.isLoading && <div className="text-center"><Loader/></div> }
-                    {!this.props.isLoading && filteredItems && filteredItems.length
-                        ? this.renderContainer(filteredItems) : (renderNoResults && !search) ? renderNoResults : (
-                            <Column>
-                                {!isLoading && (
-                                    <div className="mx-2 mt-1 mb-2">
-                                        {'No results '}
-                                        {search && (
-                                            <span>
-                                    for
-                                                <strong>
-                                                    {` "${search}"`}
-                                                </strong>
-                                            </span>
-                                        )}
-                                    </div>
-                                )}
-                            </Column>
-                        )}
+                    {this.props.isLoading && (!filteredItems||!items) ? <div className="text-center"><Loader/></div> :
+                        filteredItems && filteredItems.length
+                            ? this.renderContainer(filteredItems) : (renderNoResults && !search) ? renderNoResults : (
+                                <Column>
+                                    {!isLoading && (
+                                        <div className="mx-2 mt-1 mb-2">
+                                            {'No results '}
+                                            {search && (
+                                                <span>
+                                                    for
+                                                    <strong>
+                                                        {` "${search}"`}
+                                                    </strong>
+                                                </span>
+                                            )}
+                                        </div>
+                                    )}
+                                </Column>
+                            )
+                    }
                 </div>
                 {!!paging && filteredItems && filteredItems.length > 10 && (
                 <Paging
