@@ -15,14 +15,9 @@ const AuditLogPage = class extends Component {
     };
 
     componentDidMount() {
-        AppActions.getAuditLog(this.props.match.params.projectId, this.state.search);
+        const { env } = this.getEnvironment();
+        AppActions.getAuditLog(this.props.match.params.projectId, this.state.search, env);
         API.trackPage(Constants.pages.AUDIT_LOG);
-    }
-
-    componentWillUpdate(nextProps, nextState) {
-        // if (nextProps.params.environmentId !== this.props.match.params.environmentId) {
-        //     AppActions.getIdentities(nextProps.params.environmentId);
-        // }
     }
 
     filterRow = (logMessage, search) => {
@@ -58,11 +53,12 @@ const AuditLogPage = class extends Component {
 
     toggleEnv = (env) => {
         const filters = Utils.fromParam();
-        if (filters.env && filters.env === env.api_key) {
+        if (filters.env && filters.env === `${env.id}`) {
             delete filters.env;
         } else {
-            filters.env = env.api_key;
+            filters.env = `${env.id}`;
         }
+        AppActions.getAuditLog(this.props.match.params.projectId, this.state.search, env.id);
         this.context.router.history.replace(`${document.location.pathname}?${Utils.toParam(filters)}`);
     }
 
@@ -79,10 +75,14 @@ const AuditLogPage = class extends Component {
         this.context.router.history.replace(`${document.location.pathname}?${Utils.toParam(filters)}`);
     }
 
+
+    getEnvironment = ()=>{
+        const {env} = Utils.fromParam()
+        return {env}
+    }
     render() {
-        const { environmentId } = this.props.match.params;
         const { state: { search } } = this;
-        const { env: envFilter } = Utils.fromParam();
+        const { env: envFilter } = this.getEnvironment();
         const hasRbacPermission = !this.props.hasFeature('plan_based_access') || Utils.getPlansPermission(AccountStore.getPlans(), 'AUDIT') || !this.props.hasFeature('scaleup_audit');
         const apiSearch = flagsmith.hasFeature("audit_api_search");
         if (!hasRbacPermission) {
@@ -105,8 +105,11 @@ const AuditLogPage = class extends Component {
                         </p>
                         <FormGroup>
                             <AuditLogProvider>
-                                {({ isLoading, auditLog, auditLogPaging }) => (
-                                    <div>
+                                {({ isLoading, auditLog:_auditLog, auditLogPaging }) => {
+                                    const {env} = Utils.fromParam()
+                                    const auditLog = _auditLog && _auditLog[env||this.props.match.params.projectId]
+                                    return (
+                                        <div>
                                             <div className="audit">
                                                 <div className="font-weight-bold mb-2">
                                                     Filter by environments:
@@ -115,7 +118,7 @@ const AuditLogPage = class extends Component {
                                                     {({ project }) => (
                                                         <Row>
                                                             {project && project.environments && project.environments.map(env => (
-                                                                <ToggleChip active={envFilter === env.api_key} onClick={() => this.toggleEnv(env)} className="mr-2 mb-4">
+                                                                <ToggleChip active={envFilter === `${env.id}`} onClick={() => this.toggleEnv(env)} className="mr-2 mb-4">
                                                                     {env.name}
                                                                 </ToggleChip>
                                                             ))}
@@ -124,42 +127,43 @@ const AuditLogPage = class extends Component {
                                                 </ProjectProvider>
                                                 <FormGroup>
                                                     <PanelSearch
-                                                      onBlur={this.saveSearch}
-                                                      id="messages-list"
-                                                      title="Log entries"
-                                                      isLoading={isLoading}
-                                                      className="no-pad"
-                                                      icon="ion-md-browsers"
-                                                      items={auditLog}
-                                                      search={search}
-                                                      filter={envFilter}
-                                                      onChange={(e)=>{
-                                                          if (apiSearch) {
-                                                              this.setState({ search: Utils.safeParseEventValue(e) });
-                                                              AppActions.getAuditLog(this.props.match.params.projectId, Utils.safeParseEventValue(e));
-                                                          } else {
-                                                              this.filterSearch(e)
-                                                          }
-                                                      }}
-                                                      paging={auditLogPaging}
-                                                      nextPage={apiSearch? () => AppActions.getAuditLogPage(this.props.match.params.projectId, auditLogPaging.next):undefined}
-                                                      prevPage={apiSearch? () => AppActions.getAuditLogPage(this.props.match.params.projectId, auditLogPaging.previous): undefined}
-                                                      goToPage={page => AppActions.getAuditLogPage(this.props.match.params.projectId,`${Project.api}audit/?page=${page}`)}
-                                                      renderRow={this.renderRow}
-                                                      renderNoResults={(
-                                                          <FormGroup className="text-center">
-                                                            You have no
-                                                            log messages
-                                                            for your
-                                                            project.
-                                                          </FormGroup>
-                                                    )}
-                                                      filterRow={this.filterRow}
+                                                        onBlur={this.saveSearch}
+                                                        id="messages-list"
+                                                        title="Log entries"
+                                                        isLoading={isLoading||(!auditLog)}
+                                                        className="no-pad"
+                                                        icon="ion-md-browsers"
+                                                        items={auditLog}
+                                                        search={search}
+                                                        filter={envFilter}
+                                                        onChange={(e)=>{
+                                                            if (apiSearch) {
+                                                                this.setState({ search: Utils.safeParseEventValue(e) });
+                                                                AppActions.getAuditLog(this.props.match.params.projectId, Utils.safeParseEventValue(e), env);
+                                                            } else {
+                                                                this.filterSearch(e)
+                                                            }
+                                                        }}
+                                                        paging={auditLogPaging}
+                                                        nextPage={apiSearch? () => AppActions.getAuditLogPage(this.props.match.params.projectId, auditLogPaging.next, env):undefined}
+                                                        prevPage={apiSearch? () => AppActions.getAuditLogPage(this.props.match.params.projectId, auditLogPaging.previous, env): undefined}
+                                                        goToPage={page => AppActions.getAuditLogPage(this.props.match.params.projectId,`${Project.api}audit/?page=${page}`, env)}
+                                                        renderRow={this.renderRow}
+                                                        renderNoResults={(
+                                                            <FormGroup className="text-center">
+                                                                You have no
+                                                                log messages
+                                                                for your
+                                                                project.
+                                                            </FormGroup>
+                                                        )}
+                                                        filterRow={this.filterRow}
                                                     />
                                                 </FormGroup>
                                             </div>
-                                    </div>
-                                )}
+                                        </div>
+                                    )
+                                }}
                             </AuditLogProvider>
                         </FormGroup>
                     </div>

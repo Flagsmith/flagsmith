@@ -432,24 +432,27 @@ const AppActions = Object.assign({}, require('./base/_app-actions'), {
             pageSize,
         });
     },
-    getAuditLog(projectId, search) {
+    getAuditLog(projectId, search, environmentId) {
         Dispatcher.handleViewAction({
             actionType: Actions.GET_AUDIT_LOG,
             projectId,
+            environmentId,
             search,
         });
     },
-    getAuditLogPage(projectId, page) {
+    getAuditLogPage(projectId, page, environmentId) {
         Dispatcher.handleViewAction({
             projectId,
             actionType: Actions.GET_AUDIT_LOG_PAGE,
             page,
+            environmentId
         });
     },
-    searchAuditLog(search) {
+    searchAuditLog(search,environmentId) {
         Dispatcher.handleViewAction({
             actionType: Actions.SEARCH_AUDIT_LOG,
             search,
+            environmentId
         });
     },
     deleteIdentity(envId, id) {
