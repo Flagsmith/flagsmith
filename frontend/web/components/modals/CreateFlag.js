@@ -506,7 +506,14 @@ const CreateFlag = class extends Component {
                                     }}
                                     />);
                                 } else {
-                                    this.save(editFlagValue, isSaving);
+                                    if (document.getElementById("language-validation-error")) {
+                                        openConfirm("Validation error", "Your remote config value does not pass validation for the language you have selected. Are you sure you wish to save?",()=>{
+                                            this.save(editFlagValue, isSaving);
+
+                                        }, null, "Save", "Cancel" )
+                                    } else {
+                                        this.save(editFlagValue, isSaving);
+                                    }
                                 }
                             };
 
