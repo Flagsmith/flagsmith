@@ -209,9 +209,9 @@ exports.openModal2 = (header, body, footer, other) => {
     />, document.getElementById('modal2'));
 };
 
-exports.openConfirm = (header, body, onYes, onNo) => {
+exports.openConfirm = (header, body, onYes, onNo, yesText, noText) => {
     render(<Confirm
       header={header} onYes={onYes} onNo={onNo}
-      body={body}
+      body={body} yesText={yesText} noText={noText}
     />, document.getElementById('confirm'));
 };
