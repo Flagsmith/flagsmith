@@ -82,7 +82,7 @@ class Validation extends Component {
     }
 
     render() {
-        const displayLanguage = this.props.language === 'ini' ? 'toml' :this.state.language
+        const displayLanguage = this.props.language === 'ini' ? 'toml' :this.props.language
         return (
             <Tooltip position="top" title={!this.state.error?<ion className="text-white ion-ios-checkmark-circle"/>:<ion className="text-white ion-ios-warning"/>}>
                 {!this.state.error? displayLanguage + " validation passed": displayLanguage + " validation error, please check your value.<br/>Error: " + this.state.error}
