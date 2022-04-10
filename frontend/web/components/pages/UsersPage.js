@@ -169,7 +169,7 @@ const UsersPage = class extends Component {
                                                                     You have no users in your project{this.state.search ? <span> for <strong>"{this.state.search}"</strong></span> : ''}.
                                                                 </div>
                                                             )}
-                                                            filterRow={(flag, search) => flag.identifier && flag.identifier.toLowerCase().indexOf(search) !== -1}
+                                                            filterRow={(flag, search) => true}
                                                             search={this.state.search}
                                                             onChange={(e) => {
                                                                 this.setState({ search: Utils.safeParseEventValue(e) });
