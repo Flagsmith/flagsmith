@@ -54,6 +54,12 @@
     position: absolute;
     top: 5px;
     right: 10px;
+    .active {
+      span {
+        margin: 0;
+        opacity: 1;
+      }
+    }
     span {
       margin-right: 5px;
       color: white;
