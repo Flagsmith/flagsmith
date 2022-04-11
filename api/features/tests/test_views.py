@@ -282,15 +282,25 @@ class ProjectFeatureTestCase(TestCase):
         data = {"name": "Test feature flag", "type": "FLAG", "project": self.project.id}
 
         # When
-        self.client.post(url, data=data)
+        response = self.client.post(url, data=data)
+        feature_id = response.json()["id"]
 
         # Then
+
+        # Audit log exists for the feature
         assert (
             AuditLog.objects.filter(
-                related_object_type=RelatedObjectType.FEATURE.name
+                related_object_type=RelatedObjectType.FEATURE.name,
+                related_object_id=feature_id,
             ).count()
             == 1
         )
+        # and Audit log exists for every environment
+        assert AuditLog.objects.filter(
+            related_object_type=RelatedObjectType.FEATURE_STATE.name,
+            project=self.project,
+            environment__in=self.project.environments.all(),
+        ).count() == len(self.project.environments.all())
 
     def test_audit_log_created_when_feature_updated(self):
         # Given
