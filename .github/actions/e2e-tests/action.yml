@@ -1,0 +1,39 @@
+name: Run E2E tests
+description: "Run the E2E tests against an environment"
+
+inputs:
+  e2e_test_token:
+    description: "The authentication token used for E2E test endpoints."
+    required: true
+  slack_token:
+    description: "The slack authentication token."
+    required: true
+  environment:
+    description: "The value of the ENV environment variable to use for npm run env."
+    required: true
+
+runs:
+    using: composite
+
+    steps:
+      - name: Cloning repo
+        uses: actions/checkout@v2
+        with:
+          fetch-depth: 0
+
+      - name: Test with Chromedriver
+        working-directory: frontend
+        env:
+          E2E_TEST_TOKEN: ${{ inputs.e2e_test_token }}
+          SLACK_TOKEN: ${{ inputs.slack_token }}
+          STATIC_ASSET_CDN_URL: /
+        run: |
+          wget -q https://dl.google.com/linux/chrome/deb/pool/main/g/google-chrome-stable/google-chrome-stable_96.0.4664.110-1_amd64.deb
+          sudo apt install --allow-downgrades -y ./google-chrome*.deb -f
+          google-chrome --version
+          node -v
+          npm i
+          export ENV=${{ inputs.environment }};
+          npm run env
+          npm run test
+        shell: bash
