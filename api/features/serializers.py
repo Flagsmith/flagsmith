@@ -2,9 +2,7 @@ import django.core.exceptions
 from rest_framework import serializers
 
 from audit.models import (
-    FEATURE_CREATED_MESSAGE,
     FEATURE_STATE_UPDATED_MESSAGE,
-    FEATURE_UPDATED_MESSAGE,
     IDENTITY_FEATURE_STATE_UPDATED_MESSAGE,
     AuditLog,
     RelatedObjectType,
