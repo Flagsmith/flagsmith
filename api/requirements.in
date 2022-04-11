@@ -28,7 +28,7 @@ djoser
 influxdb-client
 django-ordered-model
 django-ses
-django-axes<5.31.0  # 5.31.0 is not compatible with py36, TODO: remove this constraint once we move to ECS
+django-axes
 django-admin-sso
 drf-yasg2
 django-debug-toolbar
