@@ -1,4 +1,4 @@
-import re
+import logging
 import typing
 
 from core.constants import BOOLEAN, FLOAT, INTEGER
@@ -13,6 +13,17 @@ from projects.models import Project
 if typing.TYPE_CHECKING:
     from environments.identities.models import Identity
     from environments.identities.traits.models import Trait
+
+
+logger = logging.getLogger(__name__)
+
+try:
+    import re2 as re
+
+    logger.info("Using re2 library for regex.")
+except ImportError:
+    logger.warning("Unable to import re2. Falling back to re.")
+    import re
 
 # Condition Types
 EQUAL = "EQUAL"
