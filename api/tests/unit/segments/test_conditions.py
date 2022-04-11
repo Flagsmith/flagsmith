@@ -39,7 +39,7 @@ from segments.models import (
 def test_does_identity_match_for_semver_values(
     identity, operator, trait_value, condition_value, result
 ):
-    # Give
+    # Given
     condition = Condition(operator=operator, property="version", value=condition_value)
     traits = [
         Trait(
