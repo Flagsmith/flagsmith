@@ -19,7 +19,7 @@ oauth2client
 djangorestframework-recursive
 packaging
 chargebee
-python-http-client<3.2.0 # 3.2.0 is the latest but throws an error on installation saying that it's not found
+python-http-client
 django-health-check
 django-storages
 django-environ

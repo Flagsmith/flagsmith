@@ -197,7 +197,7 @@ python-dateutil==2.8.1
     #   rudder-sdk-python
 python-dotenv==0.15.0
     # via environs
-python-http-client==3.1.0
+python-http-client==3.3.7
     # via
     #   -r requirements.in
     #   sendgrid
