@@ -102,6 +102,7 @@ runs:
         env:
           IMAGE_TAG: ${{ steps.ecr-tag-variable.outputs.tag }}
           ECR_REPOSITORY: ${{ inputs.aws_ecr_repository_arn }}
+          DOCKER_BUILDKIT: "1"
         run: |
           echo "Building docker image with URL: "
           echo $ECR_REPOSITORY:$IMAGE_TAG
