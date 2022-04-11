@@ -43,7 +43,7 @@ jobs:
     run-tests:
         runs-on: ubuntu-latest
         name: Run E2E Tests
-        environment: production
+        environment: staging
         needs: deploy-staging-ecs
 
         steps:
