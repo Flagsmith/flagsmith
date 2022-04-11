@@ -47,6 +47,11 @@ jobs:
         needs: deploy-staging-ecs
 
         steps:
+            - name: Cloning repo
+              uses: actions/checkout@v2
+              with:
+                fetch-depth: 0
+
             - name: Run E2E tests against staging
               uses: ./.github/actions/e2e-tests
               with:
