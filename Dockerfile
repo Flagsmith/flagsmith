@@ -23,7 +23,9 @@ RUN if [ "$TARGETARCH" != "amd64" ]; then apt-get update && apt-get install -y g
 
 # Install re2
 ARG GOOGLE_RE2_VERSION="0.2.20220401"
-RUN pip install google-re2==${GOOGLE_RE2_VERSION}
+ARG TARGETPLATFORM
+# re2 is broken on arm/v7 platform, so dont try to install it; fall back to standard re
+RUN if [ "$TARGETPLATFORM" != "linux/arm/v7" ]; then pip install google-re2==${GOOGLE_RE2_VERSION}; fi;
 
 # Install python dependencies
 RUN pip install -r requirements.txt --no-cache-dir --compile
