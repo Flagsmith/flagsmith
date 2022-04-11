@@ -54,3 +54,28 @@ def _create_change_request(user, environment, feature):
     new_feature_state.save()
 
     return change_request
+
+
+@pytest.fixture()
+def mock_plaintext_content():
+    return "plaintext content"
+
+
+@pytest.fixture()
+def mock_html_content():
+    return "<p>html content</p>"
+
+
+@pytest.fixture()
+def mock_render_to_string(mocker, mock_plaintext_content, mock_html_content):
+    _mock_render_to_string = mocker.MagicMock()
+
+    def render_to_string_side_effect(template_name: str, context: dict):
+        if template_name.endswith("html"):
+            return mock_html_content
+        elif template_name.endswith(".txt"):
+            return mock_plaintext_content
+        raise ValueError("Unknown template provided!")
+
+    _mock_render_to_string.side_effect = render_to_string_side_effect
+    return _mock_render_to_string

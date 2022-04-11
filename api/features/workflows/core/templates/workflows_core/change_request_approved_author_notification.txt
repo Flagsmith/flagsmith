@@ -1,0 +1,7 @@
+Hi {{ author.full_name | default:"there" }},
+
+Your change request has been approved{% if approver.full_name %} by {{ approver.full_name }}{% endif %}. Please click on the link below to see it.
+
+{{ url }}
+
+The Flagsmith Team

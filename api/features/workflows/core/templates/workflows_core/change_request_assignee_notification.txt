@@ -1,0 +1,7 @@
+Hi {{ approver.full_name | default:"there" }},
+
+You have been assigned to a change request on Flagsmith{% if author.full_name %} created by {{ author.full_name }}{% endif %}. Click on the link below to see it.
+
+{{ url }}
+
+The Flagsmith Team

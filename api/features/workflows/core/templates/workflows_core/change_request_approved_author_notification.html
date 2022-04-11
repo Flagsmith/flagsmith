@@ -1,0 +1,30 @@
+<table>
+
+    <tr>
+
+           <td>Hi {{ author.full_name | default:"there" }},</td>
+
+    </tr>
+
+    <tr>
+
+           <td>
+               Your change request has been approved{% if approver.full_name %} by {{ approver.full_name }}{% endif %}.
+               Please click <a href="{{ url }}">here</a> to see it.
+           </td>
+
+    </tr>
+
+    <tr>
+
+           <td>The Flagsmith team</td>
+
+    </tr>
+
+    <tr>
+        <td>
+            If the link above isn't working, copy and paste the following into your browser: {{ url }}
+        </td>
+    </tr>
+
+</table>
