@@ -41,31 +41,31 @@ jobs:
                 flagsmith_workflows_revision: v1.0.1
 
 
-#    run-tests:
-#        runs-on: ubuntu-latest
-#        name: Run E2E Tests
-#        environment: staging
-#        needs: deploy-staging-ecs
-#
-#        steps:
-#            - name: Cloning repo
-#              uses: actions/checkout@v2
-#              with:
-#                  fetch-depth: 0
-#
-#            - name: Test with Chromedriver
-#              working-directory: frontend
-#              env:
-#                  E2E_TEST_TOKEN_STAGING: ${{ secrets.E2E_TEST_TOKEN }}
-#                  SLACK_TOKEN: ${{ secrets.SLACK_TOKEN }}
-#                  STATIC_ASSET_CDN_URL: /
-#              run: |
-#                  wget -q https://dl.google.com/linux/chrome/deb/pool/main/g/google-chrome-stable/google-chrome-stable_96.0.4664.110-1_amd64.deb
-#                  sudo apt install --allow-downgrades -y ./google-chrome*.deb -f
-#                  google-chrome --version
-#                  node -v
-#                  npm i
-#                  export ENV=staging;
-#                  npm run env
-#                  npm run test
-#
+    run-tests:
+        runs-on: ubuntu-latest
+        name: Run E2E Tests
+        environment: staging
+        needs: deploy-staging-ecs
+
+        steps:
+            - name: Cloning repo
+              uses: actions/checkout@v2
+              with:
+                  fetch-depth: 0
+
+            - name: Test with Chromedriver
+              working-directory: frontend
+              env:
+                  E2E_TEST_TOKEN_STAGING: ${{ secrets.E2E_TEST_TOKEN }}
+                  SLACK_TOKEN: ${{ secrets.SLACK_TOKEN }}
+                  STATIC_ASSET_CDN_URL: /
+              run: |
+                  wget -q https://dl.google.com/linux/chrome/deb/pool/main/g/google-chrome-stable/google-chrome-stable_96.0.4664.110-1_amd64.deb
+                  sudo apt install --allow-downgrades -y ./google-chrome*.deb -f
+                  google-chrome --version
+                  node -v
+                  npm i
+                  export ENV=staging;
+                  npm run env
+                  npm run test
+
