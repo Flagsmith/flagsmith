@@ -1,7 +1,8 @@
 FROM python:3.10-slim as application
 
 # arm architecture platform builds need postgres drivers installing via apt
-ARG TARGETARCH
+# by default we want to build amd64 arch images
+ARG TARGETARCH="amd64"
 RUN if [ "$TARGETARCH" != "amd64" ]; then apt-get update && apt-get install -y gcc libpq-dev && rm -rf /var/lib/apt/lists/*; fi;
 
 # Install re2
