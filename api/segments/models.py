@@ -1,6 +1,7 @@
 import logging
 import typing
 
+import semver
 from core.constants import BOOLEAN, FLOAT, INTEGER
 from django.core.exceptions import ValidationError
 from django.db import models
@@ -180,6 +181,10 @@ class Condition(models.Model):
                     return self.check_float_value(trait.float_value)
                 elif trait.value_type == BOOLEAN:
                     return self.check_boolean_value(trait.boolean_value)
+                elif semver.VersionInfo.isvalid(
+                    trait.string_value
+                ) and semver.VersionInfo.isvalid(self.value):
+                    return self.check_semver_value(trait.string_value)
                 else:
                     return self.check_string_value(trait.string_value)
 
@@ -249,6 +254,27 @@ class Condition(models.Model):
             return value == bool_value
         elif self.operator == NOT_EQUAL:
             return value != bool_value
+
+        return False
+
+    def check_semver_value(self, value: str) -> bool:
+        try:
+            condition_version_info = semver.VersionInfo.parse(self.value)
+        except ValueError:
+            return False
+
+        if self.operator == EQUAL:
+            return value == condition_version_info
+        elif self.operator == GREATER_THAN:
+            return value > condition_version_info
+        elif self.operator == GREATER_THAN_INCLUSIVE:
+            return value >= condition_version_info
+        elif self.operator == LESS_THAN:
+            return value < condition_version_info
+        elif self.operator == LESS_THAN_INCLUSIVE:
+            return value <= condition_version_info
+        elif self.operator == NOT_EQUAL:
+            return value != condition_version_info
 
         return False
 
