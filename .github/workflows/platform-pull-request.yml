@@ -76,7 +76,7 @@ jobs:
               with:
                 e2e_test_token: some-token
                 slack_token: ${{ secrets.SLACK_TOKEN }}
-                environment: prod
+                environment: local
                 enable_influxdb_features: false
 
     docker-build-unified:
