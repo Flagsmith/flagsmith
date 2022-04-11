@@ -64,7 +64,7 @@ jobs:
                   google-chrome --version
                   node -v
                   npm i
-                  export ENV=production;
+                  export ENV=prod;
                   npm run env
                   npm run test
 
