@@ -20,8 +20,13 @@ const url = `http://localhost:${process.env.PORT || 8080}/`;
 
 fixture`Initialise`
     .before(async () => {
+        console.log(`$E2E_TEST_TOKEN = ${process.env.E2E_TEST_TOKEN}`);
+        console.log(`$E2E_TEST_TOKEN_${Project.env.toUpperCase()} = ${process.env.E2E_TEST_TOKEN}`);
+
         const token = process.env.E2E_TEST_TOKEN
             ? process.env.E2E_TEST_TOKEN : process.env[`E2E_TEST_TOKEN_${Project.env.toUpperCase()}`];
+
+        console.log(token);
 
         if (token) {
             await fetch(`${Project.api}e2etests/teardown/`, {

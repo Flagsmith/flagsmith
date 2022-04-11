@@ -34,6 +34,7 @@ runs:
           ENV: ${{ inputs.environment }}
           ENABLE_INFLUXDB_FEATURES: ${{ inputs.enable_influxdb_features }}
         run: |
+          echo "$E2E_TEST_TOKEN"
           wget -q https://dl.google.com/linux/chrome/deb/pool/main/g/google-chrome-stable/google-chrome-stable_96.0.4664.110-1_amd64.deb
           sudo apt install --allow-downgrades -y ./google-chrome*.deb -f
           google-chrome --version
