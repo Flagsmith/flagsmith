@@ -71,24 +71,13 @@ jobs:
                   python manage.py migrate
                   python manage.py runserver &
 
-            - name: Run E2E Tests with Chromedriver
-              working-directory: frontend
-              env:
-                  E2E_TEST_TOKEN_DEV: some-token
-                  ENABLE_INFLUXDB_FEATURES: false
-                  ENV: local
-                  SLACK_TOKEN: ${{ secrets.SLACK_TOKEN }}
-                  STATIC_ASSET_CDN_URL: /
-              run: |
-                  wget -q https://dl.google.com/linux/chrome/deb/pool/main/g/google-chrome-stable/google-chrome-stable_96.0.4664.110-1_amd64.deb
-                  sudo apt install --allow-downgrades -y ./google-chrome*.deb -f
-                  google-chrome --version
-                  node -v
-                  npm i
-                  npm run env
-                  echo "Testing API is available at http://127.0.0.1:8000/health:"
-                  curl  -s -D - "http://127.0.0.1:8000/health?format=json"
-                  npm run test
+            - name: Run E2E tests against local
+              uses: ./.github/actions/e2e-tests
+              with:
+                e2e_test_token: some-token
+                slack_token: ${{ secrets.SLACK_TOKEN }}
+                environment: local
+                enable_influxdb_features: false
 
     docker-build-unified:
         if: github.event.pull_request.draft == false
