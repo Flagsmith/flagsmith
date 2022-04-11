@@ -203,7 +203,7 @@ def test_user_is_notified_when_assigned_to_a_change_request(
 
     # Then
     assert mock_send_mail.call_count == 1
-    call_kwargs = mock_send_mail.call_args.kwargs
+    call_kwargs = mock_send_mail.call_args[1]
     assert call_kwargs["subject"] == change_request_no_required_approvals.email_subject
     assert call_kwargs["message"] == mock_plaintext_content
     assert call_kwargs["html_message"] == mock_html_content
@@ -229,7 +229,7 @@ def test_user_is_not_notified_after_approving_a_change_request(
     # Then
     # An email is sent to the author but not to the user that approved the request
     assert mock_send_mail.call_count == 1
-    assert mock_send_mail.call_args.kwargs["recipient_list"] == [
+    assert mock_send_mail.call_args[1]["recipient_list"] == [
         change_request_no_required_approvals.user.email
     ]
 
@@ -260,7 +260,7 @@ def test_change_request_author_is_notified_after_an_approval_is_created(
 
     # Then
     assert mock_send_mail.call_count == 1
-    call_kwargs = mock_send_mail.call_args.kwargs
+    call_kwargs = mock_send_mail.call_args[1]
     assert call_kwargs["subject"] == change_request_no_required_approvals.email_subject
     assert call_kwargs["message"] == mock_plaintext_content
     assert call_kwargs["html_message"] == mock_html_content
@@ -301,10 +301,10 @@ def test_change_request_author_is_notified_after_an_existing_approval_is_approve
     call_args_list = mock_send_mail.call_args_list
 
     # The first one should be to the user that was assigned to approve it
-    assert call_args_list[0].kwargs["recipient_list"] == [user.email]
+    assert call_args_list[0][1]["recipient_list"] == [user.email]
 
     # The second one should be to the change request author
-    call_kwargs = call_args_list[1].kwargs
+    call_kwargs = call_args_list[1][1]
     assert call_kwargs["subject"] == change_request_no_required_approvals.email_subject
     assert call_kwargs["message"] == mock_plaintext_content
     assert call_kwargs["html_message"] == mock_html_content
