@@ -380,7 +380,7 @@ class FeatureState(LifecycleModel, models.Model):
             return IDENTITY
         elif self.feature_segment_id and self.identity_id is None:
             return FEATURE_SEGMENT
-        elif self.identity_id and self.feature_segment_id is None:
+        elif self.identity_id is None and self.feature_segment_id is None:
             return ENVIRONMENT
 
         logger.error(
