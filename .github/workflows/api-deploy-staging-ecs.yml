@@ -35,7 +35,7 @@ jobs:
                 aws_ecr_repository_arn: 302456015006.dkr.ecr.eu-west-2.amazonaws.com/flagsmith-ecr-d247ba2
                 aws_identity_migration_event_bus_name: identity_migration-fb41b5d
                 aws_identity_migration_event_bus_rule_id: identity_migration-08330ed
-                aws_identity_migration_task_role_arn: arn:aws:iam::302456015006:role/task-exec-role-5512471
+                aws_identity_migration_task_role_arn: arn:aws:iam::302456015006:role/task-exec-role-6fb76f6
                 aws_task_definitions_directory_path: infrastructure/aws/staging
                 flagsmith_saml_revision: v0.1.1
                 flagsmith_workflows_revision: v1.0.1
