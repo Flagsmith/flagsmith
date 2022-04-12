@@ -51,10 +51,13 @@ class Identity(models.Model):
             feature_segment__environment=self.environment,
         )
         environment_default_query = Q(identity=None, feature_segment=None)
+        only_live_versions_query = Q(
+            live_from__lte=timezone.now(), version__isnull=False
+        )
 
         # define the full query
         full_query = (
-            Q(live_from__lte=timezone.now())
+            only_live_versions_query
             & belongs_to_environment_query
             & (
                 overridden_for_identity_query
@@ -92,10 +95,7 @@ class Identity(models.Model):
                 identity_flags[flag.feature_id] = flag
             else:
                 current_flag = identity_flags[flag.feature_id]
-                if flag > current_flag or (
-                    flag.type == current_flag.type
-                    and flag.version > current_flag.version
-                ):
+                if flag > current_flag:
                     identity_flags[flag.feature_id] = flag
 
         if self.environment.project.hide_disabled_flags:

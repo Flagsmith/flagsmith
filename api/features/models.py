@@ -279,6 +279,13 @@ class FeatureState(LifecycleModel, models.Model):
             # flag, else False.
             return not (other.identity or self.feature_segment < other.feature_segment)
 
+        if self.type == other.type:
+            return (
+                self.version is not None
+                and other.version is not None
+                and self.version > other.version
+            ) or (self.version is not None and other.version is None)
+
         # if we've reached here, then self is just the environment default. In this case, other is higher priority if
         # it has a feature_segment or an identity
         return not (other.feature_segment or other.identity)
@@ -380,7 +387,7 @@ class FeatureState(LifecycleModel, models.Model):
             return IDENTITY
         elif self.feature_segment_id and self.identity_id is None:
             return FEATURE_SEGMENT
-        elif self.identity_id and self.feature_segment_id is None:
+        elif self.identity_id is None and self.feature_segment_id is None:
             return ENVIRONMENT
 
         logger.error(
