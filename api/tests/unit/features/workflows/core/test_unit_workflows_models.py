@@ -1,6 +1,7 @@
 from datetime import timedelta
 
 import pytest
+from django.contrib.sites.models import Site
 from django.utils import timezone
 
 from features.workflows.core.exceptions import (
@@ -176,3 +177,168 @@ def test_user_cannot_approve_their_own_change_requests(
         change_request_no_required_approvals.approve(
             change_request_no_required_approvals.user
         )
+
+
+def test_user_is_notified_when_assigned_to_a_change_request(
+    change_request_no_required_approvals,
+    django_user_model,
+    mocker,
+    settings,
+    mock_render_to_string,
+    mock_plaintext_content,
+    mock_html_content,
+):
+    # Given
+    mock_send_mail = mocker.patch("features.workflows.core.models.send_mail")
+    mocker.patch(
+        "features.workflows.core.models.render_to_string", mock_render_to_string
+    )
+
+    user = django_user_model.objects.create(email="approver@example.com")
+
+    # When
+    ChangeRequestApproval.objects.create(
+        change_request=change_request_no_required_approvals, user=user
+    )
+
+    # Then
+    assert mock_send_mail.call_count == 1
+    call_kwargs = mock_send_mail.call_args[1]
+    assert call_kwargs["subject"] == change_request_no_required_approvals.email_subject
+    assert call_kwargs["message"] == mock_plaintext_content
+    assert call_kwargs["html_message"] == mock_html_content
+    assert call_kwargs["from_email"] == settings.DEFAULT_FROM_EMAIL
+    assert call_kwargs["recipient_list"] == [user.email]
+
+
+def test_user_is_not_notified_after_approving_a_change_request(
+    change_request_no_required_approvals, django_user_model, mocker
+):
+    # Given
+    mock_send_mail = mocker.patch("features.workflows.core.models.send_mail")
+
+    user = django_user_model.objects.create(email="approver@example.com")
+
+    # When
+    ChangeRequestApproval.objects.create(
+        change_request=change_request_no_required_approvals,
+        user=user,
+        approved_at=timezone.now(),
+    )
+
+    # Then
+    # An email is sent to the author but not to the user that approved the request
+    assert mock_send_mail.call_count == 1
+    assert mock_send_mail.call_args[1]["recipient_list"] == [
+        change_request_no_required_approvals.user.email
+    ]
+
+
+def test_change_request_author_is_notified_after_an_approval_is_created(
+    mocker,
+    change_request_no_required_approvals,
+    django_user_model,
+    settings,
+    mock_render_to_string,
+    mock_html_content,
+    mock_plaintext_content,
+):
+    # Given
+    mock_send_mail = mocker.patch("features.workflows.core.models.send_mail")
+    mocker.patch(
+        "features.workflows.core.models.render_to_string", mock_render_to_string
+    )
+
+    user = django_user_model.objects.create(email="approver@example.com")
+
+    # When
+    ChangeRequestApproval.objects.create(
+        change_request=change_request_no_required_approvals,
+        user=user,
+        approved_at=timezone.now(),
+    )
+
+    # Then
+    assert mock_send_mail.call_count == 1
+    call_kwargs = mock_send_mail.call_args[1]
+    assert call_kwargs["subject"] == change_request_no_required_approvals.email_subject
+    assert call_kwargs["message"] == mock_plaintext_content
+    assert call_kwargs["html_message"] == mock_html_content
+    assert call_kwargs["from_email"] == settings.DEFAULT_FROM_EMAIL
+    assert call_kwargs["recipient_list"] == [
+        change_request_no_required_approvals.user.email
+    ]
+
+
+def test_change_request_author_is_notified_after_an_existing_approval_is_approved(
+    mocker,
+    django_user_model,
+    change_request_no_required_approvals,
+    settings,
+    mock_render_to_string,
+    mock_html_content,
+    mock_plaintext_content,
+):
+    # Given
+    mock_send_mail = mocker.patch("features.workflows.core.models.send_mail")
+    mocker.patch(
+        "features.workflows.core.models.render_to_string", mock_render_to_string
+    )
+
+    user = django_user_model.objects.create(email="approver@example.com")
+
+    change_request_approval = ChangeRequestApproval.objects.create(
+        change_request=change_request_no_required_approvals, user=user
+    )
+
+    # When
+    change_request_approval.approved_at = timezone.now()
+    change_request_approval.save()
+
+    # Then
+    # 2 emails are sent
+    assert mock_send_mail.call_count == 2
+    call_args_list = mock_send_mail.call_args_list
+
+    # The first one should be to the user that was assigned to approve it
+    assert call_args_list[0][1]["recipient_list"] == [user.email]
+
+    # The second one should be to the change request author
+    call_kwargs = call_args_list[1][1]
+    assert call_kwargs["subject"] == change_request_no_required_approvals.email_subject
+    assert call_kwargs["message"] == mock_plaintext_content
+    assert call_kwargs["html_message"] == mock_html_content
+    assert call_kwargs["from_email"] == settings.DEFAULT_FROM_EMAIL
+    assert call_kwargs["recipient_list"] == [
+        change_request_no_required_approvals.user.email
+    ]
+
+
+def test_change_request_url(change_request_no_required_approvals, settings):
+    # Given
+    site = Site.objects.filter(id=settings.SITE_ID).first()
+    environment_key = change_request_no_required_approvals.environment.api_key
+    project_id = change_request_no_required_approvals.environment.project.id
+
+    # Then
+    assert (
+        change_request_no_required_approvals.url
+        == "https://%s/projects/%s/environments/%s/change-requests/%s"
+        % (
+            site.domain,
+            project_id,
+            environment_key,
+            change_request_no_required_approvals.id,
+        )
+    )
+
+
+def test_change_request_email_subject(change_request_no_required_approvals):
+    assert (
+        change_request_no_required_approvals.email_subject
+        == "Flagsmith Change Request: %s (#%s)"
+        % (
+            change_request_no_required_approvals.title,
+            change_request_no_required_approvals.id,
+        )
+    )

@@ -1,0 +1,31 @@
+<table>
+
+        <tr>
+
+               <td>Hi {{ approver.full_name | default:"there" }},</td>
+
+        </tr>
+
+        <tr>
+
+               <td>
+                   You have been assigned to a change request on Flagsmith{% if author.full_name %} created by {{ author.full_name }}{% endif %}.
+                   Click <a href="{{ url }}">here</a> to see it.
+               </td>
+
+
+        </tr>
+
+        <tr>
+
+               <td>The Flagsmith team</td>
+
+        </tr>
+
+    <tr>
+        <td>
+            If the link above isn't working, copy and paste the following into your browser: {{ url }}
+        </td>
+    </tr>
+
+</table>
