@@ -21,9 +21,8 @@ def test_audit_log_can_be_filtered_by_environments(admin_client, project, enviro
     )
     # Then
     assert response.status_code == status.HTTP_200_OK
-    assert response.json()["count"] == 2
+    assert response.json()["count"] == 1
     assert response.json()["results"][0]["environment"]["id"] == audit_env.id
-    assert response.json()["results"][1]["environment"] is None
 
 
 def test_audit_log_can_be_filtered_by_log_text(admin_client, project, environment):

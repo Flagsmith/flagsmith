@@ -18,7 +18,9 @@ from rest_framework.response import Response
 from rest_framework.schemas import AutoSchema
 
 from audit.models import (
+    FEATURE_CREATED_MESSAGE,
     FEATURE_DELETED_MESSAGE,
+    FEATURE_UPDATED_MESSAGE,
     IDENTITY_FEATURE_STATE_DELETED_MESSAGE,
     AuditLog,
     RelatedObjectType,
@@ -108,18 +110,23 @@ class FeatureViewSet(viewsets.ModelViewSet):
         )
 
     def perform_create(self, serializer):
-        serializer.save(
+        instance = serializer.save(
             project_id=self.kwargs.get("project_pk"), user=self.request.user
         )
+        feature_states = list(
+            instance.feature_states.filter(identity=None, feature_segment=None)
+        )
+        self._create_audit_log("CREATE", instance, feature_states)
 
     def perform_update(self, serializer):
-        serializer.save(project_id=self.kwargs.get("project_pk"))
+        instance = serializer.save(project_id=self.kwargs.get("project_pk"))
+        self._create_audit_log("UPDATE", instance)
 
     def perform_destroy(self, instance):
         feature_states = list(
             instance.feature_states.filter(identity=None, feature_segment=None)
         )
-        self._create_feature_delete_audit_log(feature_states)
+        self._create_audit_log("DELETE", instance, feature_states)
         self._trigger_feature_state_change_webhooks(feature_states)
         instance.delete()
 
@@ -131,11 +138,19 @@ class FeatureViewSet(viewsets.ModelViewSet):
                 feature_state, WebhookEventType.FLAG_DELETED
             )
 
-    def _create_feature_delete_audit_log(
-        self, feature_states: typing.List[FeatureState]
+    def _create_audit_log(
+        self,
+        action_type: str,
+        feature: Feature,
+        feature_states: typing.List[FeatureState] = None,
     ):
-        feature = feature_states[0].feature
-        message = FEATURE_DELETED_MESSAGE % feature.name
+        assert action_type in ("CREATE", "UPDATE", "DELETE")
+        feature_states = feature_states or []
+        message = {
+            "CREATE": FEATURE_CREATED_MESSAGE,
+            "UPDATE": FEATURE_UPDATED_MESSAGE,
+            "DELETE": FEATURE_DELETED_MESSAGE,
+        }.get(action_type) % feature.name
         project_audit_log = AuditLog(
             author=self.request.user,
             project=feature.project,
