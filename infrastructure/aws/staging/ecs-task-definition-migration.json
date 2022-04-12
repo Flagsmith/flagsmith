@@ -1,8 +1,8 @@
 {
     "family": "flagsmith-api-migration",
     "networkMode": "awsvpc",
-    "executionRoleArn": "arn:aws:iam::302456015006:role/task-exec-role-5512471",
-    "taskRoleArn": "arn:aws:iam::302456015006:role/task-exec-role-5512471",
+    "executionRoleArn": "arn:aws:iam::302456015006:role/task-exec-role-6fb76f6",
+    "taskRoleArn": "arn:aws:iam::302456015006:role/task-exec-role-6fb76f6",
     "containerDefinitions": [
         {
             "name": "flagsmith-api-migration",
