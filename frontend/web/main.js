@@ -75,6 +75,7 @@ setTimeout(() => {
       || document.location.pathname.indexOf('/invite') !== -1
       || document.location.pathname.indexOf('/projects') !== -1)
     && !AccountStore.getUser()) {
+        API.setRedirect(document.location.pathname + (document.location.search || ''))
         browserHistory.push(`/?redirect=${encodeURIComponent(document.location.pathname + (document.location.search || ''))}`);
     }
 

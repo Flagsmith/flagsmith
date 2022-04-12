@@ -75,7 +75,7 @@ const App = class extends Component {
     };
 
     onLogin = () => {
-        let { redirect } = Utils.fromParam();
+        let redirect = API.getRedirect();
         const invite = API.getInvite();
         if (invite) {
             redirect = `/invite/${invite}`;
@@ -100,6 +100,7 @@ const App = class extends Component {
         // Redirect on login
         if (this.props.location.pathname == '/' || this.props.location.pathname == '/saml' || this.props.location.pathname.includes('/oauth') || this.props.location.pathname == '/login' || this.props.location.pathname == '/demo' || this.props.location.pathname == '/signup') {
             if (redirect) {
+                API.setRedirect("")
                 this.context.router.history.replace(redirect);
             } else {
                 AsyncStorage.getItem('lastEnv')
