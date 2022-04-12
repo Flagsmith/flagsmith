@@ -25,7 +25,7 @@ jobs:
               uses: ./.github/actions/api-deploy-ecs
               with:
                 github_access_token: ${{ secrets.GH_PRIVATE_ACCESS_TOKEN }}
-                aws_access_key_id: AKIARHES7IUA4IU3T5VX
+                aws_access_key_id: AKIARHES7IUAU2LR2B5K
                 aws_secret_access_key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
                 aws_ecs_cluster_name: flagsmith-api-cluster-eu-west-2-f0b0108
                 aws_ecs_cluster_arn: arn:aws:ecs:eu-west-2:084060095745:cluster/flagsmith-api-cluster-eu-west-2-f0b0108
