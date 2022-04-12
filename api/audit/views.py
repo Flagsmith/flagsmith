@@ -40,7 +40,7 @@ class AuditLogViewSet(mixins.ListModelMixin, viewsets.GenericViewSet):
         if project:
             q = q & Q(project__id=project)
         if environments:
-            q = q & (Q(environment__id__in=environments) | Q(environment=None))
+            q = q & Q(environment__id__in=environments)
 
         search = serializer.data.get("search")
         if search:

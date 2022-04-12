@@ -2,9 +2,7 @@ import django.core.exceptions
 from rest_framework import serializers
 
 from audit.models import (
-    FEATURE_CREATED_MESSAGE,
     FEATURE_STATE_UPDATED_MESSAGE,
-    FEATURE_UPDATED_MESSAGE,
     IDENTITY_FEATURE_STATE_UPDATED_MESSAGE,
     AuditLog,
     RelatedObjectType,
@@ -82,30 +80,7 @@ class ListCreateFeatureSerializer(WritableNestedModelSerializer):
         user = validated_data.pop("user")
         instance = super(ListCreateFeatureSerializer, self).create(validated_data)
         instance.owners.add(user)
-        self._create_audit_log(instance, True)
         return instance
-
-    def update(self, instance, validated_data):
-        updated_instance = super(ListCreateFeatureSerializer, self).update(
-            instance, validated_data
-        )
-        self._create_audit_log(updated_instance, False)
-        return updated_instance
-
-    def _create_audit_log(self, instance, created):
-        message = (
-            FEATURE_CREATED_MESSAGE % instance.name
-            if created
-            else FEATURE_UPDATED_MESSAGE % instance.name
-        )
-        request = self.context.get("request")
-        AuditLog.objects.create(
-            author=getattr(request, "user", None),
-            related_object_id=instance.id,
-            related_object_type=RelatedObjectType.FEATURE.name,
-            project=instance.project,
-            log=message,
-        )
 
     def validate_multivariate_options(self, mv_options):
         total_percentage_allocation = sum(
