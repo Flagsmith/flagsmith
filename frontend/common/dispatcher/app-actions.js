@@ -490,11 +490,11 @@ const AppActions = Object.assign({}, require('./base/_app-actions'), {
             id: organisationId,
         });
     },
-    getChangeRequests(environment, page) {
+    getChangeRequests(environment, committed) {
         Dispatcher.handleViewAction({
             actionType: Actions.GET_CHANGE_REQUESTS,
             environment,
-            page,
+            committed,
         });
     },
     getChangeRequest(id) {
