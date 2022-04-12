@@ -22,12 +22,33 @@
         }
     }
 }
-
+.alert {
+    border-radius: $default-border-radius;
+    .title {
+        font-size: 16px;
+        font-weight: bold;
+        margin-bottom: 5px;
+        .ion {
+            font-size: 18px;
+        }
+    }
+}
+.alert-info {
+    background-color: $bt-brand-primary-faint;
+    color: white;
+    border-color: transparent;
+    border-left: 5px solid $bt-brand-primary;
+    a {
+        color: white;
+        text-decoration: underline;
+    }
+}
 .dark {
     .alert {
         &.alert-info {
-            background: $dark-bg-10;
-            border-color: $dark-bg-10;
+            background: $bt-brand-primary-dark;
+            border-color: transparent;
+            border-color: lighten($bt-brand-primary-dark,5);
             color: $header-color-dark;
         }
     }

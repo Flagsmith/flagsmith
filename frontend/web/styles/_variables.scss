@@ -13,7 +13,7 @@ $dark-bg-20: #3A3D4A;
 $dark-bg-50: #B3B3B3;
 $dark-highlight: #424b72;
 $dark-highlight2: $dark-bg-20;
-$dark-highlight3: #f18e7f;
+$dark-highlight3: #ceb256;
 
 $dark-highlight-color: #e1e1e1;
 $dark-color: #747484;
@@ -25,6 +25,8 @@ $button-bg-dark-hover: darken($button-bg-dark,1);
 // COLORS
 
 $bt-brand-primary: #7B51FB;
+$bt-brand-primary-faint: #1d0d4d;
+//$bt-brand-primary-faint: #003100;
 $bt-brand-primary-light: lighten($bt-brand-primary,40);
 $bt-brand-primary-lighter: lighten($bt-brand-primary,70);
 
@@ -32,7 +34,7 @@ $bt-brand-primary-dark: #1E0D26;
 $bt-brand-primary-dark-alt: #17103A;
 $bt-brand-primary-dark-desaturated: #202040;
 $bt-brand-primary-dark-desaturated-light: #38386d;
-$bt-brand-primary-dark-desaturated-lighter: #5d60cc;
+$bt-brand-primary-dark-desaturated-lighter: #4e51be;
 $bt-brand-primary-dark-desaturated-lighter-dark: #131216;
 
 
@@ -44,7 +46,7 @@ $bt-brand-faint-hover: #eee7f6;
 $bt-brand-faint-hover-dark: #242230;
 
 
-$bt-brand-tertiary: #f18e7f;
+$bt-brand-tertiary: #F7D56E;
 $bt-brand-tertiary-dark: $dark-highlight3;
 $bt-brand-secondary: #00a696;
 $bt-brand-secondary-faint: #2d9189;

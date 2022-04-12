@@ -2,6 +2,7 @@ import React from 'react';
 import Constants from '../../../common/constants';
 import VariationValue from './VariationValue';
 import ValueEditor from "../ValueEditor";
+import InfoMessage from "../InfoMessage";
 
 export default function VariationOptions({ multivariateOptions, select, controlValue, weightTitle, variationOverrides, removeVariation, updateVariation, setVariations, setValue }) {
     const invalid = multivariateOptions.length && controlValue < 0;
@@ -17,7 +18,12 @@ export default function VariationOptions({ multivariateOptions, select, controlV
                     Your variation percentage splits total to over 100%
                 </div>
             )}
-            <p>{Constants.strings.MULTIVARIATE_DESCRIPTION}</p>
+            <p>
+
+                <InfoMessage>
+                    Variation values are shared amongst environments. Variation weights are specific to this Environment. <a target={"_blank"} href="https://docs.flagsmith.com/basic-features/managing-features#multi-variate-flags">Check the Docs for more</a>
+                </InfoMessage>
+            </p>
             {select && (
                 <div className="panel panel--flat panel-without-heading mb-2">
                     <div className="panel-content">
