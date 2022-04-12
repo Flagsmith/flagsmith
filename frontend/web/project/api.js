@@ -96,6 +96,12 @@ global.API = {
     setEvent(v) {
         return API.setCookie('event', v);
     },
+    setRedirect(v) {
+        return API.setCookie('redirect', v);
+    },
+    getRedirect(v) {
+        return API.getCookie('redirect');
+    },
     getCookie(key) {
         return require('js-cookie').get(key);
     },
