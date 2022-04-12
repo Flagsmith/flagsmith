@@ -23,7 +23,6 @@ const ChangeRequestsPage = class extends Component {
         this.listenTo(ChangeRequestStore, 'change', () => this.forceUpdate());
         this.listenTo(OrganisationStore, 'change', () => this.forceUpdate());
         AppActions.getChangeRequests(this.props.match.params.environmentId);
-        AppActions.getChangeRequests(this.props.match.params.environmentId, true);
         AppActions.getOrganisation(AccountStore.getOrganisation().id);
     }
 
@@ -93,7 +92,7 @@ const ChangeRequestsPage = class extends Component {
                               icon="ion-md-git-pull-request"
                               items={data}
                               renderRow={({ title, user: _user, created_at, id }, index) => {
-                                  const user = OrganisationStore.model.users.find(v => v.id === _user);
+                                  const user = (OrganisationStore.model && OrganisationStore.model.users && OrganisationStore.model.users.find(v => v.id === _user) ) ||{};
                                   return (
                                       <Link to={`/project/${projectId}/environment/${environmentId}/change-requests/${id}`}>
                                           <Row className="list-item clickable">

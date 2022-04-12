@@ -19,13 +19,26 @@ const controller = {
             })            .catch(e => API.ajaxHandler(store, e));
 
     },
-    getChangeRequests: (envId, page) => {
+    getChangeRequests: (envId, committed) => {
         store.loading();
         store.envId = envId;
-        const endpoint = `${Project.api}environments/${envId}/list-change-requests/`;
+        const endpoint = `${Project.api}environments/${envId}/list-change-requests/?include_committed=${1}`;
         data.get(endpoint)
             .then((res) => {
-                store.model[envId] = res;
+                let committed = []
+                let results = []
+                if (res) {
+                    res.map((v)=>{
+                        if(v.committed_at) {
+                            committed.push(v)
+                        } else {
+                            results.push(v)
+                        }
+                    })
+                }
+                store.committed[envId] = committed;
+                store.model[envId] = results;
+
                 store.loaded();
             })            .catch(e => API.ajaxHandler(store, e));
 
@@ -64,6 +77,7 @@ const controller = {
 const store = Object.assign({}, BaseStore, {
     id: 'change-request-store',
     model: {},
+    committed: {},
 });
 
 
@@ -71,7 +85,7 @@ store.dispatcherIndex = Dispatcher.register(store, (payload) => {
     const action = payload.action; // this is our action from handleViewAction
     switch (action.actionType) {
         case Actions.GET_CHANGE_REQUESTS:
-            controller.getChangeRequests(action.environment, action.page);
+            controller.getChangeRequests(action.environment, action.committed);
             break;
         case Actions.GET_CHANGE_REQUEST:
             controller.getChangeRequest(action.id);
