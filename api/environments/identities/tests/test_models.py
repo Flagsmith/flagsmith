@@ -1,5 +1,6 @@
 from core.constants import FLOAT
 from django.test import TransactionTestCase
+from django.utils import timezone
 
 from environments.identities.models import Identity
 from environments.identities.traits.models import Trait
@@ -841,3 +842,25 @@ class IdentityTestCase(TransactionTestCase):
         # the number of queries are what we expect (see above context manager) and
         # the segment is returned
         assert len(segments) == 1 and segments[0] == segment
+
+    def test_get_all_feature_states_does_not_return_null_versions(self):
+        # Given
+        feature = Feature.objects.create(name="test_feature", project=self.project)
+        version_1_feature_state = FeatureState.objects.get(
+            feature=feature, environment=self.environment
+        )
+        # clone the feature state with null version (using as_draft argument)
+        version_1_feature_state.clone(
+            env=self.environment, live_from=timezone.now(), as_draft=True
+        )
+
+        identity = Identity.objects.create(
+            environment=self.environment, identifier="identity"
+        )
+
+        # When
+        identity_feature_states = identity.get_all_feature_states()
+
+        # Then
+        assert len(identity_feature_states) == 1
+        assert identity_feature_states[0].id == version_1_feature_state.id
