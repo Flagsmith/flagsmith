@@ -46,8 +46,9 @@
 .dark {
     .alert {
         &.alert-info {
-            background: $dark-bg-10;
-            border-color: $dark-bg-10;
+            background: $bt-brand-primary-dark;
+            border-color: transparent;
+            border-color: lighten($bt-brand-primary-dark,5);
             color: $header-color-dark;
         }
     }
