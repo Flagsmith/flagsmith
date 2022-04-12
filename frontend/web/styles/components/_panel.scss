@@ -146,7 +146,9 @@
 
 .dark {
 	.panel {
-
+		.icon {
+			color: $dark-color;
+		}
 		.panel-content {
 			background-color: $panel-bg-dark;
 		}
