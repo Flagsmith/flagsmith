@@ -116,6 +116,10 @@ class FFAdminUser(LifecycleModel, AbstractUser):
 
         return AuthType.EMAIL.value
 
+    @property
+    def full_name(self):
+        return self.get_full_name()
+
     def get_full_name(self):
         if not self.first_name:
             return None
