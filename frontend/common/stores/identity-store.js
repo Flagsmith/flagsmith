@@ -30,12 +30,12 @@ const controller = {
             ? data.put(`${Project.api}environments/${environmentId}/identities/${identity}/featurestates/${identityFlag.id}/`, Object.assign({}, {
                 id: identityFlag.id,
                 enabled: !identityFlag.enabled,
-                value: identityFlag.value,
+                feature_state_value: identityFlag.feature_state_value || environmentFlag.feature_state_value,
             }))
             : data.post(`${Project.api}environments/${environmentId}/identities/${identity}/featurestates/`, {
                 feature: projectFlag.id,
                 enabled: !environmentFlag || !environmentFlag.enabled,
-                value: environmentFlag ? environmentFlag.value : undefined,
+                feature_state_value: environmentFlag ? environmentFlag.feature_state_value : undefined,
             });
 
         prom.then((res) => {
