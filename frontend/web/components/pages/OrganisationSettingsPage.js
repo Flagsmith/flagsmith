@@ -786,15 +786,6 @@ const OrganisationSettingsPage = class extends Component {
                                                 />
                                             </Row>
                                         </Column>
-                                        <Button
-                                          id="delete-org-btn"
-                                          onClick={() => this.confirmRemove(organisation, () => {
-                                              deleteOrganisation();
-                                          })}
-                                          className="btn btn--with-icon ml-auto btn--remove"
-                                        >
-                                            <RemoveIcon/>
-                                        </Button>
                                     </Row>
 
                                 </FormGroup>
