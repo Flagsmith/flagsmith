@@ -11,11 +11,8 @@ class SegmentPermissions(BasePermission):
             return False
 
         project = Project.objects.get(pk=project_pk)
-        organisation = project.organisation
 
-        if request.user.is_project_admin(project) or request.user.is_organisation_admin(
-            organisation
-        ):
+        if request.user.is_project_admin(project):
             return True
 
         # environment admins should be able to get segments for an identity
@@ -34,13 +31,7 @@ class SegmentPermissions(BasePermission):
         return view.detail
 
     def has_object_permission(self, request, view, obj):
-        project = obj.project
-        organisation = project.organisation
-        return (
-            request.user.is_project_admin(project)
-            or request.user.is_organisation_admin(organisation)
-            or (
-                view.action == "detail"
-                and request.user.has_project_permission("VIEW_PROJECT", project)
-            )
+        return request.user.is_project_admin(obj.project) or (
+            view.action == "detail"
+            and request.user.has_project_permission("VIEW_PROJECT", obj.project)
         )

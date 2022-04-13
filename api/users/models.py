@@ -206,16 +206,13 @@ class FFAdminUser(LifecycleModel, AbstractUser):
         return Project.objects.filter(query).distinct()
 
     def has_project_permission(self, permission, project):
-        organisation = project.organisation
-        if self.is_project_admin(project) or self.is_organisation_admin(organisation):
+        if self.is_project_admin(project):
             return True
 
         return project in self.get_permitted_projects([permission])
 
     def has_environment_permission(self, permission, environment):
-        project = environment.project
-        organisation = project.organisation
-        if self.is_organisation_admin(organisation) or self.is_project_admin(project):
+        if self.is_project_admin(environment.project):
             return True
 
         return self._is_environment_admin_or_has_permission(environment, permission)
@@ -233,9 +230,10 @@ class FFAdminUser(LifecycleModel, AbstractUser):
             ).exists()
         )
 
-    def is_project_admin(self, project):
+    def is_project_admin(self, project, allow_org_admin: bool = True):
         return (
-            UserProjectPermission.objects.filter(
+            (allow_org_admin and self.is_organisation_admin(project.organisation))
+            or UserProjectPermission.objects.filter(
                 admin=True, user=self, project=project
             ).exists()
             or UserPermissionGroupProjectPermission.objects.filter(
@@ -256,9 +254,7 @@ class FFAdminUser(LifecycleModel, AbstractUser):
             - User is an admin for the organisation the environment belongs to
         """
 
-        if self.is_organisation_admin(project.organisation) or self.is_project_admin(
-            project
-        ):
+        if self.is_project_admin(project):
             return project.environments.all()
 
         permission_groups = self.permission_groups.all()
@@ -311,14 +307,22 @@ class FFAdminUser(LifecycleModel, AbstractUser):
     def belongs_to(self, organisation_id: int) -> bool:
         return organisation_id in self.organisations.all().values_list("id", flat=True)
 
-    def is_environment_admin(self, environment):
-        if self.is_organisation_admin(
-            environment.project.organisation
-        ) or self.is_project_admin(environment.project):
-            return True
-
+    def is_environment_admin(
+        self,
+        environment: Environment,
+        allow_project_admin: bool = True,
+        allow_organisation_admin: bool = True,
+    ):
         return (
-            UserEnvironmentPermission.objects.filter(
+            (
+                allow_organisation_admin
+                and self.is_organisation_admin(environment.project.organisation)
+            )
+            or (
+                allow_project_admin
+                and self.is_project_admin(environment.project, allow_org_admin=False)
+            )
+            or UserEnvironmentPermission.objects.filter(
                 admin=True, user=self, environment=environment
             ).exists()
             or UserPermissionGroupEnvironmentPermission.objects.filter(

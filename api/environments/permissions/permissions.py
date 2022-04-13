@@ -41,9 +41,7 @@ class EnvironmentPermissions(BasePermission):
 
     def has_object_permission(self, request, view, obj):
         if view.action == "clone":
-            return request.user.is_organisation_admin(
-                obj.project.organisation
-            ) or request.user.is_project_admin(obj.project)
+            return request.user.is_project_admin(obj.project)
 
         return request.user.is_environment_admin(obj) or view.action in [
             "user_permissions"
@@ -123,14 +121,3 @@ class EnvironmentAdminPermission(BasePermission):
 
     def has_object_permission(self, request, view, obj):
         return request.user.is_environment_admin(obj.environment)
-
-
-class HasEnvironmentPermission(BasePermission):
-    def __init__(self, environment_permissions: typing.List[str] = None):
-        self.environment_permissions = environment_permissions or []
-
-    def has_object_permission(self, request, view, obj):
-        return all(
-            request.user.has_environment_permission(permission, obj)
-            for permission in self.environment_permissions
-        )

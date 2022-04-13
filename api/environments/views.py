@@ -67,9 +67,6 @@ class EnvironmentViewSet(viewsets.ModelViewSet):
     lookup_field = "api_key"
     permission_classes = [IsAuthenticated, EnvironmentPermissions]
 
-    def get_permissions(self):
-        return super().get_permissions()
-
     def get_serializer_class(self):
         if self.action == "trait_keys":
             return TraitKeysSerializer
@@ -194,15 +191,11 @@ class EnvironmentViewSet(viewsets.ModelViewSet):
             )
 
         is_project_admin = request.user.is_project_admin(environment.project)
-        is_org_admin = request.user.is_organisation_admin(
-            environment.project.organisation
-        )
 
         data = {
             "admin": group_permissions.filter(admin=True).exists()
             or user_permissions.filter(admin=True).exists()
-            or is_project_admin
-            or is_org_admin,
+            or is_project_admin,
             "permissions": permissions,
         }
 

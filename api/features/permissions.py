@@ -39,9 +39,7 @@ class FeaturePermissions(BasePermission):
             )
 
         if view.action in ("update", "segments"):
-            return request.user.is_organisation_admin(
-                obj.project.organisation
-            ) or request.user.is_project_admin(obj.project)
+            return request.user.is_project_admin(obj.project)
 
         return False
 

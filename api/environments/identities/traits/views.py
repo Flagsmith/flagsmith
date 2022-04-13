@@ -44,7 +44,7 @@ class TraitViewSet(viewsets.ModelViewSet):
         """
         environment_api_key = self.kwargs["environment_api_key"]
         identity_pk = self.kwargs.get("identity_pk")
-        environment = Environment.objects.filter(api_key=environment_api_key)
+        environment = Environment.objects.get(api_key=environment_api_key)
 
         if not self.request.user.has_environment_permission(
             VIEW_ENVIRONMENT, environment

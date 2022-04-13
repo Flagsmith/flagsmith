@@ -37,13 +37,10 @@ class ProjectPermissions(BasePermission):
 
     def has_object_permission(self, request, view, project):
         """Check if user has permission to view / edit / delete project"""
-        user = request.user
-        organisation = project.organisation
-
-        if user.is_project_admin(project) or user.is_organisation_admin(organisation):
+        if request.user.is_project_admin(project):
             return True
 
-        if view.action == "retrieve" and user.has_project_permission(
+        if view.action == "retrieve" and request.user.has_project_permission(
             "VIEW_PROJECT", project
         ):
             return True
@@ -56,25 +53,17 @@ class ProjectPermissions(BasePermission):
 
 class NestedProjectPermissions(BasePermission):
     def has_permission(self, request, view):
-        user = request.user
         project_pk = view.kwargs.get("project_pk")
         if not project_pk:
             return False
 
         project = Project.objects.get(pk=project_pk).select_related("organisation")
-        organisation = project.organisation
 
-        if user.is_project_admin(project) or user.is_organisation_admin(organisation):
+        if request.user.is_project_admin(project):
             return True
 
         # move on to object specific permissions
         return view.detail
 
     def has_object_permission(self, request, view, obj):
-        project = obj.project
-        organisation = project.organisation
-        user = request.user
-        if user.is_organisation_admin(organisation) or user.is_project_admin(project):
-            return True
-
-        return False
+        return request.user.is_project_admin(obj.project)

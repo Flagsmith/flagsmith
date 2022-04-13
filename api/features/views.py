@@ -241,9 +241,8 @@ class BaseFeatureStateViewSet(viewsets.ModelViewSet):
         """
         environment_api_key = self.kwargs["environment_api_key"]
 
-        if environment := Environment.objects.filter(
-            api_key=environment_api_key
-        ).first():
+        try:
+            environment = Environment.objects.get(api_key=environment_api_key)
             if not self.request.user.has_environment_permission(
                 VIEW_ENVIRONMENT, environment
             ):
@@ -260,8 +259,8 @@ class BaseFeatureStateViewSet(viewsets.ModelViewSet):
                 )
 
             return queryset.select_related("feature_state_value", "identity", "feature")
-
-        raise NotFound("Environment not found.")
+        except Environment.DoesNotExist:
+            raise NotFound("Environment not found.")
 
     def _apply_query_param_filters(self, queryset: QuerySet) -> QuerySet:
         if self.request.query_params.get("feature"):

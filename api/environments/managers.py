@@ -60,5 +60,5 @@ class EnvironmentManager(Manager):
         return (
             super()
             .get_queryset(*args, **kwargs)
-            .select_related("project", "organisation")
+            .select_related("project", "project__organisation")
         )

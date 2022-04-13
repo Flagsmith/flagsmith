@@ -149,9 +149,10 @@ class EnvironmentTestCase(TestCase):
         data = {"project": self.project.id, "name": "New name"}
 
         # When
-        self.client.put(url, data=data)
+        response = self.client.put(url, data=data)
 
         # Then
+        assert response.status_code == status.HTTP_200_OK
         assert (
             AuditLog.objects.filter(
                 related_object_type=RelatedObjectType.ENVIRONMENT.name
