@@ -448,7 +448,9 @@ class SimpleFeatureStateViewSet(
         queryset = FeatureState.get_environment_flags_queryset(
             environments=permitted_environments
         )
-        return queryset.select_related("feature_state_value")
+        return queryset.select_related("feature_state_value").prefetch_related(
+            "multivariate_feature_state_values"
+        )
 
 
 class SDKFeatureStates(GenericAPIView):
