@@ -439,7 +439,6 @@ class SimpleFeatureStateViewSet(
     mixins.ListModelMixin,
     viewsets.GenericViewSet,
 ):
-    queryset = FeatureState.objects.select_related("feature_state_value")
     serializer_class = WritableNestedFeatureStateSerializer
     permission_classes = [FeatureStatePermissions]
     filterset_fields = ["environment", "feature", "feature_segment"]
