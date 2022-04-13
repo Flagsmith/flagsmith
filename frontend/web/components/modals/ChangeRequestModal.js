@@ -3,7 +3,7 @@ import UserSelect from '../UserSelect';
 import data from '../../../common/data/base/_data';
 import OrganisationProvider from '../../../common/providers/OrganisationProvider';
 import Button from '../base/forms/Button';
-
+import DatePicker from ;'react-datepicker'
 const ChangeRequestModal = class extends Component {
     static displayName = 'ChangeRequestModal'
 
@@ -66,6 +66,16 @@ const ChangeRequestModal = class extends Component {
                                   placeholder="Add an optional description..."
                                 />
                             </FormGroup>
+                            {flagsmith.hasFeature("scheduling") && (
+                                <div>
+                                    <InputGroup
+                                        title="Schedule Change"
+                                        component={(
+                                            <DatePicker />
+                                            )}
+                                        />
+                                </div>
+                            )}
                             {!this.props.changeRequest && (
                                 <FormGroup className="mb-4" >
                                     <InputGroup

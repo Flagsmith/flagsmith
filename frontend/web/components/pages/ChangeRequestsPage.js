@@ -39,6 +39,7 @@ const ChangeRequestsPage = class extends Component {
         const readOnly = this.props.hasFeature('read_only_mode');
         const data = ChangeRequestStore.model && ChangeRequestStore.model[environmentId];
         const dataClosed = ChangeRequestStore.committed && ChangeRequestStore.committed[environmentId];
+        const dataScheduled = ChangeRequestStore.scheduled && ChangeRequestStore.scheduled[environmentId];
         const hasPermission = Utils.getPlansPermission(AccountStore.getPlans(), '4_EYES');
         const environment = ProjectStore.getEnvironment(environmentId);
         return (
@@ -111,6 +112,11 @@ const ChangeRequestsPage = class extends Component {
                               }}
                             />
                         </TabItem>
+                        {this.props.hasFeature("scheduling")&& (
+                            <TabItem tabLabel={`Scheduled${dataClosed ? ` (${dataClosed.length})` : ''}`}>
+
+                            </TabItem>
+                        )}
                         <TabItem tabLabel={`Closed${dataClosed ? ` (${dataClosed.length})` : ''}`}>
                             <PanelSearch
                               renderSearchWithNoResults

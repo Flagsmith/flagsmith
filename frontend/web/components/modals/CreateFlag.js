@@ -317,6 +317,7 @@ const CreateFlag = class extends Component {
         const environmentVariations = this.props.environmentVariations;
         const environment = ProjectStore.getEnvironment(this.props.environmentId)
         const is4Eyes = !!environment && !!environment.minimum_change_request_approvals && flagsmith.hasFeature('4eyes'); // todo: base on environment settings too
+        const canSchedule = Utils.getPlansPermission(AccountStore.getPlans(), '4_EYES')
         const is4EyesSegmentOverrides = is4Eyes && flagsmith.hasFeature('4eyes_segment_overrides'); //
         const controlValue = Utils.calculateControl(multivariate_options, environmentVariations);
         const invalid = !!multivariate_options && multivariate_options.length && controlValue < 0;
@@ -478,8 +479,8 @@ const CreateFlag = class extends Component {
                     }}
                     >
                         {({ isLoading, isSaving, error, influxData }, { createFlag, editFlagSettings, editFlagValue, editFlagSegments, createChangeRequest }) => {
-                            const saveFeatureValue = () => {
-                                if (is4Eyes) {
+                            const saveFeatureValue = (schedule) => {
+                                if (is4Eyes||schedule) {
                                     openModal2(this.props.changeRequest? 'Update Change Request' :'New Change Request', <ChangeRequestModal
                                         changeRequest={this.props.changeRequest}
                                         onSave={({
@@ -561,6 +562,14 @@ const CreateFlag = class extends Component {
                                                         </strong>
                                                     </p>
                                                     <div className="text-right">
+                                                        {this.props.hasFeature("scheduling") && !is4Eyes && (
+                                                            <Button
+                                                                onClick={saveFeatureValue} className="mr-2" type="button" data-test="create-change-request"
+                                                                id="create-change-request-btn" disabled={isSaving || !name || invalid}
+                                                            >
+                                                                {isSaving ? existingChangeRequest? 'Scheduling Update':'Schedule Update' : existingChangeRequest? 'Update Change Request':'Scheduling Update'}
+                                                            </Button>
+                                                        )}
                                                         {is4Eyes ? (
                                                             <Button
                                                               onClick={saveFeatureValue} type="button" data-test="update-feature-btn"
@@ -576,6 +585,8 @@ const CreateFlag = class extends Component {
                                                                 {isSaving ? 'Updating' : 'Update Feature Value'}
                                                             </Button>
                                                         )}
+
+
                                                     </div>
                                                 </FormGroup>
                                             </TabItem>
