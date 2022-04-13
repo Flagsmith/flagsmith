@@ -561,17 +561,17 @@ class FeatureState(LifecycleModel, models.Model):
                 live_from__lte=timezone.now(),
                 version__isnull=False,
             )
-            .values("environment", "feature", "feature_segment", "identity")
+            .values("environment_id", "feature_id", "feature_segment_id", "identity_id")
             .annotate(max_version=Max("version"))
             .order_by()
         )
         q = Q()
         for latest_version_dict in latest_versions_qs:
             q = q | Q(
-                environment_id=latest_version_dict["environment"],
-                feature_id=latest_version_dict["feature"],
-                identity_id=latest_version_dict["identity"],
-                feature_segment_id=latest_version_dict["feature_segment"],
+                environment_id=latest_version_dict["environment_id"],
+                feature_id=latest_version_dict["feature_id"],
+                identity_id=latest_version_dict["identity_id"],
+                feature_segment_id=latest_version_dict["feature_segment_id"],
                 version=latest_version_dict["max_version"],
             )
 
