@@ -392,6 +392,13 @@ LOGGING = {
     "loggers": {"": {"level": LOG_LEVEL, "handlers": ["console"]}},
 }
 
+ENABLE_DB_LOGGING = env.bool("DJANGO_ENABLE_DB_LOGGING", default=False)
+if ENABLE_DB_LOGGING:
+    LOGGING["loggers"]["django.db.backends"] = {
+        "level": "DEBUG",
+        "handlers": ["console"],
+    }
+
 CACHE_FLAGS_SECONDS = env.int("CACHE_FLAGS_SECONDS", default=0)
 FLAGS_CACHE_LOCATION = "environment-flags"
 ENVIRONMENT_CACHE_LOCATION = "environment-objects"
