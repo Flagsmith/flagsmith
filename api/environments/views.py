@@ -11,6 +11,7 @@ from flag_engine.django_transform.document_builders import (
 )
 from rest_framework import mixins, status, viewsets
 from rest_framework.decorators import action
+from rest_framework.exceptions import ValidationError
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 
@@ -23,6 +24,7 @@ from permissions.serializers import (
     MyUserObjectPermissionsSerializer,
     PermissionModelSerializer,
 )
+from projects.models import Project
 from webhooks.mixins import TriggerSampleWebhookMixin
 from webhooks.webhooks import WebhookType
 
@@ -84,13 +86,16 @@ class EnvironmentViewSet(viewsets.ModelViewSet):
         return context
 
     def get_queryset(self):
-        queryset = self.request.user.get_permitted_environments("VIEW_ENVIRONMENT")
-
         project_id = self.request.query_params.get("project")
-        if project_id:
-            queryset = queryset.filter(project__id=project_id)
 
-        return queryset
+        try:
+            project = Project.objects.get(id=project_id).select_related("organisation")
+        except Project.DoesNotExist:
+            raise ValidationError("Invalid or missing value for project GET parameter.")
+
+        return self.request.user.get_permitted_environments(
+            "VIEW_ENVIRONMENT", project=project
+        )
 
     def perform_create(self, serializer):
         environment = serializer.save()
@@ -189,11 +194,15 @@ class EnvironmentViewSet(viewsets.ModelViewSet):
             )
 
         is_project_admin = request.user.is_project_admin(environment.project)
+        is_org_admin = request.user.is_organisation_admin(
+            environment.project.organisation
+        )
 
         data = {
             "admin": group_permissions.filter(admin=True).exists()
             or user_permissions.filter(admin=True).exists()
-            or is_project_admin,
+            or is_project_admin
+            or is_org_admin,
             "permissions": permissions,
         }
 

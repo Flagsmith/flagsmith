@@ -24,7 +24,7 @@ class ProjectPermissions(BasePermission):
                 id=int(request.data.get("organisation"))
             )
             if organisation.restrict_project_create_to_admin:
-                return request.user.is_admin(organisation.pk)
+                return request.user.is_organisation_admin(organisation.pk)
             return request.user.has_organisation_permission(
                 organisation, CREATE_PROJECT
             )
@@ -35,17 +35,17 @@ class ProjectPermissions(BasePermission):
         # move on to object specific permissions
         return view.detail
 
-    def has_object_permission(self, request, view, obj):
+    def has_object_permission(self, request, view, project):
         """Check if user has permission to view / edit / delete project"""
-        if request.user.is_project_admin(obj):
+        user = request.user
+        organisation = project.organisation
+
+        if user.is_project_admin(project) or user.is_organisation_admin(organisation):
             return True
 
-        if view.action == "retrieve" and request.user.has_project_permission(
-            "VIEW_PROJECT", obj
+        if view.action == "retrieve" and user.has_project_permission(
+            "VIEW_PROJECT", project
         ):
-            return True
-
-        if view.action in ("update", "destroy") and request.user.is_project_admin(obj):
             return True
 
         if view.action == "user_permissions":
@@ -56,20 +56,25 @@ class ProjectPermissions(BasePermission):
 
 class NestedProjectPermissions(BasePermission):
     def has_permission(self, request, view):
+        user = request.user
         project_pk = view.kwargs.get("project_pk")
         if not project_pk:
             return False
 
-        project = Project.objects.get(pk=project_pk)
+        project = Project.objects.get(pk=project_pk).select_related("organisation")
+        organisation = project.organisation
 
-        if request.user.is_project_admin(project):
+        if user.is_project_admin(project) or user.is_organisation_admin(organisation):
             return True
 
         # move on to object specific permissions
         return view.detail
 
     def has_object_permission(self, request, view, obj):
-        if request.user.is_project_admin(obj.project):
+        project = obj.project
+        organisation = project.organisation
+        user = request.user
+        if user.is_organisation_admin(organisation) or user.is_project_admin(project):
             return True
 
         return False

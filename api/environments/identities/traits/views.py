@@ -5,6 +5,7 @@ from drf_yasg2 import openapi
 from drf_yasg2.utils import swagger_auto_schema
 from rest_framework import mixins, status, viewsets
 from rest_framework.decorators import action
+from rest_framework.exceptions import PermissionDenied
 from rest_framework.response import Response
 from rest_framework.schemas import AutoSchema
 
@@ -21,6 +22,7 @@ from environments.identities.traits.serializers import (
     TraitSerializerFull,
 )
 from environments.models import Environment
+from environments.permissions.constants import VIEW_ENVIRONMENT
 from environments.permissions.permissions import (
     EnvironmentKeyPermissions,
     TraitPersistencePermissions,
@@ -42,9 +44,12 @@ class TraitViewSet(viewsets.ModelViewSet):
         """
         environment_api_key = self.kwargs["environment_api_key"]
         identity_pk = self.kwargs.get("identity_pk")
-        environment = self.request.user.get_permitted_environments(
-            "VIEW_ENVIRONMENT"
-        ).get(api_key=environment_api_key)
+        environment = Environment.objects.filter(api_key=environment_api_key)
+
+        if not self.request.user.has_environment_permission(
+            VIEW_ENVIRONMENT, environment
+        ):
+            raise PermissionDenied()
 
         if identity_pk:
             identity = Identity.objects.get(pk=identity_pk, environment=environment)

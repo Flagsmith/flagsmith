@@ -11,6 +11,11 @@ from drf_yasg2 import openapi
 from drf_yasg2.utils import swagger_auto_schema
 from rest_framework import mixins, status, viewsets
 from rest_framework.decorators import action
+from rest_framework.exceptions import (
+    NotFound,
+    PermissionDenied,
+    ValidationError,
+)
 from rest_framework.generics import GenericAPIView, get_object_or_404
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.renderers import JSONRenderer
@@ -28,6 +33,7 @@ from audit.models import (
 from environments.authentication import EnvironmentKeyAuthentication
 from environments.identities.models import Identity
 from environments.models import Environment
+from environments.permissions.constants import VIEW_ENVIRONMENT
 from environments.permissions.permissions import (
     EnvironmentKeyPermissions,
     NestedEnvironmentPermissions,
@@ -234,20 +240,28 @@ class BaseFeatureStateViewSet(viewsets.ModelViewSet):
         Override queryset to filter based on provided URL parameters.
         """
         environment_api_key = self.kwargs["environment_api_key"]
-        environment = get_object_or_404(
-            self.request.user.get_permitted_environments("VIEW_ENVIRONMENT"),
-            api_key=environment_api_key,
-        )
 
-        queryset = FeatureState.get_environment_flags_queryset(
-            environments=[environment]
-        )
-        queryset = self._apply_query_param_filters(queryset)
+        if environment := Environment.objects.filter(
+            api_key=environment_api_key
+        ).first():
+            if not self.request.user.has_environment_permission(
+                VIEW_ENVIRONMENT, environment
+            ):
+                raise PermissionDenied()
 
-        if self.action == "list":
-            queryset = queryset.prefetch_related("multivariate_feature_state_values")
+            queryset = FeatureState.get_environment_flags_queryset(
+                environments=[environment]
+            )
+            queryset = self._apply_query_param_filters(queryset)
 
-        return queryset.select_related("feature_state_value", "identity", "feature")
+            if self.action == "list":
+                queryset = queryset.prefetch_related(
+                    "multivariate_feature_state_values"
+                )
+
+            return queryset.select_related("feature_state_value", "identity", "feature")
+
+        raise NotFound("Environment not found.")
 
     def _apply_query_param_filters(self, queryset: QuerySet) -> QuerySet:
         if self.request.query_params.get("feature"):
@@ -444,15 +458,27 @@ class SimpleFeatureStateViewSet(
     filterset_fields = ["environment", "feature", "feature_segment"]
 
     def get_queryset(self):
-        permitted_environments = self.request.user.get_permitted_environments(
-            permission_key="VIEW_ENVIRONMENT"
-        )
-        queryset = FeatureState.get_environment_flags_queryset(
-            environments=permitted_environments
-        )
-        return queryset.select_related("feature_state_value").prefetch_related(
-            "multivariate_feature_state_values"
-        )
+        if not self.request.query_params.get("environment"):
+            raise ValidationError("'environment' GET parameter is required.")
+
+        if environment := Environment.objects.filter(
+            id=self.request.query_params["environment"]
+        ).first():
+            if not self.request.user.has_environment_permission(
+                VIEW_ENVIRONMENT, environment
+            ):
+                raise PermissionDenied(
+                    "User does not have permission to perform action in environment."
+                )
+
+            queryset = FeatureState.get_environment_flags_queryset(
+                environments=[environment]
+            )
+            return queryset.select_related("feature_state_value").prefetch_related(
+                "multivariate_feature_state_values"
+            )
+
+        raise NotFound("Environment not found.")
 
 
 class SDKFeatureStates(GenericAPIView):

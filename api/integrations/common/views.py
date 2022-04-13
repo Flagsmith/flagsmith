@@ -1,8 +1,12 @@
 from rest_framework import viewsets
-from rest_framework.exceptions import ValidationError
-from rest_framework.generics import get_object_or_404
+from rest_framework.exceptions import (
+    NotFound,
+    PermissionDenied,
+    ValidationError,
+)
 
 from environments.models import Environment
+from environments.permissions.constants import VIEW_ENVIRONMENT
 
 
 class IntegrationCommonViewSet(viewsets.ModelViewSet):
@@ -12,12 +16,20 @@ class IntegrationCommonViewSet(viewsets.ModelViewSet):
 
     def get_queryset(self):
         environment_api_key = self.kwargs["environment_api_key"]
-        environment = get_object_or_404(
-            self.request.user.get_permitted_environments("VIEW_ENVIRONMENT"),
-            api_key=environment_api_key,
-        )
 
-        return self.model_class.objects.filter(environment=environment)
+        if environment := Environment.objects.filter(
+            api_key=environment_api_key
+        ).first():
+            if not self.request.user.has_environment_permission(
+                VIEW_ENVIRONMENT, environment
+            ):
+                raise PermissionDenied(
+                    "User does not have permission to perform action in environment."
+                )
+
+            return self.model_class.objects.filter(environment=environment)
+
+        raise NotFound("Environment not found.")
 
     def perform_create(self, serializer):
         environment = self.get_environment_from_request()
