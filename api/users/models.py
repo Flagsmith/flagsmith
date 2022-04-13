@@ -10,7 +10,6 @@ from django.db.models import Q, QuerySet
 from django.utils.translation import gettext_lazy as _
 from django_lifecycle import AFTER_CREATE, LifecycleModel, hook
 
-from environments.identities.models import Identity
 from environments.models import Environment
 from environments.permissions.models import (
     UserEnvironmentPermission,

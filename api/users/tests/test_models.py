@@ -4,10 +4,6 @@ import pytest
 from django.db.utils import IntegrityError
 
 from environments.models import Environment
-from environments.permissions.models import (
-    EnvironmentPermissionModel,
-    UserEnvironmentPermission,
-)
 from organisations.models import Organisation, OrganisationRole
 from organisations.permissions.models import (
     UserOrganisationPermission,
