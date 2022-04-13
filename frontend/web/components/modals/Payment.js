@@ -77,6 +77,20 @@ const PaymentModal = class extends Component {
                             <div>
                                 <div>
                                     <div className="col-md-12">
+                                        {flagsmith.hasFeature("annual_plans")&&(
+                                            <div className="text-center mb-4">
+                                                <Row className="justify-content-center">
+                                                    <span className="mr-2">
+                                                        Monthly
+                                                    </span>
+                                                    <Switch onMarkup={" "
+                                                    } offMarkup={" "} checked={this.state.yearly} onChange={(yearly)=>this.setState({yearly})}/>
+                                                    <span className="ml-2">
+                                                        Yearly
+                                                    </span>
+                                                </Row>
+                                            </div>
+                                        )}
                                         <div className="flex-row align-start">
                                             <div className="col-md-4 pricing-panel">
                                                 <div className="panel panel-default">
@@ -88,12 +102,19 @@ const PaymentModal = class extends Component {
                                                           src="/static/images/startup.svg" alt="Startup icon"
                                                           className="pricing-icon"
                                                         />
-                                                        <p className="pricing-type">$45</p>
+                                                        <p className="pricing-type">{this.state.yearly?"$40":"$45"}</p>
                                                         <p className="text-small text-center">billed monthly</p>
-                                                        {!viewOnly ? (
+                                                        {!viewOnly ? this.state.yearly? (
                                                             <PaymentButton
-                                                              data-cb-plan-id="startup-v2"
+                                                              data-cb-plan-id={"startup-annual-v2"}
                                                               className="pricing-cta blue"
+                                                            >
+                                                                {plan.includes('startup') ? 'Purchased' : 'Buy'}
+                                                            </PaymentButton>
+                                                        ) : (
+                                                            <PaymentButton
+                                                                data-cb-plan-id={"startup-v2"}
+                                                                className="pricing-cta blue"
                                                             >
                                                                 {plan.includes('startup') ? 'Purchased' : 'Buy'}
                                                             </PaymentButton>
@@ -137,12 +158,19 @@ const PaymentModal = class extends Component {
                                                           src="/static/images/pricing-scale-up.svg" alt="Scale-up icon"
                                                           className="pricing-icon"
                                                         />
-                                                        <p className="pricing-type">$200</p>
+                                                        <p className="pricing-type">{this.state.yearly?"$180":"$200"}</p>
                                                         <p className="text-small text-center">billed monthly</p>
-                                                        {!viewOnly ? (
+                                                        {!viewOnly ? this.state.yearly? (
                                                             <PaymentButton
-                                                              data-cb-plan-id="scale-up-v2"
+                                                                data-cb-plan-id={"scale-up-annual-v2"}
                                                               className="pricing-cta"
+                                                            >
+                                                                {plan.includes('scale-up') ? 'Purchased' : 'Buy'}
+                                                            </PaymentButton>
+                                                        ) : (
+                                                            <PaymentButton
+                                                                data-cb-plan-id={"scale-up-v2"}
+                                                                className="pricing-cta"
                                                             >
                                                                 {plan.includes('scale-up') ? 'Purchased' : 'Buy'}
                                                             </PaymentButton>
