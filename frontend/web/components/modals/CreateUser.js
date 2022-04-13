@@ -41,7 +41,7 @@ const CreateUser = class extends Component {
     submit = () => {
         const value = this.state.value;
         this.setState({ error: false });
-        Promise.all(value.map(v => data.post(''.concat(Project.api, 'environments/').concat(this.props.environmentId, '/identities/'), {
+        Promise.all(value.map(v => data.post(''.concat(Project.api, 'environments/').concat(this.props.environmentId, '/'+Utils.getIdentitiesEndpoint()+'/'), {
             environment: this.props.environmentId,
             identifier: v,
         }))).then(() => {

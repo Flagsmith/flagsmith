@@ -21,6 +21,7 @@ import UpgradeIcon from './svg/UpgradeIcon';
 import SparklesIcon from './svg/SparklesIcon';
 import AccountSettingsPage from './pages/AccountSettingsPage';
 import Headway from "./Headway";
+import ProjectStore from "../../common/stores/project-store";
 
 const App = class extends Component {
     static propTypes = {
@@ -42,6 +43,7 @@ const App = class extends Component {
     }
 
     componentDidMount = () => {
+        this.listenTo(ProjectStore, 'change', ()=>this.forceUpdate())
         window.addEventListener('scroll', this.handleScroll);
     };
 
@@ -207,6 +209,7 @@ const App = class extends Component {
         if (AccountStore.forced2Factor()) {
             return <AccountSettingsPage/>;
         }
+        const projectNotLoaded = (!ProjectStore.model && document.location.href.includes("project/"));
         return (
             <div>
                 <AccountProvider onNoUser={this.onNoUser} onLogout={this.onLogout} onLogin={this.onLogin}>
@@ -412,7 +415,7 @@ const App = class extends Component {
                                 {isMobile && pageHasAside && asideIsVisible ? null : (
                                     <div>
                                         <ButterBar/>
-                                        {this.props.children}
+                                        {projectNotLoaded? <div className="text-center"><Loader/></div> : this.props.children}
                                     </div>
                                 )}
 
