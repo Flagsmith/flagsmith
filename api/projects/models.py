@@ -11,6 +11,7 @@ from permissions.models import (
     AbstractBasePermissionModel,
     PermissionModel,
 )
+from projects.managers import ProjectManager
 
 project_segments_cache = caches[settings.PROJECT_SEGMENTS_CACHE_LOCATION]
 
@@ -29,6 +30,8 @@ class Project(models.Model):
         default=False,
         help_text="If true will sync environment data with dynamodb and allow access to dynamodb identities",
     )
+
+    objects = ProjectManager()
 
     class Meta:
         ordering = ["id"]
