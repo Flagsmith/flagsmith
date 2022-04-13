@@ -244,7 +244,10 @@ class BaseFeatureStateViewSet(viewsets.ModelViewSet):
         )
         queryset = self._apply_query_param_filters(queryset)
 
-        return queryset
+        if self.action == "list":
+            queryset = queryset.prefetch_related("multivariate_feature_state_values")
+
+        return queryset.select_related("feature_state_value", "identity", "feature")
 
     def _apply_query_param_filters(self, queryset: QuerySet) -> QuerySet:
         if self.request.query_params.get("feature"):
