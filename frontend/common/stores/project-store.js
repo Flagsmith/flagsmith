@@ -31,7 +31,7 @@ const controller = {
         const req = cloneId ? data.post(`${Project.api}environments/${cloneId}/clone/`, { name }) : data.post(`${Project.api}environments/`, { name, project: projectId });
 
         req.then((res) => {
-            data.post(`${Project.api}environments/${res.api_key}/identities/`, {
+            data.post(`${Project.api}environments/${res.api_key}/${Utils.getIdentitiesEndpoint()}/`, {
                 environment: res.api_key,
                 identifier: `${name.toLowerCase()}_user_123456`,
             })

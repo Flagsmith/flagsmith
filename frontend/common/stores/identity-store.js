@@ -6,11 +6,11 @@ const controller = {
 
     getIdentity: (envId, id) => {
         store.loading();
-        return data.get(`${Project.api}environments/${envId}/identities/${id}/`)
+        return data.get(`${Project.api}environments/${envId}/${Utils.getIdentitiesEndpoint()}/${id}/`)
             .then(identity => Promise.all([
                 data.get(`${Project.api}identities/?identifier=${encodeURIComponent(identity.identifier)}`, null, { 'x-environment-key': envId }),
                 Promise.resolve(identity),
-                data.get(`${Project.api}environments/${envId}/identities/${id}/featurestates/`),
+                data.get(`${Project.api}environments/${envId}/${Utils.getIdentitiesEndpoint()}/${id}/featurestates/`),
             ]))
             .then(([res, identity, flags]) => {
                 const features = flags && flags.results;
@@ -27,12 +27,12 @@ const controller = {
         store.saving();
         API.trackEvent(Constants.events.TOGGLE_USER_FEATURE);
         const prom = identityFlag.identity
-            ? data.put(`${Project.api}environments/${environmentId}/identities/${identity}/featurestates/${identityFlag.id}/`, Object.assign({}, {
+            ? data.put(`${Project.api}environments/${environmentId}/${Utils.getIdentitiesEndpoint()}/${identity}/featurestates/${identityFlag.id}/`, Object.assign({}, {
                 id: identityFlag.id,
                 enabled: !identityFlag.enabled,
                 value: identityFlag.value,
             }))
-            : data.post(`${Project.api}environments/${environmentId}/identities/${identity}/featurestates/`, {
+            : data.post(`${Project.api}environments/${environmentId}/${Utils.getIdentitiesEndpoint()}/${identity}/featurestates/`, {
                 feature: projectFlag.id,
                 enabled: !environmentFlag || !environmentFlag.enabled,
                 value: environmentFlag ? environmentFlag.value : undefined,
@@ -47,7 +47,7 @@ const controller = {
         store.saving();
         API.trackEvent(Constants.events.TOGGLE_USER_FEATURE);
 
-        const prom = data.put(`${Project.api}environments/${environmentId}/identities/${identity}/featurestates/${identityFlag}/`, Object.assign({}, payload));
+        const prom = data.put(`${Project.api}environments/${environmentId}/${Utils.getIdentitiesEndpoint()}/${identity}/featurestates/${identityFlag}/`, Object.assign({}, payload));
         prom.then((res) => {
             if (onSuccess) onSuccess();
             store.saved();
@@ -64,13 +64,13 @@ const controller = {
         store.saving();
         API.trackEvent(Constants.events.EDIT_USER_FEATURE);
         const prom = identityFlag.identity
-            ? data.put(`${Project.api}environments/${environmentId}/identities/${identity}/featurestates/${identityFlag.id}/`, Object.assign({}, {
+            ? data.put(`${Project.api}environments/${environmentId}/${Utils.getIdentitiesEndpoint()}/${identity}/featurestates/${identityFlag.id}/`, Object.assign({}, {
                 id: identityFlag.id,
                 enabled: identityFlag.enabled,
                 multivariate_feature_state_values:identityFlag.multivariate_options,
                 feature_state_value: identityFlag.feature_state_value,
             }))
-            : data.post(`${Project.api}environments/${environmentId}/identities/${identity}/featurestates/`, {
+            : data.post(`${Project.api}environments/${environmentId}/${Utils.getIdentitiesEndpoint()}/${identity}/featurestates/`, {
                 feature: projectFlag.id,
                 enabled: identityFlag.enabled,
                 multivariate_feature_state_values:identityFlag.multivariate_options,
@@ -83,13 +83,13 @@ const controller = {
     removeUserFlag(identity, identityFlag, environmentId) {
         store.saving();
         API.trackEvent(Constants.events.REMOVE_USER_FEATURE);
-        data.delete(`${Project.api}environments/${environmentId}/identities/${identity}/featurestates/${identityFlag.id}/`)
+        data.delete(`${Project.api}environments/${environmentId}/${Utils.getIdentitiesEndpoint()}/${identity}/featurestates/${identityFlag.id}/`)
             .then(() => controller.getIdentity(environmentId, identity)
                 .then(() => store.saved()));
     },
     deleteIdentityTrait(envId, identity, id) {
         store.saving();
-        data.delete(`${Project.api}environments/${envId}/identities/${identity}/traits/${id}/`)
+        data.delete(`${Project.api}environments/${envId}/${Utils.getIdentitiesEndpoint()}/${identity}/traits/${id}/`)
             .then(() => {
                 const index = _.findIndex(store.model.traits, trait => trait.id === id);
                 if (index !== -1) {

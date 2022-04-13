@@ -126,7 +126,7 @@ const UsersPage = class extends Component {
                                                             showExactFilter
                                                             nextPage={() => AppActions.getIdentitiesPage(environmentId, identitiesPaging.next)}
                                                             prevPage={() => AppActions.getIdentitiesPage(environmentId, identitiesPaging.previous)}
-                                                            goToPage={page => AppActions.getIdentitiesPage(environmentId, `${Project.api}environments/${environmentId}/identities/?page=${page}`)}
+                                                            goToPage={page => AppActions.getIdentitiesPage(environmentId, `${Project.api}environments/${environmentId}/${Utils.getIdentitiesEndpoint()}/?page=${page}`)}
                                                             renderRow={({ id, identifier }, index) => (permission ? (
                                                                 <Row
                                                                     space className="list-item clickable" key={id}

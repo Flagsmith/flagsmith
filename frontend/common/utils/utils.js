@@ -1,4 +1,5 @@
 const React = require('react');
+const ProjectStore = require('../../common/stores/project-store')
 module.exports = Object.assign({}, require('./base/_utils'), {
     numberWithCommas(x) {
         return x.toString()
@@ -17,6 +18,13 @@ module.exports = Object.assign({}, require('./base/_utils'), {
             return 'UPDATE_FEATURE_STATE';
         }
         return 'ADMIN';
+    },
+
+    getIdentitiesEndpoint() {
+      if (ProjectStore.model && ProjectStore.model.use_edge_identities) {
+          return "edge-identities"
+      }
+      return "identities"
     },
 
     getManageFeaturePermissionDescription() {
