@@ -10,7 +10,15 @@ const controller = {
         const endpoint = (page && `${page}${store.search ? `&q=${store.search}&page_size=${pageSize || PAGE_SIZE}` : `&page_size=${pageSize || PAGE_SIZE}`}`) || `${Project.api}environments/${envId}/${Utils.getIdentitiesEndpoint()}/${store.search ? `?q=${store.search}&page_size=${pageSize || PAGE_SIZE}` : `?page_size=${pageSize || PAGE_SIZE}`}`;
         data.get(endpoint)
             .then((res) => {
-                store.model = res && res.results;
+                store.model = res && res.results && res.results.map((v)=>{
+                    if (v.id) {
+                        return v
+                    }
+                    return {
+                        ...v,
+                        id: v.identity_uuid
+                    }
+                });
                 store.paging.next = res.next;
                 store.paging.count = res.count;
                 store.paging.previous = res.previous;
