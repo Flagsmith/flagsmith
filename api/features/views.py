@@ -461,9 +461,10 @@ class SimpleFeatureStateViewSet(
         if not self.request.query_params.get("environment"):
             raise ValidationError("'environment' GET parameter is required.")
 
-        if environment := Environment.objects.filter(
-            id=self.request.query_params["environment"]
-        ).first():
+        try:
+            environment = Environment.objects.get(
+                id=self.request.query_params["environment"]
+            )
             if not self.request.user.has_environment_permission(
                 VIEW_ENVIRONMENT, environment
             ):
@@ -477,8 +478,8 @@ class SimpleFeatureStateViewSet(
             return queryset.select_related("feature_state_value").prefetch_related(
                 "multivariate_feature_state_values"
             )
-
-        raise NotFound("Environment not found.")
+        except Environment.DoesNotExist:
+            raise NotFound("Environment not found.")
 
 
 class SDKFeatureStates(GenericAPIView):

@@ -17,9 +17,8 @@ class IntegrationCommonViewSet(viewsets.ModelViewSet):
     def get_queryset(self):
         environment_api_key = self.kwargs["environment_api_key"]
 
-        if environment := Environment.objects.filter(
-            api_key=environment_api_key
-        ).first():
+        try:
+            environment = Environment.objects.get(api_key=environment_api_key)
             if not self.request.user.has_environment_permission(
                 VIEW_ENVIRONMENT, environment
             ):
@@ -28,8 +27,8 @@ class IntegrationCommonViewSet(viewsets.ModelViewSet):
                 )
 
             return self.model_class.objects.filter(environment=environment)
-
-        raise NotFound("Environment not found.")
+        except Environment.DoesNotExist:
+            raise NotFound("Environment not found.")
 
     def perform_create(self, serializer):
         environment = self.get_environment_from_request()
