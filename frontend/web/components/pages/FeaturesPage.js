@@ -99,8 +99,12 @@ const FeaturesPage = class extends Component {
 
         if (!this.state.showArchived && flag.is_archived) {
             return false
+        } else if (this.state.showArchived && flag.is_archived) {
+            return true
         }
-        if(!this.state.tags || !this.state.tags.length) {
+
+
+        if((!this.state.tags || !this.state.tags.length) && !this.state.showArchived) {
             return true
         }
         if(this.state.tags.includes('') && (!flag.tags || !flag.tags.length)) {
@@ -196,7 +200,8 @@ const FeaturesPage = class extends Component {
                                                                   <Row className="px-0 pt-0 pb-2">
                                                                       <TagSelect
                                                                         showUntagged
-                                                                        showClearAll={this.state.tags && !!this.state.tags.length}
+                                                                        showClearAll={(this.state.tags && !!this.state.tags.length)||this.state.showArchived}
+                                                                        onClearAll={()=>this.setState({showArchived:false, tags:[]})}
                                                                         projectId={projectId} value={this.state.tags} onChange={(tags) => {
                                                                             this.setState({ tags });
                                                                             AsyncStorage.setItem(`${projectId}tags`, JSON.stringify(tags));
@@ -208,7 +213,7 @@ const FeaturesPage = class extends Component {
                                                                                     selected={this.state.showArchived}
                                                                                     onClick={() => this.setState({ showArchived: !this.state.showArchived })}
                                                                                     className="px-2 py-2 ml-2 mr-2"
-                                                                                    tag={{ label: `Include Archived` }}
+                                                                                    tag={{ label: `Archived` }}
                                                                                   />
                                                                               </div>
 

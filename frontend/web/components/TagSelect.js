@@ -64,6 +64,7 @@ class TagSelect extends PureComponent {
                                     } else {
                                         this.props.onChange((showUntagged ? [''] : []).concat(projectTags.map(v => v.id)));
                                     }
+                                    this.props.onClearAll && this.props.onClearAll()
                                 }} style={{ marginBottom: 10 }} className="btn--link mr-2"
                             >
                                 Clear Filters
