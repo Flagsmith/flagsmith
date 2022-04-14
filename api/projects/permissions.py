@@ -24,7 +24,7 @@ class ProjectPermissions(BasePermission):
                 id=int(request.data.get("organisation"))
             )
             if organisation.restrict_project_create_to_admin:
-                return request.user.is_admin(organisation.pk)
+                return request.user.is_organisation_admin(organisation.pk)
             return request.user.has_organisation_permission(
                 organisation, CREATE_PROJECT
             )

@@ -11,6 +11,7 @@ from flag_engine.django_transform.document_builders import (
 )
 from rest_framework import mixins, status, viewsets
 from rest_framework.decorators import action
+from rest_framework.exceptions import ValidationError
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 
@@ -23,6 +24,7 @@ from permissions.serializers import (
     MyUserObjectPermissionsSerializer,
     PermissionModelSerializer,
 )
+from projects.models import Project
 from webhooks.mixins import TriggerSampleWebhookMixin
 from webhooks.webhooks import WebhookType
 
@@ -65,9 +67,6 @@ class EnvironmentViewSet(viewsets.ModelViewSet):
     lookup_field = "api_key"
     permission_classes = [IsAuthenticated, EnvironmentPermissions]
 
-    def get_permissions(self):
-        return super().get_permissions()
-
     def get_serializer_class(self):
         if self.action == "trait_keys":
             return TraitKeysSerializer
@@ -84,13 +83,22 @@ class EnvironmentViewSet(viewsets.ModelViewSet):
         return context
 
     def get_queryset(self):
-        queryset = self.request.user.get_permitted_environments("VIEW_ENVIRONMENT")
+        if self.action == "list":
+            project_id = self.request.query_params.get(
+                "project"
+            ) or self.request.data.get("project")
 
-        project_id = self.request.query_params.get("project")
-        if project_id:
-            queryset = queryset.filter(project__id=project_id)
+            try:
+                project = Project.objects.get(id=project_id)
+            except Project.DoesNotExist:
+                raise ValidationError("Invalid or missing value for project parameter.")
 
-        return queryset
+            return self.request.user.get_permitted_environments(
+                "VIEW_ENVIRONMENT", project=project
+            )
+
+        # Permission class handles validation of permissions for other actions
+        return Environment.objects.all()
 
     def perform_create(self, serializer):
         environment = serializer.save()

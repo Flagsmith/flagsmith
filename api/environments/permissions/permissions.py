@@ -1,5 +1,3 @@
-import typing
-
 from django.db.models import Q
 from rest_framework import exceptions
 from rest_framework.permissions import BasePermission
@@ -64,7 +62,7 @@ class IdentityPermissions(BasePermission):
             return False
 
     def has_object_permission(self, request, view, obj):
-        if request.user.is_admin(obj.environment.project.organisation):
+        if request.user.is_organisation_admin(obj.environment.project.organisation):
             return True
 
         if request.user.is_environment_admin(obj.environment):
@@ -121,14 +119,3 @@ class EnvironmentAdminPermission(BasePermission):
 
     def has_object_permission(self, request, view, obj):
         return request.user.is_environment_admin(obj.environment)
-
-
-class HasEnvironmentPermission(BasePermission):
-    def __init__(self, environment_permissions: typing.List[str] = None):
-        self.environment_permissions = environment_permissions or []
-
-    def has_object_permission(self, request, view, obj):
-        return all(
-            request.user.has_environment_permission(permission, obj)
-            for permission in self.environment_permissions
-        )

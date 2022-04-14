@@ -14,7 +14,7 @@ ORGANISATION_PERMISSIONS = (
 class NestedOrganisationEntityPermission(BasePermission):
     def has_permission(self, request, view):
         organisation_pk = view.kwargs.get("organisation_pk")
-        if organisation_pk and request.user.is_admin(
+        if organisation_pk and request.user.is_organisation_admin(
             Organisation.objects.get(pk=organisation_pk)
         ):
             return True
@@ -26,7 +26,7 @@ class NestedOrganisationEntityPermission(BasePermission):
     def has_object_permission(self, request, view, obj):
         organisation_id = view.kwargs.get("organisation_pk")
         organisation = Organisation.objects.get(id=organisation_id)
-        return request.user.is_admin(organisation)
+        return request.user.is_organisation_admin(organisation)
 
 
 class OrganisationPermission(BasePermission):
@@ -36,7 +36,7 @@ class OrganisationPermission(BasePermission):
         return True
 
     def has_object_permission(self, request, view, obj):
-        if request.user.is_admin(obj) or (
+        if request.user.is_organisation_admin(obj) or (
             view.action == "my_permissions" and obj in request.user.organisations.all()
         ):
             return True
@@ -51,7 +51,7 @@ class OrganisationUsersPermission(BasePermission):
         organisation_id = view.kwargs.get("organisation_pk")
         organisation = Organisation.objects.get(id=organisation_id)
 
-        if request.user.is_admin(organisation):
+        if request.user.is_organisation_admin(organisation):
             return True
 
         if view.action == "list" and request.user.belongs_to(organisation.id):
@@ -63,7 +63,7 @@ class OrganisationUsersPermission(BasePermission):
         organisation_id = view.kwargs.get("organisation_pk")
         organisation = Organisation.objects.get(id=organisation_id)
 
-        if request.user.is_admin(organisation):
+        if request.user.is_organisation_admin(organisation):
             return True
 
         return False
@@ -72,7 +72,7 @@ class OrganisationUsersPermission(BasePermission):
 class UserPermissionGroupPermission(BasePermission):
     def has_permission(self, request, view):
         organisation_pk = view.kwargs.get("organisation_pk")
-        if organisation_pk and request.user.is_admin(
+        if organisation_pk and request.user.is_organisation_admin(
             Organisation.objects.get(pk=organisation_pk)
         ):
             return True
@@ -86,7 +86,7 @@ class UserPermissionGroupPermission(BasePermission):
         organisation_id = view.kwargs.get("organisation_pk")
         organisation = Organisation.objects.get(id=organisation_id)
 
-        if request.user.is_admin(organisation):
+        if request.user.is_organisation_admin(organisation):
             return True
 
         return False

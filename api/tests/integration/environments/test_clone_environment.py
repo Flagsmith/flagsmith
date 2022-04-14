@@ -15,7 +15,7 @@ def test_clone_environment_clones_feature_states_with_value(
     # Firstly, let's update feature state value of the source enviroment
     # fetch the feature state id to update
     feature_state = get_env_feature_states_list_with_api(
-        admin_client, {"enviroment": environment, "feature": feature}
+        admin_client, {"environment": environment, "feature": feature}
     )["results"][0]["id"]
 
     fs_update_url = reverse(

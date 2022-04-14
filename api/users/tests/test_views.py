@@ -131,7 +131,7 @@ class UserTestCase(TestCase):
         self.client.post(url)
 
         # Then
-        assert self.user.is_admin(self.organisation)
+        assert self.user.is_organisation_admin(self.organisation)
 
     @mock.patch("organisations.invites.views.Thread")
     def test_join_organisation_alerts_admin_users_if_exceeds_plan_limit(
