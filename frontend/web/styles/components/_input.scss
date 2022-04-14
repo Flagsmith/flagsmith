@@ -145,3 +145,34 @@ textarea {
 	right:10px;
 	top:8px;
 }
+
+.react-datepicker__header--time {
+	height: 59px;
+}
+.dark {
+	.react-datepicker__day--disabled {
+		opacity: 0.25;
+	}
+	.react-datepicker__day-name, .react-datepicker__current-month, .react-datepicker-time__header {
+		color: $header-color-dark;
+
+	}
+	.react-datepicker__day {
+		color: $dark-color;
+	}
+	.react-datepicker__header, .react-datepicker-time__header {
+		background-color: $panel-heading-bg;
+		border-color: transparent;
+	}
+	.react-datepicker-time__heade {
+
+	}
+	.react-datepicker__time-container {
+		border-left-color: $panel-bg-dark;
+	}
+	.react-datepicker, .react-datepicker__time {
+		border-color: $panel-bg-dark;
+		color: $dark-color;
+		background-color: $panel-bg-dark;
+	}
+}
