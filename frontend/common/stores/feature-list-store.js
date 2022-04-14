@@ -207,7 +207,6 @@ const controller = {
                 };
                 const reqType = req.id ? 'put' : 'post';
                 const url = req.id ? `${Project.api}features/workflows/change-requests/${req.id}/` : `${Project.api}environments/${environmentId}/create-change-request/`;
-                debugger
                 return data[reqType](url, req).then((v) => {
                     let prom = Promise.resolve();
                     if (multivariate_options) {
@@ -226,7 +225,6 @@ const controller = {
                         ...v,
                     }).then(() => {
                         if (commit) {
-                            debugger;
                             AppActions.actionChangeRequest(v.id, 'commit', () => {
                                 AppActions.getFeatures(projectId, environmentId, true);
                             });
