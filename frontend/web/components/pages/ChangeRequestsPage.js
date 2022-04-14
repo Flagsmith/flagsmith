@@ -112,11 +112,11 @@ const ChangeRequestsPage = class extends Component {
                               }}
                             />
                         </TabItem>
-                        {this.props.hasFeature('scheduling') && (
-                            <TabItem tabLabel={`Scheduled${dataScheduled ? ` (${dataScheduled.length})` : ''}`}>
-                                Needs API
-                            </TabItem>
-                        )}
+                        {/* {this.props.hasFeature('scheduling') && ( */}
+                        {/*    <TabItem tabLabel={`Scheduled${dataScheduled ? ` (${dataScheduled.length})` : ''}`}> */}
+                        {/*        Needs API */}
+                        {/*    </TabItem> */}
+                        {/* )} */}
                         <TabItem tabLabel={`Closed${dataClosed ? ` (${dataClosed.length})` : ''}`}>
                             <PanelSearch
                               renderSearchWithNoResults
