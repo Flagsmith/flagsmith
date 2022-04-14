@@ -23,9 +23,13 @@ class TagPermissions(BasePermission):
         return view.detail
 
     def has_object_permission(self, request, view, obj):
+        project = obj.project
         if request.user.is_project_admin(obj.project):
             return True
 
-        return view.action == "detail" and request.user.has_project_permission(
-            "VIEW_PROJECT", obj.project
-        )
+        if view.action == "detail" and request.user.has_project_permission(
+            "VIEW_PROJECT", project
+        ):
+            return True
+
+        return False
