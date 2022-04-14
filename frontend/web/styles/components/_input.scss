@@ -28,7 +28,6 @@ textarea {
 	position: relative;
 	transition: height 200ms cubic-bezier(0.23, 1, 0.32, 1) 0ms;
 	background-color: transparent !important;
-
 	&.invalid hr, &.invalid hr.highlight {
 		border-color: $alert-danger-border;
 	}
@@ -48,9 +47,8 @@ textarea {
 	}
 	input.input, input[type="text"] {
 		width: 100%;
-		border: none;
 		text-indent: 15px;
-		border-width: 0;
+		border: 1px solid $input-border-color;
 		outline: none;
 		box-shadow: none;
 		background-image: none;
