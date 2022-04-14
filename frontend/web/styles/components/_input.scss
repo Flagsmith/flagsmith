@@ -49,12 +49,14 @@ textarea {
 	input.input, input[type="text"] {
 		width: 100%;
 		border: none;
+		text-indent: 15px;
 		border-width: 0;
 		outline: none;
 		box-shadow: none;
 		background-image: none;
 		-webkit-appearance: none;
 		background-image: none;
+		border-radius: $border-radius-default;
 
 		&:disabled {
 			opacity: 0.5;
@@ -115,7 +117,7 @@ textarea {
 
 
 
-.dark .input-container {
+.dark .input-container, .dark .react-datepicker-wrapper .react-datepicker__input-container {
 	input, input:-webkit-autofill, textarea:-webkit-autofill, select:-webkit-autofill {
 		background-color: $input-bg-dark;
 		color: $body-text-dark;

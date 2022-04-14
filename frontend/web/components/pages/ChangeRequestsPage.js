@@ -3,8 +3,8 @@ import ChangeRequestStore from '../../../common/stores/change-requests-store';
 import OrganisationStore from '../../../common/stores/organisation-store';
 import ProjectStore from '../../../common/stores/project-store';
 import PaymentModal from '../modals/Payment';
-import Tabs  from '../base/forms/Tabs';
-import TabItem  from '../base/forms/TabItem';
+import Tabs from '../base/forms/Tabs';
+import TabItem from '../base/forms/TabItem';
 
 const ChangeRequestsPage = class extends Component {
     static displayName = 'ChangeRequestsPage';
@@ -80,7 +80,7 @@ const ChangeRequestsPage = class extends Component {
                     <Tabs
                       value={this.state.tab}
                       onChange={(tab) => {
-                          this.setState({tab})
+                          this.setState({ tab });
                       }}
                     >
                         <TabItem tabLabel={`Open${data ? ` (${data.length})` : ''}`}>
@@ -93,7 +93,7 @@ const ChangeRequestsPage = class extends Component {
                               icon="ion-md-git-pull-request"
                               items={data}
                               renderRow={({ title, user: _user, created_at, id }, index) => {
-                                  const user = (OrganisationStore.model && OrganisationStore.model.users && OrganisationStore.model.users.find(v => v.id === _user) ) ||{};
+                                  const user = (OrganisationStore.model && OrganisationStore.model.users && OrganisationStore.model.users.find(v => v.id === _user)) || {};
                                   return (
                                       <Link to={`/project/${projectId}/environment/${environmentId}/change-requests/${id}`}>
                                           <Row className="list-item clickable">
@@ -112,9 +112,9 @@ const ChangeRequestsPage = class extends Component {
                               }}
                             />
                         </TabItem>
-                        {this.props.hasFeature("scheduling")&& (
-                            <TabItem tabLabel={`Scheduled${dataClosed ? ` (${dataClosed.length})` : ''}`}>
-
+                        {this.props.hasFeature('scheduling') && (
+                            <TabItem tabLabel={`Scheduled${dataScheduled ? ` (${dataScheduled.length})` : ''}`}>
+                                Needs API
                             </TabItem>
                         )}
                         <TabItem tabLabel={`Closed${dataClosed ? ` (${dataClosed.length})` : ''}`}>

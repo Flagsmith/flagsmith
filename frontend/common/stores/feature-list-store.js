@@ -180,7 +180,7 @@ const controller = {
             store.saved();
         });
     },
-    editFeatureStateChangeRequest: (projectId, environmentId, flag, projectFlag, environmentFlag, segmentOverrides, changeRequest) => {
+    editFeatureStateChangeRequest: (projectId, environmentId, flag, projectFlag, environmentFlag, segmentOverrides, changeRequest, commit) => {
         store.saving();
         API.trackEvent(Constants.events.EDIT_FEATURE);
 
@@ -194,50 +194,58 @@ const controller = {
                     // multivariate is existing, override the existing with the new value
                     return { ...v, percentage_allocation: matching.default_percentage_allocation };
                 });
-                const {featureStateId,multivariate_options, ...changeRequestData} = changeRequest
+                const { featureStateId, multivariate_options, ...changeRequestData } = changeRequest;
                 const req = {
                     feature_states: [{
-                        id:featureStateId,
+                        id: featureStateId,
                         feature: projectFlag.id,
                         enabled: flag.default_enabled,
                         feature_state_value: Utils.valueToFeatureState(flag.initial_value),
-                        live_from: new Date().toISOString(),
+                        live_from: changeRequest.live_from || new Date().toISOString(),
                     }],
                     ...changeRequestData,
                 };
-                const reqType = req.id?"put":"post";
-                const url = req.id? `${Project.api}features/workflows/change-requests/${req.id}/` : `${Project.api}environments/${environmentId}/create-change-request/`
-                return data[reqType](url, req).then((v)=>{
-                    let prom = Promise.resolve()
+                const reqType = req.id ? 'put' : 'post';
+                const url = req.id ? `${Project.api}features/workflows/change-requests/${req.id}/` : `${Project.api}environments/${environmentId}/create-change-request/`;
+                debugger
+                return data[reqType](url, req).then((v) => {
+                    let prom = Promise.resolve();
                     if (multivariate_options) {
                         v.feature_states[0].multivariate_feature_state_values = v.feature_states[0].multivariate_feature_state_values.map(
-                            (v)=>{
-                                const matching = multivariate_options.find((m)=>(v.multivariate_feature_option||v.id) === (m.multivariate_feature_option||m.id))
-                                return ({...v,
-                                    percentage_allocation: matching.percentage_allocation || matching.default_percentage_allocation
-                                })
-                            })
+                            (v) => {
+                                const matching = multivariate_options.find(m => (v.multivariate_feature_option || v.id) === (m.multivariate_feature_option || m.id));
+                                return ({ ...v,
+                                    percentage_allocation: matching.percentage_allocation || matching.default_percentage_allocation,
+                                });
+                            },
+                        );
                     }
 
 
-                        prom = data['put']( `${Project.api}features/workflows/change-requests/${v.id}/`, {
-                            ...v,
-                        })
-                    prom.then(()=>{
-                        AppActions.getChangeRequests(environmentId)
-                        if (featureStateId) {
-                            AppActions.getChangeRequest(changeRequestData.id)
+                    prom = data.put(`${Project.api}features/workflows/change-requests/${v.id}/`, {
+                        ...v,
+                    }).then(() => {
+                        if (commit) {
+                            debugger;
+                            AppActions.actionChangeRequest(v.id, 'commit', () => {
+                                AppActions.getFeatures(projectId, environmentId, true);
+                            });
                         }
-                    })
-
+                    });
+                    prom.then(() => {
+                        AppActions.getChangeRequests(environmentId);
+                        if (featureStateId) {
+                            AppActions.getChangeRequest(changeRequestData.id);
+                        }
+                    });
                 });
             });
 
 
         Promise.all([prom]).then(([res, segmentRes]) => {
             store.saved();
-            if (typeof closeModal !=='undefined') {
-                closeModal()
+            if (typeof closeModal !== 'undefined') {
+                closeModal();
             }
         });
     },
@@ -297,7 +305,7 @@ store.dispatcherIndex = Dispatcher.register(store, (payload) => {
             controller.editFeatureState(action.projectId, action.environmentId, action.flag, action.projectFlag, action.environmentFlag, action.segmentOverrides, action.mode);
             break;
         case Actions.EDIT_ENVIRONMENT_FLAG_CHANGE_REQUEST:
-            controller.editFeatureStateChangeRequest(action.projectId, action.environmentId, action.flag, action.projectFlag, action.environmentFlag, action.segmentOverrides, action.changeRequest);
+            controller.editFeatureStateChangeRequest(action.projectId, action.environmentId, action.flag, action.projectFlag, action.environmentFlag, action.segmentOverrides, action.changeRequest, action.commit);
             break;
         case Actions.EDIT_FLAG:
             controller.editFlag(action.projectId, action.flag, action.onComplete);
