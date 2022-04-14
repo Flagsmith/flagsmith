@@ -14,7 +14,7 @@ class TriggerSampleWebhookPermission(BasePermission):
 
 
 def is_organisation_admin(organisation_pk, request):
-    return organisation_pk and request.user.is_admin(
+    return organisation_pk and request.user.is_organisation_admin(
         Organisation.objects.get(pk=organisation_pk)
     )
 

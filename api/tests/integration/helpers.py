@@ -61,7 +61,8 @@ def get_env_feature_states_list_with_api(client: APIClient, query_params: dict) 
 
     """
     url = reverse("api-v1:features:featurestates-list")
-    return get_json_response(client, url, query_params)
+    response = get_json_response(client, url, query_params)
+    return response
 
 
 def get_feature_segement_list_with_api(client: APIClient, query_params: dict) -> dict:

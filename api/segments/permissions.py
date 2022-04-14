@@ -31,8 +31,7 @@ class SegmentPermissions(BasePermission):
         return view.detail
 
     def has_object_permission(self, request, view, obj):
-        project = obj.project
-        return request.user.is_project_admin(project) or (
+        return request.user.is_project_admin(obj.project) or (
             view.action == "detail"
-            and request.user.has_project_permission("VIEW_PROJECT", project)
+            and request.user.has_project_permission("VIEW_PROJECT", obj.project)
         )

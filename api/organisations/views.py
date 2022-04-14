@@ -207,7 +207,7 @@ class OrganisationViewSet(viewsets.ModelViewSet):
         serializer = self.get_serializer(
             instance={
                 "permissions": permission_keys,
-                "admin": request.user.is_admin(org),
+                "admin": request.user.is_organisation_admin(org),
             }
         )
         return Response(serializer.data)

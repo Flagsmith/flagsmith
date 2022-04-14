@@ -49,8 +49,7 @@ class FeatureStatePermissions(BasePermission):
         try:
             if view.action == "create" and request.data.get("environment"):
                 environment = Environment.objects.get(id=request.data["environment"])
-                is_environment_admin = request.user.is_environment_admin(environment)
-                return is_environment_admin or request.user.has_environment_permission(
+                return request.user.has_environment_permission(
                     UPDATE_FEATURE_STATE, environment
                 )
 
@@ -62,8 +61,7 @@ class FeatureStatePermissions(BasePermission):
             return False
 
     def has_object_permission(self, request, view, obj):
-        is_environment_admin = request.user.is_environment_admin(obj.environment)
-        return is_environment_admin or request.user.has_environment_permission(
+        return request.user.has_environment_permission(
             UPDATE_FEATURE_STATE, environment=obj.environment
         )
 
