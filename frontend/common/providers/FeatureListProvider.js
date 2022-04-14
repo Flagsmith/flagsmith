@@ -121,7 +121,7 @@ const FeatureListProvider = class extends Component {
         });
     };
 
-    createChangeRequest = (projectId, environmentId, flag, projectFlag, environmentFlag, segmentOverrides, changeRequest) => {
+    createChangeRequest = (projectId, environmentId, flag, projectFlag, environmentFlag, segmentOverrides, changeRequest, commit) => {
         AppActions.editFlag(projectId, Object.assign({}, projectFlag, flag, {
             multivariate_options: flag.multivariate_options && flag.multivariate_options.map((v) => {
                 const matchingProjectVariate = (projectFlag.multivariate_options && projectFlag.multivariate_options.find(p => p.id === v.id)) || v;
@@ -134,7 +134,7 @@ const FeatureListProvider = class extends Component {
             AppActions.editEnvironmentFlagChangeRequest(projectId, environmentId, flag, newProjectFlag, {
                 ...environmentFlag,
                 multivariate_feature_state_values: flag.multivariate_options,
-            }, segmentOverrides, changeRequest);
+            }, segmentOverrides, changeRequest, commit);
         });
     };
 

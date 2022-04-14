@@ -11,13 +11,12 @@ const controller = {
         data.post(`${Project.api}features/workflows/change-requests/${id}/${action}/`)
             .then((res) => {
                 data.get(`${Project.api}features/workflows/change-requests/${id}/`)
-                    .then((res)=>{
+                    .then((res) => {
                         store.model[id] = res;
-                        cb && cb()
+                        cb && cb();
                         store.loaded();
-                    })
-            })            .catch(e => API.ajaxHandler(store, e));
-
+                    });
+            }).catch(e => API.ajaxHandler(store, e));
     },
     getChangeRequests: (envId, committed) => {
         store.loading();
@@ -25,42 +24,43 @@ const controller = {
         const endpoint = `${Project.api}environments/${envId}/list-change-requests/?include_committed=${1}`;
         data.get(endpoint)
             .then((res) => {
-                let committed = []
-                let results = []
+                const committed = [];
+                const results = [];
                 if (res) {
-                    res.map((v)=>{
-                        if(v.committed_at) {
-                            committed.push(v)
+                    res.map((v) => {
+                        if (v.committed_at) {
+                            committed.push(v);
                         } else {
-                            results.push(v)
+                            results.push(v);
                         }
-                    })
+                    });
                 }
-                store.committed[envId] = committed;
+                if (flagsmith.hasFeature('scheduling')) {
+                    store.committed[envId] = committed.filter(v => !v.live_from);
+                    store.scheduled[envId] = committed.filter(v => !!v.live_from);
+                } else {
+                    store.committed[envId] = committed;
+                }
                 store.model[envId] = results;
 
                 store.loaded();
-            })            .catch(e => API.ajaxHandler(store, e));
-
+            }).catch(e => API.ajaxHandler(store, e));
     },
     deleteChangeRequest: (id, cb) => {
         store.loading();
         data.delete(`${Project.api}features/workflows/change-requests/${id}/`)
             .then((res) => {
-                store.loaded()
-                cb()
-            })            .catch(e => API.ajaxHandler(store, e));
-
+                store.loaded();
+                cb();
+            }).catch(e => API.ajaxHandler(store, e));
     },
     updateChangeRequest: (changeRequest) => {
-        debugger
         store.loading();
-        data.put(`${Project.api}features/workflows/change-requests/${changeRequest.id}/`,changeRequest)
+        data.put(`${Project.api}features/workflows/change-requests/${changeRequest.id}/`, changeRequest)
             .then((res) => {
                 store.model[changeRequest.id] = res;
                 store.loaded();
-            })            .catch(e => API.ajaxHandler(store, e));
-
+            }).catch(e => API.ajaxHandler(store, e));
     },
     getChangeRequest: (id) => {
         store.loading();
@@ -68,8 +68,7 @@ const controller = {
             .then((res) => {
                 store.model[id] = res;
                 store.loaded();
-            })            .catch(e => API.ajaxHandler(store, e));
-
+            }).catch(e => API.ajaxHandler(store, e));
     },
 };
 
@@ -78,6 +77,7 @@ const store = Object.assign({}, BaseStore, {
     id: 'change-request-store',
     model: {},
     committed: {},
+    scheduled: {},
 });
 
 

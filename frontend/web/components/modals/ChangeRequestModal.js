@@ -1,4 +1,5 @@
 import React, { Component } from 'react';
+import DatePicker from 'react-datepicker';
 import UserSelect from '../UserSelect';
 import data from '../../../common/data/base/_data';
 import OrganisationProvider from '../../../common/providers/OrganisationProvider';
@@ -12,9 +13,9 @@ const ChangeRequestModal = class extends Component {
     };
 
     state = {
-        approvals:(this.props.changeRequest && this.props.changeRequest.approvals )|| [],
-        title: this.props.changeRequest && this.props.changeRequest.title || "",
-        description: this.props.changeRequest && this.props.changeRequest.description ||"",
+        approvals: (this.props.changeRequest && this.props.changeRequest.approvals) || [],
+        title: this.props.changeRequest && this.props.changeRequest.title || '',
+        description: this.props.changeRequest && this.props.changeRequest.description || '',
     }
 
     addOwner = (id) => {
@@ -25,12 +26,12 @@ const ChangeRequestModal = class extends Component {
         this.setState({ approvals: (this.state.approvals || []).filter(v => v.user !== id) });
     }
 
-    getApprovals = (users, approvals) => users.filter(v => approvals.find((a)=>a.user === v.id))
+    getApprovals = (users, approvals) => users.filter(v => approvals.find(a => a.user === v.id))
 
     save = () => {
-        const { title, description, approvals } = this.state;
+        const { title, description, approvals, live_from } = this.state;
         this.props.onSave({
-            title, description, approvals,
+            title, description, approvals, live_from: live_from || undefined,
         });
     }
 
@@ -44,7 +45,7 @@ const ChangeRequestModal = class extends Component {
                         <div>
                             <FormGroup className="mb-4" >
                                 <InputGroup
-                                    value={this.state.title}
+                                  value={this.state.title}
                                   onChange={e => this.setState({ title: Utils.safeParseEventValue(e) })}
                                   isValid={title && title.length}
                                   type="text"
@@ -66,44 +67,68 @@ const ChangeRequestModal = class extends Component {
                                   placeholder="Add an optional description..."
                                 />
                             </FormGroup>
-                            {!this.props.changeRequest && (
+                            {flagsmith.hasFeature('scheduling') && (
+                                <div>
+                                    <InputGroup
+                                      tooltip="Allows you to set a date and time in which your change will only become active "
+                                      title="Schedule Change"
+                                      component={(
+                                          <Row>
+                                              <Flex>
+                                                  <DatePicker
+                                                    minDate={new Date()} onChange={(e) => {
+                                                        this.setState({
+                                                            live_from: e.toISOString(),
+                                                        });
+                                                    }} showTimeSelect
+                                                    timeIntervals={15} value={this.state.live_from ? `${moment(this.state.live_from).format('Do MMM YYYY hh:mma')} (${Intl.DateTimeFormat().resolvedOptions().timeZone})` : 'Immediately'}
+                                                  />
+                                              </Flex>
+
+                                              <ButtonLink className="ml-2" onClick={() => this.setState({ live_from: null })}>
+                                                    Clear
+                                              </ButtonLink>
+                                          </Row>
+                                            )}
+                                    />
+                                </div>
+                            )}
+                            {!this.props.changeRequest && this.props.showAssignees && (
                                 <FormGroup className="mb-4" >
                                     <InputGroup
-                                        component={(
-                                            <div>
-                                                <Row>
-                                                    {ownerUsers.map(u => (
-                                                        <Row onClick={() => this.removeOwner(u.id)} className="chip chip--active">
-                                                            <span className="font-weight-bold">
-                                                                {u.first_name} {u.last_name}
-                                                            </span>
-                                                            <span className="chip-icon ion ion-ios-close"/>
-                                                        </Row>
-                                                    ))}
-                                                    <Button className="btn--link btn--link-primary" onClick={() => this.setState({ showUsers: true })}>Add Assignee</Button>
-                                                </Row>
+                                      component={(
+                                          <div>
+                                              <Row>
+                                                  {ownerUsers.map(u => (
+                                                      <Row onClick={() => this.removeOwner(u.id)} className="chip chip--active">
+                                                          <span className="font-weight-bold">
+                                                              {u.first_name} {u.last_name}
+                                                          </span>
+                                                          <span className="chip-icon ion ion-ios-close"/>
+                                                      </Row>
+                                                  ))}
+                                                  <Button className="btn--link btn--link-primary" onClick={() => this.setState({ showUsers: true })}>Add Assignee</Button>
+                                              </Row>
 
-                                            </div>
+                                          </div>
                                         )}
-                                        onChange={e => this.setState({ description: Utils.safeParseEventValue(e) })}
-                                        type="text"
-                                        title="Assignees"
-                                        tooltipPlace="top"
-                                        tooltip="Assignees will be able to review and approve the change request"
-                                        inputProps={{ className: 'full-width', style: { minHeight: 80 } }}
-                                        className="full-width"
-                                        placeholder="Add an optional description..."
+                                      onChange={e => this.setState({ description: Utils.safeParseEventValue(e) })}
+                                      type="text"
+                                      title="Assignees"
+                                      tooltipPlace="top"
+                                      tooltip="Assignees will be able to review and approve the change request"
+                                      inputProps={{ className: 'full-width', style: { minHeight: 80 } }}
+                                      className="full-width"
+                                      placeholder="Add an optional description..."
                                     />
                                 </FormGroup>
                             )}
                             {!this.props.changeRequest && (
                                 <UserSelect
-                                    users={users.filter((v)=>{
-                                        return v.id !== AccountStore.getUser().id
-                                    })} value={this.state.approvals.map((v)=>v.user)}
-                                    onAdd={this.addOwner}
-                                    onRemove={this.removeOwner}
-                                    isOpen={this.state.showUsers} onToggle={() => this.setState({ showUsers: !this.state.showUsers })}
+                                  users={users.filter(v => v.id !== AccountStore.getUser().id)} value={this.state.approvals.map(v => v.user)}
+                                  onAdd={this.addOwner}
+                                  onRemove={this.removeOwner}
+                                  isOpen={this.state.showUsers} onToggle={() => this.setState({ showUsers: !this.state.showUsers })}
                                 />
                             )}
 
@@ -112,10 +137,10 @@ const ChangeRequestModal = class extends Component {
                                 <Button
                                   id="confirm-cancel-plan"
                                   className="btn btn-primary"
-                                  disabled={!title || (!this.state.approvals.length && !this.props.changeRequest )}
+                                  disabled={!title || (!this.state.approvals.length && (!this.props.changeRequest && this.props.showAssignees))}
                                   onClick={this.save}
                                 >
-                                    {this.props.changeRequest?  "Update":"Create"}
+                                    {this.props.changeRequest ? 'Update' : 'Create'}
                                 </Button>
                             </FormGroup>
                         </div>);
