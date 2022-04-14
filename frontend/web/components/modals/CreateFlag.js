@@ -572,7 +572,7 @@ const CreateFlag = class extends Component {
                                                                               data-test="create-change-request"
                                                                               id="create-change-request-btn" disabled={isSaving || !name || invalid}
                                                                             >
-                                                                                {isSaving ? existingChangeRequest ? 'Scheduling Update' : 'Schedule Update' : existingChangeRequest ? 'Update Change Request' : 'Scheduling Update'}
+                                                                                {isSaving ? existingChangeRequest ? 'Scheduling Update' : 'Schedule Update' : existingChangeRequest ? 'Update Change Request' : 'Schedule Update'}
                                                                             </ButtonOutline>
                                                                         ) : (
                                                                             <Tooltip title={(
@@ -582,7 +582,7 @@ const CreateFlag = class extends Component {
                                                                                   data-test="create-change-request"
                                                                                   id="create-change-request-btn"
                                                                                 >
-                                                                                    {isSaving ? existingChangeRequest ? 'Scheduling Update' : 'Schedule Update' : existingChangeRequest ? 'Update Change Request' : 'Scheduling Update'}
+                                                                                    {isSaving ? existingChangeRequest ? 'Scheduling Update' : 'Schedule Update' : existingChangeRequest ? 'Update Change Request' : 'Schedule Update'}
                                                                                 </ButtonOutline>
                                                                             )}
                                                                             >
