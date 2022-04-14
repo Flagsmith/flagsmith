@@ -3,6 +3,7 @@ from datetime import timedelta
 from unittest import TestCase
 
 import pytest
+from django.test import override_settings
 from django.urls import reverse
 from django.utils import timezone
 from rest_framework import status
@@ -45,7 +46,8 @@ class ProjectTestCase(TestCase):
     def _get_detail_url(self, project_id):
         return reverse("api-v1:projects:project-detail", args=[project_id])
 
-    def test_project_response_use_edge_identities(self):
+    @override_settings(PROJECT_METADATA_TABLE_NAME_DYNAMO=None)
+    def test_project_response_use_edge_identities_is_false_if_not_configured(self):
         # Given
         project_name = "project1"
         data = {"name": project_name, "organisation": self.organisation.id}

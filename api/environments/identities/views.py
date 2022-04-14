@@ -6,7 +6,9 @@ from collections import namedtuple
 import coreapi
 from boto3.dynamodb.conditions import Key
 from django.conf import settings
+from django.core.exceptions import ObjectDoesNotExist
 from rest_framework import status, viewsets
+from rest_framework.exceptions import NotFound
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.schemas import AutoSchema
@@ -62,9 +64,13 @@ class EdgeIdentityViewSet(viewsets.ModelViewSet):
         return self.dynamo_identifier_search_functions["BEGINS_WITH"], search_query
 
     def get_object(self):
-        return Identity.dynamo_wrapper.get_item_from_uuid(
-            self.kwargs["environment_api_key"], self.kwargs["identity_uuid"]
-        )
+        try:
+            identity = Identity.dynamo_wrapper.get_item_from_uuid(
+                self.kwargs["environment_api_key"], self.kwargs["identity_uuid"]
+            )
+        except ObjectDoesNotExist as e:
+            raise NotFound() from e
+        return identity
 
     def get_queryset(self):
         page_size = self.pagination_class().get_page_size(self.request)
