@@ -5,7 +5,7 @@ import coreapi
 from app_analytics.influxdb_wrapper import get_multiple_event_list_for_feature
 from django.conf import settings
 from django.core.cache import caches
-from django.db.models import QuerySet
+from django.db.models import Q, QuerySet
 from django.utils.decorators import method_decorator
 from drf_yasg2 import openapi
 from drf_yasg2.utils import swagger_auto_schema
@@ -249,7 +249,7 @@ class BaseFeatureStateViewSet(viewsets.ModelViewSet):
                 raise PermissionDenied()
 
             queryset = FeatureState.get_environment_flags_queryset(
-                environments=[environment]
+                environment=environment
             )
             queryset = self._apply_query_param_filters(queryset)
 
@@ -476,7 +476,7 @@ class SimpleFeatureStateViewSet(
                 )
 
             queryset = FeatureState.get_environment_flags_queryset(
-                environments=[environment]
+                environment=environment
             )
             return queryset.select_related("feature_state_value").prefetch_related(
                 "multivariate_feature_state_values"
@@ -516,7 +516,9 @@ class SDKFeatureStates(GenericAPIView):
 
         if "feature" in request.GET:
             feature_states = FeatureState.get_environment_flags_list(
-                environment=request.environment, feature_name=request.GET["feature"]
+                environment=request.environment,
+                feature_name=request.GET["feature"],
+                additional_filters=Q(feature_segment=None, identity=None),
             )
             if len(feature_states) != 1:
                 # TODO: what if more than one?
@@ -532,7 +534,8 @@ class SDKFeatureStates(GenericAPIView):
         else:
             data = self.get_serializer(
                 FeatureState.get_environment_flags_list(
-                    environment=request.environment
+                    environment=request.environment,
+                    additional_filters=Q(feature_segment=None, identity=None),
                 ),
                 many=True,
             ).data
@@ -543,7 +546,10 @@ class SDKFeatureStates(GenericAPIView):
         data = flags_cache.get(environment.api_key)
         if not data:
             data = self.get_serializer(
-                FeatureState.get_environment_flags_list(environment=environment),
+                FeatureState.get_environment_flags_list(
+                    environment=environment,
+                    additional_filters=Q(feature_segment=None, identity=None),
+                ),
                 many=True,
             ).data
             flags_cache.set(environment.api_key, data, settings.CACHE_FLAGS_SECONDS)
