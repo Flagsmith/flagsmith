@@ -66,7 +66,7 @@ def test_get_identity_returns_404_if_identity_does_not_exists(
         "api-v1:environments:environment-edge-identities-detail",
         args=[environment_api_key, "identity_uuid_that_does_not_exists"],
     )
-    dynamo_wrapper_mock.get_item_from_uuid.side_effects = ObjectDoesNotExist
+    dynamo_wrapper_mock.get_item_from_uuid.side_effect = ObjectDoesNotExist
 
     # When
     response = admin_client.get(url)
