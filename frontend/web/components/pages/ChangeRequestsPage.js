@@ -112,7 +112,7 @@ const ChangeRequestsPage = class extends Component {
                               }}
                             />
                         </TabItem>
-                        {this.props.hasFeature('scheduling') && (
+                        {this.props.hasFeature('scheduling') && false && (
                             <TabItem tabLabel={`Scheduled${dataScheduled ? ` (${dataScheduled.length})` : ''}`}>
                                 Needs API
                             </TabItem>
@@ -127,7 +127,7 @@ const ChangeRequestsPage = class extends Component {
                               icon="ion-md-git-pull-request"
                               items={dataClosed}
                               renderRow={({ title, user: _user, created_at, id }, index) => {
-                                  const user = OrganisationStore.model.users && OrganisationStore.model.users.find(v => v.id === _user);
+                                  const user = OrganisationStore.model && OrganisationStore.model.users && OrganisationStore.model.users.find(v => v.id === _user);
                                   return (
                                       <Link to={`/project/${projectId}/environment/${environmentId}/change-requests/${id}`}>
                                           <Row className="list-item clickable">
