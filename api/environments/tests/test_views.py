@@ -271,9 +271,11 @@ class EnvironmentTestCase(TestCase):
         )
 
         # When
-        self.client.post(url, data={"key": trait_key})
+        response = self.client.post(url, data={"key": trait_key})
 
         # Then
+        assert response.status_code == status.HTTP_200_OK
+
         assert not Trait.objects.filter(
             identity=identity_one_environment_one, trait_key=trait_key
         ).exists()

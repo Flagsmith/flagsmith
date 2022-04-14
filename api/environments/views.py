@@ -83,16 +83,22 @@ class EnvironmentViewSet(viewsets.ModelViewSet):
         return context
 
     def get_queryset(self):
-        project_id = self.request.query_params.get("project")
+        if self.action == "list":
+            project_id = self.request.query_params.get(
+                "project"
+            ) or self.request.data.get("project")
 
-        try:
-            project = Project.objects.get(id=project_id).select_related("organisation")
-        except Project.DoesNotExist:
-            raise ValidationError("Invalid or missing value for project GET parameter.")
+            try:
+                project = Project.objects.get(id=project_id)
+            except Project.DoesNotExist:
+                raise ValidationError("Invalid or missing value for project parameter.")
 
-        return self.request.user.get_permitted_environments(
-            "VIEW_ENVIRONMENT", project=project
-        )
+            return self.request.user.get_permitted_environments(
+                "VIEW_ENVIRONMENT", project=project
+            )
+
+        # Permission class handles validation of permissions for other actions
+        return Environment.objects.all()
 
     def perform_create(self, serializer):
         environment = serializer.save()
@@ -135,7 +141,10 @@ class EnvironmentViewSet(viewsets.ModelViewSet):
 
     @action(detail=True, methods=["POST"], url_path="delete-traits")
     def delete_traits(self, request, *args, **kwargs):
-        serializer = self.get_serializer(data=request.data)
+        serializer_class = self.get_serializer_class()
+        serializer = serializer_class(
+            data=request.data, context=self.get_serializer_context()
+        )
         if serializer.is_valid():
             serializer.delete()
             return Response(status=status.HTTP_200_OK)

@@ -57,7 +57,7 @@ class NestedProjectPermissions(BasePermission):
         if not project_pk:
             return False
 
-        project = Project.objects.get(pk=project_pk).select_related("organisation")
+        project = Project.objects.select_related("organisation").get(pk=project_pk)
 
         if request.user.is_project_admin(project):
             return True

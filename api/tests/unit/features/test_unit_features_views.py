@@ -13,12 +13,14 @@ def test_list_feature_states_from_simple_view_set(
     environment, feature, admin_user, admin_client, django_assert_num_queries
 ):
     # Given
-    url = reverse("api-v1:features:featurestates-list")
+    base_url = reverse("api-v1:features:featurestates-list")
+    url = f"{base_url}?environment={environment.id}"
 
     # add another feature
     Feature.objects.create(name="another_feature", project=environment.project)
 
-    # add another organisation with a project, environment and feature
+    # add another organisation with a project, environment and feature (which should be
+    # excluded)
     another_organisation = Organisation.objects.create(name="another_organisation")
     admin_user.add_organisation(another_organisation)
     another_project = Project.objects.create(
@@ -32,7 +34,7 @@ def test_list_feature_states_from_simple_view_set(
 
     # add another feature with multivariate options
     mv_feature = Feature.objects.create(
-        name="mv_feature", project=another_project, type=MULTIVARIATE
+        name="mv_feature", project=environment.project, type=MULTIVARIATE
     )
     MultivariateFeatureOption.objects.create(
         feature=mv_feature,
@@ -42,14 +44,14 @@ def test_list_feature_states_from_simple_view_set(
     )
 
     # When
-    with django_assert_num_queries(4):
+    with django_assert_num_queries(7):
         response = admin_client.get(url)
 
     # Then
     assert response.status_code == status.HTTP_200_OK
 
     response_json = response.json()
-    assert response_json["count"] == 4
+    assert response_json["count"] == 3
 
 
 def test_list_feature_states_nested_environment_view_set(
@@ -76,7 +78,7 @@ def test_list_feature_states_nested_environment_view_set(
     Feature.objects.create(name="another_feature", project=project)
 
     # When
-    with django_assert_num_queries(5):
+    with django_assert_num_queries(6):
         response = admin_client.get(base_url)
 
     # Then
