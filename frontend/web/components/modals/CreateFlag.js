@@ -13,6 +13,7 @@ import FlagOwners from '../FlagOwners';
 import FeatureListStore from '../../../common/stores/feature-list-store';
 import ChangeRequestModal from './ChangeRequestModal';
 import Feature from '../Feature';
+import { ButtonOutline } from '../base/forms/Button';
 
 const FEATURE_ID_MAXLENGTH = Constants.forms.maxLength.FEATURE_ID;
 
@@ -485,7 +486,7 @@ const CreateFlag = class extends Component {
                                       showAssignees={is4Eyes}
                                       changeRequest={this.props.changeRequest}
                                       onSave={({
-                                          title, description, approvals,live_from
+                                          title, description, approvals, live_from,
                                       }) => {
                                           closeModal2();
                                           this.save((projectId, environmentId, flag, projectFlag, environmentFlag, segmentOverrides) => {
@@ -564,13 +565,32 @@ const CreateFlag = class extends Component {
                                                             </p>
                                                             <div className="text-right">
                                                                 {this.props.hasFeature('scheduling') && !is4Eyes && (
-                                                                <Button
-                                                                  onClick={saveFeatureValue} className="mr-2" type="button"
-                                                                  data-test="create-change-request"
-                                                                  id="create-change-request-btn" disabled={isSaving || !name || invalid}
-                                                                >
-                                                                    {isSaving ? existingChangeRequest ? 'Scheduling Update' : 'Schedule Update' : existingChangeRequest ? 'Update Change Request' : 'Scheduling Update'}
-                                                                </Button>
+                                                                    <>
+                                                                        {canSchedule ? (
+                                                                            <ButtonOutline
+                                                                              onClick={saveFeatureValue} className="mr-2" type="button"
+                                                                              data-test="create-change-request"
+                                                                              id="create-change-request-btn" disabled={isSaving || !name || invalid}
+                                                                            >
+                                                                                {isSaving ? existingChangeRequest ? 'Scheduling Update' : 'Schedule Update' : existingChangeRequest ? 'Update Change Request' : 'Scheduling Update'}
+                                                                            </ButtonOutline>
+                                                                        ) : (
+                                                                            <Tooltip title={(
+                                                                                <ButtonOutline
+                                                                                    disabled
+                                                                                  onClick={saveFeatureValue} className="mr-2" type="button"
+                                                                                  data-test="create-change-request"
+                                                                                  id="create-change-request-btn" disabled={isSaving || !name || invalid}
+                                                                                >
+                                                                                    {isSaving ? existingChangeRequest ? 'Scheduling Update' : 'Schedule Update' : existingChangeRequest ? 'Update Change Request' : 'Scheduling Update'}
+                                                                                </ButtonOutline>
+                                                                            )}
+                                                                            >
+                                                                                {'This feature is available on our scale-up plan'}
+                                                                            </Tooltip>
+                                                                        )}
+                                                                    </>
+
                                                                 )}
                                                                 {is4Eyes ? (
                                                                     <Button
