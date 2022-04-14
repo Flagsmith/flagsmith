@@ -52,7 +52,7 @@ class DynamoIdentityWrapper:
         }
         try:
             return self.query_items(**query_kwargs)["Items"][0]
-        except KeyError:
+        except IndexError:
             raise ObjectDoesNotExist()
 
     def get_all_items(

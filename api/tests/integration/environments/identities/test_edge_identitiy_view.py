@@ -1,6 +1,7 @@
 import urllib
 
 import pytest
+from django.core.exceptions import ObjectDoesNotExist
 from django.urls import reverse
 from rest_framework import status
 
@@ -52,6 +53,26 @@ def test_get_identity(
     dynamo_wrapper_mock.get_item_from_uuid.assert_called_with(
         environment_api_key, identity_uuid
     )
+
+
+def test_get_identity_returns_404_if_identity_does_not_exists(
+    admin_client,
+    dynamo_enabled_environment,
+    environment_api_key,
+    dynamo_wrapper_mock,
+):
+    # Given
+    url = reverse(
+        "api-v1:environments:environment-edge-identities-detail",
+        args=[environment_api_key, "identity_uuid_that_does_not_exists"],
+    )
+    dynamo_wrapper_mock.get_item_from_uuid.side_effects = ObjectDoesNotExist
+
+    # When
+    response = admin_client.get(url)
+
+    # Then
+    assert response.status_code == status.HTTP_404_NOT_FOUND
 
 
 def test_create_identity(
