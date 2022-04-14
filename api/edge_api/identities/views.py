@@ -1,3 +1,4 @@
+from django.core.exceptions import ObjectDoesNotExist
 from flag_engine.identities.builders import (
     build_identity_dict,
     build_identity_model,
@@ -22,7 +23,10 @@ class EdgeIdentityFeatureStateViewSet(viewsets.ModelViewSet):
 
     def initial(self, request, *args, **kwargs):
         super().initial(request, *args, **kwargs)
-        self.identity = self._get_identity_from_request()
+        try:
+            self.identity = self._get_identity_from_request()
+        except ObjectDoesNotExist as e:
+            raise NotFound() from e
 
     def _get_identity_from_request(self):
         """

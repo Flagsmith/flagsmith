@@ -1,4 +1,6 @@
+import pytest
 from boto3.dynamodb.conditions import Key
+from django.core.exceptions import ObjectDoesNotExist
 from flag_engine.django_transform.document_builders import (
     build_identity_document,
 )
@@ -22,6 +24,18 @@ def test_get_item_from_uuid_calls_query_with_correct_argument(mocker):
         Limit=1,
         KeyConditionExpression=Key("identity_uuid").eq(identity_uuid),
     )
+
+
+def test_get_item_from_uuid_raises_object_does_not_exists_if_identity_is_not_returned(
+    mocker,
+):
+    # Given
+    dynamo_identity_wrapper = DynamoIdentityWrapper()
+    mocked_dynamo_table = mocker.patch.object(dynamo_identity_wrapper, "_table")
+    mocked_dynamo_table.query.return_value = {"Items": [], "Count": 0}
+    # Then
+    with pytest.raises(ObjectDoesNotExist):
+        dynamo_identity_wrapper.get_item_from_uuid("env_key", "identity_uuid")
 
 
 def test_delete_item_calls_dynamo_delete_item_with_correct_arguments(mocker):
