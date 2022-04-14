@@ -141,10 +141,7 @@ class EnvironmentViewSet(viewsets.ModelViewSet):
 
     @action(detail=True, methods=["POST"], url_path="delete-traits")
     def delete_traits(self, request, *args, **kwargs):
-        serializer_class = self.get_serializer_class()
-        serializer = serializer_class(
-            data=request.data, context=self.get_serializer_context()
-        )
+        serializer = self.get_serializer(data=request.data)
         if serializer.is_valid():
             serializer.delete()
             return Response(status=status.HTTP_200_OK)
