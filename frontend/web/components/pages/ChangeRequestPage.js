@@ -368,7 +368,7 @@ const ChangeRequestsPage = class extends Component {
                                                                 <span className="ion icon-primary text-primary icon ion-md-checkbox mr-2"/>
                                                                 Approved by {approvedBy.join(", ")}
                                                             </div>
-                                                        ) : (
+                                                        ) : !!minApprovals && (
                                                             <div className="text-right mb-2 mr-2">
                                                                 <span className="ion icon-primary text-primary icon ion-ios-information-circle mr-2"/>
                                                                 You need at least {minApprovals} approval{minApprovals!=1 ?"s":""} to publish this change
