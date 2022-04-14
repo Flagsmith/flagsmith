@@ -47,7 +47,17 @@ const OrganisationProvider = class extends Component {
         return (
             this.props.children(
                 {
-                    ...this.state,
+                    ...{
+                        isSaving: OrganisationStore.isSaving,
+                        isLoading: OrganisationStore.isLoading,
+                        projects: OrganisationStore.getProjects(this.props.id),
+                        project: OrganisationStore.getProject(),
+                        users: OrganisationStore.getUsers(),
+                        invites: OrganisationStore.getInvites(),
+                        inviteLinks: OrganisationStore.getInviteLinks(),
+                        usage: OrganisationStore.getUsage(),
+                        influx_data: OrganisationStore.getInflux(),
+                    },
                     createProject: this.createProject,
                     selectProject: this.selectProject,
                 },
