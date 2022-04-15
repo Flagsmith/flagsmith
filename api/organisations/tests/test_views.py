@@ -12,6 +12,7 @@ from rest_framework import status
 from rest_framework.test import APIClient, override_settings
 
 from environments.models import Environment
+from environments.permissions.models import UserEnvironmentPermission
 from features.models import Feature, FeatureSegment
 from organisations.invites.models import Invite
 from organisations.models import (
@@ -22,7 +23,7 @@ from organisations.models import (
 )
 from organisations.permissions.models import UserOrganisationPermission
 from organisations.permissions.permissions import CREATE_PROJECT
-from projects.models import Project
+from projects.models import Project, UserProjectPermission
 from segments.models import Segment
 from users.models import FFAdminUser, UserPermissionGroup
 from util.tests import Helper
@@ -236,6 +237,53 @@ class OrganisationTestCase(TestCase):
         assert group not in user_2.permission_groups.all()
         # Test that other users are still part of the group
         assert group in self.user.permission_groups.all()
+
+    def test_remove_user_from_an_organisation_also_removes_users_environment_and_project_permission(
+        self,
+    ):
+        # Given
+        organisation = Organisation.objects.create(name="Test org")
+
+        self.user.add_organisation(organisation, OrganisationRole.ADMIN)
+        # Now, let's create a project
+        project_name = "org_remove_test"
+        project_create_url = reverse("api-v1:projects:project-list")
+        data = {"name": project_name, "organisation": organisation.id}
+
+        response = self.client.post(project_create_url, data=data)
+        project_id = response.json()["id"]
+
+        # Next, let's create an environment
+        url = reverse("api-v1:environments:environment-list")
+        data = {"name": "Test environment", "project": project_id}
+        response = self.client.post(url, data=data)
+        environment_id = response.json()["id"]
+
+        url = reverse(
+            "api-v1:organisations:organisation-remove-users", args=[organisation.pk]
+        )
+
+        data = [{"id": self.user.id}]
+
+        # Next, let's remove the user from the organisation
+        res = self.client.post(
+            url, data=json.dumps(data), content_type="application/json"
+        )
+
+        # Then
+        assert res.status_code == status.HTTP_200_OK
+        assert (
+            UserProjectPermission.objects.filter(
+                project__id=project_id, user=self.user
+            ).count()
+            == 0
+        )
+        assert (
+            UserEnvironmentPermission.objects.filter(
+                user=self.user, environment__id=environment_id
+            ).count()
+            == 0
+        )
 
     @override_settings()
     def test_can_invite_user_as_admin(self):
