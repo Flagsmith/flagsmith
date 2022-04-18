@@ -14,3 +14,8 @@ class FrontEndRedirectURLNotFound(APIException):
 class SlackConfigurationDoesNotExist(APIException):
     status_code = 400
     default_detail = "Slack api token not found. Please generate the token using oauth"
+
+
+class SlackChannelJoinError(BaseException):
+    def __init__(self, msg: str):
+        super().__init__(msg)

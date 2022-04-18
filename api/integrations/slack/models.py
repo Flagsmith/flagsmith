@@ -33,11 +33,5 @@ class SlackEnvironment(LifecycleModel):
     )
     enabled = models.BooleanField(default=True)
 
-    @hook(BEFORE_SAVE)
-    def join_channel(self):
-        SlackWrapper(
-            api_token=self.slack_configuration.api_token, channel_id=self.channel_id
-        ).join_channel()
-
     class Meta:
         unique_together = ("slack_configuration", "environment")
