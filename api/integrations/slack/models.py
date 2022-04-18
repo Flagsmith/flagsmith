@@ -1,9 +1,6 @@
 from django.db import models
-from django_lifecycle import BEFORE_SAVE, LifecycleModel, hook
 
 from projects.models import Project
-
-from .slack import SlackWrapper
 
 
 class SlackConfiguration(models.Model):
@@ -14,7 +11,7 @@ class SlackConfiguration(models.Model):
     created_date = models.DateTimeField(auto_now_add=True)
 
 
-class SlackEnvironment(LifecycleModel):
+class SlackEnvironment(models.Model):
     slack_configuration = models.ForeignKey(
         SlackConfiguration, related_name="env_config", on_delete=models.CASCADE
     )
