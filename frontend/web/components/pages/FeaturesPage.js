@@ -96,23 +96,21 @@ const FeaturesPage = class extends Component {
     }
 
     filter = flags => _.filter(flags, (flag) => {
-
         if (!this.state.showArchived && flag.is_archived) {
-            return false
-        } else if (this.state.showArchived && flag.is_archived) {
-            return true
+            return false;
+        } if (this.state.showArchived && flag.is_archived) {
+            return true;
         }
 
 
-        if((!this.state.tags || !this.state.tags.length) && !this.state.showArchived) {
-            return true
+        if ((!this.state.tags || !this.state.tags.length) && !this.state.showArchived) {
+            return true;
         }
-        if(this.state.tags.includes('') && (!flag.tags || !flag.tags.length)) {
-            return true
+        if (this.state.tags.includes('') && (!flag.tags || !flag.tags.length)) {
+            return true;
         }
 
         return _.intersection(flag.tags || [], this.state.tags).length;
-
     }) || []
 
     createFeaturePermission(el) {
@@ -191,7 +189,10 @@ const FeaturesPage = class extends Component {
                                                               title="Features"
                                                               renderSearchWithNoResults
                                                               itemHeight={65}
-                                                              sorting={[
+                                                              sorting={this.props.hasFeature('stale_flags') ? [
+                                                                  { label: 'Name', value: 'name', order: 'asc', default: true },
+                                                                  { label: 'Created Date', value: 'created_date', order: 'asc' },
+                                                              ] : [
                                                                   { label: 'Name', value: 'name', order: 'asc', default: true },
                                                                   { label: 'Created Date', value: 'created_date', order: 'asc' },
                                                               ]}
@@ -200,8 +201,8 @@ const FeaturesPage = class extends Component {
                                                                   <Row className="px-0 pt-0 pb-2">
                                                                       <TagSelect
                                                                         showUntagged
-                                                                        showClearAll={(this.state.tags && !!this.state.tags.length)||this.state.showArchived}
-                                                                        onClearAll={()=>this.setState({showArchived:false, tags:[]})}
+                                                                        showClearAll={(this.state.tags && !!this.state.tags.length) || this.state.showArchived}
+                                                                        onClearAll={() => this.setState({ showArchived: false, tags: [] })}
                                                                         projectId={projectId} value={this.state.tags} onChange={(tags) => {
                                                                             this.setState({ tags });
                                                                             AsyncStorage.setItem(`${projectId}tags`, JSON.stringify(tags));
@@ -213,7 +214,7 @@ const FeaturesPage = class extends Component {
                                                                                     selected={this.state.showArchived}
                                                                                     onClick={() => this.setState({ showArchived: !this.state.showArchived })}
                                                                                     className="px-2 py-2 ml-2 mr-2"
-                                                                                    tag={{ label: `Archived` }}
+                                                                                    tag={{ label: 'Archived' }}
                                                                                   />
                                                                               </div>
 

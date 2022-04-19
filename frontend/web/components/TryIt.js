@@ -15,7 +15,7 @@ const TryIt = class extends Component {
         this.setState({ isLoading: true });
         API.trackEvent(Constants.events.TRY_IT);
 
-        const url = userId ? `${Project.api}identities/?identifier=${userId}` : `${Project.api}flags/`;
+        const url = userId ? `${Utils.getSDKEndpoint()}identities/?identifier=${userId}` : `${Utils.getSDKEndpoint()}flags/`;
         const options = {
             headers: { 'X-Environment-Key': environmentId },
         };
