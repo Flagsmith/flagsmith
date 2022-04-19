@@ -105,7 +105,8 @@ class ProjectViewSet(viewsets.ModelViewSet):
         return Response(serializer.data)
 
 
-class UserProjectPermissionsViewSet(viewsets.ModelViewSet):
+class BaseProjectPermissionsViewSet(viewsets.ModelViewSet):
+    model_class = None
     pagination_class = None
     permission_classes = [IsAuthenticated, NestedProjectPermissions]
 
@@ -113,9 +114,17 @@ class UserProjectPermissionsViewSet(viewsets.ModelViewSet):
         if not self.kwargs.get("project_pk"):
             raise ValidationError("Missing project pk.")
 
-        return UserProjectPermission.objects.filter(
-            project__pk=self.kwargs["project_pk"]
-        )
+        return self.model_class.objects.filter(project__pk=self.kwargs["project_pk"])
+
+    def perform_create(self, serializer):
+        serializer.save(project_id=self.kwargs["project_pk"])
+
+    def perform_update(self, serializer):
+        serializer.save(project_id=self.kwargs["project_pk"])
+
+
+class UserProjectPermissionsViewSet(BaseProjectPermissionsViewSet):
+    model_class = UserProjectPermission
 
     def get_serializer_class(self):
         if self.action == "list":
@@ -123,40 +132,15 @@ class UserProjectPermissionsViewSet(viewsets.ModelViewSet):
 
         return CreateUpdateUserProjectPermissionSerializer
 
-    def perform_create(self, serializer):
-        project = Project.objects.get(id=self.kwargs["project_pk"])
-        serializer.save(project=project)
 
-    def perform_update(self, serializer):
-        project = Project.objects.get(id=self.kwargs["project_pk"])
-        serializer.save(project=project)
-
-
-class UserPermissionGroupProjectPermissionsViewSet(viewsets.ModelViewSet):
-    pagination_class = None
-    permission_classes = [IsAuthenticated, NestedProjectPermissions]
-
-    def get_queryset(self):
-        if not self.kwargs.get("project_pk"):
-            raise ValidationError("Missing project pk.")
-
-        return UserPermissionGroupProjectPermission.objects.filter(
-            project__pk=self.kwargs["project_pk"]
-        )
+class UserPermissionGroupProjectPermissionsViewSet(BaseProjectPermissionsViewSet):
+    model_class = UserPermissionGroupProjectPermission
 
     def get_serializer_class(self):
         if self.action == "list":
             return ListUserPermissionGroupProjectPermissionSerializer
 
         return CreateUpdateUserPermissionGroupProjectPermissionSerializer
-
-    def perform_create(self, serializer):
-        project = Project.objects.get(id=self.kwargs["project_pk"])
-        serializer.save(project=project)
-
-    def perform_update(self, serializer):
-        project = Project.objects.get(id=self.kwargs["project_pk"])
-        serializer.save(project=project)
 
 
 @swagger_auto_schema(method="GET", responses={200: UserObjectPermissionsSerializer()})
