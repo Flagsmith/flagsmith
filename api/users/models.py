@@ -152,6 +152,12 @@ class FFAdminUser(LifecycleModel, AbstractUser):
 
     def remove_organisation(self, organisation):
         UserOrganisation.objects.filter(user=self, organisation=organisation).delete()
+        UserProjectPermission.objects.filter(
+            user=self, project__organisation=organisation
+        ).delete()
+        UserEnvironmentPermission.objects.filter(
+            user=self, environment__project__organisation=organisation
+        ).delete()
 
     def get_organisation_role(self, organisation):
         user_organisation = self.get_user_organisation(organisation)
