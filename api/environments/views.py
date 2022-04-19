@@ -21,8 +21,8 @@ from environments.permissions.permissions import (
     NestedEnvironmentPermissions,
 )
 from permissions.serializers import (
-    MyUserObjectPermissionsSerializer,
     PermissionModelSerializer,
+    UserObjectPermissionsSerializer,
 )
 from projects.models import Project
 from webhooks.mixins import TriggerSampleWebhookMixin
@@ -160,7 +160,7 @@ class EnvironmentViewSet(viewsets.ModelViewSet):
             ).data
         )
 
-    @swagger_auto_schema(responses={200: MyUserObjectPermissionsSerializer})
+    @swagger_auto_schema(responses={200: UserObjectPermissionsSerializer})
     @action(
         detail=True,
         methods=["GET"],
@@ -205,7 +205,7 @@ class EnvironmentViewSet(viewsets.ModelViewSet):
             "permissions": permissions,
         }
 
-        serializer = MyUserObjectPermissionsSerializer(data=data)
+        serializer = UserObjectPermissionsSerializer(data=data)
         serializer.is_valid()
 
         return Response(serializer.data)

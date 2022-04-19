@@ -5,15 +5,15 @@ from django.utils.decorators import method_decorator
 from drf_yasg2 import openapi
 from drf_yasg2.utils import swagger_auto_schema
 from rest_framework import viewsets
-from rest_framework.decorators import action
+from rest_framework.decorators import action, api_view, permission_classes
 from rest_framework.exceptions import ValidationError
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 
 from environments.serializers import EnvironmentSerializerLight
 from permissions.serializers import (
-    MyUserObjectPermissionsSerializer,
     PermissionModelSerializer,
+    UserObjectPermissionsSerializer,
 )
 from projects.models import (
     Project,
@@ -21,7 +21,12 @@ from projects.models import (
     UserPermissionGroupProjectPermission,
     UserProjectPermission,
 )
-from projects.permissions import NestedProjectPermissions, ProjectPermissions
+from projects.permissions import (
+    IsProjectAdmin,
+    NestedProjectPermissions,
+    ProjectPermissions,
+)
+from projects.permissions_calculator import ProjectPermissionsCalculator
 from projects.serializers import (
     CreateUpdateUserPermissionGroupProjectPermissionSerializer,
     CreateUpdateUserProjectPermissionSerializer,
@@ -29,6 +34,8 @@ from projects.serializers import (
     ListUserProjectPermissionSerializer,
     ProjectSerializer,
 )
+
+project_permissions_calculator = ProjectPermissionsCalculator()
 
 
 @method_decorator(
@@ -81,7 +88,7 @@ class ProjectViewSet(viewsets.ModelViewSet):
             ).data
         )
 
-    @swagger_auto_schema(responses={200: MyUserObjectPermissionsSerializer})
+    @swagger_auto_schema(responses={200: UserObjectPermissionsSerializer()})
     @action(
         detail=True,
         methods=["GET"],
@@ -89,42 +96,12 @@ class ProjectViewSet(viewsets.ModelViewSet):
         url_name="my-permissions",
     )
     def user_permissions(self, request, *args, **kwargs):
-        # TODO: tidy this mess up
-
-        group_permissions = UserPermissionGroupProjectPermission.objects.filter(
-            group__users=request.user, project=self.get_object()
-        )
-        user_permissions = UserProjectPermission.objects.filter(
-            user=request.user, project=self.get_object()
-        )
-
-        permissions = set()
-        for group_permission in group_permissions:
-            permissions = permissions.union(
-                {
-                    permission.key
-                    for permission in group_permission.permissions.all()
-                    if permission.key
-                }
+        permission_data = (
+            project_permissions_calculator.get_user_project_permission_data(
+                user_id=request.user.id, project_id=self.get_object().id
             )
-        for user_permission in user_permissions:
-            permissions = permissions.union(
-                {
-                    permission.key
-                    for permission in user_permission.permissions.all()
-                    if permission.key
-                }
-            )
-
-        data = {
-            "admin": group_permissions.filter(admin=True).exists()
-            or user_permissions.filter(admin=True).exists(),
-            "permissions": permissions,
-        }
-
-        serializer = MyUserObjectPermissionsSerializer(data=data)
-        serializer.is_valid()
-
+        )
+        serializer = UserObjectPermissionsSerializer(instance=permission_data)
         return Response(serializer.data)
 
 
@@ -180,3 +157,24 @@ class UserPermissionGroupProjectPermissionsViewSet(viewsets.ModelViewSet):
     def perform_update(self, serializer):
         project = Project.objects.get(id=self.kwargs["project_pk"])
         serializer.save(project=project)
+
+
+@swagger_auto_schema(method="GET", responses={200: UserObjectPermissionsSerializer()})
+@api_view(http_method_names=["GET"])
+@permission_classes([IsAuthenticated, IsProjectAdmin])
+def get_user_project_permissions(request, **kwargs):
+    project_id = kwargs["project_pk"]
+    user_id = kwargs["user_pk"]
+
+    user_permissions_data = (
+        project_permissions_calculator.get_user_project_permission_data(
+            user_id, project_id
+        )
+    )
+
+    return Response(
+        {
+            "admin": user_permissions_data.admin,
+            "permissions": user_permissions_data.permissions,
+        }
+    )
