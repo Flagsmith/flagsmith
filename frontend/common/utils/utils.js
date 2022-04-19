@@ -34,6 +34,13 @@ module.exports = Object.assign({}, require('./base/_utils'), {
       return Project.api
     },
 
+    showUserSegments() {
+      if (flagsmith.hasFeature("edge_identities") && ProjectStore.model && ProjectStore.model.use_edge_identities) {
+          return false
+      }
+      return true
+    },
+
     getFeatureStatesEndpoint() {
       if (flagsmith.hasFeature("edge_identities") && ProjectStore.model && ProjectStore.model.use_edge_identities) {
           return "edge-featurestates"

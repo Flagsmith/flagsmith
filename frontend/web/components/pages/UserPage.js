@@ -181,7 +181,7 @@ const UserPage = class extends Component {
                                                   renderRow={({ name, id, enabled, created_date, feature, type }, i) => {
                                                       const identityFlag = identityFlags[id] || {};
                                                       const environmentFlag = (environmentFlags && environmentFlags[id]) || {};
-                                                      const hasUserOverride = identityFlag.identity;
+                                                      const hasUserOverride = identityFlag.identity || identityFlag.identity_uuid;
                                                       const flagEnabled = hasUserOverride
                                                           ? identityFlag.enabled
                                                           : environmentFlag.enabled; // show default value s
@@ -317,6 +317,7 @@ const UserPage = class extends Component {
                                                                   <Column>
                                                                       <Button
                                                                         onClick={() => this.confirmRemove(_.find(projectFlags, { id }), () => {
+                                                                            debugger
                                                                             removeFlag({
                                                                                 environmentId: this.props.match.params.environmentId,
                                                                                 identity: this.props.match.params.id,
@@ -431,60 +432,62 @@ const UserPage = class extends Component {
                                                     />
                                                 </FormGroup>
                                             )}
-                                            <IdentitySegmentsProvider id={this.props.match.params.id}>
-                                                {({ isLoading: segmentsLoading, segments }) => (segmentsLoading ? <div className="text-center"><Loader/></div> : (
-                                                    <FormGroup>
-                                                        <PanelSearch
-                                                          id="user-segments-list"
-                                                          className="no-pad"
-                                                          icon="ion-ios-globe"
-                                                          title="Segments"
-                                                          itemHeight={70}
-                                                          items={segments || []}
-                                                          renderRow={({ name, id, enabled, created_date, type, description }, i) => (
-                                                              <Row
-                                                                onClick={() => this.editSegment(segments[i])}
-                                                                className="list-item clickable"
-                                                                space
-                                                                key={i}
-                                                              >
-                                                                  <div
-                                                                    className="flex flex-1"
-                                                                  >
-                                                                      <Row>
-                                                                          <ButtonLink
-                                                                            onClick={() => this.editSegment(segments[i])}
-                                                                          >
+                                            {Utils.showUserSegments() && (
+                                                <IdentitySegmentsProvider id={this.props.match.params.id}>
+                                                    {({ isLoading: segmentsLoading, segments }) => (segmentsLoading ? <div className="text-center"><Loader/></div> : (
+                                                        <FormGroup>
+                                                            <PanelSearch
+                                                                id="user-segments-list"
+                                                                className="no-pad"
+                                                                icon="ion-ios-globe"
+                                                                title="Segments"
+                                                                itemHeight={70}
+                                                                items={segments || []}
+                                                                renderRow={({ name, id, enabled, created_date, type, description }, i) => (
+                                                                    <Row
+                                                                        onClick={() => this.editSegment(segments[i])}
+                                                                        className="list-item clickable"
+                                                                        space
+                                                                        key={i}
+                                                                    >
+                                                                        <div
+                                                                            className="flex flex-1"
+                                                                        >
+                                                                            <Row>
+                                                                                <ButtonLink
+                                                                                    onClick={() => this.editSegment(segments[i])}
+                                                                                >
                                                                               <span data-test={`segment-${i}-name`} className="bold-link">
                                                                                   {name}
                                                                               </span>
-                                                                          </ButtonLink>
-                                                                      </Row>
-                                                                      <div className="list-item-footer faint mt-2">
-                                                                          {description ? <div>{description}<br/></div> : ''}
-                                                                            Created
-                                                                          {' '}
-                                                                          {moment(created_date).format('DD/MMM/YYYY')}
-                                                                      </div>
-                                                                  </div>
-                                                              </Row>
-                                                          )
-                                                            }
-                                                          renderNoResults={(
-                                                              <Panel
-                                                                icon="ion-ios-globe"
-                                                                title="Segments"
-                                                              >
-                                                                  <div className="text-center">
-                                                                        This user is not part of any segment.
-                                                                  </div>
-                                                              </Panel>
-                                                            )}
-                                                          filterRow={({ name }, search) => name.toLowerCase().indexOf(search) > -1}
-                                                        />
-                                                    </FormGroup>
-                                                ))}
-                                            </IdentitySegmentsProvider>
+                                                                                </ButtonLink>
+                                                                            </Row>
+                                                                            <div className="list-item-footer faint mt-2">
+                                                                                {description ? <div>{description}<br/></div> : ''}
+                                                                                Created
+                                                                                {' '}
+                                                                                {moment(created_date).format('DD/MMM/YYYY')}
+                                                                            </div>
+                                                                        </div>
+                                                                    </Row>
+                                                                )
+                                                                }
+                                                                renderNoResults={(
+                                                                    <Panel
+                                                                        icon="ion-ios-globe"
+                                                                        title="Segments"
+                                                                    >
+                                                                        <div className="text-center">
+                                                                            This user is not part of any segment.
+                                                                        </div>
+                                                                    </Panel>
+                                                                )}
+                                                                filterRow={({ name }, search) => name.toLowerCase().indexOf(search) > -1}
+                                                            />
+                                                        </FormGroup>
+                                                    ))}
+                                                </IdentitySegmentsProvider>
+                                            )}
                                         </FormGroup>
                                     </div>
                                     <div className="col-md-12 mt-2">
