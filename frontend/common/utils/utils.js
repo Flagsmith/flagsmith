@@ -31,7 +31,7 @@ module.exports = Object.assign({}, require('./base/_utils'), {
       if (flagsmith.hasFeature("edge_identities") && ProjectStore.model && ProjectStore.model.use_edge_identities) {
           return Project.flagsmithClientEdgeAPI
       }
-      return Project.flagsmithClientAPI
+      return Project.api
     },
 
     getFeatureStatesEndpoint() {
