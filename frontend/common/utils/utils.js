@@ -27,6 +27,20 @@ module.exports = Object.assign({}, require('./base/_utils'), {
       return "identities"
     },
 
+    getSDKEndpoint() {
+      if (flagsmith.hasFeature("edge_identities") && ProjectStore.model && ProjectStore.model.use_edge_identities) {
+          return Project.flagsmithClientEdgeAPI
+      }
+      return Project.api
+    },
+
+    getFeatureStatesEndpoint() {
+      if (flagsmith.hasFeature("edge_identities") && ProjectStore.model && ProjectStore.model.use_edge_identities) {
+          return "edge-featurestates"
+      }
+      return "featurestates"
+    },
+
     getManageFeaturePermissionDescription() {
         if (flagsmith.hasFeature('update_feature_state_permission')) {
             return 'Update Feature State';
