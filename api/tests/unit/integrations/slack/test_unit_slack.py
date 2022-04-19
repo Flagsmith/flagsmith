@@ -1,3 +1,7 @@
+import pytest
+from slack_sdk.errors import SlackApiError
+
+from integrations.slack.exceptions import SlackChannelJoinError
 from integrations.slack.slack import SlackChannel, SlackWrapper
 
 
@@ -65,6 +69,20 @@ def test_join_channel_makes_correct_call(mocker, mocked_slack_internal_client):
 
     # Then
     mocked_slack_internal_client.conversations_join.assert_called_with(channel=channel)
+
+
+def test_join_channel_raises_slack_channel_join_error_on_slack_api_error(
+    mocker, mocked_slack_internal_client
+):
+    # Given
+    channel = "channel_1"
+    api_token = "random_token"
+    mocked_slack_internal_client.conversations_join.side_effect = SlackApiError(
+        message="server_error", response={"error": "some_error_code"}
+    )
+    # Then
+    with pytest.raises(SlackChannelJoinError):
+        SlackWrapper(api_token=api_token, channel_id=channel).join_channel()
 
 
 def test_get_bot_token_makes_correct_calls(
