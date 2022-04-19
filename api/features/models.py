@@ -495,7 +495,10 @@ class FeatureState(LifecycleModel, models.Model):
 
     @classmethod
     def get_environment_flags_list(
-        cls, environment: "Environment", feature_name: str = None
+        cls,
+        environment: "Environment",
+        feature_name: str = None,
+        additional_filters: Q = None,
     ) -> typing.List["FeatureState"]:
         """
         Get a list of the latest committed versions of FeatureState objects that are
@@ -513,8 +516,6 @@ class FeatureState(LifecycleModel, models.Model):
             cls.objects.select_related("feature", "feature_state_value")
             .filter(
                 environment=environment,
-                identity=None,
-                feature_segment=None,
                 live_from__isnull=False,
                 live_from__lte=timezone.now(),
                 version__isnull=False,
@@ -528,54 +529,36 @@ class FeatureState(LifecycleModel, models.Model):
         if feature_name:
             feature_states = feature_states.filter(feature__name__iexact=feature_name)
 
-        # Build up a dictionary in the form {feature: feature_state} and only keep the
-        # latest version for each feature.
+        if additional_filters:
+            feature_states = feature_states.filter(additional_filters)
+
+        # Build up a dictionary in the form
+        # {(feature_id, feature_segment_id, identity_id): feature_state}
+        # and only keep the latest version for each feature.
         feature_states_dict = {}
         for feature_state in feature_states:
-            current_feature_state = feature_states_dict.get(feature_state.feature)
+            key = (
+                feature_state.feature_id,
+                feature_state.feature_segment_id,
+                feature_state.identity_id,
+            )
+            current_feature_state = feature_states_dict.get(key)
             if (
                 not current_feature_state
                 or feature_state.version > current_feature_state.version
             ):
-                feature_states_dict[feature_state.feature] = feature_state
+                feature_states_dict[key] = feature_state
 
         return list(feature_states_dict.values())
 
     @classmethod
-    def get_environment_flags_queryset(
-        cls, environments: typing.List["Environment"]
-    ) -> QuerySet:
+    def get_environment_flags_queryset(cls, environment: "Environment") -> QuerySet:
         """
-        Get a queryset of the latest committed versions of an environments feature
-        states, including those that are associated with a feature segment or identity.
-
-        Note: This method uses 2 queries. The first gets a dictionary containing the ids
-        of each of the combinations of identity, feature_segment & feature plus the
-        latest version number for that combination. This information is then used to
-        build a query to get the correct feature states. Returns a QuerySet.
+        Get a queryset of the latest live versions of an environments' feature states
         """
 
-        latest_versions_qs = (
-            cls.objects.filter(
-                environment__in=environments,
-                live_from__lte=timezone.now(),
-                version__isnull=False,
-            )
-            .values("environment_id", "feature_id", "feature_segment_id", "identity_id")
-            .annotate(max_version=Max("version"))
-            .order_by()
-        )
-        q = Q()
-        for latest_version_dict in latest_versions_qs:
-            q = q | Q(
-                environment_id=latest_version_dict["environment_id"],
-                feature_id=latest_version_dict["feature_id"],
-                identity_id=latest_version_dict["identity_id"],
-                feature_segment_id=latest_version_dict["feature_segment_id"],
-                version=latest_version_dict["max_version"],
-            )
-
-        return cls.objects.filter(Q(environment__in=environments) & q)
+        feature_states_list = cls.get_environment_flags_list(environment)
+        return FeatureState.objects.filter(id__in=[fs.id for fs in feature_states_list])
 
     @hook(BEFORE_CREATE)
     def set_live_from_for_version_1(self):
