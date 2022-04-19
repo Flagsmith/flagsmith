@@ -35,8 +35,6 @@ from projects.serializers import (
     ProjectSerializer,
 )
 
-project_permissions_calculator = ProjectPermissionsCalculator()
-
 
 @method_decorator(
     name="list",
@@ -96,9 +94,12 @@ class ProjectViewSet(viewsets.ModelViewSet):
         url_name="my-permissions",
     )
     def user_permissions(self, request, *args, **kwargs):
+        project_permissions_calculator = ProjectPermissionsCalculator(
+            project_id=kwargs["project_pk"]
+        )
         permission_data = (
             project_permissions_calculator.get_user_project_permission_data(
-                user_id=request.user.id, project_id=self.get_object().id
+                user_id=request.user.id
             )
         )
         serializer = UserObjectPermissionsSerializer(instance=permission_data)
@@ -163,15 +164,14 @@ class UserPermissionGroupProjectPermissionsViewSet(viewsets.ModelViewSet):
 @api_view(http_method_names=["GET"])
 @permission_classes([IsAuthenticated, IsProjectAdmin])
 def get_user_project_permissions(request, **kwargs):
-    project_id = kwargs["project_pk"]
     user_id = kwargs["user_pk"]
 
+    project_permissions_calculator = ProjectPermissionsCalculator(kwargs["project_pk"])
     user_permissions_data = (
-        project_permissions_calculator.get_user_project_permission_data(
-            user_id, project_id
-        )
+        project_permissions_calculator.get_user_project_permission_data(user_id)
     )
 
+    # TODO: expose `user` and `groups` attributes from user_permissions_data
     return Response(
         {
             "admin": user_permissions_data.admin,

@@ -37,7 +37,7 @@ from users.models import UserPermissionGroup
         (set(), True, set(), True, set(), True),
     ),
 )
-def test_permissions_calculator_get_user_project_permission_data_admin_user(
+def test_permissions_calculator_get_user_project_permission_data(
     project,
     django_user_model,
     user_permissions,
@@ -71,11 +71,11 @@ def test_permissions_calculator_get_user_project_permission_data_admin_user(
     for permission_key in group_permissions:
         group_project_permission.permissions.add(project_permissions[permission_key])
 
-    permission_calculator = ProjectPermissionsCalculator()
+    permission_calculator = ProjectPermissionsCalculator(project_id=project.id)
 
     # When
     user_permission_data = permission_calculator.get_user_project_permission_data(
-        user_id=user.id, project_id=project.id
+        user_id=user.id
     )
 
     # Then
