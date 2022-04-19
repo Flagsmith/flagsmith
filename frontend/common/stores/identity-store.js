@@ -27,8 +27,8 @@ const controller = {
         store.saving();
         API.trackEvent(Constants.events.TOGGLE_USER_FEATURE);
         const prom = identityFlag.identity
-            ? data.put(`${Project.api}environments/${environmentId}/${Utils.getIdentitiesEndpoint()}/${identity}/${Utils.getFeatureStatesEndpoint()}/${identityFlag.id}/`, Object.assign({}, {
-                id: identityFlag.id,
+            ? data.put(`${Project.api}environments/${environmentId}/${Utils.getIdentitiesEndpoint()}/${identity}/${Utils.getFeatureStatesEndpoint()}/${identityFlag.id||identityFlag.featurestate_uuid}/`, Object.assign({}, {
+                id: identityFlag.id||identityFlag.featurestate_uuid,
                 enabled: !identityFlag.enabled,
                 feature_state_value: identityFlag.feature_state_value || environmentFlag.feature_state_value,
             }))
@@ -64,8 +64,8 @@ const controller = {
         store.saving();
         API.trackEvent(Constants.events.EDIT_USER_FEATURE);
         const prom = identityFlag.identity
-            ? data.put(`${Project.api}environments/${environmentId}/${Utils.getIdentitiesEndpoint()}/${identity}/${Utils.getFeatureStatesEndpoint()}/${identityFlag.id}/`, Object.assign({}, {
-                id: identityFlag.id,
+            ? data.put(`${Project.api}environments/${environmentId}/${Utils.getIdentitiesEndpoint()}/${identity}/${Utils.getFeatureStatesEndpoint()}/${identityFlag.id||identityFlag.featurestate_uuid}/`, Object.assign({}, {
+                id: identityFlag.id||identityFlag.featurestate_uuid,
                 enabled: identityFlag.enabled,
                 multivariate_feature_state_values:identityFlag.multivariate_options,
                 feature_state_value: identityFlag.feature_state_value,
@@ -83,7 +83,7 @@ const controller = {
     removeUserFlag(identity, identityFlag, environmentId) {
         store.saving();
         API.trackEvent(Constants.events.REMOVE_USER_FEATURE);
-        data.delete(`${Project.api}environments/${environmentId}/${Utils.getIdentitiesEndpoint()}/${identity}/${Utils.getFeatureStatesEndpoint()}/${identityFlag.id}/`)
+        data.delete(`${Project.api}environments/${environmentId}/${Utils.getIdentitiesEndpoint()}/${identity}/${Utils.getFeatureStatesEndpoint()}/${identityFlag.id||identityFlag.featurestate_uuid}/`)
             .then(() => controller.getIdentity(environmentId, identity)
                 .then(() => store.saved()));
     },
