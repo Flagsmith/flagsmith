@@ -3,9 +3,12 @@ from typing import List
 
 from django.conf import settings
 from slack_sdk import WebClient
+from slack_sdk.errors import SlackApiError
 from slack_sdk.http_retry.builtin_handlers import RateLimitErrorRetryHandler
 
 from integrations.common.wrapper import AbstractBaseEventIntegrationWrapper
+
+from .exceptions import SlackChannelJoinError
 
 
 @dataclass
@@ -34,8 +37,11 @@ class SlackWrapper(AbstractBaseEventIntegrationWrapper):
         )
         return oauth_response.get("access_token")
 
-    def join_channel(self) -> None:
-        self._client.conversations_join(channel=self.channel_id)
+    def join_channel(self):
+        try:
+            self._client.conversations_join(channel=self.channel_id)
+        except SlackApiError as e:
+            raise SlackChannelJoinError(e.response.get("error")) from e
 
     def get_channels_data(self, **kwargs) -> ChannelsDataResponse:
         """

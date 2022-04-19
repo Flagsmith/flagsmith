@@ -3,25 +3,33 @@ from rest_framework import serializers
 
 from integrations.slack.models import SlackConfiguration, SlackEnvironment
 
+from .exceptions import SlackChannelJoinError
+from .slack import SlackWrapper
+
 
 class SlackEnvironmentSerializer(serializers.ModelSerializer):
     class Meta:
         model = SlackEnvironment
         fields = ("id", "channel_id", "enabled")
 
-    def create(self, validated_data):
+    def save(self, **kwargs):
         try:
-            config = SlackConfiguration.objects.get(
-                project=validated_data["environment"].project
+            slack_configuration = SlackConfiguration.objects.get(
+                project=kwargs.get("environment").project
             )
-        except ObjectDoesNotExist:
+        except ObjectDoesNotExist as e:
             raise serializers.ValidationError(
                 "Slack api token not found. Please generate the token using oauth"
-            )
-
-        return SlackEnvironment.objects.create(
-            **validated_data, slack_configuration=config
-        )
+            ) from e
+        kwargs.update(slack_configuration=slack_configuration)
+        try:
+            SlackWrapper(
+                api_token=slack_configuration.api_token,
+                channel_id=self.validated_data.get("channel_id"),
+            ).join_channel()
+        except SlackChannelJoinError as e:
+            raise serializers.ValidationError(e) from e
+        return super().save(**kwargs)
 
 
 class SlackChannelSerializer(serializers.Serializer):

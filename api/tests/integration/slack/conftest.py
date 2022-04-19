@@ -46,7 +46,7 @@ def slack_environment_config(
         args=[environment_api_key],
     )
     env_config = {"channel_id": "channel_id1", "enabled": True}
-    mocker.patch("integrations.slack.models.SlackWrapper.join_channel")
+    mocker.patch("integrations.slack.serializers.SlackWrapper.join_channel")
     response = admin_client.post(
         url,
         data=json.dumps(env_config),
