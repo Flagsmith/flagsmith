@@ -17,7 +17,6 @@ from permissions.serializers import (
     UserObjectPermissionsSerializer,
 )
 from projects.models import (
-    Project,
     ProjectPermissionModel,
     UserPermissionGroupProjectPermission,
     UserProjectPermission,
