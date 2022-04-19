@@ -6,6 +6,7 @@ import TabItem from './base/forms/TabItem';
 import AvailablePermissionsProvider from '../../common/providers/AvailablePermissionsProvider';
 import _data from '../../common/data/base/_data';
 import UserGroupList from './UserGroupList';
+import InfoMessage from './InfoMessage';
 // import propTypes from 'prop-types';
 
 class _EditPermissionsModal extends Component {
@@ -34,7 +35,7 @@ class _EditPermissionsModal extends Component {
                   }
 
                   if (!entityPermissions.admin && !(entityPermissions.permissions.find(v => v === (`VIEW_${this.props.parentLevel.toUpperCase()}`)))) {
-                      throw 'Error';
+                      this.state.parentError = true;
                   }
               });
       }
@@ -120,18 +121,6 @@ class _EditPermissionsModal extends Component {
           <AvailablePermissionsProvider level={level}>
               {(props) => {
                   const { permissions, isLoading } = props;
-                  if (this.state.parentError) {
-                      return (
-                          <div>
-                              The selected {this.props.isGroup ? 'group' : 'user'} does not have permission to view this {this.props.parentLevel}. Please adjust their permissions in <a onClick={() => {
-                              this.props.push(this.props.parentSettingsLink);
-                              closeModal();
-                          }}
-                              ><strong>{this.props.parentLevel} settings</strong>
-                              </a>.
-                          </div>
-                      );
-                  }
                   return (isLoading || !permissions || !entityPermissions ? <div className="text-center"><Loader/></div>
                       : (
                           <div>
@@ -188,6 +177,19 @@ class _EditPermissionsModal extends Component {
                               <p className="text-right mt-2">
                                 This will edit the permissions for <bold>{this.props.isGroup ? `the ${this.props.name} group` : ` ${this.props.name}`}</bold>.
                               </p>
+
+                              {
+                                  this.state.parentError && (
+                                      <InfoMessage>
+                                          The selected {this.props.isGroup ? 'group' : 'user'} does not have explicit user permissions to view this {this.props.parentLevel}. If the user does not belong to any groups with this permissions, you may have to adjust their permissions in <a onClick={() => {
+                                          this.props.push(this.props.parentSettingsLink);
+                                          closeModal();
+                                      }}
+                                      ><strong>{this.props.parentLevel} settings</strong>
+                                      </a>.
+                                      </InfoMessage>
+                                  )
+                              }
                               <div className="text-right">
                                   <Button
                                     onClick={this.save} data-test="update-feature-btn" id="update-feature-btn"
