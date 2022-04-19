@@ -2,6 +2,7 @@ from unittest import mock
 
 import pytest
 from django.core.exceptions import ValidationError
+from django.db.models import Q
 from django.db.utils import IntegrityError
 from django.test import TestCase
 from django.utils import timezone
@@ -461,7 +462,8 @@ class FeatureStateTest(TestCase):
 
         # When
         environment_feature_states = FeatureState.get_environment_flags_list(
-            environment=self.environment
+            environment=self.environment,
+            additional_filters=Q(feature_segment=None, identity=None),
         )
 
         # Then

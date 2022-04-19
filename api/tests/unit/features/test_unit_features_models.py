@@ -19,7 +19,7 @@ def test_feature_state_get_environment_flags_queryset_returns_only_latest_versio
 
     # When
     feature_states = FeatureState.get_environment_flags_queryset(
-        environments=[environment]
+        environment=environment
     )
 
     # Then
