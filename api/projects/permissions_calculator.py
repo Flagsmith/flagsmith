@@ -50,6 +50,7 @@ class UserProjectPermissionData:
             reduce(
                 lambda a, b: a.union(b),
                 [group.permissions for group in self.groups],
+                set(),
             )
         )
 
