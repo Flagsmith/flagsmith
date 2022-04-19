@@ -8,6 +8,7 @@ from rest_framework import viewsets
 from rest_framework.decorators import action, api_view, permission_classes
 from rest_framework.exceptions import ValidationError
 from rest_framework.permissions import IsAuthenticated
+from rest_framework.request import Request
 from rest_framework.response import Response
 
 from environments.serializers import EnvironmentSerializerLight
@@ -93,10 +94,8 @@ class ProjectViewSet(viewsets.ModelViewSet):
         url_path="my-permissions",
         url_name="my-permissions",
     )
-    def user_permissions(self, request, *args, **kwargs):
-        project_permissions_calculator = ProjectPermissionsCalculator(
-            project_id=kwargs["project_pk"]
-        )
+    def user_permissions(self, request: Request, pk: int = None):
+        project_permissions_calculator = ProjectPermissionsCalculator(project_id=pk)
         permission_data = (
             project_permissions_calculator.get_user_project_permission_data(
                 user_id=request.user.id
