@@ -357,6 +357,9 @@ const store = Object.assign({}, BaseStore, {
         if (!store.model) return []
         return _.filter(store.model.organisations.map(org => org.subscription && org.subscription.plan), plan => !!plan);
     },
+    getActiveOrgPlan() {
+        return store.organisation && store.organisation.subscription && store.organisation.subscription.plan
+    },
     getDate() {
         return store.getOrganisation() && store.getOrganisation().created_date;
     },

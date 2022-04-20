@@ -40,7 +40,7 @@ const ChangeRequestsPage = class extends Component {
         const data = ChangeRequestStore.model && ChangeRequestStore.model[environmentId];
         const dataClosed = ChangeRequestStore.committed && ChangeRequestStore.committed[environmentId];
         const dataScheduled = ChangeRequestStore.scheduled && ChangeRequestStore.scheduled[environmentId];
-        const hasPermission = Utils.getPlansPermission(AccountStore.getPlans(), '4_EYES');
+        const hasPermission = Utils.getPlansPermission('4_EYES');
         const environment = ProjectStore.getEnvironment(environmentId);
         return (
             <div data-test="change-requests-page" id="change-requests-page" className="app-container container">

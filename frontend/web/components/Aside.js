@@ -76,7 +76,7 @@ const Aside = class extends Component {
         let integrations = this.props.getValue('integrations') || '[]';
         integrations = JSON.parse(integrations);
         const environmentId = (this.props.environmentId !== 'create' && this.props.environmentId) || (ProjectStore.model && ProjectStore.model.environments[0].api_key);
-        const hasRbacPermission = !this.props.hasFeature('plan_based_access') || Utils.getPlansPermission(AccountStore.getPlans(), 'AUDIT') || !this.props.hasFeature('scaleup_audit');
+        const hasRbacPermission = !this.props.hasFeature('plan_based_access') || Utils.getPlansPermission('AUDIT') || !this.props.hasFeature('scaleup_audit');
         const has4Eyes = flagsmith.hasFeature('4eyes');
         const changeRequest = ChangeRequestStore.model[this.props.environmentId];
         const changeRequests = (changeRequest && changeRequest.length) || 0;
