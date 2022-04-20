@@ -216,7 +216,9 @@ const PaymentModal = class extends Component {
                                                         {!viewOnly ? (
                                                             <a
                                                               onClick={() => {
-                                                                  openModal('Contact Sales', <ContactForm onComplete={closeModal}/>);
+                                                                  if(window.$crisp){
+                                                                      $crisp.push(['do', 'chat:open'])
+                                                                  }
                                                               }}
                                                               href="#"
                                                               className="pricing-cta blue"
