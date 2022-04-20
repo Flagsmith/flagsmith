@@ -119,7 +119,7 @@ const EnvironmentSettingsPage = class extends Component {
 
     render() {
         const { props: { webhooks, webhooksLoading }, state: { name } } = this;
-        const has4EyesPermission = Utils.getPlansPermission(AccountStore.getPlans(), '4_EYES');
+        const has4EyesPermission = Utils.getPlansPermission('4_EYES');
 
         return (
             <div className="app-container container">
