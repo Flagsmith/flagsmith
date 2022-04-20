@@ -595,9 +595,6 @@ class FeatureStateValue(AbstractBaseFeatureValueModel):
         FeatureState, related_name="feature_state_value", on_delete=models.CASCADE
     )
 
-    # TODO: increase max length of string value on base model class
-    string_value = models.CharField(null=True, max_length=20000, blank=True)
-
     history = HistoricalRecords()
 
     def clone(self, feature_state: FeatureState) -> "FeatureStateValue":
