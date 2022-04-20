@@ -90,7 +90,10 @@ class EdgeIdentityViewSet(viewsets.ModelViewSet):
         Identity.dynamo_wrapper.delete_item(instance["composite_key"])
 
 
-class EdgeIdentityFeatureStateViewSet(viewsets.ModelViewSet):
+from .views_mixins import GetIdentityMixin
+
+
+class EdgeIdentityFeatureStateViewSet(viewsets.ModelViewSet, GetIdentityMixin):
     permission_classes = [IsAuthenticated, IdentityFeatureStatePermissions]
     lookup_field = "featurestate_uuid"
 
@@ -100,17 +103,7 @@ class EdgeIdentityFeatureStateViewSet(viewsets.ModelViewSet):
 
     def initial(self, request, *args, **kwargs):
         super().initial(request, *args, **kwargs)
-        self.identity = self._get_identity_from_request()
-
-    def _get_identity_from_request(self):
-        """
-        Get identity object from URL parameters in request.
-        """
-
-        identity_document = Identity.dynamo_wrapper.get_item_from_uuid_or_404(
-            self.kwargs["edge_identity_identity_uuid"]
-        )
-        return build_identity_model(identity_document)
+        self.identity = self.get_identity_from_request_or_404()
 
     def get_object(self):
         featurestate_uuid = self.kwargs["featurestate_uuid"]

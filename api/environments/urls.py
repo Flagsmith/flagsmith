@@ -101,6 +101,11 @@ edge_identity_router.register(
     EdgeIdentityFeatureStateViewSet,
     basename="edge-identity-featurestates",
 )
+edge_identity_router.register(
+    r"edge-traits",
+    EdgeIdentityTraitsViewSet,
+    basename="edge-identity-traits",
+)
 environments_router.register(
     r"integrations/slack-channels",
     SlackGetChannelsViewSet,
