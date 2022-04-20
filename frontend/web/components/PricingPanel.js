@@ -122,7 +122,9 @@ Team Members
                                         <p className="text-small text-center">for enterprise pricing</p>
                                         <a
                                           onClick={() => {
-                                              openModal('Contact Sales', <ContactForm onComplete={closeModal}/>);
+                                              if(window.$crisp){
+                                                  $crisp.push(['do', 'chat:open'])
+                                              }
                                           }} className="pricing-cta blue"
                                         >Contact Us
                                         </a>
