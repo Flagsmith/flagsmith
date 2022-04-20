@@ -123,6 +123,7 @@ Team Members
                                         <a
                                           onClick={() => {
                                               if(window.$crisp){
+                                                  closeModal()
                                                   $crisp.push(['do', 'chat:open'])
                                               }
                                           }} className="pricing-cta blue"
