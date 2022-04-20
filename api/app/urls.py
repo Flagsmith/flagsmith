@@ -62,6 +62,3 @@ if settings.WORKFLOWS_LOGIC_INSTALLED:
             ),
         ]
     )
-
-# Catch all for subfolder views on the front end
-urlpatterns.append(url(r"^.*/$", views.index, name="index"))
