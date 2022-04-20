@@ -297,9 +297,9 @@ const OrganisationSettingsPage = class extends Component {
         const { hasFeature, getValue } = this.props;
         const { name, webhook_notification_email } = this.state;
         const { props: { webhooks, webhooksLoading } } = this;
-        const hasRbacPermission = !this.props.hasFeature('plan_based_access') || Utils.getPlansPermission(AccountStore.getPlans(), 'RBAC');
+        const hasRbacPermission = !this.props.hasFeature('plan_based_access') || Utils.getPlansPermission('RBAC');
         const paymentsEnabled = this.props.hasFeature('payments_enabled');
-        const force2faPermission = Utils.getPlansPermission(AccountStore.getPlans(), 'FORCE_2FA');
+        const force2faPermission = Utils.getPlansPermission('FORCE_2FA');
 
         return (
             <div className="app-container container">

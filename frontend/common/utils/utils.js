@@ -204,7 +204,10 @@ module.exports = Object.assign({}, require('./base/_utils'), {
         Utils.scrollToElement('.signup-form');
     },
 
-    getPlansPermission: (plans, permission) => {
+    getPlansPermission: (permission) => {
+        const isOrgPermission = permission !== '2FA';
+        const plans = isOrgPermission? [AccountStore.getActiveOrgPlan()]: AccountStore.getPlans()
+
         if (!plans || !plans.length) {
             return false;
         }
