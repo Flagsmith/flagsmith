@@ -99,9 +99,7 @@ const Aside = class extends Component {
                                         </div>
                                     )}
                                     <div className="row ml-0 mr-0 aside__wrapper">
-                                  x        <div
-                                    className={`aside__projects-sidebar ${this.props.className || ''}`}
-                                  >
+                                      <div className={`aside__projects-sidebar ${this.props.className || ''}`}>
                                       <div className="flex-row justify-content-center">
                                           <div className="flex-column">
                                               <Link to="/projects">
