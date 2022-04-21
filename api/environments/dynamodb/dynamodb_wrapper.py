@@ -21,7 +21,8 @@ class DynamoWrapper:
 
     def __init__(self):
         self._table = None
-        if table := getattr(settings, self.TABLE_NAME):
+        table = getattr(settings, self.TABLE_NAME)
+        if table:
             self._table = boto3.resource("dynamodb").Table(table)
 
     @property
