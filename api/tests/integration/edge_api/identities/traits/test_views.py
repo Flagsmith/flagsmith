@@ -28,7 +28,7 @@ def test_edge_identities_traits_list(
         environment_api_key, identity_uuid
     )
     assert response.status_code == status.HTTP_200_OK
-    assert response.json()["traits"] == identity_traits
+    assert response.json() == identity_traits
 
 
 def test_edge_identities_traits_list_returns_404_if_identity_does_not_exists(
