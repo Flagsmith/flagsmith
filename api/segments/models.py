@@ -5,12 +5,12 @@ import semver
 from core.constants import BOOLEAN, FLOAT, INTEGER
 from django.core.exceptions import ValidationError
 from django.db import models
+from flag_engine.utils.semver import is_semver, remove_semver_suffix
 
 from environments.identities.helpers import (
     get_hashed_percentage_for_object_ids,
 )
 from projects.models import Project
-from util.semver import is_semver, remove_semver_suffix
 
 if typing.TYPE_CHECKING:
     from environments.identities.models import Identity
