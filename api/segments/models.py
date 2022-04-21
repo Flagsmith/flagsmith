@@ -182,7 +182,7 @@ class Condition(models.Model):
                     return self.check_float_value(trait.float_value)
                 elif trait.value_type == BOOLEAN:
                     return self.check_boolean_value(trait.boolean_value)
-                elif is_semver(trait.string_value) and is_semver(self.value):
+                elif is_semver(self.value):
                     return self.check_semver_value(trait.string_value)
                 else:
                     return self.check_string_value(trait.string_value)
@@ -261,22 +261,21 @@ class Condition(models.Model):
             condition_version_info = semver.VersionInfo.parse(
                 remove_semver_suffix(self.value)
             )
-            trait_version_info = semver.VersionInfo.parse(remove_semver_suffix(value))
         except ValueError:
             return False
 
         if self.operator == EQUAL:
-            return trait_version_info == condition_version_info
+            return value == condition_version_info
         elif self.operator == GREATER_THAN:
-            return trait_version_info > condition_version_info
+            return value > condition_version_info
         elif self.operator == GREATER_THAN_INCLUSIVE:
-            return trait_version_info >= condition_version_info
+            return value >= condition_version_info
         elif self.operator == LESS_THAN:
-            return trait_version_info < condition_version_info
+            return value < condition_version_info
         elif self.operator == LESS_THAN_INCLUSIVE:
-            return trait_version_info <= condition_version_info
+            return value <= condition_version_info
         elif self.operator == NOT_EQUAL:
-            return trait_version_info != condition_version_info
+            return value != condition_version_info
 
         return False
 

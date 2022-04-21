@@ -10,4 +10,4 @@ def is_semver(value: str) -> bool:
 
 
 def remove_semver_suffix(value: str) -> str:
-    return value[0:-7]
+    return value[:-7]
