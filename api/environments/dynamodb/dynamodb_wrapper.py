@@ -5,10 +5,8 @@ import boto3
 from boto3.dynamodb.conditions import Key
 from django.conf import settings
 from django.core.exceptions import ObjectDoesNotExist
-from flag_engine.django_transform.document_builders import (
-    build_environment_document,
-    build_identity_document,
-)
+
+from flag_engine.api.document_builders import build_identity_document, build_environment_document
 
 from environments.models import Environment
 

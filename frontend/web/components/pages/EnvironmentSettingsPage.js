@@ -201,7 +201,7 @@ const EnvironmentSettingsPage = class extends Component {
                                                         <h3 className="m-b-0">Change Requests</h3>
                                                         {!has4EyesPermission? (
                                                             <p>
-                                                                View and manage your feature changes with a Four Eyes approval flow with our <a
+                                                                View and manage your feature changes with a Change Request flow with our <a
                                                                 href="#" onClick={() => {
                                                                 openModal('Payment plans', <PaymentModal
                                                                     viewOnly={false}
@@ -212,12 +212,12 @@ const EnvironmentSettingsPage = class extends Component {
                                                             </p>
                                                         ): (
                                                             <p>
-                                                                Require a minumim number of people to approve changes to features.
+                                                                Require a minimum number of people to approve changes to features.
                                                                 {' '}
                                                                 <ButtonLink
-                                                                    href="https://docs.flagsmith.com/advanced-use/4-eyes"
+                                                                    href="https://docs.flagsmith.com/advanced-use/change-requests"
                                                                     target="_blank"
-                                                                >Learn about Four Eyes.</ButtonLink>
+                                                                >Learn about Change Requests.</ButtonLink>
                                                             </p>
                                                         )}
 
