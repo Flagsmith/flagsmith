@@ -446,15 +446,15 @@ const AppActions = Object.assign({}, require('./base/_app-actions'), {
             projectId,
             actionType: Actions.GET_AUDIT_LOG_PAGE,
             page,
-            environmentId
+            environmentId,
         });
     },
-    searchAuditLog(search,projectId,environmentId) {
+    searchAuditLog(search, projectId, environmentId) {
         Dispatcher.handleViewAction({
             actionType: Actions.SEARCH_AUDIT_LOG,
             projectId,
             search,
-            environmentId
+            environmentId,
         });
     },
     deleteIdentity(envId, id) {
@@ -491,11 +491,13 @@ const AppActions = Object.assign({}, require('./base/_app-actions'), {
             id: organisationId,
         });
     },
-    getChangeRequests(environment, committed) {
+    getChangeRequests(environment, data, page) {
         Dispatcher.handleViewAction({
             actionType: Actions.GET_CHANGE_REQUESTS,
             environment,
-            committed,
+            committed: data.committed,
+            live_from_after: data.live_from_after,
+            page,
         });
     },
     getChangeRequest(id) {
@@ -511,11 +513,11 @@ const AppActions = Object.assign({}, require('./base/_app-actions'), {
         });
     },
 
-    deleteChangeRequest(id,cb) {
+    deleteChangeRequest(id, cb) {
         Dispatcher.handleViewAction({
             actionType: Actions.DELETE_CHANGE_REQUEST,
             id,
-            cb
+            cb,
         });
     },
     actionChangeRequest(id, action, cb) {
@@ -523,7 +525,7 @@ const AppActions = Object.assign({}, require('./base/_app-actions'), {
             actionType: Actions.ACTION_CHANGE_REQUEST,
             id,
             action,
-            cb
+            cb,
         });
     },
 });

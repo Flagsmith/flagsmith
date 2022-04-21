@@ -41,7 +41,7 @@ const Aside = class extends Component {
         this.state = {};
         ES6Component(this)
         AppActions.getProject(this.props.projectId);
-        AppActions.getChangeRequests(this.props.environmentId);
+        AppActions.getChangeRequests(this.props.environmentId, {});
         this.listenTo(ChangeRequestStore, 'change', ()=>this.forceUpdate())
     }
 
@@ -50,7 +50,7 @@ const Aside = class extends Component {
             AppActions.getProject(this.props.projectId);
         }
         if (newProps.environmentId !== this.props.environmentId) {
-            AppActions.getChangeRequests(newProps.environmentId);
+            AppActions.getChangeRequests(newProps.environmentId, {});
         }
     }
 
@@ -79,7 +79,7 @@ const Aside = class extends Component {
         const hasRbacPermission = !this.props.hasFeature('plan_based_access') || Utils.getPlansPermission('AUDIT') || !this.props.hasFeature('scaleup_audit');
         const has4Eyes = flagsmith.hasFeature('4eyes');
         const changeRequest = ChangeRequestStore.model[this.props.environmentId];
-        const changeRequests = (changeRequest && changeRequest.length) || 0;
+        const changeRequests = (changeRequest && changeRequest.count) || 0;
         return (
             <OrganisationProvider>
                 {({ isLoading: isLoadingOrg, projects }) => (
