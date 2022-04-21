@@ -1,6 +1,4 @@
-from flag_engine.django_transform.document_builders import (
-    build_environment_document,
-)
+from flag_engine.api.document_builders import build_environment_document
 
 from environments.dynamodb import DynamoEnvironmentWrapper
 from environments.models import Environment
