@@ -103,8 +103,8 @@ class ChangeRequest(LifecycleModel):
         current_site = Site.objects.filter(id=settings.SITE_ID).first()
         url = "https://"
         url += current_site.domain if current_site else "app.flagsmith.com"
-        url += f"/projects/{self.environment.project.id}"
-        url += f"/environments/{self.environment.api_key}"
+        url += f"/project/{self.environment.project.id}"
+        url += f"/environment/{self.environment.api_key}"
         url += f"/change-requests/{self.id}"
         return url
 
