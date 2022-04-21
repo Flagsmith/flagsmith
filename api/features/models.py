@@ -290,6 +290,41 @@ class FeatureState(LifecycleModel, models.Model):
         # it has a feature_segment or an identity
         return not (other.feature_segment or other.identity)
 
+    def __str__(self):
+        s = f"Feature {self.feature.name} - Enabled: {self.enabled}"
+        if self.environment is not None:
+            s = f"{self.environment} - {s}"
+        elif self.identity is not None:
+            s = f"Identity {self.identity.identifier} - {s}"
+        return s
+
+    @property
+    def previous_feature_state_value(self):
+        try:
+            history_instance = self.feature_state_value.history.first()
+            return (
+                history_instance
+                and getattr(history_instance, "prev_record", None)
+                and history_instance.prev_record.instance.value
+            )
+        except ObjectDoesNotExist:
+            return None
+
+    @property
+    def type(self) -> str:
+        if self.identity_id and self.feature_segment_id is None:
+            return IDENTITY
+        elif self.feature_segment_id and self.identity_id is None:
+            return FEATURE_SEGMENT
+        elif self.identity_id is None and self.feature_segment_id is None:
+            return ENVIRONMENT
+
+        logger.error(
+            "FeatureState %d does not have a valid type. Defaulting to environment.",
+            self.id,
+        )
+        return ENVIRONMENT
+
     def clone(
         self,
         env: "Environment",
@@ -327,6 +362,21 @@ class FeatureState(LifecycleModel, models.Model):
 
         return clone
 
+    def generate_feature_state_value_data(self, value):
+        """
+        Takes the value of a feature state to generate a feature state value and returns dictionary
+        to use for passing into feature state value serializer
+
+        :param value: feature state value of variable type
+        :return: dictionary to pass directly into feature state value serializer
+        """
+        fsv_type = self.get_feature_state_value_type(value)
+        return {
+            "type": fsv_type,
+            "feature_state": self.id,
+            self.get_feature_state_key_name(fsv_type): value,
+        }
+
     def get_feature_state_value(self, identity: "Identity" = None) -> typing.Any:
         feature_state_value = (
             self.get_multivariate_feature_state_value(identity)
@@ -338,6 +388,20 @@ class FeatureState(LifecycleModel, models.Model):
         # has a related feature state value. Note that we use getattr rather than
         # hasattr as we want to return None if no feature state value exists.
         return feature_state_value and feature_state_value.value
+
+    def get_feature_state_value_defaults(self) -> dict:
+        if self.feature.initial_value is None:
+            return {}
+
+        value = self.feature.initial_value
+        type = get_value_type(value)
+        parse_func = {
+            BOOLEAN: get_boolean_from_string,
+            INTEGER: get_integer_from_string,
+        }.get(type, lambda v: v)
+        key_name = self.get_feature_state_key_name(type)
+
+        return {"type": type, key_name: parse_func(value)}
 
     def get_multivariate_feature_state_value(
         self, identity: "Identity"
@@ -369,33 +433,6 @@ class FeatureState(LifecycleModel, models.Model):
         # if there isn't one - although this should never happen)
         return getattr(self, "feature_state_value", None)
 
-    @property
-    def previous_feature_state_value(self):
-        try:
-            history_instance = self.feature_state_value.history.first()
-            return (
-                history_instance
-                and getattr(history_instance, "prev_record", None)
-                and history_instance.prev_record.instance.value
-            )
-        except ObjectDoesNotExist:
-            return None
-
-    @property
-    def type(self) -> str:
-        if self.identity_id and self.feature_segment_id is None:
-            return IDENTITY
-        elif self.feature_segment_id and self.identity_id is None:
-            return FEATURE_SEGMENT
-        elif self.identity_id is None and self.feature_segment_id is None:
-            return ENVIRONMENT
-
-        logger.error(
-            "FeatureState %d does not have a valid type. Defaulting to environment.",
-            self.id,
-        )
-        return ENVIRONMENT
-
     @hook(BEFORE_CREATE)
     def check_for_existing_feature_state(self):
         # prevent duplicate feature states being created for an environment
@@ -413,6 +450,15 @@ class FeatureState(LifecycleModel, models.Model):
                 "Feature state already exists for this environment, feature, "
                 "version, segment & identity combination"
             )
+
+    @hook(BEFORE_CREATE)
+    def set_live_from_for_version_1(self):
+        """
+        Set the live_from date on newly created, version 1 feature states to maintain
+        the previous behaviour.
+        """
+        if self.version == 1 and not self.live_from:
+            self.live_from = timezone.now()
 
     @hook(AFTER_CREATE)
     def create_feature_state_value(self):
@@ -440,20 +486,6 @@ class FeatureState(LifecycleModel, models.Model):
             ]
             MultivariateFeatureStateValue.objects.bulk_create(mv_feature_state_values)
 
-    def get_feature_state_value_defaults(self) -> dict:
-        if self.feature.initial_value is None:
-            return {}
-
-        value = self.feature.initial_value
-        type = get_value_type(value)
-        parse_func = {
-            BOOLEAN: get_boolean_from_string,
-            INTEGER: get_integer_from_string,
-        }.get(type, lambda v: v)
-        key_name = self.get_feature_state_key_name(type)
-
-        return {"type": type, key_name: parse_func(value)}
-
     @staticmethod
     def get_feature_state_key_name(fsv_type) -> str:
         return {
@@ -463,35 +495,12 @@ class FeatureState(LifecycleModel, models.Model):
         }.get(fsv_type)
 
     @staticmethod
-    def get_featue_state_value_type(value) -> str:
+    def get_feature_state_value_type(value) -> str:
         fsv_type = type(value).__name__
         accepted_types = (STRING, INTEGER, BOOLEAN)
 
         # Default to string if not an anticipate type value to keep backwards compatibility.
         return fsv_type if fsv_type in accepted_types else STRING
-
-    def generate_feature_state_value_data(self, value):
-        """
-        Takes the value of a feature state to generate a feature state value and returns dictionary
-        to use for passing into feature state value serializer
-
-        :param value: feature state value of variable type
-        :return: dictionary to pass directly into feature state value serializer
-        """
-        fsv_type = self.get_featue_state_value_type(value)
-        return {
-            "type": fsv_type,
-            "feature_state": self.id,
-            self.get_feature_state_key_name(fsv_type): value,
-        }
-
-    def __str__(self):
-        s = f"Feature {self.feature.name} - Enabled: {self.enabled}"
-        if self.environment is not None:
-            s = f"{self.environment} - {s}"
-        elif self.identity is not None:
-            s = f"Identity {self.identity.identifier} - {s}"
-        return s
 
     @classmethod
     def get_environment_flags_list(
@@ -559,15 +568,6 @@ class FeatureState(LifecycleModel, models.Model):
 
         feature_states_list = cls.get_environment_flags_list(environment)
         return FeatureState.objects.filter(id__in=[fs.id for fs in feature_states_list])
-
-    @hook(BEFORE_CREATE)
-    def set_live_from_for_version_1(self):
-        """
-        Set the live_from date on newly created, version 1 feature states to maintain
-        the previous behaviour.
-        """
-        if self.version == 1 and not self.live_from:
-            self.live_from = timezone.now()
 
     @classmethod
     def get_next_version_number(
