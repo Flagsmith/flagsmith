@@ -232,6 +232,8 @@ rx==3.1.1
     # via influxdb-client
 s3transfer==0.3.3
     # via boto3
+semver==2.13.0
+    # via -r requirements.in
 sendgrid==3.6.5
     # via sendgrid-django
 sendgrid-django==4.2.0
