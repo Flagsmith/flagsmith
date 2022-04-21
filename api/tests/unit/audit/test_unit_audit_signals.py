@@ -1,10 +1,4 @@
-
 from pytest_django.asserts import assertQuerysetEqual
-
-import json
-
-from flag_engine.api.document_builders import build_environment_document
-
 
 from audit.models import AuditLog
 from audit.signals import send_environments_to_dynamodb
