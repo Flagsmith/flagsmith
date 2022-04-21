@@ -49,7 +49,7 @@ class FeatureStateValueEdgeIdentityField(serializers.Field):
         return instance
 
     def to_internal_value(self, data):
-        fsv_type = FeatureState.get_featue_state_value_type(data)
+        fsv_type = FeatureState.get_feature_state_value_type(data)
         feature_state_value_dict = {
             "type": fsv_type,
             FeatureState.get_feature_state_key_name(fsv_type): data,
