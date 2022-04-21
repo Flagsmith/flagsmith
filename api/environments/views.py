@@ -6,9 +6,7 @@ import logging
 from django.utils.decorators import method_decorator
 from drf_yasg2 import openapi
 from drf_yasg2.utils import swagger_auto_schema
-from flag_engine.django_transform.document_builders import (
-    build_environment_document,
-)
+from flag_engine.api.document_builders import build_environment_document
 from rest_framework import mixins, status, viewsets
 from rest_framework.decorators import action
 from rest_framework.exceptions import ValidationError

@@ -1,9 +1,7 @@
 import pytest
 from boto3.dynamodb.conditions import Key
 from django.core.exceptions import ObjectDoesNotExist
-from flag_engine.django_transform.document_builders import (
-    build_identity_document,
-)
+from flag_engine.api.document_builders import build_identity_document
 
 from environments.dynamodb import DynamoIdentityWrapper
 from environments.identities.models import Identity

@@ -5,9 +5,7 @@ from django.conf import settings
 from django.db.models import Q
 from django.db.models.signals import post_save
 from django.dispatch import receiver
-from flag_engine.django_transform.document_builders import (
-    build_environment_document,
-)
+from flag_engine.api.document_builders import build_environment_document
 
 from audit.models import AuditLog, RelatedObjectType
 from audit.serializers import AuditLogSerializer
