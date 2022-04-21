@@ -109,7 +109,7 @@ drf-yasg2==1.19.3
     # via -r requirements.in
 environs==9.2.0
     # via -r requirements.in
-flagsmith-flag-engine==2.0.0
+flagsmith-flag-engine==2.0.1
     # via -r requirements.in
 future==0.18.2
     # via django-ses
