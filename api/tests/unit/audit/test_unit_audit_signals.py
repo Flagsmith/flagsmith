@@ -1,8 +1,6 @@
 import json
 
-from flag_engine.django_transform.document_builders import (
-    build_environment_document,
-)
+from flag_engine.api.document_builders import build_environment_document
 
 from audit.models import AuditLog
 from audit.signals import send_environments_to_dynamodb

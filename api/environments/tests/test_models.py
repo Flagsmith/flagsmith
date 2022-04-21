@@ -5,7 +5,7 @@ import pytest
 from core.constants import STRING
 from django.test import TestCase
 from django.utils import timezone
-from flag_engine.django_transform.document_builders import (
+from flag_engine.api.document_builders import (
     build_environment_api_key_document,
 )
 
