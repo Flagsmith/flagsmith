@@ -325,6 +325,14 @@ class FeatureState(LifecycleModel, models.Model):
         )
         return ENVIRONMENT
 
+    @property
+    def is_live(self) -> bool:
+        return (
+            self.version is not None
+            and self.live_from is not None
+            and self.live_from <= timezone.now()
+        )
+
     def clone(
         self,
         env: "Environment",
