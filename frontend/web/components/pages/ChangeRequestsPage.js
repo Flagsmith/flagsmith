@@ -48,7 +48,7 @@ const ChangeRequestsPage = class extends Component {
                     <h3>Change Requests</h3>
                     {!hasPermission && (
                         <p>
-                            View and manage your feature changes with a Four Eyes approval flow with our <a
+                            View and manage your feature changes with a Change Request flow with our <a
                               href="#" onClick={() => {
                                   openModal('Payment plans', <PaymentModal
                                     viewOnly={false}
@@ -66,11 +66,10 @@ const ChangeRequestsPage = class extends Component {
                                 </span>
                             ) : (
                                 <div>
-                                    View and manage requests to change feature flags with  <ButtonLink
-                                      href="https://docs.flagsmith.com/advanced-use/4-eyes"
+                                    View and manage requests to change feature flags with <ButtonLink
+                                      href="https://docs.flagsmith.com/advanced-use/change-requests"
                                       target="_blank"
-                                    >Four Eyes Approval
-                                    </ButtonLink>.
+                                    >Change Requests</ButtonLink>.
                                 </div>
 
                             )}
