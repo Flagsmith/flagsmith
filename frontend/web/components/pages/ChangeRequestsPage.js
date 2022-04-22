@@ -18,28 +18,37 @@ const ChangeRequestsPage = class extends Component {
         this.state = {
             tags: [],
             showArchived: false,
+            live_after: new Date().toISOString(),
         };
         ES6Component(this);
         this.listenTo(ChangeRequestStore, 'change', () => this.forceUpdate());
         this.listenTo(OrganisationStore, 'change', () => this.forceUpdate());
-        AppActions.getChangeRequests(this.props.match.params.environmentId);
-        AppActions.getOrganisation(AccountStore.getOrganisation().id);
     }
+
 
     componentWillUpdate() {
 
     }
 
     componentDidMount = () => {
-
+        AppActions.getChangeRequests(this.props.match.params.environmentId, {});
+        AppActions.getChangeRequests(this.props.match.params.environmentId, { committed: true });
+        AppActions.getChangeRequests(this.props.match.params.environmentId, { live_from_after: this.state.live_after });
+        AppActions.getOrganisation(AccountStore.getOrganisation().id);
     };
 
     render() {
         const { projectId, environmentId, envId } = this.props.match.params;
         const readOnly = this.props.hasFeature('read_only_mode');
-        const data = ChangeRequestStore.model && ChangeRequestStore.model[environmentId];
-        const dataClosed = ChangeRequestStore.committed && ChangeRequestStore.committed[environmentId];
-        const dataScheduled = ChangeRequestStore.scheduled && ChangeRequestStore.scheduled[environmentId];
+        const data = ChangeRequestStore.model && ChangeRequestStore.model[environmentId] && ChangeRequestStore.model[environmentId] && ChangeRequestStore.model[environmentId].results;
+        const dataPaging = ChangeRequestStore.model && ChangeRequestStore.model[environmentId] && ChangeRequestStore.model[environmentId] && ChangeRequestStore.model[environmentId];
+
+        const dataClosed = ChangeRequestStore.committed && ChangeRequestStore.committed[environmentId] && ChangeRequestStore.committed[environmentId].results;
+        const dataClosedPaging = ChangeRequestStore.committed && ChangeRequestStore.committed[environmentId] && ChangeRequestStore.committed[environmentId];
+
+        const dataScheduled = ChangeRequestStore.scheduled && ChangeRequestStore.scheduled[environmentId] && ChangeRequestStore.scheduled[environmentId].results;
+        const dataScheduledPaging = ChangeRequestStore.scheduled && ChangeRequestStore.scheduled[environmentId] && ChangeRequestStore.scheduled[environmentId];
+
         const hasPermission = Utils.getPlansPermission('4_EYES');
         const environment = ProjectStore.getEnvironment(environmentId);
         return (
@@ -82,7 +91,7 @@ const ChangeRequestsPage = class extends Component {
                           this.setState({ tab });
                       }}
                     >
-                        <TabItem tabLabel={`Open${data ? ` (${data.length})` : ''}`}>
+                        <TabItem tabLabel={`Open${data ? ` (${dataPaging.count})` : ''}`}>
                             <PanelSearch
                               renderSearchWithNoResults
                               id="users-list"
@@ -91,6 +100,10 @@ const ChangeRequestsPage = class extends Component {
                               isLoading={ChangeRequestStore.isLoading || !data || !OrganisationStore.model}
                               icon="ion-md-git-pull-request"
                               items={data}
+                              paging={dataPaging}
+                              nextPage={() => AppActions.getChangeRequests(this.props.match.params.environmentId, {}, dataPaging.next)}
+                              prevPage={() => AppActions.getChangeRequests(this.props.match.params.environmentId, {}, dataPaging.previous)}
+                              goToPage={page => AppActions.getChangeRequests(this.props.match.params.environmentId, {}, `${Project.api}environments/${environmentId}/list-change-requests/?page=${page}`)}
                               renderRow={({ title, user: _user, created_at, id }, index) => {
                                   const user = (OrganisationStore.model && OrganisationStore.model.users && OrganisationStore.model.users.find(v => v.id === _user)) || {};
                                   return (
@@ -111,12 +124,43 @@ const ChangeRequestsPage = class extends Component {
                               }}
                             />
                         </TabItem>
-                        {/* {this.props.hasFeature('scheduling') && ( */}
-                        {/*    <TabItem tabLabel={`Scheduled${dataScheduled ? ` (${dataScheduled.length})` : ''}`}> */}
-                        {/*        Needs API */}
-                        {/*    </TabItem> */}
-                        {/* )} */}
-                        <TabItem tabLabel={`Closed${dataClosed ? ` (${dataClosed.length})` : ''}`}>
+                        {this.props.hasFeature('scheduling') && (
+                        <TabItem tabLabel={`Scheduled${dataScheduledPaging ? ` (${dataScheduledPaging.count})` : ''}`}>
+                            <PanelSearch
+                              renderSearchWithNoResults
+                              id="users-list"
+                              title="Change Requests"
+                              className="mt-4 mx-2"
+                              isLoading={ChangeRequestStore.isLoading || !dataScheduled || !OrganisationStore.model}
+                              icon="ion-md-git-pull-request"
+                              items={dataScheduled}
+                              paging={dataScheduledPaging}
+                              nextPage={() => AppActions.getChangeRequests(this.props.match.params.environmentId, { live_from_after: this.state.live_after }, dataPaging.next)}
+                              prevPage={() => AppActions.getChangeRequests(this.props.match.params.environmentId, { live_from_after: this.state.live_after }, dataPaging.previous)}
+                              goToPage={page => AppActions.getChangeRequests(this.props.match.params.environmentId, { live_from_after: this.state.live_after }, `${Project.api}environments/${environmentId}/list-change-requests/?page=${page}`)}
+
+                              renderRow={({ title, user: _user, created_at, id }, index) => {
+                                  const user = OrganisationStore.model && OrganisationStore.model.users.find(v => v.id === _user);
+                                  return (
+                                      <Link to={`/project/${projectId}/environment/${environmentId}/change-requests/${id}`}>
+                                          <Row className="list-item clickable">
+                                              <span className="ion text-primary mr-4 icon ion-md-git-pull-request"/>
+                                              <div>
+                                                  <ButtonLink>
+                                                      {title}
+                                                  </ButtonLink>
+                                                  <div className="list-item-footer faint">
+                                                            Created at {moment(created_at).format('Do MMM YYYY HH:mma')} by {user && user.first_name} {user && user.last_name}
+                                                  </div>
+                                              </div>
+                                          </Row>
+                                      </Link>
+                                  );
+                              }}
+                            />
+                        </TabItem>
+                        )}
+                        <TabItem tabLabel={`Closed${dataClosedPaging ? ` (${dataClosedPaging.count})` : ''}`}>
                             <PanelSearch
                               renderSearchWithNoResults
                               id="users-list"
@@ -125,8 +169,13 @@ const ChangeRequestsPage = class extends Component {
                               isLoading={ChangeRequestStore.isLoading || !data || !OrganisationStore.model}
                               icon="ion-md-git-pull-request"
                               items={dataClosed}
+                              paging={dataClosedPaging}
+                              nextPage={() => AppActions.getChangeRequests(this.props.match.params.environmentId, { committed: true }, dataPaging.next)}
+                              prevPage={() => AppActions.getChangeRequests(this.props.match.params.environmentId, { committed: true }, dataPaging.previous)}
+                              goToPage={page => AppActions.getChangeRequests(this.props.match.params.environmentId, { committed: true }, `${Project.api}environments/${environmentId}/list-change-requests/?page=${page}`)}
+
                               renderRow={({ title, user: _user, created_at, id }, index) => {
-                                  const user = OrganisationStore.model.users.find(v => v.id === _user);
+                                  const user = OrganisationStore.model && OrganisationStore.model.users.find(v => v.id === _user);
                                   return (
                                       <Link to={`/project/${projectId}/environment/${environmentId}/change-requests/${id}`}>
                                           <Row className="list-item clickable">

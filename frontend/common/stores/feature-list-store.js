@@ -231,7 +231,10 @@ const controller = {
                         }
                     });
                     prom.then(() => {
-                        AppActions.getChangeRequests(environmentId);
+                        AppActions.getChangeRequests(environmentId, {});
+                        AppActions.getChangeRequests(environmentId, { committed: true });
+                        AppActions.getChangeRequests(environmentId, { live_from_after: this.state.live_after });
+
                         if (featureStateId) {
                             AppActions.getChangeRequest(changeRequestData.id);
                         }
