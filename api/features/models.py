@@ -516,6 +516,7 @@ class FeatureState(LifecycleModel, models.Model):
         environment: "Environment",
         feature_name: str = None,
         additional_filters: Q = None,
+        exclude_filters: Q = None,
     ) -> typing.List["FeatureState"]:
         """
         Get a list of the latest committed versions of FeatureState objects that are
@@ -525,23 +526,19 @@ class FeatureState(LifecycleModel, models.Model):
         feature states. The logic to grab the latest version is then handled in python
         by building a dictionary. Returns a list of FeatureState objects.
         """
-
         # Get all feature states for a given environment with a valid live_from in the
         # past. Note: includes all versions for a given environment / feature
         # combination. We filter for the latest version later on.
-        feature_states = (
-            cls.objects.select_related("feature", "feature_state_value")
-            .filter(
-                environment=environment,
-                live_from__isnull=False,
-                live_from__lte=timezone.now(),
-                version__isnull=False,
-            )
-            .exclude(
-                feature__project__hide_disabled_flags=True,
-                enabled=False,
-            )
+        feature_states = cls.objects.select_related(
+            "feature", "feature_state_value"
+        ).filter(
+            environment=environment,
+            live_from__isnull=False,
+            live_from__lte=timezone.now(),
+            version__isnull=False,
         )
+        if exclude_filters:
+            feature_states = feature_states.exclude(exclude_filters)
 
         if feature_name:
             feature_states = feature_states.filter(feature__name__iexact=feature_name)
