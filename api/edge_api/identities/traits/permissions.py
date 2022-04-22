@@ -12,6 +12,4 @@ class EnvironmentIdentityTraitsPermission(IsAuthenticated):
         environment = Environment.objects.get(
             api_key=view.kwargs.get("environment_api_key")
         )
-        if not request.user.has_environment_permission(VIEW_ENVIRONMENT, environment):
-            return False
-        return request.user.is_environment_admin(environment)
+        return request.user.has_environment_permission(VIEW_ENVIRONMENT, environment)
