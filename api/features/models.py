@@ -516,7 +516,7 @@ class FeatureState(LifecycleModel, models.Model):
         environment: "Environment",
         feature_name: str = None,
         additional_filters: Q = None,
-        exclude_filters: Q = None,
+        # exclude_filters: Q = None,
     ) -> typing.List["FeatureState"]:
         """
         Get a list of the latest committed versions of FeatureState objects that are
@@ -537,8 +537,8 @@ class FeatureState(LifecycleModel, models.Model):
             live_from__lte=timezone.now(),
             version__isnull=False,
         )
-        if exclude_filters:
-            feature_states = feature_states.exclude(exclude_filters)
+        # if exclude_filters:
+        #     feature_states = feature_states.exclude(exclude_filters)
 
         if feature_name:
             feature_states = feature_states.filter(feature__name__iexact=feature_name)
