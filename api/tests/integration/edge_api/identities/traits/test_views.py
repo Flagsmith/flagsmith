@@ -51,33 +51,6 @@ def test_edge_identities_traits_list_returns_404_if_identity_does_not_exists(
     assert response.status_code == status.HTTP_404_NOT_FOUND
 
 
-def test_edge_identities_traits_detail(
-    admin_client,
-    environment,
-    environment_api_key,
-    identity_document,
-    identity_traits,
-    dynamo_wrapper_mock,
-):
-    # Given
-    dynamo_wrapper_mock.get_item_from_uuid.return_value = identity_document
-    identity_uuid = identity_document["identity_uuid"]
-    trait_key = identity_traits[0]["trait_key"]
-    url = reverse(
-        "api-v1:environments:edge-identity-traits-detail",
-        args=[environment_api_key, identity_uuid, trait_key],
-    )
-    # When
-    response = admin_client.get(url)
-
-    # Then
-    dynamo_wrapper_mock.get_item_from_uuid.assert_called_with(
-        environment_api_key, identity_uuid
-    )
-    assert response.status_code == status.HTTP_200_OK
-    assert response.json()["trait_key"] == trait_key
-
-
 def test_edge_identities_trait_delete(
     admin_client,
     environment,
@@ -91,11 +64,15 @@ def test_edge_identities_trait_delete(
     identity_uuid = identity_document["identity_uuid"]
     trait_key = identity_traits[0]["trait_key"]
     url = reverse(
-        "api-v1:environments:edge-identity-traits-detail",
-        args=[environment_api_key, identity_uuid, trait_key],
+        "api-v1:environments:edge-identity-traits-create-or-update",
+        args=[environment_api_key, identity_uuid],
     )
+    data = {"trait_key": trait_key, "trait_value": None}
+
     # When
-    response = admin_client.delete(url)
+    response = admin_client.put(
+        url, data=json.dumps(data), content_type="application/json"
+    )
 
     # Then
     dynamo_wrapper_mock.get_item_from_uuid.assert_called_with(
@@ -111,28 +88,7 @@ def test_edge_identities_trait_delete(
             args[0]["identity_traits"],
         )
     )
-    assert response.status_code == status.HTTP_204_NO_CONTENT
-
-
-def test_edge_identities_traits_delete_returns_404_if_trait_does_not_exists(
-    admin_client,
-    environment,
-    environment_api_key,
-    identity_document,
-    dynamo_wrapper_mock,
-):
-    # Given
-    dynamo_wrapper_mock.get_item_from_uuid.return_value = identity_document
-    identity_uuid = identity_document["identity_uuid"]
-    url = reverse(
-        "api-v1:environments:edge-identity-traits-detail",
-        args=[environment_api_key, identity_uuid, "trait_key_that_does_not_exists"],
-    )
-    # When
-    response = admin_client.delete(url)
-
-    # Then
-    assert response.status_code == status.HTTP_404_NOT_FOUND
+    assert response.status_code == status.HTTP_200_OK
 
 
 def test_edge_identities_traits_create_trait(
@@ -146,7 +102,7 @@ def test_edge_identities_traits_create_trait(
     dynamo_wrapper_mock.get_item_from_uuid.return_value = identity_document
     identity_uuid = identity_document["identity_uuid"]
     url = reverse(
-        "api-v1:environments:edge-identity-traits-list",
+        "api-v1:environments:edge-identity-traits-create-or-update",
         args=[environment_api_key, identity_uuid],
     )
     trait_key = "new_trait_key"
@@ -170,7 +126,7 @@ def test_edge_identities_traits_create_trait(
             args[0]["identity_traits"],
         )
     )
-    assert response.status_code == status.HTTP_201_CREATED
+    assert response.status_code == status.HTTP_200_OK
     assert response.json()["trait_key"] == trait_key
 
 
@@ -187,8 +143,8 @@ def test_edge_identities_traits_update_trait(
     identity_uuid = identity_document["identity_uuid"]
     trait_key = identity_traits[0]["trait_key"]
     url = reverse(
-        "api-v1:environments:edge-identity-traits-detail",
-        args=[environment_api_key, identity_uuid, trait_key],
+        "api-v1:environments:edge-identity-traits-create-or-update",
+        args=[environment_api_key, identity_uuid],
     )
     updated_trait_value = "updated_trait_value"
     data = {"trait_key": trait_key, "trait_value": updated_trait_value}
