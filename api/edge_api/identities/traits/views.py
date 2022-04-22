@@ -11,7 +11,7 @@ from edge_api.identities.views_mixins import GetIdentityMixin
 from environments.identities.models import Identity
 
 from .permissions import EnvironmentIdentityTraitsPermission
-from .serializers import EdgeIdentityTraitsResponseSerializer
+from .serializers import EdgeIdentityTraitsSerializer
 
 trait_schema = APITraitSchema()
 
@@ -19,19 +19,27 @@ trait_schema = APITraitSchema()
 class EdgeIdentityTraitsViewSet(viewsets.ViewSet, GetIdentityMixin):
     permission_classes = [EnvironmentIdentityTraitsPermission]
 
-    serializer_class = EdgeIdentityTraitsResponseSerializer
-
     def initial(self, request, *args, **kwargs):
         super().initial(request, *args, **kwargs)
         self.identity = self.get_identity_from_request_or_404()
 
     @swagger_auto_schema(
-        responses={200: EdgeIdentityTraitsResponseSerializer(many=True)},
+        responses={200: EdgeIdentityTraitsSerializer(many=True)},
     )
     def list(self, request, *args, **kwargs):
         data = trait_schema.dump(self.identity.identity_traits, many=True)
         return Response(data=data, status=status.HTTP_200_OK)
 
+    @swagger_auto_schema(
+        method="put",
+        request_body=EdgeIdentityTraitsSerializer,
+        responses={200: EdgeIdentityTraitsSerializer(many=True)},
+    )
+    @swagger_auto_schema(
+        method="post",
+        request_body=EdgeIdentityTraitsSerializer,
+        responses={200: EdgeIdentityTraitsSerializer(many=True)},
+    )
     @action(detail=False, methods=["post", "put"], url_path="create-or-update")
     def create_or_update(self, request, *args, **kwargs):
         data = self._create_or_update(request)
