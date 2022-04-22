@@ -22,9 +22,9 @@ const controller = {
     getChangeRequests: (envId, { committed, live_from_after }, page) => {
         store.loading();
         store.envId = envId;
-        let endpoint = page || `${Project.api}environments/${envId}/list-change-requests/?${committed ? 'committed=1' : 'committed=1'}${live_from_after ? `&live_from_after=${live_from_after}` : ''}`;
+        let endpoint = page || `${Project.api}environments/${envId}/list-change-requests/?${committed ? 'committed=1' : 'committed=0'}${live_from_after ? `&live_from_after=${live_from_after}` : ''}`;
         if (!endpoint.includes('page_size')) {
-            endpoint += `&page_size=${PAGE_SIZE}/`;
+            endpoint += `&page_size=${PAGE_SIZE}`;
         }
         data.get(endpoint)
             .then((res) => {
