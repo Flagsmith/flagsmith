@@ -4,7 +4,7 @@ const splitIfValue = (v,append) =>{
     return append? v.split(append) : [v]
 }
 const findOperator = (operator,value,operators) =>{
-    const findAppended = value.includes(":")?(operators||[]).find((v)=>{
+    const findAppended = `${value}`.includes(":")?(operators||[]).find((v)=>{
         const split = value.split(":")
         const targetKey = ":"+ split[split.length-1]
         return v.value === operator+targetKey
