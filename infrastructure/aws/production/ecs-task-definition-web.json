@@ -117,7 +117,7 @@
                 },
                 {
                     "name": "SENDER_EMAIL",
-                    "value": "support@flagsmith.com"
+                    "value": "Flagsmith <support@flagsmith.com>"
                 },
                 {
                     "name": "SENTRY_TRACE_SAMPLE_RATE",
