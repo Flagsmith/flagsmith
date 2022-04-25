@@ -8,7 +8,9 @@ from django_lifecycle import AFTER_CREATE, AFTER_SAVE, LifecycleModel, hook
 
 from organisations.chargebee import (
     get_customer_id_from_subscription_id,
+    get_max_api_calls_for_plan,
     get_max_seats_for_plan,
+    get_plan_meta_data,
     get_portal_url,
 )
 from users.utils.mailer_lite import MailerLite
@@ -121,9 +123,11 @@ class Subscription(LifecycleModel, models.Model):
     notes = models.CharField(max_length=500, blank=True, null=True)
 
     def update_plan(self, plan_id):
+        plan_metadata = get_plan_meta_data(plan_id)
         self.cancellation_date = None
         self.plan = plan_id
-        self.max_seats = get_max_seats_for_plan(plan_id)
+        self.max_seats = get_max_seats_for_plan(plan_metadata)
+        self.max_api_calls = get_max_api_calls_for_plan(plan_metadata)
         self.save()
 
     @hook(AFTER_CREATE)

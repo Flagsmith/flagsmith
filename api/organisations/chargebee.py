@@ -13,6 +13,7 @@ logger = logging.getLogger(__name__)
 def get_subscription_data_from_hosted_page(hosted_page_id):
     hosted_page = get_hosted_page(hosted_page_id)
     subscription = get_subscription_from_hosted_page(hosted_page)
+    plan_metadata = get_plan_meta_data(subscription.plan_id)
     if subscription:
         return {
             "subscription_id": subscription.id,
@@ -20,7 +21,8 @@ def get_subscription_data_from_hosted_page(hosted_page_id):
             "subscription_date": datetime.fromtimestamp(
                 subscription.created_at, tz=UTC
             ),
-            "max_seats": get_max_seats_for_plan(subscription.plan_id),
+            "max_seats": get_max_seats_for_plan(plan_metadata),
+            "max_api_calls": get_max_api_calls_for_plan(plan_metadata),
             "customer_id": get_customer_id_from_hosted_page(hosted_page),
         }
     else:
@@ -46,9 +48,12 @@ def get_customer_id_from_hosted_page(hosted_page):
             return content.customer.id
 
 
-def get_max_seats_for_plan(plan_id):
-    meta_data = get_plan_meta_data(plan_id)
+def get_max_seats_for_plan(meta_data: dict) -> int:
     return meta_data.get("seats", 1)
+
+
+def get_max_api_calls_for_plan(meta_data: dict) -> int:
+    return meta_data.get("api_calls", 50000)
 
 
 def get_plan_meta_data(plan_id):
