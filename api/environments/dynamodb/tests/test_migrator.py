@@ -1,4 +1,4 @@
-from pytest_django.asserts import assertQuerysetEqual
+from pytest_django.asserts import assertQuerysetEqual as assert_queryset_equal
 
 from environments.dynamodb.migrator import IdentityMigrator
 from environments.dynamodb.types import (
@@ -40,14 +40,14 @@ def test_migrate_calls_internal_methods_with_correct_arguments(
     args, kwargs = mocked_identity_wrapper.return_value.write_identities.call_args
     assert kwargs == {}
 
-    assertQuerysetEqual(
+    assert_queryset_equal(
         args[0], Identity.objects.filter(environment__project__id=project.id)
     )
     # and
     args, kwargs = mocked_environment_wrapper.return_value.write_environments.call_args
     assert kwargs == {}
 
-    assertQuerysetEqual(args[0], Environment.objects.filter(project_id=project.id))
+    assert_queryset_equal(args[0], Environment.objects.filter(project_id=project.id))
 
     # and, Make sure that Project Metadata Wrapper was called correctly
     mocked_project_metadata.get_or_new.assert_called_with(project.id)
