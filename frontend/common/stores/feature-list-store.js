@@ -214,7 +214,7 @@ const controller = {
                             (v) => {
                                 const matching = multivariate_options.find(m => (v.multivariate_feature_option || v.id) === (m.multivariate_feature_option || m.id));
                                 return ({ ...v,
-                                    percentage_allocation: matching.percentage_allocation || matching.default_percentage_allocation,
+                                    percentage_allocation: matching? matching.percentage_allocation || matching.default_percentage_allocation : v.percentage_allocation ,
                                 });
                             },
                         );
