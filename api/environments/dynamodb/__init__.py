@@ -1,1 +1,4 @@
-from .dynamodb_wrapper import DynamoIdentityWrapper  # noqa
+from .dynamodb_wrapper import (  # noqa
+    DynamoEnvironmentWrapper,
+    DynamoIdentityWrapper,
+)

@@ -5,8 +5,8 @@ from projects.models import Project
 
 
 @pytest.fixture()
-def mock_dynamo_env_table(mocker):
-    return mocker.patch("audit.signals.dynamo_env_table")
+def mock_dynamo_env_wrapper(mocker):
+    return mocker.patch("audit.signals.environment_wrapper")
 
 
 @pytest.fixture()
