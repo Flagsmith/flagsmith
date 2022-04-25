@@ -1,14 +1,12 @@
 import logging
 
-import boto3
-from django.conf import settings
 from django.db.models import Q
 from django.db.models.signals import post_save
 from django.dispatch import receiver
-from flag_engine.api.document_builders import build_environment_document
 
 from audit.models import AuditLog, RelatedObjectType
 from audit.serializers import AuditLogSerializer
+from environments.dynamodb import DynamoEnvironmentWrapper
 from environments.models import Environment
 from integrations.datadog.datadog import DataDogWrapper
 from integrations.dynatrace.dynatrace import DynatraceWrapper
@@ -116,12 +114,8 @@ def send_audit_log_event_to_dynatrace(sender, instance, **kwargs):
     _track_event_async(instance, dynatrace)
 
 
-# Intialize the dynamo client globally
-dynamo_env_table = None
-if settings.ENVIRONMENTS_TABLE_NAME_DYNAMO:
-    dynamo_env_table = boto3.resource("dynamodb").Table(
-        settings.ENVIRONMENTS_TABLE_NAME_DYNAMO
-    )
+# Intialize the dynamo environment wrapper globaly
+environment_wrapper = DynamoEnvironmentWrapper()
 
 
 @receiver(post_save, sender=AuditLog)
@@ -134,12 +128,9 @@ def send_environments_to_dynamodb(sender, instance, **kwargs):
     environments = Environment.objects.filter_for_document_builder(environments_filter)
 
     project = instance.project or getattr(environments.first(), "project", None)
-    if not (project and project.enable_dynamo_db and dynamo_env_table):
+    if not (project and project.enable_dynamo_db and environment_wrapper.is_enabled):
         return
-
-    with dynamo_env_table.batch_writer() as writer:
-        for environment in environments:
-            writer.put_item(Item=build_environment_document(environment))
+    environment_wrapper.write_environments(environments)
 
 
 @receiver(post_save, sender=AuditLog)

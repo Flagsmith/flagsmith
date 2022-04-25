@@ -5,23 +5,32 @@ import boto3
 from boto3.dynamodb.conditions import Key
 from django.conf import settings
 from django.core.exceptions import ObjectDoesNotExist
-from flag_engine.api.document_builders import build_identity_document
+from flag_engine.api.document_builders import (
+    build_environment_document,
+    build_identity_document,
+)
+
+from environments.models import Environment
 
 if typing.TYPE_CHECKING:
     from environments.identities.models import Identity
 
 
-class DynamoIdentityWrapper:
+class DynamoWrapper:
+    table_name: str = None
+
     def __init__(self):
         self._table = None
-        if settings.IDENTITIES_TABLE_NAME_DYNAMO:
-            self._table = boto3.resource("dynamodb").Table(
-                settings.IDENTITIES_TABLE_NAME_DYNAMO
-            )
+        if self.table_name:
+            self._table = boto3.resource("dynamodb").Table(self.table_name)
 
     @property
     def is_enabled(self) -> bool:
         return self._table is not None
+
+
+class DynamoIdentityWrapper(DynamoWrapper):
+    table_name = settings.IDENTITIES_TABLE_NAME_DYNAMO
 
     def query_items(self, *args, **kwargs):
         return self._table.query(*args, **kwargs)
@@ -85,3 +94,12 @@ class DynamoIdentityWrapper:
         if start_key:
             query_kwargs.update(ExclusiveStartKey=start_key)
         return self.query_items(**query_kwargs)
+
+
+class DynamoEnvironmentWrapper(DynamoWrapper):
+    table_name = settings.ENVIRONMENTS_TABLE_NAME_DYNAMO
+
+    def write_environments(self, environments: Iterable[Environment]):
+        with self._table.batch_writer() as writer:
+            for environment in environments:
+                writer.put_item(Item=build_environment_document(environment))

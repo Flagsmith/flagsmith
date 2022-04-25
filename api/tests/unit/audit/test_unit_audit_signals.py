@@ -1,30 +1,31 @@
-import json
-
-from flag_engine.api.document_builders import build_environment_document
+from pytest_django.asserts import assertQuerysetEqual as assert_queryset_equal
 
 from audit.models import AuditLog
 from audit.signals import send_environments_to_dynamodb
+from environments.models import Environment
 
 
 def test_send_env_to_dynamodb_from_audit_log_with_environment(
     dynamo_enabled_project,
     dynamo_enabled_project_environment_one,
-    mock_dynamo_env_table,
+    mock_dynamo_env_wrapper,
 ):
     # Given
     audit_log = AuditLog.objects.create(
         environment=dynamo_enabled_project_environment_one
     )
-    mock_dynamo_env_table.reset_mock()
-    batch_writer = mock_dynamo_env_table.batch_writer.return_value
-    batch_writer_context_manager = batch_writer.__enter__.return_value
+    mock_dynamo_env_wrapper.reset_mock()
 
     # When
     send_environments_to_dynamodb(sender=AuditLog, instance=audit_log)
 
     # Then
-    batch_writer_context_manager.put_item.assert_called_once_with(
-        Item=build_environment_document(dynamo_enabled_project_environment_one)
+    args, kwargs = mock_dynamo_env_wrapper.write_environments.call_args
+    assert kwargs == {}
+    assert len(args) == 1
+    assert_queryset_equal(
+        args[0],
+        Environment.objects.filter(id=dynamo_enabled_project_environment_one.id),
     )
 
 
@@ -32,56 +33,44 @@ def test_send_env_to_dynamodb_from_audit_log_with_project(
     dynamo_enabled_project,
     dynamo_enabled_project_environment_one,
     dynamo_enabled_project_environment_two,
-    mock_dynamo_env_table,
+    mock_dynamo_env_wrapper,
 ):
     # Given
     audit_log = AuditLog.objects.create(project=dynamo_enabled_project)
-    mock_dynamo_env_table.reset_mock()
-    batch_writer = mock_dynamo_env_table.batch_writer.return_value
-    batch_writer_context_manager = batch_writer.__enter__.return_value
+    mock_dynamo_env_wrapper.reset_mock()
 
     # When
     send_environments_to_dynamodb(sender=AuditLog, instance=audit_log)
 
     # Then
-    # put item is called twice
-    assert batch_writer_context_manager.put_item.call_count == 2
-
-    # and the two items are the 2 environment dicts as expected
-    # note that we json dump the dicts so we can use sets as we don't
-    # care about order and dicts are unhashable.
-    put_item_items = {
-        json.dumps(call_args[1]["Item"])
-        for call_args in batch_writer_context_manager.put_item.call_args_list
-    }
-    expected_items = {
-        json.dumps(build_environment_document(env))
-        for env in (
-            dynamo_enabled_project_environment_one,
-            dynamo_enabled_project_environment_two,
-        )
-    }
-    assert put_item_items == expected_items
+    args, kwargs = mock_dynamo_env_wrapper.write_environments.call_args
+    assert kwargs == {}
+    assert len(args) == 1
+    assert_queryset_equal(
+        args[0], Environment.objects.filter(project=dynamo_enabled_project)
+    )
 
 
 def test_send_env_to_dynamodb_from_audit_log_with_environment_and_project(
     dynamo_enabled_project,
     dynamo_enabled_project_environment_one,
-    mock_dynamo_env_table,
+    mock_dynamo_env_wrapper,
 ):
     # Given
     audit_log = AuditLog.objects.create(
         environment=dynamo_enabled_project_environment_one,
         project=dynamo_enabled_project,
     )
-    mock_dynamo_env_table.reset_mock()
-    batch_writer = mock_dynamo_env_table.batch_writer.return_value
-    batch_writer_context_manager = batch_writer.__enter__.return_value
+    mock_dynamo_env_wrapper.reset_mock()
 
     # When
     send_environments_to_dynamodb(sender=AuditLog, instance=audit_log)
 
     # Then
-    batch_writer_context_manager.put_item.assert_called_once_with(
-        Item=build_environment_document(dynamo_enabled_project_environment_one)
+    args, kwargs = mock_dynamo_env_wrapper.write_environments.call_args
+    assert kwargs == {}
+    assert len(args) == 1
+    assert_queryset_equal(
+        args[0],
+        Environment.objects.filter(id=dynamo_enabled_project_environment_one.id),
     )
