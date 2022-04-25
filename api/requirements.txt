@@ -45,7 +45,7 @@ coreschema==0.0.4
     #   drf-yasg2
 dj-database-url==0.5.0
     # via -r requirements.in
-django==3.2.12
+django==3.2.13
     # via
     #   -r requirements.in
     #   django-admin-sso
@@ -233,7 +233,9 @@ rx==3.1.1
 s3transfer==0.3.3
     # via boto3
 semver==2.13.0
-    # via -r requirements.in
+    # via
+    #   -r requirements.in
+    #   flagsmith-flag-engine
 sendgrid==3.6.5
     # via sendgrid-django
 sendgrid-django==4.2.0
