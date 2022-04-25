@@ -17,13 +17,12 @@ if typing.TYPE_CHECKING:
 
 
 class DynamoWrapper:
-    table_name_settings_attribute_name: str = None
+    table_name: str = None
 
     def __init__(self):
         self._table = None
-        table = getattr(settings, self.table_name_settings_attribute_name)
-        if table:
-            self._table = boto3.resource("dynamodb").Table(table)
+        if self.table_name:
+            self._table = boto3.resource("dynamodb").Table(self.table_name)
 
     @property
     def is_enabled(self) -> bool:
@@ -31,7 +30,7 @@ class DynamoWrapper:
 
 
 class DynamoIdentityWrapper(DynamoWrapper):
-    table_name_settings_attribute_name = "IDENTITIES_TABLE_NAME_DYNAMO"
+    table_name = settings.IDENTITIES_TABLE_NAME_DYNAMO
 
     def query_items(self, *args, **kwargs):
         return self._table.query(*args, **kwargs)
@@ -98,7 +97,7 @@ class DynamoIdentityWrapper(DynamoWrapper):
 
 
 class DynamoEnvironmentWrapper(DynamoWrapper):
-    table_name_settings_attribute_name = "ENVIRONMENTS_TABLE_NAME_DYNAMO"
+    table_name = settings.ENVIRONMENTS_TABLE_NAME_DYNAMO
 
     def write_environments(self, environments: Iterable[Environment]):
         with self._table.batch_writer() as writer:
