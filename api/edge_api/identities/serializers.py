@@ -22,13 +22,9 @@ from features.serializers import FeatureStateValueSerializer
 engine_multi_fs_value_schema = MultivariateFeatureStateValueSchema()
 
 
-class EdgeIdentitySerializer(serializers.ModelSerializer):
-    identity_uuid = serializers.CharField(required=False)
-
-    class Meta:
-        model = Identity
-        fields = ("identifier", "environment", "identity_uuid")
-        read_only_fields = ("environment", "identity_uuid")
+class EdgeIdentitySerializer(serializers.Serializer):
+    identity_uuid = serializers.CharField(read_only=True)
+    identifier = serializers.CharField(required=True, max_length=2000)
 
     def save(self, **kwargs):
         identifier = self.validated_data.get("identifier")
