@@ -1,7 +1,10 @@
 from django.conf.urls import include, url
 from rest_framework_nested import routers
 
-from edge_api.identities.views import EdgeIdentityFeatureStateViewSet
+from edge_api.identities.views import (
+    EdgeIdentityFeatureStateViewSet,
+    EdgeIdentityViewSet,
+)
 from features.views import (
     EnvironmentFeatureStateViewSet,
     IdentityFeatureStateViewSet,
@@ -19,7 +22,7 @@ from integrations.slack.views import (
 from integrations.webhook.views import WebhookConfigurationViewSet
 
 from .identities.traits.views import TraitViewSet
-from .identities.views import EdgeIdentityViewSet, IdentityViewSet
+from .identities.views import IdentityViewSet
 from .permissions.views import (
     UserEnvironmentPermissionsViewSet,
     UserPermissionGroupEnvironmentPermissionsViewSet,
