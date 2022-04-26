@@ -515,10 +515,11 @@ class SDKFeatureStates(GenericAPIView):
             return self._get_flags_response_with_identifier(request, identifier)
 
         if "feature" in request.GET:
+
             feature_states = FeatureState.get_environment_flags_list(
                 environment=request.environment,
                 feature_name=request.GET["feature"],
-                additional_filters=Q(feature_segment=None, identity=None),
+                additional_filters=self._additional_filters,
             )
             if len(feature_states) != 1:
                 # TODO: what if more than one?
@@ -535,12 +536,19 @@ class SDKFeatureStates(GenericAPIView):
             data = self.get_serializer(
                 FeatureState.get_environment_flags_list(
                     environment=request.environment,
-                    additional_filters=Q(feature_segment=None, identity=None),
+                    additional_filters=self._additional_filters,
                 ),
                 many=True,
             ).data
 
         return Response(data)
+
+    @property
+    def _additional_filters(self) -> Q:
+        exclude_hide_disabled = Q(
+            feature__project__hide_disabled_flags=True, enabled=False
+        )
+        return Q(feature_segment=None, identity=None) & ~exclude_hide_disabled
 
     def _get_flags_from_cache(self, environment):
         data = flags_cache.get(environment.api_key)
@@ -548,7 +556,7 @@ class SDKFeatureStates(GenericAPIView):
             data = self.get_serializer(
                 FeatureState.get_environment_flags_list(
                     environment=environment,
-                    additional_filters=Q(feature_segment=None, identity=None),
+                    additional_filters=self._additional_filters,
                 ),
                 many=True,
             ).data

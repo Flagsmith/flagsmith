@@ -1,7 +1,5 @@
 from django.http import HttpRequest
-from flag_engine.django_transform.document_builders import (
-    build_environment_document,
-)
+from flag_engine.api.document_builders import build_environment_document
 from rest_framework.exceptions import NotFound
 from rest_framework.response import Response
 from rest_framework.views import APIView

@@ -1,9 +1,7 @@
 import pytest
 from boto3.dynamodb.conditions import Key
 from django.core.exceptions import ObjectDoesNotExist
-from flag_engine.django_transform.document_builders import (
-    build_identity_document,
-)
+from flag_engine.api.document_builders import build_identity_document
 
 from environments.dynamodb import DynamoIdentityWrapper
 from environments.identities.models import Identity
@@ -157,21 +155,30 @@ def test_write_identities_calls_internal_methods_with_correct_arguments(
     assert actual_identity_document == expected_identity_document
 
 
-def test_is_enabled_is_false_if_dynamo_table_name_is_not_set(settings):
+def test_is_enabled_is_false_if_dynamo_table_name_is_not_set(settings, mocker):
     # Given
-    settings.IDENTITIES_TABLE_NAME_DYNAMO = None
+    mocker.patch(
+        "environments.dynamodb.dynamodb_wrapper.DynamoIdentityWrapper.table_name",
+        None,
+    )
 
+    mocked_boto3 = mocker.patch("environments.dynamodb.dynamodb_wrapper.boto3")
     # When
     dynamo_identity_wrapper = DynamoIdentityWrapper()
 
     # Then
     assert dynamo_identity_wrapper.is_enabled is False
+    mocked_boto3.resource.assert_not_called()
+    mocked_boto3.resource.return_value.Table.assert_not_called()
 
 
 def test_is_enabled_is_true_if_dynamo_table_name_is_set(settings, mocker):
     # Given
     table_name = "random_table_name"
-    settings.IDENTITIES_TABLE_NAME_DYNAMO = table_name
+    mocker.patch(
+        "environments.dynamodb.dynamodb_wrapper.DynamoIdentityWrapper.table_name",
+        table_name,
+    )
     mocked_boto3 = mocker.patch("environments.dynamodb.dynamodb_wrapper.boto3")
 
     # When

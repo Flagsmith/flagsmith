@@ -14,7 +14,7 @@ import FeatureListStore from '../../../common/stores/feature-list-store';
 import ChangeRequestModal from './ChangeRequestModal';
 import Feature from '../Feature';
 import { ButtonOutline } from '../base/forms/Button';
-
+import ChangeRequestStore from '../../../common/stores/change-requests-store'
 const FEATURE_ID_MAXLENGTH = Constants.forms.maxLength.FEATURE_ID;
 
 const CreateFlag = class extends Component {
