@@ -100,8 +100,10 @@ class EdgeIdentityViewSet(viewsets.ModelViewSet):
     @swagger_auto_schema(
         responses={200: EdgeIdentityTraitsSerializer(many=True)},
     )
+    @action(detail=True, methods=["get"], url_path="list-traits")
     def get_traits(self, request, *args, **kwargs):
-        data = trait_schema.dump(self.identity.identity_traits, many=True)
+        identity = self.get_object()
+        data = trait_schema.dump(identity["identity_traits"], many=True)
         return Response(data=data, status=status.HTTP_200_OK)
 
     @swagger_auto_schema(
@@ -109,24 +111,17 @@ class EdgeIdentityViewSet(viewsets.ModelViewSet):
         request_body=EdgeIdentityTraitsSerializer,
         responses={200: EdgeIdentityTraitsSerializer(many=True)},
     )
-    @swagger_auto_schema(
-        method="post",
-        request_body=EdgeIdentityTraitsSerializer,
-        responses={200: EdgeIdentityTraitsSerializer(many=True)},
-    )
-    @action(detail=False, methods=["post", "put"], url_path="create-or-update")
+    @action(detail=True, methods=["put"], url_path="update-traits")
     def update_traits(self, request, *args, **kwargs):
-        data = self._create_or_update(request)
-        return Response(data, status=status.HTTP_200_OK)
-
-    def _create_or_update(self, request):
+        identity = self.get_object()
         try:
             trait = trait_schema.load(request.data)
         except marshmallow.ValidationError as validation_error:
             raise ValidationError(validation_error) from validation_error
-        self.identity.update_traits([trait])
-        self._save()
-        return trait_schema.dump(trait)
+        identity.update_traits([trait])
+        Identity.dynamo_wrapper.put_item(build_identity_dict(self.instance))
+        data = trait_schema.dump(trait)
+        return Response(data, status=status.HTTP_200_OK)
 
 
 class EdgeIdentityFeatureStateViewSet(viewsets.ModelViewSet, GetIdentityMixin):

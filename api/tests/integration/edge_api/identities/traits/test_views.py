@@ -51,46 +51,6 @@ def test_edge_identities_traits_list_returns_404_if_identity_does_not_exists(
     assert response.status_code == status.HTTP_404_NOT_FOUND
 
 
-def test_edge_identities_trait_delete(
-    admin_client,
-    environment,
-    environment_api_key,
-    identity_document,
-    identity_traits,
-    dynamo_wrapper_mock,
-):
-    # Given
-    dynamo_wrapper_mock.get_item_from_uuid.return_value = identity_document
-    identity_uuid = identity_document["identity_uuid"]
-    trait_key = identity_traits[0]["trait_key"]
-    url = reverse(
-        "api-v1:environments:edge-identity-traits-create-or-update",
-        args=[environment_api_key, identity_uuid],
-    )
-    data = {"trait_key": trait_key, "trait_value": None}
-
-    # When
-    response = admin_client.put(
-        url, data=json.dumps(data), content_type="application/json"
-    )
-
-    # Then
-    dynamo_wrapper_mock.get_item_from_uuid.assert_called_with(
-        environment_api_key, identity_uuid
-    )
-    # Next, let's verify that deleted trait
-    # is not part of identity dict that we put
-    name, args, _ = dynamo_wrapper_mock.mock_calls[1]
-    assert name == "put_item"
-    assert not list(
-        filter(
-            lambda trait: trait["trait_key"] == trait_key,
-            args[0]["identity_traits"],
-        )
-    )
-    assert response.status_code == status.HTTP_200_OK
-
-
 def test_edge_identities_traits_create_trait(
     admin_client,
     environment,
