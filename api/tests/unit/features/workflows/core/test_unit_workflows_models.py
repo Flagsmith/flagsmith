@@ -323,7 +323,7 @@ def test_change_request_url(change_request_no_required_approvals, settings):
     # Then
     assert (
         change_request_no_required_approvals.url
-        == "https://%s/projects/%s/environments/%s/change-requests/%s"
+        == "https://%s/project/%s/environment/%s/change-requests/%s"
         % (
             site.domain,
             project_id,

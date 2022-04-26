@@ -76,12 +76,14 @@ const ChangeRequestModal = class extends Component {
                                           <Row>
                                               <Flex>
                                                   <DatePicker
+                                                      de
                                                     minDate={new Date()} onChange={(e) => {
                                                         this.setState({
                                                             live_from: e.toISOString(),
                                                         });
-                                                    }} showTimeSelect
-                                                    timeIntervals={15} value={this.state.live_from ? `${moment(this.state.live_from).format('Do MMM YYYY hh:mma')} (${Intl.DateTimeFormat().resolvedOptions().timeZone})` : 'Immediately'}
+                                                    }} showTimeInput
+                                                      selected={moment(this.state.live_from)._d}
+                                                    value={this.state.live_from ? `${moment(this.state.live_from).format('Do MMM YYYY hh:mma')} (${Intl.DateTimeFormat().resolvedOptions().timeZone})` : 'Immediately'}
                                                   />
                                               </Flex>
 

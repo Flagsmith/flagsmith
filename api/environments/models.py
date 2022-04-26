@@ -13,7 +13,7 @@ from django.db.models import Q
 from django.utils import timezone
 from django.utils.translation import ugettext_lazy as _
 from django_lifecycle import AFTER_CREATE, AFTER_SAVE, LifecycleModel, hook
-from flag_engine.django_transform.document_builders import (
+from flag_engine.api.document_builders import (
     build_environment_api_key_document,
 )
 

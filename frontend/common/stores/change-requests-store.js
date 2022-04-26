@@ -3,6 +3,7 @@ const OrganisationStore = require('./organisation-store');
 const data = require('../data/base/_data');
 const { env } = require('../../.eslintrc');
 
+const PAGE_SIZE = 20;
 const createdFirstFeature = false;
 const controller = {
 
@@ -18,31 +19,24 @@ const controller = {
                     });
             }).catch(e => API.ajaxHandler(store, e));
     },
-    getChangeRequests: (envId, committed) => {
+    getChangeRequests: (envId, { committed, live_from_after }, page) => {
         store.loading();
         store.envId = envId;
-        const endpoint = `${Project.api}environments/${envId}/list-change-requests/?include_committed=${1}`;
+        let endpoint = page || `${Project.api}environments/${envId}/list-change-requests/?${committed ? 'committed=1' : 'committed=0'}${live_from_after ? `&live_from_after=${live_from_after}` : ''}`;
+        if (!endpoint.includes('page_size')) {
+            endpoint += `&page_size=${PAGE_SIZE}`;
+        }
         data.get(endpoint)
             .then((res) => {
-                const committed = [];
-                const results = [];
-                if (res) {
-                    res.map((v) => {
-                        if (v.committed_at) {
-                            committed.push(v);
-                        } else {
-                            results.push(v);
-                        }
-                    });
-                }
-                if (flagsmith.hasFeature('scheduling')) {
-                    store.committed[envId] = committed.filter(v => !v.live_from);
-                    store.scheduled[envId] = committed.filter(v => !!v.live_from);
+                res.currentPage = page ? parseInt(page.split('page=')[1]) : 1;
+                res.pageSize = PAGE_SIZE;
+                if (live_from_after) {
+                    store.scheduled[envId] = res;
+                } else if (committed) {
+                    store.committed[envId] = res;
                 } else {
-                    store.committed[envId] = committed;
+                    store.model[envId] = res;
                 }
-                store.model[envId] = results;
-
                 store.loaded();
             }).catch(e => API.ajaxHandler(store, e));
     },
@@ -85,7 +79,7 @@ store.dispatcherIndex = Dispatcher.register(store, (payload) => {
     const action = payload.action; // this is our action from handleViewAction
     switch (action.actionType) {
         case Actions.GET_CHANGE_REQUESTS:
-            controller.getChangeRequests(action.environment, action.committed);
+            controller.getChangeRequests(action.environment, { committed: action.committed, live_from_after: action.live_from_after }, action.page);
             break;
         case Actions.GET_CHANGE_REQUEST:
             controller.getChangeRequest(action.id);

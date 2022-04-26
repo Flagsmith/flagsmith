@@ -45,7 +45,7 @@ coreschema==0.0.4
     #   drf-yasg2
 dj-database-url==0.5.0
     # via -r requirements.in
-django==3.2.12
+django==3.2.13
     # via
     #   -r requirements.in
     #   django-admin-sso
@@ -109,7 +109,7 @@ drf-yasg2==1.19.3
     # via -r requirements.in
 environs==9.2.0
     # via -r requirements.in
-flagsmith-flag-engine==1.6.2
+flagsmith-flag-engine==2.0.2
     # via -r requirements.in
 future==0.18.2
     # via django-ses
@@ -232,6 +232,10 @@ rx==3.1.1
     # via influxdb-client
 s3transfer==0.3.3
     # via boto3
+semver==2.13.0
+    # via
+    #   -r requirements.in
+    #   flagsmith-flag-engine
 sendgrid==3.6.5
     # via sendgrid-django
 sendgrid-django==4.2.0

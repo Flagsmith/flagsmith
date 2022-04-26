@@ -1,11 +1,13 @@
 from django.db.models import Prefetch
 
 from environments.identities.models import Identity
+from environments.models import Environment
 from features.models import FeatureState
 from features.multivariate.models import MultivariateFeatureStateValue
+from projects.models import Project
 from util.queryset import iterator_with_prefetch
 
-from .dynamodb_wrapper import DynamoIdentityWrapper
+from .dynamodb_wrapper import DynamoEnvironmentWrapper, DynamoIdentityWrapper
 from .types import DynamoProjectMetadata, ProjectIdentityMigrationStatus
 
 
@@ -28,8 +30,17 @@ class IdentityMigrator:
         return migration_status == ProjectIdentityMigrationStatus.MIGRATION_NOT_STARTED
 
     def migrate(self):
-        self.project_metadata.start_identity_migration()
         project_id = self.project_metadata.id
+
+        self.project_metadata.start_identity_migration()
+
+        Project.objects.filter(id=project_id).update(enable_dynamo_db=True)
+        environment_wrapper = DynamoEnvironmentWrapper()
+        environments = Environment.objects.filter_for_document_builder(
+            project_id=project_id
+        )
+        environment_wrapper.write_environments(environments)
+
         identity_wrapper = DynamoIdentityWrapper()
         identities = (
             Identity.objects.filter(environment__project__id=project_id)

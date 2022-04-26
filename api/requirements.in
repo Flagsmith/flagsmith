@@ -43,3 +43,4 @@ boto3
 slack_sdk
 rudder-sdk-python
 asgiref
+semver
