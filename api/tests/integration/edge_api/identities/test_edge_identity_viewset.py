@@ -50,9 +50,7 @@ def test_get_identity(
     # Then
     assert response.status_code == status.HTTP_200_OK
     assert response.json()["identity_uuid"] == identity_uuid
-    dynamo_wrapper_mock.get_item_from_uuid.assert_called_with(
-        environment_api_key, identity_uuid
-    )
+    dynamo_wrapper_mock.get_item_from_uuid.assert_called_with(identity_uuid)
 
 
 def test_get_identity_returns_404_if_identity_does_not_exists(
@@ -149,9 +147,7 @@ def test_delete_identity(
     # Then
     assert response.status_code == status.HTTP_204_NO_CONTENT
 
-    dynamo_wrapper_mock.get_item_from_uuid.assert_called_with(
-        environment_api_key, identity_uuid
-    )
+    dynamo_wrapper_mock.get_item_from_uuid.assert_called_with(identity_uuid)
     dynamo_wrapper_mock.delete_item.assert_called_with(
         identity_document["composite_key"]
     )

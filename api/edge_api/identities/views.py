@@ -55,7 +55,7 @@ class EdgeIdentityViewSet(viewsets.ModelViewSet):
     def get_object(self):
         try:
             identity = Identity.dynamo_wrapper.get_item_from_uuid(
-                self.kwargs["environment_api_key"], self.kwargs["identity_uuid"]
+                self.kwargs["identity_uuid"]
             )
         except ObjectDoesNotExist as e:
             raise NotFound() from e
@@ -116,8 +116,7 @@ class EdgeIdentityFeatureStateViewSet(viewsets.ModelViewSet):
         """
 
         identity_document = Identity.dynamo_wrapper.get_item_from_uuid(
-            self.kwargs["environment_api_key"],
-            self.kwargs["edge_identity_identity_uuid"],
+            self.kwargs["edge_identity_identity_uuid"]
         )
         return build_identity_model(identity_document)
 

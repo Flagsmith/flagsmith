@@ -50,7 +50,7 @@ class DynamoIdentityWrapper(DynamoWrapper):
     def delete_item(self, composite_key: str):
         self._table.delete_item(Key={"composite_key": composite_key})
 
-    def get_item_from_uuid(self, environment_api_key: str, uuid: str):
+    def get_item_from_uuid(self, uuid: str):
         filter_expression = Key("identity_uuid").eq(uuid)
         query_kwargs = {
             "IndexName": "identity_uuid-index",
