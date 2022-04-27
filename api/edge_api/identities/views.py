@@ -112,7 +112,7 @@ class EdgeIdentityViewSet(viewsets.ModelViewSet):
     @swagger_auto_schema(
         method="put",
         request_body=EdgeIdentityTraitsSerializer,
-        responses={200: EdgeIdentityTraitsSerializer(many=True)},
+        responses={200: EdgeIdentityTraitsSerializer},
     )
     @action(detail=True, methods=["put"], url_path="update-traits")
     def update_traits(self, request, *args, **kwargs):
