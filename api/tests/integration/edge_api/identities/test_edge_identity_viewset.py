@@ -5,7 +5,7 @@ from django.core.exceptions import ObjectDoesNotExist
 from django.urls import reverse
 from rest_framework import status
 
-from environments.identities.views import EdgeIdentityViewSet
+from edge_api.identities.views import EdgeIdentityViewSet
 
 
 @pytest.fixture()
@@ -123,7 +123,7 @@ def test_create_identity_returns_400_if_identity_already_exists(
         "api-v1:environments:environment-edge-identities-list",
         args=[environment_api_key],
     )
-    dynamo_wrapper_mock.get_item.return_value = identity_document  # {
+    dynamo_wrapper_mock.get_item.return_value = identity_document
     response = admin_client.post(url, data={"identifier": identifier})
     assert response.status_code == status.HTTP_400_BAD_REQUEST
 
