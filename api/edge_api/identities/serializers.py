@@ -6,11 +6,13 @@ from flag_engine.features.models import (
 )
 from flag_engine.features.schemas import MultivariateFeatureStateValueSchema
 from flag_engine.identities.builders import build_identity_dict
+from flag_engine.identities.models import IdentityModel as EngineIdentity
 from flag_engine.utils.exceptions import (
     DuplicateFeatureState,
     InvalidPercentageAllocation,
 )
 from rest_framework import serializers
+from rest_framework.exceptions import ValidationError
 
 from environments.identities.models import Identity
 from features.models import Feature, FeatureState, FeatureStateValue
@@ -18,6 +20,24 @@ from features.multivariate.models import MultivariateFeatureOption
 from features.serializers import FeatureStateValueSerializer
 
 engine_multi_fs_value_schema = MultivariateFeatureStateValueSchema()
+
+
+class EdgeIdentitySerializer(serializers.Serializer):
+    identity_uuid = serializers.CharField(read_only=True)
+    identifier = serializers.CharField(required=True, max_length=2000)
+
+    def save(self, **kwargs):
+        identifier = self.validated_data.get("identifier")
+        environment_api_key = self.context["view"].kwargs["environment_api_key"]
+        self.instance = EngineIdentity(
+            identifier=identifier, environment_api_key=environment_api_key
+        )
+        if Identity.dynamo_wrapper.get_item(self.instance.composite_key):
+            raise ValidationError(
+                f"Identity with identifier: {identifier} already exists"
+            )
+        Identity.dynamo_wrapper.put_item(build_identity_dict(self.instance))
+        return self.instance
 
 
 class EdgeMultivariateFeatureOptionField(serializers.IntegerField):
