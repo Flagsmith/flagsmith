@@ -377,7 +377,7 @@ def test_edge_identities_trait_delete(
 
 def test_edge_identities_traits_create_trait(
     admin_client,
-    environment,
+    dynamo_enabled_environment,
     environment_api_key,
     identity_document,
     dynamo_wrapper_mock,
@@ -393,10 +393,13 @@ def test_edge_identities_traits_create_trait(
     data = {"trait_key": trait_key, "trait_value": "new_trait_value"}
 
     # When
-    response = admin_client.post(
+    response = admin_client.put(
         url, data=json.dumps(data), content_type="application/json"
     )
     # Then
+    assert response.status_code == status.HTTP_200_OK
+    assert response.json()["trait_key"] == trait_key
+
     dynamo_wrapper_mock.get_item_from_uuid.assert_called_with(
         environment_api_key, identity_uuid
     )
@@ -410,13 +413,11 @@ def test_edge_identities_traits_create_trait(
             args[0]["identity_traits"],
         )
     )
-    assert response.status_code == status.HTTP_200_OK
-    assert response.json()["trait_key"] == trait_key
 
 
 def test_edge_identities_traits_update_trait(
     admin_client,
-    environment,
+    dynamo_enabled_environment,
     environment_api_key,
     identity_document,
     identity_traits,
@@ -438,6 +439,10 @@ def test_edge_identities_traits_update_trait(
         url, data=json.dumps(data), content_type="application/json"
     )
     # Then
+    assert response.status_code == status.HTTP_200_OK
+    assert response.json()["trait_key"] == trait_key
+    assert response.json()["trait_value"] == updated_trait_value
+    # and
     dynamo_wrapper_mock.get_item_from_uuid.assert_called_with(
         environment_api_key, identity_uuid
     )
@@ -452,6 +457,3 @@ def test_edge_identities_traits_update_trait(
             args[0]["identity_traits"],
         )
     )
-    assert response.status_code == status.HTTP_200_OK
-    assert response.json()["trait_key"] == trait_key
-    assert response.json()["trait_value"] == updated_trait_value
