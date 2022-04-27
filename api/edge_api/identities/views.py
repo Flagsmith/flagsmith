@@ -3,7 +3,6 @@ import json
 import typing
 
 from boto3.dynamodb.conditions import Key
-from django.core.exceptions import ObjectDoesNotExist
 from flag_engine.identities.builders import (
     build_identity_dict,
     build_identity_model,
@@ -53,13 +52,9 @@ class EdgeIdentityViewSet(viewsets.ModelViewSet):
         return self.dynamo_identifier_search_functions["BEGINS_WITH"], search_query
 
     def get_object(self):
-        try:
-            identity = Identity.dynamo_wrapper.get_item_from_uuid(
-                self.kwargs["identity_uuid"]
-            )
-        except ObjectDoesNotExist as e:
-            raise NotFound() from e
-        return identity
+        return Identity.dynamo_wrapper.get_item_from_uuid_or_404(
+            self.kwargs["identity_uuid"]
+        )
 
     def get_queryset(self):
         page_size = self.pagination_class().get_page_size(self.request)
@@ -105,17 +100,14 @@ class EdgeIdentityFeatureStateViewSet(viewsets.ModelViewSet):
 
     def initial(self, request, *args, **kwargs):
         super().initial(request, *args, **kwargs)
-        try:
-            self.identity = self._get_identity_from_request()
-        except ObjectDoesNotExist as e:
-            raise NotFound() from e
+        self.identity = self._get_identity_from_request()
 
     def _get_identity_from_request(self):
         """
         Get identity object from URL parameters in request.
         """
 
-        identity_document = Identity.dynamo_wrapper.get_item_from_uuid(
+        identity_document = Identity.dynamo_wrapper.get_item_from_uuid_or_404(
             self.kwargs["edge_identity_identity_uuid"]
         )
         return build_identity_model(identity_document)

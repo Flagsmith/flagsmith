@@ -1,9 +1,9 @@
 import urllib
 
 import pytest
-from django.core.exceptions import ObjectDoesNotExist
 from django.urls import reverse
 from rest_framework import status
+from rest_framework.exceptions import NotFound
 
 from edge_api.identities.views import EdgeIdentityViewSet
 
@@ -44,13 +44,13 @@ def test_get_identity(
         "api-v1:environments:environment-edge-identities-detail",
         args=[environment_api_key, identity_uuid],
     )
-    dynamo_wrapper_mock.get_item_from_uuid.return_value = identity_document
+    dynamo_wrapper_mock.get_item_from_uuid_or_404.return_value = identity_document
     # When
     response = admin_client.get(url)
     # Then
     assert response.status_code == status.HTTP_200_OK
     assert response.json()["identity_uuid"] == identity_uuid
-    dynamo_wrapper_mock.get_item_from_uuid.assert_called_with(identity_uuid)
+    dynamo_wrapper_mock.get_item_from_uuid_or_404.assert_called_with(identity_uuid)
 
 
 def test_get_identity_returns_404_if_identity_does_not_exists(
@@ -64,7 +64,7 @@ def test_get_identity_returns_404_if_identity_does_not_exists(
         "api-v1:environments:environment-edge-identities-detail",
         args=[environment_api_key, "identity_uuid_that_does_not_exists"],
     )
-    dynamo_wrapper_mock.get_item_from_uuid.side_effect = ObjectDoesNotExist
+    dynamo_wrapper_mock.get_item_from_uuid_or_404.side_effect = NotFound
 
     # When
     response = admin_client.get(url)
@@ -140,14 +140,14 @@ def test_delete_identity(
         args=[environment_api_key, identity_uuid],
     )
 
-    dynamo_wrapper_mock.get_item_from_uuid.return_value = identity_document
+    dynamo_wrapper_mock.get_item_from_uuid_or_404.return_value = identity_document
     # When
     response = admin_client.delete(url)
 
     # Then
     assert response.status_code == status.HTTP_204_NO_CONTENT
 
-    dynamo_wrapper_mock.get_item_from_uuid.assert_called_with(identity_uuid)
+    dynamo_wrapper_mock.get_item_from_uuid_or_404.assert_called_with(identity_uuid)
     dynamo_wrapper_mock.delete_item.assert_called_with(
         identity_document["composite_key"]
     )

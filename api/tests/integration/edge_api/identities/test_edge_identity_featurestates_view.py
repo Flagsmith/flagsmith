@@ -1,8 +1,8 @@
 import json
 
-from django.core.exceptions import ObjectDoesNotExist
 from django.urls import reverse
 from rest_framework import status
+from rest_framework.exceptions import NotFound
 
 
 def test_edge_identities_feature_states_list(
@@ -13,7 +13,7 @@ def test_edge_identities_feature_states_list(
     dynamo_wrapper_mock,
 ):
     # Given
-    dynamo_wrapper_mock.get_item_from_uuid.return_value = identity_document
+    dynamo_wrapper_mock.get_item_from_uuid_or_404.return_value = identity_document
 
     identity_uuid = identity_document["identity_uuid"]
     url = reverse(
@@ -23,7 +23,7 @@ def test_edge_identities_feature_states_list(
     # When
     response = admin_client.get(url)
     # Then
-    dynamo_wrapper_mock.get_item_from_uuid.assert_called_with(identity_uuid)
+    dynamo_wrapper_mock.get_item_from_uuid_or_404.assert_called_with(identity_uuid)
     assert response.status_code == status.HTTP_200_OK
     assert len(response.json()) == 3
 
@@ -35,7 +35,7 @@ def test_edge_identities_feature_states_list_returns_404_if_identity_does_not_ex
     dynamo_wrapper_mock,
 ):
     # Given
-    dynamo_wrapper_mock.get_item_from_uuid.side_effect = ObjectDoesNotExist
+    dynamo_wrapper_mock.get_item_from_uuid_or_404.side_effect = NotFound
 
     url = reverse(
         "api-v1:environments:edge-identity-featurestates-list",
@@ -56,7 +56,7 @@ def test_edge_identities_featurestate_detail(
     dynamo_wrapper_mock,
 ):
     # Given
-    dynamo_wrapper_mock.get_item_from_uuid.return_value = identity_document
+    dynamo_wrapper_mock.get_item_from_uuid_or_404.return_value = identity_document
     identity_uuid = identity_document["identity_uuid"]
     featurestate_uuid = identity_document["identity_features"][0]["featurestate_uuid"]
     url = reverse(
@@ -67,7 +67,7 @@ def test_edge_identities_featurestate_detail(
     response = admin_client.get(url)
 
     # Then
-    dynamo_wrapper_mock.get_item_from_uuid.assert_called_with(identity_uuid)
+    dynamo_wrapper_mock.get_item_from_uuid_or_404.assert_called_with(identity_uuid)
     assert response.status_code == status.HTTP_200_OK
     assert response.json()["featurestate_uuid"] == featurestate_uuid
 
@@ -80,7 +80,7 @@ def test_edge_identities_featurestate_delete(
     dynamo_wrapper_mock,
 ):
     # Given
-    dynamo_wrapper_mock.get_item_from_uuid.return_value = identity_document
+    dynamo_wrapper_mock.get_item_from_uuid_or_404.return_value = identity_document
     identity_uuid = identity_document["identity_uuid"]
     featurestate_uuid = identity_document["identity_features"][0]["featurestate_uuid"]
     url = reverse(
@@ -92,7 +92,7 @@ def test_edge_identities_featurestate_delete(
 
     # Then
 
-    dynamo_wrapper_mock.get_item_from_uuid.assert_called_with(identity_uuid)
+    dynamo_wrapper_mock.get_item_from_uuid_or_404.assert_called_with(identity_uuid)
 
     # Next, let's verify that deleted feature state
     # is not part of identity dict that we put
@@ -115,7 +115,7 @@ def test_edge_identities_featurestate_delete_returns_404_if_featurestate_does_no
     dynamo_wrapper_mock,
 ):
     # Given
-    dynamo_wrapper_mock.get_item_from_uuid.return_value = identity_document
+    dynamo_wrapper_mock.get_item_from_uuid_or_404.return_value = identity_document
     identity_uuid = identity_document["identity_uuid"]
     featurestate_uuid = "some_random_uuid"
     url = reverse(
@@ -138,7 +138,7 @@ def test_edge_identities_create_featurestate_returns_400_if_feature_state_alread
     feature,
 ):
     # Given
-    dynamo_wrapper_mock.get_item_from_uuid.return_value = identity_document
+    dynamo_wrapper_mock.get_item_from_uuid_or_404.return_value = identity_document
 
     identity_uuid = identity_document["identity_uuid"]
     url = reverse(
@@ -157,7 +157,7 @@ def test_edge_identities_create_featurestate_returns_400_if_feature_state_alread
     response = admin_client.post(url, data=data)
 
     # Then
-    dynamo_wrapper_mock.get_item_from_uuid.assert_called_with(identity_uuid)
+    dynamo_wrapper_mock.get_item_from_uuid_or_404.assert_called_with(identity_uuid)
     assert response.status_code == status.HTTP_400_BAD_REQUEST
 
 
@@ -170,7 +170,9 @@ def test_edge_identities_create_featurestate(
     feature,
 ):
     # Given
-    dynamo_wrapper_mock.get_item_from_uuid.return_value = identity_document_without_fs
+    dynamo_wrapper_mock.get_item_from_uuid_or_404.return_value = (
+        identity_document_without_fs
+    )
     identity_uuid = identity_document_without_fs["identity_uuid"]
     url = reverse(
         "api-v1:environments:edge-identity-featurestates-list",
@@ -191,7 +193,7 @@ def test_edge_identities_create_featurestate(
     )
 
     # Then
-    dynamo_wrapper_mock.get_item_from_uuid.assert_called_with(identity_uuid)
+    dynamo_wrapper_mock.get_item_from_uuid_or_404.assert_called_with(identity_uuid)
     assert response.status_code == status.HTTP_201_CREATED
     assert response.json()["feature"] == feature
     assert response.json()["feature_state_value"] == feature_state_value
@@ -208,7 +210,9 @@ def test_edge_identities_create_mv_featurestate(
     mv_option_value,
 ):
     # Given
-    dynamo_wrapper_mock.get_item_from_uuid.return_value = identity_document_without_fs
+    dynamo_wrapper_mock.get_item_from_uuid_or_404.return_value = (
+        identity_document_without_fs
+    )
     identity_uuid = identity_document_without_fs["identity_uuid"]
     url = reverse(
         "api-v1:environments:edge-identity-featurestates-list",
@@ -233,7 +237,7 @@ def test_edge_identities_create_mv_featurestate(
         url, data=json.dumps(data), content_type="application/json"
     )
     # Then
-    dynamo_wrapper_mock.get_item_from_uuid.assert_called_with(identity_uuid)
+    dynamo_wrapper_mock.get_item_from_uuid_or_404.assert_called_with(identity_uuid)
     assert response.status_code == status.HTTP_201_CREATED
     assert response.json()["feature"] == feature
     assert response.json()["feature_state_value"] == mv_option_value
@@ -248,7 +252,7 @@ def test_edge_identities_update_featurestate(
     feature,
 ):
     # Given
-    dynamo_wrapper_mock.get_item_from_uuid.return_value = identity_document
+    dynamo_wrapper_mock.get_item_from_uuid_or_404.return_value = identity_document
     identity_uuid = identity_document["identity_uuid"]
     featurestate_uuid = identity_document["identity_features"][0]["featurestate_uuid"]
     url = reverse(
@@ -268,7 +272,7 @@ def test_edge_identities_update_featurestate(
     # When
     response = admin_client.put(url, data=data)
     # Then
-    dynamo_wrapper_mock.get_item_from_uuid.assert_called_with(identity_uuid)
+    dynamo_wrapper_mock.get_item_from_uuid_or_404.assert_called_with(identity_uuid)
     assert response.status_code == status.HTTP_200_OK
     assert response.json()["feature"] == feature
     assert response.json()["feature_state_value"] == feature_state_value
@@ -285,7 +289,7 @@ def test_edge_identities_update_mv_featurestate(
     mv_option_value,
 ):
     # Given
-    dynamo_wrapper_mock.get_item_from_uuid.return_value = identity_document
+    dynamo_wrapper_mock.get_item_from_uuid_or_404.return_value = identity_document
     identity_uuid = identity_document["identity_uuid"]
     featurestate_uuid = identity_document["identity_features"][2]["featurestate_uuid"]
     url = reverse(
@@ -313,7 +317,7 @@ def test_edge_identities_update_mv_featurestate(
         url, data=json.dumps(data), content_type="application/json"
     )
     # Then
-    dynamo_wrapper_mock.get_item_from_uuid.assert_called_with(identity_uuid)
+    dynamo_wrapper_mock.get_item_from_uuid_or_404.assert_called_with(identity_uuid)
     assert response.status_code == status.HTTP_200_OK
     assert response.json()["feature_state_value"] == mv_option_value
     assert (
@@ -333,7 +337,9 @@ def test_edge_identities_post_returns_400_for_invalid_mvfs_allocation(
 ):
 
     # Given
-    dynamo_wrapper_mock.get_item_from_uuid.return_value = identity_document_without_fs
+    dynamo_wrapper_mock.get_item_from_uuid_or_404.return_value = (
+        identity_document_without_fs
+    )
     identity_uuid = identity_document_without_fs["identity_uuid"]
     url = reverse(
         "api-v1:environments:edge-identity-featurestates-list",
@@ -361,7 +367,7 @@ def test_edge_identities_post_returns_400_for_invalid_mvfs_allocation(
         url, data=json.dumps(data), content_type="application/json"
     )
     # Then
-    dynamo_wrapper_mock.get_item_from_uuid.assert_called_with(identity_uuid)
+    dynamo_wrapper_mock.get_item_from_uuid_or_404.assert_called_with(identity_uuid)
     assert response.status_code == status.HTTP_400_BAD_REQUEST
     assert (
         response.json()["multivariate_feature_state_values"]

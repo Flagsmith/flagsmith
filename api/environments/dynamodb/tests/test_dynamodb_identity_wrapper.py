@@ -2,6 +2,7 @@ import pytest
 from boto3.dynamodb.conditions import Key
 from django.core.exceptions import ObjectDoesNotExist
 from flag_engine.api.document_builders import build_identity_document
+from rest_framework.exceptions import NotFound
 
 from environments.dynamodb import DynamoIdentityWrapper
 from environments.identities.models import Identity
@@ -11,11 +12,10 @@ def test_get_item_from_uuid_calls_query_with_correct_argument(mocker):
     # Given
     dynamo_identity_wrapper = DynamoIdentityWrapper()
     mocked_dynamo_table = mocker.patch.object(dynamo_identity_wrapper, "_table")
-    environment_key = "environment_key"
     identity_uuid = "test_uuid"
 
     # When
-    dynamo_identity_wrapper.get_item_from_uuid(environment_key, identity_uuid)
+    dynamo_identity_wrapper.get_item_from_uuid(identity_uuid)
     # Then
     mocked_dynamo_table.query.assert_called_with(
         IndexName="identity_uuid-index",
@@ -33,7 +33,39 @@ def test_get_item_from_uuid_raises_object_does_not_exists_if_identity_is_not_ret
     mocked_dynamo_table.query.return_value = {"Items": [], "Count": 0}
     # Then
     with pytest.raises(ObjectDoesNotExist):
-        dynamo_identity_wrapper.get_item_from_uuid("env_key", "identity_uuid")
+        dynamo_identity_wrapper.get_item_from_uuid("identity_uuid")
+
+
+def test_get_item_from_uuid_or_404_calls_get_item_from_uuid_with_correct_arguments(
+    mocker,
+):
+    # Given
+    dynamo_identity_wrapper = DynamoIdentityWrapper()
+    mocked_get_item_from_uuid = mocker.patch.object(
+        dynamo_identity_wrapper, "get_item_from_uuid"
+    )
+    identity_uuid = "test_uuid"
+
+    # When
+    dynamo_identity_wrapper.get_item_from_uuid_or_404(identity_uuid)
+
+    # Then
+    mocked_get_item_from_uuid.assert_called_with(identity_uuid)
+
+
+def test_get_item_from_uuid_or_404_calls_raises_not_found_if_internal_method_raises_object_does_not_exists(
+    mocker,
+):
+    # Given
+    dynamo_identity_wrapper = DynamoIdentityWrapper()
+    mocker.patch.object(
+        dynamo_identity_wrapper, "get_item_from_uuid", side_effect=ObjectDoesNotExist
+    )
+    identity_uuid = "test_uuid"
+
+    # Then
+    with pytest.raises(NotFound):
+        dynamo_identity_wrapper.get_item_from_uuid_or_404(identity_uuid)
 
 
 def test_delete_item_calls_dynamo_delete_item_with_correct_arguments(mocker):

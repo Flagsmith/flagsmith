@@ -9,6 +9,7 @@ from flag_engine.api.document_builders import (
     build_environment_document,
     build_identity_document,
 )
+from rest_framework.exceptions import NotFound
 
 from environments.models import Environment
 
@@ -50,7 +51,7 @@ class DynamoIdentityWrapper(DynamoWrapper):
     def delete_item(self, composite_key: str):
         self._table.delete_item(Key={"composite_key": composite_key})
 
-    def get_item_from_uuid(self, uuid: str):
+    def get_item_from_uuid(self, uuid: str) -> dict:
         filter_expression = Key("identity_uuid").eq(uuid)
         query_kwargs = {
             "IndexName": "identity_uuid-index",
@@ -61,6 +62,12 @@ class DynamoIdentityWrapper(DynamoWrapper):
             return self.query_items(**query_kwargs)["Items"][0]
         except IndexError:
             raise ObjectDoesNotExist()
+
+    def get_item_from_uuid_or_404(self, uuid: str) -> dict:
+        try:
+            self.get_item_from_uuid(uuid)
+        except ObjectDoesNotExist as e:
+            raise NotFound() from e
 
     def get_all_items(
         self, environment_api_key: str, limit: int, start_key: dict = None
