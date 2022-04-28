@@ -31,7 +31,6 @@ urlpatterns = [
         views.project_overrides,
         name="project_overrides",
     ),
-    path("", views.index, name="index"),
 ]
 
 if settings.DEBUG:
@@ -62,3 +61,7 @@ if settings.WORKFLOWS_LOGIC_INSTALLED:
             ),
         ]
     )
+
+if settings.SERVE_FE_ASSETS:
+    # add route to serve FE assets for any unrecognised paths
+    urlpatterns.append(url(r"^.*$", views.index, name="index"))

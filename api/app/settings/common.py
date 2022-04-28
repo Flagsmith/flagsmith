@@ -601,3 +601,5 @@ IDENTITY_MIGRATION_EVENT_BUS_NAME = env.str("IDENTITY_MIGRATION_EVENT_BUS_NAME",
 EDGE_RELEASE_DATETIME = env.datetime("EDGE_RELEASE_DATETIME", None)
 
 DISABLE_WEBHOOKS = env.bool("DISABLE_WEBHOOKS", False)
+
+SERVE_FE_ASSETS = os.path.exists(BASE_DIR + "/app/templates/webpack/index.html")
