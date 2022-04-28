@@ -41,15 +41,17 @@ def test_get_item_from_uuid_or_404_calls_get_item_from_uuid_with_correct_argumen
 ):
     # Given
     dynamo_identity_wrapper = DynamoIdentityWrapper()
+    expected_document = {"key": "value"}
     mocked_get_item_from_uuid = mocker.patch.object(
-        dynamo_identity_wrapper, "get_item_from_uuid"
+        dynamo_identity_wrapper, "get_item_from_uuid", return_value=expected_document
     )
     identity_uuid = "test_uuid"
 
     # When
-    dynamo_identity_wrapper.get_item_from_uuid_or_404(identity_uuid)
+    returned_document = dynamo_identity_wrapper.get_item_from_uuid_or_404(identity_uuid)
 
     # Then
+    assert returned_document == expected_document
     mocked_get_item_from_uuid.assert_called_with(identity_uuid)
 
 

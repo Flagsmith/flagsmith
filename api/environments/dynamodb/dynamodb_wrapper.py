@@ -65,7 +65,7 @@ class DynamoIdentityWrapper(DynamoWrapper):
 
     def get_item_from_uuid_or_404(self, uuid: str) -> dict:
         try:
-            self.get_item_from_uuid(uuid)
+            return self.get_item_from_uuid(uuid)
         except ObjectDoesNotExist as e:
             raise NotFound() from e
 
