@@ -110,3 +110,6 @@ class DynamoEnvironmentWrapper(DynamoWrapper):
         with self._table.batch_writer() as writer:
             for environment in environments:
                 writer.put_item(Item=build_environment_document(environment))
+
+    def get_item(self, api_key: str) -> typing.Optional[dict]:
+        return self._table.get_item(Key={"api_key": api_key}).get("Item")
