@@ -248,7 +248,7 @@ def test_get_segment_ids_returns_correct_segment_ids(
     mocked_environment_wrapper.return_value.get_item.return_value = environment_document
 
     # When
-    segment_ids = dynamo_identity_wrapper.get_segmenent_ids(identity_uuid)
+    segment_ids = dynamo_identity_wrapper.get_segment_ids(identity_uuid)
 
     # Then
     assert segment_ids == [identity_matching_segment.id]
@@ -270,7 +270,7 @@ def test_get_segment_ids_returns_empty_list_if_identity_does_not_exists(
     identity_uuid = identity_document["identity_uuid"]
 
     # Then
-    segment_ids = dynamo_identity_wrapper.get_segmenent_ids(identity_uuid)
+    segment_ids = dynamo_identity_wrapper.get_segment_ids(identity_uuid)
 
     # Then
     assert segment_ids == []

@@ -106,7 +106,7 @@ class DynamoIdentityWrapper(DynamoWrapper):
             query_kwargs.update(ExclusiveStartKey=start_key)
         return self.query_items(**query_kwargs)
 
-    def get_segmenent_ids(self, identity_pk: str) -> list:
+    def get_segment_ids(self, identity_pk: str) -> list:
         with suppress(ObjectDoesNotExist):
             identity_document = self.get_item_from_uuid(identity_pk)
             identity = build_identity_model(identity_document)

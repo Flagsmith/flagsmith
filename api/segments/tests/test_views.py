@@ -173,7 +173,7 @@ def test_can_filter_by_edge_identity_to_get_only_matching_segments(
         "environments.identities.models.Identity.dynamo_wrapper",
     )
 
-    mocked_identity_wrapper.get_segmenent_ids.return_value = expected_segment_ids
+    mocked_identity_wrapper.get_segment_ids.return_value = expected_segment_ids
 
     base_url = reverse("api-v1:projects:project-segments-list", args=[project.id])
     url = f"{base_url}?identity={identity_uuid}"
@@ -184,4 +184,4 @@ def test_can_filter_by_edge_identity_to_get_only_matching_segments(
     # Then
     assert response.json().get("count") == len(expected_segment_ids)
     assert response.json()["results"][0]["id"] == expected_segment_ids[0]
-    mocked_identity_wrapper.get_segmenent_ids.assert_called_with(identity_uuid)
+    mocked_identity_wrapper.get_segment_ids.assert_called_with(identity_uuid)

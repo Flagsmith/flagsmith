@@ -46,7 +46,7 @@ class SegmentViewSet(viewsets.ModelViewSet):
                 identity = Identity.objects.get(pk=identity_pk)
                 segment_ids = [segment.id for segment in identity.get_segments()]
             else:
-                segment_ids = Identity.dynamo_wrapper.get_segmenent_ids(identity_pk)
+                segment_ids = Identity.dynamo_wrapper.get_segment_ids(identity_pk)
             queryset = queryset.filter(id__in=segment_ids)
 
         return queryset
