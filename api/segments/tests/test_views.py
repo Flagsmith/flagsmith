@@ -3,10 +3,7 @@ import json
 from core.constants import STRING
 from django.contrib.auth import get_user_model
 from django.urls import reverse
-from flag_engine.api.document_builders import (
-    build_environment_document,
-    build_identity_document,
-)
+from flag_engine.api.document_builders import build_identity_document
 from rest_framework import status
 from rest_framework.test import APITestCase
 
