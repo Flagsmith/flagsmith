@@ -1,11 +1,13 @@
 import logging
+from contextlib import suppress
 
+from django.core.exceptions import ObjectDoesNotExist
 from django.utils.decorators import method_decorator
 from drf_yasg2 import openapi
 from drf_yasg2.utils import swagger_auto_schema
 from flag_engine.environments.builders import build_environment_model
 from flag_engine.identities.builders import build_identity_model
-from flag_engine.segments.evaluators import get_identity_segments
+from flag_engine.segments.evaluator import get_identity_segments
 from rest_framework import viewsets
 from rest_framework.generics import get_object_or_404
 from rest_framework.permissions import IsAuthenticated
@@ -50,19 +52,20 @@ class SegmentViewSet(viewsets.ModelViewSet):
                 identity = Identity.objects.get(pk=identity_pk)
                 segment_ids = [segment.id for segment in identity.get_segments()]
             else:
-                # TODO: remove 404
-                identity = Identity.dynamo_wrapper.get_item_from_uuid_or_404(
-                    self.kwargs["identity_uuid"]
-                )
-                identity = build_identity_model(identity)
-
-                environment_wrapper = DynamoEnvironmentWrapper()
-                environment = build_environment_model(
-                    environment_wrapper.get_item(identity.environment_api_key)
-                )
-                segments = get_identity_segments(environment, identity)
-                segment_ids = [segment.id for segment in segments]
-
+                segment_ids = _get_segment_ids_for_edge_identity(identity_pk)
             queryset = queryset.filter(id__in=segment_ids)
 
         return queryset
+
+
+def _get_segment_ids_for_edge_identity(identity_pk: str) -> list:
+    with suppress(ObjectDoesNotExist):
+        identity_document = Identity.dynamo_wrapper.get_item_from_uuid(identity_pk)
+        identity = build_identity_model(identity_document)
+        environment_wrapper = DynamoEnvironmentWrapper()
+        environment = build_environment_model(
+            environment_wrapper.get_item(identity.environment_api_key)
+        )
+        segments = get_identity_segments(environment, identity)
+        return [segment.id for segment in segments]
+    return []

@@ -71,13 +71,16 @@ def multivariate_feature(project):
 
 
 @pytest.fixture()
-def identity_matching_segment(project):
+def identity_matching_segment(project, trait):
     segment = Segment.objects.create(name="Matching segment", project=project)
     matching_rule = SegmentRule.objects.create(
         segment=segment, type=SegmentRule.ALL_RULE
     )
     Condition.objects.create(
-        rule=matching_rule, property=trait_key, operator=EQUAL, value=trait_value
+        rule=matching_rule,
+        property=trait.trait_key,
+        operator=EQUAL,
+        value=trait.trait_value,
     )
     return segment
 
