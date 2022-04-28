@@ -42,9 +42,11 @@ class SegmentViewSet(viewsets.ModelViewSet):
 
         identity_pk = self.request.query_params.get("identity")
         if identity_pk:
-            identity = Identity.objects.get(pk=identity_pk)
-            queryset = queryset.filter(
-                id__in=[segment.id for segment in identity.get_segments()]
-            )
+            if identity_pk.isdigit():
+                identity = Identity.objects.get(pk=identity_pk)
+                segment_ids = [segment.id for segment in identity.get_segments()]
+            else:
+                segment_ids = Identity.dynamo_wrapper.get_segment_ids(identity_pk)
+            queryset = queryset.filter(id__in=segment_ids)
 
         return queryset
