@@ -1,4 +1,5 @@
 import typing
+from contextlib import suppress
 from typing import Iterable
 
 import boto3
@@ -9,6 +10,9 @@ from flag_engine.api.document_builders import (
     build_environment_document,
     build_identity_document,
 )
+from flag_engine.environments.builders import build_environment_model
+from flag_engine.identities.builders import build_identity_model
+from flag_engine.segments.evaluator import get_identity_segments
 from rest_framework.exceptions import NotFound
 
 from environments.models import Environment
@@ -102,6 +106,18 @@ class DynamoIdentityWrapper(DynamoWrapper):
             query_kwargs.update(ExclusiveStartKey=start_key)
         return self.query_items(**query_kwargs)
 
+    def get_segment_ids(self, identity_pk: str) -> list:
+        with suppress(ObjectDoesNotExist):
+            identity_document = self.get_item_from_uuid(identity_pk)
+            identity = build_identity_model(identity_document)
+            environment_wrapper = DynamoEnvironmentWrapper()
+            environment = build_environment_model(
+                environment_wrapper.get_item(identity.environment_api_key)
+            )
+            segments = get_identity_segments(environment, identity)
+            return [segment.id for segment in segments]
+        return []
+
 
 class DynamoEnvironmentWrapper(DynamoWrapper):
     table_name = settings.ENVIRONMENTS_TABLE_NAME_DYNAMO
@@ -110,3 +126,9 @@ class DynamoEnvironmentWrapper(DynamoWrapper):
         with self._table.batch_writer() as writer:
             for environment in environments:
                 writer.put_item(Item=build_environment_document(environment))
+
+    def get_item(self, api_key: str) -> dict:
+        try:
+            return self._table.get_item(Key={"api_key": api_key})["Item"]
+        except KeyError as e:
+            raise ObjectDoesNotExist() from e
