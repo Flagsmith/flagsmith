@@ -31,7 +31,6 @@ urlpatterns = [
         views.project_overrides,
         name="project_overrides",
     ),
-    path("", views.index, name="index"),
 ]
 
 if settings.DEBUG:
@@ -63,5 +62,6 @@ if settings.WORKFLOWS_LOGIC_INSTALLED:
         ]
     )
 
-# Catch all for subfolder views on the front end
-urlpatterns.append(url(r"^.*/$", views.index, name="index"))
+if settings.SERVE_FE_ASSETS:
+    # Catch all for subfolder views on the front end
+    urlpatterns.append(url(r"^.*/$", views.index, name="index"))

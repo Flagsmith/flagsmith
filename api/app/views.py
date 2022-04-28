@@ -17,12 +17,11 @@ def version_info(request):
 
 @csrf_exempt
 def index(request):
-    if not (request.method == "GET" and settings.SERVE_FE_ASSETS):
-        return HttpResponse(
-            status=404,
-            content_type="application/json",
-            content=json.dumps({"message": f"Not found: {request.path}."}),
+    if not request.method == "GET":
+        logger.warning(
+            "Invalid request made to %s with method %s", request.path, request.method
         )
+        return HttpResponse(status=415, content_type="application/json")
 
     template = loader.get_template("webpack/index.html")
     context = {
