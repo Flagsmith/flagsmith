@@ -111,7 +111,7 @@ class DynamoEnvironmentWrapper(DynamoWrapper):
             for environment in environments:
                 writer.put_item(Item=build_environment_document(environment))
 
-    def get_item(self, api_key: str) -> typing.Optional[dict]:
+    def get_item(self, api_key: str) -> dict:
         try:
             return self._table.get_item(Key={"api_key": api_key})["Item"]
         except KeyError as e:
