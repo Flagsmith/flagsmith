@@ -63,5 +63,5 @@ if settings.WORKFLOWS_LOGIC_INSTALLED:
     )
 
 if settings.SERVE_FE_ASSETS:
-    # Catch all for subfolder views on the front end
-    urlpatterns.append(url(r"^.*/$", views.index, name="index"))
+    # add route to serve FE assets for any unrecognised paths
+    urlpatterns.append(url(r"^.*$", views.index, name="index"))

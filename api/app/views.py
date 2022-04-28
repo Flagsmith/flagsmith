@@ -17,11 +17,11 @@ def version_info(request):
 
 @csrf_exempt
 def index(request):
-    if not request.method == "GET":
+    if request.method != "GET":
         logger.warning(
             "Invalid request made to %s with method %s", request.path, request.method
         )
-        return HttpResponse(status=415, content_type="application/json")
+        return HttpResponse(status=405, content_type="application/json")
 
     template = loader.get_template("webpack/index.html")
     context = {
