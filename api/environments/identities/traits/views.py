@@ -91,7 +91,8 @@ class TraitViewSet(viewsets.ModelViewSet):
         if request.query_params.get("deleteAllMatchingTraits") in ("true", "True"):
             trait = self.get_object()
             Trait.objects.filter(
-                trait_key=trait.key, identity__environment=trait.identity.environment
+                trait_key=trait.trait_key,
+                identity__environment=trait.identity.environment,
             ).delete()
             return Response(status=status.HTTP_204_NO_CONTENT)
         else:
