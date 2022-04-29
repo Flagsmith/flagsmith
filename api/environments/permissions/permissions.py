@@ -1,3 +1,5 @@
+import typing
+
 from django.db.models import Q
 from rest_framework import exceptions
 from rest_framework.permissions import BasePermission
@@ -72,6 +74,15 @@ class IdentityPermissions(BasePermission):
 
 
 class NestedEnvironmentPermissions(BasePermission):
+    def __init__(
+        self,
+        *args,
+        action_permission_map: typing.Dict[str, str] = None,
+        **kwargs,
+    ):
+        super(NestedEnvironmentPermissions, self).__init__(*args, **kwargs)
+        self.action_permission_map = action_permission_map or {}
+
     def has_permission(self, request, view):
         if view.action == "create":
             environment_api_key = view.kwargs.get("environment_api_key")
@@ -88,10 +99,12 @@ class NestedEnvironmentPermissions(BasePermission):
         return view.detail
 
     def has_object_permission(self, request, view, obj):
-        if request.user.is_environment_admin(obj.environment):
-            return True
+        if view.action in self.action_permission_map:
+            return request.user.has_environment_permission(
+                self.action_permission_map[view.action], obj.environment
+            )
 
-        return False
+        return request.user.is_environment_admin(obj.environment)
 
 
 class TraitPersistencePermissions(BasePermission):

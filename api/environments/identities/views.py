@@ -13,6 +13,7 @@ from environments.identities.models import Identity
 from environments.identities.serializers import IdentitySerializer
 from environments.identities.traits.serializers import TraitSerializerBasic
 from environments.models import Environment
+from environments.permissions.constants import MANAGE_IDENTITIES
 from environments.permissions.permissions import NestedEnvironmentPermissions
 from environments.sdk.serializers import (
     IdentifyWithTraitsSerializer,
@@ -51,6 +52,14 @@ class IdentityViewSet(viewsets.ModelViewSet):
         queryset = queryset.order_by("created_date")
 
         return queryset
+
+    def get_permissions(self):
+        return [
+            IsAuthenticated(),
+            NestedEnvironmentPermissions(
+                action_permission_map={"retrieve": MANAGE_IDENTITIES}
+            ),
+        ]
 
     def get_environment_from_request(self):
         """
