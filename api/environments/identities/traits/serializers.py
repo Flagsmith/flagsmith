@@ -80,3 +80,18 @@ class DeleteAllTraitKeysSerializer(serializers.Serializer):
         Trait.objects.filter(
             identity__environment=environment, trait_key=self.validated_data.get("key")
         ).delete()
+
+
+class TraitSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Trait
+        fields = (
+            "id",
+            "trait_key",
+            "value_type",
+            "integer_value",
+            "string_value",
+            "boolean_value",
+            "float_value",
+            "created_date",
+        )
