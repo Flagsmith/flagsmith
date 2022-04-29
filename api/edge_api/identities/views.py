@@ -29,7 +29,6 @@ from features.permissions import IdentityFeatureStatePermissions
 from projects.exceptions import DynamoNotEnabledError
 
 from .exceptions import TraitPersistenceError
-from .views_mixins import GetIdentityMixin
 
 trait_schema = APITraitSchema()
 
@@ -129,7 +128,7 @@ class EdgeIdentityViewSet(viewsets.ModelViewSet):
         return Response(data, status=status.HTTP_200_OK)
 
 
-class EdgeIdentityFeatureStateViewSet(viewsets.ModelViewSet, GetIdentityMixin):
+class EdgeIdentityFeatureStateViewSet(viewsets.ModelViewSet):
     permission_classes = [IsAuthenticated, IdentityFeatureStatePermissions]
     lookup_field = "featurestate_uuid"
 
@@ -139,7 +138,10 @@ class EdgeIdentityFeatureStateViewSet(viewsets.ModelViewSet, GetIdentityMixin):
 
     def initial(self, request, *args, **kwargs):
         super().initial(request, *args, **kwargs)
-        self.identity = self.get_identity_from_request_or_404()
+        identity_document = Identity.dynamo_wrapper.get_item_from_uuid_or_404(
+            self.kwargs["edge_identity_identity_uuid"]
+        )
+        self.identity = build_identity_model(identity_document)
 
     def get_object(self):
         featurestate_uuid = self.kwargs["featurestate_uuid"]
