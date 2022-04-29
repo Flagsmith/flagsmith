@@ -4,8 +4,6 @@ import typing
 
 import marshmallow
 from boto3.dynamodb.conditions import Key
-
-from django.core.exceptions import ObjectDoesNotExist
 from drf_yasg2.utils import swagger_auto_schema
 from flag_engine.api.schemas import APITraitSchema
 from flag_engine.identities.builders import (
@@ -30,6 +28,7 @@ from environments.permissions.permissions import NestedEnvironmentPermissions
 from features.permissions import IdentityFeatureStatePermissions
 from projects.exceptions import DynamoNotEnabledError
 
+from .exceptions import TraitPersistenceError
 from .views_mixins import GetIdentityMixin
 
 trait_schema = APITraitSchema()
@@ -116,6 +115,9 @@ class EdgeIdentityViewSet(viewsets.ModelViewSet):
     )
     @action(detail=True, methods=["put"], url_path="update-traits")
     def update_traits(self, request, *args, **kwargs):
+        environment = self.get_environment_from_request()
+        if not environment.project.organisation.persist_trait_data:
+            raise TraitPersistenceError()
         identity = build_identity_model(self.get_object())
         try:
             trait = trait_schema.load(request.data)

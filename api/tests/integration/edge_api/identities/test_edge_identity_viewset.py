@@ -315,7 +315,7 @@ def test_edge_identities_traits_list(
     dynamo_wrapper_mock,
 ):
     # Given
-    dynamo_wrapper_mock.get_item_from_uuid.return_value = identity_document
+    dynamo_wrapper_mock.get_item_from_uuid_or_404.return_value = identity_document
 
     identity_uuid = identity_document["identity_uuid"]
     url = reverse(
@@ -329,9 +329,7 @@ def test_edge_identities_traits_list(
     assert response.status_code == status.HTTP_200_OK
     assert response.json() == identity_traits
 
-    dynamo_wrapper_mock.get_item_from_uuid.assert_called_with(
-        environment_api_key, identity_uuid
-    )
+    dynamo_wrapper_mock.get_item_from_uuid_or_404.assert_called_with(identity_uuid)
 
 
 def test_edge_identities_trait_delete(
@@ -343,7 +341,7 @@ def test_edge_identities_trait_delete(
     dynamo_wrapper_mock,
 ):
     # Given
-    dynamo_wrapper_mock.get_item_from_uuid.return_value = identity_document
+    dynamo_wrapper_mock.get_item_from_uuid_or_404.return_value = identity_document
     identity_uuid = identity_document["identity_uuid"]
     trait_key = identity_traits[0]["trait_key"]
     url = reverse(
@@ -360,9 +358,7 @@ def test_edge_identities_trait_delete(
     # Then
     assert response.status_code == status.HTTP_200_OK
 
-    dynamo_wrapper_mock.get_item_from_uuid.assert_called_with(
-        environment_api_key, identity_uuid
-    )
+    dynamo_wrapper_mock.get_item_from_uuid_or_404.assert_called_with(identity_uuid)
     # Next, let's verify that deleted trait
     # is not part of identity dict that we put
     name, args, _ = dynamo_wrapper_mock.mock_calls[1]
@@ -375,7 +371,7 @@ def test_edge_identities_trait_delete(
     )
 
 
-def test_edge_identities_traits_create_trait(
+def test_edge_identities_create_trait(
     admin_client,
     dynamo_enabled_environment,
     environment_api_key,
@@ -383,7 +379,7 @@ def test_edge_identities_traits_create_trait(
     dynamo_wrapper_mock,
 ):
     # Given
-    dynamo_wrapper_mock.get_item_from_uuid.return_value = identity_document
+    dynamo_wrapper_mock.get_item_from_uuid_or_404.return_value = identity_document
     identity_uuid = identity_document["identity_uuid"]
     url = reverse(
         "api-v1:environments:environment-edge-identities-update-traits",
@@ -400,9 +396,7 @@ def test_edge_identities_traits_create_trait(
     assert response.status_code == status.HTTP_200_OK
     assert response.json()["trait_key"] == trait_key
 
-    dynamo_wrapper_mock.get_item_from_uuid.assert_called_with(
-        environment_api_key, identity_uuid
-    )
+    dynamo_wrapper_mock.get_item_from_uuid_or_404.assert_called_with(identity_uuid)
     # Next, let's verify that new trait
     # is part of identity dict that we put
     name, args, _ = dynamo_wrapper_mock.mock_calls[1]
@@ -415,7 +409,7 @@ def test_edge_identities_traits_create_trait(
     )
 
 
-def test_edge_identities_traits_update_trait(
+def test_edge_identities_update_trait(
     admin_client,
     dynamo_enabled_environment,
     environment_api_key,
@@ -424,7 +418,7 @@ def test_edge_identities_traits_update_trait(
     dynamo_wrapper_mock,
 ):
     # Given
-    dynamo_wrapper_mock.get_item_from_uuid.return_value = identity_document
+    dynamo_wrapper_mock.get_item_from_uuid_or_404.return_value = identity_document
     identity_uuid = identity_document["identity_uuid"]
     trait_key = identity_traits[0]["trait_key"]
     url = reverse(
@@ -443,9 +437,7 @@ def test_edge_identities_traits_update_trait(
     assert response.json()["trait_key"] == trait_key
     assert response.json()["trait_value"] == updated_trait_value
     # and
-    dynamo_wrapper_mock.get_item_from_uuid.assert_called_with(
-        environment_api_key, identity_uuid
-    )
+    dynamo_wrapper_mock.get_item_from_uuid_or_404.assert_called_with(identity_uuid)
     # Next, let's verify that updated trait value
     # is part of identity dict that we put
     name, args, _ = dynamo_wrapper_mock.mock_calls[1]
@@ -457,3 +449,32 @@ def test_edge_identities_traits_update_trait(
             args[0]["identity_traits"],
         )
     )
+
+
+def test_edge_identities_update_traits_returns_400_if_persist_trait_data_is_false(
+    admin_client,
+    dynamo_enabled_environment,
+    environment_api_key,
+    identity_document,
+    identity_traits,
+    dynamo_wrapper_mock,
+    organisation_with_persist_trait_data_disabled,
+):
+    # Given
+    dynamo_wrapper_mock.get_item_from_uuid_or_404.return_value = identity_document
+    identity_uuid = identity_document["identity_uuid"]
+    trait_key = identity_traits[0]["trait_key"]
+
+    url = reverse(
+        "api-v1:environments:environment-edge-identities-update-traits",
+        args=[environment_api_key, identity_uuid],
+    )
+    updated_trait_value = "updated_trait_value"
+    data = {"trait_key": trait_key, "trait_value": updated_trait_value}
+
+    # When
+    response = admin_client.put(
+        url, data=json.dumps(data), content_type="application/json"
+    )
+    # Then
+    assert response.status_code == status.HTTP_400_BAD_REQUEST

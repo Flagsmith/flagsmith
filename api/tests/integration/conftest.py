@@ -7,6 +7,7 @@ from django.urls import reverse
 from rest_framework.test import APIClient
 
 from app.utils import create_hash
+from organisations.models import Organisation
 
 
 @pytest.fixture()
@@ -44,6 +45,11 @@ def project(admin_client, organisation):
     url = reverse("api-v1:projects:project-list")
     response = admin_client.post(url, data=project_data)
     return response.json()["id"]
+
+
+@pytest.fixture()
+def organisation_with_persist_trait_data_disabled(organisation):
+    Organisation.objects.filter(id=organisation).update(persist_trait_data=False)
 
 
 @pytest.fixture()
