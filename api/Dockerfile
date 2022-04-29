@@ -14,6 +14,9 @@ RUN if [ "${TARGETPLATFORM}" != "linux/arm/v7" ]; then pip install google-re2==$
 WORKDIR /app
 COPY . .
 
+# pysaml2 dependency
+RUN apt update && apt install -y xmlsec1
+
 # Install python dependencies
 RUN pip install -r requirements.txt --no-cache-dir --compile
 
