@@ -23,6 +23,15 @@ class TheComponent extends Component {
         />);
     }
 
+    componentDidMount() {
+        const { projectFlag, environmentFlags } = this.props;
+        const {feature} = Utils.fromParam()
+        const {  id } = projectFlag;
+        if (`${id}` === feature) {
+            this.editFlag(projectFlag, environmentFlags[id]);
+        }
+    }
+
     confirmRemove = (projectFlag, cb) => {
         openModal('Remove Feature', <ConfirmRemoveFeature
           environmentId={this.props.environmentId}
@@ -33,6 +42,12 @@ class TheComponent extends Component {
 
     editFlag = (projectFlag, environmentFlag) => {
         API.trackEvent(Constants.events.VIEW_FEATURE);
+
+        history.replaceState(
+            {},
+            null,
+            `${document.location.pathname}?feature=${projectFlag.id}`
+        );
         openModal(`Edit Feature: ${projectFlag.name}`, <CreateFlagModal
           isEdit
           router={this.context.router}
@@ -41,7 +56,13 @@ class TheComponent extends Component {
           projectFlag={projectFlag}
           environmentFlag={environmentFlag}
           flagId={environmentFlag.id}
-        />, null, { className: 'side-modal fade' });
+        />, null, { className: 'side-modal fade', onClose: ()=>{
+                history.replaceState(
+                    {},
+                    null,
+                    `${document.location.pathname}`
+                );
+            } });
     };
 
 

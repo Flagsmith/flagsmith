@@ -426,7 +426,7 @@ const CreateFlag = class extends Component {
                 )}
 
                 {identity && description && (
-                    <FormGroup className="mb-4 mr-3 ml-3" >
+                    <FormGroup className="mb-4 mt-2 mr-3 ml-3" >
                         <InputGroup
                           value={description}
                           data-test="featureDesc"
@@ -442,28 +442,31 @@ const CreateFlag = class extends Component {
                         />
                     </FormGroup>
                 )}
-                <Feature
-                  hide_from_client={hide_from_client}
-                  multivariate_options={multivariate_options}
-                  environmentVariations={environmentVariations}
-                  isEdit={isEdit}
-                  identity={identity}
-                  removeVariation={this.removeVariation}
-                  updateVariation={this.updateVariation}
-                  addVariation={this.addVariation}
-                  checked={default_enabled}
-                  value={initial_value}
-                  identityVariations={this.state.identityVariations}
-                  onChangeIdentityVariations={(identityVariations) => {
-                      this.setState({ identityVariations });
-                  }}
-                  environmentFlag={this.props.environmentFlag}
-                  projectFlag={projectFlag}
-                  onValueChange={(e) => {
-                      this.setState({ initial_value: Utils.getTypedValue(Utils.safeParseEventValue(e)) });
-                  }}
-                  onCheckedChange={default_enabled => this.setState({ default_enabled })}
-                />
+                <div className={identity && !description?"mt-2":""}>
+                    <Feature
+                        hide_from_client={hide_from_client}
+                        multivariate_options={multivariate_options}
+                        environmentVariations={environmentVariations}
+                        isEdit={isEdit}
+                        identity={identity}
+                        removeVariation={this.removeVariation}
+                        updateVariation={this.updateVariation}
+                        addVariation={this.addVariation}
+                        checked={default_enabled}
+                        value={initial_value}
+                        identityVariations={this.state.identityVariations}
+                        onChangeIdentityVariations={(identityVariations) => {
+                            this.setState({ identityVariations });
+                        }}
+                        environmentFlag={this.props.environmentFlag}
+                        projectFlag={projectFlag}
+                        onValueChange={(e) => {
+                            this.setState({ initial_value: Utils.getTypedValue(Utils.safeParseEventValue(e)) });
+                        }}
+                        onCheckedChange={default_enabled => this.setState({ default_enabled })}
+                    />
+                </div>
+
                 {!isEdit && !identity && Settings(projectAdmin)}
             </>
         );
