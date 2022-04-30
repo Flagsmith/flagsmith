@@ -12,7 +12,9 @@ const SegmentsPage = class extends Component {
 
     constructor(props, context) {
         super(props, context);
-        this.state = {};
+        this.state = {
+            preselect: Utils.fromParam().id
+        };
         AppActions.getFeatures(this.props.match.params.projectId, this.props.match.params.environmentId);
         AppActions.getSegments(this.props.match.params.projectId, this.props.match.params.environmentId);
     }
@@ -47,6 +49,11 @@ const SegmentsPage = class extends Component {
 
     editSegment = (segment, readOnly) => {
         API.trackEvent(Constants.events.VIEW_SEGMENT);
+        history.replaceState(
+            {},
+            null,
+            `${document.location.pathname}?id=${segment.id}`
+        );
         openModal(`Edit Segment - ${segment.name}`, <CreateSegmentModal
           segment={segment}
           isEdit
@@ -54,7 +61,16 @@ const SegmentsPage = class extends Component {
           environmentId={this.props.match.params.environmentId}
           projectId={this.props.match.params.projectId}
           projectFlag={segment}
-        />, null, { className: 'fade side-modal create-segment-modal' });
+        />, null, {
+            onClose: ()=>{
+                history.replaceState(
+                    {},
+                    null,
+                    `${document.location.pathname}`
+                );
+            },
+            className: 'fade side-modal create-segment-modal'
+        });
     };
 
 
@@ -172,39 +188,45 @@ const SegmentsPage = class extends Component {
                                                       icon="ion-ios-globe"
                                                       title="Segments"
                                                       items={segments}
-                                                      renderRow={({ name, id, enabled, description, type }, i) => (
-                                                          <Row className="list-item clickable" key={id} space>
-                                                              <div
-                                                                className="flex flex-1"
-                                                                onClick={() => this.editSegment(_.find(segments, { id }), !permission)}
-                                                              >
-                                                                  <Row>
-                                                                      <ButtonLink>
-                                                                          <span data-test={`segment-${i}-name`}>
-                                                                              {name}
-                                                                          </span>
-                                                                      </ButtonLink>
-                                                                  </Row>
-                                                                  <div className="list-item-footer faint">
-                                                                      {description || 'No description'}
+                                                      renderRow={({ name, id, enabled, description, type }, i) => {
+                                                          if(this.state.preselect === `${id}`) {
+                                                              this.state.preselect = null
+                                                              this.editSegment(_.find(segments, { id }), !permission)
+                                                          }
+                                                          return (
+                                                              <Row className="list-item clickable" key={id} space>
+                                                                  <div
+                                                                      className="flex flex-1"
+                                                                      onClick={() => this.editSegment(_.find(segments, { id }), !permission)}
+                                                                  >
+                                                                      <Row>
+                                                                          <ButtonLink>
+                                                                              <span data-test={`segment-${i}-name`}>
+                                                                                  {name}
+                                                                              </span>
+                                                                          </ButtonLink>
+                                                                      </Row>
+                                                                      <div className="list-item-footer faint">
+                                                                          {description || 'No description'}
+                                                                      </div>
                                                                   </div>
-                                                              </div>
-                                                              <Row>
-                                                                  <Column>
-                                                                      <button
-                                                                        disabled={!permission}
-                                                                        data-test={`remove-segment-btn-${i}`}
-                                                                        onClick={() => this.confirmRemove(_.find(segments, { id }), () => {
-                                                                            removeSegment(this.props.match.params.projectId, id);
-                                                                        })}
-                                                                        className="btn btn--with-icon"
-                                                                      >
-                                                                          <RemoveIcon/>
-                                                                      </button>
-                                                                  </Column>
+                                                                  <Row>
+                                                                      <Column>
+                                                                          <button
+                                                                              disabled={!permission}
+                                                                              data-test={`remove-segment-btn-${i}`}
+                                                                              onClick={() => this.confirmRemove(_.find(segments, { id }), () => {
+                                                                                  removeSegment(this.props.match.params.projectId, id);
+                                                                              })}
+                                                                              className="btn btn--with-icon"
+                                                                          >
+                                                                              <RemoveIcon/>
+                                                                          </button>
+                                                                      </Column>
+                                                                  </Row>
                                                               </Row>
-                                                          </Row>
-                                                      )}
+                                                          )
+                                                      }}
                                                       renderNoResults={(
                                                           <div className="text-center"/>
                                                     )}
