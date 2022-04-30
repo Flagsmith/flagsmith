@@ -33,7 +33,7 @@ class TheComponent extends Component {
         });
     }
 
-    getOwners = (users, owners) => users.filter(v => owners.includes(v.id))
+    getOwners = (users, owners) => users ? users.filter(v => owners.includes(v.id)): []
 
     render() {
         const hasPermission = !this.props.hasFeature('plan_based_access') || Utils.getPlansPermission('FLAG_OWNERS');
