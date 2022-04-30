@@ -1,3 +1,4 @@
+from rest_framework.exceptions import APIException, PermissionDenied
 from rest_framework.permissions import BasePermission
 
 from organisations.models import Organisation
@@ -73,3 +74,25 @@ class NestedProjectPermissions(BasePermission):
             return True
 
         return False
+
+
+class IsProjectAdmin(BasePermission):
+    def __init__(
+        self, *args, project_pk_view_kwarg_attribute_name: str = "project_pk", **kwargs
+    ):
+        super().__init__(*args, **kwargs)
+        self._view_kwarg_name = project_pk_view_kwarg_attribute_name
+
+    def has_permission(self, request, view):
+        return request.user.is_project_admin(self._get_project(view))
+
+    def _get_project(self, view) -> Project:
+        try:
+            project_pk = view.kwargs[self._view_kwarg_name]
+            return Project.objects.get(id=project_pk)
+        except KeyError:
+            raise APIException(
+                "`IsProjectAdmin` incorrectly configured. No project pk found."
+            )
+        except Project.DoesNotExist:
+            raise PermissionDenied()

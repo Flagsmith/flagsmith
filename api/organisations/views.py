@@ -39,8 +39,8 @@ from organisations.serializers import (
     UpdateSubscriptionSerializer,
 )
 from permissions.serializers import (
-    MyUserObjectPermissionsSerializer,
     PermissionModelSerializer,
+    UserObjectPermissionsSerializer,
 )
 from projects.serializers import ProjectSerializer
 from users.serializers import UserIdSerializer
@@ -69,7 +69,7 @@ class OrganisationViewSet(viewsets.ModelViewSet):
         elif self.action == "permissions":
             return PermissionModelSerializer
         elif self.action == "my_permissions":
-            return MyUserObjectPermissionsSerializer
+            return UserObjectPermissionsSerializer
         return OrganisationSerializerFull
 
     def get_serializer_context(self):
