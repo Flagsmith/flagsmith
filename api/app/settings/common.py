@@ -591,7 +591,7 @@ if WORKFLOWS_LOGIC_INSTALLED:
 AUTH_CONTROLLER_MODULE_PATH = env(
     "AUTH_CONTROLLER_MODULE_PATH", os.path.join(BASE_DIR, "auth_controller")
 )
-AUTH_CONTROLLER_INSTALLED = os.path.exists(SAML_MODULE_PATH)
+AUTH_CONTROLLER_INSTALLED = os.path.exists(AUTH_CONTROLLER_MODULE_PATH)
 if AUTH_CONTROLLER_INSTALLED:
     INSTALLED_APPS.append("auth_controller")
     AUTHENTICATION_BACKENDS.insert(0, "auth_controller.backends.AuthControllerBackend")
