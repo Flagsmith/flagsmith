@@ -11,6 +11,7 @@ import withSegmentOverrides from "../../../common/providers/withSegmentOverrides
 import ProjectStore from "../../../common/stores/project-store";
 import ValueEditor from "../ValueEditor";
 import CreateFlagModal from "../modals/CreateFlag";
+import InfoMessage from "../InfoMessage";
 const labelWidth = 200
 const ChangeRequestsPage = class extends Component {
     static displayName = 'ChangeRequestsPage';
@@ -106,9 +107,14 @@ const ChangeRequestsPage = class extends Component {
        AppActions.actionChangeRequest(this.props.match.params.id, "approve")
     }
     publishChangeRequest = () => {
-        openConfirm(<h3>Publish Change Request</h3>, (
+        const id = this.props.match.params.id;
+        const changeRequest = ChangeRequestStore.model[id];
+        const isScheduled = new Date(changeRequest.feature_states[0].live_from).valueOf() > new Date().valueOf()
+        const scheduledDate =  moment(changeRequest.feature_states[0].live_from)
+
+        openConfirm(<h3>{isScheduled?"Schedule":"Publish"} Change Request</h3>, (
             <p>
-                Are you sure you want to publish this change request? This will adjust the feature for your environment.
+                Are you sure you want to {isScheduled?"schedule":"publish"} this change request{isScheduled?` for ${scheduledDate.format("Do MMM YYYY hh:mma")}`:""}? This will adjust the feature for your environment.
             </p>
         ), ()=>{
             AppActions.actionChangeRequest(this.props.match.params.id, "commit", ()=>{
@@ -137,7 +143,8 @@ const ChangeRequestsPage = class extends Component {
         }
         const user = orgUsers.find(v => v.id === changeRequest.user);
         const committedBy = changeRequest.committed_by && orgUsers && orgUsers.find((v)=>v.id === changeRequest.committed_by) || {}
-
+        const isScheduled = new Date(changeRequest.feature_states[0].live_from).valueOf() > new Date().valueOf()
+        const scheduledDate =  moment(changeRequest.feature_states[0].live_from)
         return (
             <FeatureListProvider onSave={this.onSave} onError={this.onError}>
                 {({ isLoading, projectFlags, environmentFlags }) => {
@@ -206,7 +213,7 @@ const ChangeRequestsPage = class extends Component {
                                 </Flex>
                                 <div className="mr-4">
 
-                                    {!changeRequest.committed_at && (
+                                    {!changeRequest.committed_at || isScheduled && (
                                         <Row>
                                             <Button onClick={this.deleteChangeRequest} className="btn btn--small btn-danger">Delete</Button>
                                             <Button onClick={()=>this.editChangeRequest(projectFlag, environmentFlag)} className="btn btn--small ml-2">Edit</Button>
@@ -220,6 +227,16 @@ const ChangeRequestsPage = class extends Component {
 
                                     <div className="col-md-12">
 
+                                        {
+                                            isScheduled && !!changeRequest.committed_at &&(
+                                                <Row>
+                                                    <InfoMessage icon="ion-md-calendar" title="Scheduled Change">
+                                                        This feature change is scheduled to go live at {scheduledDate.format("Do MMM YYYY hh:mma")}. You can still edit / remove the change request before this date.
+                                                    </InfoMessage>
+                                                </Row>
+
+                                            )
+                                        }
                                         <InputGroup component={(
                                             <div>
                                                 <Row>
@@ -362,6 +379,8 @@ const ChangeRequestsPage = class extends Component {
 
                                                 <Flex/>
                                                 <Flex>
+
+
                                                     {
                                                         approvedBy.length? (
                                                             <div className="text-right mb-2 mr-2">
@@ -371,7 +390,7 @@ const ChangeRequestsPage = class extends Component {
                                                         ) : !!minApprovals && (
                                                             <div className="text-right mb-2 mr-2">
                                                                 <span className="ion icon-primary text-primary icon ion-ios-information-circle mr-2"/>
-                                                                You need at least {minApprovals} approval{minApprovals!=1 ?"s":""} to publish this change
+                                                                You need at least {minApprovals} approval{minApprovals!=1 ?"s":""} to {isScheduled?"schedule":"publish"} this change
                                                             </div>
                                                         )
                                                     }
@@ -394,7 +413,7 @@ const ChangeRequestsPage = class extends Component {
                                                             <Button disabled={(approvedBy.length<minApprovals)} onClick={this.publishChangeRequest} className="btn ml-2">
                                                                 <span className="ion icon ion-ios-git-merge text-light mr-2"/>
 
-                                                                Publish Change
+                                                                {isScheduled?"Schedule":"Publish"} Change
                                                             </Button>
                                                         </Row>
                                                     )}

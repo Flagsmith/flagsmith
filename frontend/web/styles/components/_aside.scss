@@ -432,6 +432,7 @@ $animation-timing-function: ease-in-out;
         @include customScroll;
     }
     &__environment-list-item {
+        position: relative;
         display: block;
         color: $aside-nav-inactive-color;
         path {

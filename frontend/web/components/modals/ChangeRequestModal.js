@@ -15,6 +15,7 @@ const ChangeRequestModal = class extends Component {
     state = {
         approvals: (this.props.changeRequest && this.props.changeRequest.approvals) || [],
         title: this.props.changeRequest && this.props.changeRequest.title || '',
+        live_from: this.props.changeRequest && this.props.changeRequest.feature_states[0].live_from,
         description: this.props.changeRequest && this.props.changeRequest.description || '',
     }
 
@@ -36,6 +37,7 @@ const ChangeRequestModal = class extends Component {
     }
 
     render() {
+        debugger
         const { title, description } = this.state;
         return (
             <OrganisationProvider>
@@ -76,18 +78,21 @@ const ChangeRequestModal = class extends Component {
                                           <Row>
                                               <Flex>
                                                   <DatePicker
-                                                      de
-                                                    minDate={new Date()} onChange={(e) => {
+                                                    minDate={new Date()}
+                                                    onChange={(e) => {
                                                         this.setState({
                                                             live_from: e.toISOString(),
                                                         });
-                                                    }} showTimeInput
-                                                      selected={moment(this.state.live_from)._d}
+                                                    }}
+                                                    showTimeInput
+                                                    selected={moment(this.state.live_from)._d}
                                                     value={this.state.live_from ? `${moment(this.state.live_from).format('Do MMM YYYY hh:mma')} (${Intl.DateTimeFormat().resolvedOptions().timeZone})` : 'Immediately'}
                                                   />
                                               </Flex>
 
-                                              <ButtonLink className="ml-2" onClick={() => this.setState({ live_from: null })}>
+                                              <ButtonLink className="ml-2" onClick={() => {
+                                                  this.setState({ live_from: null })
+                                              }}>
                                                     Clear
                                               </ButtonLink>
                                           </Row>
