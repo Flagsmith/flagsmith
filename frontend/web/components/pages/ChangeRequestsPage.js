@@ -91,39 +91,41 @@ const ChangeRequestsPage = class extends Component {
                           this.setState({ tab });
                       }}
                     >
-                        <TabItem tabLabel={`Open${data ? ` (${dataPaging.count})` : ''}`}>
-                            <PanelSearch
-                              renderSearchWithNoResults
-                              id="users-list"
-                              title="Change Requests"
-                              className="mt-4 mx-2"
-                              isLoading={ChangeRequestStore.isLoading || !data || !OrganisationStore.model}
-                              icon="ion-md-git-pull-request"
-                              items={data}
-                              paging={dataPaging}
-                              nextPage={() => AppActions.getChangeRequests(this.props.match.params.environmentId, {}, dataPaging.next)}
-                              prevPage={() => AppActions.getChangeRequests(this.props.match.params.environmentId, {}, dataPaging.previous)}
-                              goToPage={page => AppActions.getChangeRequests(this.props.match.params.environmentId, {}, `${Project.api}environments/${environmentId}/list-change-requests/?page=${page}`)}
-                              renderRow={({ title, user: _user, created_at, id }, index) => {
-                                  const user = (OrganisationStore.model && OrganisationStore.model.users && OrganisationStore.model.users.find(v => v.id === _user)) || {};
-                                  return (
-                                      <Link to={`/project/${projectId}/environment/${environmentId}/change-requests/${id}`}>
-                                          <Row className="list-item clickable">
-                                              <span className="ion text-primary mr-4 icon ion-md-git-pull-request"/>
-                                              <div>
-                                                  <ButtonLink>
-                                                      {title}
-                                                  </ButtonLink>
-                                                  <div className="list-item-footer faint">
-                                                       Created at {moment(created_at).format('Do MMM YYYY HH:mma')} by {user && user.first_name} {user && user.last_name}
-                                                  </div>
-                                              </div>
-                                          </Row>
-                                      </Link>
-                                  );
-                              }}
-                            />
-                        </TabItem>
+                        {!!environment.minimum_change_request_approvals && (
+                            <TabItem tabLabel={`Open${data ? ` (${dataPaging.count})` : ''}`}>
+                                <PanelSearch
+                                    renderSearchWithNoResults
+                                    id="users-list"
+                                    title="Change Requests"
+                                    className="mt-4 mx-2"
+                                    isLoading={ChangeRequestStore.isLoading || !data || !OrganisationStore.model}
+                                    icon="ion-md-git-pull-request"
+                                    items={data}
+                                    paging={dataPaging}
+                                    nextPage={() => AppActions.getChangeRequests(this.props.match.params.environmentId, {}, dataPaging.next)}
+                                    prevPage={() => AppActions.getChangeRequests(this.props.match.params.environmentId, {}, dataPaging.previous)}
+                                    goToPage={page => AppActions.getChangeRequests(this.props.match.params.environmentId, {}, `${Project.api}environments/${environmentId}/list-change-requests/?page=${page}`)}
+                                    renderRow={({ title, user: _user, created_at, id }, index) => {
+                                        const user = (OrganisationStore.model && OrganisationStore.model.users && OrganisationStore.model.users.find(v => v.id === _user)) || {};
+                                        return (
+                                            <Link to={`/project/${projectId}/environment/${environmentId}/change-requests/${id}`}>
+                                                <Row className="list-item clickable">
+                                                    <span className="ion text-primary mr-4 icon ion-md-git-pull-request"/>
+                                                    <div>
+                                                        <ButtonLink>
+                                                            {title}
+                                                        </ButtonLink>
+                                                        <div className="list-item-footer faint">
+                                                            Created at {moment(created_at).format('Do MMM YYYY HH:mma')} by {user && user.first_name} {user && user.last_name}
+                                                        </div>
+                                                    </div>
+                                                </Row>
+                                            </Link>
+                                        );
+                                    }}
+                                />
+                            </TabItem>
+                        )}
                         {this.props.hasFeature('scheduling') && (
                         <TabItem tabLabel={`Scheduled${dataScheduledPaging ? ` (${dataScheduledPaging.count})` : ''}`}>
                             <PanelSearch
@@ -138,7 +140,6 @@ const ChangeRequestsPage = class extends Component {
                               nextPage={() => AppActions.getChangeRequests(this.props.match.params.environmentId, { live_from_after: this.state.live_after }, dataPaging.next)}
                               prevPage={() => AppActions.getChangeRequests(this.props.match.params.environmentId, { live_from_after: this.state.live_after }, dataPaging.previous)}
                               goToPage={page => AppActions.getChangeRequests(this.props.match.params.environmentId, { live_from_after: this.state.live_after }, `${Project.api}environments/${environmentId}/list-change-requests/?page=${page}`)}
-
                               renderRow={({ title, user: _user, created_at, id }, index) => {
                                   const user = OrganisationStore.model && OrganisationStore.model.users.find(v => v.id === _user);
                                   return (
@@ -185,7 +186,7 @@ const ChangeRequestsPage = class extends Component {
                                                       {title}
                                                   </ButtonLink>
                                                   <div className="list-item-footer faint">
-                                                       Created at {moment(created_at).format('Do MMM YYYY HH:mma')} by {user && user.first_name} {user && user.last_name}
+                                                       Live from {moment(created_at).format('Do MMM YYYY HH:mma')} by {user && user.first_name} {user && user.last_name}
                                                   </div>
                                               </div>
                                           </Row>

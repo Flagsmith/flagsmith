@@ -115,14 +115,21 @@
     display: inline-block;
     border-radius: 20px;
     background: $bt-brand-primary;
+    font-weight: bold;
+    padding-left: 5px;
+    padding-right: 5px;
     height: 16px;
-    width: 16px;
+    min-width: 16px;
     color: #fff;
     text-align: center;
     line-height: 16px;
     font-size: 11px;
     cursor: pointer;
-    top: 8px;
-    left: 8px;
-    will-change: scale;
+    position: relative;
+    bottom: 1px;
+}
+.aside__environment-list-item.active {
+    .unread {
+        background-color: rgba(0,0,0,.2);
+    }
 }
