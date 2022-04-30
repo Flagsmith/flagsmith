@@ -39,6 +39,7 @@ jobs:
                 aws_task_definitions_directory_path: infrastructure/aws/staging
                 flagsmith_saml_revision: v0.1.1
                 flagsmith_workflows_revision: v1.0.2
+                # TODO: Add auth controller
 
     run-tests:
         runs-on: ubuntu-latest
