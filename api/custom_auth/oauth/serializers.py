@@ -27,11 +27,13 @@ class OAuthLoginSerializer(serializers.Serializer):
     def create(self, validated_data):
         user_info = self.get_user_info()
         if settings.AUTH_CONTROLLER_INSTALLED:
-            from auth_controller import is_authentication_method_valid
+            from auth_controller.controller import (
+                is_authentication_method_valid,
+            )
 
             is_authentication_method_valid(
                 self.context.get("request"),
-                username=user_info.get("email"),
+                email=user_info.get("email"),
                 raise_exception=True,
             )
 

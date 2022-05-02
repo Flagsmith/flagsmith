@@ -588,14 +588,11 @@ if WORKFLOWS_LOGIC_INSTALLED:
     INSTALLED_APPS.append(WORKFLOWS_LOGIC_MODULE_PATH)
 
 # Additional functionality for restricting authentication to a set of authentication methods in Flagsmith SaaS
-AUTH_CONTROLLER_MODULE_PATH = env(
-    "AUTH_CONTROLLER_MODULE_PATH", os.path.join(BASE_DIR, "auth_controller")
-)
-AUTH_CONTROLLER_INSTALLED = os.path.exists(AUTH_CONTROLLER_MODULE_PATH)
+
+AUTH_CONTROLLER_INSTALLED = importlib.util.find_spec("auth_controller") is not None
 if AUTH_CONTROLLER_INSTALLED:
     INSTALLED_APPS.append("auth_controller")
     AUTHENTICATION_BACKENDS.insert(0, "auth_controller.backends.AuthControllerBackend")
-
 
 DEFAULT_AUTO_FIELD = "django.db.models.AutoField"
 

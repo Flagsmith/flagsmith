@@ -30,9 +30,11 @@ class CustomUserCreateSerializer(UserCreateSerializer):
 
     def validate_email(self, value):
         if settings.AUTH_CONTROLLER_INSTALLED:
-            from auth_controller import is_authentication_method_valid
+            from auth_controller.controller import (
+                is_authentication_method_valid,
+            )
 
-            is_authentication_method_valid(self.context.get("request"), username=value)
+            is_authentication_method_valid(self.context.get("request"), email=value)
 
         if FFAdminUser.objects.filter(email__iexact=value).count() != 0:
             raise serializers.ValidationError(
