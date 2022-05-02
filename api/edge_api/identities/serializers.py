@@ -131,3 +131,8 @@ class EdgeIdentityFeatureStateSerializer(serializers.Serializer):
             ) from e
         Identity.dynamo_wrapper.put_item(identity_dict)
         return self.instance
+
+
+class EdgeIdentityTraitsSerializer(serializers.Serializer):
+    trait_key = serializers.CharField()
+    trait_value = serializers.CharField(allow_null=True)
