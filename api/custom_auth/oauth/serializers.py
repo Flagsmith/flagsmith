@@ -1,5 +1,5 @@
 from django.conf import settings
-from django.contrib.auth import get_user_model
+from django.contrib.auth import authenticate, get_user_model
 from django.contrib.auth.signals import user_logged_in
 from rest_framework import serializers
 from rest_framework.authtoken.models import Token
@@ -29,6 +29,7 @@ class OAuthLoginSerializer(serializers.Serializer):
         user_logged_in.send(
             sender=UserModel, request=self.context.get("request"), user=user
         )
+        authenticate(request=self.context.get("request"), username=user.username)
         return Token.objects.get_or_create(user=user)[0]
 
     def _get_user(self):
