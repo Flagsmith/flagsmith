@@ -29,6 +29,11 @@ class CustomUserCreateSerializer(UserCreateSerializer):
         read_only_fields = ("is_active",)
 
     def validate_email(self, value):
+        if settings.AUTH_CONTROLLER_INSTALLED:
+            from auth_controller import is_authentication_method_valid
+
+            is_authentication_method_valid(self.context.get("request"), username=value)
+
         if FFAdminUser.objects.filter(email__iexact=value).count() != 0:
             raise serializers.ValidationError(
                 "Feature flag admin user with this email already exists."
