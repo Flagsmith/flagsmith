@@ -7,6 +7,7 @@ from django.urls import reverse
 from rest_framework.test import APIClient
 
 from app.utils import create_hash
+from organisations.models import Organisation
 
 
 @pytest.fixture()
@@ -44,6 +45,11 @@ def project(admin_client, organisation):
     url = reverse("api-v1:projects:project-list")
     response = admin_client.post(url, data=project_data)
     return response.json()["id"]
+
+
+@pytest.fixture()
+def organisation_with_persist_trait_data_disabled(organisation):
+    Organisation.objects.filter(id=organisation).update(persist_trait_data=False)
 
 
 @pytest.fixture()
@@ -180,7 +186,16 @@ def feature_segment(admin_client, segment, feature, environment):
 
 
 @pytest.fixture()
-def identity_document(environment_api_key, feature):
+def identity_traits():
+    return [
+        {"trait_value": "trait_value_1", "trait_key": "trait_key_1"},
+        {"trait_value": "trait_value_2", "trait_key": "trait_key_2"},
+        {"trait_value": "trait_value_3", "trait_key": "trait_key_3"},
+    ]
+
+
+@pytest.fixture()
+def identity_document(environment_api_key, feature, identity_traits):
     _environment_feature_state_1_document = {
         "featurestate_uuid": "ad71c644-71df-4e83-9cb5-cd2cd0160200",
         "multivariate_feature_state_values": [],
@@ -230,7 +245,7 @@ def identity_document(environment_api_key, feature):
     }
     return {
         "composite_key": f"{environment_api_key}_user_1_test",
-        "identity_traits": [{"trait_value": "test", "trait_key": "first_name"}],
+        "identity_traits": identity_traits,
         "identity_features": [
             _environment_feature_state_1_document,
             _environment_feature_state_2_document,
