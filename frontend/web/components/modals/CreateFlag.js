@@ -485,7 +485,7 @@ const CreateFlag = class extends Component {
                         {({ isLoading, isSaving, error, influxData }, { createFlag, editFlagSettings, editFlagValue, editFlagSegments, createChangeRequest }) => {
                             const saveFeatureValue = (schedule) => {
                                 if (is4Eyes || schedule) {
-                                    openModal2(this.props.changeRequest ? 'Update Change Request' : 'New Change Request', <ChangeRequestModal
+                                    openModal2(schedule? "New Scheduled Flag Update" : this.props.changeRequest ? 'Update Change Request' : 'New Change Request', <ChangeRequestModal
                                       showAssignees={is4Eyes}
                                       changeRequest={this.props.changeRequest}
                                       onSave={({
@@ -571,7 +571,7 @@ const CreateFlag = class extends Component {
                                                                     <>
                                                                         {canSchedule ? (
                                                                             <ButtonOutline
-                                                                              onClick={saveFeatureValue} className="mr-2" type="button"
+                                                                              onClick={()=>saveFeatureValue(true)} className="mr-2" type="button"
                                                                               data-test="create-change-request"
                                                                               id="create-change-request-btn" disabled={isSaving || !name || invalid}
                                                                             >
@@ -581,7 +581,7 @@ const CreateFlag = class extends Component {
                                                                             <Tooltip title={(
                                                                                 <ButtonOutline
                                                                                   disabled
-                                                                                  onClick={saveFeatureValue} className="mr-2" type="button"
+                                                                                  className="mr-2" type="button"
                                                                                   data-test="create-change-request"
                                                                                   id="create-change-request-btn"
                                                                                 >
@@ -597,7 +597,7 @@ const CreateFlag = class extends Component {
                                                                 )}
                                                                 {is4Eyes ? (
                                                                     <Button
-                                                                      onClick={saveFeatureValue} type="button" data-test="update-feature-btn"
+                                                                      onClick={()=>saveFeatureValue()} type="button" data-test="update-feature-btn"
                                                                       id="update-feature-btn" disabled={isSaving || !name || invalid}
                                                                     >
                                                                         {isSaving ? existingChangeRequest ? 'Updating Change Request' : 'Creating Change Request' : existingChangeRequest ? 'Update Change Request' : 'Create Change Request'}
