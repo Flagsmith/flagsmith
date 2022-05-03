@@ -29,7 +29,6 @@ from util.views import SDKAPIView
 
 class IdentityViewSet(viewsets.ModelViewSet):
     serializer_class = IdentitySerializer
-    permission_classes = [IsAuthenticated, NestedEnvironmentPermissions]
     pagination_class = CustomPagination
 
     def get_queryset(self):
