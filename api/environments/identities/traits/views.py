@@ -60,6 +60,7 @@ class TraitViewSet(viewsets.ModelViewSet):
                     "partial_update": MANAGE_IDENTITIES,
                     "destroy": MANAGE_IDENTITIES,
                     "list": MANAGE_IDENTITIES,
+                    "retrieve": MANAGE_IDENTITIES,
                 },
                 get_environment_from_object_callable=lambda t: t.identity.environment,
             ),

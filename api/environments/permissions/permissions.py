@@ -88,11 +88,11 @@ class NestedEnvironmentPermissions(BasePermission):
         self.get_environment_from_object_callable = get_environment_from_object_callable
 
     def has_permission(self, request, view):
-        environment_api_key = view.kwargs.get("environment_api_key")
-        if not environment_api_key:
+        try:
+            environment_api_key = view.kwargs.get("environment_api_key")
+            environment = Environment.objects.get(api_key=environment_api_key)
+        except Environment.DoesNotExist:
             return False
-
-        environment = Environment.objects.get(api_key=environment_api_key)
 
         if view.action in self.action_permission_map:
             return request.user.has_environment_permission(

@@ -1,11 +1,14 @@
 from django.urls import reverse
 from rest_framework import status
+from rest_framework.permissions import IsAuthenticated
 
+from environments.identities.traits.views import TraitViewSet
 from environments.permissions.constants import (
     MANAGE_IDENTITIES,
     VIEW_ENVIRONMENT,
 )
 from environments.permissions.models import UserEnvironmentPermission
+from environments.permissions.permissions import NestedEnvironmentPermissions
 from permissions.models import PermissionModel
 from projects.models import UserProjectPermission
 
@@ -61,3 +64,24 @@ def test_trait_view_set_update(environment, admin_client, identity, trait):
     # Then
     assert response.status_code == status.HTTP_200_OK
     assert response.json()["string_value"] == new_value
+
+
+def test_edge_identity_view_set_get_permissions():
+    # Given
+    view_set = TraitViewSet()
+
+    # When
+    permissions = view_set.get_permissions()
+
+    # Then
+    assert isinstance(permissions[0], IsAuthenticated)
+    assert isinstance(permissions[1], NestedEnvironmentPermissions)
+
+    assert permissions[1].action_permission_map == {
+        "list": MANAGE_IDENTITIES,
+        "retrieve": MANAGE_IDENTITIES,
+        "create": MANAGE_IDENTITIES,
+        "update": MANAGE_IDENTITIES,
+        "partial_update": MANAGE_IDENTITIES,
+        "destroy": MANAGE_IDENTITIES,
+    }
