@@ -49,12 +49,12 @@ const CreateTrait = class extends Component {
             >
                 {({ project }) => (
                     <IdentityProvider onSave={this.onSave}>
-                        {({ isLoading, isSaving, error }, { editTrait }) => (
+                        {({ isLoading, isSaving, error }, { createTrait }) => (
                             <form
                               id="create-trait-modal"
                               onSubmit={(e) => {
                                   e.preventDefault();
-                                  this.save(editTrait, isSaving);
+                                  this.save(createTrait, isSaving);
                               }}
                             >
                                 <FormGroup className="mb-3">

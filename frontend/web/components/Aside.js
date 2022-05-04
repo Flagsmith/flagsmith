@@ -39,14 +39,14 @@ const Aside = class extends Component {
     constructor(props, context) {
         super(props, context);
         this.state = {};
-        ES6Component(this)
+        ES6Component(this);
         AppActions.getProject(this.props.projectId);
         AppActions.getChangeRequests(this.props.environmentId, {});
-        this.listenTo(ChangeRequestStore, 'change', ()=>this.forceUpdate())
-        this.listenTo(ProjectStore, 'loaded', ()=> {
+        this.listenTo(ChangeRequestStore, 'change', () => this.forceUpdate());
+        this.listenTo(ProjectStore, 'loaded', () => {
             const environment = ProjectStore.getEnvironment(this.props.environmentId);
-            AppActions.getChangeRequests(this.props.environmentId, environment.minimum_change_request_approvals? {}:{live_from_after: new Date().toISOString()})
-        })
+            AppActions.getChangeRequests(this.props.environmentId, environment.minimum_change_request_approvals ? {} : { live_from_after: new Date().toISOString() });
+        });
     }
 
     componentWillReceiveProps(newProps) {
@@ -56,7 +56,7 @@ const Aside = class extends Component {
         }
         if (newProps.environmentId !== this.props.environmentId) {
             if (environment) {
-                AppActions.getChangeRequests(newProps.environmentId, environment.minimum_change_request_approvals? {}:{live_from_after: new Date().toISOString()})
+                AppActions.getChangeRequests(newProps.environmentId, environment.minimum_change_request_approvals ? {} : { live_from_after: new Date().toISOString() });
             }
         }
     }
@@ -86,7 +86,7 @@ const Aside = class extends Component {
         const environment = ProjectStore.getEnvironment(this.props.environmentId);
         const hasRbacPermission = !this.props.hasFeature('plan_based_access') || Utils.getPlansPermission('AUDIT') || !this.props.hasFeature('scaleup_audit');
         const has4Eyes = flagsmith.hasFeature('4eyes');
-        const changeRequest = environment && environment.minimum_change_request_approvals? ChangeRequestStore.model[this.props.environmentId]: ChangeRequestStore.scheduled[this.props.environmentId];
+        const changeRequest = environment && environment.minimum_change_request_approvals ? ChangeRequestStore.model[this.props.environmentId] : ChangeRequestStore.scheduled[this.props.environmentId];
         const changeRequests = (changeRequest && changeRequest.count) || 0;
         return (
             <OrganisationProvider>
@@ -107,73 +107,73 @@ const Aside = class extends Component {
                                         </div>
                                     )}
                                     <div className="row ml-0 mr-0 aside__wrapper">
-                                      <div className={`aside__projects-sidebar ${this.props.className || ''}`}>
-                                      <div className="flex-row justify-content-center">
-                                          <div className="flex-column">
-                                              <Link to="/projects">
-                                                  <NavIconSmall
-                                                    className="aside__logo"
-                                                  />
-                                              </Link>
-                                          </div>
+                                        <div className={`aside__projects-sidebar ${this.props.className || ''}`}>
+                                            <div className="flex-row justify-content-center">
+                                                <div className="flex-column">
+                                                    <Link to="/projects">
+                                                        <NavIconSmall
+                                                          className="aside__logo"
+                                                        />
+                                                    </Link>
+                                                </div>
 
-                                          <div className="flex-column">
-                                              <div className="aside__projects-item">
-                                                  <div className="flex-row justify-content-center">
-                                                      <div className="flex-column mb-3">
+                                                <div className="flex-column">
+                                                    <div className="aside__projects-item">
+                                                        <div className="flex-row justify-content-center">
+                                                            <div className="flex-column mb-3">
 
-                                                          <Tooltip
-                                                            title={(
-                                                                <Button onClick={this.newProject} className="btn--transparent aside__add-btn">
-                                                                    <a
-                                                                      id="create-project-link"
-                                                                      to="/projects"
-                                                                      state={{ create: true }}
-                                                                    >
-                                                                        <PlusIcon width={18}/>
-                                                                    </a>
-                                                                </Button>
+                                                                <Tooltip
+                                                                  title={(
+                                                                      <Button onClick={this.newProject} className="btn--transparent aside__add-btn">
+                                                                          <a
+                                                                            id="create-project-link"
+                                                                            to="/projects"
+                                                                            state={{ create: true }}
+                                                                          >
+                                                                              <PlusIcon width={18}/>
+                                                                          </a>
+                                                                      </Button>
                                                                     )}
-                                                            place="right"
-                                                          >
+                                                                  place="right"
+                                                                >
                                                                     Create Project
-                                                          </Tooltip>
+                                                                </Tooltip>
 
-                                                      </div>
-                                                  </div>
-                                              </div>
-                                          </div>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
 
-                                          <ProjectSelect
-                                            renderRow={(project, onClick) => (
-                                                <AsideProjectButton
-                                                  data-test={`switch-project-${project.name.toLowerCase()}${this.props.projectId === (`${project.id}`) ? '-active' : ''}`}
-                                                  key={project.id}
-                                                  onClick={onClick}
-                                                  className={this.props.projectId === `${project.id}` ? 'active' : ''}
-                                                  name={project.name}
-                                                  projectLetter={(`${project.name[0]}`).toUpperCase()}
+                                                <ProjectSelect
+                                                  renderRow={(project, onClick) => (
+                                                      <AsideProjectButton
+                                                        data-test={`switch-project-${project.name.toLowerCase()}${this.props.projectId === (`${project.id}`) ? '-active' : ''}`}
+                                                        key={project.id}
+                                                        onClick={onClick}
+                                                        className={this.props.projectId === `${project.id}` ? 'active' : ''}
+                                                        name={project.name}
+                                                        projectLetter={(`${project.name[0]}`).toUpperCase()}
+                                                      />
+                                                  )}
+                                                  projectId={this.props.projectId}
+                                                  environmentId={environmentId}
+                                                  clearableValue={false}
+                                                  onChange={(project) => {
+                                                      AppActions.getProject(project.id);
+                                                      if (project.environments[0]) {
+                                                          this.context.router.history.push(`/project/${project.id}/environment/${project.environments[0].api_key}/features`);
+                                                      } else {
+                                                          this.context.router.history.push(`/project/${project.id}/environment/create`);
+                                                      }
+                                                      AsyncStorage.setItem('lastEnv', JSON.stringify({
+                                                          orgId: AccountStore.getOrganisation().id,
+                                                          projectId: project.id,
+                                                          environmentId: project.environments[0].api_key,
+                                                      }));
+                                                  }}
                                                 />
-                                            )}
-                                            projectId={this.props.projectId}
-                                            environmentId={environmentId}
-                                            clearableValue={false}
-                                            onChange={(project) => {
-                                                AppActions.getProject(project.id);
-                                                if (project.environments[0]) {
-                                                    this.context.router.history.push(`/project/${project.id}/environment/${project.environments[0].api_key}/features`);
-                                                } else {
-                                                    this.context.router.history.push(`/project/${project.id}/environment/create`);
-                                                }
-                                                AsyncStorage.setItem('lastEnv', JSON.stringify({
-                                                    orgId: AccountStore.getOrganisation().id,
-                                                    projectId: project.id,
-                                                    environmentId: project.environments[0].api_key,
-                                                }));
-                                            }}
-                                          />
-                                      </div>
-                                  </div>
+                                            </div>
+                                        </div>
                                         {(
                                             <React.Fragment>
                                                 <div className="aside__main-content" style={{ 'overflowY': 'auto' }}>
@@ -292,53 +292,60 @@ const Aside = class extends Component {
                                                                     onClick={onClick}
                                                                     active={environment.api_key === environmentId} title={environment.name}
                                                                   >
-                                                                      <Permission level="environment" permission="ADMIN" id={environment.api_key}>
-                                                                          {({ permission: environmentAdmin, isLoading }) => (isLoading
-                                                                              ? <div className="text-center"><Loader/></div> : (
-                                                                                  <div className="aside__environment-nav list-unstyled mb-0">
-                                                                                      <NavLink
-                                                                                        className="aside__environment-list-item"
-                                                                                        id="features-link"
-                                                                                        to={`/project/${project.id}/environment/${environment.api_key}/features`}
-                                                                                      >
-                                                                                          <FeaturesIcon className="aside__environment-list-item--icon"/>
-                                                                                            Features
-                                                                                      </NavLink>
-                                                                                      {has4Eyes && (
-                                                                                          <NavLink
-                                                                                            activeClassName="active"
+                                                                      <Permission level="environment" permission={flagsmith.hasFeature('manage_identities_permission') ? 'MANAGE_IDENTITIES' : 'ADMIN'} id={environment.api_key}>
+                                                                          {({ permission: manageIdentityPermission, isLoading: manageIdentityLoading }) => (
+                                                                              <Permission level="environment" permission="ADMIN" id={environment.api_key}>
+                                                                                  {({ permission: environmentAdmin, isLoading }) => (isLoading || manageIdentityLoading
+                                                                                      ? <div className="text-center"><Loader/></div> : (
+                                                                                          <div className="aside__environment-nav list-unstyled mb-0">
+                                                                                              <NavLink
+                                                                                                className="aside__environment-list-item"
+                                                                                                id="features-link"
+                                                                                                to={`/project/${project.id}/environment/${environment.api_key}/features`}
+                                                                                              >
+                                                                                                  <FeaturesIcon className="aside__environment-list-item--icon"/>
+                                                                                                  Features
+                                                                                              </NavLink>
+                                                                                              {has4Eyes && (
+                                                                                                  <NavLink
+                                                                                                    activeClassName="active"
 
-                                                                                            className="aside__environment-list-item"
-                                                                                            id="change-requests-link"
-                                                                                            to={`/project/${project.id}/environment/${environment.api_key}/change-requests/`}
-                                                                                          >
-                                                                                              <span className="ion icon ion-md-git-pull-request aside__environment-list-item--icon"/>
-                                                                                                    Change Requests {changeRequests ? <span className="unread">{changeRequests}</span> : null}
-                                                                                          </NavLink>
-                                                                                      )}
-                                                                                      <NavLink
-                                                                                        id="users-link"
-                                                                                        className="aside__environment-list-item"
-                                                                                        exact
-                                                                                        to={`/project/${project.id}/environment/${environment.api_key}/users`}
-                                                                                      >
-                                                                                          <UsersIcon
-                                                                                            className="aside__environment-list-item--icon"
-                                                                                          />
-                                                                                            Users
-                                                                                      </NavLink>
-                                                                                      {environmentAdmin && (
-                                                                                      <NavLink
-                                                                                        id="env-settings-link"
-                                                                                        className="aside__environment-list-item"
-                                                                                        to={`/project/${project.id}/environment/${environment.api_key}/settings`}
-                                                                                      >
-                                                                                          <EnvironmentSettingsIcon className="aside__environment-list-item--icon"/>
-                                                                                                Settings
-                                                                                      </NavLink>
-                                                                                      )}
-                                                                                  </div>
-                                                                              ))}
+                                                                                                    className="aside__environment-list-item"
+                                                                                                    id="change-requests-link"
+                                                                                                    to={`/project/${project.id}/environment/${environment.api_key}/change-requests/`}
+                                                                                                  >
+                                                                                                      <span className="ion icon ion-md-git-pull-request aside__environment-list-item--icon"/>
+                                                                                                      Change Requests {changeRequests ? <span className="unread">{changeRequests}</span> : null}
+                                                                                                  </NavLink>
+                                                                                              )}
+                                                                                              {manageIdentityPermission && (
+                                                                                                  <NavLink
+                                                                                                    id="users-link"
+                                                                                                    className="aside__environment-list-item"
+                                                                                                    exact
+                                                                                                    to={`/project/${project.id}/environment/${environment.api_key}/users`}
+                                                                                                  >
+                                                                                                      <UsersIcon
+                                                                                                        className="aside__environment-list-item--icon"
+                                                                                                      />
+                                                                                                      Users
+                                                                                                  </NavLink>
+                                                                                              )}
+
+                                                                                              {environmentAdmin && (
+                                                                                                  <NavLink
+                                                                                                    id="env-settings-link"
+                                                                                                    className="aside__environment-list-item"
+                                                                                                    to={`/project/${project.id}/environment/${environment.api_key}/settings`}
+                                                                                                  >
+                                                                                                      <EnvironmentSettingsIcon className="aside__environment-list-item--icon"/>
+                                                                                                      Settings
+                                                                                                  </NavLink>
+                                                                                              )}
+                                                                                          </div>
+                                                                                      ))}
+                                                                              </Permission>
+                                                                          )}
                                                                       </Permission>
                                                                   </Collapsible>
                                                               )}
