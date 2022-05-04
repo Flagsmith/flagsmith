@@ -4,6 +4,173 @@ from django.urls import reverse
 from rest_framework import status
 
 
+def test_can_create_mv_option(project, mv_option_50_percent, admin_client, feature):
+    # Given
+    mv_option_url = reverse(
+        "api-v1:projects:feature-mv-options-list",
+        args=[project, feature],
+    )
+    data = {
+        "type": "unicode",
+        "feature": feature,
+        "string_value": "bigger",
+        "default_percentage_allocation": 50,
+    }
+    # When
+    response = admin_client.post(
+        mv_option_url,
+        data=json.dumps(data),
+        content_type="application/json",
+    )
+    # Then
+    assert response.status_code == status.HTTP_201_CREATED
+    assert response.json()["id"]
+    assert set(data.items()).issubset(set(response.json().items()))
+
+
+def test_can_list_mv_option(project, mv_option_50_percent, admin_client, feature):
+    # Given
+    url = reverse(
+        "api-v1:projects:feature-mv-options-list",
+        args=[project, feature],
+    )
+    # When
+    response = admin_client.get(
+        url,
+        content_type="application/json",
+    )
+    # Then
+    assert response.status_code == status.HTTP_200_OK
+    assert response.json()["count"] == 1
+    assert response.json()["results"][0]["id"] == mv_option_50_percent
+
+
+def test_creating_mv_options_with_accumulated_total_gt_100_returns_400(
+    project, mv_option_50_percent, admin_client, feature
+):
+    mv_option_url = reverse(
+        "api-v1:projects:feature-mv-options-list",
+        args=[project, feature],
+    )
+    data = {
+        "type": "unicode",
+        "feature": feature,
+        "string_value": "bigger",
+        "default_percentage_allocation": 51,
+    }
+    # When
+    response = admin_client.post(
+        mv_option_url,
+        data=json.dumps(data),
+        content_type="application/json",
+    )
+    # Then
+    assert response.status_code == status.HTTP_400_BAD_REQUEST
+    assert response.json()["default_percentage_allocation"] == [
+        "Invalid percentage allocation"
+    ]
+
+
+def test_can_update_default_percentage_allocation(
+    project, mv_option_50_percent, admin_client, feature
+):
+    mv_option_url = reverse(
+        "api-v1:projects:feature-mv-options-detail",
+        args=[project, feature, mv_option_50_percent],
+    )
+    data = {
+        "id": mv_option_50_percent,
+        "type": "unicode",
+        "feature": feature,
+        "string_value": "bigger",
+        "default_percentage_allocation": 70,
+    }
+    # When
+    response = admin_client.put(
+        mv_option_url,
+        data=json.dumps(data),
+        content_type="application/json",
+    )
+    # Then
+    assert response.status_code == status.HTTP_200_OK
+    assert response.json()["id"] == mv_option_50_percent
+    assert set(data.items()).issubset(set(response.json().items()))
+
+
+def test_updating_default_percentage_allocation_that_pushes_the_total_percentage_allocation_over_100_returns_400(
+    project, mv_option_50_percent, admin_client, feature
+):
+    # First let's create another mv_option with 30 percent allocation
+    url = reverse(
+        "api-v1:projects:feature-mv-options-list",
+        args=[project, feature],
+    )
+    data = {
+        "type": "unicode",
+        "feature": feature,
+        "string_value": "bigger",
+        "default_percentage_allocation": 30,
+    }
+    response = admin_client.post(
+        url,
+        data=json.dumps(data),
+        content_type="application/json",
+    )
+    mv_option_30_percent = response.json()["id"]
+
+    # Next, let's update the 30 percent mv option to 51 percent
+    url = reverse(
+        "api-v1:projects:feature-mv-options-detail",
+        args=[project, feature, mv_option_50_percent],
+    )
+    data = {
+        "id": mv_option_30_percent,
+        "type": "unicode",
+        "feature": feature,
+        "string_value": "bigger",
+        "default_percentage_allocation": 51,
+    }
+    # When
+    response = admin_client.put(
+        url,
+        data=json.dumps(data),
+        content_type="application/json",
+    )
+    # Then
+    assert response.status_code == status.HTTP_400_BAD_REQUEST
+    assert response.json()["default_percentage_allocation"] == [
+        "Invalid percentage allocation"
+    ]
+
+
+def test_can_remove_mv_option(project, mv_option_50_percent, admin_client, feature):
+    # Given
+    mv_option_url = reverse(
+        "api-v1:projects:feature-mv-options-detail",
+        args=[project, feature, mv_option_50_percent],
+    )
+
+    # When
+    response = admin_client.delete(
+        mv_option_url,
+        content_type="application/json",
+    )
+    # Then
+    assert response.status_code == status.HTTP_204_NO_CONTENT
+    # and
+    url = reverse(
+        "api-v1:projects:feature-mv-options-list",
+        args=[project, feature],
+    )
+    assert (
+        admin_client.get(
+            url,
+            content_type="application/json",
+        ).json()["count"]
+        == 0
+    )
+
+
 def test_create_and_update_multivariate_feature_with_2_variations_50_percent(
     project, environment, environment_api_key, admin_client, feature
 ):
