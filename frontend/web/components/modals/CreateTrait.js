@@ -42,7 +42,6 @@ const CreateTrait = class extends Component {
     render() {
         const { props: { isEdit, identity, environmentId, projectId } } = this;
         const { state: { trait_key, trait_value, error, isSaving } } = this;
-        const x = 'test3';
 
         return (
             <ProjectProvider
