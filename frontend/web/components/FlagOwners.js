@@ -12,7 +12,7 @@ class TheComponent extends Component {
     }
 
     getData = () => {
-        data.get(`${Project.api}/projects/${this.props.projectId}/features/${this.props.id}/`)
+        data.get(`${Project.api}projects/${this.props.projectId}/features/${this.props.id}/`)
             .then((res) => {
                 const owners = (res.owners || []).map(v => v.id);
                 this.setState({ owners });
@@ -21,14 +21,14 @@ class TheComponent extends Component {
 
     addOwner = (id) => {
         this.setState({ owners: (this.state.owners || []).concat(id) });
-        data.post(`${Project.api}/projects/${this.props.projectId}/features/${this.props.id}/add-owners/`, {
+        data.post(`${Project.api}projects/${this.props.projectId}/features/${this.props.id}/add-owners/`, {
             user_ids: [id],
         });
     }
 
     removeOwner = (id) => {
         this.setState({ owners: (this.state.owners || []).filter(v => v !== id) });
-        data.post(`${Project.api}/projects/${this.props.projectId}/features/${this.props.id}/remove-owners/`, {
+        data.post(`${Project.api}projects/${this.props.projectId}/features/${this.props.id}/remove-owners/`, {
             user_ids: [id],
         });
     }
