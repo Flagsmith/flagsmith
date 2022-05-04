@@ -3,8 +3,6 @@ import json
 from django.urls import reverse
 from rest_framework import status
 
-from features.feature_types import MULTIVARIATE
-
 
 def test_create_and_update_multivariate_feature_with_2_variations_50_percent(
     project, environment, environment_api_key, admin_client, feature
