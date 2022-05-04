@@ -25,7 +25,11 @@
                 {
                     "name": "PROJECT_METADATA_TABLE_NAME_DYNAMO",
                     "value": "flagsmith_project_metadata"
-                }
+                },
+                {
+                    "name": "ENVIRONMENTS_TABLE_NAME_DYNAMO",
+                    "value": "flagsmith_environments"
+               }
             ],
             "secrets": [
                 {

@@ -8,7 +8,7 @@ const controller = {
         store.loading();
         return data.get(`${Project.api}environments/${envId}/${Utils.getIdentitiesEndpoint()}/${id}/`)
             .then(identity => Promise.all([
-                data.get(`${Project.api}identities/?identifier=${encodeURIComponent(identity.identifier)}`, null, { 'x-environment-key': envId }),
+                data.get(`${Utils.getSDKEndpoint()}identities/?identifier=${encodeURIComponent(identity.identifier)}`, null, { 'x-environment-key': envId }),
                 Promise.resolve(identity),
                 data.get(`${Project.api}environments/${envId}/${Utils.getIdentitiesEndpoint()}/${id}/${Utils.getFeatureStatesEndpoint()}/`),
             ]))
@@ -26,7 +26,7 @@ const controller = {
     toggleUserFlag({ identity, projectFlag, environmentFlag, identityFlag, environmentId }) {
         store.saving();
         API.trackEvent(Constants.events.TOGGLE_USER_FEATURE);
-        const prom = identityFlag.identity
+        const prom = identityFlag.identity || identityFlag.identity_uuid
             ? data.put(`${Project.api}environments/${environmentId}/${Utils.getIdentitiesEndpoint()}/${identity}/${Utils.getFeatureStatesEndpoint()}/${identityFlag.id||identityFlag.featurestate_uuid}/`, Object.assign({}, {
                 id: identityFlag.id||identityFlag.featurestate_uuid,
                 enabled: !identityFlag.enabled,
@@ -63,7 +63,7 @@ const controller = {
     editUserFlag({ identity, projectFlag, environmentFlag, identityFlag, environmentId }) {
         store.saving();
         API.trackEvent(Constants.events.EDIT_USER_FEATURE);
-        const prom = identityFlag.identity
+        const prom = identityFlag.identity || identityFlag.identity_uuid
             ? data.put(`${Project.api}environments/${environmentId}/${Utils.getIdentitiesEndpoint()}/${identity}/${Utils.getFeatureStatesEndpoint()}/${identityFlag.id||identityFlag.featurestate_uuid}/`, Object.assign({}, {
                 id: identityFlag.id||identityFlag.featurestate_uuid,
                 enabled: identityFlag.enabled,

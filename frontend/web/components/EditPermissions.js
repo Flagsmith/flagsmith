@@ -136,7 +136,7 @@ class _EditPermissionsModal extends Component {
                                                       hasRbacPermission ? `Full View and Write permissions for the given ${Format.camelCase(this.props.level)}.`
                                                           : (
                                                               <span>
-                                                                  Role-based access is not available in our Open Source version. Please contact <a href="mailto:sales@flagsmith.com">sales@flagsmith.com</a> for more information on our licensing options.
+                                                                  Role-based access is not available on our Free Plan. Please visit <a href="https://flagsmith.com/pricing/">our Pricing Page</a> for more information on our licensing options.
                                                               </span>
                                                           )
                                                   }

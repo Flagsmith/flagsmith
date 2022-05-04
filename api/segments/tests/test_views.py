@@ -3,6 +3,7 @@ import json
 from core.constants import STRING
 from django.contrib.auth import get_user_model
 from django.urls import reverse
+from flag_engine.api.document_builders import build_identity_document
 from rest_framework import status
 from rest_framework.test import APITestCase
 
@@ -158,3 +159,29 @@ class SegmentViewSetTestCase(APITestCase):
 
         # Then
         assert res.status_code == status.HTTP_201_CREATED
+
+
+def test_can_filter_by_edge_identity_to_get_only_matching_segments(
+    project, environment, identity, admin_client, identity_matching_segment, mocker
+):
+    # Given
+    Segment.objects.create(name="Non matching segment", project=project)
+    expected_segment_ids = [identity_matching_segment.id]
+    identity_document = build_identity_document(identity)
+    identity_uuid = identity_document["identity_uuid"]
+    mocked_identity_wrapper = mocker.patch(
+        "environments.identities.models.Identity.dynamo_wrapper",
+    )
+
+    mocked_identity_wrapper.get_segment_ids.return_value = expected_segment_ids
+
+    base_url = reverse("api-v1:projects:project-segments-list", args=[project.id])
+    url = f"{base_url}?identity={identity_uuid}"
+
+    # When
+    response = admin_client.get(url)
+
+    # Then
+    assert response.json().get("count") == len(expected_segment_ids)
+    assert response.json()["results"][0]["id"] == expected_segment_ids[0]
+    mocked_identity_wrapper.get_segment_ids.assert_called_with(identity_uuid)

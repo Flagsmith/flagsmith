@@ -22,6 +22,9 @@ const Provider = class extends React.Component {
     }
 
   close = () => { // use when you wish to trigger closing manually
+        if(this.props.onClose) {
+            this.props.onClose()
+        }
       $(ReactDOM.findDOMNode(this)).off('hidden.bs.modal', this._closed);
       $(ReactDOM.findDOMNode(this)).off('shown.bs.modal', this._shown);
       if (!E2E) {
@@ -81,7 +84,7 @@ const Modal = class extends React.Component {
 
   render() {
       return (
-          <Provider isModal2={this.props.isModal2} ref="modal">
+          <Provider onClose={this.props.onClose} isModal2={this.props.isModal2} ref="modal">
               <div
                 tabIndex="-1" className={`modal ${E2E ? 'transition-none ' : ''}${this.props.className ? this.props.className : 'alert fade expand'}`} role="dialog"
                 aria-hidden="true"
