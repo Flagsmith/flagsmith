@@ -234,7 +234,7 @@ const CreateFlag = class extends Component {
         const identities = identity ? identity.identifier : [];
 
         if (!_.find(identities, v => v.identifier === selectedIdentity)) {
-            _data.post(`${Project.api}environments/${environmentId}/${Utils.getIdentitiesEndpoint()}/${selectedIdentity}/featurestates/`, {
+            _data.post(`${Project.api}environments/${environmentId}/${Utils.getIdentitiesEndpoint()}/${selectedIdentity}/${Utils.getFeatureStatesEndpoint()}/`, {
                 feature: projectFlag.id,
                 enabled: !environmentFlag.enabled,
                 value: environmentFlag.value,
