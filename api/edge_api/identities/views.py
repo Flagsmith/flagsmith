@@ -24,6 +24,7 @@ from edge_api.identities.serializers import (
 )
 from environments.identities.models import Identity
 from environments.models import Environment
+from environments.permissions.constants import MANAGE_IDENTITIES
 from environments.permissions.permissions import NestedEnvironmentPermissions
 from features.permissions import IdentityFeatureStatePermissions
 from projects.exceptions import DynamoNotEnabledError
@@ -35,7 +36,6 @@ trait_schema = APITraitSchema()
 
 class EdgeIdentityViewSet(viewsets.ModelViewSet):
     serializer_class = EdgeIdentitySerializer
-    permission_classes = [IsAuthenticated, NestedEnvironmentPermissions]
     pagination_class = EdgeIdentityPagination
     lookup_field = "identity_uuid"
     dynamo_identifier_search_functions = {
@@ -89,6 +89,18 @@ class EdgeIdentityViewSet(viewsets.ModelViewSet):
         )
         return identity_documents
 
+    def get_permissions(self):
+        return [
+            IsAuthenticated(),
+            NestedEnvironmentPermissions(
+                action_permission_map={
+                    "retrieve": MANAGE_IDENTITIES,
+                    "get_traits": MANAGE_IDENTITIES,
+                    "update_traits": MANAGE_IDENTITIES,
+                }
+            ),
+        ]
+
     def get_environment_from_request(self):
         """
         Get environment object from URL parameters in request.
@@ -110,7 +122,7 @@ class EdgeIdentityViewSet(viewsets.ModelViewSet):
     @swagger_auto_schema(
         method="put",
         request_body=EdgeIdentityTraitsSerializer,
-        responses={200: EdgeIdentityTraitsSerializer},
+        responses={200: EdgeIdentityTraitsSerializer()},
     )
     @action(detail=True, methods=["put"], url_path="update-traits")
     def update_traits(self, request, *args, **kwargs):
