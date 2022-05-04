@@ -78,8 +78,17 @@ const SegmentOverride = ConfigProvider(SortableElement(({ hasFeature, controlVal
                             placeholder="Value e.g. 'big' "
                         />
                     </>
-
                 )}
+                {!!controlValue && (
+                    <div className={"mt-2 text-right"}>
+                        <Button onClick={()=>{
+                            setValue(Utils.getTypedValue(Utils.safeParseEventValue(controlValue)))
+                        }}>
+                            Set as Environment Value
+                        </Button>
+                    </div>
+                )}
+
 
                 {(
                     <div>

@@ -1,4 +1,6 @@
-from django.db.models import Q
+import typing
+
+from django.db.models import Model, Q
 from rest_framework import exceptions
 from rest_framework.permissions import BasePermission
 
@@ -72,26 +74,45 @@ class IdentityPermissions(BasePermission):
 
 
 class NestedEnvironmentPermissions(BasePermission):
-    def has_permission(self, request, view):
-        if view.action == "create":
-            environment_api_key = view.kwargs.get("environment_api_key")
-            if not environment_api_key:
-                return False
+    def __init__(
+        self,
+        *args,
+        action_permission_map: typing.Dict[str, str] = None,
+        get_environment_from_object_callable: typing.Callable[
+            [Model], Environment
+        ] = lambda o: o.environment,
+        **kwargs,
+    ):
+        super(NestedEnvironmentPermissions, self).__init__(*args, **kwargs)
+        self.action_permission_map = action_permission_map or {}
+        self.get_environment_from_object_callable = get_environment_from_object_callable
 
+    def has_permission(self, request, view):
+        try:
+            environment_api_key = view.kwargs.get("environment_api_key")
             environment = Environment.objects.get(api_key=environment_api_key)
+        except Environment.DoesNotExist:
+            return False
+
+        if view.action in self.action_permission_map:
+            return request.user.has_environment_permission(
+                self.action_permission_map[view.action], environment
+            )
+        elif view.action == "create":
             return request.user.is_environment_admin(environment)
 
-        if view.action == "list":
-            return True
-
-        # move on to object specific permissions
-        return view.detail
+        return view.action == "list" or view.detail
 
     def has_object_permission(self, request, view, obj):
-        if request.user.is_environment_admin(obj.environment):
-            return True
+        if view.action in self.action_permission_map:
+            return request.user.has_environment_permission(
+                self.action_permission_map[view.action],
+                self.get_environment_from_object_callable(obj),
+            )
 
-        return False
+        return request.user.is_environment_admin(
+            self.get_environment_from_object_callable(obj)
+        )
 
 
 class TraitPersistencePermissions(BasePermission):

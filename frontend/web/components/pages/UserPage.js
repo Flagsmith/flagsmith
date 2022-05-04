@@ -81,6 +81,11 @@ const UserPage = class extends Component {
     }
 
     editFlag = (projectFlag, environmentFlag, identityFlag, multivariate_feature_state_values) => {
+        history.replaceState(
+            {},
+            null,
+            `${document.location.pathname}?flag=${projectFlag.name}`
+        );
         API.trackEvent(Constants.events.VIEW_USER_FEATURE);
         openModal(<span>Edit User Feature: <span className="standard-case">{projectFlag.name}</span></span>, <CreateFlagModal
           isEdit
@@ -94,7 +99,16 @@ const UserPage = class extends Component {
               multivariate_feature_state_values,
           }}
           environmentFlag={environmentFlag}
-        />);
+        />, null,{
+            className: 'side-modal fade',
+            onClose: ()=>{
+                history.replaceState(
+                    {},
+                    null,
+                    `${document.location.pathname}`
+                );
+            }
+        });
     };
 
     createTrait = () => {

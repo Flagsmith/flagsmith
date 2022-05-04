@@ -1,4 +1,5 @@
 from django.conf.urls import include, url
+from django.urls import path
 from rest_framework_nested import routers
 
 from features.views import FeatureViewSet
@@ -11,6 +12,7 @@ from . import views
 from .views import (
     UserPermissionGroupProjectPermissionsViewSet,
     UserProjectPermissionsViewSet,
+    get_user_project_permissions,
 )
 
 router = routers.DefaultRouter()
@@ -52,4 +54,9 @@ urlpatterns = [
     url(r"^", include(router.urls)),
     url(r"^", include(projects_router.urls)),
     url(r"^", include(nested_features_router.urls)),
+    path(
+        "<int:project_pk>/all-user-permissions/<int:user_pk>/",
+        get_user_project_permissions,
+        name="all-user-permissions",
+    ),
 ]

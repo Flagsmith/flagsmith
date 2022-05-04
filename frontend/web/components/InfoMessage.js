@@ -9,7 +9,7 @@ export default class InfoMessage extends PureComponent {
       return (
           <div className="alert alert-info">
               <div className="title">
-                  <span className="ion ion-ios-information-circle"/> NOTE
+                  <span className={"ion "+this.props.icon || "ion-ios-information-circle"}/> {this.props.title || "NOTE"}
               </div>
               {this.props.children}
           </div>

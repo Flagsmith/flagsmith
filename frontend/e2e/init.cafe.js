@@ -79,8 +79,9 @@ test('[Initialise]', async () => {
     await toggleFeature(0, true);
 
     log('Try it');
+    await t.wait(1500)
     await click('#try-it-btn');
-    await t.wait(3000)
+    await t.wait(1500)
     let text = await getText('#try-it-results');
     let json;
     try { json = JSON.parse(text); } catch (e) { throw new Error('Try it results are not valid JSON'); }
@@ -96,8 +97,9 @@ test('[Initialise]', async () => {
     await closeModal()
 
     log('Try it again');
+    await t.wait(1500)
     await click('#try-it-btn');
-    await t.wait(3000)
+    await t.wait(1500)
     text = await getText('#try-it-results');
     try { json = JSON.parse(text); } catch (e) { throw new Error('Try it results are not valid JSON'); }
     await t.expect(json.header_size.value).eql(12);
@@ -110,8 +112,9 @@ test('[Initialise]', async () => {
     await closeModal()
 
     log('Try it again 2');
+    await t.wait(1500)
     await click('#try-it-btn');
-    await t.wait(3000)
+    await t.wait(1500)
     text = await getText('#try-it-results');
     try { json = JSON.parse(text); } catch (e) { throw new Error('Try it results are not valid JSON'); }
     await t.expect(json.header_size.value).eql(false);

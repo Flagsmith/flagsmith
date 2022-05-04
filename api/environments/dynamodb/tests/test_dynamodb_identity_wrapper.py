@@ -1,21 +1,25 @@
 import pytest
 from boto3.dynamodb.conditions import Key
 from django.core.exceptions import ObjectDoesNotExist
-from flag_engine.api.document_builders import build_identity_document
+from flag_engine.api.document_builders import (
+    build_environment_document,
+    build_identity_document,
+)
+from rest_framework.exceptions import NotFound
 
 from environments.dynamodb import DynamoIdentityWrapper
 from environments.identities.models import Identity
+from segments.models import Segment
 
 
 def test_get_item_from_uuid_calls_query_with_correct_argument(mocker):
     # Given
     dynamo_identity_wrapper = DynamoIdentityWrapper()
     mocked_dynamo_table = mocker.patch.object(dynamo_identity_wrapper, "_table")
-    environment_key = "environment_key"
     identity_uuid = "test_uuid"
 
     # When
-    dynamo_identity_wrapper.get_item_from_uuid(environment_key, identity_uuid)
+    dynamo_identity_wrapper.get_item_from_uuid(identity_uuid)
     # Then
     mocked_dynamo_table.query.assert_called_with(
         IndexName="identity_uuid-index",
@@ -33,7 +37,41 @@ def test_get_item_from_uuid_raises_object_does_not_exists_if_identity_is_not_ret
     mocked_dynamo_table.query.return_value = {"Items": [], "Count": 0}
     # Then
     with pytest.raises(ObjectDoesNotExist):
-        dynamo_identity_wrapper.get_item_from_uuid("env_key", "identity_uuid")
+        dynamo_identity_wrapper.get_item_from_uuid("identity_uuid")
+
+
+def test_get_item_from_uuid_or_404_calls_get_item_from_uuid_with_correct_arguments(
+    mocker,
+):
+    # Given
+    dynamo_identity_wrapper = DynamoIdentityWrapper()
+    expected_document = {"key": "value"}
+    mocked_get_item_from_uuid = mocker.patch.object(
+        dynamo_identity_wrapper, "get_item_from_uuid", return_value=expected_document
+    )
+    identity_uuid = "test_uuid"
+
+    # When
+    returned_document = dynamo_identity_wrapper.get_item_from_uuid_or_404(identity_uuid)
+
+    # Then
+    assert returned_document == expected_document
+    mocked_get_item_from_uuid.assert_called_with(identity_uuid)
+
+
+def test_get_item_from_uuid_or_404_calls_raises_not_found_if_internal_method_raises_object_does_not_exists(
+    mocker,
+):
+    # Given
+    dynamo_identity_wrapper = DynamoIdentityWrapper()
+    mocker.patch.object(
+        dynamo_identity_wrapper, "get_item_from_uuid", side_effect=ObjectDoesNotExist
+    )
+    identity_uuid = "test_uuid"
+
+    # Then
+    with pytest.raises(NotFound):
+        dynamo_identity_wrapper.get_item_from_uuid_or_404(identity_uuid)
 
 
 def test_delete_item_calls_dynamo_delete_item_with_correct_arguments(mocker):
@@ -188,3 +226,51 @@ def test_is_enabled_is_true_if_dynamo_table_name_is_set(settings, mocker):
     assert dynamo_identity_wrapper.is_enabled is True
     mocked_boto3.resource.assert_called_with("dynamodb")
     mocked_boto3.resource.return_value.Table.assert_called_with(table_name)
+
+
+def test_get_segment_ids_returns_correct_segment_ids(
+    project, environment, identity, identity_matching_segment, mocker
+):
+    # Given - two segments (one that matches the identity and one that does not)
+    Segment.objects.create(name="Non matching segment", project=project)
+
+    identity_document = build_identity_document(identity)
+    dynamo_identity_wrapper = DynamoIdentityWrapper()
+    mocked_get_item_from_uuid = mocker.patch.object(
+        dynamo_identity_wrapper, "get_item_from_uuid", return_value=identity_document
+    )
+    identity_uuid = identity_document["identity_uuid"]
+
+    environment_document = build_environment_document(environment)
+    mocked_environment_wrapper = mocker.patch(
+        "environments.dynamodb.dynamodb_wrapper.DynamoEnvironmentWrapper"
+    )
+    mocked_environment_wrapper.return_value.get_item.return_value = environment_document
+
+    # When
+    segment_ids = dynamo_identity_wrapper.get_segment_ids(identity_uuid)
+
+    # Then
+    assert segment_ids == [identity_matching_segment.id]
+    mocked_get_item_from_uuid.assert_called_with(identity_uuid)
+    mocked_environment_wrapper.return_value.get_item.assert_called_with(
+        environment.api_key
+    )
+
+
+def test_get_segment_ids_returns_empty_list_if_identity_does_not_exists(
+    project, environment, identity, mocker
+):
+    # Given
+    identity_document = build_identity_document(identity)
+    dynamo_identity_wrapper = DynamoIdentityWrapper()
+    mocker.patch.object(
+        dynamo_identity_wrapper, "get_item_from_uuid", side_effect=ObjectDoesNotExist
+    )
+    identity_uuid = identity_document["identity_uuid"]
+
+    # Then
+    segment_ids = dynamo_identity_wrapper.get_segment_ids(identity_uuid)
+
+    # Then
+    assert segment_ids == []

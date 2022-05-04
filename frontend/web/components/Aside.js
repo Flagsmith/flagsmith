@@ -43,14 +43,21 @@ const Aside = class extends Component {
         AppActions.getProject(this.props.projectId);
         AppActions.getChangeRequests(this.props.environmentId, {});
         this.listenTo(ChangeRequestStore, 'change', ()=>this.forceUpdate())
+        this.listenTo(ProjectStore, 'loaded', ()=> {
+            const environment = ProjectStore.getEnvironment(this.props.environmentId);
+            AppActions.getChangeRequests(this.props.environmentId, environment.minimum_change_request_approvals? {}:{live_from_after: new Date().toISOString()})
+        })
     }
 
     componentWillReceiveProps(newProps) {
+        const environment = ProjectStore.getEnvironment(newProps.environmentId);
         if (newProps.projectId !== this.props.projectId) {
             AppActions.getProject(this.props.projectId);
         }
         if (newProps.environmentId !== this.props.environmentId) {
-            AppActions.getChangeRequests(newProps.environmentId, {});
+            if (environment) {
+                AppActions.getChangeRequests(newProps.environmentId, environment.minimum_change_request_approvals? {}:{live_from_after: new Date().toISOString()})
+            }
         }
     }
 
@@ -76,9 +83,10 @@ const Aside = class extends Component {
         let integrations = this.props.getValue('integrations') || '[]';
         integrations = JSON.parse(integrations);
         const environmentId = (this.props.environmentId !== 'create' && this.props.environmentId) || (ProjectStore.model && ProjectStore.model.environments[0].api_key);
+        const environment = ProjectStore.getEnvironment(this.props.environmentId);
         const hasRbacPermission = !this.props.hasFeature('plan_based_access') || Utils.getPlansPermission('AUDIT') || !this.props.hasFeature('scaleup_audit');
         const has4Eyes = flagsmith.hasFeature('4eyes');
-        const changeRequest = ChangeRequestStore.model[this.props.environmentId];
+        const changeRequest = environment && environment.minimum_change_request_approvals? ChangeRequestStore.model[this.props.environmentId]: ChangeRequestStore.scheduled[this.props.environmentId];
         const changeRequests = (changeRequest && changeRequest.count) || 0;
         return (
             <OrganisationProvider>
