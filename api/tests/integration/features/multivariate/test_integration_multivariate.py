@@ -7,42 +7,36 @@ from features.feature_types import MULTIVARIATE
 
 
 def test_create_and_update_multivariate_feature_with_2_variations_50_percent(
-    project, environment, environment_api_key, admin_client
+    project, environment, environment_api_key, admin_client, feature
 ):
     """
     Specific test to reproduce issue #234 in Github
     https://github.com/Flagsmith/flagsmith/issues/234
     """
-    # Create an MV feature with 2 variations, both with 50% weighting
-    create_feature_data = {
-        "name": "mv_feature",
-        "initial_value": "big",
-        "multivariate_options": [
-            {
-                "type": "unicode",
-                "string_value": "bigger",
-                "default_percentage_allocation": 50,
-            },
-            {
-                "type": "unicode",
-                "string_value": "biggest",
-                "default_percentage_allocation": 50,
-            },
-        ],
-        "project": project,
-        "type": MULTIVARIATE,
-    }
-    create_url = reverse("api-v1:projects:project-features-list", args=[project])
-    create_feature_response = admin_client.post(
-        create_url,
-        data=json.dumps(create_feature_data),
+    mv_option_data = [
+        {
+            "type": "unicode",
+            "feature": feature,
+            "string_value": "bigger",
+            "default_percentage_allocation": 50,
+        },
+        {
+            "type": "unicode",
+            "feature": feature,
+            "string_value": "biggest",
+            "default_percentage_allocation": 50,
+        },
+    ]
+    mv_option_url = reverse(
+        "api-v1:projects:project-features-update-mv-options", args=[project, feature]
+    )
+    mv_option_response = admin_client.put(
+        mv_option_url,
+        data=json.dumps(mv_option_data),
         content_type="application/json",
     )
-    create_feature_response_json = create_feature_response.json()
-    feature_id = create_feature_response_json["id"]
-
-    assert create_feature_response.status_code == status.HTTP_201_CREATED
-    assert len(create_feature_response_json["multivariate_options"]) == 2
+    assert mv_option_response.status_code == status.HTTP_200_OK
+    assert len(mv_option_response.json()) == 2
 
     # Now get the feature states for the environment so we can get the id of the
     # feature state and multivariate feature states in the given environment
@@ -51,7 +45,7 @@ def test_create_and_update_multivariate_feature_with_2_variations_50_percent(
     )
     get_feature_states_response = admin_client.get(get_feature_states_url)
     results = get_feature_states_response.json()["results"]
-    feature_state = next(filter(lambda fs: fs["feature"] == feature_id, results))
+    feature_state = next(filter(lambda fs: fs["feature"] == feature, results))
     feature_state_id = feature_state["id"]
 
     assert get_feature_states_response.status_code == status.HTTP_200_OK
@@ -79,7 +73,7 @@ def test_create_and_update_multivariate_feature_with_2_variations_50_percent(
         ],
         "identity": None,
         "enabled": False,
-        "feature": feature_id,
+        "feature": feature,
         "environment": environment,
         "feature_segment": None,
     }

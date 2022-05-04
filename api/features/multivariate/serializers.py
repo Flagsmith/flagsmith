@@ -12,6 +12,7 @@ class MultivariateFeatureOptionSerializer(serializers.ModelSerializer):
 
         fields = (
             "id",
+            "feature",
             "type",
             "integer_value",
             "string_value",

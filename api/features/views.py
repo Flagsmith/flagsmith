@@ -41,6 +41,7 @@ from environments.permissions.permissions import (
 from webhooks.webhooks import WebhookEventType
 
 from .models import Feature, FeatureState
+from .multivariate.serializers import MultivariateFeatureOptionSerializer
 from .permissions import (
     EnvironmentFeatureStatePermissions,
     FeaturePermissions,
@@ -93,6 +94,17 @@ class FeatureViewSet(viewsets.ModelViewSet):
         feature = self.get_object()
         serializer.add_owners(feature)
         return Response(self.get_serializer(instance=feature).data)
+
+    @swagger_auto_schema(
+        request_body=MultivariateFeatureOptionSerializer(many=True),
+        responses={200: MultivariateFeatureOptionSerializer},
+    )
+    @action(detail=True, methods=["PUT"], url_path="update-mv-options")
+    def update_mv_options(self, request, *args, **kwargs):
+        serializer = MultivariateFeatureOptionSerializer(data=request.data, many=True)
+        serializer.is_valid()
+        serializer.save()
+        return Response(serializer.data)
 
     @swagger_auto_schema(
         request_body=FeatureOwnerInputSerializer,
