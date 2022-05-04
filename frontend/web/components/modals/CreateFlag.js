@@ -14,7 +14,8 @@ import FeatureListStore from '../../../common/stores/feature-list-store';
 import ChangeRequestModal from './ChangeRequestModal';
 import Feature from '../Feature';
 import { ButtonOutline } from '../base/forms/Button';
-import ChangeRequestStore from '../../../common/stores/change-requests-store'
+import ChangeRequestStore from '../../../common/stores/change-requests-store';
+
 const FEATURE_ID_MAXLENGTH = Constants.forms.maxLength.FEATURE_ID;
 
 const CreateFlag = class extends Component {
@@ -237,7 +238,7 @@ const CreateFlag = class extends Component {
             _data.post(`${Project.api}environments/${environmentId}/${Utils.getIdentitiesEndpoint()}/${selectedIdentity}/${Utils.getFeatureStatesEndpoint()}/`, {
                 feature: projectFlag.id,
                 enabled: !environmentFlag.enabled,
-                feature_state_value: environmentFlag.value||null,
+                feature_state_value: environmentFlag.value || null,
             }).then((res) => {
                 this.setState({
                     isLoading: false,
@@ -323,6 +324,7 @@ const CreateFlag = class extends Component {
         const controlValue = Utils.calculateControl(multivariate_options, environmentVariations);
         const invalid = !!multivariate_options && multivariate_options.length && controlValue < 0;
         const existingChangeRequest = this.props.changeRequest;
+        const hideIdentityOverridesTab = Utils.getShouldHideIdentityOverridesTab();
         const Settings = projectAdmin => (
             <>
                 {!identity && this.state.tags && (
@@ -442,28 +444,28 @@ const CreateFlag = class extends Component {
                         />
                     </FormGroup>
                 )}
-                <div className={identity && !description?"mt-2":""}>
+                <div className={identity && !description ? 'mt-2' : ''}>
                     <Feature
-                        hide_from_client={hide_from_client}
-                        multivariate_options={multivariate_options}
-                        environmentVariations={environmentVariations}
-                        isEdit={isEdit}
-                        identity={identity}
-                        removeVariation={this.removeVariation}
-                        updateVariation={this.updateVariation}
-                        addVariation={this.addVariation}
-                        checked={default_enabled}
-                        value={initial_value}
-                        identityVariations={this.state.identityVariations}
-                        onChangeIdentityVariations={(identityVariations) => {
-                            this.setState({ identityVariations });
-                        }}
-                        environmentFlag={this.props.environmentFlag}
-                        projectFlag={projectFlag}
-                        onValueChange={(e) => {
-                            this.setState({ initial_value: Utils.getTypedValue(Utils.safeParseEventValue(e)) });
-                        }}
-                        onCheckedChange={default_enabled => this.setState({ default_enabled })}
+                      hide_from_client={hide_from_client}
+                      multivariate_options={multivariate_options}
+                      environmentVariations={environmentVariations}
+                      isEdit={isEdit}
+                      identity={identity}
+                      removeVariation={this.removeVariation}
+                      updateVariation={this.updateVariation}
+                      addVariation={this.addVariation}
+                      checked={default_enabled}
+                      value={initial_value}
+                      identityVariations={this.state.identityVariations}
+                      onChangeIdentityVariations={(identityVariations) => {
+                          this.setState({ identityVariations });
+                      }}
+                      environmentFlag={this.props.environmentFlag}
+                      projectFlag={projectFlag}
+                      onValueChange={(e) => {
+                          this.setState({ initial_value: Utils.getTypedValue(Utils.safeParseEventValue(e)) });
+                      }}
+                      onCheckedChange={default_enabled => this.setState({ default_enabled })}
                     />
                 </div>
 
@@ -485,7 +487,7 @@ const CreateFlag = class extends Component {
                         {({ isLoading, isSaving, error, influxData }, { createFlag, editFlagSettings, editFlagValue, editFlagSegments, createChangeRequest }) => {
                             const saveFeatureValue = (schedule) => {
                                 if (is4Eyes || schedule) {
-                                    openModal2(schedule? "New Scheduled Flag Update" : this.props.changeRequest ? 'Update Change Request' : 'New Change Request', <ChangeRequestModal
+                                    openModal2(schedule ? 'New Scheduled Flag Update' : this.props.changeRequest ? 'Update Change Request' : 'New Change Request', <ChangeRequestModal
                                       showAssignees={is4Eyes}
                                       changeRequest={this.props.changeRequest}
                                       onSave={({
@@ -571,7 +573,7 @@ const CreateFlag = class extends Component {
                                                                     <>
                                                                         {canSchedule ? (
                                                                             <ButtonOutline
-                                                                              onClick={()=>saveFeatureValue(true)} className="mr-2" type="button"
+                                                                              onClick={() => saveFeatureValue(true)} className="mr-2" type="button"
                                                                               data-test="create-change-request"
                                                                               id="create-change-request-btn" disabled={isSaving || !name || invalid}
                                                                             >
@@ -597,7 +599,7 @@ const CreateFlag = class extends Component {
                                                                 )}
                                                                 {is4Eyes ? (
                                                                     <Button
-                                                                      onClick={()=>saveFeatureValue()} type="button" data-test="update-feature-btn"
+                                                                      onClick={() => saveFeatureValue()} type="button" data-test="update-feature-btn"
                                                                       id="update-feature-btn" disabled={isSaving || !name || invalid}
                                                                     >
                                                                         {isSaving ? existingChangeRequest ? 'Updating Change Request' : 'Creating Change Request' : existingChangeRequest ? 'Update Change Request' : 'Create Change Request'}
@@ -700,7 +702,7 @@ const CreateFlag = class extends Component {
 
                                                     {
                                                 !identity
-                                                && isEdit && !existingChangeRequest && (
+                                                && isEdit && !existingChangeRequest && !hideIdentityOverridesTab && (
                                                     <TabItem data-test="identity_overrides" tabLabel="Identity Overrides">
                                                         <FormGroup className="mb-4 mr-3 ml-3">
                                                             <PanelSearch

@@ -228,7 +228,7 @@ const CreateSegment = class extends Component {
                       value={description}
                       inputProps={{
                           className: 'full-width',
-                          readOnly: !!identity,
+                          readOnly: !!identity || readOnly,
                           name: 'featureDesc',
                       }}
                       onChange={e => this.setState({ description: Utils.safeParseEventValue(e) })}
