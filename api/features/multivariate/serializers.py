@@ -20,6 +20,9 @@ class MultivariateFeatureOptionSerializer(serializers.ModelSerializer):
             "default_percentage_allocation",
         )
 
+    def save(self, **kwargs):
+        return super().save(**kwargs)
+
 
 class MultivariateFeatureStateValueSerializer(serializers.ModelSerializer):
     class Meta:

@@ -102,7 +102,7 @@ class FeatureViewSet(viewsets.ModelViewSet):
     @action(detail=True, methods=["PUT"], url_path="update-mv-options")
     def update_mv_options(self, request, *args, **kwargs):
         serializer = MultivariateFeatureOptionSerializer(data=request.data, many=True)
-        serializer.is_valid()
+        serializer.is_valid(raise_exception=True)
         serializer.save()
         return Response(serializer.data)
 
