@@ -67,6 +67,13 @@ module.exports = Object.assign({}, require('./base/_utils'), {
         return true;
     },
 
+    getShouldHideIdentityOverridesTab() {
+        if (flagsmith.hasFeature('edge_identities') && ProjectStore.model && ProjectStore.model.use_edge_identities) {
+            return true;
+        }
+        return false;
+    },
+
     getFeatureStatesEndpoint() {
         if (flagsmith.hasFeature('edge_identities') && ProjectStore.model && ProjectStore.model.use_edge_identities) {
             return 'edge-featurestates';
