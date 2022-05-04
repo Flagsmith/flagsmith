@@ -1,5 +1,5 @@
 const React = require('react');
-const ProjectStore = require('../../common/stores/project-store')
+const ProjectStore = require('../../common/stores/project-store');
 module.exports = Object.assign({}, require('./base/_utils'), {
     numberWithCommas(x) {
         return x.toString()
@@ -20,32 +20,58 @@ module.exports = Object.assign({}, require('./base/_utils'), {
         return 'ADMIN';
     },
 
+    getTraitEndpointMethod() {
+        if (flagsmith.hasFeature('edge_identities') && ProjectStore.model && ProjectStore.model.use_edge_identities) {
+            return 'put';
+        }
+        return 'post';
+    },
+    getTraitEndpoint(environmentId, userId) {
+        if (flagsmith.hasFeature('edge_identities') && ProjectStore.model && ProjectStore.model.use_edge_identities) {
+            return `${Project.api}environments/${environmentId}/edge-identities/${userId}/update-traits/`;
+        }
+        return `${Project.api}traits/`;
+    },
+
+    getShouldSendIdentityToTraits() {
+        if (flagsmith.hasFeature('edge_identities') && ProjectStore.model && ProjectStore.model.use_edge_identities) {
+            return false;
+        }
+        return true;
+    },
+    getShouldUpdateTraitOnDelete() {
+        if (flagsmith.hasFeature('edge_identities') && ProjectStore.model && ProjectStore.model.use_edge_identities) {
+            return true;
+        }
+        return false;
+    },
+
     getIdentitiesEndpoint() {
-      if (flagsmith.hasFeature("edge_identities") && ProjectStore.model && ProjectStore.model.use_edge_identities) {
-          return "edge-identities"
-      }
-      return "identities"
+        if (flagsmith.hasFeature('edge_identities') && ProjectStore.model && ProjectStore.model.use_edge_identities) {
+            return 'edge-identities';
+        }
+        return 'identities';
     },
 
     getSDKEndpoint() {
-      if (flagsmith.hasFeature("edge_identities") && ProjectStore.model && ProjectStore.model.use_edge_identities) {
-          return Project.flagsmithClientEdgeAPI
-      }
-      return Project.api
+        if (flagsmith.hasFeature('edge_identities') && ProjectStore.model && ProjectStore.model.use_edge_identities) {
+            return Project.flagsmithClientEdgeAPI;
+        }
+        return Project.api;
     },
 
     showUserSegments() {
-      if (flagsmith.hasFeature("edge_identities") && ProjectStore.model && ProjectStore.model.use_edge_identities) {
-          return false
-      }
-      return true
+        if (flagsmith.hasFeature('edge_identities') && ProjectStore.model && ProjectStore.model.use_edge_identities) {
+            return false;
+        }
+        return true;
     },
 
     getFeatureStatesEndpoint() {
-      if (flagsmith.hasFeature("edge_identities") && ProjectStore.model && ProjectStore.model.use_edge_identities) {
-          return "edge-featurestates"
-      }
-      return "featurestates"
+        if (flagsmith.hasFeature('edge_identities') && ProjectStore.model && ProjectStore.model.use_edge_identities) {
+            return 'edge-featurestates';
+        }
+        return 'featurestates';
     },
 
     getManageFeaturePermissionDescription() {
@@ -149,12 +175,12 @@ module.exports = Object.assign({}, require('./base/_utils'), {
             tags: projectFlag.tags,
             hide_from_client: environmentFlag.hide_from_client,
             feature_state_value: environmentFlag.feature_state_value,
-            multivariate_options: projectFlag.multivariate_options.map((v)=>{
-                const matching = multivariate_options && multivariate_options.find((m)=>v.id === m.multivariate_feature_option)
+            multivariate_options: projectFlag.multivariate_options.map((v) => {
+                const matching = multivariate_options && multivariate_options.find(m => v.id === m.multivariate_feature_option);
                 return {
                     ...v,
-                    default_percentage_allocation: matching? matching.percentage_allocation : v.default_percentage_allocation
-                }
+                    default_percentage_allocation: matching ? matching.percentage_allocation : v.default_percentage_allocation,
+                };
             }),
             enabled: environmentFlag.enabled,
             description: projectFlag.description,
@@ -213,8 +239,8 @@ module.exports = Object.assign({}, require('./base/_utils'), {
 
     getPlansPermission: (permission) => {
         const isOrgPermission = permission !== '2FA';
-        const plans = isOrgPermission? AccountStore.getActiveOrgPlan()? [AccountStore.getActiveOrgPlan()] : null
-            : AccountStore.getPlans()
+        const plans = isOrgPermission ? AccountStore.getActiveOrgPlan() ? [AccountStore.getActiveOrgPlan()] : null
+            : AccountStore.getPlans();
 
         if (!plans || !plans.length) {
             return false;
@@ -249,23 +275,23 @@ module.exports = Object.assign({}, require('./base/_utils'), {
                 break;
             }
             case '2FA': {
-                valid = isSideProjectOrGreater
+                valid = isSideProjectOrGreater;
                 break;
             }
             case 'RBAC': {
-                valid = isSideProjectOrGreater
+                valid = isSideProjectOrGreater;
                 break;
             }
             case 'AUDIT': {
-                valid = isScaleupOrGreater
+                valid = isScaleupOrGreater;
                 break;
             }
             case 'FORCE_2FA': {
-                valid = isScaleupOrGreater
+                valid = isScaleupOrGreater;
                 break;
             }
             case '4_EYES': {
-                valid = true
+                valid = true;
                 break;
             }
             default:

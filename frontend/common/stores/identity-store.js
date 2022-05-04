@@ -13,7 +13,7 @@ const controller = {
                 data.get(`${Project.api}environments/${envId}/${Utils.getIdentitiesEndpoint()}/${id}/${Utils.getFeatureStatesEndpoint()}/`),
             ]))
             .then(([res, identity, flags]) => {
-                const features = (flags && flags.results)||flags;
+                const features = (flags && flags.results) || flags;
                 const traits = res.traits;
                 store.model = store.model || {};
                 store.model.features = features && _.keyBy(features, f => f.feature);
@@ -27,8 +27,8 @@ const controller = {
         store.saving();
         API.trackEvent(Constants.events.TOGGLE_USER_FEATURE);
         const prom = identityFlag.identity || identityFlag.identity_uuid
-            ? data.put(`${Project.api}environments/${environmentId}/${Utils.getIdentitiesEndpoint()}/${identity}/${Utils.getFeatureStatesEndpoint()}/${identityFlag.id||identityFlag.featurestate_uuid}/`, Object.assign({}, {
-                id: identityFlag.id||identityFlag.featurestate_uuid,
+            ? data.put(`${Project.api}environments/${environmentId}/${Utils.getIdentitiesEndpoint()}/${identity}/${Utils.getFeatureStatesEndpoint()}/${identityFlag.id || identityFlag.featurestate_uuid}/`, Object.assign({}, {
+                id: identityFlag.id || identityFlag.featurestate_uuid,
                 enabled: !identityFlag.enabled,
                 feature_state_value: identityFlag.feature_state_value || environmentFlag.feature_state_value,
             }))
@@ -55,7 +55,12 @@ const controller = {
     },
     editTrait({ identity, environmentId, trait: { trait_key, trait_value } }) {
         store.saving();
-        data.post(`${Project.api}traits/`, { identity: { identifier: store.model && store.model.identity.identifier }, trait_key, trait_value }, { 'x-environment-key': environmentId })
+        data[Utils.getTraitEndpointMethod()](Utils.getTraitEndpoint(environmentId, identity),
+            {
+                identity: Utils.getShouldSendIdentityToTraits() ? { identifier: store.model && store.model.identity.identifier } : undefined,
+                trait_key,
+                trait_value,
+            }, { 'x-environment-key': environmentId })
             .then(() => controller.getIdentity(environmentId, identity)
                 .then(() => store.saved()))
             .catch(e => API.ajaxHandler(store, e));
@@ -64,16 +69,16 @@ const controller = {
         store.saving();
         API.trackEvent(Constants.events.EDIT_USER_FEATURE);
         const prom = identityFlag.identity || identityFlag.identity_uuid
-            ? data.put(`${Project.api}environments/${environmentId}/${Utils.getIdentitiesEndpoint()}/${identity}/${Utils.getFeatureStatesEndpoint()}/${identityFlag.id||identityFlag.featurestate_uuid}/`, Object.assign({}, {
-                id: identityFlag.id||identityFlag.featurestate_uuid,
+            ? data.put(`${Project.api}environments/${environmentId}/${Utils.getIdentitiesEndpoint()}/${identity}/${Utils.getFeatureStatesEndpoint()}/${identityFlag.id || identityFlag.featurestate_uuid}/`, Object.assign({}, {
+                id: identityFlag.id || identityFlag.featurestate_uuid,
                 enabled: identityFlag.enabled,
-                multivariate_feature_state_values:identityFlag.multivariate_options,
+                multivariate_feature_state_values: identityFlag.multivariate_options,
                 feature_state_value: identityFlag.feature_state_value,
             }))
             : data.post(`${Project.api}environments/${environmentId}/${Utils.getIdentitiesEndpoint()}/${identity}/${Utils.getFeatureStatesEndpoint()}/`, {
                 feature: projectFlag.id,
                 enabled: identityFlag.enabled,
-                multivariate_feature_state_values:identityFlag.multivariate_options,
+                multivariate_feature_state_values: identityFlag.multivariate_options,
                 feature_state_value: identityFlag.feature_state_value,
             });
 
@@ -83,12 +88,24 @@ const controller = {
     removeUserFlag(identity, identityFlag, environmentId) {
         store.saving();
         API.trackEvent(Constants.events.REMOVE_USER_FEATURE);
-        data.delete(`${Project.api}environments/${environmentId}/${Utils.getIdentitiesEndpoint()}/${identity}/${Utils.getFeatureStatesEndpoint()}/${identityFlag.id||identityFlag.featurestate_uuid}/`)
+        data.delete(`${Project.api}environments/${environmentId}/${Utils.getIdentitiesEndpoint()}/${identity}/${Utils.getFeatureStatesEndpoint()}/${identityFlag.id || identityFlag.featurestate_uuid}/`)
             .then(() => controller.getIdentity(environmentId, identity)
                 .then(() => store.saved()));
     },
     deleteIdentityTrait(envId, identity, id) {
         store.saving();
+        if (Utils.getShouldUpdateTraitOnDelete()) {
+            debugger;
+            controller.editTrait({
+                identity,
+                environmentId: envId,
+                trait: {
+                    trait_key: id,
+                    trait_value: null,
+                },
+            });
+            return;
+        }
         data.delete(`${Project.api}environments/${envId}/${Utils.getIdentitiesEndpoint()}/${identity}/traits/${id}/`)
             .then(() => {
                 const index = _.findIndex(store.model.traits, trait => trait.id === id);

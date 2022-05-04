@@ -153,7 +153,7 @@ const UserPage = class extends Component {
                 <strong>{trait_key}</strong>
                 {' from this user?'}
             </p>,
-            () => AppActions.deleteIdentityTrait(this.props.match.params.environmentId, this.props.match.params.id, id),
+            () => AppActions.deleteIdentityTrait(this.props.match.params.environmentId, this.props.match.params.id, id||trait_key),
         );
     }
 

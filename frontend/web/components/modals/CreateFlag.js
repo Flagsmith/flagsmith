@@ -91,7 +91,7 @@ const CreateFlag = class extends Component {
     }
 
     userOverridesPage = (page) => {
-        data.get(`${Project.api}environments/${this.props.environmentId}/featurestates/?anyIdentity=1&feature=${this.props.projectFlag.id}&page=${page}`)
+        data.get(`${Project.api}environments/${this.props.environmentId}/${Utils.getFeatureStatesEndpoint()}/?anyIdentity=1&feature=${this.props.projectFlag.id}&page=${page}`)
             .then((userOverrides) => {
                 this.setState({
                     userOverrides: userOverrides.results,
@@ -237,7 +237,7 @@ const CreateFlag = class extends Component {
             _data.post(`${Project.api}environments/${environmentId}/${Utils.getIdentitiesEndpoint()}/${selectedIdentity}/${Utils.getFeatureStatesEndpoint()}/`, {
                 feature: projectFlag.id,
                 enabled: !environmentFlag.enabled,
-                value: environmentFlag.value,
+                feature_state_value: environmentFlag.value||null,
             }).then((res) => {
                 this.setState({
                     isLoading: false,
