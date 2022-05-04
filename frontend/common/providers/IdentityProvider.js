@@ -52,6 +52,10 @@ const IdentityProvider = class extends Component {
         AppActions.editTrait({ trait, identity, environmentId });
     };
 
+    createTrait = ({ trait, identity, environmentId, isCreate }) => {
+        AppActions.editTrait({ trait, identity, environmentId, isCreate });
+    };
+
     removeFlag = ({ environmentId, identity, identityFlag }) => {
         AppActions.removeUserFlag({ environmentId, identity, identityFlag });
     };
@@ -61,9 +65,9 @@ const IdentityProvider = class extends Component {
     };
 
     render() {
-        const { toggleFlag, editFlagValue, removeFlag, editTrait, changeUserFlag } = this;
+        const { toggleFlag, editFlagValue, removeFlag, editTrait, changeUserFlag, createTrait } = this;
         return (
-            this.props.children({ ...this.state }, { toggleFlag, editFlagValue, removeFlag, editTrait, changeUserFlag })
+            this.props.children({ ...this.state }, { toggleFlag, editFlagValue, createTrait, removeFlag, editTrait, changeUserFlag })
         );
     }
 };
