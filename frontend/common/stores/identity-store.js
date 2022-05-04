@@ -95,7 +95,6 @@ const controller = {
     deleteIdentityTrait(envId, identity, id) {
         store.saving();
         if (Utils.getShouldUpdateTraitOnDelete()) {
-            debugger;
             controller.editTrait({
                 identity,
                 environmentId: envId,
