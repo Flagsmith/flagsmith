@@ -5,7 +5,7 @@ from drf_yasg2 import openapi
 from drf_yasg2.utils import swagger_auto_schema
 from rest_framework import mixins, status, viewsets
 from rest_framework.decorators import action
-from rest_framework.exceptions import PermissionDenied
+from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.schemas import AutoSchema
 
@@ -18,13 +18,15 @@ from environments.identities.models import Identity
 from environments.identities.traits.models import Trait
 from environments.identities.traits.serializers import (
     IncrementTraitValueSerializer,
+    TraitSerializer,
     TraitSerializerBasic,
     TraitSerializerFull,
 )
 from environments.models import Environment
-from environments.permissions.constants import VIEW_ENVIRONMENT
+from environments.permissions.constants import MANAGE_IDENTITIES
 from environments.permissions.permissions import (
     EnvironmentKeyPermissions,
+    NestedEnvironmentPermissions,
     TraitPersistencePermissions,
 )
 from environments.sdk.serializers import (
@@ -36,103 +38,45 @@ from util.views import SDKAPIView
 
 
 class TraitViewSet(viewsets.ModelViewSet):
-    serializer_class = TraitSerializerFull
+    serializer_class = TraitSerializer
 
     def get_queryset(self):
         """
         Override queryset to filter based on provided URL parameters.
         """
         environment_api_key = self.kwargs["environment_api_key"]
-        identity_pk = self.kwargs.get("identity_pk")
+        identity_pk = self.kwargs["identity_pk"]
         environment = Environment.objects.get(api_key=environment_api_key)
-
-        if not self.request.user.has_environment_permission(
-            VIEW_ENVIRONMENT, environment
-        ):
-            raise PermissionDenied()
-
-        if identity_pk:
-            identity = Identity.objects.get(pk=identity_pk, environment=environment)
-        else:
-            identity = None
-
+        identity = Identity.objects.get(pk=identity_pk, environment=environment)
         return Trait.objects.filter(identity=identity)
 
-    def get_environment_from_request(self):
-        """
-        Get environment object from URL parameters in request.
-        """
-        return Environment.objects.get(api_key=self.kwargs["environment_api_key"])
+    def get_permissions(self):
+        return [
+            IsAuthenticated(),
+            NestedEnvironmentPermissions(
+                action_permission_map={
+                    "create": MANAGE_IDENTITIES,
+                    "update": MANAGE_IDENTITIES,
+                    "partial_update": MANAGE_IDENTITIES,
+                    "destroy": MANAGE_IDENTITIES,
+                    "list": MANAGE_IDENTITIES,
+                    "retrieve": MANAGE_IDENTITIES,
+                },
+                get_environment_from_object_callable=lambda t: t.identity.environment,
+            ),
+        ]
 
-    def get_identity_from_request(self, environment):
+    def get_identity_from_request(self):
         """
         Get identity object from URL parameters in request.
         """
         return Identity.objects.get(pk=self.kwargs["identity_pk"])
 
-    def create(self, request, *args, **kwargs):
-        """
-        Override create method to add identity (if present) from URL parameters.
+    def perform_create(self, serializer):
+        serializer.save(identity=self.get_identity_from_request())
 
-        TODO: fix this - it doesn't work, the FE uses the SDK endpoint instead
-        """
-        data = request.data
-        environment = self.get_environment_from_request()
-        if (
-            environment.project.organisation
-            not in self.request.user.organisations.all()
-        ):
-            return Response(status=status.HTTP_403_FORBIDDEN)
-
-        identity_pk = self.kwargs.get("identity_pk")
-
-        # check if identity in data or in request
-        if "identity" not in data and not identity_pk:
-            error = {"detail": "Identity not provided"}
-            return Response(error, status=status.HTTP_400_BAD_REQUEST)
-
-        # TODO: do we give priority to request identity or data?
-        # Override with request identity
-        if identity_pk:
-            data["identity"] = identity_pk
-
-        serializer = self.get_serializer(data=data)
-        serializer.is_valid(raise_exception=True)
-        self.perform_create(serializer)
-        headers = self.get_success_headers(serializer.data)
-
-        return Response(
-            serializer.data, status=status.HTTP_201_CREATED, headers=headers
-        )
-
-    def update(self, request, *args, **kwargs):
-        """
-        Override update method to always assume update request is partial and create / update
-        trait value.
-        """
-        trait_to_update = self.get_object()
-        trait_data = request.data
-
-        # Check if trait value was provided with request data. If so, we need to figure out value_type from
-        # the given value and also use correct value field e.g. boolean_value, float_value, integer_value or
-        # string_value, and override request data
-        if "trait_value" in trait_data:
-            trait_data = trait_to_update.generate_trait_value_data(
-                trait_data["trait_value"]
-            )
-
-        serializer = TraitSerializerFull(trait_to_update, data=trait_data, partial=True)
-
-        serializer.is_valid(raise_exception=True)
-        self.perform_update(serializer)
-
-        return Response(serializer.data)
-
-    def partial_update(self, request, *args, **kwargs):
-        """
-        Override partial_update as overridden update method assumes partial True for all requests.
-        """
-        return self.update(request, *args, **kwargs)
+    def perform_update(self, serializer):
+        serializer.save(identity=self.get_identity_from_request())
 
     @swagger_auto_schema(
         manual_parameters=[
@@ -145,20 +89,15 @@ class TraitViewSet(viewsets.ModelViewSet):
         ]
     )
     def destroy(self, request, *args, **kwargs):
-        delete_all_traits = request.query_params.get("deleteAllMatchingTraits")
-        if delete_all_traits and delete_all_traits in ("true", "True"):
+        if request.query_params.get("deleteAllMatchingTraits") in ("true", "True"):
             trait = self.get_object()
-            self._delete_all_traits_matching_key(
-                trait.trait_key, trait.identity.environment
-            )
+            Trait.objects.filter(
+                trait_key=trait.trait_key,
+                identity__environment=trait.identity.environment,
+            ).delete()
             return Response(status=status.HTTP_204_NO_CONTENT)
         else:
             return super(TraitViewSet, self).destroy(request, *args, **kwargs)
-
-    def _delete_all_traits_matching_key(self, trait_key, environment):
-        Trait.objects.filter(
-            trait_key=trait_key, identity__environment=environment
-        ).delete()
 
 
 class SDKTraitsDeprecated(SDKAPIView):
