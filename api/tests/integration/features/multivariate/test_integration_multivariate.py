@@ -48,7 +48,7 @@ def test_can_list_mv_option(project, mv_option_50_percent, admin_client, feature
 def test_creating_mv_options_with_accumulated_total_gt_100_returns_400(
     project, mv_option_50_percent, admin_client, feature
 ):
-    mv_option_url = reverse(
+    url = reverse(
         "api-v1:projects:feature-mv-options-list",
         args=[project, feature],
     )
@@ -60,7 +60,7 @@ def test_creating_mv_options_with_accumulated_total_gt_100_returns_400(
     }
     # When
     response = admin_client.post(
-        mv_option_url,
+        url,
         data=json.dumps(data),
         content_type="application/json",
     )
@@ -74,7 +74,7 @@ def test_creating_mv_options_with_accumulated_total_gt_100_returns_400(
 def test_can_update_default_percentage_allocation(
     project, mv_option_50_percent, admin_client, feature
 ):
-    mv_option_url = reverse(
+    url = reverse(
         "api-v1:projects:feature-mv-options-detail",
         args=[project, feature, mv_option_50_percent],
     )
@@ -87,7 +87,7 @@ def test_can_update_default_percentage_allocation(
     }
     # When
     response = admin_client.put(
-        mv_option_url,
+        url,
         data=json.dumps(data),
         content_type="application/json",
     )
