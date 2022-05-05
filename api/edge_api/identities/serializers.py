@@ -136,3 +136,9 @@ class EdgeIdentityFeatureStateSerializer(serializers.Serializer):
 class EdgeIdentityTraitsSerializer(serializers.Serializer):
     trait_key = serializers.CharField()
     trait_value = serializers.CharField(allow_null=True)
+
+
+class EdgeIdentityFsQueryparamSerializer(serializers.Serializer):
+    feature = serializers.IntegerField(
+        required=False, help_text="ID of the feature to filter by"
+    )

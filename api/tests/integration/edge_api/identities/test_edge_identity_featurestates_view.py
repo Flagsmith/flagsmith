@@ -28,6 +28,32 @@ def test_edge_identities_feature_states_list(
     assert len(response.json()) == 3
 
 
+def test_edge_identities_feature_states_list_can_be_filtered_using_feature_id(
+    admin_client,
+    environment,
+    environment_api_key,
+    identity_document,
+    dynamo_wrapper_mock,
+    feature,
+):
+    # Given
+    dynamo_wrapper_mock.get_item_from_uuid_or_404.return_value = identity_document
+
+    identity_uuid = identity_document["identity_uuid"]
+    url = reverse(
+        "api-v1:environments:edge-identity-featurestates-list",
+        args=[environment_api_key, identity_uuid],
+    )
+    url = f"{url}?feature={feature}"
+    # When
+    response = admin_client.get(url)
+    # Then
+    dynamo_wrapper_mock.get_item_from_uuid_or_404.assert_called_with(identity_uuid)
+    assert response.status_code == status.HTTP_200_OK
+    assert len(response.json()) == 1
+    assert response.json()[0]["feature"] == feature
+
+
 def test_edge_identities_feature_states_list_returns_404_if_identity_does_not_exists(
     admin_client,
     environment,
