@@ -201,6 +201,22 @@ MIDDLEWARE = [
     "simple_history.middleware.HistoryRequestMiddleware",
 ]
 
+APPLICATION_INSIGHTS_CONNECTION_STRING = env.str(
+    "APPLICATION_INSIGHTS_CONNECTION_STRING", default=None
+)
+OPENCENSUS_SAMPLING_RATE = env.float("OPENCENSUS_SAMPLING_RATE", 1.0)
+
+if APPLICATION_INSIGHTS_CONNECTION_STRING:
+    MIDDLEWARE.insert(0, "opencensus.ext.django.middleware.OpencensusMiddleware")
+    OPENCENSUS = {
+        "TRACE": {
+            "SAMPLER": f"opencensus.trace.samplers.ProbabilitySampler(rate={OPENCENSUS_SAMPLING_RATE})",
+            "EXPORTER": f"""opencensus.ext.azure.trace_exporter.AzureExporter(
+                connection_string='{APPLICATION_INSIGHTS_CONNECTION_STRING}',
+            )""",
+        }
+    }
+
 if ENABLE_GZIP_COMPRESSION:
     # ref: https://docs.djangoproject.com/en/2.2/ref/middleware/#middleware-ordering
     MIDDLEWARE.insert(1, "django.middleware.gzip.GZipMiddleware")
@@ -387,10 +403,19 @@ LOGGING = {
             "level": LOG_LEVEL,
             "class": "logging.StreamHandler",
             "formatter": "generic",
-        },
+        }
     },
     "loggers": {"": {"level": LOG_LEVEL, "handlers": ["console"]}},
 }
+
+if APPLICATION_INSIGHTS_CONNECTION_STRING:
+    LOGGING["handlers"]["azure"] = {
+        "level": "DEBUG",
+        "class": "opencensus.ext.azure.log_exporter.AzureLogHandler",
+        "connection_string": APPLICATION_INSIGHTS_CONNECTION_STRING,
+    }
+
+    LOGGING["loggers"][""]["handlers"].append("azure")
 
 ENABLE_DB_LOGGING = env.bool("DJANGO_ENABLE_DB_LOGGING", default=False)
 if ENABLE_DB_LOGGING:
