@@ -100,6 +100,7 @@ jobs:
               with:
                   push: false
                   tags: flagsmith/flagsmith:testing
+                  platforms: linux/amd64,linux/arm64,linux/arm/v7
 
     docker-build-api:
         if: github.event.pull_request.draft == false
