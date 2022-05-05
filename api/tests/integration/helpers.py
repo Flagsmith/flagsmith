@@ -1,11 +1,10 @@
 import json
-import typing
 
 from django.urls import reverse
 from django.utils.http import urlencode
 from rest_framework.test import APIClient
 
-from features.feature_types import MULTIVARIATE, STANDARD
+from features.feature_types import STANDARD
 from features.value_types import STRING
 
 

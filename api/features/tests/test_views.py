@@ -24,8 +24,6 @@ from features.models import (
     FeatureState,
     FeatureStateValue,
 )
-from features.multivariate.models import MultivariateFeatureOption
-from features.value_types import STRING
 from organisations.models import Organisation, OrganisationRole
 from projects.models import Project
 from projects.tags.models import Tag
