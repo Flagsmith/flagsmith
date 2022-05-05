@@ -41,7 +41,6 @@ from environments.permissions.permissions import (
 from webhooks.webhooks import WebhookEventType
 
 from .models import Feature, FeatureState
-from .multivariate.serializers import MultivariateFeatureOptionSerializer
 from .permissions import (
     EnvironmentFeatureStatePermissions,
     FeaturePermissions,
