@@ -4,8 +4,6 @@ import typing
 
 import marshmallow
 from boto3.dynamodb.conditions import Key
-from django.utils.decorators import method_decorator
-from drf_yasg2 import openapi
 from drf_yasg2.utils import swagger_auto_schema
 from flag_engine.api.schemas import APITraitSchema
 from flag_engine.identities.builders import (
@@ -143,20 +141,6 @@ class EdgeIdentityViewSet(viewsets.ModelViewSet):
         return Response(data, status=status.HTTP_200_OK)
 
 
-@method_decorator(
-    name="list",
-    decorator=swagger_auto_schema(
-        manual_parameters=[
-            openapi.Parameter(
-                "feature",
-                openapi.IN_QUERY,
-                "ID of the feature to filter by.",
-                required=False,
-                type=openapi.TYPE_INTEGER,
-            ),
-        ]
-    ),
-)
 class EdgeIdentityFeatureStateViewSet(viewsets.ModelViewSet):
     permission_classes = [IsAuthenticated, IdentityFeatureStatePermissions]
     lookup_field = "featurestate_uuid"
@@ -185,6 +169,7 @@ class EdgeIdentityFeatureStateViewSet(viewsets.ModelViewSet):
             raise NotFound()
         return featurestate
 
+    @swagger_auto_schema(query_serializer=EdgeIdentityFsQueryparamSerializer())
     def list(self, request, *args, **kwargs):
         q_params_serializer = EdgeIdentityFsQueryparamSerializer(
             data=self.request.query_params
