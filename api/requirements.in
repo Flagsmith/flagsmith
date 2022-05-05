@@ -44,3 +44,5 @@ slack_sdk
 rudder-sdk-python
 asgiref
 semver
+opencensus-ext-azure
+opencensus-ext-django
