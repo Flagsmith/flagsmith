@@ -19,6 +19,7 @@ from rest_framework.response import Response
 from app.pagination import EdgeIdentityPagination
 from edge_api.identities.serializers import (
     EdgeIdentityFeatureStateSerializer,
+    EdgeIdentityFsQueryparamSerializer,
     EdgeIdentitySerializer,
     EdgeIdentityTraitsSerializer,
 )
@@ -169,7 +170,20 @@ class EdgeIdentityFeatureStateViewSet(viewsets.ModelViewSet):
         return featurestate
 
     def list(self, request, *args, **kwargs):
-        serializer = self.get_serializer(self.identity.identity_features, many=True)
+        q_params_serializer = EdgeIdentityFsQueryparamSerializer(
+            data=self.request.query_params
+        )
+        q_params_serializer.is_valid(raise_exception=True)
+
+        identity_features = self.identity.identity_features
+
+        feature = q_params_serializer.data.get("feature")
+        if feature:
+            identity_features = filter(
+                lambda fs: fs.feature.id == feature, identity_features
+            )
+
+        serializer = self.get_serializer(identity_features, many=True)
         return Response(data=serializer.data, status=status.HTTP_200_OK)
 
     def perform_destroy(self, instance):
