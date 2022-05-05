@@ -121,7 +121,7 @@ def test_updating_default_percentage_allocation_that_pushes_the_total_percentage
     # Next, let's update the 30 percent mv option to 51 percent
     url = reverse(
         "api-v1:projects:feature-mv-options-detail",
-        args=[project, feature, mv_option_50_percent],
+        args=[project, feature, mv_option_30_percent],
     )
     data = {
         "id": mv_option_30_percent,
