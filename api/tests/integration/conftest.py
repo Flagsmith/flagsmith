@@ -138,21 +138,22 @@ def feature(admin_client, project, default_feature_value):
 
 
 @pytest.fixture()
-def mv_option(admin_client, project, mv_option_value):
-    data = {
-        "name": "test_feature_mv",
-        "default_enabled": True,
-        "multivariate_options": [{"type": "unicode", "string_value": mv_option_value}],
-    }
-    url = reverse("api-v1:projects:project-features-list", args=[project])
-
-    # When
-    response = admin_client.post(
-        url, data=json.dumps(data), content_type="application/json"
+def mv_option_50_percent(project, admin_client, feature, mv_option_value):
+    url = reverse(
+        "api-v1:projects:feature-mv-options-list",
+        args=[project, feature],
     )
-
-    response_json = response.json()
-    return response_json["multivariate_options"][0]["id"]
+    data = {
+        "type": "unicode",
+        "feature": feature,
+        "string_value": mv_option_value,
+        "default_percentage_allocation": 50,
+    }
+    return admin_client.post(
+        url,
+        data=json.dumps(data),
+        content_type="application/json",
+    ).json()["id"]
 
 
 @pytest.fixture()

@@ -3,6 +3,7 @@ import json
 from django.urls import reverse
 from rest_framework import status
 from rest_framework.exceptions import NotFound
+from tests.integration.helpers import create_mv_option_with_api
 
 
 def test_edge_identities_feature_states_list(
@@ -258,7 +259,7 @@ def test_edge_identities_create_mv_featurestate(
     identity_document_without_fs,
     dynamo_wrapper_mock,
     feature,
-    mv_option,
+    mv_option_50_percent,
     mv_option_value,
 ):
     # Given
@@ -278,7 +279,7 @@ def test_edge_identities_create_mv_featurestate(
         "enabled": expected_fs_enabled,
         "multivariate_feature_state_values": [
             {
-                "multivariate_feature_option": mv_option,
+                "multivariate_feature_option": mv_option_50_percent,
                 "percentage_allocation": expected_percentage_allocation,
             }
         ],
@@ -419,7 +420,7 @@ def test_edge_identities_update_mv_featurestate(
     identity_document,
     dynamo_wrapper_mock,
     feature,
-    mv_option,
+    mv_option_50_percent,
     mv_option_value,
 ):
     # Given
@@ -437,7 +438,8 @@ def test_edge_identities_update_mv_featurestate(
         "multivariate_feature_state_values": [
             {
                 "percentage_allocation": new_mv_allocation,
-                "multivariate_feature_option": mv_option,
+                "multivariate_feature_option": mv_option_50_percent,
+                "id": 1,
             },
         ],
         "enabled": expected_fs_enabled,
@@ -497,12 +499,13 @@ def test_edge_identities_update_mv_featurestate(
 
 def test_edge_identities_post_returns_400_for_invalid_mvfs_allocation(
     admin_client,
+    project,
     environment,
     environment_api_key,
     identity_document_without_fs,
     dynamo_wrapper_mock,
     feature,
-    mv_option,
+    mv_option_50_percent,
 ):
 
     # Given
@@ -514,17 +517,20 @@ def test_edge_identities_post_returns_400_for_invalid_mvfs_allocation(
         "api-v1:environments:edge-identity-featurestates-list",
         args=[environment_api_key, identity_uuid],
     )
+    mv_option_30_percent = create_mv_option_with_api(
+        admin_client, project, feature, 30, "some_value"
+    )
 
     data = {
         "feature": feature,
         "enabled": True,
         "multivariate_feature_state_values": [
             {
-                "multivariate_feature_option": mv_option,
+                "multivariate_feature_option": mv_option_50_percent,
                 "percentage_allocation": 90,
             },
             {
-                "multivariate_feature_option": mv_option,
+                "multivariate_feature_option": mv_option_30_percent,
                 "percentage_allocation": 90,
             },
         ],

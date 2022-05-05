@@ -6,7 +6,7 @@ from rest_framework import status
 
 def test_can_create_mv_option(project, mv_option_50_percent, admin_client, feature):
     # Given
-    mv_option_url = reverse(
+    url = reverse(
         "api-v1:projects:feature-mv-options-list",
         args=[project, feature],
     )
@@ -18,7 +18,7 @@ def test_can_create_mv_option(project, mv_option_50_percent, admin_client, featu
     }
     # When
     response = admin_client.post(
-        mv_option_url,
+        url,
         data=json.dumps(data),
         content_type="application/json",
     )
