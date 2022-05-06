@@ -26,6 +26,12 @@ module.exports = Object.assign({}, require('./base/_utils'), {
         }
         return 'post';
     },
+    getIsEdge() {
+        if (flagsmith.hasFeature('edge_identities') && ProjectStore.model && ProjectStore.model.use_edge_identities) {
+            return true;
+        }
+        return false;
+    },
     getTraitEndpoint(environmentId, userId) {
         if (flagsmith.hasFeature('edge_identities') && ProjectStore.model && ProjectStore.model.use_edge_identities) {
             return `${Project.api}environments/${environmentId}/edge-identities/${userId}/update-traits/`;
