@@ -180,7 +180,7 @@ const UsersPage = class extends Component {
                                                     </FormGroup>
 
 
-                                                {permission && !preventAddTrait && (
+                                                {permission && !preventAddTrait && Utils.getShouldShowProjectTraits() && (
                                                     <EnvironmentTraitsProvider environmentId={environmentId}>
                                                         {({ isLoading, error, traits, deleteTrait, isDeleting }) => (
                                                             <div>

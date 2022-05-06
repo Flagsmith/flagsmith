@@ -46,6 +46,13 @@ module.exports = Object.assign({}, require('./base/_utils'), {
         return false;
     },
 
+    getShouldShowProjectTraits() {
+        if (flagsmith.hasFeature('edge_identities') && ProjectStore.model && ProjectStore.model.use_edge_identities) {
+            return false;
+        }
+        return true;
+    },
+
     getIdentitiesEndpoint() {
         if (flagsmith.hasFeature('edge_identities') && ProjectStore.model && ProjectStore.model.use_edge_identities) {
             return 'edge-identities';
