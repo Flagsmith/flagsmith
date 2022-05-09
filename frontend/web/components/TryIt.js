@@ -78,11 +78,13 @@ const TryIt = class extends Component {
                         </div>
                     </div>
                     {this.state.data && (
-                        <div id="try-it-results">
+                        <div id={!this.state.isLoading && "try-it-results"}>
                             <FormGroup/>
-                            <Highlight className="json">
-                                {this.state.data}
-                            </Highlight>
+                            <div style={{opacity: this.state.isLoading?0.5:1}} className={"fade "}>
+                                <Highlight className="json">
+                                    {this.state.data}
+                                </Highlight>
+                            </div>
                         </div>
                     )}
                     {this.state.isLoading && !this.state.data && (
