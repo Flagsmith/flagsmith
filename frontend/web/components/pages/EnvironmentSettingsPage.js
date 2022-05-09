@@ -129,11 +129,11 @@ const EnvironmentSettingsPage = class extends Component {
                 >
                     {({ isLoading, isSaving, editProject, editEnv, deleteProject, deleteEnv, project }) => {
                         const env = _.find(project.environments, { api_key: this.props.match.params.environmentId });
-                        if (env && (typeof this.state.minimum_change_request_approvals !== "number")) {
+                        if (env && (typeof this.state.minimum_change_request_approvals === "undefined")) {
                             setTimeout(()=>{
                                 this.setState({
                                     name:env.name,
-                                    minimum_change_request_approvals:env.minimum_change_request_approvals,
+                                    minimum_change_request_approvals:Utils.changeRequestsEnabled(env.minimum_change_request_approvals)? env.minimum_change_request_approvals : null,
                                 })
                             },10)
                         }
