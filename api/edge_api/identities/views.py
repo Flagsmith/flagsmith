@@ -145,6 +145,8 @@ class EdgeIdentityFeatureStateViewSet(viewsets.ModelViewSet):
     permission_classes = [IsAuthenticated, IdentityFeatureStatePermissions]
     lookup_field = "featurestate_uuid"
     serializer_class = EdgeIdentityFeatureStateSerializer
+
+    # Patch is not supported
     http_method_names = [
         "get",
         "post",

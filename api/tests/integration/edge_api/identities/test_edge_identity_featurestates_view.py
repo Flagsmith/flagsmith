@@ -394,8 +394,11 @@ def test_edge_identities_patch_returns_405(
     environment,
     environment_api_key,
     identity_document,
+    dynamo_wrapper_mock,
+    feature,
 ):
     # Given
+    dynamo_wrapper_mock.get_item_from_uuid_or_404.return_value = identity_document
     identity_uuid = identity_document["identity_uuid"]
     featurestate_uuid = identity_document["identity_features"][0]["featurestate_uuid"]
 
