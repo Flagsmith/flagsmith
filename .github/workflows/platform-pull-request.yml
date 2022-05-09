@@ -79,6 +79,33 @@ jobs:
                 environment: local
                 enable_influxdb_features: false
 
+    run-staging-e2e-tests:
+      if: github.event.pull_request.draft == false
+      runs-on: ubuntu-latest
+      environment: staging
+      name: Run Staging E2E Tests
+
+      steps:
+        - name: Cloning repo
+          uses: actions/checkout@v2
+          with:
+            fetch-depth: 0
+
+        - name: Run E2E Tests
+          env:
+            E2E_TEST_TOKEN_PROD: ${{ secrets.E2E_TEST_TOKEN }}
+            ENV: staging
+            SLACK_TOKEN: ${{ secrets.SLACK_TOKEN }}
+            STATIC_ASSET_CDN_URL: /
+            run: |
+              wget -q https://dl.google.com/linux/chrome/deb/pool/main/g/google-chrome-stable/google-chrome-stable_96.0.4664.110-1_amd64.deb
+              sudo apt install --allow-downgrades -y ./google-chrome*.deb -f
+              google-chrome --version
+              node -v
+              npm i
+              npm run test:staging
+
+
     docker-build-unified:
         if: github.event.pull_request.draft == false
         name: Test unified docker image build
@@ -100,32 +127,6 @@ jobs:
               with:
                   push: false
                   tags: flagsmith/flagsmith:testing
-
-    run-tests:
-        if: github.event.pull_request.draft == false
-        runs-on: ubuntu-latest
-        environment: staging
-        name: Run Staging E2E Tests
-
-        steps:
-          - name: Cloning repo
-            uses: actions/checkout@v2
-            with:
-              fetch-depth: 0
-
-          - name: Run E2E Tests
-            env:
-              E2E_TEST_TOKEN_PROD: ${{ secrets.E2E_TEST_TOKEN }}
-              ENV: staging
-              SLACK_TOKEN: ${{ secrets.SLACK_TOKEN }}
-              STATIC_ASSET_CDN_URL: /
-              run: |
-                wget -q https://dl.google.com/linux/chrome/deb/pool/main/g/google-chrome-stable/google-chrome-stable_96.0.4664.110-1_amd64.deb
-                sudo apt install --allow-downgrades -y ./google-chrome*.deb -f
-                google-chrome --version
-                node -v
-                npm i
-                npm run test:staging
 
     docker-build-api:
         if: github.event.pull_request.draft == false
