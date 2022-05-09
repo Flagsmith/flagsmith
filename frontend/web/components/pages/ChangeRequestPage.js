@@ -77,7 +77,7 @@ const ChangeRequestsPage = class extends Component {
             </p>
         ), ()=>{
 
-            AppActions.deleteChangeRequest(this.props.match.params.id, ()=>{
+            AppActions.deleteChangeRequestØ(this.props.match.params.id, ()=>{
                 this.context.router.history.replace(`/project/${this.props.match.params.projectId}/environment/${this.props.match.params.environmentId}/change-requests`);
             })
 
@@ -128,7 +128,7 @@ const ChangeRequestsPage = class extends Component {
     render() {
         const id = this.props.match.params.id;
         const changeRequest = ChangeRequestStore.model[id];
-        if (OrganisationStore.isLoading || (ChangeRequestStore.isLoading && !changeRequest) || !FeatureListStore.getEnvironmentFlags()) {
+        if (!changeRequest || OrganisationStore.isLoading || (ChangeRequestStore.isLoading && !changeRequest) || !FeatureListStore.getEnvironmentFlags()) {
             return (
                 <div data-test="change-requests-page" id="change-requests-page" className="app-container container">
                     <div className="text-center"><Loader/></div>
@@ -141,7 +141,7 @@ const ChangeRequestsPage = class extends Component {
         if (featureId!== this.activeFeature) {
             this.fetchFeature(featureId)
         }
-        const user = orgUsers.find(v => v.id === changeRequest.user);
+        const user = changeRequest && orgUsers.find(v => v.id === changeRequest.user);
         const committedBy = changeRequest.committed_by && orgUsers && orgUsers.find((v)=>v.id === changeRequest.committed_by) || {}
         const isScheduled = new Date(changeRequest.feature_states[0].live_from).valueOf() > new Date().valueOf()
         const scheduledDate =  moment(changeRequest.feature_states[0].live_from)
@@ -213,7 +213,7 @@ const ChangeRequestsPage = class extends Component {
                                 </Flex>
                                 <div className="mr-4">
 
-                                    {!changeRequest.committed_at || isScheduled && (
+                                    {((!committedBy || !committedBy.id) || isScheduled) && (
                                         <Row>
                                             <Button onClick={this.deleteChangeRequest} className="btn btn--small btn-danger">Delete</Button>
                                             <Button onClick={()=>this.editChangeRequest(projectFlag, environmentFlag)} className="btn btn--small ml-2">Edit</Button>
@@ -270,6 +270,20 @@ const ChangeRequestsPage = class extends Component {
                                         <Panel
                                             title={"Change Request"}>
 
+                                            <Row
+                                                className="mt-2" style={{
+                                                marginLeft: '0.75rem',
+                                                marginRight: '0.75rem',
+                                            }}
+                                            >
+                                                <strong style={{width:labelWidth}}>
+                                                    Feature
+                                                </strong>
+
+                                                <a target="_blank" className="btn--link btn--link-primary mt-2" href={`/project/${this.props.match.params.projectId}/environment/${this.props.match.params.environmentId}/features?feature=${projectFlag && projectFlag.id}`}>
+                                                    {projectFlag && projectFlag.name}
+                                                </a>
+                                            </Row>
                                             <Row
                                                 className="mt-2" style={{
                                                 marginLeft: '0.75rem',

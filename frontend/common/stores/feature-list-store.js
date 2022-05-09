@@ -214,7 +214,9 @@ const controller = {
                             (v) => {
                                 const matching = multivariate_options.find(m => (v.multivariate_feature_option || v.id) === (m.multivariate_feature_option || m.id));
                                 return ({ ...v,
-                                    percentage_allocation: matching? matching.percentage_allocation || matching.default_percentage_allocation : v.percentage_allocation ,
+                                    percentage_allocation: matching?
+                                        typeof matching.percentage_allocation == 'number' ?  matching.percentage_allocation :
+                                        matching.default_percentage_allocation : v.percentage_allocation ,
                                 });
                             },
                         );
@@ -223,11 +225,13 @@ const controller = {
 
                     prom = data.put(`${Project.api}features/workflows/change-requests/${v.id}/`, {
                         ...v,
-                    }).then(() => {
+                    }).then((v) => {
                         if (commit) {
                             AppActions.actionChangeRequest(v.id, 'commit', () => {
                                 AppActions.getFeatures(projectId, environmentId, true);
                             });
+                        } else {
+                            AppActions.getChangeRequest(v.id)
                         }
                     });
                     prom.then(() => {
