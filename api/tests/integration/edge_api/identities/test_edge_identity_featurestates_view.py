@@ -230,9 +230,10 @@ def test_edge_identities_create_featurestate(
 
     # Next, let's verify that the document that we put
     # have the fs that we created
+
     # First, let's create the copy of the original document
     expected_identity_document = identity_document_without_fs
-    # Next, let's modify the fs value that we updated
+    # Next, let's append the fs that we created
     expected_identity_document["identity_features"].append(
         {
             "feature": {"type": None, "name": "test feature", "id": feature},
@@ -298,9 +299,10 @@ def test_edge_identities_create_mv_featurestate(
     assert name == "put_item"
     # Next, let's verify that the document that we put
     # have the fs that we created
+
     # First, let's create the copy of the original document
     expected_identity_document = identity_document_without_fs
-    # Next, let's modify the fs value that we updated
+    # Next, let's append the fs that we created
     expected_identity_document["identity_features"].append(
         {
             "feature": {"type": None, "name": "test feature", "id": feature},
@@ -372,6 +374,7 @@ def test_edge_identities_update_featurestate(
 
     # Next, let's verify that the document that we put
     # have correct updates
+
     # First, let's create the copy of the original document
     expected_identity_document = identity_document
     # Next, let's modify the fs value that we updated
@@ -440,7 +443,7 @@ def test_edge_identities_update_mv_featurestate(
     # Next, let's verify that the document that we put
     # have correct updates
 
-    # First, create the copy of the original document
+    # First, let's create the copy of the original document
     expected_identity_document = identity_document
     # Next, let's modify the fs value that we updated
     expected_identity_document["identity_features"][2][
