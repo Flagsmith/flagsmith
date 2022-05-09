@@ -37,7 +37,6 @@ const ChangeRequestModal = class extends Component {
     }
 
     render() {
-        debugger
         const { title, description } = this.state;
         return (
             <OrganisationProvider>
