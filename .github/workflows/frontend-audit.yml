@@ -1,0 +1,19 @@
+on:
+  schedule:
+    - cron: "0 18 * * *"
+
+jobs:
+  execute:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Cloning repo
+        uses: actions/checkout@v2
+        with:
+          fetch-depth: 0
+
+      - name: Audit
+        working-directory: frontend
+        run: |
+          npm i
+          npm audit --audit-level high
