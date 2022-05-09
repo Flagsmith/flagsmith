@@ -4,7 +4,6 @@ import Card from '../Card';
 import { ButtonLink } from '../base/forms/Button';
 import { Google } from '../../project/auth';
 import NavIconSmall from '../svg/NavIconSmall';
-import CreateProjectModal from '../modals/CreateProject';
 import SamlForm from '../SamlForm';
 
 const HomePage = class extends React.Component {
