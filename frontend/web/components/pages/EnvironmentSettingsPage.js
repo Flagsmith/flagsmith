@@ -129,11 +129,13 @@ const EnvironmentSettingsPage = class extends Component {
                 >
                     {({ isLoading, isSaving, editProject, editEnv, deleteProject, deleteEnv, project }) => {
                         const env = _.find(project.environments, { api_key: this.props.match.params.environmentId });
-                        if (env && (typeof this.state.minimum_change_request_approvals !== "number")) {
+                        if (env && (typeof this.state.minimum_change_request_approvals === "undefined")) {
+                            setTimeout(()=>{
                                 this.setState({
                                     name:env.name,
-                                    minimum_change_request_approvals:env.minimum_change_request_approvals || 0,
+                                    minimum_change_request_approvals:Utils.changeRequestsEnabled(env.minimum_change_request_approvals)? env.minimum_change_request_approvals : null,
                                 })
+                            },10)
                         }
                         return (
                             <div>
@@ -224,11 +226,11 @@ const EnvironmentSettingsPage = class extends Component {
                                                     </div>
                                                     <div className="col-md-4 pr-0 text-right">
                                                             <div>
-                                                                <Switch disabled={!has4EyesPermission} className="float-right" checked={has4EyesPermission && !!this.state.minimum_change_request_approvals} onChange={(v)=>this.setState({minimum_change_request_approvals: v?1:0}, this.saveEnv)} />
+                                                                <Switch disabled={!has4EyesPermission} className="float-right" checked={has4EyesPermission && Utils.changeRequestsEnabled(this.state.minimum_change_request_approvals)} onChange={(v)=>this.setState({minimum_change_request_approvals: v?0:null}, this.saveEnv)} />
                                                             </div>
                                                     </div>
                                                 </Row>
-                                                {!!this.state.minimum_change_request_approvals && has4EyesPermission&& (
+                                                {Utils.changeRequestsEnabled(this.state.minimum_change_request_approvals) && has4EyesPermission&& (
                                                     <div>
                                                         <div className="mb-2">
                                                             <strong>Minimum number of approvals</strong>

@@ -45,7 +45,8 @@ const Aside = class extends Component {
         this.listenTo(ChangeRequestStore, 'change', () => this.forceUpdate());
         this.listenTo(ProjectStore, 'loaded', () => {
             const environment = ProjectStore.getEnvironment(this.props.environmentId);
-            AppActions.getChangeRequests(this.props.environmentId, environment.minimum_change_request_approvals ? {} : { live_from_after: new Date().toISOString() });
+
+            AppActions.getChangeRequests(this.props.environmentId, Utils.changeRequestsEnabled(environment.minimum_change_request_approvals) ? {} : { live_from_after: new Date().toISOString() });
         });
     }
 
@@ -56,7 +57,7 @@ const Aside = class extends Component {
         }
         if (newProps.environmentId !== this.props.environmentId) {
             if (environment) {
-                AppActions.getChangeRequests(newProps.environmentId, environment.minimum_change_request_approvals ? {} : { live_from_after: new Date().toISOString() });
+                AppActions.getChangeRequests(newProps.environmentId, Utils.changeRequestsEnabled(environment.minimum_change_request_approvals) ? {} : { live_from_after: new Date().toISOString() });
             }
         }
     }
@@ -86,7 +87,7 @@ const Aside = class extends Component {
         const environment = ProjectStore.getEnvironment(this.props.environmentId);
         const hasRbacPermission = !this.props.hasFeature('plan_based_access') || Utils.getPlansPermission('AUDIT') || !this.props.hasFeature('scaleup_audit');
         const has4Eyes = flagsmith.hasFeature('4eyes');
-        const changeRequest = environment && environment.minimum_change_request_approvals ? ChangeRequestStore.model[this.props.environmentId] : ChangeRequestStore.scheduled[this.props.environmentId];
+        const changeRequest = environment && Utils.changeRequestsEnabled(environment.minimum_change_request_approvals) ? ChangeRequestStore.model[this.props.environmentId] : ChangeRequestStore.scheduled[this.props.environmentId];
         const changeRequests = (changeRequest && changeRequest.count) || 0;
         return (
             <OrganisationProvider>
