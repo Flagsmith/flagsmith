@@ -30,6 +30,7 @@ const controller = {
             ? data.put(`${Project.api}environments/${environmentId}/${Utils.getIdentitiesEndpoint()}/${identity}/${Utils.getFeatureStatesEndpoint()}/${identityFlag.id || identityFlag.featurestate_uuid}/`, Object.assign({}, {
                 id: identityFlag.id || identityFlag.featurestate_uuid,
                 enabled: !identityFlag.enabled,
+                feature: projectFlag.id,
                 feature_state_value: identityFlag.feature_state_value || environmentFlag.feature_state_value,
             }))
             : data.post(`${Project.api}environments/${environmentId}/${Utils.getIdentitiesEndpoint()}/${identity}/${Utils.getFeatureStatesEndpoint()}/`, {
@@ -72,6 +73,7 @@ const controller = {
             ? data.put(`${Project.api}environments/${environmentId}/${Utils.getIdentitiesEndpoint()}/${identity}/${Utils.getFeatureStatesEndpoint()}/${identityFlag.id || identityFlag.featurestate_uuid}/`, Object.assign({}, {
                 id: identityFlag.id || identityFlag.featurestate_uuid,
                 enabled: identityFlag.enabled,
+                feature: projectFlag.id,
                 multivariate_feature_state_values: identityFlag.multivariate_options,
                 feature_state_value: identityFlag.feature_state_value,
             }))
