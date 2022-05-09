@@ -5,6 +5,17 @@ on:
         types: [opened, synchronize, reopened, ready_for_review]
 
 jobs:
+    run-staging-e2e-tests:
+        if: github.event.pull_request.draft == false
+        runs-on: ubuntu-latest
+        name: Full Staging E2E tests
+
+        steps:
+          - name: Cloning repo
+            uses: actions/checkout@v2
+            with:
+              fetch-depth: 0
+
     run-e2e-tests:
         if: github.event.pull_request.draft == false
         runs-on: ubuntu-latest
