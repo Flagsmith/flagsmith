@@ -1,36 +1,30 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en-GB">
 
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
     <meta http-equiv="x-ua-compatible" content="ie=edge">
     <meta name="description" content="Manage your Feature Flags, Feature Toggles and Remote Config in your Mobile, React, React Native, Java, Javascript (Node) and Python projects." />
-    <meta property="og:image" content="https://flagsmith.com/images/bullet-train.png" />
+    <meta property="og:image" content="https://flagsmith.com/static/aa08b77a1a9bca99643945f1f3eeb027/b2d24/social-preview.jpg" />
     <meta property="og:title" content="Flagsmith - Feature Flags, Feature Toggles and Remote Config" />
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.8.0/highlight.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/languages/javascript.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/languages/json.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/languages/java.min.js"></script>
-    <script src="https://secure.aadcdn.microsoftonline-p.com/lib/1.0.0/js/msal.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/languages/ini.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/languages/yaml.min.js"></script>
-    <script src="//cdn.headwayapp.co/widget.js"></script>
+    <script src="/static/javascript/highlight.min.js"></script>
     <script src="https://browser.sentry-cdn.com/4.3.0/bundle.min.js" crossorigin="anonymous"></script>
-    <script
-            src="https://code.jquery.com/jquery-3.4.1.min.js"
+    <script src="/static/javascript/msal.min.js"></script>
+    <script src="/static/javascript/jquery.min.js"
             crossorigin="anonymous"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/tether/1.2.0/js/tether.min.js"
-        crossorigin="anonymous"></script>
+    <script src="/static/javascript/tether.min.js"
+            crossorigin="anonymous"></script>
+    <script src="//cdn.headwayapp.co/widget.js"></script>
     <!--Project.js overrides-->
     <script src="/config/project-overrides"></script>
     <style>
         @font-face {
             font-family: 'OpenSans';
-                src: local('OpenSans'),
-                url('/static/fonts/OpenSans-Regular.ttf') format('ttf'),
-                url('/static/fonts/OpenSans-Regular.woff2') format('woff2'),
-                url('/static/fonts/OpenSans-Regular.woff') format('woff');
+            src: local('OpenSans'),
+            url('/static/fonts/OpenSans-Regular.ttf') format('ttf'),
+            url('/static/fonts/OpenSans-Regular.woff2') format('woff2'),
+            url('/static/fonts/OpenSans-Regular.woff') format('woff');
             font-weight: normal;
             font-display:swap;
         }
@@ -38,8 +32,8 @@
         @font-face {
             font-family: 'OpenSans';
             src: local('OpenSans'),
-                url('/static/fonts/OpenSans-Regular.woff2') format('woff2'),
-                url('/static/fonts/OpenSans-Regular.woff') format('woff');
+            url('/static/fonts/OpenSans-Regular.woff2') format('woff2'),
+            url('/static/fonts/OpenSans-Regular.woff') format('woff');
             font-weight: 400;
             font-display:swap;
         }
@@ -47,8 +41,8 @@
         @font-face {
             font-family: 'OpenSans';
             src: local('OpenSans'),
-                url('/static/fonts/OpenSans-Light.woff2') format('woff2'),
-                url('/static/fonts/OpenSans-Light.woff') format('woff');
+            url('/static/fonts/OpenSans-Light.woff2') format('woff2'),
+            url('/static/fonts/OpenSans-Light.woff') format('woff');
             font-weight: 300;
             font-display:swap;
         }
@@ -56,9 +50,9 @@
         @font-face {
             font-family: 'OpenSans';
             src: local('OpenSans'),
-                url('/static/fonts/OpenSans-Light.ttf') format('ttf'),
-                url('/static/fonts/OpenSans-Light.woff2') format('woff2'),
-                url('/static/fonts/OpenSans-Light.woff') format('woff');
+            url('/static/fonts/OpenSans-Light.ttf') format('ttf'),
+            url('/static/fonts/OpenSans-Light.woff2') format('woff2'),
+            url('/static/fonts/OpenSans-Light.woff') format('woff');
             font-weight: 100;
             font-display:swap;
         }
@@ -66,9 +60,9 @@
         @font-face {
             font-family: 'OpenSans';
             src: local('OpenSans'),
-                url('/static/fonts/OpenSans-Light.ttf') format('ttf'),
-                url('/static/fonts/OpenSans-Light.woff2') format('woff2'),
-                url('/static/fonts/OpenSans-Light.woff') format('woff');
+            url('/static/fonts/OpenSans-Light.ttf') format('ttf'),
+            url('/static/fonts/OpenSans-Light.woff2') format('woff2'),
+            url('/static/fonts/OpenSans-Light.woff') format('woff');
             font-weight: 200;
             font-display:swap;
         }
@@ -76,9 +70,9 @@
         @font-face {
             font-family: 'OpenSans';
             src: local('OpenSans'),
-                url('/static/fonts/OpenSans-Light.ttf') format('ttf'),
-                url('/static/fonts/OpenSans-Light.woff2') format('woff2'),
-                url('/static/fonts/OpenSans-Light.woff') format('woff');
+            url('/static/fonts/OpenSans-Light.ttf') format('ttf'),
+            url('/static/fonts/OpenSans-Light.woff2') format('woff2'),
+            url('/static/fonts/OpenSans-Light.woff') format('woff');
             font-weight:bold;
             font-display:swap;
         }
@@ -87,9 +81,9 @@
         @font-face {
             font-family: 'OpenSans';
             src: local('OpenSans'),
-                url('/static/fonts/OpenSans-Bold.ttf') format('ttf'),
-                url('/static/fonts/OpenSans-Bold.woff2') format('woff2'),
-                url('/static/fonts/OpenSans-Bold.woff') format('woff');
+            url('/static/fonts/OpenSans-Bold.ttf') format('ttf'),
+            url('/static/fonts/OpenSans-Bold.woff2') format('woff2'),
+            url('/static/fonts/OpenSans-Bold.woff') format('woff');
             font-weight:bold;
             font-display:swap;
         }
@@ -97,9 +91,9 @@
         @font-face {
             font-family: 'OpenSans';
             src: local('OpenSans'),
-                url('/static/fonts/OpenSans-SemiBold.ttf') format('ttf'),
-                url('/static/fonts/OpenSans-SemiBold.woff2') format('woff2'),
-                url('/static/fonts/OpenSans-SemiBold.woff') format('woff');
+            url('/static/fonts/OpenSans-SemiBold.ttf') format('ttf'),
+            url('/static/fonts/OpenSans-SemiBold.woff2') format('woff2'),
+            url('/static/fonts/OpenSans-SemiBold.woff') format('woff');
             font-weight:500;
             font-display:swap;
         }
@@ -107,9 +101,9 @@
         @font-face {
             font-family: 'OpenSans';
             src: local('OpenSans'),
-                url('/static/fonts/OpenSans-Bold.ttf') format('ttf'),
-                url('/static/fonts/OpenSans-Bold.woff2') format('woff2'),
-                url('/static/fonts/OpenSans-Bold.woff') format('woff');
+            url('/static/fonts/OpenSans-Bold.ttf') format('ttf'),
+            url('/static/fonts/OpenSans-Bold.woff2') format('woff2'),
+            url('/static/fonts/OpenSans-Bold.woff') format('woff');
             font-weight:600;
             font-display:swap;
         }
@@ -119,13 +113,13 @@
     <link rel="shortcut icon" href="/static/images/favicon.ico">
 </head>
 <body>
-    <div id="app"></div>
-    <div id="toast"></div>
-    <div id="modal"></div>
-    <div id="modal2"></div>
-    <div id="confirm"></div>
+<div id="app"></div>
+<div id="toast"></div>
+<div id="modal"></div>
+<div id="modal2"></div>
+<div id="confirm"></div>
 
-    <div class="e2e" id="e2e-request"></div>
-    <div class="e2e" id="e2e-error"></div>
+<div class="e2e" id="e2e-request"></div>
+<div class="e2e" id="e2e-error"></div>
 </body>
 </html>
