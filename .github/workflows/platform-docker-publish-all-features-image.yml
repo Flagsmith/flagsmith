@@ -4,6 +4,8 @@ on:
     push:
         tags:
             - "*"
+        branches:
+            - "feature/build-aio-image-with-all-features"
 
 env:
   FLAGSMITH_SAML_REVISION: v0.1.2
