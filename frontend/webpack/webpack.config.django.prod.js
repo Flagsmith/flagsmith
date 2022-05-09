@@ -5,11 +5,11 @@ const url = require('url');
 const path = require('path');
 const webpack = require('webpack');
 const HtmlWebpackPlugin = require('html-webpack-plugin');
-const ExtractTextPlugin = require('extract-text-webpack-plugin');
 const CleanWebpackPlugin = require('clean-webpack-plugin');
 const CopyWebpackPlugin = require('copy-webpack-plugin');
-const UglifyJSPlugin = require('uglifyjs-webpack-plugin');
+const TerserPlugin = require('terser-webpack-plugin');
 const moment = require('moment');
+const MiniCssExtractPlugin = require('mini-css-extract-plugin');
 
 const Project = require('../common/project');
 
@@ -22,16 +22,9 @@ module.exports = {
     },
     optimization: { // chunk bundle into Libraries, App JS and dumb components
         minimizer: [
-            new UglifyJSPlugin({
-                cache: true,
+            new TerserPlugin({
                 parallel: true,
-                sourceMap: true, // set to true if you want JS source maps
                 extractComments: true,
-                uglifyOptions: {
-                    compress: {
-                        drop_console: true,
-                    },
-                },
             }),
         ],
     },
@@ -43,7 +36,7 @@ module.exports = {
     output: {
         path: path.join(__dirname, '../../api/static'),
         publicPath: '/static/',
-        filename: '[name].[hash].js',
+        filename: '[name].[fullhash].js',
     },
 
     plugins: require('./plugins')
@@ -56,36 +49,35 @@ module.exports = {
                 SENTRY_RELEASE_VERSION: moment().valueOf().toString(),
             }),
 
-            // reduce filesize
-            new webpack.optimize.OccurrenceOrderPlugin(),
-
             // pull inline styles into cachebusted file
-            new ExtractTextPlugin({
-                filename: 'style.[hash].css',
-                allChunks: true,
+            new MiniCssExtractPlugin({
+                filename:  "[name].[fullhash].css",
+                chunkFilename:  "[id].[fullhash].css",
             }),
 
             // Copy static content
-            new CopyWebpackPlugin([
-                { from: path.join(__dirname, '../web/static'), to: path.join(__dirname, '../../api/static') },
-            ]),
+            new CopyWebpackPlugin(
+                {
+                    patterns:[
+                        { from: path.join(__dirname, '../web/static'), to: path.join(__dirname, '../../api/static') },
+                    ]
+                }),
 
         ]).concat(require('./pages').map(page => new HtmlWebpackPlugin({
             filename: `${page}.html`, // output template
             template: `../api/app/templates/${page}.html`, // template to use
             'assets': { // add these script/link tags
-                'client': '/[hash].js',
-                'style': 'style.[hash].css',
+                'client': '/[fullhash].js',
+                'style': 'style.[fullhash].css',
             },
         }))),
 
     module: {
-        rules: require('./loaders').concat([{
-            test: /\.scss$/,
-            use: ExtractTextPlugin.extract({
-                fallback: 'style-loader',
-                use: 'css-loader!sass-loader',
-            }),
-        }]),
+        rules: require('./loaders').concat([
+            {
+                test: /\.scss$/,
+                use: [MiniCssExtractPlugin.loader, 'css-loader','sass-loader'],
+            },
+        ]),
     },
 };
