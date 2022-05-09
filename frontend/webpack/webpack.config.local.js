@@ -6,7 +6,7 @@ const path = require('path');
 const whitelabel = typeof process.env.WHITELABEL === 'undefined' ? false : process.env.WHITELABEL;
 const styles = whitelabel ? path.join(__dirname, `../web/styles/whitelabel/${process.env.WHITELABEL}`) : path.join(__dirname, '../web/styles');
 module.exports = {
-    devtool: 'eval-cheap-source-map',
+    devtool: 'eval-source-map',
     mode: 'development',
     stats: 'errors-only',
     entry: [
