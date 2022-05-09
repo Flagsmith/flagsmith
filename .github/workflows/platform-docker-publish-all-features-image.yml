@@ -1,4 +1,4 @@
-name: Platform Publish Docker Images
+name: Publish Flagsmith Private Cloud Image
 
 on:
     push:
