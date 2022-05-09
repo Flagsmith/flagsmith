@@ -81,7 +81,7 @@ class TheComponent extends Component {
                           data-test={`feature-switch-${this.props.index}${environmentFlags[id] && environmentFlags[id].enabled ? '-on' : '-off'}`}
                           checked={environmentFlags[id] && environmentFlags[id].enabled}
                           onChange={() => {
-                              if (environment.minimum_change_request_approvals) {
+                              if (Utils.changeRequestsEnabled(environment.minimum_change_request_approvals)) {
                                   this.editFlag(projectFlag, environmentFlags[id]);
                                   return;
                               }
@@ -167,7 +167,7 @@ class TheComponent extends Component {
                                   data-test={`feature-switch-${this.props.index}${environmentFlags[id] && environmentFlags[id].enabled ? '-on' : '-off'}`}
                                   checked={environmentFlags[id] && environmentFlags[id].enabled}
                                   onChange={() => {
-                                      if (environment.minimum_change_request_approvals) {
+                                      if (Utils.changeRequestsEnabled(environment.minimum_change_request_approvals)) {
                                           this.editFlag(projectFlag, environmentFlags[id]);
                                           return;
                                       }

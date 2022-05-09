@@ -6,6 +6,10 @@ module.exports = Object.assign({}, require('./base/_utils'), {
             .replace(/\B(?=(\d{3})+(?!\d))/g, ',');
     },
 
+    changeRequestsEnabled(value) {
+        return typeof value ==='number'
+    },
+
     escapeHtml(html) {
         const text = document.createTextNode(html);
         const p = document.createElement('p');

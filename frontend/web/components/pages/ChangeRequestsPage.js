@@ -69,7 +69,7 @@ const ChangeRequestsPage = class extends Component {
                     )}
                     {hasPermission && (
                         <p>
-                            {environment && !environment.minimum_change_request_approvals ? (
+                            {environment && !Utils.changeRequestsEnabled(environment.minimum_change_request_approvals) ? (
                                 <span>
                                     To enable this feature set a minimum number of approvals in <Link to={`/project/${projectId}/environment/${environmentId}/settings`}>Environment Settings</Link>
                                 </span>
