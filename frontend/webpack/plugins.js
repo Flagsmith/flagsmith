@@ -12,13 +12,14 @@ module.exports = [
     new webpack.DefinePlugin({
         E2E: process.env.E2E,
     }),
-
-    // Fixes warning in moment-with-locales.min.js
-    // Module not found: Error: Can't resolve './locale' in ...
-    new webpack.IgnorePlugin(/^\.\/locale$/, /moment$/),
-
+    // // Fixes warning in moment-with-locales.min.js
+    // // Module not found: Error: Can't resolve './locale' in ...
+    new webpack.IgnorePlugin(/\.\/locale$/),
+    //
     // Copy static content
-    new CopyWebpackPlugin([
-        { from: path.join(__dirname, '../web/static'), to: path.join(__dirname, '../public/static') },
-    ]),
+    new CopyWebpackPlugin({
+        patterns: [
+            { from: path.join(__dirname, '../web/static'), to: path.join(__dirname, '../public/static') },
+        ]
+    }),
 ];
