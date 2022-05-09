@@ -280,7 +280,7 @@ const ChangeRequestsPage = class extends Component {
                                                     Feature
                                                 </strong>
 
-                                                <a target="_blank" className="btn--link btn--link-primary mt-2" href={`/project/${this.props.match.params.projectId}/environment/${this.props.match.params.environmentId}/features?feature=${projectFlag && projectFlag.id}`}>
+                                                <a target="_blank" className="btn--link btn--link-primary" href={`/project/${this.props.match.params.projectId}/environment/${this.props.match.params.environmentId}/features?feature=${projectFlag && projectFlag.id}`}>
                                                     {projectFlag && projectFlag.name}
                                                 </a>
                                             </Row>
