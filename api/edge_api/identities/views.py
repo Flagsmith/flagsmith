@@ -144,9 +144,18 @@ class EdgeIdentityViewSet(viewsets.ModelViewSet):
 class EdgeIdentityFeatureStateViewSet(viewsets.ModelViewSet):
     permission_classes = [IsAuthenticated, IdentityFeatureStatePermissions]
     lookup_field = "featurestate_uuid"
-
     serializer_class = EdgeIdentityFeatureStateSerializer
 
+    # Patch is not supported
+    http_method_names = [
+        "get",
+        "post",
+        "put",
+        "delete",
+        "head",
+        "options",
+        "trace",
+    ]
     pagination_class = None
 
     def initial(self, request, *args, **kwargs):
