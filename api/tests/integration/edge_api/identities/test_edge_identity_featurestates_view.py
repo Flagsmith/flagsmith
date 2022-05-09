@@ -389,6 +389,28 @@ def test_edge_identities_update_featurestate(
     assert args[0] == expected_identity_document
 
 
+def test_edge_identities_patch_returns_405(
+    admin_client,
+    environment,
+    environment_api_key,
+    identity_document,
+    dynamo_wrapper_mock,
+    feature,
+):
+    # Given
+    identity_uuid = identity_document["identity_uuid"]
+    featurestate_uuid = identity_document["identity_features"][0]["featurestate_uuid"]
+
+    url = reverse(
+        "api-v1:environments:edge-identity-featurestates-detail",
+        args=[environment_api_key, identity_uuid, featurestate_uuid],
+    )
+    # When
+    response = admin_client.put(url, data={})
+    # Then
+    assert response.status_code == status.HTTP_405_METHOD_NOT_ALLOWED
+
+
 def test_edge_identities_update_mv_featurestate(
     admin_client,
     environment,
