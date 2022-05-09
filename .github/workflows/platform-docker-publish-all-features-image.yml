@@ -8,6 +8,10 @@ on:
         tags:
             - "*"
 
+env:
+  FLAGSMITH_SAML_REVISION: v0.1.2
+  FLAGSMITH_WORKFLOWS_REVISION: v1.0.2
+
 jobs:
     build-dockerhub:
         runs-on: ubuntu-latest
@@ -23,8 +27,8 @@ jobs:
               uses: actions/checkout@v2
               with:
                 repository: flagsmith/flagsmith-saml
-                token: ${{ inputs.github_access_token }}
-                ref: ${{ inputs.flagsmith_saml_revision }}
+                token: ${{ secrets.GH_PRIVATE_ACCESS_TOKEN }}
+                ref: ${{ env.flagsmith_saml_revision }}
                 path: ./flagsmith-saml
 
             - name: Integrate SAML module
@@ -36,8 +40,8 @@ jobs:
               uses: actions/checkout@v2
               with:
                 repository: flagsmith/flagsmith-workflows
-                token: ${{ inputs.github_access_token }}
-                ref: ${{ inputs.flagsmith_workflows_revision }}
+                token: ${{ secrets.GH_PRIVATE_ACCESS_TOKEN }}
+                ref: ${{ env.flagsmith_saml_revision }}
                 path: ./flagsmith-workflows
 
             - name: Integrate Workflows Logic module
