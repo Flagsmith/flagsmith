@@ -99,7 +99,7 @@ if (isDev) { // Serve files from src directory and use webpack-dev-server
     app.set('views', 'public/static');
 }
 
-app.engine('handlebars', exphbs());
+app.engine('handlebars', exphbs.create().engine);
 app.set('view engine', 'handlebars');
 
 app.get('/robots.txt', (req, res) => {
