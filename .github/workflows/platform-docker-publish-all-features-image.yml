@@ -2,9 +2,6 @@ name: Publish Flagsmith Private Cloud Image
 
 on:
     push:
-        branches:
-            - main
-            - feature/build-aio-image-with-all-features
         tags:
             - "*"
 
@@ -60,8 +57,6 @@ jobs:
               with:
                   images: |
                       flagsmith/flagsmith-private-cloud
-                  flavor: |
-                      latest=${{ startsWith(github.ref, 'refs/heads/main') }}
                   tags: |
                       type=ref,event=branch
                       type=semver,pattern={{version}}
@@ -81,8 +76,6 @@ jobs:
 
             - name: Build and push amd64 images
               id: docker_build
-              # only build amd images for latest tag
-              if: ${{ !startsWith(github.ref, 'refs/tags/') }}
               uses: docker/build-push-action@v2
               with:
                   platforms: linux/amd64
