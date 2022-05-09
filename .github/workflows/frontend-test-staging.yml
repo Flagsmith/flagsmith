@@ -1,7 +1,10 @@
 name: Staging E2E Tests
 
 on:
-  workflow_dispatch
+  workflow_dispatch:
+    inputs:
+      msg:
+        default: 'Default Message'
 
 jobs:
     run-staging-e2e-tests:
