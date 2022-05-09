@@ -1,7 +1,12 @@
 name: Staging E2E Tests
 
 on:
-  workflow_dispatch
+  workflow_dispatch:
+    inputs:
+      logLevel:
+        description: 'Log level'
+        required: true
+        default: 'warning'
 
 jobs:
     run-staging-e2e-tests:
