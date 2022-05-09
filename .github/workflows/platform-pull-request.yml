@@ -5,33 +5,6 @@ on:
         types: [opened, synchronize, reopened, ready_for_review]
 
 jobs:
-    run-staging-e2e-tests:
-        if: github.event.pull_request.draft == false
-        runs-on: ubuntu-latest
-        name: Full Staging E2E tests
-        environment: staging
-
-        steps:
-          - name: Cloning repo
-            uses: actions/checkout@v2
-            with:
-              fetch-depth: 0
-
-          - name: Run Staging E2E Tests
-            working-directory: frontend
-            env:
-                E2E_TEST_TOKEN_STAGING: ${{ secrets.E2E_TEST_TOKEN }}
-                ENV: staging
-                SLACK_TOKEN: ${{ secrets.SLACK_TOKEN }}
-                STATIC_ASSET_CDN_URL: /
-            run: |
-               wget -q https://dl.google.com/linux/chrome/deb/pool/main/g/google-chrome-stable/google-chrome-stable_96.0.4664.110-1_amd64.deb
-               sudo apt install --allow-downgrades -y ./google-chrome*.deb -f
-               google-chrome --version
-               node -v
-               npm i
-               npm run test:staging              
-
     run-e2e-tests:
         if: github.event.pull_request.draft == false
         runs-on: ubuntu-latest
