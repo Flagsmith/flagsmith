@@ -200,7 +200,7 @@ def identity_document(environment_api_key, feature, identity_traits):
         "featurestate_uuid": "ad71c644-71df-4e83-9cb5-cd2cd0160200",
         "multivariate_feature_state_values": [],
         "feature_state_value": "feature_1_value",
-        "id": 1,
+        "django_id": 1,
         "feature": {
             "name": "feature_1",
             "type": "STANDARD",
@@ -211,7 +211,7 @@ def identity_document(environment_api_key, feature, identity_traits):
     _environment_feature_state_2_document = {
         "featurestate_uuid": "c6ec4de7-11a7-47c2-abc9-0d7bf0fc90e9",
         "multivariate_feature_state_values": [],
-        "id": 1,
+        "django_id": 1,
         "feature_state_value": "2.3",
         "feature": {
             "name": "feature_2",
@@ -225,17 +225,22 @@ def identity_document(environment_api_key, feature, identity_traits):
         "multivariate_feature_state_values": [
             {
                 "percentage_allocation": 50,
-                "multivariate_feature_option": {"value": "50_percent"},
+                "multivariate_feature_option": {"value": "50_percent", "id": 1},
+                "mv_fs_value_uuid": "9438d56d-e06e-4f6b-bca5-f66755f063c0",
                 "id": 1,
             },
             {
                 "percentage_allocation": 50,
-                "multivariate_feature_option": {"value": "other_50_percent"},
+                "mv_fs_value_uuid": "2a9293f6-7c53-43bc-a7a3-689679239106",
+                "multivariate_feature_option": {
+                    "value": "other_50_percent",
+                    "id": None,
+                },
                 "id": 2,
             },
         ],
         "feature_state_value": None,
-        "id": 1,
+        "django_id": 1,
         "feature": {
             "name": "multivariate_feature",
             "type": "MULTIVARIATE",
@@ -255,6 +260,7 @@ def identity_document(environment_api_key, feature, identity_traits):
         "created_date": "2021-09-21T10:12:42.230257+00:00",
         "environment_api_key": environment_api_key,
         "identity_uuid": "59efa2a7-6a45-46d6-b953-a7073a90eacf",
+        "django_id": None,
     }
 
 

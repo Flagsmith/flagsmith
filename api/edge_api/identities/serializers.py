@@ -114,12 +114,12 @@ class EdgeIdentityFeatureStateSerializer(serializers.Serializer):
                 raise serializers.ValidationError(
                     "Feature state already exists."
                 ) from e
-        if self.validated_data.get("multivariate_feature_state_values"):
-            self.instance.multivariate_feature_state_values = self.validated_data[
-                "multivariate_feature_state_values"
-            ]
-
         self.instance.set_value(feature_state_value)
+        self.instance.enabled = self.validated_data["enabled"]
+        self.instance.multivariate_feature_state_values = self.validated_data[
+            "multivariate_feature_state_values"
+        ]
+
         try:
             identity_dict = build_identity_dict(identity)
         except InvalidPercentageAllocation as e:
@@ -129,6 +129,7 @@ class EdgeIdentityFeatureStateSerializer(serializers.Serializer):
                     "for feature must be less than 100 percent"
                 }
             ) from e
+
         Identity.dynamo_wrapper.put_item(identity_dict)
         return self.instance
 
