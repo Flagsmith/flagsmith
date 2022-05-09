@@ -92,6 +92,9 @@ const CreateFlag = class extends Component {
     }
 
     userOverridesPage = (page) => {
+        if (Utils.getIsEdge()) {
+            return
+        }
         data.get(`${Project.api}environments/${this.props.environmentId}/${Utils.getFeatureStatesEndpoint()}/?anyIdentity=1&feature=${this.props.projectFlag.id}&page=${page}`)
             .then((userOverrides) => {
                 this.setState({
