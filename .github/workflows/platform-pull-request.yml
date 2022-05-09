@@ -18,6 +18,7 @@ jobs:
               fetch-depth: 0
 
           - name: Run Staging E2E Tests
+            working-directory: frontend
             env:
                 E2E_TEST_TOKEN_PROD: ${{ secrets.E2E_TEST_TOKEN }}
                 ENV: staging
