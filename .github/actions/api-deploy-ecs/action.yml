@@ -92,7 +92,7 @@ runs:
           repository: flagsmith/flagsmith-auth-controller
           token: ${{ inputs.github_access_token }}
           ref: ${{ inputs.flagsmith_auth_controller_revision }}
-          path: ./auth-controller
+          path: ./flagsmith-auth-controller
 
       - name: Integrate Auth Controller module
         run: |
