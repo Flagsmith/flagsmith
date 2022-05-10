@@ -42,6 +42,7 @@ class Identity(models.Model):
             identity / segment priorities
         """
         segments = self.get_segments(traits=traits)
+
         # define sub queries
         belongs_to_environment_query = Q(environment=self.environment)
         overridden_for_identity_query = Q(identity=self)
