@@ -173,6 +173,9 @@
 			color: $dark-highlight-color;
 			&:hover {
 				color: $dark-highlight-color !important;
+				&.text-white {
+					color: white !important;
+				}
 			}
 		}
 		.list-item:hover a {
@@ -193,5 +196,12 @@
 				background-color: $panel-bg-darker;
 			}
 		}
+	}
+}
+
+
+a.text-white {
+	&:hover {
+		color: white !important;
 	}
 }
