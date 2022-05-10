@@ -34,7 +34,9 @@ class CustomUserCreateSerializer(UserCreateSerializer):
                 is_authentication_method_valid,
             )
 
-            is_authentication_method_valid(self.context.get("request"), email=value)
+            is_authentication_method_valid(
+                self.context.get("request"), email=value, raise_exception=True
+            )
 
         if FFAdminUser.objects.filter(email__iexact=value).count() != 0:
             raise serializers.ValidationError(
