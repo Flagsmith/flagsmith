@@ -72,7 +72,7 @@ runs:
         run: |
           mv ./flagsmith-saml/saml ./api
           cat ./flagsmith-saml/requirements.txt >> ./api/requirements.txt
-          echo "" >> ./api/requirements.txt
+          echo "" >> ./api/requirements.txt  # add a new line so that future concatenation works
         shell: bash
 
       - name: Checkout Workflows Logic package
@@ -99,7 +99,7 @@ runs:
         run: |
           mv ./flagsmith-auth-controller/auth_controller ./api
           cat ./flagsmith-auth-controller/requirements.txt >> ./api/requirements.txt
-          echo "" >> ./api/requirements.txt
+          echo "" >> ./api/requirements.txt # add a new line so that future concatenation works
         shell: bash
 
       - name: Set ECR tag
