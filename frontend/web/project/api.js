@@ -107,15 +107,15 @@ global.API = {
     },
     setCookie(key, v) {
         try {
-            require('js-cookie').set(key, v, { path: '/' });
-            require('js-cookie').set(key, v, { path: '/', domain: Project.cookieDomain });
+            require('js-cookie').set(key, v, { path: '/', secure: true });
+            require('js-cookie').set(key, v, { path: '/', domain: Project.cookieDomain, secure: true });
         } catch (e) {
 
         }
     },
     setInvite(id) {
         const cookie = require('js-cookie');
-        cookie.set('invite', id);
+        cookie.set('invite', id, { secure: true });
     },
     getInvite() {
         return require('js-cookie').get('invite');
