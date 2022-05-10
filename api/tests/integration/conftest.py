@@ -5,6 +5,7 @@ import pytest
 from django.test import Client as DjangoClient
 from django.urls import reverse
 from rest_framework.test import APIClient
+from tests.integration.helpers import create_mv_option_with_api
 
 from app.utils import create_hash
 from organisations.models import Organisation
@@ -139,21 +140,9 @@ def feature(admin_client, project, default_feature_value):
 
 @pytest.fixture()
 def mv_option_50_percent(project, admin_client, feature, mv_option_value):
-    url = reverse(
-        "api-v1:projects:feature-mv-options-list",
-        args=[project, feature],
+    return create_mv_option_with_api(
+        admin_client, project, feature, 50, mv_option_value
     )
-    data = {
-        "type": "unicode",
-        "feature": feature,
-        "string_value": mv_option_value,
-        "default_percentage_allocation": 50,
-    }
-    return admin_client.post(
-        url,
-        data=json.dumps(data),
-        content_type="application/json",
-    ).json()["id"]
 
 
 @pytest.fixture()
