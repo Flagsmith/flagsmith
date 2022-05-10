@@ -96,3 +96,35 @@ class GithubLoginSerializerTestCase(TestCase):
         # Then
         MockGithubUser.assert_called_with(code=access_token)
         mock_github_user.get_user_info.assert_called()
+
+
+def test_OAuthLoginSerializer_calls_is_authentication_method_valid_correctly_if_auth_controller_is_installed(
+    settings, rf, mocker, db
+):
+    # Given
+    settings.AUTH_CONTROLLER_INSTALLED = True
+
+    request = rf.post("/some-login/url")
+    user_email = "test_user@test.com"
+    mocked_auth_controller = mocker.MagicMock()
+    mocker.patch.dict(
+        "sys.modules", {"auth_controller.controller": mocked_auth_controller}
+    )
+
+    serializer = OAuthLoginSerializer(
+        data={"access_token": "some_token"}, context={"request": request}
+    )
+    # monkey patch the get_user_info method to return the mock user data
+    serializer.get_user_info = lambda: {"email": user_email}
+
+    serializer.is_valid(raise_exception=True)
+
+    # When
+    serializer.save()
+
+    # Then
+    mocked_auth_controller.is_authentication_method_valid.assert_called_with(
+        request,
+        email=user_email,
+        raise_exception=True,
+    )
