@@ -178,9 +178,28 @@ const Aside = class extends Component {
                                         {(
                                             <React.Fragment>
                                                 <div className="aside__main-content" style={{ 'overflowY': 'auto' }}>
-
                                                     <div className="pl-4 pr-4 pt-4">
-                                                        <h1 className="aside__project-title">{project && project.name ? project.name : '...'}</h1>
+                                                        <Row>
+                                                            <h1 className="aside__project-title">
+                                                                {project && project.name ? project.name : '...'}
+                                                                {flagsmith.hasFeature('edge_identities') && (
+                                                                    <span
+                                                                      style={{
+                                                                          position: 'relative',
+                                                                          bottom: 2,
+                                                                          left: 5,
+                                                                      }}
+                                                                      className="chip chip--active bg-secondary"
+                                                                    >
+                                                                        <span className="font-weight-bold">
+                                                                            {Utils.getIsEdge() ? 'Edge' : 'Core'}
+                                                                        </span>
+                                                                    </span>
+                                                                )}
+
+                                                            </h1>
+
+                                                        </Row>
                                                     </div>
                                                     <Permission level="project" permission="ADMIN" id={this.props.projectId}>
                                                         {({ permission, isLoading }) => permission && (

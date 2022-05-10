@@ -6,6 +6,9 @@
     clear: both;
     height: 0;
 }
+.bg-secondary {
+    background-color: $bt-brand-secondary;
+}
 .clearfix { display: inline-block; }
 /* start commented backslash hack \*/
 * html .clearfix { height: 1%; }
