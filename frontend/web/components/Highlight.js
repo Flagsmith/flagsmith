@@ -1,10 +1,20 @@
 import React from 'react';
 
-if (typeof hljs !=="undefined") {
+if (typeof hljs !== 'undefined') {
     hljs.initHighlightingOnLoad();
 }
-
-const defaultValue = {__html:"Enter a value..."}
+function escapeHtml(unsafe) {
+    if (!unsafe || !unsafe.__html) return unsafe;
+    return {
+        __html: unsafe.__html
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;')
+            .replace(/'/g, '&#039;'),
+    };
+}
+const defaultValue = { __html: 'Enter a value...' };
 class Highlight extends React.Component {
   state = {
       value: { __html: this.props.children },
@@ -26,12 +36,11 @@ class Highlight extends React.Component {
   highlightCode = () => {
       const nodes = this.el.querySelectorAll('pre code');
 
-      if (typeof hljs!=="undefined"){
+      if (typeof hljs !== 'undefined') {
           for (let i = 0; i < nodes.length; i++) {
               hljs.highlightBlock(nodes[i]);
           }
       }
-
   };
 
   setEl(el) {
@@ -65,10 +74,11 @@ class Highlight extends React.Component {
   };
 
     onFocus= () => {
-        this.setState({focus:true})
+        this.setState({ focus: true });
     }
+
     onBlur= () => {
-        this.setState({focus:false})
+        this.setState({ focus: false });
         this.highlightCode();
     }
 
@@ -97,7 +107,7 @@ class Highlight extends React.Component {
                   onFocus={this.onFocus}
                   onInput={this._handleInput}
                   className={className}
-                  dangerouslySetInnerHTML={this.state.focus? this.state.value : this.props.children ? {...this.state.value} : defaultValue}
+                  dangerouslySetInnerHTML={escapeHtml(this.state.focus ? this.state.value : this.props.children ? { ...this.state.value } : defaultValue)}
                 />
             </pre>
         );
