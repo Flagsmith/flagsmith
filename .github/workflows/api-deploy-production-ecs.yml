@@ -39,6 +39,7 @@ jobs:
                 aws_task_definitions_directory_path: infrastructure/aws/production
                 flagsmith_saml_revision: v0.1.2
                 flagsmith_workflows_revision: v1.0.2
+                flagsmith_auth_controller_revision: v0.0.1
 
     run-tests:
         runs-on: ubuntu-latest

@@ -25,14 +25,25 @@ class OAuthLoginSerializer(serializers.Serializer):
         abstract = True
 
     def create(self, validated_data):
-        user = self._get_user()
+        user_info = self.get_user_info()
+        if settings.AUTH_CONTROLLER_INSTALLED:
+            from auth_controller.controller import (
+                is_authentication_method_valid,
+            )
+
+            is_authentication_method_valid(
+                self.context.get("request"),
+                email=user_info.get("email"),
+                raise_exception=True,
+            )
+
+        user = self._get_user(user_info)
         user_logged_in.send(
             sender=UserModel, request=self.context.get("request"), user=user
         )
         return Token.objects.get_or_create(user=user)[0]
 
-    def _get_user(self):
-        user_data = self.get_user_info()
+    def _get_user(self, user_data: dict):
         email = user_data.get("email")
         existing_user = UserModel.objects.filter(email=email).first()
 
