@@ -14,6 +14,9 @@ const postToSlack = process.env.VERCEL_ENV === 'production';
 
 const isDev = process.env.NODE_ENV !== 'production';
 const port = process.env.PORT || 8080;
+const xFrameOptions = require('x-frame-options');
+
+app.use(xFrameOptions());
 
 app.get('/config/project-overrides', (req, res) => {
     const getVariable = ({ name, value }) => {
@@ -100,8 +103,8 @@ if (isDev) { // Serve files from src directory and use webpack-dev-server
 }
 
 app.engine('handlebars', exphbs.create({
-    layoutsDir: "",
-    defaultLayout: "",
+    layoutsDir: '',
+    defaultLayout: '',
 }).engine);
 app.set('view engine', 'handlebars');
 
