@@ -60,8 +60,13 @@ class InfluxDBWrapper:
     def write(self):
         try:
             self.write_api.write(bucket=settings.INFLUXDB_BUCKET, record=self.records)
-        except HTTPError as e:
-            capture_exception(e)
+        except HTTPError:
+            logger.warning("Failed to write records to Influx.")
+            logger.debug(
+                "Records: %s. Bucket: %s",
+                self.records,
+                settings.INFLUXDB_BUCKET,
+            )
 
     @staticmethod
     def influx_query_manager(
