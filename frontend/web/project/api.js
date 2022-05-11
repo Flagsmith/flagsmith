@@ -108,8 +108,8 @@ global.API = {
     setCookie(key, v) {
         try {
             if (!v) {
-                require('js-cookie').remove(key, v, { path: '/', domain: Project.cookieDomain });
-                require('js-cookie').remove(key, v, { path: '/' });
+                require('js-cookie').remove(key, { path: '/', domain: Project.cookieDomain });
+                require('js-cookie').remove(key, { path: '/' });
             } else {
                 require('js-cookie').set(key, v, { path: '/' });
             }
