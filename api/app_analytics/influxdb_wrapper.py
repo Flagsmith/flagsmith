@@ -11,8 +11,6 @@ from urllib3.exceptions import HTTPError
 
 logger = logging.getLogger(__name__)
 
-logger = logging.getLogger(__name__)
-
 url = settings.INFLUXDB_URL
 token = settings.INFLUXDB_TOKEN
 influx_org = settings.INFLUXDB_ORG
@@ -26,7 +24,7 @@ range_bucket_mappings = {
 retries = Retry(connect=3, read=3, redirect=3)
 # Set a timeout to prevent threads being potentially stuck open due to network weirdness
 influxdb_client = InfluxDBClient(
-    url=url, token=token, org=influx_org, retries=retries, timeout=3
+    url=url, token=token, org=influx_org, retries=retries, timeout=3000
 )
 
 DEFAULT_DROP_COLUMNS = (
