@@ -105,7 +105,7 @@ class EdgeIdentityFeatureStateSerializer(serializers.Serializer):
 
     def save(self, **kwargs):
         identity = self.context["view"].identity
-        feature_state_value = self.validated_data.pop("feature_state_value")
+        feature_state_value = self.validated_data.pop("feature_state_value", None)
         if not self.instance:
             self.instance = EngineFeatureStateModel(**self.validated_data)
             try:
@@ -115,10 +115,13 @@ class EdgeIdentityFeatureStateSerializer(serializers.Serializer):
                     "Feature state already exists."
                 ) from e
         self.instance.set_value(feature_state_value)
-        self.instance.enabled = self.validated_data["enabled"]
-        self.instance.multivariate_feature_state_values = self.validated_data[
-            "multivariate_feature_state_values"
-        ]
+        self.instance.enabled = self.validated_data.get(
+            "enabled", self.instance.enabled
+        )
+        self.instance.multivariate_feature_state_values = self.validated_data.get(
+            "multivariate_feature_state_values",
+            self.instance.multivariate_feature_state_values,
+        )
 
         try:
             identity_dict = build_identity_dict(identity)
