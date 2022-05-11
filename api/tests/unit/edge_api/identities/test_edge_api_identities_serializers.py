@@ -28,7 +28,7 @@ def test_edge_identity_feature_state_serializer_save_allows_missing_mvfsvs(
     assert result
 
     mock_dynamo_wrapper.put_item.assert_called_once()
-    saved_identity_record, *_ = mock_dynamo_wrapper.put_item.call_args.args
+    saved_identity_record = mock_dynamo_wrapper.put_item.call_args[0][0]
     assert saved_identity_record["identifier"] == identity.identifier
     assert len(saved_identity_record["identity_features"]) == 1
 
