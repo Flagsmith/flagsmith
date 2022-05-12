@@ -120,6 +120,7 @@ const UsersPage = class extends Component {
                                                             title="Users"
                                                             className="no-pad"
                                                             isLoading={isLoading}
+                                                            filterLabel={Utils.getIsEdge()?"Starts with":"Contains"}
                                                             icon="ion-md-person"
                                                             items={identities}
                                                             paging={identitiesPaging}

@@ -67,8 +67,10 @@ export const viewFeature = async (index) => {
 export const addSegmentOverrideConfig = async (index, value, selectionIndex = 0) => {
     await click(byId('segment_overrides'));
     await click(byId(`select-segment-option-${selectionIndex}`));
+
     await waitForElementVisible(byId(`segment-override-value-${index}`));
     await setText(byId(`segment-override-value-${0}`), value);
+    await click(byId('segment-override-toggle-0'));
 };
 
 export const addSegmentOverride = async (index, value, selectionIndex = 0) => {
@@ -85,7 +87,7 @@ export const saveFeature = async () => {
     await click('#update-feature-btn');
     await waitForElementVisible('.toast-message');
     await waitForElementNotExist('.toast-message');
-    await closeModal()
+    await closeModal();
     await waitForElementNotExist('#create-feature-modal');
 };
 
@@ -94,7 +96,7 @@ export const saveFeatureSegments = async () => {
     await click('#update-feature-segments-btn');
     await waitForElementVisible('.toast-message');
     await waitForElementNotExist('.toast-message');
-    await closeModal()
+    await closeModal();
     await waitForElementNotExist('#create-feature-modal');
 };
 
@@ -131,25 +133,26 @@ export const login = async (email, password) => {
     await waitForElementVisible('#project-select-page');
 };
 
-export const createRemoteConfig = async (index, name, value, description = 'description') => {
+export const createRemoteConfig = async (index, name, value, description = 'description', defaultOff) => {
     const expectedValue = typeof value === 'string' ? `"${value}"` : `${value}`;
     await gotoFeatures();
     await click('#show-create-feature-btn');
     await setText(byId('featureID'), name);
     await setText(byId('featureValue'), value);
     await setText(byId('featureDesc'), description);
+    if (!defaultOff) {
+        await click(byId('toggle-feature-button'));
+    }
     await click(byId('create-feature-btn'));
     await waitForElementVisible(byId(`feature-value-${index}`));
     await assertTextContent(byId(`feature-value-${index}`), expectedValue);
 };
-export const closeModal = async ()=> {
-
-    await t.click("body", {
+export const closeModal = async () => {
+    await t.click('body', {
         offsetX: 50,
-        offsetY: 50
-    })
-
-}
+        offsetY: 50,
+    });
+};
 export const createFeature = async (index, name, value, description = 'description') => {
     await gotoFeatures();
     await click('#show-create-feature-btn');
