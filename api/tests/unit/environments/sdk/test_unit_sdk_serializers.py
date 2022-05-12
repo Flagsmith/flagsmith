@@ -31,7 +31,7 @@ def test_identify_with_traits_serializer_runs_identity_integrations_on_create(
     )
 
     mock_identify_integrations = mocker.patch(
-        "environments.sdk.serializers.identify_integrations"
+        "environments.sdk.serializers.identify_integrations", autospec=True
     )
 
     # When
