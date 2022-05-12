@@ -106,7 +106,7 @@ test('Segments Test', async () => {
     log('Create features', 'Segment Test');
     await gotoFeatures();
     await createFeature(0, 'flag', true);
-    await createRemoteConfig(0, 'config', 0);
+    await createRemoteConfig(0, 'config', 0, 'Description');
 
     log('Toggle flag for user', 'Segment Test');
     await goToUser(0);

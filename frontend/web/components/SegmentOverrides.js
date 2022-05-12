@@ -23,7 +23,7 @@ const SegmentOverride = ConfigProvider(SortableElement(({ hasFeature, controlVal
         <div data-test={`segment-override-${index}`} style={{ zIndex: 9999999999 }} className="panel panel-without-heading panel--draggable mb-2">
             <Row className="panel-content" space>
                 <div
-                    className="flex flex-1 text-left"
+                  className="flex flex-1 text-left"
                 >
                     <strong>
                         {v.segment.name}
@@ -34,9 +34,10 @@ const SegmentOverride = ConfigProvider(SortableElement(({ hasFeature, controlVal
                         <Column>
                             <div>
                                 <Switch
-                                    disabled={disabled}
-                                    checked={v.enabled}
-                                    onChange={toggle}
+                                  data-test={`segment-override-toggle-${index}`}
+                                  disabled={disabled}
+                                  checked={v.enabled}
+                                  onChange={toggle}
                                 />
                             </div>
                         </Column>
@@ -44,19 +45,19 @@ const SegmentOverride = ConfigProvider(SortableElement(({ hasFeature, controlVal
                         {/* Input to adjust order without drag for E2E */}
                         {E2E && (
                             <input
-                                data-test={`sort-${index}`}
-                                onChange={(e) => {
-                                    onSortEnd({ oldIndex: index, newIndex: parseInt(Utils.safeParseEventValue(e)) });
-                                }}
-                                type="text"
+                              data-test={`sort-${index}`}
+                              onChange={(e) => {
+                                  onSortEnd({ oldIndex: index, newIndex: parseInt(Utils.safeParseEventValue(e)) });
+                              }}
+                              type="text"
                             />
                         )}
 
                         <button
-                            disabled={disabled}
-                            id="remove-feature"
-                            onClick={confirmRemove}
-                            className="btn btn--with-icon"
+                          disabled={disabled}
+                          id="remove-feature"
+                          onClick={confirmRemove}
+                          className="btn btn--with-icon"
                         >
                             <RemoveIcon/>
                         </button>
@@ -72,18 +73,19 @@ const SegmentOverride = ConfigProvider(SortableElement(({ hasFeature, controlVal
                             Value (optional)
                         </label>
                         <ValueEditor
-                            value={v.value}
-                            data-test={`segment-override-value-${index}`}
-                            onChange={e => setValue(Utils.getTypedValue(Utils.safeParseEventValue(e)))}
-                            placeholder="Value e.g. 'big' "
+                          value={v.value}
+                          data-test={`segment-override-value-${index}`}
+                          onChange={e => setValue(Utils.getTypedValue(Utils.safeParseEventValue(e)))}
+                          placeholder="Value e.g. 'big' "
                         />
                     </>
                 )}
                 {!!controlValue && (
-                    <div className={"mt-2 text-right"}>
-                        <Button onClick={()=>{
-                            setValue(Utils.getTypedValue(Utils.safeParseEventValue(controlValue)))
-                        }}>
+                    <div className="mt-2 text-right">
+                        <Button onClick={() => {
+                            setValue(Utils.getTypedValue(Utils.safeParseEventValue(controlValue)));
+                        }}
+                        >
                             Set as Environment Value
                         </Button>
                     </div>
@@ -94,23 +96,23 @@ const SegmentOverride = ConfigProvider(SortableElement(({ hasFeature, controlVal
                     <div>
                         <FormGroup className="mb-4">
                             <VariationOptions
-                                disabled
-                                select={flagsmith.hasFeature("segment_mv_percentages")?false: true}
-                                controlValue={controlValue}
-                                variationOverrides={v.multivariate_options}
-                                setVariations={setVariations}
-                                setValue={setValue}
-                                updateVariation={() => {}}
-                                weightTitle="Override Weight %"
-                                multivariateOptions={multivariateOptions}
-                                removeVariation={() => {}}
+                              disabled
+                              select={!flagsmith.hasFeature('segment_mv_percentages')}
+                              controlValue={controlValue}
+                              variationOverrides={v.multivariate_options}
+                              setVariations={setVariations}
+                              setValue={setValue}
+                              updateVariation={() => {}}
+                              weightTitle="Override Weight %"
+                              multivariateOptions={multivariateOptions}
+                              removeVariation={() => {}}
                             />
                         </FormGroup>
                     </div>
                 )}
             </div>
         </div>
-    )
+    );
 }));
 
 const SegmentOverrideList = SortableContainer(({ disabled, multivariateOptions, onSortEnd, items, controlValue, confirmRemove, toggle, setValue, setVariations }) => (
@@ -127,8 +129,8 @@ const SegmentOverrideList = SortableContainer(({ disabled, multivariateOptions, 
               controlValue={controlValue}
               toggle={() => toggle(index)}
               setVariations={newVariations => setVariations(index, newVariations)}
-              setValue={value => {
-                  setValue(index, value)
+              setValue={(value) => {
+                  setValue(index, value);
               }}
             />
         ))}
