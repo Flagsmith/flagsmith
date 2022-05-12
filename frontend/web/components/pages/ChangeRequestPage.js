@@ -77,7 +77,7 @@ const ChangeRequestsPage = class extends Component {
             </p>
         ), ()=>{
 
-            AppActions.deleteChangeRequestØ(this.props.match.params.id, ()=>{
+            AppActions.deleteChangeRequest(this.props.match.params.id, ()=>{
                 this.context.router.history.replace(`/project/${this.props.match.params.projectId}/environment/${this.props.match.params.environmentId}/change-requests`);
             })
 
