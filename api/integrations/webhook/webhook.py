@@ -1,7 +1,6 @@
 import logging
 import typing
 
-from environments.identities.traits.models import Trait
 from environments.identities.traits.serializers import TraitSerializerBasic
 from integrations.common.wrapper import AbstractBaseIdentityIntegrationWrapper
 from webhooks.webhooks import call_integration_webhook
@@ -11,6 +10,7 @@ from .serializers import IntegrationFeatureStateSerializer, SegmentSerializer
 
 if typing.TYPE_CHECKING:
     from environments.identities.models import Identity
+    from environments.identities.traits.models import Trait
     from features.models import FeatureState
 
 logger = logging.getLogger(__name__)
@@ -28,9 +28,9 @@ class WebhookWrapper(AbstractBaseIdentityIntegrationWrapper):
 
     def generate_user_data(
         self,
-        identity: Identity,
-        feature_states: typing.List[FeatureState],
-        trait_models: typing.List[Trait] = None,
+        identity: "Identity",
+        feature_states: typing.List["FeatureState"],
+        trait_models: typing.List["Trait"] = None,
     ) -> dict:
         serialized_flags = IntegrationFeatureStateSerializer(
             feature_states, many=True, context={"identity": identity}
