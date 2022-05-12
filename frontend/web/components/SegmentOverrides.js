@@ -80,7 +80,7 @@ const SegmentOverride = ConfigProvider(SortableElement(({ hasFeature, controlVal
                         />
                     </>
                 )}
-                {!!controlValue && (
+                {!!controlValue && (!multivariateOptions || !multivariateOptions.length) && (
                     <div className="mt-2 text-right">
                         <Button onClick={() => {
                             setValue(Utils.getTypedValue(Utils.safeParseEventValue(controlValue)));
@@ -151,31 +151,30 @@ class TheComponent extends Component {
 
     addItem = () => {
         const value = (this.props.value || []).map(val => ({ ...val, priority: val.priority }));
-        this.setState({ isLoading: true });
-        _data.post(`${Project.api}features/feature-segments/`, {
+        const newValue = {
             feature: this.props.feature,
             segment: this.state.selectedSegment.value,
             environment: ProjectStore.getEnvironmentIdFromKey(this.props.environmentId),
             priority: value.length,
-        }).then(res => _data.post(`${Project.api}features/featurestates/`, {
-            enabled: false,
-            feature: this.props.feature,
-            environment: ProjectStore.getEnvironmentIdFromKey(this.props.environmentId),
-            feature_segment: res.id,
-            feature_state_value: Utils.valueToFeatureState(''),
-        }).then(res2 => [res, res2])).then(([res, res2]) => {
-            res.value = Utils.featureStateToValue(res2.feature_state_value);
-            res.enabled = res2.enabled;
-            res.feature_segment_value = res2;
-            this.props.onChange([res].concat(value).map((v, i) => ({ ...v, priority: i })));
-            this.setState({
-                selectedSegment: null,
-                isLoading: false,
-            });
-        });
+            feature_segment_value: {
+                enabled: false,
+                feature: this.props.feature,
+                environment: ProjectStore.getEnvironmentIdFromKey(this.props.environmentId),
+                feature_segment: null,
+                feature_state_value: Utils.valueToFeatureState(''),
+            },
+        };
+        this.props.onChange([newValue].concat(value));
     }
 
     confirmRemove = (i) => {
+        if (!this.props.value[i].id) {
+            this.props.onChange(_.filter(this.props.value, (v, index) => index !== i).map((v, i) => ({
+                ...v,
+                priority: i,
+            })));
+            return;
+        }
         this.setState({ isLoading: true });
         openConfirm(
             <h3>Delete Segment Override</h3>,
@@ -184,14 +183,16 @@ class TheComponent extends Component {
                 <strong>{name}</strong>
             </p>,
             () => {
-                _data.delete(`${Project.api}features/feature-segments/${this.props.value[i].id}/`)
-                    .then((res) => {
-                        this.props.onChange(_.filter(this.props.value, (v, index) => index !== i).map((v, i) => ({
-                            ...v,
-                            priority: i,
-                        })));
-                        this.setState({ isLoading: false });
-                    });
+                if (this.props.value[i].id) {
+                    _data.delete(`${Project.api}features/feature-segments/${this.props.value[i].id}/`)
+                        .then((res) => {
+                            this.props.onChange(_.filter(this.props.value, (v, index) => index !== i).map((v, i) => ({
+                                ...v,
+                                priority: i,
+                            })));
+                            this.setState({ isLoading: false });
+                        });
+                }
             },
             () => {
                 this.setState({ isLoading: false });

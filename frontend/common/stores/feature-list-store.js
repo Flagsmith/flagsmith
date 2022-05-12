@@ -122,62 +122,90 @@ const controller = {
     },
     editFeatureState: (projectId, environmentId, flag, projectFlag, environmentFlag, segmentOverrides, mode) => {
         let prom;
+        const segmentOverridesProm = Promise.all((segmentOverrides || []).map((v, i) => {
+            if (!v.id) {
+                return data.post(`${Project.api}features/feature-segments/`, {
+                    feature: v.feature,
+                    segment: v.segment,
+                    environment: v.environment,
+                    priority: v.priority,
+                }).then(featureSegment => data.post(`${Project.api}features/featurestates/`, {
+                    enabled: v.feature_segment_value.enabled,
+                    feature: v.feature_segment_value.feature,
+                    environment: v.feature_segment_value.environment,
+                    feature_segment: featureSegment.id,
+                    feature_state_value: v.feature_segment_value.feature_state_value,
+                }).then((featureSegmentValue) => {
+                    debugger
+                    const newValue = {
+                        ...featureSegment,
+                        feature_state_value: featureSegmentValue,
+                    };
+                    segmentOverrides[i] = newValue;
+                }));
+            }
+            return Promise.resolve();
+        }));
+
         store.saving();
         API.trackEvent(Constants.events.EDIT_FEATURE);
-        if (mode !== 'VALUE') {
-            prom = Promise.resolve();
-        } else if (environmentFlag) {
-            prom = data.get(`${Project.api}environments/${environmentId}/featurestates/${environmentFlag.id}/`)
-                .then((environmentFeatureStates) => {
-                    const multivariate_feature_state_values = environmentFeatureStates.multivariate_feature_state_values && environmentFeatureStates.multivariate_feature_state_values.map((v) => {
-                        const matching = flag.multivariate_options.find(m => m.id === v.multivariate_feature_option);
-                        if (!matching) { // multivariate is new, meaning the value is already correct from the default allocation
-                            return v;
-                        }
-                        // multivariate is existing, override the existing with the new value
-                        return { ...v, percentage_allocation: matching.default_percentage_allocation };
+
+        segmentOverridesProm.then(() => {
+            if (mode !== 'VALUE') {
+                prom = Promise.resolve();
+            } else if (environmentFlag) {
+                prom = data.get(`${Project.api}environments/${environmentId}/featurestates/${environmentFlag.id}/`)
+                    .then((environmentFeatureStates) => {
+                        const multivariate_feature_state_values = environmentFeatureStates.multivariate_feature_state_values && environmentFeatureStates.multivariate_feature_state_values.map((v) => {
+                            const matching = flag.multivariate_options.find(m => m.id === v.multivariate_feature_option);
+                            if (!matching) { // multivariate is new, meaning the value is already correct from the default allocation
+                                return v;
+                            }
+                            // multivariate is existing, override the existing with the new value
+                            return { ...v, percentage_allocation: matching.default_percentage_allocation };
+                        });
+                        environmentFlag.multivariate_feature_state_values = multivariate_feature_state_values;
+                        return data.put(`${Project.api}environments/${environmentId}/featurestates/${environmentFlag.id}/`, Object.assign({}, environmentFlag, {
+                            feature_state_value: flag.initial_value,
+                            hide_from_client: flag.hide_from_client,
+                            enabled: flag.default_enabled,
+                        }));
                     });
-                    environmentFlag.multivariate_feature_state_values = multivariate_feature_state_values;
-                    return data.put(`${Project.api}environments/${environmentId}/featurestates/${environmentFlag.id}/`, Object.assign({}, environmentFlag, {
-                        feature_state_value: flag.initial_value,
-                        hide_from_client: flag.hide_from_client,
-                        enabled: flag.default_enabled,
-                    }));
-                });
-        } else {
-            prom = data.post(`${Project.api}environments/${environmentId}/featurestates/`, Object.assign({}, flag, {
-                enabled: false,
-                environment: environmentId,
-                feature: projectFlag,
-            }));
-        }
-
-        const segmentOverridesRequest = mode === 'SEGMENT' && segmentOverrides
-            ? data.post(`${Project.api}features/feature-segments/update-priorities/`, segmentOverrides.map((override, index) => ({
-                id: override.id,
-                priority: index,
-            }))).then(() => Promise.all(segmentOverrides.map(override => data.put(`${Project.api}features/featurestates/${override.feature_segment_value.id}/`, {
-                ...override.feature_segment_value,
-                multivariate_feature_state_values: override.multivariate_options && override.multivariate_options.map((o) => {
-                    if (o.multivariate_feature_option) return o;
-                    return {
-                        multivariate_feature_option: environmentFlag.multivariate_feature_state_values[o.multivariate_feature_option_index].multivariate_feature_option,
-                        percentage_allocation: o.percentage_allocation,
-                    };
-                }),
-                feature_state_value: Utils.valueToFeatureState(override.value),
-                enabled: override.enabled,
-            })))) : Promise.resolve();
-
-
-        Promise.all([prom, segmentOverridesRequest]).then(([res, segmentRes]) => {
-            store.model.keyedEnvironmentFeatures[projectFlag.id] = res;
-            if (segmentRes) {
-                const feature = _.find(store.model.features, f => f.id === projectFlag.id);
-                if (feature) feature.feature_segments = _.map(segmentRes.feature_segments, segment => ({ ...segment, segment: segment.segment.id }));
+            } else {
+                prom = data.post(`${Project.api}environments/${environmentId}/featurestates/`, Object.assign({}, flag, {
+                    enabled: false,
+                    environment: environmentId,
+                    feature: projectFlag,
+                }));
             }
-            store.model.lastSaved = new Date().valueOf();
-            store.saved();
+
+            const segmentOverridesRequest = mode === 'SEGMENT' && segmentOverrides
+                ? data.post(`${Project.api}features/feature-segments/update-priorities/`, segmentOverrides.map((override, index) => ({
+                    id: override.id,
+                    priority: index,
+                }))).then(() => Promise.all(segmentOverrides.map(override => data.put(`${Project.api}features/featurestates/${override.feature_segment_value.id}/`, {
+                    ...override.feature_segment_value,
+                    multivariate_feature_state_values: override.multivariate_options && override.multivariate_options.map((o) => {
+                        if (o.multivariate_feature_option) return o;
+                        return {
+                            multivariate_feature_option: environmentFlag.multivariate_feature_state_values[o.multivariate_feature_option_index].multivariate_feature_option,
+                            percentage_allocation: o.percentage_allocation,
+                        };
+                    }),
+                    feature_state_value: Utils.valueToFeatureState(override.value),
+                    enabled: override.enabled,
+                })))) : Promise.resolve();
+
+
+            Promise.all([prom, segmentOverridesRequest]).then(([res, segmentRes]) => {
+                store.model.keyedEnvironmentFeatures[projectFlag.id] = res;
+                if (segmentRes) {
+                    const feature = _.find(store.model.features, f => f.id === projectFlag.id);
+                    if (feature) feature.feature_segments = _.map(segmentRes.feature_segments, segment => ({ ...segment, segment: segment.segment.id }));
+                }
+                store.model.lastSaved = new Date().valueOf();
+                store.saved();
+            });
         });
     },
     editFeatureStateChangeRequest: (projectId, environmentId, flag, projectFlag, environmentFlag, segmentOverrides, changeRequest, commit) => {
@@ -214,9 +242,9 @@ const controller = {
                             (v) => {
                                 const matching = multivariate_options.find(m => (v.multivariate_feature_option || v.id) === (m.multivariate_feature_option || m.id));
                                 return ({ ...v,
-                                    percentage_allocation: matching?
-                                        typeof matching.percentage_allocation == 'number' ?  matching.percentage_allocation :
-                                        matching.default_percentage_allocation : v.percentage_allocation ,
+                                    percentage_allocation: matching
+                                        ? typeof matching.percentage_allocation === 'number' ? matching.percentage_allocation
+                                            : matching.default_percentage_allocation : v.percentage_allocation,
                                 });
                             },
                         );
@@ -231,7 +259,7 @@ const controller = {
                                 AppActions.getFeatures(projectId, environmentId, true);
                             });
                         } else {
-                            AppActions.getChangeRequest(v.id)
+                            AppActions.getChangeRequest(v.id);
                         }
                     });
                     prom.then(() => {
