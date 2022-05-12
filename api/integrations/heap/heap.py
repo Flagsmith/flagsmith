@@ -4,6 +4,7 @@ import typing
 import requests
 
 from environments.identities.models import Identity
+from environments.identities.traits.models import Trait
 from features.models import FeatureState
 from integrations.common.wrapper import AbstractBaseIdentityIntegrationWrapper
 
@@ -24,7 +25,10 @@ class HeapWrapper(AbstractBaseIdentityIntegrationWrapper):
         logger.debug("Sent event to Heap. Response code was: %s" % response.status_code)
 
     def generate_user_data(
-        self, identity: Identity, feature_states: typing.List[FeatureState]
+        self,
+        identity: Identity,
+        feature_states: typing.List[FeatureState],
+        trait_models: typing.List[Trait] = None,
     ) -> dict:
         feature_properties = {}
 

@@ -15,13 +15,15 @@ IDENTITY_INTEGRATIONS = [
 ]
 
 
-def identify_integrations(identity, all_feature_states):
+def identify_integrations(identity, all_feature_states, trait_models=None):
     for integration in IDENTITY_INTEGRATIONS:
         config = getattr(identity.environment, integration.get("relation_name"), None)
         if config:
             wrapper = integration.get("wrapper")
             wrapper_instance = wrapper(config)
             user_data = wrapper_instance.generate_user_data(
-                identity=identity, feature_states=all_feature_states
+                identity=identity,
+                feature_states=all_feature_states,
+                trait_models=trait_models,
             )
             wrapper_instance.identify_user_async(data=user_data)

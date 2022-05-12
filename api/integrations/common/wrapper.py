@@ -5,6 +5,7 @@ from util.util import postpone
 
 if typing.TYPE_CHECKING:
     from environments.identities.models import Identity
+    from environments.identities.traits.models import Trait
     from features.models import FeatureState
 
 
@@ -33,6 +34,9 @@ class AbstractBaseIdentityIntegrationWrapper(ABC):
 
     @abstractmethod
     def generate_user_data(
-        self, identity: "Identity", feature_states: typing.List["FeatureState"]
+        self,
+        identity: "Identity",
+        feature_states: typing.List["FeatureState"],
+        trait_models: typing.List["Trait"],
     ) -> dict:
         raise NotImplementedError()

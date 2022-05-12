@@ -64,7 +64,9 @@ def test_identify_integrations_calls_every_integration_in_identity_integrations_
     )
 
     integration_a_mocked_generate_user_data.assert_called_with(
-        identity=identity, feature_states=identity.get_all_feature_states()
+        identity=identity,
+        feature_states=identity.get_all_feature_states(),
+        trait_models=None,
     )
     integration_wrapper_a.return_value.identify_user_async.assert_called_with(
         data=integration_a_mocked_generate_user_data.return_value
@@ -78,7 +80,9 @@ def test_identify_integrations_calls_every_integration_in_identity_integrations_
     )
 
     integration_b_mocked_generate_user_data.assert_called_with(
-        identity=identity, feature_states=identity.get_all_feature_states()
+        identity=identity,
+        feature_states=identity.get_all_feature_states(),
+        trait_models=None,
     )
     integration_wrapper_b.return_value.identify_user_async.assert_called_with(
         data=integration_b_mocked_generate_user_data.return_value

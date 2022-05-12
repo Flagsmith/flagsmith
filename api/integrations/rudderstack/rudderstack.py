@@ -4,6 +4,7 @@ import typing
 import rudder_analytics
 
 from environments.identities.models import Identity
+from environments.identities.traits.models import Trait
 from features.models import FeatureState
 from integrations.common.wrapper import AbstractBaseIdentityIntegrationWrapper
 
@@ -21,7 +22,10 @@ class RudderstackWrapper(AbstractBaseIdentityIntegrationWrapper):
         rudder_analytics.identify(**user_data)
 
     def generate_user_data(
-        self, identity: Identity, feature_states: typing.List[FeatureState]
+        self,
+        identity: Identity,
+        feature_states: typing.List[FeatureState],
+        trait_models: typing.List[Trait] = None,
     ) -> dict:
         feature_properties = {}
 
