@@ -44,6 +44,7 @@ const ConfirmHideFlags = class extends Component {
 
                 </p>
                 <InputGroup
+                  data-test="js-project-name"
                   inputProps={{ className: 'full-width' }}
                   title="Please type the project name to confirm"
                   placeholder="Project name"
@@ -52,6 +53,7 @@ const ConfirmHideFlags = class extends Component {
 
                 <FormGroup className="text-right">
                     <Button
+                      data-test="js-confirm"
                       disabled={this.state.challenge != project.name}
                       className="btn btn-primary"
                     >

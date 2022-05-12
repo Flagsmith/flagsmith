@@ -31,7 +31,7 @@ const controller = {
                 id: identityFlag.id || identityFlag.featurestate_uuid,
                 enabled: !identityFlag.enabled,
                 feature: projectFlag.id,
-                feature_state_value: identityFlag.feature_state_value || environmentFlag.feature_state_value,
+                feature_state_value: identityFlag? identityFlag.feature_state_value : environmentFlag && environmentFlag.feature_state_value,
             }))
             : data.post(`${Project.api}environments/${environmentId}/${Utils.getIdentitiesEndpoint()}/${identity}/${Utils.getFeatureStatesEndpoint()}/`, {
                 feature: projectFlag.id,
