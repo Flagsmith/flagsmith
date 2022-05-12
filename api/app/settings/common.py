@@ -199,7 +199,7 @@ MIDDLEWARE = [
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
     "simple_history.middleware.HistoryRequestMiddleware",
-    "core.middleware.cache_control.NoCacheMiddleware",
+    "core.middleware.cache_control.NeverCacheMiddleware",
 ]
 
 APPLICATION_INSIGHTS_CONNECTION_STRING = env.str(
