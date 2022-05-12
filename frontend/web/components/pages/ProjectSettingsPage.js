@@ -122,7 +122,7 @@ const ProjectSettingsPage = class extends Component {
                                         </p>
                                     </div>
                                     <div className="col-md-2 text-right">
-                                        <Switch disabled={isSaving} onChange={() => this.toggleHideDisabledFlags(project, editProject)} checked={project.hide_disabled_flags}/>
+                                        <Switch data-test="js-hide-disabled-flags" disabled={isSaving} onChange={() => this.toggleHideDisabledFlags(project, editProject)} checked={project.hide_disabled_flags}/>
                                     </div>
                                 </div>
                             </FormGroup>

@@ -51,7 +51,7 @@ fixture`Initialise`
 
 test('[Initialise]', async () => {
     log('Create Organisation');
-    await click(byId("jsSignup"))
+    await click(byId('jsSignup'));
     await setText(byId('firstName'), 'Bullet'); // visit the url
     await setText(byId('lastName'), 'Train'); // visit the url
     await setText(byId('email'), email); // visit the url
@@ -67,6 +67,16 @@ test('[Initialise]', async () => {
     await click(byId('create-project-btn'));
     await waitForElementVisible((byId('features-page')));
 
+    log('Hide disabled flags');
+    await click('#project-settings-link');
+    await click(byId('js-hide-disabled-flags'));
+    await setText(byId('js-project-name'), 'My Test Project');
+    await click(byId('js-confirm'));
+
+
+    await click('#features-link');
+
+
     log('Create Features');
     await createRemoteConfig(0, 'header_size', 'big');
     await createFeature(1, 'header_enabled', false);
@@ -79,9 +89,9 @@ test('[Initialise]', async () => {
     await toggleFeature(0, true);
 
     log('Try it');
-    await t.wait(1500)
+    await t.wait(1500);
     await click('#try-it-btn');
-    await t.wait(1500)
+    await t.wait(1500);
     let text = await getText('#try-it-results');
     let json;
     try { json = JSON.parse(text); } catch (e) { throw new Error('Try it results are not valid JSON'); }
@@ -94,12 +104,12 @@ test('[Initialise]', async () => {
     await click('#update-feature-btn');
     await assertTextContent(byId('feature-value-1'), '12');
     await t.pressKey('esc');
-    await closeModal()
+    await closeModal();
 
     log('Try it again');
-    await t.wait(1500)
+    await t.wait(1500);
     await click('#try-it-btn');
-    await t.wait(1500)
+    await t.wait(1500);
     text = await getText('#try-it-results');
     try { json = JSON.parse(text); } catch (e) { throw new Error('Try it results are not valid JSON'); }
     await t.expect(json.header_size.value).eql(12);
@@ -109,12 +119,12 @@ test('[Initialise]', async () => {
     await setText(byId('featureValue'), 'false');
     await click('#update-feature-btn');
     await assertTextContent(byId('feature-value-1'), 'false');
-    await closeModal()
+    await closeModal();
 
     log('Try it again 2');
-    await t.wait(1500)
+    await t.wait(1500);
     await click('#try-it-btn');
-    await t.wait(1500)
+    await t.wait(1500);
     text = await getText('#try-it-results');
     try { json = JSON.parse(text); } catch (e) { throw new Error('Try it results are not valid JSON'); }
     await t.expect(json.header_size.value).eql(false);
