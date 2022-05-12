@@ -93,7 +93,7 @@ class IdentifyWithTraitsSerializer(serializers.Serializer):
             )
 
         all_feature_states = identity.get_all_feature_states(traits=trait_models)
-        identify_integrations(identity, all_feature_states)
+        identify_integrations(identity, all_feature_states, trait_models)
 
         return {
             "identity": identity,

@@ -5,6 +5,7 @@ import typing
 import requests
 
 from environments.identities.models import Identity
+from environments.identities.traits.models import Trait
 from features.models import FeatureState
 from integrations.common.wrapper import AbstractBaseIdentityIntegrationWrapper
 
@@ -37,7 +38,10 @@ class MixpanelWrapper(AbstractBaseIdentityIntegrationWrapper):
         logger.debug("Sent event to Mixpanel. Body code was: %s" % response.content)
 
     def generate_user_data(
-        self, identity: Identity, feature_states: typing.List[FeatureState]
+        self,
+        identity: Identity,
+        feature_states: typing.List[FeatureState],
+        trait_models: typing.List[Trait] = None,
     ) -> dict:
         feature_properties = {}
 
