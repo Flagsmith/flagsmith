@@ -6,7 +6,7 @@ def get_current_site_url(default_domain: str = "app.flagsmith.com"):
     current_site = Site.objects.filter(id=settings.SITE_ID).first()
 
     url = "https://"
-    url += current_site.domain if current_site else "app.flagsmith.com"
+    url += current_site.domain if current_site else default_domain
     return url
 
 
