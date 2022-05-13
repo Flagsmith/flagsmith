@@ -27,4 +27,5 @@ jobs:
                 cd api
                 python -m pip install --upgrade pip
                 python -m pip install pip-audit
+                pip install -r requirements-dev.txt
                 pip-audit -v
