@@ -1,4 +1,4 @@
-name: API Pull Request
+name: API Security Audit
 
 on:
     schedule:
@@ -25,4 +25,5 @@ jobs:
             - name: Run Audit
               run: |
                 python -m pip install pip-audit
+                cd api
                 pip-audit
