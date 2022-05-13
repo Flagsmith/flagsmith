@@ -42,7 +42,6 @@ class Invite(AbstractBaseInviteModel):
     invited_by = models.ForeignKey(
         FFAdminUser, related_name="sent_invites", null=True, on_delete=models.CASCADE
     )
-    frontend_base_url = models.CharField(max_length=500, null=False)
 
     class Meta:
         unique_together = ("email", "organisation")

@@ -135,10 +135,7 @@ class OrganisationTestCase(TestCase):
         url = reverse(
             "api-v1:organisations:organisation-invite", args=[organisation.pk]
         )
-        data = {
-            "emails": ["test@example.com"],
-            "frontend_base_url": "https://example.com",
-        }
+        data = {"emails": ["test@example.com"]}
 
         # When
         response = self.client.post(
@@ -156,7 +153,7 @@ class OrganisationTestCase(TestCase):
         organisation = Organisation.objects.create(name="test org")
         self.user.add_organisation(organisation, OrganisationRole.ADMIN)
         email = "test_2@example.com"
-        data = {"emails": [email], "frontend_base_url": "https://example.com"}
+        data = {"emails": [email]}
         url = reverse(
             "api-v1:organisations:organisation-invite", args=[organisation.pk]
         )
@@ -185,15 +182,9 @@ class OrganisationTestCase(TestCase):
         self.user.add_organisation(organisation, OrganisationRole.ADMIN)
 
         invite_1 = Invite.objects.create(
-            email="test_1@example.com",
-            frontend_base_url="https://www.example.com",
-            organisation=organisation,
+            email="test_1@example.com", organisation=organisation
         )
-        Invite.objects.create(
-            email="test_2@example.com",
-            frontend_base_url="https://www.example.com",
-            organisation=organisation,
-        )
+        Invite.objects.create(email="test_2@example.com", organisation=organisation)
 
         # When
         invite_list_response = self.client.get(
@@ -298,8 +289,7 @@ class OrganisationTestCase(TestCase):
         invited_email = "test@example.com"
 
         data = {
-            "invites": [{"email": invited_email, "role": OrganisationRole.ADMIN.name}],
-            "frontend_base_url": "http://blah.com",
+            "invites": [{"email": invited_email, "role": OrganisationRole.ADMIN.name}]
         }
 
         # When
@@ -326,8 +316,7 @@ class OrganisationTestCase(TestCase):
         invited_email = "test@example.com"
 
         data = {
-            "invites": [{"email": invited_email, "role": OrganisationRole.USER.name}],
-            "frontend_base_url": "http://blah.com",
+            "invites": [{"email": invited_email, "role": OrganisationRole.USER.name}]
         }
 
         # When
