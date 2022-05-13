@@ -84,7 +84,9 @@ class ChangeRequest(LifecycleModel):
         self.save()
 
     def is_approved(self):
-        return self.environment.minimum_change_request_approvals is not None and (
+        if self.environment.minimum_change_request_approvals is None:
+            return True
+        return (
             self.approvals.filter(approved_at__isnull=False).count()
             >= self.environment.minimum_change_request_approvals
         )
