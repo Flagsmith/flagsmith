@@ -3,8 +3,6 @@ name: API Security Audit
 on:
     schedule:
         - cron: "0 8 * * *"
-    pull_request: # todo: remove
-        types: [opened, synchronize, reopened, ready_for_review]
 
 jobs:
     audit:
