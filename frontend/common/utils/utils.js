@@ -164,7 +164,7 @@ module.exports = Object.assign({}, require('./base/_utils'), {
             type: 'unicode',
             boolean_value: null,
             integer_value: null,
-            string_value: val || '',
+            string_value: value === null? null : val || '',
         };
     },
     getFlagValue(projectFlag, environmentFlag, identityFlag, multivariate_options) {
