@@ -1,0 +1,31 @@
+name: API Security Audit
+
+on:
+    schedule:
+        - cron: "0 8 * * *"
+
+jobs:
+    audit:
+        runs-on: ubuntu-latest
+        name: API Security Audit
+
+        steps:
+            - name: Cloning repo
+              uses: actions/checkout@v2
+              with:
+                  fetch-depth: 0
+
+            - name: Set up Python 3.10
+              uses: actions/setup-python@v2
+              with:
+                  python-version:  "3.10"
+
+            - name: Run Audit
+            # todo: remove the hack to upgrade `packaging` as drf-yasg2 has an old version dependency
+              run: |
+                cd api
+                python -m pip install --upgrade pip
+                pip install -r requirements-dev.txt
+                pip install packaging==21.3
+                python -m pip install pip-audit
+                pip-audit -v
