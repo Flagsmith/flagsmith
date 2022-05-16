@@ -1,3 +1,4 @@
+from core.helpers import get_current_site_url
 from django.conf import settings
 from django.core.mail import EmailMultiAlternatives
 from django.db import models
@@ -41,7 +42,6 @@ class Invite(AbstractBaseInviteModel):
     invited_by = models.ForeignKey(
         FFAdminUser, related_name="sent_invites", null=True, on_delete=models.CASCADE
     )
-    frontend_base_url = models.CharField(max_length=500, null=False)
 
     class Meta:
         unique_together = ("email", "organisation")
@@ -55,7 +55,7 @@ class Invite(AbstractBaseInviteModel):
         super(Invite, self).save(*args, **kwargs)
 
     def get_invite_uri(self):
-        return "%s%s" % (self.frontend_base_url, str(self.hash))
+        return f"{get_current_site_url()}/invite/{str(self.hash)}"
 
     def send_invite_mail(self):
         context = {

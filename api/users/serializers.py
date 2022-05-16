@@ -83,7 +83,6 @@ class InviteSerializer(serializers.ModelSerializer):
         fields = (
             "email",
             "organisation",
-            "frontend_base_url",
             "invited_by",
             "date_created",
         )

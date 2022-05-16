@@ -105,7 +105,6 @@ class InviteSerializer(serializers.ModelSerializer):
 
 class MultiInvitesSerializer(serializers.Serializer):
     invites = InviteSerializer(many=True, required=False)
-    frontend_base_url = serializers.CharField()
     emails = serializers.ListSerializer(child=serializers.EmailField(), required=False)
 
     def create(self, validated_data):
@@ -124,7 +123,6 @@ class MultiInvitesSerializer(serializers.Serializer):
                 **invite,
                 "invited_by": user,
                 "organisation": organisation,
-                "frontend_base_url": validated_data["frontend_base_url"],
             }
             created_invites.append(Invite.objects.create(**data))
 

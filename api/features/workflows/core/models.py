@@ -1,7 +1,7 @@
 import typing
 
+from core.helpers import get_current_site_url
 from django.conf import settings
-from django.contrib.sites.models import Site
 from django.core.mail import send_mail
 from django.db import models
 from django.template.loader import render_to_string
@@ -99,10 +99,7 @@ class ChangeRequest(LifecycleModel):
             raise AttributeError(
                 "Change request must be saved before it has a url attribute."
             )
-
-        current_site = Site.objects.filter(id=settings.SITE_ID).first()
-        url = "https://"
-        url += current_site.domain if current_site else "app.flagsmith.com"
+        url = get_current_site_url()
         url += f"/project/{self.environment.project.id}"
         url += f"/environment/{self.environment.api_key}"
         url += f"/change-requests/{self.id}"
