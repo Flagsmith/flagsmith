@@ -1,5 +1,4 @@
 import re
-import time
 from collections import ChainMap
 
 import pyotp
@@ -45,8 +44,6 @@ class AuthIntegrationTestCase(APITestCase):
         assert register_response_success.status_code == status.HTTP_201_CREATED
         assert register_response_success.json()["key"]
 
-        # add delay to avoid HTTP_429 as we have throttle in place for login
-        time.sleep(1)
         # now verify we can login with the same credentials
         new_login_data = {
             "email": self.test_email,
@@ -89,8 +86,6 @@ class AuthIntegrationTestCase(APITestCase):
         )
         assert reset_password_confirm_response.status_code == status.HTTP_204_NO_CONTENT
 
-        # add delay to avoid HTTP_429 as we have throttle in place for login
-        time.sleep(1)
         # now check we can login with the new details
         new_login_data = {
             "email": self.test_email,
@@ -171,8 +166,6 @@ class AuthIntegrationTestCase(APITestCase):
         self.assertFalse(new_user.is_active)
 
         # And login should fail as we have not activated account yet
-        # add delay to avoid HTTP_429 as we have throttle in place for login
-        time.sleep(1)
         login_data = {
             "email": self.test_email,
             "password": self.password,
@@ -199,7 +192,6 @@ class AuthIntegrationTestCase(APITestCase):
             activate_url, data=activate_data, status_code=status.HTTP_204_NO_CONTENT
         )
 
-        time.sleep(1)
         # And login success
         login_result = self.client.post(login_url, data=login_data)
         assert login_result.status_code == status.HTTP_200_OK
@@ -285,9 +277,6 @@ class AuthIntegrationTestCase(APITestCase):
         assert register_response.status_code == status.HTTP_201_CREATED
         assert register_response.json()["key"]
 
-        # since we're hitting login in other tests we need to ensure that the
-        # first login request doesn't fail with HTTP_429
-        time.sleep(1)
         # verify we can login with credentials
         login_data = {
             "email": self.test_email,
