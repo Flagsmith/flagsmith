@@ -1,3 +1,4 @@
+from djoser.views import UserViewSet
 from rest_framework.throttling import ScopedRateThrottle
 from trench.views.authtoken import (
     AuthTokenLoginOrRequestMFACode,
@@ -21,3 +22,8 @@ class CustomAuthTokenLoginWithMFACode(AuthTokenLoginWithMFACode):
 
     throttle_classes = [ScopedRateThrottle]
     throttle_scope = "mfa_code"
+
+
+class ThrottledUserViewSet(UserViewSet):
+    throttle_classes = [ScopedRateThrottle]
+    throttle_scope = "signup"

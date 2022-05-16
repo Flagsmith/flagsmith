@@ -5,6 +5,7 @@ from collections import ChainMap
 import pyotp
 from django.conf import settings
 from django.core import mail
+from django.core.cache import cache
 from django.urls import reverse
 from rest_framework import status
 from rest_framework.test import APITestCase, override_settings
@@ -23,6 +24,7 @@ class AuthIntegrationTestCase(APITestCase):
 
     def tearDown(self) -> None:
         FFAdminUser.objects.all().delete()
+        cache.clear()
 
     def test_register_and_login_workflows(self):
         # try to register without first_name / last_name
@@ -299,3 +301,31 @@ class AuthIntegrationTestCase(APITestCase):
         # try login in again, should deny, current limit 1 per second
         login_response = self.client.post(login_url, data=login_data)
         assert login_response.status_code == status.HTTP_429_TOO_MANY_REQUESTS
+
+
+def test_throttle_signup(api_client, settings, user_password, db, reset_cache):
+    # verify that a throttle rate exists already then set it
+    # to something easier to reliably test
+    assert settings.REST_FRAMEWORK["DEFAULT_THROTTLE_RATES"]["signup"]
+    settings.REST_FRAMEWORK["DEFAULT_THROTTLE_RATES"]["signup"] = "1/min"
+    # Next, let's hit signup for the first time
+    register_data = {
+        "email": "user_1_email@mail.com",
+        "password": user_password,
+        "re_password": user_password,
+        "first_name": "user_1",
+        "last_name": "user_1_last_name",
+    }
+    register_url = reverse("api-v1:custom_auth:ffadminuser-list")
+    register_response = api_client.post(register_url, data=register_data)
+
+    # Assert that signup worked
+    assert register_response.status_code == status.HTTP_201_CREATED
+    assert register_response.json()["key"]
+
+    # Now, let's signup again
+    register_url = reverse("api-v1:custom_auth:ffadminuser-list")
+    response = api_client.post(register_url, data=register_data)
+
+    # Assert that we got throttled
+    assert response.status_code == status.HTTP_429_TOO_MANY_REQUESTS

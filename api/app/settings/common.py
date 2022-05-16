@@ -182,12 +182,12 @@ REST_FRAMEWORK = {
     "DEFAULT_PAGINATION_CLASS": "rest_framework.pagination.PageNumberPagination",
     "DEFAULT_THROTTLE_RATES": {
         "login": "20/min",
+        "signup": "10/min",
         "mfa_code": "5/min",
         "invite": "10/min",
     },
     "DEFAULT_FILTER_BACKENDS": ["django_filters.rest_framework.DjangoFilterBackend"],
 }
-
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
     "whitenoise.middleware.WhiteNoiseMiddleware",
@@ -634,3 +634,6 @@ EDGE_RELEASE_DATETIME = env.datetime("EDGE_RELEASE_DATETIME", None)
 DISABLE_WEBHOOKS = env.bool("DISABLE_WEBHOOKS", False)
 
 SERVE_FE_ASSETS = os.path.exists(BASE_DIR + "/app/templates/webpack/index.html")
+
+# Used to configure the number of application proxies that the API runs behind
+NUM_PROXIES = env.int("NUM_PROXIES", 1)

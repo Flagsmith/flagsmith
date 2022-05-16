@@ -1,4 +1,5 @@
 import pytest
+from django.core.cache import cache
 from rest_framework.test import APIClient
 
 from environments.identities.models import Identity
@@ -11,6 +12,7 @@ from features.value_types import STRING
 from organisations.models import Organisation, OrganisationRole
 from projects.models import Project
 from segments.models import EQUAL, Condition, Segment, SegmentRule
+from users.models import FFAdminUser
 
 trait_key = "key1"
 trait_value = "value1"
@@ -93,3 +95,15 @@ def api_client():
 @pytest.fixture()
 def feature(project, environment):
     return Feature.objects.create(name="Test Feature1", project=project)
+
+
+@pytest.fixture()
+def user_password():
+    return FFAdminUser.objects.make_random_password()
+
+
+@pytest.fixture()
+def reset_cache():
+    cache.clear()
+    yield
+    cache.clear()
