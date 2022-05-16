@@ -201,6 +201,10 @@ MIDDLEWARE = [
     "simple_history.middleware.HistoryRequestMiddleware",
 ]
 
+ADD_NEVER_CACHE_HEADERS = env.bool("ADD_NEVER_CACHE_HEADERS", True)
+if ADD_NEVER_CACHE_HEADERS:
+    MIDDLEWARE.append("core.middleware.cache_control.NeverCacheMiddleware")
+
 APPLICATION_INSIGHTS_CONNECTION_STRING = env.str(
     "APPLICATION_INSIGHTS_CONNECTION_STRING", default=None
 )
