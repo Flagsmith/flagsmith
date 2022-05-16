@@ -76,6 +76,18 @@ def test_change_request_approve_by_new_approver_when_approvals_exist(
     ).exists()
 
 
+def test_change_request_is_approved_returns_true_when_minimum_change_request_approvals_is_none(
+    change_request_no_required_approvals, mocker, environment
+):
+    # Given
+    change_request_no_required_approvals.environment.minimum_change_request_approvals = (
+        None
+    )
+    change_request_no_required_approvals.save()
+    # Then
+    assert change_request_no_required_approvals.is_approved() is True
+
+
 def test_change_request_commit_raises_exception_when_not_approved(
     change_request_1_required_approvals,
 ):
