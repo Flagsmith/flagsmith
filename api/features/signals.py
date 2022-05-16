@@ -22,9 +22,10 @@ def create_feature_segment_audit_log(
     instance, history_user, history_instance, **kwargs
 ):
     # due to referential integrity issues that come from cascade deletes, we skip creating
-    # audit logs for deleted feature segments for now
+    # audit logs for deleted feature segments for now. This is handled in the view instead.
     # TODO: handle audit log in middleware instead
-    project = None if history_instance.history_type == "-" else instance.feature.project
+    if history_instance.history_type == "-":
+        return
 
     message = FEATURE_SEGMENT_UPDATED_MESSAGE % (
         instance.feature.name,
@@ -35,7 +36,7 @@ def create_feature_segment_audit_log(
         obj_type=RelatedObjectType.FEATURE,
         log_message=message,
         author=history_user,
-        project=project,
+        project=instance.feature.project,
     )
 
 

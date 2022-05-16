@@ -4,6 +4,7 @@ from rest_framework import serializers
 from audit.models import (
     FEATURE_STATE_UPDATED_MESSAGE,
     IDENTITY_FEATURE_STATE_UPDATED_MESSAGE,
+    SEGMENT_FEATURE_STATE_UPDATED_MESSAGE,
     AuditLog,
     RelatedObjectType,
 )
@@ -252,6 +253,11 @@ def create_feature_state_audit_log(feature_state, request):
         message = IDENTITY_FEATURE_STATE_UPDATED_MESSAGE % (
             feature_state.feature.name,
             feature_state.identity.identifier,
+        )
+    elif feature_state.feature_segment:
+        message = SEGMENT_FEATURE_STATE_UPDATED_MESSAGE % (
+            feature_state.feature.name,
+            feature_state.feature_segment.segment.name,
         )
     else:
         message = FEATURE_STATE_UPDATED_MESSAGE % feature_state.feature.name
