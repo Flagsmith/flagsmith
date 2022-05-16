@@ -76,6 +76,18 @@ def test_change_request_approve_by_new_approver_when_approvals_exist(
     ).exists()
 
 
+def test_change_request_is_approved_returns_true_when_minimum_change_request_approvals_is_none(
+    change_request_no_required_approvals, mocker, environment
+):
+    # Given
+    change_request_no_required_approvals.environment.minimum_change_request_approvals = (
+        None
+    )
+    change_request_no_required_approvals.save()
+    # Then
+    change_request_no_required_approvals.is_approved() is True
+
+
 def test_change_request_commit_raises_exception_when_not_approved(
     change_request_1_required_approvals,
 ):
@@ -91,30 +103,6 @@ def test_change_request_commit_not_scheduled(
     change_request_no_required_approvals, mocker
 ):
     # Given
-    user = FFAdminUser.objects.create(email="approver@example.com")
-
-    now = timezone.now()
-    mocker.patch("features.workflows.core.models.timezone.now", return_value=now)
-
-    # When
-    change_request_no_required_approvals.commit(committed_by=user)
-
-    # Then
-    assert change_request_no_required_approvals.committed_at == now
-    assert change_request_no_required_approvals.committed_by == user
-
-    assert change_request_no_required_approvals.feature_states.first().version == 2
-    assert change_request_no_required_approvals.feature_states.first().live_from == now
-
-
-def test_change_request_commit_when_minimum_change_request_approvals_is_none(
-    change_request_no_required_approvals, mocker, environment
-):
-    # Given
-    change_request_no_required_approvals.environment.minimum_change_request_approvals = (
-        None
-    )
-    change_request_no_required_approvals.save()
     user = FFAdminUser.objects.create(email="approver@example.com")
 
     now = timezone.now()
