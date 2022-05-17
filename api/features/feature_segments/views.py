@@ -1,3 +1,5 @@
+import logging
+
 from django.utils.decorators import method_decorator
 from drf_yasg2.utils import swagger_auto_schema
 from rest_framework import mixins, viewsets
@@ -16,6 +18,8 @@ from features.feature_segments.serializers import (
     FeatureSegmentQuerySerializer,
 )
 from features.models import FeatureSegment
+
+logger = logging.getLogger(__name__)
 
 
 @method_decorator(
@@ -73,8 +77,9 @@ class FeatureSegmentViewSet(
             instance.feature.name,
             instance.segment.name,
         )
-        audit_log_record = (
-            AuditLog.create_record(
+
+        if feature_state:
+            audit_log_record = AuditLog.create_record(
                 obj=feature_state,
                 obj_type=RelatedObjectType.FEATURE_STATE,
                 log_message=message,
@@ -83,14 +88,14 @@ class FeatureSegmentViewSet(
                 environment=instance.environment,
                 persist=False,
             )
-            if feature_state
-            else None
-        )
-
-        instance.delete()
-
-        if audit_log_record:
+            instance.delete()
             audit_log_record.save()
+        else:
+            logger.warning(
+                "FeatureSegment %d has no feature state. Deleting without AuditLog.",
+                instance.id,
+            )
+            instance.delete()
 
     @action(detail=False, methods=["POST"], url_path="update-priorities")
     def update_priorities(self, request, *args, **kwargs):
