@@ -1,6 +1,6 @@
 from django.utils.decorators import method_decorator
 from drf_yasg2.utils import swagger_auto_schema
-from rest_framework import mixins, status, viewsets
+from rest_framework import mixins, viewsets
 from rest_framework.decorators import action
 from rest_framework.response import Response
 
@@ -65,9 +65,7 @@ class FeatureSegmentViewSet(
             kwargs = {**kwargs, "many": True, "partial": True}
         return super(FeatureSegmentViewSet, self).get_serializer(*args, **kwargs)
 
-    def destroy(self, request, *args, **kwargs):
-        instance = self.get_object()
-
+    def perform_destroy(self, instance):
         # feature state <-> feature segment relationship is incorrectly modelled as a
         # foreign key instead of one to one, so we need to grab the first feature state
         feature_state = instance.feature_states.first()
@@ -80,7 +78,7 @@ class FeatureSegmentViewSet(
                 obj=feature_state,
                 obj_type=RelatedObjectType.FEATURE_STATE,
                 log_message=message,
-                author=request.user,
+                author=self.request.user,
                 project=instance.feature.project,
                 environment=instance.environment,
                 persist=False,
@@ -89,13 +87,10 @@ class FeatureSegmentViewSet(
             else None
         )
 
-        self.perform_destroy(instance)
-        response = Response(status=status.HTTP_204_NO_CONTENT)
+        instance.delete()
 
-        if audit_log_record and response.status_code == status.HTTP_204_NO_CONTENT:
+        if audit_log_record:
             audit_log_record.save()
-
-        return response
 
     @action(detail=False, methods=["POST"], url_path="update-priorities")
     def update_priorities(self, request, *args, **kwargs):
