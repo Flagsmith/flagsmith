@@ -6,9 +6,13 @@ from django.urls import reverse
 from rest_framework import status
 from rest_framework.test import APIClient
 
-from audit.models import AuditLog, RelatedObjectType
+from audit.models import (
+    SEGMENT_FEATURE_STATE_DELETED_MESSAGE,
+    AuditLog,
+    RelatedObjectType,
+)
 from environments.models import Environment
-from features.models import Feature, FeatureSegment
+from features.models import Feature, FeatureSegment, FeatureState
 from organisations.models import Organisation, OrganisationRole
 from projects.models import Project
 from segments.models import Segment
@@ -163,3 +167,37 @@ class FeatureSegmentViewSetTestCase(TestCase):
         json_response = response.json()
         assert json_response[0]["id"] == feature_segment_1.id
         assert json_response[1]["id"] == feature_segment_2.id
+
+    def test_delete_feature_segment_creates_audit_log(self):
+        # Given
+        feature_segment = FeatureSegment.objects.create(
+            feature=self.feature, environment=self.environment_1, segment=self.segment
+        )
+        feature_state = FeatureState.objects.create(
+            feature=self.feature,
+            environment=self.environment_1,
+            feature_segment=feature_segment,
+        )
+
+        expected_audit_log_message = SEGMENT_FEATURE_STATE_DELETED_MESSAGE % (
+            self.feature.name,
+            self.segment.name,
+        )
+
+        url = reverse(
+            "api-v1:features:feature-segment-detail", args=(feature_segment.id,)
+        )
+
+        # When
+        response = self.client.delete(url)
+
+        # Then
+        assert response.status_code == status.HTTP_204_NO_CONTENT
+
+        assert AuditLog.objects.filter(
+            project=self.project,
+            related_object_id=feature_state.id,
+            related_object_type=RelatedObjectType.FEATURE_STATE.name,
+            environment=self.environment_1,
+            log=expected_audit_log_message,
+        ).exists()
