@@ -492,8 +492,8 @@ const UserPage = class extends Component {
                                                                     icon="ion-ios-globe"
                                                                     title="Segments"
                                                                   >
-                                                                      <div className="text-center">
-                                                                            This user is not part of any segment.
+                                                                      <div>
+                                                                            This user is not a member of any segments.
                                                                       </div>
                                                                   </Panel>
                                                                 )}
