@@ -25,5 +25,13 @@ class CustomAuthTokenLoginWithMFACode(AuthTokenLoginWithMFACode):
 
 
 class ThrottledUserViewSet(UserViewSet):
-    throttle_classes = [ScopedRateThrottle]
     throttle_scope = "signup"
+
+    def get_throttles(self):
+        """
+        Used for throttling create(signup) action
+        """
+        throttles = []
+        if self.action == "create":
+            throttles = [ScopedRateThrottle()]
+        return throttles

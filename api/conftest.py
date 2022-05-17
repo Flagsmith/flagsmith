@@ -104,6 +104,9 @@ def user_password():
 
 @pytest.fixture()
 def reset_cache():
+    # https://groups.google.com/g/django-developers/c/zlaPsP13dUY
+    # TL;DR: Use this if your test interacts with cache since django
+    # does not clear cache after every test
     cache.clear()
     yield
     cache.clear()

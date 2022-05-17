@@ -318,3 +318,14 @@ def test_throttle_signup(api_client, settings, user_password, db, reset_cache):
 
     # Assert that we got throttled
     assert response.status_code == status.HTTP_429_TOO_MANY_REQUESTS
+
+
+def test_get_user_is_not_throttled(admin_client, settings, reset_cache):
+    # Given
+    settings.REST_FRAMEWORK["DEFAULT_THROTTLE_RATES"]["signup"] = "1/min"
+    url = reverse("api-v1:custom_auth:ffadminuser-me")
+    # When
+    for _ in range(2):
+        response = admin_client.get(url)
+        # Then
+        assert response.status_code == status.HTTP_200_OK
