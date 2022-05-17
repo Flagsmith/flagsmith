@@ -15,6 +15,7 @@ REST_FRAMEWORK = {
         "login": "100/min",
         "mfa_code": "5/min",
         "invite": "10/min",
+        "signup": "100/min",
     },
     "DEFAULT_FILTER_BACKENDS": ["django_filters.rest_framework.DjangoFilterBackend"],
 }
