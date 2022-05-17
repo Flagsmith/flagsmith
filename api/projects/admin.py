@@ -14,25 +14,35 @@ class EnvironmentInline(admin.StackedInline):
     model = Environment
     extra = 0
     show_change_link = True
+    fields = ("name", "api_key", "minimum_change_request_approvals")
 
 
 class FeatureInline(admin.StackedInline):
     model = Feature
     extra = 0
     show_change_link = True
-    readonly_fields = ("owners", "tags")
+    fields = (
+        "name",
+        "description",
+        "initial_value",
+        "default_enabled",
+        "type",
+        "is_archived",
+    )
 
 
 class SegmentInline(admin.StackedInline):
     model = Segment
     extra = 0
     show_change_link = True
+    fields = ("name", "description")
 
 
 class TagInline(admin.StackedInline):
     model = Tag
     extra = 0
     show_change_link = True
+    fields = ("label", "description", "color")
 
 
 @admin.register(Project)
@@ -47,10 +57,4 @@ class ProjectAdmin(admin.ModelAdmin):
     list_filter = ("created_date", "enable_dynamo_db")
     list_select_related = ("organisation",)
     search_fields = ("organisation__name",)
-
-    def get_queryset(self, request):
-        return (
-            super()
-            .get_queryset(request)
-            .prefetch_related("features__owners", "features__tags")
-        )
+    fields = ("name", "organisation", "hide_disabled_flags", "enable_dynamo_db")
