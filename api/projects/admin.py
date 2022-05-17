@@ -20,6 +20,7 @@ class FeatureInline(admin.StackedInline):
     model = Feature
     extra = 0
     show_change_link = True
+    readonly_fields = ("owners", "tags")
 
 
 class SegmentInline(admin.StackedInline):
@@ -46,3 +47,10 @@ class ProjectAdmin(admin.ModelAdmin):
     list_filter = ("created_date", "enable_dynamo_db")
     list_select_related = ("organisation",)
     search_fields = ("organisation__name",)
+
+    def get_queryset(self, request):
+        return (
+            super()
+            .get_queryset(request)
+            .prefetch_related("features__owners", "features__tags")
+        )
