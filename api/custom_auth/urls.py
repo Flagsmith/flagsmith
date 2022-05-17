@@ -24,6 +24,8 @@ urlpatterns = [
         name="mfa-authtoken-login-code",
     ),
     path("", include(throttled_user_router.urls)),
+    # NOTE: endpoints provided by `djoser.urls`
+    # are deprecated and will be removed in the next Major release
     path("", include("djoser.urls")),
     path("", include("trench.urls")),  # MFA
     path("", include("trench.urls.djoser")),  # override necessary urls for MFA auth
