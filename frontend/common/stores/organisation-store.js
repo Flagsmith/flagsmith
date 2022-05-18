@@ -73,7 +73,7 @@ const controller = {
     },
     createProject: (name) => {
         store.saving();
-        const createSampleUser = (res, envName) => data.post(`${Project.api}environments/${res.api_key}/${Utils.getIdentitiesEndpoint()}/`, {
+        const createSampleUser = (res, envName) => data.post(`${Project.api}environments/${res.api_key}/${Utils.getIdentitiesEndpoint(res)}/`, {
             environment: res.id,
             identifier: `${envName}_user_123456`,
         }).then(() => res);
