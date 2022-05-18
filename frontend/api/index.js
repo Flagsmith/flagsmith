@@ -86,7 +86,7 @@ app.get('/config/project-overrides', (req, res) => {
 // e.g. FLAGSMITH_PROXY_API_URL=http://api.flagsmith.com/
 if (process.env.FLAGSMITH_PROXY_API_URL) {
     const { createProxyMiddleware } = require('http-proxy-middleware');
-    app.use('/api/v1/', createProxyMiddleware({ target: process.env.FLAGSMITH_PROXY_API_URL, changeOrigin: true }));
+    app.use('/api/v1/', createProxyMiddleware({ target: process.env.FLAGSMITH_PROXY_API_URL, changeOrigin: true, xfwd: true }));
 }
 
 if (isDev) { // Serve files from src directory and use webpack-dev-server
