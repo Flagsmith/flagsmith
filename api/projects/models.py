@@ -4,6 +4,8 @@ from __future__ import unicode_literals
 from django.conf import settings
 from django.core.cache import caches
 from django.db import models
+from django.utils import timezone
+from django_lifecycle import BEFORE_CREATE, LifecycleModel, hook
 
 from organisations.models import Organisation
 from permissions.models import (
@@ -16,7 +18,7 @@ from projects.managers import ProjectManager
 project_segments_cache = caches[settings.PROJECT_SEGMENTS_CACHE_LOCATION]
 
 
-class Project(models.Model):
+class Project(LifecycleModel):
     name = models.CharField(max_length=2000)
     created_date = models.DateTimeField("DateCreated", auto_now_add=True)
     organisation = models.ForeignKey(
@@ -58,6 +60,10 @@ class Project(models.Model):
             )
 
         return segments
+
+    @hook(BEFORE_CREATE)
+    def set_enable_dynamo_db(self):
+        self.enable_dynamo_db = settings.EDGE_RELEASE_DATETIME < timezone.now()
 
 
 class ProjectPermissionManager(models.Manager):
