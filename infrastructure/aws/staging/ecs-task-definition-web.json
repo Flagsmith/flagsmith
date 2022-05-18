@@ -138,6 +138,10 @@
                 {
                     "name": "ENVIRONMENTS_API_KEY_TABLE_NAME_DYNAMO",
                     "value": "flagsmith_environment_api_key"
+                },
+                {
+                    "name":"EDGE_RELEASE_DATETIME",
+                    "value":"2022-02-20T12:35:00Z"
                 }
             ],
             "secrets": [
