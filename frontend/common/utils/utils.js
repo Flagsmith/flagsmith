@@ -24,75 +24,86 @@ module.exports = Object.assign({}, require('./base/_utils'), {
         return 'ADMIN';
     },
 
-    getTraitEndpointMethod() {
+    getTraitEndpointMethod(_project) {
+        let project = _project ? _project : ProjectStore.model
         if (flagsmith.hasFeature('edge_identities') && ProjectStore.model && ProjectStore.model.use_edge_identities) {
             return 'put';
         }
         return 'post';
     },
-    getIsEdge() {
+    getIsEdge(_project) {
+        let project = _project ? _project : ProjectStore.model
         if (flagsmith.hasFeature('edge_identities') && ProjectStore.model && ProjectStore.model.use_edge_identities) {
             return true;
         }
         return false;
     },
-    getTraitEndpoint(environmentId, userId) {
+    getTraitEndpoint(environmentId, userId, _project) {
         if (flagsmith.hasFeature('edge_identities') && ProjectStore.model && ProjectStore.model.use_edge_identities) {
             return `${Project.api}environments/${environmentId}/edge-identities/${userId}/update-traits/`;
         }
         return `${Project.api}traits/`;
     },
 
-    getShouldSendIdentityToTraits() {
-        if (flagsmith.hasFeature('edge_identities') && ProjectStore.model && ProjectStore.model.use_edge_identities) {
+    getShouldSendIdentityToTraits(_project) {
+        let project = _project ? _project : ProjectStore.model
+        if (flagsmith.hasFeature('edge_identities') && project && project.use_edge_identities) {
             return false;
         }
         return true;
     },
-    getShouldUpdateTraitOnDelete() {
-        if (flagsmith.hasFeature('edge_identities') && ProjectStore.model && ProjectStore.model.use_edge_identities) {
+    getShouldUpdateTraitOnDelete(_project) {
+        let project = _project ? _project : ProjectStore.model
+        if (flagsmith.hasFeature('edge_identities') && project && project.use_edge_identities) {
             return true;
         }
         return false;
     },
 
-    getShouldShowProjectTraits() {
-        if (flagsmith.hasFeature('edge_identities') && ProjectStore.model && ProjectStore.model.use_edge_identities) {
+    getShouldShowProjectTraits(_project) {
+        let project = _project ? _project : ProjectStore.model
+        if (flagsmith.hasFeature('edge_identities') && project && project.use_edge_identities) {
             return false;
         }
         return true;
     },
 
-    getIdentitiesEndpoint() {
-        if (flagsmith.hasFeature('edge_identities') && ProjectStore.model && ProjectStore.model.use_edge_identities) {
+    getIdentitiesEndpoint(_project) {
+        let project = _project ? _project : ProjectStore.model
+        if (flagsmith.hasFeature('edge_identities') && project && project.use_edge_identities) {
             return 'edge-identities';
         }
         return 'identities';
     },
 
-    getSDKEndpoint() {
-        if (flagsmith.hasFeature('edge_identities') && ProjectStore.model && ProjectStore.model.use_edge_identities) {
+    getSDKEndpoint(_project) {
+        let project = _project ? _project : ProjectStore.model
+
+        if (flagsmith.hasFeature('edge_identities') && project && project.use_edge_identities) {
             return Project.flagsmithClientEdgeAPI;
         }
         return Project.api;
     },
 
-    showUserSegments() {
-        if (flagsmith.hasFeature('edge_identities') && ProjectStore.model && ProjectStore.model.use_edge_identities) {
+    showUserSegments(_project) {
+        let project = _project ? _project : ProjectStore.model
+        if (flagsmith.hasFeature('edge_identities') && project && project.use_edge_identities) {
             return false;
         }
         return true;
     },
 
-    getShouldHideIdentityOverridesTab() {
-        if (flagsmith.hasFeature('edge_identities') && ProjectStore.model && ProjectStore.model.use_edge_identities) {
+    getShouldHideIdentityOverridesTab(_project) {
+        let project = _project ? _project : ProjectStore.model
+        if (flagsmith.hasFeature('edge_identities') && project && project.use_edge_identities) {
             return true;
         }
         return false;
     },
 
-    getFeatureStatesEndpoint() {
-        if (flagsmith.hasFeature('edge_identities') && ProjectStore.model && ProjectStore.model.use_edge_identities) {
+    getFeatureStatesEndpoint(_project) {
+        let project = _project ? _project : ProjectStore.model
+        if (flagsmith.hasFeature('edge_identities') && project && project.use_edge_identities) {
             return 'edge-featurestates';
         }
         return 'featurestates';
