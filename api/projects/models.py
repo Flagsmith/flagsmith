@@ -63,7 +63,7 @@ class Project(LifecycleModel):
 
     @hook(BEFORE_CREATE)
     def set_enable_dynamo_db(self):
-        self.enable_dynamo_db = (
+        self.enable_dynamo_db = self.enable_dynamo_db or (
             settings.EDGE_RELEASE_DATETIME is not None
             and settings.EDGE_RELEASE_DATETIME < timezone.now()
         )
