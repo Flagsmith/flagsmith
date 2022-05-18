@@ -191,7 +191,9 @@ const Aside = class extends Component {
                                                                       }}
                                                                       className="chip chip--active bg-secondary"
                                                                     >
-                                                                        <a href="https://docs.flagsmith.com/next/advanced-use/edge-api#enabling-the-edge-api" className="text-white font-weight-bold">
+                                                                        <a
+                                                                            data-test={Utils.getIsEdge() ? 'edge-project': "core-project"}
+                                                                            href="https://docs.flagsmith.com/next/advanced-use/edge-api#enabling-the-edge-api" className="text-white font-weight-bold">
                                                                             {Utils.getIsEdge() ? 'Edge' : 'Core'}
                                                                         </a>
                                                                     </span>
