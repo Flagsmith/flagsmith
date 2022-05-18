@@ -76,15 +76,16 @@ const ChangeRequestsPage = class extends Component {
                             ) : (
                                 <div>
                                     View and manage requests to change feature flags with <ButtonLink
-                                      href="https://docs.flagsmith.com/advanced-use/change-requests"
-                                      target="_blank"
-                                    >Change Requests</ButtonLink>.
+                                        href="https://docs.flagsmith.com/advanced-use/change-requests"
+                                        target="_blank"
+                                    >Change Requests</ButtonLink> and <ButtonLink
+                                        href="https://docs.flagsmith.com/advanced-use/scheduled-flags"
+                                        target="_blank"
+                                    >Scheduled Flags</ButtonLink>.
                                 </div>
-
                             )}
                         </p>
                     )}
-
                     <Tabs
                       value={this.state.tab}
                       onChange={(tab) => {
