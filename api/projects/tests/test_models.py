@@ -55,7 +55,7 @@ def test_get_segments_from_cache_set_not_called(project, segments, monkeypatch):
 
 @pytest.mark.parametrize(
     "edge_release_datetime, expected_enable_dynamo_db_value",
-    ((yesterday, True), (tomorrow, False)),
+    ((yesterday, True), (tomorrow, False), (None, False)),
 )
 def test_create_project_sets_enable_dynamo_db(
     db, edge_release_datetime, expected_enable_dynamo_db_value, settings, organisation
