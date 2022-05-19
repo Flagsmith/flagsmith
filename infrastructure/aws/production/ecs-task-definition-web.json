@@ -138,6 +138,10 @@
                 {
                     "name": "ENVIRONMENTS_API_KEY_TABLE_NAME_DYNAMO",
                     "value": "flagsmith_environment_api_key"
+                },
+                {
+                    "name": "CACHE_BAD_ENVIRONMENTS_SECONDS",
+                    "value": "60"
                 }
             ],
             "secrets": [
