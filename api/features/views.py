@@ -47,6 +47,7 @@ from .permissions import (
     FeaturePermissions,
     FeatureStatePermissions,
     IdentityFeatureStatePermissions,
+    MasterAPIKeyFeatureStatePermissions,
 )
 from .serializers import (
     FeatureInfluxDataSerializer,
@@ -466,7 +467,7 @@ class SimpleFeatureStateViewSet(
     viewsets.GenericViewSet,
 ):
     serializer_class = WritableNestedFeatureStateSerializer
-    permission_classes = [IsAuthenticated, FeatureStatePermissions]
+    permission_classes = [FeatureStatePermissions | MasterAPIKeyFeatureStatePermissions]
     filterset_fields = ["environment", "feature", "feature_segment"]
 
     def get_queryset(self):
@@ -481,13 +482,6 @@ class SimpleFeatureStateViewSet(
             environment = Environment.objects.get(
                 id=self.request.query_params["environment"]
             )
-            if not self.request.user.has_environment_permission(
-                VIEW_ENVIRONMENT, environment
-            ):
-                raise PermissionDenied(
-                    "User does not have permission to perform action in environment."
-                )
-
             queryset = FeatureState.get_environment_flags_queryset(
                 environment_id=environment.id
             )

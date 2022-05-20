@@ -280,12 +280,13 @@ def create_feature_state_audit_log(feature_state, request):
         message = FEATURE_STATE_UPDATED_MESSAGE % feature_state.feature.name
 
     AuditLog.objects.create(
-        author=getattr(request, "user", None),
+        author=None if request.user.is_anonymous else request.user,
         related_object_id=feature_state.id,
         related_object_type=RelatedObjectType.FEATURE_STATE.name,
         environment=feature_state.environment,
         project=feature_state.environment.project,
         log=message,
+        master_api_key=request.master_api_key if request.user.is_anonymous else None,
     )
 
 

@@ -1,4 +1,7 @@
+from contextlib import suppress
+
 from django.conf import settings
+from django.core.exceptions import ObjectDoesNotExist
 from rest_framework.exceptions import PermissionDenied
 from rest_framework.permissions import BasePermission
 
@@ -90,3 +93,17 @@ class UserPermissionGroupPermission(BasePermission):
             return True
 
         return False
+
+
+class NestedIsOrganisationAdminPermission(BasePermission):
+    def has_permission(self, request, view):
+        organisation_pk = view.kwargs.get("organisation_pk")
+
+        with suppress(ObjectDoesNotExist):
+            return request.user.is_organisation_admin(
+                Organisation.objects.get(pk=organisation_pk)
+            )
+        return False
+
+    def has_object_permission(self, request, view, obj):
+        return self.has_permission(request, view)
