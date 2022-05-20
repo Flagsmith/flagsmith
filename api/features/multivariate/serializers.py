@@ -9,19 +9,23 @@ from features.multivariate.models import (
 )
 
 
-class MultivariateFeatureOptionSerializer(serializers.ModelSerializer):
+class NestedMultivariateFeatureOptionSerializer(serializers.ModelSerializer):
     class Meta:
         model = MultivariateFeatureOption
 
         fields = (
             "id",
-            "feature",
             "type",
             "integer_value",
             "string_value",
             "boolean_value",
             "default_percentage_allocation",
         )
+
+
+class MultivariateFeatureOptionSerializer(NestedMultivariateFeatureOptionSerializer):
+    class Meta(NestedMultivariateFeatureOptionSerializer.Meta):
+        fields = NestedMultivariateFeatureOptionSerializer.Meta.fields + ("feature",)
 
     def validate(self, attrs):
         attrs = super().validate(attrs)

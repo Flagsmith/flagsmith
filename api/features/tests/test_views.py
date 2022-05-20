@@ -25,7 +25,8 @@ from features.models import (
     FeatureStateValue,
 )
 from organisations.models import Organisation, OrganisationRole
-from projects.models import Project
+from permissions.models import PermissionModel
+from projects.models import Project, UserProjectPermission
 from projects.tags.models import Tag
 from segments.models import Segment
 from users.models import FFAdminUser
@@ -722,7 +723,7 @@ class ProjectFeatureTestCase(TestCase):
             period="24h",  # this is the default but can be provided as a GET param
         )
 
-    def test_passing_multivariate_options_with_feature_create_does_not_create_mv(self):
+    def test_project_admin_can_create_mv_options_when_creating_feature(self):
         # Given
         data = {
             "name": "test_feature",
@@ -740,7 +741,36 @@ class ProjectFeatureTestCase(TestCase):
         assert response.status_code == status.HTTP_201_CREATED
 
         response_json = response.json()
-        assert len(response_json["multivariate_options"]) == 0
+        assert len(response_json["multivariate_options"]) == 1
+
+    def test_regular_user_cannot_create_mv_options_when_creating_feature(self):
+        # Given
+        user = FFAdminUser.objects.create(email="regularuser@project.com")
+        user.add_organisation(self.organisation)
+        user_project_permission = UserProjectPermission.objects.create(
+            user=user, project=self.project
+        )
+        permissions = PermissionModel.objects.filter(
+            key__in=["VIEW_PROJECT", "CREATE_FEATURE"]
+        )
+        user_project_permission.permissions.add(*permissions)
+        client = APIClient()
+        client.force_authenticate(user)
+
+        data = {
+            "name": "test_feature",
+            "default_enabled": True,
+            "multivariate_options": [{"type": "unicode", "string_value": "test-value"}],
+        }
+        url = reverse("api-v1:projects:project-features-list", args=[self.project.id])
+
+        # When
+        response = client.post(
+            url, data=json.dumps(data), content_type="application/json"
+        )
+
+        # Then
+        assert response.status_code == status.HTTP_403_FORBIDDEN
 
 
 @pytest.mark.django_db()

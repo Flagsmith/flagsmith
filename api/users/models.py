@@ -236,7 +236,7 @@ class FFAdminUser(LifecycleModel, AbstractUser):
             ).exists()
         )
 
-    def is_project_admin(self, project, allow_org_admin: bool = True):
+    def is_project_admin(self, project: Project, allow_org_admin: bool = True):
         return (
             (allow_org_admin and self.is_organisation_admin(project.organisation))
             or UserProjectPermission.objects.filter(
