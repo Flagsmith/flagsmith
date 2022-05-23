@@ -70,7 +70,7 @@ test('Segments Test', async () => {
     await createTrait(0, 'trait', 1);
     await createTrait(1, 'trait2', 2);
     await createTrait(2, 'trait3', 3);
-    await assertTextContent(byId('segment-0-name'), 'segment_1');
+    // await assertTextContent(byId('segment-0-name'), 'segment_1'); todo: view user segments disabled in edge
     await waitForElementVisible(byId('user-feature-switch-1-on'));
     await assertTextContent(byId('user-feature-value-0'), '1');
 
