@@ -2,6 +2,7 @@ from django.conf.urls import include, url
 from django.urls import path
 from rest_framework_nested import routers
 
+from features.multivariate.views import MultivariateFeatureOptionViewSet
 from features.views import FeatureViewSet
 from integrations.datadog.views import DataDogConfigurationViewSet
 from integrations.new_relic.views import NewRelicConfigurationViewSet
@@ -46,7 +47,9 @@ projects_router.register(
 nested_features_router = routers.NestedSimpleRouter(
     projects_router, r"features", lookup="feature"
 )
-
+nested_features_router.register(
+    r"mv-options", MultivariateFeatureOptionViewSet, basename="feature-mv-options"
+)
 
 app_name = "projects"
 
