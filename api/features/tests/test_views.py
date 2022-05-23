@@ -24,10 +24,9 @@ from features.models import (
     FeatureState,
     FeatureStateValue,
 )
-from features.multivariate.models import MultivariateFeatureOption
-from features.value_types import STRING
 from organisations.models import Organisation, OrganisationRole
-from projects.models import Project
+from permissions.models import PermissionModel
+from projects.models import Project, UserProjectPermission
 from projects.tags.models import Tag
 from segments.models import Segment
 from users.models import FFAdminUser
@@ -724,7 +723,7 @@ class ProjectFeatureTestCase(TestCase):
             period="24h",  # this is the default but can be provided as a GET param
         )
 
-    def test_create_feature_with_multivariate_options(self):
+    def test_project_admin_can_create_mv_options_when_creating_feature(self):
         # Given
         data = {
             "name": "test_feature",
@@ -744,98 +743,34 @@ class ProjectFeatureTestCase(TestCase):
         response_json = response.json()
         assert len(response_json["multivariate_options"]) == 1
 
-    def test_create_mv_feature_with_invalid_percentage_allocation_returns_400(self):
+    def test_regular_user_cannot_create_mv_options_when_creating_feature(self):
         # Given
+        user = FFAdminUser.objects.create(email="regularuser@project.com")
+        user.add_organisation(self.organisation)
+        user_project_permission = UserProjectPermission.objects.create(
+            user=user, project=self.project
+        )
+        permissions = PermissionModel.objects.filter(
+            key__in=["VIEW_PROJECT", "CREATE_FEATURE"]
+        )
+        user_project_permission.permissions.add(*permissions)
+        client = APIClient()
+        client.force_authenticate(user)
+
         data = {
             "name": "test_feature",
             "default_enabled": True,
-            "multivariate_options": [
-                {
-                    "type": "unicode",
-                    "string_value": "test-value-50",
-                    "default_percentage_allocation": 50,
-                },
-                {
-                    "type": "unicode",
-                    "string_value": "test-value-51",
-                    "default_percentage_allocation": 51,
-                },
-            ],
+            "multivariate_options": [{"type": "unicode", "string_value": "test-value"}],
         }
         url = reverse("api-v1:projects:project-features-list", args=[self.project.id])
 
         # When
-        response = self.client.post(
+        response = client.post(
             url, data=json.dumps(data), content_type="application/json"
         )
+
         # Then
-        assert response.status_code == status.HTTP_400_BAD_REQUEST
-        assert (
-            response.json()["multivariate_options"][0]
-            == "Invalid percentage allocation"
-        )
-
-    def test_update_feature_with_multivariate_options(self):
-        # Given
-        # a feature
-        feature = Feature.objects.create(name="test_feature", project=self.project)
-
-        # a multivariate feature option for the feature that we will leave out from
-        # the list in the PUT request
-        multivariate_option_to_delete = MultivariateFeatureOption.objects.create(
-            feature=feature,
-            type=STRING,
-            string_value="test-value_to_delete",
-            default_percentage_allocation=50,
-        )
-
-        # a multivariate feature option for the feature that we will update in the
-        # PUT request
-        multivariate_option_to_update = MultivariateFeatureOption.objects.create(
-            feature=feature,
-            type=STRING,
-            string_value="test-value",
-            default_percentage_allocation=50,
-        )
-        updated_mv_option_data = model_to_dict(multivariate_option_to_update)
-        updated_mv_option_data["string_value"] = "updated-value"
-
-        # and the data adds a new multivariate flag, removes one and updates one
-        data = {
-            "name": "test_feature",
-            "multivariate_options": [
-                {
-                    "type": "unicode",
-                    "string_value": "test-value",
-                    "default_percentage_allocation": 50,
-                },  # new mv option
-                updated_mv_option_data,  # the updated mv option
-            ],  # and we removed the deleted one
-        }
-        url = reverse(
-            "api-v1:projects:project-features-detail",
-            args=[self.project.id, feature.id],
-        )
-        # When
-        response = self.client.put(
-            url, data=json.dumps(data), content_type="application/json"
-        )
-        # Then
-        # The response is successful
-        assert response.status_code == status.HTTP_200_OK
-
-        # and the correct number of multivariate options are returned
-        response_json = response.json()
-        assert len(response_json["multivariate_options"]) == 2
-
-        # and the deleted option is not included, and the updated option has been
-        # correctly updated
-        for mv_option in response_json["multivariate_options"]:
-            assert mv_option["id"] != multivariate_option_to_delete.id
-            if mv_option["id"] == multivariate_option_to_update.id:
-                assert (
-                    mv_option["string_value"] == updated_mv_option_data["string_value"]
-                )
+        assert response.status_code == status.HTTP_403_FORBIDDEN
 
 
 @pytest.mark.django_db()

@@ -1,5 +1,6 @@
 import django.core.exceptions
 from rest_framework import serializers
+from rest_framework.exceptions import PermissionDenied
 
 from audit.models import (
     FEATURE_STATE_UPDATED_MESSAGE,
@@ -14,8 +15,8 @@ from util.drf_writable_nested.serializers import WritableNestedModelSerializer
 
 from .models import Feature, FeatureState, FeatureStateValue
 from .multivariate.serializers import (
-    MultivariateFeatureOptionSerializer,
     MultivariateFeatureStateValueSerializer,
+    NestedMultivariateFeatureOptionSerializer,
 )
 
 
@@ -48,7 +49,7 @@ class ProjectFeatureSerializer(serializers.ModelSerializer):
 
 
 class ListCreateFeatureSerializer(WritableNestedModelSerializer):
-    multivariate_options = MultivariateFeatureOptionSerializer(
+    multivariate_options = NestedMultivariateFeatureOptionSerializer(
         many=True, required=False
     )
     owners = UserListSerializer(many=True, read_only=True)
@@ -83,14 +84,21 @@ class ListCreateFeatureSerializer(WritableNestedModelSerializer):
         instance.owners.add(user)
         return instance
 
-    def validate_multivariate_options(self, mv_options):
-        total_percentage_allocation = sum(
-            mv_option.get("default_percentage_allocation", 100)
-            for mv_option in mv_options
-        )
-        if total_percentage_allocation > 100:
-            raise serializers.ValidationError("Invalid percentage allocation")
-        return mv_options
+    def validate_multivariate_options(self, multivariate_options):
+        if multivariate_options:
+            user = self.context["request"].user
+            project = self.context.get("project")
+            if not (user and project and user.is_project_admin(project)):
+                raise PermissionDenied(
+                    "User must be project admin to modify / create MV options."
+                )
+            total_percentage_allocation = sum(
+                mv_option.get("default_percentage_allocation", 100)
+                for mv_option in multivariate_options
+            )
+            if total_percentage_allocation > 100:
+                raise serializers.ValidationError("Invalid percentage allocation")
+        return multivariate_options
 
     def validate(self, attrs):
         view = self.context["view"]

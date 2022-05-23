@@ -38,6 +38,7 @@ from environments.permissions.permissions import (
     EnvironmentKeyPermissions,
     NestedEnvironmentPermissions,
 )
+from projects.models import Project
 from webhooks.webhooks import WebhookEventType
 
 from .models import Feature, FeatureState
@@ -135,6 +136,16 @@ class FeatureViewSet(viewsets.ModelViewSet):
         self._create_audit_log("DELETE", instance, feature_states)
         self._trigger_feature_state_change_webhooks(feature_states)
         instance.delete()
+
+    def get_serializer_context(self):
+        context = super().get_serializer_context()
+        context.update(
+            project=get_object_or_404(
+                Project.objects.all(), pk=self.kwargs["project_pk"]
+            ),
+            user=self.request.user,
+        )
+        return context
 
     def _trigger_feature_state_change_webhooks(
         self, feature_states: typing.List[FeatureState]
