@@ -1,0 +1,64 @@
+name: Run E2E tests
+description: "Run the E2E tests against an environment"
+
+inputs:
+    database_url:
+        description: "The database URL to connect the API to"
+        required: true
+    sendgrid_api_key:
+        description: "The sendgrid API key to use for email sending"
+        required: true
+    sentry_sdk_dsn:
+        description: "The sentry SDK DSN"
+        required: true
+    python_version:
+        description: "The authentication token used for E2E test endpoints."
+        required: false
+        default: "3.8"
+    e2e_test_token:
+        description: "The token to use for authenticating the E2E test process"
+        required: false
+        default: "some-token"
+
+runs:
+    using: composite
+
+    steps:
+        -   name: Set up Python ${{ inputs.python_version }}
+            uses: actions/setup-python@v2
+            with:
+                python-version: ${{ inputs.python_version }}
+
+        -   name: Copy pip requirements
+            run: cp api/requirements.txt .
+            shell: bash
+
+        -   name: Restore VirtualEnv from cache
+            uses: syphar/restore-virtualenv@v1.2
+            id: cache-e2e-api
+
+        -   name: Restore Pip from cache
+            uses: syphar/restore-pip-download-cache@v1
+            if: steps.cache-e2e-api.outputs.cache-hit != 'true'
+
+        -   name: Install Dependencies
+            if: steps.cache-e2e-api.outputs.cache-hit != 'true'
+            run: |
+                python -m pip install --upgrade pip
+                pip install -r requirements.txt
+            shell: bash
+
+        -   name: Run API
+            working-directory: api
+            env:
+                E2E_TEST_AUTH_TOKEN: ${{ inputs.e2e_test_token }}
+                DJANGO_ALLOWED_HOSTS: '*'
+                DATABASE_URL: ${{ inputs.database_url }}
+                SENDGRID_API_KEY: ${{ inputs.sendgrid_api_key }}
+                DJANGO_SETTINGS_MODULE: app.settings.test
+                FE_E2E_TEST_USER_EMAIL: nightwatch@solidstategroup.com
+                SENTRY_SDK_DSN: ${{ inputs.sentry_sdk_dsn }}
+            run: |
+                python manage.py migrate
+                python manage.py runserver &
+            shell: bash

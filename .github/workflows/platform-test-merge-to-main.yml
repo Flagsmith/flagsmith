@@ -34,42 +34,13 @@ jobs:
                   restore-keys: |
                       ${{ runner.os }}-node-
 
-            - name: Set up Python 3.8
-              uses: actions/setup-python@v2
+            - name: Run Local API
+              uses: ./.github/actions/run-local-api
               with:
-                  python-version: 3.8
-
-            - name: Copy pip requirements
-              run: |
-                  cp api/requirements.txt .
-
-            - name: Restore VirtualEnv from cache
-              uses: syphar/restore-virtualenv@v1.2
-              id: cache-e2e-api
-
-            - name: Restore Pip from cache
-              uses: syphar/restore-pip-download-cache@v1
-              if: steps.cache-e2e-api.outputs.cache-hit != 'true'
-
-            - name: Install Dependencies
-              if: steps.cache-e2e-api.outputs.cache-hit != 'true'
-              run: |
-                  python -m pip install --upgrade pip
-                  pip install -r requirements.txt
-
-            - name: Run API
-              working-directory: api
-              env:
-                  E2E_TEST_AUTH_TOKEN: some-token
-                  DJANGO_ALLOWED_HOSTS: '*'
-                  DATABASE_URL: postgres://postgres:postgres@localhost:5432/flagsmith
-                  SENDGRID_API_KEY: ${{ secrets.SENDGRID_API_KEY }}
-                  DJANGO_SETTINGS_MODULE: app.settings.test
-                  FE_E2E_TEST_USER_EMAIL: nightwatch@solidstategroup.com
-                  SENTRY_SDK_DSN: ${{ secrets.SENTRY_SDK_DSN }}
-              run: |
-                  python manage.py migrate
-                  python manage.py runserver &
+                  e2e_test_token: some-token
+                  database_url: postgres://postgres:postgres@localhost:5432/flagsmith
+                  sentry_sdk_dsn: ${{ secrets.SENTRY_SDK_DSN }}
+                  sendgrid_api_key: ${{ secrets.SENDGRID_API_KEY }}
 
             - name: Run E2E tests against local
               uses: ./.github/actions/e2e-tests
