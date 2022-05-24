@@ -40,7 +40,6 @@
     }
 }
 .dark {
-
     .input-container {
         input.input {
             border: 1px solid $bt-input-border-dark !important;
@@ -58,7 +57,11 @@
 
 .input-container{
     height:$input-height;
-
+    &.invalid {
+        input.input {
+            border-color: $brand-danger;
+        }
+    }
     input.input{
         border:1px solid $bt-input-border;
         background-color: $input-bg;

@@ -3,16 +3,7 @@ import React, { PureComponent } from 'react';
 const splitIfValue = (v,append) =>{
     return append? v.split(append) : [v]
 }
-const findOperator = (operator,value,operators) =>{
-    const findAppended = `${value}`.includes(":")?(operators||[]).find((v)=>{
-        const split = value.split(":")
-        const targetKey = ":"+ split[split.length-1]
-        return v.value === operator+targetKey
-    }): false
-    if(findAppended) return findAppended;
 
-    return operators.find((v)=>v.value === operator)
-}
 export default class Rule extends PureComponent {
     static displayName = 'Rule';
 
@@ -22,7 +13,7 @@ export default class Rule extends PureComponent {
         const { props: { operators, rule: { conditions: rules } } } = this;
         const isLastRule = i === (rules.length - 1);
         const hasOr = i > 0;
-        const operatorObj = findOperator(rule.operator, rule.value, operators)
+        const operatorObj = Utils.findOperator(rule.operator, rule.value, operators)
         const operator = operatorObj && operatorObj.value
         const value = typeof rule.value === "string" ? rule.value.replace((operatorObj&&operatorObj.append)||"","") : rule.value
         return (
@@ -75,12 +66,11 @@ export default class Rule extends PureComponent {
                                   className="input-container--flat full-width"
                                   value={`${value}`}
                                   placeholder="Value *"
-
                                   onChange={e => {
                                       const value = Utils.getTypedValue(Utils.safeParseEventValue(e))
                                       this.setRuleProperty(i, 'value', { value: operatorObj && operatorObj.append? `${value}${operatorObj.append}`:value }, true)
                                   }}
-                                  isValid={value && this.validateRule(rule)}
+                                  isValid={Utils.validateRule(rule)}
                                 />
                             </Flex>
                         </Row>
@@ -131,7 +121,7 @@ export default class Rule extends PureComponent {
     setRuleProperty = (i, prop, { value }) => {
         const { props: { rule: { conditions: rules } } } = this;
 
-        const prevOperator = findOperator(rules[i].operator, rules[i].value, this.props.operators)
+        const prevOperator = Utils.findOperator(rules[i].operator, rules[i].value, this.props.operators)
         const newOperator =  prop !== 'operator' ? prevOperator: this.props.operators.find((v)=>{
             return v.value === value
         })
@@ -159,16 +149,7 @@ export default class Rule extends PureComponent {
         this.props.onChange(this.props.rule);
     };
 
-    validateRule = (rule) => {
-        switch (rule.operator) {
-            case 'PERCENTAGE_SPLIT': {
-                const value = parseFloat(rule.value);
-                return value && value >= 0 && value <= 100;
-            }
-            default:
-                return true;
-        }
-    }
+
 
     render() {
         const { props: { rule: { conditions: rules } } } = this;

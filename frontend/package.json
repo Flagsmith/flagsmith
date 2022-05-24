@@ -106,6 +106,7 @@
     "react-window": "^1.8.6",
     "recharts": "^1.8.5",
     "sass-loader": "^12.6.0",
+    "semver": "^7.3.7",
     "style-loader": "0.23.1",
     "toml": "^3.0.0",
     "webpack": "5.52.1",
