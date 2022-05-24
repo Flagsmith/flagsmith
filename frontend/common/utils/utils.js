@@ -1,5 +1,6 @@
 const React = require('react');
 const ProjectStore = require('../../common/stores/project-store');
+const semver = require('semver')
 module.exports = Object.assign({}, require('./base/_utils'), {
     numberWithCommas(x) {
         return x.toString()
@@ -43,6 +44,46 @@ module.exports = Object.assign({}, require('./base/_utils'), {
             return `${Project.api}environments/${environmentId}/edge-identities/${userId}/update-traits/`;
         }
         return `${Project.api}traits/`;
+    },
+    findOperator (operator,value,operators) {
+        const findAppended = `${value}`.includes(":")?(operators||[]).find((v)=>{
+            const split = value.split(":")
+            const targetKey = ":"+ split[split.length-1]
+            return v.value === operator+targetKey
+        }): false
+        if(findAppended) return findAppended;
+
+        return operators.find((v)=>v.value === operator)
+    },
+    validateRule (rule)  {
+        if(!rule) return false
+
+        const operators = flagsmith.getValue('segment_operators') ? JSON.parse(flagsmith.getValue('segment_operators')) : []
+        const operatorObj = Utils.findOperator(rule.operator, rule.value, operators)
+
+        if (operatorObj && operatorObj.value && operatorObj.value.toLowerCase().includes("semver")) {
+            return !!semver.valid(semver.coerce(`${rule.value.split(":")[0]}`))
+        }
+
+        switch (rule.operator) {
+            case 'PERCENTAGE_SPLIT': {
+                const value = parseFloat(rule.value);
+                return value && value >= 0 && value <= 100;
+            }
+            case 'REGEX': {
+                try {
+                    if(!rule.value) {
+                        throw new Error("")
+                    }
+                    new RegExp(`${rule.value}`)
+                    return true
+                } catch (e) {
+                    return false
+                }
+            }
+            default:
+                return rule.value !== '' && rule.value  !== undefined && rule.value !== null;
+        }
     },
 
     getShouldSendIdentityToTraits(_project) {
