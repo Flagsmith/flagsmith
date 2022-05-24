@@ -20,11 +20,14 @@ const controller = {
             }).catch(e => API.ajaxHandler(store, e));
     },
     getChangeRequests: (envId, { committed, live_from_after }, page) => {
+        if (!envId) {
+            return;
+        }
         store.loading();
         store.envId = envId;
-        const committedParams = `${committed || live_from_after ? 'committed=1' : 'committed=0'}` // request only committed for closed and scheduled
-        const liveFromParams =  live_from_after?`&live_from_after=${live_from_after}`:"" // request live from after for scheduled
-        const liveFromBeforeParams =  committed? `&live_from_before=${new Date().toISOString()}`:"" // request live from before for closed
+        const committedParams = `${committed || live_from_after ? 'committed=1' : 'committed=0'}`; // request only committed for closed and scheduled
+        const liveFromParams = live_from_after ? `&live_from_after=${live_from_after}` : ''; // request live from after for scheduled
+        const liveFromBeforeParams = committed ? `&live_from_before=${new Date().toISOString()}` : ''; // request live from before for closed
         let endpoint = page || `${Project.api}environments/${envId}/list-change-requests/?${committedParams}${liveFromParams}${liveFromBeforeParams}`;
         if (!endpoint.includes('page_size')) {
             endpoint += `&page_size=${PAGE_SIZE}`;
