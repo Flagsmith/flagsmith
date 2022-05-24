@@ -46,7 +46,7 @@ def test_get_environment_document(
     url = reverse("api-v1:environment-document")
 
     # When
-    with django_assert_num_queries(11):
+    with django_assert_num_queries(12):
         response = client.get(url)
 
     # Then

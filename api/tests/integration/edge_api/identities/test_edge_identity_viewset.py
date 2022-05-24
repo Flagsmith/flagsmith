@@ -16,7 +16,7 @@ def dynamo_wrapper_mock(mocker):
     )
 
 
-def test_get_identites_returns_bad_request_if_dynamo_is_not_enabled(
+def test_get_identities_returns_bad_request_if_dynamo_is_not_enabled(
     admin_client, environment, environment_api_key
 ):
     # Given
@@ -24,6 +24,7 @@ def test_get_identites_returns_bad_request_if_dynamo_is_not_enabled(
         "api-v1:environments:environment-edge-identities-list",
         args=[environment_api_key],
     )
+
     # When
     response = admin_client.get(url)
 
