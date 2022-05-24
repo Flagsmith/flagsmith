@@ -45,8 +45,9 @@ const Aside = class extends Component {
         this.listenTo(ChangeRequestStore, 'change', () => this.forceUpdate());
         this.listenTo(ProjectStore, 'loaded', () => {
             const environment = ProjectStore.getEnvironment(this.props.environmentId);
-
-            AppActions.getChangeRequests(this.props.environmentId, Utils.changeRequestsEnabled(environment.minimum_change_request_approvals) ? {} : { live_from_after: new Date().toISOString() });
+            if (environment){
+                AppActions.getChangeRequests(this.props.environmentId, Utils.changeRequestsEnabled(environment.minimum_change_request_approvals) ? {} : { live_from_after: new Date().toISOString() });
+            }
         });
     }
 
