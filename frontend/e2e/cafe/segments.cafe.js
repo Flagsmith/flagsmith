@@ -4,7 +4,7 @@ import {
     assertTextContent,
     byId,
     click, closeModal, createFeature, createRemoteConfig,
-    createSegment, createTrait, deleteFeature, gotoFeature,
+    createSegment, createTrait, deleteFeature, getLogger, gotoFeature,
     gotoFeatures,
     gotoSegments, goToUser,
     log,
@@ -15,9 +15,11 @@ import {
 import {t} from 'testcafe'
 const email = 'nightwatch@solidstategroup.com';
 const password = 'str0ngp4ssw0rd!';
+const logger = getLogger()
 
 fixture`Segments Tests`
-    .page`http://localhost:3000/`;
+    .page`http://localhost:3000/`
+    .requestHooks(logger)
 
 test('Segments Test', async () => {
     log('Login', 'Segment Test');
@@ -124,4 +126,12 @@ test('Segments Test', async () => {
     await click(byId('user-feature-switch-1-off'));
     await click('#confirm-toggle-feature-btn');
     await waitForElementVisible(byId('user-feature-switch-1-on'));
-});
+}).after(async (t)=>{
+    console.log("Start of Segments Requests")
+    console.log(logger.requests)
+    console.log("End of Segments Requests")
+    console.log("Start of Segments Errors")
+    console.error((await t.getBrowserConsoleMessages()).error);
+    console.log("End of Segments Errors")
+})
+

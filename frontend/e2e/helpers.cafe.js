@@ -1,4 +1,4 @@
-import { Selector, t } from 'testcafe';
+import { RequestLogger, Selector, t } from 'testcafe';
 
 export const byId = id => `[data-test="${id}"]`;
 
@@ -32,6 +32,10 @@ export const click = async (selector) => {
 export const gotoSegments = async () => {
     await click('#segments-link');
 };
+
+export const getLogger = ()=>{
+    return RequestLogger(/api\/v1/, {logResponseBody:true, stringifyResponseBody: true})
+}
 
 export const gotoTraits = async () => {
     await click('#users-link');

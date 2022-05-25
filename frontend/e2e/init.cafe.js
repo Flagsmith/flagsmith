@@ -4,6 +4,7 @@ import Project from '../common/project';
 import {
     assertTextContent,
     byId, click, closeModal,
+    getLogger,
     createFeature,
     createRemoteConfig, createSegment, createTrait,
     deleteFeature, deleteSegment, deleteTrait, getText, gotoSegments, gotoTraits, log,
@@ -17,8 +18,9 @@ require('dotenv').config();
 const email = 'nightwatch@solidstategroup.com';
 const password = 'str0ngp4ssw0rd!';
 const url = `http://localhost:${process.env.PORT || 8080}/`;
-
+const logger = getLogger()
 fixture`Initialise`
+    .requestHooks(logger)
     .before(async () => {
         const token = process.env.E2E_TEST_TOKEN
             ? process.env.E2E_TEST_TOKEN : process.env[`E2E_TEST_TOKEN_${Project.env.toUpperCase()}`];
@@ -205,4 +207,9 @@ test('[Initialise]', async () => {
     log('Delete segment');
     await gotoSegments();
     await deleteSegment(0, '18_or_19');
-});
+}).after(async (t)=>{
+    console.log("Start of Initialise Requests")
+    console.log(logger.requests)
+    console.error((await t.getBrowserConsoleMessages()).error);
+    console.log("Start of Initialise Requests")
+})

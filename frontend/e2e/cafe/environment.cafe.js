@@ -1,10 +1,12 @@
-import { byId, click, log, login, setText, waitForElementVisible } from '../helpers.cafe';
+import { byId, click, getLogger, log, login, setText, waitForElementVisible } from '../helpers.cafe';
 
 const email = 'nightwatch@solidstategroup.com';
 const password = 'str0ngp4ssw0rd!';
+const logger = getLogger()
 
 fixture`Environment Tests`
-    .page`http://localhost:3000/`;
+    .page`http://localhost:3000/`
+    .requestHooks(logger)
 
 test('Submit a Form', async () => {
     log('Login', 'Environment Test');
@@ -24,4 +26,11 @@ test('Submit a Form', async () => {
     await setText("[name='confirm-env-name']", 'Internal');
     await click('#confirm-delete-env-btn');
     await waitForElementVisible(byId('features-page'));
-});
+}).after(async (t)=>{
+    console.log("Start of Environment Requests")
+    console.log(logger.requests)
+    console.log("End of Environment Requests")
+    console.log("Start of Environment Errors")
+    console.error((await t.getBrowserConsoleMessages()).error);
+    console.log("End of Environment Errors")
+})
