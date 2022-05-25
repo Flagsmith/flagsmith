@@ -28,7 +28,7 @@ RUN pip install google-re2==${GOOGLE_RE2_VERSION}
 
 # Install SAML dependency if required
 ARG SAML_INSTALLED="0"
-RUN if [ "${SAML_INSTALLED}" = "1" ]; then apt-get update && apt-get install -y xmlsec1 && echo "true" > xmlsec-installed.txt; fi;
+RUN if [ "${SAML_INSTALLED}" = "1" ]; then apt-get update && apt-get install -y xmlsec1; fi;
 
 # Install python dependencies
 RUN pip install -r requirements.txt --no-cache-dir --compile
