@@ -80,6 +80,10 @@ jobs:
               run: |
                 echo $(ls -al ./api)
                 touch fs-test.txt
+                echo "some test text" > fs-test.txt
+
+            - name: DEBUG 2
+              run: cat fs-test.txt
 
             - name: Build and push amd64 images
               id: docker_build
