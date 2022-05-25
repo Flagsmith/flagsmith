@@ -4,6 +4,8 @@ on:
     push:
         tags:
             - "*"
+        branches:
+            - fix/private-cloud-image-build
 
 env:
   FLAGSMITH_SAML_REVISION: v0.1.2
@@ -73,6 +75,9 @@ jobs:
               with:
                   username: ${{ secrets.DOCKERHUB_USERNAME }}
                   password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+            - name: DEBUG
+              run: echo $(ls -al ./api)
 
             - name: Build and push amd64 images
               id: docker_build
