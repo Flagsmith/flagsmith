@@ -40,10 +40,10 @@ test('Invite Test', async () => {
     await assertTextContent('.nav-link-featured', organisationName);
 }).after(async (t)=>{
     console.log("Start of Invite Requests")
-    console.log(logger.requests)
+    console.log(JSON.stringify(logger.requests, null,2))
     console.log("End of Invite Requests")
     console.log("Start of Invite Errors")
-    console.error((await t.getBrowserConsoleMessages()).error);
+    console.error(JSON.stringify((await t.getBrowserConsoleMessages()).error));
     console.log("End of Invite Errors")
 
 })

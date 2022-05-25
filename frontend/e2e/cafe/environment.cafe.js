@@ -28,9 +28,9 @@ test('Submit a Form', async () => {
     await waitForElementVisible(byId('features-page'));
 }).after(async (t)=>{
     console.log("Start of Environment Requests")
-    console.log(logger.requests)
+    console.log(JSON.stringify(logger.requests, null,2))
     console.log("End of Environment Requests")
     console.log("Start of Environment Errors")
-    console.error((await t.getBrowserConsoleMessages()).error);
+    console.error(JSON.stringify((await t.getBrowserConsoleMessages()).error));
     console.log("End of Environment Errors")
 })
