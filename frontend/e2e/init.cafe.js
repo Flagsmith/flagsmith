@@ -209,7 +209,7 @@ test('[Initialise]', async () => {
     await deleteSegment(0, '18_or_19');
 }).after(async (t)=>{
     console.log("Start of Initialise Requests")
-    console.log(logger.requests)
-    console.error((await t.getBrowserConsoleMessages()).error);
+    console.log(JSON.stringify(logger.requests, null,2))
+    console.error(JSON.stringify((await t.getBrowserConsoleMessages()).error));
     console.log("Start of Initialise Requests")
 })
