@@ -77,7 +77,9 @@ jobs:
                   password: ${{ secrets.DOCKERHUB_TOKEN }}
 
             - name: DEBUG
-              run: echo $(ls -al ./api)
+              run: |
+                echo $(ls -al ./api)
+                touch fs-test.txt
 
             - name: Build and push amd64 images
               id: docker_build
