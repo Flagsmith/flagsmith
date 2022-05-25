@@ -3,6 +3,7 @@ import {
     assertTextContent,
     byId,
     click,
+    getLogger,
     log,
     login,
     setText,
@@ -14,9 +15,11 @@ const invitePrefix = `flagsmith${new Date().valueOf()}`;
 const inviteEmail = `${invitePrefix}@restmail.net`;
 const email = 'nightwatch@solidstategroup.com';
 const password = 'str0ngp4ssw0rd!';
+const logger = getLogger()
 
-fixture`Environment Tests`
-    .page`http://localhost:3000/`;
+fixture`Invite Tests`
+    .page`http://localhost:3000/`
+    .requestHooks(logger)
 
 test('Invite Test', async () => {
     log('Login', 'Invite Test');
@@ -35,4 +38,13 @@ test('Invite Test', async () => {
     await waitForElementVisible(byId('signup-btn'));
     await click(byId('signup-btn'));
     await assertTextContent('.nav-link-featured', organisationName);
-});
+}).after(async (t)=>{
+    console.log("Start of Invite Requests")
+    console.log(logger.requests)
+    console.log("End of Invite Requests")
+    console.log("Start of Invite Errors")
+    console.error((await t.getBrowserConsoleMessages()).error);
+    console.log("End of Invite Errors")
+
+})
+
