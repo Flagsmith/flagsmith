@@ -71,7 +71,8 @@ def environment_api_key():
 
 
 @pytest.fixture()
-def environment(admin_client, project, environment_api_key) -> int:
+def environment(admin_client, project, environment_api_key, settings) -> int:
+    settings.EDGE_RELEASE_DATETIME = None
     environment_data = {
         "name": "Test Environment",
         "api_key": environment_api_key,
@@ -197,6 +198,7 @@ def identity_document(environment_api_key, feature, identity_traits):
             "id": feature,
         },
         "enabled": False,
+        "feature_segment": None,
     }
     _environment_feature_state_2_document = {
         "featurestate_uuid": "c6ec4de7-11a7-47c2-abc9-0d7bf0fc90e9",
@@ -209,6 +211,7 @@ def identity_document(environment_api_key, feature, identity_traits):
             "id": 200,
         },
         "enabled": True,
+        "feature_segment": None,
     }
     _mv_feature_state_document = {
         "featurestate_uuid": "4a8fbe06-d4cd-4686-a184-d924844bb421",
@@ -237,6 +240,7 @@ def identity_document(environment_api_key, feature, identity_traits):
             "id": 400,
         },
         "enabled": False,
+        "feature_segment": None,
     }
     return {
         "composite_key": f"{environment_api_key}_user_1_test",
