@@ -4,6 +4,8 @@ on:
     push:
         tags:
             - "*"
+        branches:
+            - "improvement/docker-fixes"
 
 env:
   FLAGSMITH_SAML_REVISION: v0.1.2
