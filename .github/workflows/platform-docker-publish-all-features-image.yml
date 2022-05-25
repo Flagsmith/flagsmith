@@ -83,6 +83,8 @@ jobs:
                   push: true
                   tags: ${{ steps.meta.outputs.tags }}
                   context: .
+                  build-args: |
+                      SAML_INSTALLED: 1
 
             - name: Image digest
               run: echo ${{ steps.docker_build.outputs.digest }}
