@@ -82,6 +82,7 @@ jobs:
                   file: Dockerfile
                   push: true
                   tags: ${{ steps.meta.outputs.tags }}
+                  context: .
 
             - name: Image digest
               run: echo ${{ steps.docker_build.outputs.digest }}
