@@ -8,13 +8,19 @@ const controller = {
         store.loading();
         return data.get(`${Project.api}environments/${envId}/${Utils.getIdentitiesEndpoint()}/${id}/`)
             .then(identity => Promise.all([
-                data.get(`${Utils.getSDKEndpoint()}identities/?identifier=${encodeURIComponent(identity.identifier)}`, null, { 'x-environment-key': envId }),
+                data.get(Utils.getTraitEndpoint(envId, id)),
                 Promise.resolve(identity),
                 data.get(`${Project.api}environments/${envId}/${Utils.getIdentitiesEndpoint()}/${id}/${Utils.getFeatureStatesEndpoint()}/`),
             ]))
             .then(([res, identity, flags]) => {
                 const features = (flags && flags.results) || flags;
-                const traits = res.traits;
+                const traits = Utils.getIsEdge()? res : res && res.results && res.results.map((v)=> {
+                    return {
+                        id: v.id,
+                        trait_value: Utils.featureStateToValue(v),
+                        trait_key: v.trait_key
+                    }
+                });
                 store.model = store.model || {};
                 store.model.features = features && _.keyBy(features, f => f.feature);
                 store.model.traits = traits;
@@ -56,7 +62,7 @@ const controller = {
     },
     editTrait({ identity, environmentId, trait: { trait_key, trait_value } }) {
         store.saving();
-        data[Utils.getTraitEndpointMethod()](Utils.getTraitEndpoint(environmentId, identity),
+        data[Utils.getTraitEndpointMethod()](Utils.getUpdateTraitEndpoint(environmentId, identity),
             {
                 identity: Utils.getShouldSendIdentityToTraits() ? { identifier: store.model && store.model.identity.identifier } : undefined,
                 trait_key,
