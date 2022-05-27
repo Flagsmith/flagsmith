@@ -31,8 +31,10 @@ class QueryLogger:
 
         try:
             result = execute(sql, params, many, context)
-        except Exception:  # pragma: NO COVER
-            status = status_module.Status(code=code_pb2.UNKNOWN, message="DB error")
+        except Exception as e:  # pragma: NO COVER
+            status = status_module.Status(
+                code=code_pb2.UNKNOWN, message=f"DB error ({e.__class__.__name__}): {e}"
+            )
             span.set_status(status)
             raise
         else:
