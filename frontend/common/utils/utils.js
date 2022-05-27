@@ -39,11 +39,17 @@ module.exports = Object.assign({}, require('./base/_utils'), {
         }
         return false;
     },
-    getTraitEndpoint(environmentId, userId, _project) {
+    getUpdateTraitEndpoint(environmentId, userId, _project) {
         if (flagsmith.hasFeature('edge_identities') && ProjectStore.model && ProjectStore.model.use_edge_identities) {
             return `${Project.api}environments/${environmentId}/edge-identities/${userId}/update-traits/`;
         }
         return `${Project.api}traits/`;
+    },
+    getTraitEndpoint(environmentId, userId) {
+        if (flagsmith.hasFeature('edge_identities') && ProjectStore.model && ProjectStore.model.use_edge_identities) {
+            return `${Project.api}environments/${environmentId}/edge-identities/${userId}/list-traits/`;
+        }
+        return `${Project.api}environments/${environmentId}/identities/${userId}/traits/`;
     },
     findOperator (operator,value,operators) {
         const findAppended = `${value}`.includes(":")?(operators||[]).find((v)=>{
