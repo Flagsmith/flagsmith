@@ -99,7 +99,7 @@ class FFAdminUser(LifecycleModel, AbstractUser):
         verbose_name = "Feature flag admin user"
 
     def __str__(self):
-        return "%s %s" % (self.first_name, self.last_name)
+        return self.email
 
     @hook(AFTER_CREATE)
     def subscribe_to_mailing_list(self):
