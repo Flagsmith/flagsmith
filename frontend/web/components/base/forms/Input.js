@@ -24,7 +24,7 @@ const Input = class extends React.Component {
 
     constructor(props, context) {
         super(props, context);
-        this.state = { shouldValidate: false, type: this.props.type };
+        this.state = { shouldValidate: !!this.props.value, type: this.props.type };
     }
 
     onFocus = (e) => {

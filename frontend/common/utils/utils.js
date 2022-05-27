@@ -62,7 +62,8 @@ module.exports = Object.assign({}, require('./base/_utils'), {
         const operatorObj = Utils.findOperator(rule.operator, rule.value, operators)
 
         if (operatorObj && operatorObj.value && operatorObj.value.toLowerCase().includes("semver")) {
-            return !!semver.valid(semver.coerce(`${rule.value.split(":")[0]}`))
+            console.log(semver)
+            return !!semver.valid(`${rule.value.split(":")[0]}`)
         }
 
         switch (rule.operator) {
