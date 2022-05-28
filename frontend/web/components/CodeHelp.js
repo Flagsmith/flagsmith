@@ -169,7 +169,7 @@ Code example:
                                     return (
                                         <TabItem key={key} tabLabel={key}>
                                             <div className="hljs-container mb-2">
-                                                <Highlight className={Constants.codeHelp.keys[key]}>
+                                                <Highlight preventEscape className={Constants.codeHelp.keys[key]}>
                                                     {s}
                                                 </Highlight>
                                                 <Button onClick={() => this.copy(s)} className="btn btn-primary hljs-copy">
