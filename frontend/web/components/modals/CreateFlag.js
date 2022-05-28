@@ -864,14 +864,14 @@ const CreateFlag = class extends Component {
                                                                 </p>
                                                             )}
 
-                                                            {!!projectAdmin || (flagsmith.hasFeature("segment_mv_percentages") && createFeature) && (
+                                                            {projectAdmin || (flagsmith.hasFeature("segment_mv_percentages") && createFeature) ? (
                                                                 <Button
                                                                   onClick={saveSettings} data-test="update-feature-btn" id="update-feature-btn"
                                                                   disabled={(isSaving || !name || invalid)}
                                                                 >
                                                                     {isSaving ? 'Updating' : 'Update Settings'}
                                                                 </Button>
-                                                            )}
+                                                            ): null}
 
                                                         </div>
                                                         )}
