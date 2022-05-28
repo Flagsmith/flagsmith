@@ -25,6 +25,10 @@ const getGithubLink = (key) => {
             return 'https://docs.flagsmith.com/clients/rest/';
         case 'React Native':
             return 'https://github.com/flagsmith/flagsmith-js-client/';
+        case 'React':
+            return 'https://github.com/flagsmith/flagsmith-js-client/';
+        case 'Next.js':
+            return 'https://github.com/flagsmith/flagsmith-js-client/';
         case 'Ruby':
             return 'https://github.com/flagsmith/flagsmith-ruby-client/';
         case 'Rust':
