@@ -55,14 +55,18 @@ const getDocsLink = (key) => {
             return 'https://docs.flagsmith.com/clients/python/';
         case 'REST':
             return null;
+        case 'React':
+            return 'https://docs.flagsmith.com/clients/react';
         case 'React Native':
-            return 'https://docs.flagsmith.com/clients/javascript/';
+            return 'https://docs.flagsmith.com/clients/react';
         case 'Ruby':
             return 'https://docs.flagsmith.com/clients/ruby/';
         case 'Rust':
             return 'https://docs.flagsmith.com/clients/rust/';
         case 'iOS':
             return 'https://docs.flagsmith.com/clients/ios/';
+        case 'Next.js':
+            return 'https://docs.flagsmith.com/clients/next-ssr';
         default:
             return 'https://docs.flagsmith.com';
     }
