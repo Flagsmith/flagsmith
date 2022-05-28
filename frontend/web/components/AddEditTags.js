@@ -167,9 +167,14 @@ class _CreateEditTag extends PureComponent {
 )}
               />
               <div className="text-center">
-                  <Button onClick={this.save} type="button" disabled={this.props.tagsSaving || !this.state.tag.color || !this.state.tag.label}>
-                      {isEdit ? 'Save Tag' : 'Create Tag' }
-                  </Button>
+                  <Permission level="project" permission="ADMIN" id={this.props.projectId}>
+                      {({ permission, isLoading }) => Utils.renderWithPermission(permission, Constants.projectPermissions('Admin'), ()=>(
+                          <Button onClick={this.save} type="button" disabled={this.props.tagsSaving || !this.state.tag.color || !this.state.tag.label || !permission}>
+                              {isEdit ? 'Save Tag' : 'Create Tag' }
+                          </Button>
+                      ))
+                          }
+                  </Permission>
               </div>
           </div>
       );
@@ -254,6 +259,8 @@ class TheComponent extends PureComponent {
                   />
               </Row>
 
+              <Permission level="project" permission="ADMIN" id={this.props.projectId}>
+                  {({permission:projectAdminPermission})=>(
               <InlineModal
                 title="Tags"
                 isOpen={this.state.isOpen}
@@ -262,6 +269,7 @@ class TheComponent extends PureComponent {
                 onClose={this.toggle}
                 className="inline-modal--tags"
               >
+
                   {this.state.tab === 'SELECT' && !noTags && (
                   <div>
                       <Input
@@ -276,34 +284,43 @@ class TheComponent extends PureComponent {
                       <div className="tag-list">
                           {filteredTags && filteredTags.map((tag, index) => (
                               <div key={tag.id}>
-                                  <Row>
+                                  <Row className={"py-2"}>
                                       <Flex>
                                           <Tag
                                             className="px-2 py-2" onClick={this.selectTag} selected={this.props.isSelected(tag)}
                                             tag={tag}
                                           />
                                       </Flex>
-                                      {!readOnly && (
-                                        <>
-                                            <div onClick={() => this.editTag(tag)} className="ml-2 px-2 py-2 clickable">
-                                                <span className="icon ion-md-settings"/>
-                                            </div>
-                                            <div onClick={() => this.deleteTag(tag)} className="ml-2 px-2 py-2 clickable">
-                                                <img width={16} src="/static/images/icons/bin.svg" />
-                                            </div>
-                                        </>
-                                      )}
+                                      <Permission level="project" permission="ADMIN" id={this.props.projectId}>
+                                          {({ permission, isLoading }) => Utils.renderWithPermission(permission, Constants.projectPermissions('Admin'), (
+                                              <>
+                                                  {!readOnly && !!permission && (
+                                                      <>
+                                                          <div onClick={() => this.editTag(tag)} className="ml-2 px-2 clickable">
+                                                              <span className="icon ion-md-settings"/>
+                                                          </div>
+                                                          <div onClick={() => this.deleteTag(tag)} className="ml-2 px-2 clickable">
+                                                              <img width={16} src="/static/images/icons/bin.svg" />
+                                                          </div>
+                                                      </>
+                                                  )}
+                                              </>
+                                      ))}
+                                      </Permission>
                                   </Row>
                               </div>
                           ))}
                           {!readOnly && (
                           <div className="text-center mb-2 mt-3">
-                              <ButtonLink
-                                buttonText=" Create a New Tag" onClick={() => this.setState({ tab: 'CREATE', filter: '' })}
-                                type="button"
-                              >
-                                  <span className="ml-3 icon ion-md-add"/>
-                              </ButtonLink>
+                              {Utils.renderWithPermission(projectAdminPermission, Constants.projectPermissions("Admin"), (
+                                      <ButtonLink
+                                          disabled={!projectAdminPermission}
+                                          buttonText=" Create a New Tag" onClick={() => this.setState({ tab: 'CREATE', filter: '' })}
+                                          type="button"
+                                      >
+                                          <span className="ml-3 icon ion-md-add"/>
+                                      </ButtonLink>
+                                  ))}
                           </div>
                           )}
                           {projectTags && projectTags.length && !filteredTags.length ? (
@@ -342,6 +359,8 @@ class TheComponent extends PureComponent {
                   )
                   }
               </InlineModal>
+                      )}
+              </Permission>
           </div>
 
       );

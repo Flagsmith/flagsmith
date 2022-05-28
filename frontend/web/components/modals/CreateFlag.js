@@ -328,7 +328,7 @@ const CreateFlag = class extends Component {
         const invalid = !!multivariate_options && multivariate_options.length && controlValue < 0;
         const existingChangeRequest = this.props.changeRequest;
         const hideIdentityOverridesTab = Utils.getShouldHideIdentityOverridesTab();
-        const Settings = projectAdmin => (
+        const Settings = (projectAdmin,createFeature) => (
             <>
                 {!identity && this.state.tags && (
                     <FormGroup className="mb-4 mr-3 ml-3" >
@@ -336,10 +336,10 @@ const CreateFlag = class extends Component {
                           title={identity ? 'Tags' : 'Tags (optional)'}
                           tooltip={Constants.strings.TAGS_DESCRIPTION}
                           component={(
-                              <AddEditTags
-                                readOnly={!!identity || !projectAdmin} projectId={this.props.projectId} value={this.state.tags}
-                                onChange={tags => this.setState({ tags })}
-                              />
+                                      <AddEditTags
+                                          readOnly={!!identity || !createFeature} projectId={this.props.projectId} value={this.state.tags}
+                                          onChange={tags => this.setState({ tags })}
+                                      />
                             )}
                         />
                     </FormGroup>
@@ -408,7 +408,7 @@ const CreateFlag = class extends Component {
                 )}
             </>
         );
-        const Value = projectAdmin => (
+        const Value = (projectAdmin,createFeature) => (
             <>
                 {!isEdit && (
                     <FormGroup className="mb-4 mr-3 ml-3">
@@ -472,7 +472,7 @@ const CreateFlag = class extends Component {
                     />
                 </div>
 
-                {!isEdit && !identity && Settings(projectAdmin)}
+                {!isEdit && !identity && Settings(projectAdmin, createFeature)}
             </>
         );
         return (
@@ -542,6 +542,8 @@ const CreateFlag = class extends Component {
 
                             return (
 
+                                <Permission level="project" permission="CREATE_FEATURE" id={this.props.projectId}>
+                                    {({ permission: createFeature }) => (
                                 <Permission level="project" permission="ADMIN" id={this.props.projectId}>
                                     {({ permission: projectAdmin }) => (
                                         <div
@@ -560,7 +562,7 @@ const CreateFlag = class extends Component {
                                                                 </Tooltip>
                                                     )}
                                                             >
-                                                                {Value(projectAdmin)}
+                                                                {Value(projectAdmin, createFeature)}
                                                             </Panel>
                                                             <p className="text-right mt-4">
                                                                 {is4Eyes ? 'This will create a change request for the environment' : 'This will update the feature value for the environment'}
@@ -849,20 +851,20 @@ const CreateFlag = class extends Component {
                                                     )}
                                                     {!existingChangeRequest && (
                                                     <TabItem data-test="settings" tabLabel="Settings">
-                                                        {Settings(projectAdmin)}
+                                                        {Settings(projectAdmin, createFeature)}
                                                         {isEdit && (
                                                         <div className="text-right">
-                                                            {!projectAdmin ? (
+                                                            {projectAdmin || (flagsmith.hasFeature("segment_mv_percentages") && createFeature) ? (
+                                                                    <p className="text-right">
+                                                                        This will save the above settings <strong>all environments</strong>.
+                                                                    </p>
+                                                            ) : (
                                                                 <p className="text-right">
                                                                     To edit this feature's settings, you will need <strong>Project Administrator permissions</strong>. Please contact your project administrator.
                                                                 </p>
-                                                            ) : (
-                                                                <p className="text-right">
-                                                                    This will save the above settings <strong>all environments</strong>.
-                                                                </p>
                                                             )}
 
-                                                            {!!projectAdmin && (
+                                                            {!!projectAdmin || (flagsmith.hasFeature("segment_mv_percentages") && createFeature) && (
                                                                 <Button
                                                                   onClick={saveSettings} data-test="update-feature-btn" id="update-feature-btn"
                                                                   disabled={(isSaving || !name || invalid)}
@@ -878,7 +880,7 @@ const CreateFlag = class extends Component {
                                                 </Tabs>
                                             ) : (
                                                 <div>
-                                                    {Value(projectAdmin)}
+                                                    {Value(projectAdmin,createFeature)}
                                                     {!identity && (
                                                     <div className="text-right">
                                                         <p className="text-right">
@@ -933,6 +935,8 @@ const CreateFlag = class extends Component {
                                             </div>
                                             )}
                                         </div>
+                                    )}
+                                </Permission>
                                     )}
                                 </Permission>
                             );
