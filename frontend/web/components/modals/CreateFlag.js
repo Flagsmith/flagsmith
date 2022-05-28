@@ -536,7 +536,7 @@ const CreateFlag = class extends Component {
                                 this.save(editFlagSegments, isSaving);
                             };
 
-                            const createFeature = () => {
+                            const onCreateFeature = () => {
                                 this.save(createFlag, isSaving);
                             };
 
@@ -887,7 +887,7 @@ const CreateFlag = class extends Component {
                                                         This will create the feature for <strong>all environments</strong>, you can edit this feature per environment once the feature is created.
                                                         </p>
                                                         <Button
-                                                          onClick={createFeature} data-test="create-feature-btn" id="create-feature-btn"
+                                                          onClick={onCreateFeature} data-test="create-feature-btn" id="create-feature-btn"
                                                           disabled={isSaving || !name || invalid}
                                                         >
                                                             {isSaving ? 'Creating' : 'Create Feature'}
