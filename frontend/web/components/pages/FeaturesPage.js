@@ -242,7 +242,7 @@ const FeaturesPage = class extends Component {
                                                     )}
 
                                                 </Permission>
-                                                <FormGroup>
+                                                <FormGroup className="mt-5">
                                                     <CodeHelp
                                                       title="1: Installing the SDK"
                                                       snippets={Constants.codeHelp.INSTALL}
@@ -252,7 +252,7 @@ const FeaturesPage = class extends Component {
                                                       snippets={Constants.codeHelp.INIT(this.props.match.params.environmentId, projectFlags && projectFlags[0] && projectFlags[0].name)}
                                                     />
                                                 </FormGroup>
-                                                <FormGroup>
+                                                <FormGroup className={"pb-4"}>
                                                     <TryIt
                                                       title="Test what values are being returned from the API on this environment"
                                                       environmentId={this.props.match.params.environmentId}
