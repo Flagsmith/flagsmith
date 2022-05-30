@@ -11,6 +11,8 @@ ACTION_PERMISSIONS_MAP = {
     "create": "CREATE_FEATURE",
     "add_owners": "CREATE_FEATURE",
     "remove_owners": "CREATE_FEATURE",
+    "update": "CREATE_FEATURE",
+    "partial_update": "CREATE_FEATURE",
 }
 
 
@@ -38,7 +40,7 @@ class FeaturePermissions(BasePermission):
                 ACTION_PERMISSIONS_MAP[view.action], obj.project
             )
 
-        if view.action in ("update", "segments"):
+        if view.action == "segments":
             return request.user.is_project_admin(obj.project)
 
         return False
