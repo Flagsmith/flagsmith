@@ -137,7 +137,7 @@ class ListCreateFeatureSerializer(WritableNestedModelSerializer):
 
 
 class UpdateFeatureSerializer(ListCreateFeatureSerializer):
-    """prevent users from changing the value of default enabled after creation"""
+    """prevent users from changing certain values after creation"""
 
     class Meta(ListCreateFeatureSerializer.Meta):
         read_only_fields = ListCreateFeatureSerializer.Meta.read_only_fields + (
