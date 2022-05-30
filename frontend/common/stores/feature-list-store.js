@@ -63,7 +63,10 @@ const controller = {
         };
     },
     editFlag(projectId, flag, onComplete) {
+        const originalFlag = store.model.features.find((v)=>v.id === flag.id)
+
         Promise.all((flag.multivariate_options || []).map((v,i)=>{
+
             return v.id? Promise.resolve(v) : data.post(`${Project.api}projects/${projectId}/features/${flag.id}/mv-options/`, {
                 ...v,
                 feature: flag.id,
@@ -76,8 +79,17 @@ const controller = {
                 }
             })
         })).then(()=>{
-            data.put(`${Project.api}projects/${projectId}/features/${flag.id}/`, {
+            const deletedMv = originalFlag.multivariate_options.filter((v)=>{
+                return !flag.multivariate_options.find((x)=>v.id === x.id)
+            })
+            return Promise.all(deletedMv.map((v)=>{
+                return data.delete(`${Project.api}projects/${projectId}/features/${flag.id}/mv-options/${v.id}`)
+            }))
+        })
+            .then(()=>{
+            return data.put(`${Project.api}projects/${projectId}/features/${flag.id}/`, {
                 ...flag,
+                multivariate_options: undefined,
                 type: flag.multivariate_options && flag.multivariate_options.length ? 'MULTIVARIATE' : 'STANDARD',
                 project: projectId,
             })
