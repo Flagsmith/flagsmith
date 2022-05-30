@@ -772,6 +772,83 @@ class ProjectFeatureTestCase(TestCase):
         # Then
         assert response.status_code == status.HTTP_403_FORBIDDEN
 
+    def test_regular_user_cannot_create_mv_options_when_updating_feature(self):
+        # Given
+        user = FFAdminUser.objects.create(email="regularuser@project.com")
+        user.add_organisation(self.organisation)
+        user_project_permission = UserProjectPermission.objects.create(
+            user=user, project=self.project
+        )
+        permissions = PermissionModel.objects.filter(
+            key__in=["VIEW_PROJECT", "CREATE_FEATURE"]
+        )
+        user_project_permission.permissions.add(*permissions)
+        client = APIClient()
+        client.force_authenticate(user)
+
+        feature = Feature.objects.create(
+            project=self.project,
+            name="a_feature",
+            default_enabled=True,
+        )
+
+        data = {
+            "name": feature.name,
+            "default_enabled": feature.default_enabled,
+            "multivariate_options": [{"type": "unicode", "string_value": "test-value"}],
+        }
+        url = reverse("api-v1:projects:project-features-list", args=[self.project.id])
+
+        # When
+        response = client.post(
+            url, data=json.dumps(data), content_type="application/json"
+        )
+
+        # Then
+        assert response.status_code == status.HTTP_403_FORBIDDEN
+
+    def test_regular_user_can_update_feature_description(self):
+        # Given
+        user = FFAdminUser.objects.create(email="regularuser@project.com")
+        user.add_organisation(self.organisation)
+        user_project_permission = UserProjectPermission.objects.create(
+            user=user, project=self.project
+        )
+        permissions = PermissionModel.objects.filter(
+            key__in=["VIEW_PROJECT", "CREATE_FEATURE"]
+        )
+        user_project_permission.permissions.add(*permissions)
+        client = APIClient()
+        client.force_authenticate(user)
+
+        feature = Feature.objects.create(
+            project=self.project,
+            name="a_feature",
+            default_enabled=True,
+        )
+
+        data = {
+            "name": feature.name,
+            "default_enabled": feature.default_enabled,
+            "description": "a description",
+        }
+
+        url = reverse(
+            "api-v1:projects:project-features-detail",
+            args=[self.project.id, feature.id],
+        )
+
+        # When
+        response = client.put(
+            url, data=json.dumps(data), content_type="application/json"
+        )
+
+        # Then
+        assert response.status_code == status.HTTP_200_OK
+
+        feature.refresh_from_db()
+        assert feature.description == data["description"]
+
 
 @pytest.mark.django_db()
 class FeatureStateViewSetTestCase(TestCase):
