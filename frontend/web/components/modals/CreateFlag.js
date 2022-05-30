@@ -853,7 +853,7 @@ const CreateFlag = class extends Component {
                                                         {Settings(projectAdmin, createFeature)}
                                                         {isEdit && (
                                                         <div className="text-right">
-                                                            {projectAdmin || (flagsmith.hasFeature("segment_mv_percentages") && createFeature) ? (
+                                                            {createFeature ? (
                                                                     <p className="text-right">
                                                                         This will save the above settings <strong>all environments</strong>.
                                                                     </p>
@@ -863,7 +863,7 @@ const CreateFlag = class extends Component {
                                                                 </p>
                                                             )}
 
-                                                            {projectAdmin || (flagsmith.hasFeature("segment_mv_percentages") && createFeature) ? (
+                                                            {createFeature ? (
                                                                 <Button
                                                                   onClick={saveSettings} data-test="update-feature-btn" id="update-feature-btn"
                                                                   disabled={(isSaving || !name || invalid)}
