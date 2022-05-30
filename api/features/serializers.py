@@ -100,12 +100,12 @@ class ListCreateFeatureSerializer(WritableNestedModelSerializer):
                 raise serializers.ValidationError("Invalid percentage allocation")
         return multivariate_options
 
-    def validate(self, attrs):
+    def validate_name(self, name: str):
         view = self.context["view"]
-        project_id = str(view.kwargs.get("project_pk"))
-        if not project_id.isdigit():
-            raise serializers.ValidationError("Invalid project ID.")
-        unique_filters = {"project__id": project_id, "name__iexact": attrs["name"]}
+        unique_filters = {
+            "project__id": view.kwargs.get("project_pk"),
+            "name__iexact": name,
+        }
         existing_feature_queryset = Feature.objects.filter(**unique_filters)
         if self.instance:
             existing_feature_queryset = existing_feature_queryset.exclude(
@@ -118,6 +118,14 @@ class ListCreateFeatureSerializer(WritableNestedModelSerializer):
                 "project. Note that feature names are case "
                 "insensitive."
             )
+
+        return name
+
+    def validate(self, attrs):
+        view = self.context["view"]
+        project_id = str(view.kwargs.get("project_pk"))
+        if not project_id.isdigit():
+            raise serializers.ValidationError("Invalid project ID.")
 
         # If tags selected check they from the same Project as Feature Project
         if any(tag.project_id != int(project_id) for tag in attrs.get("tags", [])):
@@ -135,6 +143,7 @@ class UpdateFeatureSerializer(ListCreateFeatureSerializer):
         read_only_fields = ListCreateFeatureSerializer.Meta.read_only_fields + (
             "default_enabled",
             "initial_value",
+            "name",
         )
 
 
