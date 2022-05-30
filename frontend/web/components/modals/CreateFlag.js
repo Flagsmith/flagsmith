@@ -360,7 +360,6 @@ const CreateFlag = class extends Component {
                       data-test="featureDesc"
                       inputProps={{
                           className: 'full-width',
-                          readOnly: !!identity || (!projectAdmin && isEdit),
                           name: 'featureDesc',
                       }}
                       onChange={e => this.setState({ description: Utils.safeParseEventValue(e) })}
