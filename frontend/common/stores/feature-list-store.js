@@ -64,9 +64,6 @@ const controller = {
     },
     editFlag(projectId, flag, onComplete) {
         Promise.all((flag.multivariate_options || []).map((v,i)=>{
-            if(!flagsmith.hasFeature("segment_mv_percentages")) {
-                return
-            }
             return v.id? Promise.resolve(v) : data.post(`${Project.api}projects/${projectId}/features/${flag.id}/mv-options/`, {
                 ...v,
                 feature: flag.id,
@@ -148,20 +145,11 @@ const controller = {
             prom = data.get(`${Project.api}environments/${environmentId}/featurestates/${environmentFlag.id}/`)
                 .then((environmentFeatureStates) => {
                     const multivariate_feature_state_values = environmentFeatureStates.multivariate_feature_state_values && environmentFeatureStates.multivariate_feature_state_values.map((v,i) => {
-                        const hasSegmentMVPercentages = flagsmith.hasFeature("segment_mv_percentages")
-                        if (hasSegmentMVPercentages) {
                             const matching = environmentFlag.multivariate_feature_state_values[i]
                             return {
                                 ...v,
                                 percentage_allocation: matching.default_percentage_allocation
                             }
-                        }
-                        const matching = flag.multivariate_options.find(m => m.id === v.multivariate_feature_option);
-                        if (!matching) { // multivariate is new, meaning the value is already correct from the default allocation
-                            return v;
-                        }
-                        // multivariate is existing, override the existing with the new value
-                        return { ...v, percentage_allocation: matching.default_percentage_allocation };
                     });
                     environmentFlag.multivariate_feature_state_values = multivariate_feature_state_values;
                     return data.put(`${Project.api}environments/${environmentId}/featurestates/${environmentFlag.id}/`, Object.assign({}, environmentFlag, {
