@@ -374,7 +374,7 @@ const CreateFlag = class extends Component {
                         <InputGroup
                           value={description}
                           component={(
-                              <Switch disabled={!projectAdmin} checked={this.state.is_archived} onChange={is_archived => this.setState({ is_archived })}/>
+                              <Switch checked={this.state.is_archived} onChange={is_archived => this.setState({ is_archived })}/>
                           )}
                           onChange={e => this.setState({ description: Utils.safeParseEventValue(e) })}
                           isValid={name && name.length}
@@ -848,7 +848,7 @@ const CreateFlag = class extends Component {
                                                         </FormGroup>
                                                     </TabItem>
                                                     )}
-                                                    {!existingChangeRequest && (
+                                                    {!existingChangeRequest && createFeature &&  (
                                                     <TabItem data-test="settings" tabLabel="Settings">
                                                         {Settings(projectAdmin, createFeature)}
                                                         {isEdit && (
