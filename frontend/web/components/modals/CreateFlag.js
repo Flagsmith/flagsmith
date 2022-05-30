@@ -374,7 +374,7 @@ const CreateFlag = class extends Component {
                         <InputGroup
                           value={description}
                           component={(
-                              <Switch disabled={!projectAdmin} checked={this.state.is_archived} onChange={is_archived => this.setState({ is_archived })}/>
+                              <Switch checked={this.state.is_archived} onChange={is_archived => this.setState({ is_archived })}/>
                           )}
                           onChange={e => this.setState({ description: Utils.safeParseEventValue(e) })}
                           isValid={name && name.length}
@@ -848,12 +848,12 @@ const CreateFlag = class extends Component {
                                                         </FormGroup>
                                                     </TabItem>
                                                     )}
-                                                    {!existingChangeRequest && (
+                                                    {!existingChangeRequest && createFeature &&  (
                                                     <TabItem data-test="settings" tabLabel="Settings">
                                                         {Settings(projectAdmin, createFeature)}
                                                         {isEdit && (
                                                         <div className="text-right">
-                                                            {projectAdmin || (flagsmith.hasFeature("segment_mv_percentages") && createFeature) ? (
+                                                            {createFeature ? (
                                                                     <p className="text-right">
                                                                         This will save the above settings <strong>all environments</strong>.
                                                                     </p>
@@ -863,7 +863,7 @@ const CreateFlag = class extends Component {
                                                                 </p>
                                                             )}
 
-                                                            {projectAdmin || (flagsmith.hasFeature("segment_mv_percentages") && createFeature) ? (
+                                                            {createFeature ? (
                                                                 <Button
                                                                   onClick={saveSettings} data-test="update-feature-btn" id="update-feature-btn"
                                                                   disabled={(isSaving || !name || invalid)}
