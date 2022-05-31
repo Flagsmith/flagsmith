@@ -4,49 +4,48 @@ on:
     push:
         branches:
             - main
-            - fix/e2e-tests
-#        paths:
-#            - "api/**"
-#            - ".github/**"
-#            - 'infrastructure/aws/staging/**'
+        paths:
+            - "api/**"
+            - ".github/**"
+            - 'infrastructure/aws/staging/**'
 
 jobs:
-#    deploy-staging-ecs:
-#        runs-on: ubuntu-latest
-#        name: API Deploy to Staging ECS
-#        environment: staging
-#
-#        steps:
-#            - name: Cloning repo
-#              uses: actions/checkout@v2
-#              with:
-#                  fetch-depth: 0
-#
-#            - name: Deploy API to Staging
-#              uses: ./.github/actions/api-deploy-ecs
-#              with:
-#                github_access_token: ${{ secrets.GH_PRIVATE_ACCESS_TOKEN }}
-#                aws_access_key_id: AKIAUM26IRCPASKFW2X5
-#                aws_secret_access_key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-#                aws_ecs_cluster_name: flagsmith-api-cluster-eu-west-2-f241261
-#                aws_ecs_cluster_arn: arn:aws:ecs:eu-west-2:302456015006:cluster/flagsmith-api-cluster-eu-west-2-f241261
-#                aws_ecs_service_name: flagsmith-svc-eu-west-2-8bb18de
-#                aws_vpc_subnet_id: subnet-1b0b8861
-#                aws_ecs_security_group_id: sg-08632d6fb4cb0fdf3
-#                aws_ecr_repository_arn: 302456015006.dkr.ecr.eu-west-2.amazonaws.com/flagsmith-ecr-d247ba2
-#                aws_identity_migration_event_bus_name: identity_migration-fb41b5d
-#                aws_identity_migration_event_bus_rule_id: identity_migration-08330ed
-#                aws_identity_migration_task_role_arn: arn:aws:iam::302456015006:role/task-exec-role-6fb76f6
-#                aws_task_definitions_directory_path: infrastructure/aws/staging
-#                flagsmith_saml_revision: v0.1.2
-#                flagsmith_workflows_revision: v1.0.3
-#                flagsmith_auth_controller_revision: v0.0.1
+    deploy-staging-ecs:
+        runs-on: ubuntu-latest
+        name: API Deploy to Staging ECS
+        environment: staging
+
+        steps:
+            - name: Cloning repo
+              uses: actions/checkout@v2
+              with:
+                  fetch-depth: 0
+
+            - name: Deploy API to Staging
+              uses: ./.github/actions/api-deploy-ecs
+              with:
+                github_access_token: ${{ secrets.GH_PRIVATE_ACCESS_TOKEN }}
+                aws_access_key_id: AKIAUM26IRCPASKFW2X5
+                aws_secret_access_key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+                aws_ecs_cluster_name: flagsmith-api-cluster-eu-west-2-f241261
+                aws_ecs_cluster_arn: arn:aws:ecs:eu-west-2:302456015006:cluster/flagsmith-api-cluster-eu-west-2-f241261
+                aws_ecs_service_name: flagsmith-svc-eu-west-2-8bb18de
+                aws_vpc_subnet_id: subnet-1b0b8861
+                aws_ecs_security_group_id: sg-08632d6fb4cb0fdf3
+                aws_ecr_repository_arn: 302456015006.dkr.ecr.eu-west-2.amazonaws.com/flagsmith-ecr-d247ba2
+                aws_identity_migration_event_bus_name: identity_migration-fb41b5d
+                aws_identity_migration_event_bus_rule_id: identity_migration-08330ed
+                aws_identity_migration_task_role_arn: arn:aws:iam::302456015006:role/task-exec-role-6fb76f6
+                aws_task_definitions_directory_path: infrastructure/aws/staging
+                flagsmith_saml_revision: v0.1.2
+                flagsmith_workflows_revision: v1.0.3
+                flagsmith_auth_controller_revision: v0.0.1
 
     run-tests:
         runs-on: ubuntu-latest
         name: Run E2E Tests
         environment: staging
-#        needs: deploy-staging-ecs
+        needs: deploy-staging-ecs
 
         steps:
             - name: Cloning repo
