@@ -849,6 +849,26 @@ class ProjectFeatureTestCase(TestCase):
         feature.refresh_from_db()
         assert feature.description == data["description"]
 
+    @mock.patch("audit.signals.environment_wrapper")
+    def test_create_feature_only_triggers_write_to_dynamodb_once_per_environment(
+        self, mock_dynamo_environment_wrapper
+    ):
+        # Given
+        url = reverse("api-v1:projects:project-features-list", args=[self.project.id])
+        data = {"name": "Test feature flag", "type": "FLAG", "project": self.project.id}
+
+        self.project.enable_dynamo_db = True
+        self.project.save()
+
+        mock_dynamo_environment_wrapper.is_enabled = True
+        mock_dynamo_environment_wrapper.reset_mock()
+
+        # When
+        self.client.post(url, data=data)
+
+        # Then
+        mock_dynamo_environment_wrapper.write_environments.assert_called_once()
+
 
 @pytest.mark.django_db()
 class FeatureStateViewSetTestCase(TestCase):
