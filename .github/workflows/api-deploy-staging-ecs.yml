@@ -5,10 +5,10 @@ on:
         branches:
             - main
             - fix/e2e-tests
-        paths:
-            - "api/**"
-            - ".github/**"
-            - 'infrastructure/aws/staging/**'
+#        paths:
+#            - "api/**"
+#            - ".github/**"
+#            - 'infrastructure/aws/staging/**'
 
 jobs:
 #    deploy-staging-ecs:
