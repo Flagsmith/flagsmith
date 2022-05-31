@@ -90,7 +90,9 @@ class EdgeFeatureField(serializers.IntegerField):
 
 
 class EdgeIdentityFeatureStateSerializer(serializers.Serializer):
-    feature_state_value = FeatureStateValueEdgeIdentityField(allow_null=True)
+    feature_state_value = FeatureStateValueEdgeIdentityField(
+        allow_null=True, required=False, default=None
+    )
     feature = EdgeFeatureField()
     multivariate_feature_state_values = EdgeMultivariateFeatureStateValueSerializer(
         many=True, required=False
