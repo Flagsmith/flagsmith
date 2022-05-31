@@ -4,6 +4,7 @@ from django.db.models import Q
 from django.db.models.signals import post_save
 from django.dispatch import receiver
 
+from audit.decorators import handle_skipped_signals
 from audit.models import AuditLog, RelatedObjectType
 from audit.serializers import AuditLogSerializer
 from environments.dynamodb import DynamoEnvironmentWrapper
@@ -18,6 +19,7 @@ logger = logging.getLogger(__name__)
 
 
 @receiver(post_save, sender=AuditLog)
+@handle_skipped_signals
 def call_webhooks(sender, instance, **kwargs):
     data = AuditLogSerializer(instance=instance).data
 
@@ -70,6 +72,7 @@ def _track_event_async(instance, integration_client):
 
 @receiver(post_save, sender=AuditLog)
 @track_only_feature_related_events
+@handle_skipped_signals
 def send_audit_log_event_to_datadog(sender, instance, **kwargs):
     data_dog_config = _get_integration_config(instance, "data_dog_config")
 
@@ -84,6 +87,7 @@ def send_audit_log_event_to_datadog(sender, instance, **kwargs):
 
 @receiver(post_save, sender=AuditLog)
 @track_only_feature_related_events
+@handle_skipped_signals
 def send_audit_log_event_to_new_relic(sender, instance, **kwargs):
 
     new_relic_config = _get_integration_config(instance, "new_relic_config")
@@ -100,6 +104,7 @@ def send_audit_log_event_to_new_relic(sender, instance, **kwargs):
 
 @receiver(post_save, sender=AuditLog)
 @track_only_feature_related_events
+@handle_skipped_signals
 def send_audit_log_event_to_dynatrace(sender, instance, **kwargs):
 
     dynatrace_config = _get_integration_config(instance, "dynatrace_config")
@@ -119,6 +124,7 @@ environment_wrapper = DynamoEnvironmentWrapper()
 
 
 @receiver(post_save, sender=AuditLog)
+@handle_skipped_signals
 def send_environments_to_dynamodb(sender, instance, **kwargs):
     environments_filter = (
         Q(id=instance.environment_id)
@@ -135,6 +141,7 @@ def send_environments_to_dynamodb(sender, instance, **kwargs):
 
 @receiver(post_save, sender=AuditLog)
 @track_only_feature_related_events
+@handle_skipped_signals
 def send_audit_log_event_to_slack(sender, instance, **kwargs):
     slack_project_config = _get_integration_config(instance, "slack_config")
     if not slack_project_config:

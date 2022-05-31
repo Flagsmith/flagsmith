@@ -63,6 +63,13 @@ class AuditLog(models.Model):
     related_object_id = models.IntegerField(null=True)
     related_object_type = models.CharField(max_length=20, null=True)
 
+    skip_signals = models.CharField(
+        null=True,
+        blank=True,
+        help_text="comma separated list of signal functions to skip",
+        max_length=500,
+    )
+
     class Meta:
         verbose_name_plural = "Audit Logs"
         ordering = ("-created_date",)
