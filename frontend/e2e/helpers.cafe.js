@@ -217,11 +217,8 @@ export const createSegment = async (index, id, rules) => {
     await assertTextContent(byId(`segment-${index}-name`), id);
 };
 
-export const wait = async (timeout = 3000) => {
-    await t.wait(timeout);
-};
-
-export const refresh = async () => {
+export const waitAndRefresh = async (waitFor = 3000) => {
+    await t.wait(waitFor);
     await t.eval(() => location.reload());
 };
 
