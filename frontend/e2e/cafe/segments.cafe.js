@@ -3,16 +3,19 @@ import {
     addSegmentOverrideConfig,
     assertTextContent,
     byId,
-    click, closeModal, createFeature, createRemoteConfig,
+    click, createFeature, createRemoteConfig,
     createSegment, createTrait, deleteFeature, getLogger, gotoFeature,
     gotoFeatures,
     gotoSegments, goToUser,
     log,
-    login, saveFeature, saveFeatureSegments, setSegmentOverrideIndex,
+    login, saveFeatureSegments, setSegmentOverrideIndex,
     setText, viewFeature,
     waitForElementVisible,
+    wait,
+    refresh,
 } from '../helpers.cafe';
 import {t} from 'testcafe'
+import {waitForConditionPollInterval} from "nightwatch/examples/globalsModule";
 const email = 'nightwatch@solidstategroup.com';
 const password = 'str0ngp4ssw0rd!';
 const logger = getLogger()
@@ -114,7 +117,9 @@ test('Segments Test', async () => {
     await goToUser(0);
     await click(byId('user-feature-switch-1-on'));
     await click('#confirm-toggle-feature-btn');
-    await waitForElementVisible(byId('user-feature-switch-1-off'), '', 10000);
+    await wait();
+    await refresh();
+    await waitForElementVisible(byId('user-feature-switch-1-off'));
 
     log('Edit flag for user', 'Segment Test');
     await click(byId('user-feature-0'));
