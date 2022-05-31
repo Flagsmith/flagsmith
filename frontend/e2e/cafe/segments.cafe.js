@@ -114,7 +114,7 @@ test('Segments Test', async () => {
     await goToUser(0);
     await click(byId('user-feature-switch-1-on'));
     await click('#confirm-toggle-feature-btn');
-    await waitForElementVisible(byId('user-feature-switch-1-off'));
+    await waitForElementVisible(byId('user-feature-switch-1-off'), '', 10000);
 
     log('Edit flag for user', 'Segment Test');
     await click(byId('user-feature-0'));

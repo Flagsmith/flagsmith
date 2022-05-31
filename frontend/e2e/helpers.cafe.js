@@ -10,9 +10,9 @@ export const setText = async (selector, text) => {
         .typeText(selector, `${text}`);
 };
 
-export const waitForElementVisible = async (selector) => {
+export const waitForElementVisible = async (selector, failMessage = '', timeout = 3000) => {
     console.log(`Waiting element visible ${selector}`);
-    return t.expect(Selector(selector).visible).ok();
+    return t.expect(Selector(selector).visible).ok(failMessage, { timeout });
 };
 
 export const waitForElementNotExist = async (selector) => {
