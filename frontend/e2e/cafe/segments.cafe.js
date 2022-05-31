@@ -15,7 +15,6 @@ import {
     refresh,
 } from '../helpers.cafe';
 import {t} from 'testcafe'
-import {waitForConditionPollInterval} from "nightwatch/examples/globalsModule";
 const email = 'nightwatch@solidstategroup.com';
 const password = 'str0ngp4ssw0rd!';
 const logger = getLogger()
