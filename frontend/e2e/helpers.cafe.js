@@ -10,9 +10,9 @@ export const setText = async (selector, text) => {
         .typeText(selector, `${text}`);
 };
 
-export const waitForElementVisible = async (selector, failMessage = '', timeout = 3000) => {
+export const waitForElementVisible = async (selector) => {
     console.log(`Waiting element visible ${selector}`);
-    return t.expect(Selector(selector).visible).ok(failMessage, { timeout });
+    return t.expect(Selector(selector).visible).ok();
 };
 
 export const waitForElementNotExist = async (selector) => {
@@ -218,6 +218,7 @@ export const createSegment = async (index, id, rules) => {
 };
 
 export const waitAndRefresh = async (waitFor = 3000) => {
+    console.log(`Waiting for ${waitFor}ms, then refreshing.`);
     await t.wait(waitFor);
     await t.eval(() => location.reload());
 };
