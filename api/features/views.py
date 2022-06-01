@@ -262,7 +262,7 @@ class BaseFeatureStateViewSet(viewsets.ModelViewSet):
                 raise PermissionDenied()
 
             queryset = FeatureState.get_environment_flags_queryset(
-                environment=environment
+                environment_id=environment.id
             )
             queryset = self._apply_query_param_filters(queryset)
 
@@ -489,7 +489,7 @@ class SimpleFeatureStateViewSet(
                 )
 
             queryset = FeatureState.get_environment_flags_queryset(
-                environment=environment
+                environment_id=environment.id
             )
             return queryset.select_related("feature_state_value").prefetch_related(
                 "multivariate_feature_state_values"
@@ -530,7 +530,7 @@ class SDKFeatureStates(GenericAPIView):
         if "feature" in request.GET:
 
             feature_states = FeatureState.get_environment_flags_list(
-                environment=request.environment,
+                environment_id=request.environment.id,
                 feature_name=request.GET["feature"],
                 additional_filters=self._additional_filters,
             )
@@ -548,7 +548,7 @@ class SDKFeatureStates(GenericAPIView):
         else:
             data = self.get_serializer(
                 FeatureState.get_environment_flags_list(
-                    environment=request.environment,
+                    environment_id=request.environment.id,
                     additional_filters=self._additional_filters,
                 ),
                 many=True,
@@ -568,7 +568,7 @@ class SDKFeatureStates(GenericAPIView):
         if not data:
             data = self.get_serializer(
                 FeatureState.get_environment_flags_list(
-                    environment=environment,
+                    environment_id=environment.id,
                     additional_filters=self._additional_filters,
                 ),
                 many=True,

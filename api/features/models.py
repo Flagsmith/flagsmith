@@ -513,7 +513,7 @@ class FeatureState(LifecycleModel, models.Model):
     @classmethod
     def get_environment_flags_list(
         cls,
-        environment: "Environment",
+        environment_id: int,
         feature_name: str = None,
         additional_filters: Q = None,
     ) -> typing.List["FeatureState"]:
@@ -531,7 +531,7 @@ class FeatureState(LifecycleModel, models.Model):
         feature_states = cls.objects.select_related(
             "feature", "feature_state_value"
         ).filter(
-            environment=environment,
+            environment_id=environment_id,
             live_from__isnull=False,
             live_from__lte=timezone.now(),
             version__isnull=False,
@@ -562,12 +562,12 @@ class FeatureState(LifecycleModel, models.Model):
         return list(feature_states_dict.values())
 
     @classmethod
-    def get_environment_flags_queryset(cls, environment: "Environment") -> QuerySet:
+    def get_environment_flags_queryset(cls, environment_id: int) -> QuerySet:
         """
         Get a queryset of the latest live versions of an environments' feature states
         """
 
-        feature_states_list = cls.get_environment_flags_list(environment)
+        feature_states_list = cls.get_environment_flags_list(environment_id)
         return FeatureState.objects.filter(id__in=[fs.id for fs in feature_states_list])
 
     @classmethod
