@@ -11,6 +11,7 @@ import {
     login, saveFeature, saveFeatureSegments, setSegmentOverrideIndex,
     setText, viewFeature,
     waitForElementVisible,
+    waitAndRefresh,
 } from '../helpers.cafe';
 import {t} from 'testcafe'
 const email = 'nightwatch@solidstategroup.com';
@@ -114,17 +115,20 @@ test('Segments Test', async () => {
     await goToUser(0);
     await click(byId('user-feature-switch-1-on'));
     await click('#confirm-toggle-feature-btn');
+    await waitAndRefresh(); // wait and refresh to avoid issues with data sync from UK -> US in github workflows
     await waitForElementVisible(byId('user-feature-switch-1-off'));
 
     log('Edit flag for user', 'Segment Test');
     await click(byId('user-feature-0'));
     await setText(byId('featureValue'), 'small');
     await click('#update-feature-btn');
+    await waitAndRefresh(); // wait and refresh to avoid issues with data sync from UK -> US in github workflows
     await assertTextContent(byId('user-feature-value-0'), '"small"');
 
     log('Toggle flag for user again', 'Segment Test');
     await click(byId('user-feature-switch-1-off'));
     await click('#confirm-toggle-feature-btn');
+    await waitAndRefresh(); // wait and refresh to avoid issues with data sync from UK -> US in github workflows
     await waitForElementVisible(byId('user-feature-switch-1-on'));
 }).after(async (t)=>{
     console.log("Start of Segments Requests")
