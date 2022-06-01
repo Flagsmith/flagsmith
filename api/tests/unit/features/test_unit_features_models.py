@@ -25,7 +25,7 @@ def test_feature_state_get_environment_flags_queryset_returns_only_latest_versio
 
     # When
     feature_states = FeatureState.get_environment_flags_queryset(
-        environment=environment
+        environment_id=environment.id
     )
 
     # Then
@@ -45,7 +45,7 @@ def test_project_hide_disabled_flags_have_no_effect_on_feature_state_get_environ
 
     # When
     feature_states = FeatureState.get_environment_flags_queryset(
-        environment=environment
+        environment_id=environment.id
     )
     # Then
     assert feature_states.count() == 2
