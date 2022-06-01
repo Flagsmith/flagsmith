@@ -472,18 +472,15 @@ class SimpleFeatureStateViewSet(
 
     def get_queryset(self):
         if not self.action == "list":
-            # permissions are handled in permission class
             return FeatureState.objects.all()
 
         try:
-            if not self.request.query_params.get("environment"):
+            environment_id = self.request.query_params.get("environment")
+            if not environment_id:
                 raise ValidationError("'environment' GET parameter is required.")
 
-            environment = Environment.objects.get(
-                id=self.request.query_params["environment"]
-            )
             queryset = FeatureState.get_environment_flags_queryset(
-                environment_id=environment.id
+                environment_id=environment_id
             )
             return queryset.select_related("feature_state_value").prefetch_related(
                 "multivariate_feature_state_values"
