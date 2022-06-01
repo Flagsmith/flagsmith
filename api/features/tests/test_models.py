@@ -462,7 +462,7 @@ class FeatureStateTest(TestCase):
 
         # When
         environment_feature_states = FeatureState.get_environment_flags_list(
-            environment=self.environment,
+            environment_id=self.environment.id,
             additional_filters=Q(feature_segment=None, identity=None),
         )
 
