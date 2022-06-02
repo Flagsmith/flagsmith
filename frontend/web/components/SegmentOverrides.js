@@ -97,6 +97,7 @@ const SegmentOverride = ConfigProvider(SortableElement(({ hasFeature, controlVal
                         <FormGroup className="mb-4">
                             <VariationOptions
                               disabled
+                              select={true}
                               controlValue={controlValue}
                               variationOverrides={v.multivariate_options}
                               setVariations={setVariations}
