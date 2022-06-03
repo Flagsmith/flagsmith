@@ -1,5 +1,7 @@
 from unittest.mock import create_autospec
 
+import pytest
+
 from integrations.opencensus.querylogger import QueryLogger
 
 
@@ -77,10 +79,8 @@ def test_querylogger_when_query_execution_fails_then_span_is_created(mocker):
     logger = QueryLogger()
 
     # When
-    try:
+    with pytest.raises(Exception):
         logger(execute, sql=sql, params=params, many="", context=context)
-    except Exception:
-        pass
 
     # Then
     execute.assert_called_once_with(sql, params, "", context)
