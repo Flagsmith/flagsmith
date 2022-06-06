@@ -296,3 +296,12 @@ def non_admin_client(organisation, django_user_model, api_client):
     user.add_organisation(Organisation.objects.get(id=organisation))
     api_client.force_authenticate(user=user)
     return api_client
+
+
+@pytest.fixture()
+def feature_state(admin_client, environment, feature):
+    base_url = reverse("api-v1:features:featurestates-list")
+    url = f"{base_url}?environment={environment}?feature={feature}"
+
+    response = admin_client.get(url)
+    return response.json()["results"][0]["id"]
