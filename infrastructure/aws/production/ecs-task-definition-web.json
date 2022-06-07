@@ -142,6 +142,10 @@
                 {
                     "name": "CACHE_BAD_ENVIRONMENTS_SECONDS",
                     "value": "60"
+                },
+                {
+                    "name": "EDGE_RELEASE_DATETIME",
+                    "value": "2022-06-07T10:00:00Z"
                 }
             ],
             "secrets": [
