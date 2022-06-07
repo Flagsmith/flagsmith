@@ -310,6 +310,7 @@ CORS_ALLOW_HEADERS = default_headers + (
     "X-Environment-Key",
     "X-E2E-Test-Auth-Token",
     "sentry-trace",
+    "baggage",
 )
 
 DEFAULT_FROM_EMAIL = env("SENDER_EMAIL", default="noreply@flagsmith.com")
