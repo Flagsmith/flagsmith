@@ -211,6 +211,9 @@ APPLICATION_INSIGHTS_CONNECTION_STRING = env.str(
 OPENCENSUS_SAMPLING_RATE = env.float("OPENCENSUS_SAMPLING_RATE", 1.0)
 
 if APPLICATION_INSIGHTS_CONNECTION_STRING:
+    MIDDLEWARE.insert(
+        0, "integrations.opencensus.middleware.OpenCensusDbTraceMiddleware"
+    )
     MIDDLEWARE.insert(0, "opencensus.ext.django.middleware.OpencensusMiddleware")
     OPENCENSUS = {
         "TRACE": {
