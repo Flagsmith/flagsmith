@@ -194,7 +194,7 @@ const Aside = class extends Component {
                                                                     >
                                                                         <a
                                                                             data-test={Utils.getIsEdge() ? 'edge-project': "core-project"}
-                                                                            href="https://docs.flagsmith.com/next/advanced-use/edge-api#enabling-the-edge-api" className="text-white font-weight-bold">
+                                                                            href="https://docs.flagsmith.com/advanced-use/edge-api#enabling-the-edge-api" className="text-white font-weight-bold">
                                                                             {Utils.getIsEdge() ? 'Edge' : 'Core'}
                                                                         </a>
                                                                     </span>
