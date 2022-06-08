@@ -1,7 +1,9 @@
+import typing
 from contextlib import suppress
 
 from django.conf import settings
 from django.core.exceptions import ObjectDoesNotExist
+from django.db.models import Model
 from rest_framework.exceptions import PermissionDenied
 from rest_framework.permissions import BasePermission
 
@@ -96,6 +98,19 @@ class UserPermissionGroupPermission(BasePermission):
 
 
 class NestedIsOrganisationAdminPermission(BasePermission):
+    def __init__(
+        self,
+        *args,
+        get_organisation_from_object_callable: typing.Callable[
+            [Model], Organisation
+        ] = lambda o: o.organisation,
+        **kwargs,
+    ):
+        super().__init__(*args, **kwargs)
+        self.get_organisation_from_object_callable = (
+            get_organisation_from_object_callable
+        )
+
     def has_permission(self, request, view):
         organisation_pk = view.kwargs.get("organisation_pk")
 
@@ -106,4 +121,6 @@ class NestedIsOrganisationAdminPermission(BasePermission):
         return False
 
     def has_object_permission(self, request, view, obj):
-        return request.user.is_organisation_admin(obj.organisation)
+        return request.user.is_organisation_admin(
+            self.get_organisation_from_object_callable(obj)
+        )
