@@ -1,7 +1,7 @@
 const keywords = {
     URL_CLIENT: 'https://cdn.jsdelivr.net/npm/flagsmith/index.js',
     LIB_NAME: 'flagsmith',
-    LIB_NAME_JAVA: 'BulletTrainClient',
+    LIB_NAME_JAVA: 'FlagsmithClient',
     NPM_CLIENT: 'flagsmith',
     NPM_RN_CLIENT: 'react-native-flagsmith',
     NPM_NODE_CLIENT: 'flagsmith-nodejs',
