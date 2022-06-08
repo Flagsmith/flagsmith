@@ -4,7 +4,7 @@ ${LIB_NAME}.init({
     environmentID:"${envId}",
     onChange: (oldFlags, params) => { // Occurs whenever flags are changed
         // Determines if the update came from the server or local cached storage
-        const { isFromServer } = params; 
+        const { isFromServer } = params;
 
         // Check for a feature
         if (${LIB_NAME}.hasFeature("${customFeature || FEATURE_NAME}")) {
@@ -15,9 +15,9 @@ ${LIB_NAME}.init({
         const ${FEATURE_NAME_ALT} = ${LIB_NAME}.getValue("${customFeature || FEATURE_NAME_ALT}");
 
         // Check whether value has changed
-        const ${FEATURE_NAME_ALT}Old = oldFlags["${customFeature || FEATURE_NAME_ALT}"] 
+        const ${FEATURE_NAME_ALT}Old = oldFlags["${customFeature || FEATURE_NAME_ALT}"]
         && oldFlags["${customFeature || FEATURE_NAME_ALT}"].value;
-        
+
         if (${FEATURE_NAME_ALT} !== ${FEATURE_NAME_ALT}Old) {
             // Value has changed, do something here
         }
