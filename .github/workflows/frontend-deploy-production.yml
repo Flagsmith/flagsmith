@@ -35,7 +35,7 @@ jobs:
                   sudo apt install --allow-downgrades -y ./google-chrome*.deb -f
                   google-chrome --version
                   node -v
-                  npm i
+                  npm i --legacy-peer-deps
                   npm run env
                   npm run test
 
@@ -69,7 +69,7 @@ jobs:
                   VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
                   ENV: prod
               run: |
-                  npm ci --only=prod
+                  npm ci --only=prod --legacy-peer-deps
                   npm run env
                   npm run bundle
                   vercel --prod --token ${{ secrets.VERCEL_TOKEN }}
