@@ -10,5 +10,4 @@ boolean featureEnabled = ${LIB_NAME}.hasFeatureFlag("${customFeature || FEATURE_
 
 // Or, use the value of a feature
 String myRemoteConfig = ${LIB_NAME}.getFeatureFlagValue("${customFeature || FEATURE_NAME_ALT}");
-
 `;
