@@ -9,7 +9,7 @@ const controller = {
         store.loading();
         let endpoint = ((page && `${page}${store.search ? `&search=${store.search}&project=${projectId}` : `&project=${projectId}`}`) || `${Project.api}audit/${store.search ? `?search=${store.search}&project=${projectId}` : `?project=${projectId}`}`);
         if (environmentId) {
-            endpoint  += `&environment=${environmentId}`
+            endpoint  += `&environments=${environmentId}`
         }
         endpoint = endpoint + `&page_size=${PAGE_SIZE}`
         data.get(endpoint)
