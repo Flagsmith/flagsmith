@@ -21,16 +21,8 @@ const AuditLogPage = class extends Component {
     }
 
     filterRow = (logMessage, search) => {
-        const { env } = Utils.fromParam();
         const stringToSearch = `${logMessage.log} ${logMessage.author ? logMessage.author.first_name : ''} ${logMessage.author ? logMessage.author.last_name : ''} ${logMessage.author ? logMessage.author.email : ''} ${moment(logMessage.created_date).format('L LTS')}`;
-        let envPassed = true;
-        if (env) {
-            if (logMessage.environment && logMessage.environment.api_key !== env) {
-                envPassed = false;
-            }
-        }
-
-        return envPassed && stringToSearch.toLowerCase().indexOf(search.toLowerCase()) !== -1;
+        return  stringToSearch.toLowerCase().indexOf(search.toLowerCase()) !== -1;
     }
 
     renderRow = ({ created_date, log, author }) => (
