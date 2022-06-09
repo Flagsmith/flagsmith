@@ -45,7 +45,7 @@ const Aside = class extends Component {
         this.listenTo(ChangeRequestStore, 'change', () => this.forceUpdate());
         this.listenTo(ProjectStore, 'loaded', () => {
             const environment = ProjectStore.getEnvironment(this.props.environmentId);
-            if (environment){
+            if (environment) {
                 AppActions.getChangeRequests(this.props.environmentId, Utils.changeRequestsEnabled(environment.minimum_change_request_approvals) ? {} : { live_from_after: new Date().toISOString() });
             }
         });
@@ -193,8 +193,9 @@ const Aside = class extends Component {
                                                                       className="chip chip--active bg-secondary"
                                                                     >
                                                                         <a
-                                                                            data-test={Utils.getIsEdge() ? 'edge-project': "core-project"}
-                                                                            href="https://docs.flagsmith.com/advanced-use/edge-api#enabling-the-edge-api" className="text-white font-weight-bold">
+                                                                          data-test={Utils.getIsEdge() ? 'edge-project' : 'core-project'}
+                                                                          href="https://docs.flagsmith.com/advanced-use/edge-api#enabling-the-edge-api" className="text-white font-weight-bold"
+                                                                        >
                                                                             {Utils.getIsEdge() ? 'Edge' : 'Core'}
                                                                         </a>
                                                                     </span>
@@ -315,7 +316,7 @@ const Aside = class extends Component {
                                                                     onClick={onClick}
                                                                     active={environment.api_key === environmentId} title={environment.name}
                                                                   >
-                                                                      <Permission level="environment" permission={flagsmith.hasFeature('manage_identities_permission') ? 'MANAGE_IDENTITIES' : 'ADMIN'} id={environment.api_key}>
+                                                                      <Permission level="environment" permission="MANAGE_IDENTITIES" id={environment.api_key}>
                                                                           {({ permission: manageIdentityPermission, isLoading: manageIdentityLoading }) => (
                                                                               <Permission level="environment" permission="ADMIN" id={environment.api_key}>
                                                                                   {({ permission: environmentAdmin, isLoading }) => (isLoading || manageIdentityLoading
