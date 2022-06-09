@@ -4,21 +4,22 @@ const data = require('../data/base/_data');
 
 const controller = {
     getAuditLog: (page, projectId, environmentId) => {
-        const PAGE_SIZE = flagsmith.hasFeature("audit_api_search")? flagsmith.getValue("audit_api_search")||999 :999;
+        const PAGE_SIZE = 10
 
         store.loading();
         let endpoint = ((page && `${page}${store.search ? `&search=${store.search}&project=${projectId}` : `&project=${projectId}`}`) || `${Project.api}audit/${store.search ? `?search=${store.search}&project=${projectId}` : `?project=${projectId}`}`);
         if (environmentId) {
-            endpoint  += `&environments=${environmentId}`
+            endpoint += `&environments=${environmentId}`;
         }
-        endpoint = endpoint + `&page_size=${PAGE_SIZE}`
+        endpoint += `&page_size=${PAGE_SIZE}`;
         data.get(endpoint)
-            .then((res) =>{
-                const key = `${environmentId||projectId}`
-                store.model = store.model||{}
+            .then((res) => {
+                const key = `${environmentId || projectId}`;
+                store.model = store.model || {};
                 store.model[key] = res && res.results;
-                store.paging[key] = {}
+                store.paging[key] = {};
                 store.paging[key].next = res.next;
+                store.paging[key].pageSize = PAGE_SIZE;
                 store.paging[key].count = res.count;
                 store.paging[key].previous = res.previous;
                 store.paging[key].currentPage = endpoint.indexOf('?page=') !== -1 ? parseInt(endpoint.substr(endpoint.indexOf('?page=') + 6)) : 1;
@@ -39,7 +40,7 @@ const store = Object.assign({}, BaseStore, {
     getPaging() {
         return {
             ...store.paging,
-            pageSize: flagsmith.hasFeature("audit_api_search")?flagsmith.getValue("audit_api_search")||999 :999
+            pageSize: flagsmith.hasFeature('audit_api_search') ? flagsmith.getValue('audit_api_search') || 999 : 999,
         };
     },
 });
@@ -57,7 +58,7 @@ store.dispatcherIndex = Dispatcher.register(store, (payload) => {
             controller.getAuditLog(action.page, action.projectId, action.environmentId);
             break;
         case Actions.SEARCH_AUDIT_LOG:
-            controller.searchAuditLog(action.search, action.projectId,action.environmentId);
+            controller.searchAuditLog(action.search, action.projectId, action.environmentId);
             break;
         default:
     }
