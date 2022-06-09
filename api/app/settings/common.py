@@ -306,11 +306,15 @@ MEDIA_URL = "/media/"  # unused but needs to be different from STATIC_URL in dja
 # CORS settings
 
 CORS_ORIGIN_ALLOW_ALL = True
-CORS_ALLOW_HEADERS = default_headers + (
+FLAGSMITH_CORS_EXTRA_ALLOW_HEADERS = env.list(
+    "FLAGSMITH_CORS_EXTRA_ALLOW_HEADERS", default=["sentry-trace"]
+)
+CORS_ALLOW_HEADERS = [
+    *default_headers,
+    *FLAGSMITH_CORS_EXTRA_ALLOW_HEADERS,
     "X-Environment-Key",
     "X-E2E-Test-Auth-Token",
-    "sentry-trace",
-)
+]
 
 DEFAULT_FROM_EMAIL = env("SENDER_EMAIL", default="noreply@flagsmith.com")
 EMAIL_CONFIGURATION = {

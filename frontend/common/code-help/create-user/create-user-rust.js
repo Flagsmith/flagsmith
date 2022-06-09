@@ -1,16 +1,20 @@
 import Utils from '../../utils/utils';
 
-module.exports = (envId, { FEATURE_NAME, FEATURE_FUNCTION, USER_ID, FEATURE_NAME_ALT }) => `let bt = bullettrain::Client::new("${envId}");
+module.exports = (envId, { FEATURE_NAME, FEATURE_FUNCTION, USER_ID, FEATURE_NAME_ALT }) => `use std::env;
+use flagsmith::{Flag, Flagsmith, FlagsmithOptions};
 
-fn test_user() -> User {
-    User {
-        identifier: String::from("${USER_ID}"),
-    }
-}
-...
+let options = FlagsmithOptions {..Default::default()};
+let flagsmith = Flagsmith::new(
+    env::var("${envId}")
+        .expect("FLAGSMITH_ENVIRONMENT_KEY not found in environment"),
+    options,
+);
+// The method below triggers a network request
+let identity_flags = flagsmith.get_identity_flags(identifier, Some(traits)).unwrap();
 
-let hasFeature = client.has_user_feature(&test_user(), "${FEATURE_NAME}").unwrap();
-let featureValue = client.get_user_value(&test_user(), "${FEATURE_NAME_ALT}")
-        .unwrap()
-        .unwrap();
+// Check for a feature
+let show_button = identity_flags.is_feature_enabled("secret_button").unwrap();
+
+// Or, use the value of a feature
+let button_data = identity_flags.get_feature_value_as_string("secret_button").unwrap();
 `;

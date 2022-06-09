@@ -125,11 +125,11 @@ def test_slack_initialized_correctly(mocker, mocked_slack_internal_client):
     assert slack_wrapper._client == mocked_slack_internal_client
 
 
-def test_track_event_makes_correct_call(mocker, mocked_slack_internal_client):
+def test_track_event_makes_correct_call(mocked_slack_internal_client):
     # Given
     api_token = "test_token"
     channel_id = "channel_id_1"
-    event = {"text": "random_text"}
+    event = {"blocks": []}
 
     slack_wrapper = SlackWrapper(api_token, channel_id)
 
@@ -138,7 +138,7 @@ def test_track_event_makes_correct_call(mocker, mocked_slack_internal_client):
 
     # Then
     mocked_slack_internal_client.chat_postMessage.assert_called_with(
-        channel=channel_id, text=event["text"]
+        channel=channel_id, blocks=event["blocks"]
     )
 
 
@@ -152,6 +152,13 @@ def test_slack_generate_event_data_with_correct_values():
     event_data = SlackWrapper.generate_event_data(log, email, environment_name)
 
     # Then
-    assert event_data["title"] == "Flagsmith Feature Flag Event"
-    assert event_data["text"] == f"{log} by user {email}"
-    assert event_data["tags"] == [f"env:{environment_name}"]
+    assert event_data["blocks"] == [
+        {"type": "section", "text": {"type": "plain_text", "text": log}},
+        {
+            "type": "section",
+            "fields": [
+                {"type": "mrkdwn", "text": f"*Environment:*\n{environment_name}"},
+                {"type": "mrkdwn", "text": f"*User:*\n{email}"},
+            ],
+        },
+    ]

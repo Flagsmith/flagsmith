@@ -1,15 +1,19 @@
-module.exports = (envId, { LIB_NAME, USER_ID, LIB_NAME_JAVA, FEATURE_NAME, FEATURE_FUNCTION, FEATURE_NAME_ALT, FEATURE_NAME_ALT_VALUE, NPM_CLIENT }, userId) => `from flagsmith import Flagsmith
+module.exports = (envId, { LIB_NAME, USER_ID, LIB_NAME_JAVA, FEATURE_NAME, FEATURE_FUNCTION, FEATURE_NAME_ALT, FEATURE_NAME_ALT_VALUE, NPM_CLIENT }, userId) => `from flagsmith import Flagsmith;
 
-flagsmith = Flagsmith(environment_id="${envId}")
+flagsmith = Flagsmith(
+    environment_key = os.environ.get("${envId}")
+)
 
 # This will create a user in the dashboard if they don't already exist
+identifier = "delboy@trotterstraders.co.uk"
+traits = {"car_type": "robin_reliant"}
+
+# The method below triggers a network request
+identity_flags = flagsmith.get_identity_flags(identifier=identifier, traits=traits)
 
 # Check for a feature
-if flagsmith.has_feature("${FEATURE_NAME}", '${USER_ID}'):
-  if flagsmith.feature_enabled("${FEATURE_NAME}"):
-    # Show my awesome cool new feature to the world
+show_button = identity_flags.is_feature_enabled("secret_button")
 
 # Or, use the value of a feature
-value = flagsmith.get_value("${FEATURE_NAME_ALT}", "${USER_ID}")
-
+button_data = json.loads(identity_flags.get_feature_value("secret_button"))
 `;
