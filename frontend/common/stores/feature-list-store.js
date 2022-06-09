@@ -40,16 +40,10 @@ const controller = {
         }
         data.post(`${Project.api}projects/${projectId}/features/`, Object.assign({}, flag, { multivariate_options: undefined, project: projectId, type: flag.multivariate_options && flag.multivariate_options.length ? 'MULTIVARIATE' : 'STANDARD',
         }))
-            .then((res)=>{
-                return Promise.all((flag.multivariate_options ||[]).map((v)=>{
-                    return data.post(`${Project.api}projects/${projectId}/features/${flag.id}/mv-options/`, {
-                        ...v,
-                        feature: res.id,
-                    }).then(()=>res)
-                })).then(()=>{
-                    return data.get(`${Project.api}projects/${projectId}/features/${res.id}`)
-                })
-            })
+            .then(res => Promise.all((flag.multivariate_options || []).map(v => data.post(`${Project.api}projects/${projectId}/features/${flag.id}/mv-options/`, {
+                ...v,
+                feature: res.id,
+            }).then(() => res))).then(() => data.get(`${Project.api}projects/${projectId}/features/${res.id}`)))
             .then(res => Promise.all([
                 data.get(`${Project.api}projects/${projectId}/features/`),
                 data.get(`${Project.api}environments/${environmentId}/featurestates/`),
@@ -73,31 +67,30 @@ const controller = {
         };
     },
     editFlag(projectId, flag, onComplete) {
-        const originalFlag = store.model.features.find((v)=>v.id === flag.id)
+        const originalFlag = store.model.features.find(v => v.id === flag.id);
 
-        Promise.all((flag.multivariate_options || []).map((v,i)=>{
-
-            return v.id? Promise.resolve(v) : data.post(`${Project.api}projects/${projectId}/features/${flag.id}/mv-options/`, {
+        Promise.all((flag.multivariate_options || []).map((v, i) => {
+            const originalMV = v.id ? originalFlag.multivariate_options.find(m => m.id === v.id) : null;
+            return (originalMV ? data.put(`${Project.api}projects/${projectId}/features/${flag.id}/mv-options/${originalMV.id}`, {
                 ...v,
                 feature: flag.id,
-                default_percentage_allocation: 0
-            }).then((res)=>{
-                flag.multivariate_options[i] = res
+                default_percentage_allocation: 0,
+            }) : data.post(`${Project.api}projects/${projectId}/features/${flag.id}/mv-options/`, {
+                ...v,
+                feature: flag.id,
+                default_percentage_allocation: 0,
+            })).then((res) => {
+                flag.multivariate_options[i] = res;
                 return {
                     ...v,
                     id: res.id,
-                }
-            })
-        })).then(()=>{
-            const deletedMv = originalFlag.multivariate_options.filter((v)=>{
-                return !flag.multivariate_options.find((x)=>v.id === x.id)
-            })
-            return Promise.all(deletedMv.map((v)=>{
-                return data.delete(`${Project.api}projects/${projectId}/features/${flag.id}/mv-options/${v.id}`)
-            }))
+                };
+            });
+        })).then(() => {
+            const deletedMv = originalFlag.multivariate_options.filter(v => !flag.multivariate_options.find(x => v.id === x.id));
+            return Promise.all(deletedMv.map(v => data.delete(`${Project.api}projects/${projectId}/features/${flag.id}/mv-options/${v.id}`)));
         })
-            .then(()=>{
-            return data.put(`${Project.api}projects/${projectId}/features/${flag.id}/`, {
+            .then(() => data.put(`${Project.api}projects/${projectId}/features/${flag.id}/`, {
                 ...flag,
                 multivariate_options: undefined,
                 type: flag.multivariate_options && flag.multivariate_options.length ? 'MULTIVARIATE' : 'STANDARD',
@@ -122,9 +115,7 @@ const controller = {
                     } else {
                         API.ajaxHandler(store, e);
                     }
-                });
-        })
-
+                }));
     },
     getInfluxDate(projectId, environmentId, flag, period) {
         data.get(`${Project.api}projects/${projectId}/features/${flag}/influx-data/?period=${period}&environment_id=${environmentId}`)
@@ -166,12 +157,12 @@ const controller = {
         } else if (environmentFlag) {
             prom = data.get(`${Project.api}environments/${environmentId}/featurestates/${environmentFlag.id}/`)
                 .then((environmentFeatureStates) => {
-                    const multivariate_feature_state_values = environmentFeatureStates.multivariate_feature_state_values && environmentFeatureStates.multivariate_feature_state_values.map((v,i) => {
-                            const matching = environmentFlag.multivariate_feature_state_values[i]
-                            return {
-                                ...v,
-                                percentage_allocation: matching.default_percentage_allocation
-                            }
+                    const multivariate_feature_state_values = environmentFeatureStates.multivariate_feature_state_values && environmentFeatureStates.multivariate_feature_state_values.map((v, i) => {
+                        const matching = environmentFlag.multivariate_feature_state_values[i];
+                        return {
+                            ...v,
+                            percentage_allocation: matching.default_percentage_allocation,
+                        };
                     });
                     environmentFlag.multivariate_feature_state_values = multivariate_feature_state_values;
                     return data.put(`${Project.api}environments/${environmentId}/featurestates/${environmentFlag.id}/`, Object.assign({}, environmentFlag, {
@@ -250,9 +241,9 @@ const controller = {
                             (v) => {
                                 const matching = multivariate_options.find(m => (v.multivariate_feature_option || v.id) === (m.multivariate_feature_option || m.id));
                                 return ({ ...v,
-                                    percentage_allocation: matching?
-                                        typeof matching.percentage_allocation == 'number' ?  matching.percentage_allocation :
-                                        matching.default_percentage_allocation : v.percentage_allocation ,
+                                    percentage_allocation: matching
+                                        ? typeof matching.percentage_allocation === 'number' ? matching.percentage_allocation
+                                            : matching.default_percentage_allocation : v.percentage_allocation,
                                 });
                             },
                         );
@@ -267,7 +258,7 @@ const controller = {
                                 AppActions.getFeatures(projectId, environmentId, true);
                             });
                         } else {
-                            AppActions.getChangeRequest(v.id)
+                            AppActions.getChangeRequest(v.id);
                         }
                     });
                     prom.then(() => {
