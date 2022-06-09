@@ -1,16 +1,20 @@
-module.exports = (envId, { LIB_NAME, USER_ID, LIB_NAME_JAVA, FEATURE_NAME, FEATURE_FUNCTION, FEATURE_NAME_ALT, FEATURE_NAME_ALT_VALUE, NPM_CLIENT }, userId) => `BulletTrainConfiguration configuration = new BulletTrainConfiguration()
-{
-    ApiUrl = "https://edge.api.flagsmith.com/api/v1/",
-    EnvironmentKey = "${envId}"
-};
+module.exports = (envId, { LIB_NAME, USER_ID, LIB_NAME_JAVA, FEATURE_NAME, FEATURE_FUNCTION, FEATURE_NAME_ALT, FEATURE_NAME_ALT_VALUE, NPM_CLIENT }, userId) => `using Flagsmith;
 
-// This will create a user in the dashboard if they don't already exist
-BulletTrainClient bulletClient = new BulletTrainClient(configuration);
+static FlagsmithClient _flagsmithClient;
+_flagsmithClient = new("${envId}");
 
-bool featureEnabled = await BulletTrainClient.instance
-    .HasFeatureFlag("${FEATURE_NAME}", "${USER_ID}");
+var Identifier = "delboy@trotterstraders.co.uk";
+var traitKey = "car_type";
+var traitValue = "robin_reliant";
+var traitList = new List<Trait> { new Trait(traitKey, traitValue) };
 
-string myRemoteConfig = await BulletTrainClient.instance
-    .GetFeatureValue("${FEATURE_NAME_ALT}", "${USER_ID}");
+# Sync
+# The method below triggers a network request
+var flags = _flagsmithClient.GetIdentityFlags(Identifier, traitList);
+var showButton = flags.IsFeatureEnabled("secret_button");
 
+# Async
+# The method below triggers a network request
+var flags = await _flagsmithClient.GetIdentityFlags(Identifier, traitList);
+var showButton = await flags.IsFeatureEnabled("secret_button");
 `;
