@@ -1,12 +1,12 @@
 module.exports = (envId, { LIB_NAME, USER_ID, LIB_NAME_JAVA, FEATURE_NAME, FEATURE_FUNCTION, FEATURE_NAME_ALT, FEATURE_NAME_ALT_VALUE, NPM_CLIENT }, userId) => `use Flagsmith\\Flagsmith;
 
-$bt = new Flagsmith('${envId}');
+$flagsmith = new Flagsmith('${envId}');
 
 // This will create a user in the dashboard if they don't already exist
+$identifier = 'delboy@trotterstraders.co.uk';
+$traits = (object) [ 'car_type' => 'robin_reliant' ];
 
-// Check for a feature
-$${FEATURE_NAME} = $bt->featureEnabled("${FEATURE_NAME}","${USER_ID}");
-
-// Or, use the value of a feature
-$${FEATURE_NAME_ALT} = $bt->getValue("${FEATURE_NAME_ALT}","${USER_ID}");
+$flags = $flagsmith->getIdentityFlags($identifier, $traits);
+$showButton = $flags->isFeatureEnabled('secret_button');
+$buttonData = $flags->getFeatureValue('secret_button');
 `;
