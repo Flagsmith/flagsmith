@@ -181,9 +181,8 @@ const EnvironmentSettingsPage = class extends Component {
                                                 </Row>
                                             </FormGroup>
                                         </div>
-                                        {this.props.hasFeature("serverside_sdk_keys") && (
-                                            <ServerSideSDKKeys environmentId={this.props.match.params.environmentId}/>
-                                        )}
+
+                                        <ServerSideSDKKeys environmentId={this.props.match.params.environmentId}/>
 
                                         <FormGroup className="mt-1">
                                             <EditPermissions
