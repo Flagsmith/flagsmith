@@ -1,11 +1,10 @@
 const BaseStore = require('./base/_store');
 const data = require('../data/base/_data');
 
+const PAGE_SIZE = 10;
 
 const controller = {
     getAuditLog: (page, projectId, environmentId) => {
-        const PAGE_SIZE = 10
-
         store.loading();
         let endpoint = ((page && `${page}${store.search ? `&search=${store.search}&project=${projectId}` : `&project=${projectId}`}`) || `${Project.api}audit/${store.search ? `?search=${store.search}&project=${projectId}` : `?project=${projectId}`}`);
         if (environmentId) {
@@ -40,7 +39,7 @@ const store = Object.assign({}, BaseStore, {
     getPaging() {
         return {
             ...store.paging,
-            pageSize: flagsmith.hasFeature('audit_api_search') ? flagsmith.getValue('audit_api_search') || 999 : 999,
+            pageSize: PAGE_SIZE,
         };
     },
 });
