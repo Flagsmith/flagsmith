@@ -77,7 +77,6 @@ const AuditLogPage = class extends Component {
         const { state: { search } } = this;
         const { env: envFilter } = this.getEnvironment();
         const hasRbacPermission = !this.props.hasFeature('plan_based_access') || Utils.getPlansPermission('AUDIT') || !this.props.hasFeature('scaleup_audit');
-        const apiSearch = flagsmith.hasFeature('audit_api_search');
         if (!hasRbacPermission) {
             return (
                 <div>
@@ -131,16 +130,12 @@ const AuditLogPage = class extends Component {
                                                       search={search}
                                                       filter={envFilter}
                                                       onChange={(e) => {
-                                                          if (apiSearch) {
-                                                              this.setState({ search: Utils.safeParseEventValue(e) });
-                                                              AppActions.searchAuditLog(Utils.safeParseEventValue(e), this.props.match.params.projectId, env);
-                                                          } else {
-                                                              this.filterSearch(e);
-                                                          }
+                                                          this.setState({ search: Utils.safeParseEventValue(e) });
+                                                          AppActions.searchAuditLog(Utils.safeParseEventValue(e), this.props.match.params.projectId, env);
                                                       }}
                                                       paging={auditLogPaging}
-                                                      nextPage={apiSearch ? () => AppActions.getAuditLogPage(this.props.match.params.projectId, auditLogPaging.next, env) : undefined}
-                                                      prevPage={apiSearch ? () => AppActions.getAuditLogPage(this.props.match.params.projectId, auditLogPaging.previous, env) : undefined}
+                                                      nextPage={() => AppActions.getAuditLogPage(this.props.match.params.projectId, auditLogPaging.next, env)}
+                                                      prevPage={() => AppActions.getAuditLogPage(this.props.match.params.projectId, auditLogPaging.previous, env)}
                                                       goToPage={page => AppActions.getAuditLogPage(this.props.match.params.projectId, `${Project.api}audit/?page=${page}`, env)}
                                                       renderRow={this.renderRow}
                                                       renderNoResults={(
