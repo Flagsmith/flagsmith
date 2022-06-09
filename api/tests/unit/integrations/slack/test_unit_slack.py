@@ -125,11 +125,11 @@ def test_slack_initialized_correctly(mocker, mocked_slack_internal_client):
     assert slack_wrapper._client == mocked_slack_internal_client
 
 
-def test_track_event_makes_correct_call(mocker, mocked_slack_internal_client):
+def test_track_event_makes_correct_call(mocked_slack_internal_client):
     # Given
     api_token = "test_token"
     channel_id = "channel_id_1"
-    event = {"text": "random_text"}
+    event = {"blocks": []}
 
     slack_wrapper = SlackWrapper(api_token, channel_id)
 
@@ -138,7 +138,7 @@ def test_track_event_makes_correct_call(mocker, mocked_slack_internal_client):
 
     # Then
     mocked_slack_internal_client.chat_postMessage.assert_called_with(
-        channel=channel_id, text=event["text"]
+        channel=channel_id, blocks=event["blocks"]
     )
 
 
