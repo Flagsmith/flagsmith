@@ -65,10 +65,20 @@ class SlackWrapper(AbstractBaseEventIntegrationWrapper):
     @staticmethod
     def generate_event_data(log: str, email: str, environment_name: str) -> dict:
         return {
-            "text": f"{log} by user {email}",
-            "title": "Flagsmith Feature Flag Event",
-            "tags": [f"env:{environment_name}"],
+            "blocks": [
+                {"type": "section", "text": {"type": "plain_text", "text": log}},
+                {
+                    "type": "section",
+                    "fields": [
+                        {
+                            "type": "mrkdwn",
+                            "text": f"*Environment:*\n{environment_name}",
+                        },
+                        {"type": "mrkdwn", "text": f"*User:*\n{email}"},
+                    ],
+                },
+            ]
         }
 
     def _track_event(self, event: dict) -> None:
-        self._client.chat_postMessage(channel=self.channel_id, text=event["text"])
+        self._client.chat_postMessage(channel=self.channel_id, blocks=event["blocks"])
