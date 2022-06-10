@@ -113,6 +113,20 @@ const FeaturesPage = class extends Component {
         return _.intersection(flag.tags || [], this.state.tags).length;
     }) || []
 
+    filterAnd = flags => _.filter(flags, (flag) => {
+        if (!!this.state.showArchived !== !!flag.is_archived) {
+            return false;
+        }
+
+        if (this.state.tags.includes('') && !!flag.tags.length) {
+            return false;
+        } if (this.state.tags.includes('') && this.state.tags.length === 1 && !flag.tags.length) {
+            return true;
+        }
+
+        return _.intersection(flag.tags || [], this.state.tags).length === this.state.tags.length;
+    }) || []
+
     createFeaturePermission(el) {
         return (
             <Permission level="project" permission="CREATE_FEATURE" id={this.props.match.params.projectId}>
@@ -196,7 +210,7 @@ const FeaturesPage = class extends Component {
                                                                   { label: 'Name', value: 'name', order: 'asc', default: true },
                                                                   { label: 'Created Date', value: 'created_date', order: 'asc' },
                                                               ]}
-                                                              items={this.filter(projectFlags, this.state.tags)}
+                                                              items={this.filterAnd(projectFlags, this.state.tags)}
                                                               header={(
                                                                   <Row className="px-0 pt-0 pb-2">
                                                                       <TagSelect
@@ -204,7 +218,15 @@ const FeaturesPage = class extends Component {
                                                                         showClearAll={(this.state.tags && !!this.state.tags.length) || this.state.showArchived}
                                                                         onClearAll={() => this.setState({ showArchived: false, tags: [] })}
                                                                         projectId={projectId} value={this.state.tags} onChange={(tags) => {
-                                                                            this.setState({ tags });
+                                                                            if (tags.includes('') && tags.length>1) {
+                                                                                if (!this.state.tags.includes('')) {
+                                                                                    this.setState({ tags: [''] });
+                                                                                } else {
+                                                                                    this.setState({ tags: tags.filter(v => !!v) });
+                                                                                }
+                                                                            } else {
+                                                                                this.setState({ tags });
+                                                                            }
                                                                             AsyncStorage.setItem(`${projectId}tags`, JSON.stringify(tags));
                                                                         }}
                                                                       >
@@ -252,7 +274,7 @@ const FeaturesPage = class extends Component {
                                                       snippets={Constants.codeHelp.INIT(this.props.match.params.environmentId, projectFlags && projectFlags[0] && projectFlags[0].name)}
                                                     />
                                                 </FormGroup>
-                                                <FormGroup className={"pb-4"}>
+                                                <FormGroup className="pb-4">
                                                     <TryIt
                                                       title="Test what values are being returned from the API on this environment"
                                                       environmentId={this.props.match.params.environmentId}
