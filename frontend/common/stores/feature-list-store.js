@@ -71,7 +71,7 @@ const controller = {
 
         Promise.all((flag.multivariate_options || []).map((v, i) => {
             const originalMV = v.id ? originalFlag.multivariate_options.find(m => m.id === v.id) : null;
-            return (originalMV ? data.put(`${Project.api}projects/${projectId}/features/${flag.id}/mv-options/${originalMV.id}`, {
+            return (originalMV ? data.put(`${Project.api}projects/${projectId}/features/${flag.id}/mv-options/${originalMV.id}/`, {
                 ...v,
                 feature: flag.id,
                 default_percentage_allocation: 0,
@@ -88,7 +88,7 @@ const controller = {
             });
         })).then(() => {
             const deletedMv = originalFlag.multivariate_options.filter(v => !flag.multivariate_options.find(x => v.id === x.id));
-            return Promise.all(deletedMv.map(v => data.delete(`${Project.api}projects/${projectId}/features/${flag.id}/mv-options/${v.id}`)));
+            return Promise.all(deletedMv.map(v => data.delete(`${Project.api}projects/${projectId}/features/${flag.id}/mv-options/${v.id}/`)));
         })
             .then(() => data.put(`${Project.api}projects/${projectId}/features/${flag.id}/`, {
                 ...flag,
