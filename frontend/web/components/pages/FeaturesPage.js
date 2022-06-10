@@ -114,24 +114,17 @@ const FeaturesPage = class extends Component {
     }) || []
 
     filterAnd = flags => _.filter(flags, (flag) => {
-        if (!this.state.showArchived && flag.is_archived) {
+        if (!!this.state.showArchived !== !!flag.is_archived) {
             return false;
         }
 
         if (this.state.tags.includes('') && !!flag.tags.length) {
             return false;
         } if (this.state.tags.includes('') && this.state.tags.length === 1 && !flag.tags.length) {
-            if (this.state.showArchived) {
-                return flag.is_archived;
-            }
             return true;
         }
 
-        const res = _.intersection(flag.tags || [], this.state.tags).length === this.state.tags.length;
-        if (this.state.showArchived) {
-            return flag.is_archived && res;
-        }
-        return res;
+        return _.intersection(flag.tags || [], this.state.tags).length === this.state.tags.length;
     }) || []
 
     createFeaturePermission(el) {
