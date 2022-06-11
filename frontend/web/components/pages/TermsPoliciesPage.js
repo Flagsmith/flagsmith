@@ -29,7 +29,7 @@ const TermsPoliciesPage = class extends React.Component {
     }
 
     render = () => {
-        const { hasFeature, getValue, match: { params: { section } } } = this.props;
+        const { match: { params: { section } } } = this.props;
         return (
             <div>
                 <LegalAside/>

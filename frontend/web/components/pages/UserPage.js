@@ -159,7 +159,6 @@ const UserPage = class extends Component {
     }
 
     render() {
-        const { hasFeature } = this.props;
         const { actualFlags } = this.state;
         const preventAddTrait = !AccountStore.getOrganisation().persist_trait_data;
         return (

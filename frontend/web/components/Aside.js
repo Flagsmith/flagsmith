@@ -81,7 +81,7 @@ const Aside = class extends Component {
     };
 
     render() {
-        const { hasFeature, getValue, toggleAside, asideIsVisible } = this.props;
+        const { toggleAside, asideIsVisible } = this.props;
         let integrations = Utils.getFlagsmithValue('integrations') || '[]';
         integrations = JSON.parse(integrations);
         const environmentId = (this.props.environmentId !== 'create' && this.props.environmentId) || (ProjectStore.model && ProjectStore.model.environments[0].api_key);
@@ -404,9 +404,9 @@ const Aside = class extends Component {
                                                     <div className="flex flex-1"/>
 
                                                     <div className="aside__footer">
-                                                        {hasFeature('demo_feature') && (
+                                                        {Utils.getFlagsmithHasFeature('demo_feature') && (
                                                             <a
-                                                              style={{ color: getValue('demo_feature') || '#43424f' }}
+                                                              style={{ color: Utils.getFlagsmithValue('demo_feature') || '#43424f' }}
                                                               className="aside__nav-item"
                                                               href="https://docs.flagsmith.com"
                                                             >
