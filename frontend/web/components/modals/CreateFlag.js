@@ -317,7 +317,7 @@ const CreateFlag = class extends Component {
             enabledSegment,
             enabledIndentity,
         } = this.state;
-        const { isEdit, hasFeature, projectFlag, identity, identityName } = this.props;
+        const { isEdit, projectFlag, identity, identityName } = this.props;
         const Provider = identity ? IdentityProvider : FeatureListProvider;
         const environmentVariations = this.props.environmentVariations;
         const environment = ProjectStore.getEnvironment(this.props.environmentId);
@@ -387,7 +387,7 @@ const CreateFlag = class extends Component {
                 )}
 
 
-                {!identity && hasFeature('hide_flag') && (
+                {!identity && Utils.getFlagsmithHasFeature('hide_flag') && (
                     <FormGroup className="mb-4 mr-3 ml-3">
                         <Tooltip
                           title={<label className="cols-sm-2 control-label">Hide from SDKs <span className="icon ion-ios-information-circle"/></label>}
