@@ -38,7 +38,7 @@ export default class Feature extends PureComponent {
 
         const enabledString = isEdit ? 'Enabled' : 'Enabled by default';
         const disabled =hide_from_client
-        const controlValue = Utils.calculateControl(multivariate_options, environmentVariations);
+        const controlValue = Utils.calculateControl(multivariate_options);
         const valueString = identity ? 'User override' : !!multivariate_options && multivariate_options.length ? `Control Value - ${controlValue}%` : `Value (optional)${' - these can be set per environment'}`;
 
         const showValue = !(!!identity && (multivariate_options && !!multivariate_options.length))
