@@ -82,12 +82,12 @@ const Aside = class extends Component {
 
     render() {
         const { hasFeature, getValue, toggleAside, asideIsVisible } = this.props;
-        let integrations = this.props.getValue('integrations') || '[]';
+        let integrations = Utils.getFlagsmithValue('integrations') || '[]';
         integrations = JSON.parse(integrations);
         const environmentId = (this.props.environmentId !== 'create' && this.props.environmentId) || (ProjectStore.model && ProjectStore.model.environments[0].api_key);
         const environment = ProjectStore.getEnvironment(this.props.environmentId);
-        const hasRbacPermission = !this.props.hasFeature('plan_based_access') || Utils.getPlansPermission('AUDIT') || !this.props.hasFeature('scaleup_audit');
-        const has4Eyes = flagsmith.hasFeature('4eyes');
+        const hasRbacPermission = !Utils.getFlagsmithHasFeature('plan_based_access') || Utils.getPlansPermission('AUDIT') || !Utils.getFlagsmithHasFeature('scaleup_audit');
+        const has4Eyes = Utils.getFlagsmithHasFeature('4eyes');
         const changeRequest = environment && Utils.changeRequestsEnabled(environment.minimum_change_request_approvals) ? ChangeRequestStore.model[this.props.environmentId] : ChangeRequestStore.scheduled[this.props.environmentId];
         const changeRequests = (changeRequest && changeRequest.count) || 0;
         return (
@@ -183,7 +183,7 @@ const Aside = class extends Component {
                                                         <Row>
                                                             <h1 className="aside__project-title">
                                                                 {project && project.name ? project.name : '...'}
-                                                                {flagsmith.hasFeature('edge_identities') && (
+                                                                {Utils.getFlagsmithHasFeature('edge_identities') && (
                                                                     <span
                                                                       style={{
                                                                           position: 'relative',
@@ -229,7 +229,7 @@ const Aside = class extends Component {
                                                         Segments
                                                     </NavLink>
 
-                                                    {this.props.hasFeature('compare_environments') && (
+                                                    {Utils.getFlagsmithHasFeature('compare_environments') && (
                                                         <NavLink
                                                           id="integrations-link"
                                                           activeClassName="active"
@@ -284,6 +284,18 @@ const Aside = class extends Component {
 
                                                             )}
                                                         </Permission>
+                                                    )}
+                                                    {!!Utils.getFlagsmithHasFeature('beta_features') && (
+                                                    <NavLink
+                                                      id="integrations-link"
+                                                      activeClassName="active"
+                                                      className="aside__nav-item"
+                                                      to={`/project/${this.props.projectId}/beta-features`}
+                                                      exact
+                                                    >
+                                                        <i className="icon mr-2 ion-ios-flask aside__nav-item--icon"/>
+                                                                    Beta Features
+                                                    </NavLink>
                                                     )}
                                                     <Permission level="project" permission="CREATE_ENVIRONMENT" id={this.props.projectId}>
                                                         {({ permission, isLoading }) => permission && (

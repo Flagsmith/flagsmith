@@ -109,7 +109,7 @@ const CreateFlag = class extends Component {
     }
 
     getInfluxData = () => {
-        if (this.props.hasFeature('flag_analytics') && this.props.environmentFlag) {
+        if (Utils.getFlagsmithHasFeature('flag_analytics') && this.props.environmentFlag) {
             AppActions.getFlagInfluxData(this.props.projectId, this.props.environmentFlag.environment, this.props.projectFlag.id, this.state.period);
         }
     }
@@ -321,9 +321,9 @@ const CreateFlag = class extends Component {
         const Provider = identity ? IdentityProvider : FeatureListProvider;
         const environmentVariations = this.props.environmentVariations;
         const environment = ProjectStore.getEnvironment(this.props.environmentId);
-        const is4Eyes = !!environment && Utils.changeRequestsEnabled(environment.minimum_change_request_approvals) && flagsmith.hasFeature('4eyes');
+        const is4Eyes = !!environment && Utils.changeRequestsEnabled(environment.minimum_change_request_approvals) && Utils.getFlagsmithHasFeature('4eyes');
         const canSchedule = Utils.getPlansPermission('4_EYES');
-        const is4EyesSegmentOverrides = is4Eyes && flagsmith.hasFeature('4eyes_segment_overrides'); //
+        const is4EyesSegmentOverrides = is4Eyes && Utils.getFlagsmithHasFeature('4eyes_segment_overrides'); //
         const controlValue = Utils.calculateControl(multivariate_options);
         const invalid = !!multivariate_options && multivariate_options.length && controlValue < 0;
         const existingChangeRequest = this.props.changeRequest;
@@ -573,7 +573,7 @@ const CreateFlag = class extends Component {
                                                                 </strong>
                                                             </p>
                                                             <div className="text-right">
-                                                                {this.props.hasFeature('scheduling') && !is4Eyes && (
+                                                                {Utils.getFlagsmithHasFeature('scheduling') && !is4Eyes && (
                                                                     <>
                                                                         {canSchedule ? (
                                                                             <ButtonOutline
@@ -837,7 +837,7 @@ const CreateFlag = class extends Component {
                                                     </TabItem>
                                                 )
                                             }
-                                                    { !existingChangeRequest && !projectOverrides.disableInflux && (this.props.hasFeature('flag_analytics') && this.props.flagId) && (
+                                                    { !existingChangeRequest && !projectOverrides.disableInflux && (Utils.getFlagsmithHasFeature('flag_analytics') && this.props.flagId) && (
                                                     <TabItem data-test="analytics" tabLabel="Analytics">
                                                         <FormGroup className="mb-4 mr-3 ml-3">
                                                             <Panel

@@ -139,7 +139,7 @@ const FeaturesPage = class extends Component {
 
     render() {
         const { projectId, environmentId } = this.props.match.params;
-        const readOnly = this.props.hasFeature('read_only_mode');
+        const readOnly = Utils.getFlagsmithHasFeature('read_only_mode');
         return (
             <div data-test="features-page" id="features-page" className="app-container container">
                 <FeatureListProvider onSave={this.onSave} onError={this.onError}>
@@ -203,7 +203,7 @@ const FeaturesPage = class extends Component {
                                                               title="Features"
                                                               renderSearchWithNoResults
                                                               itemHeight={65}
-                                                              sorting={this.props.hasFeature('stale_flags') ? [
+                                                              sorting={Utils.getFlagsmithHasFeature('stale_flags') ? [
                                                                   { label: 'Name', value: 'name', order: 'asc', default: true },
                                                                   { label: 'Created Date', value: 'created_date', order: 'asc' },
                                                               ] : [

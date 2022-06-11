@@ -38,7 +38,7 @@ export const Facebook = {
 
 export const Google = {
     login: () => new Promise((resolve) => {
-        const json = JSON.parse(flagsmith.getValue('oauth_google'));
+        const json = JSON.parse(Utils.getFlagsmithValue('oauth_google'));
         _gapi(json.clientId, (GoogleAuth) => {
             gapi.auth2.authorize({
                 client_id: json.clientId,

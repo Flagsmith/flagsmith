@@ -48,7 +48,7 @@ const App = class extends Component {
     };
 
     toggleDarkMode = () => {
-        const newValue = !flagsmith.hasFeature('dark_mode');
+        const newValue = !Utils.getFlagsmithHasFeature('dark_mode');
         flagsmith.setTrait('dark_mode', newValue);
         if (newValue) {
             document.body.classList.add('dark');
@@ -131,7 +131,7 @@ const App = class extends Component {
         }
 
 
-        if (flagsmith.hasFeature('dark_mode')) {
+        if (Utils.getFlagsmithHasFeature('dark_mode')) {
             document.body.classList.add('dark');
         }
     };
@@ -160,7 +160,7 @@ const App = class extends Component {
     };
 
     render() {
-        if (flagsmith.hasFeature('dark_mode') && !document.body.classList.contains('dark')) {
+        if (Utils.getFlagsmithHasFeature('dark_mode') && !document.body.classList.contains('dark')) {
             document.body.classList.add('dark');
         }
         const {
@@ -280,7 +280,7 @@ const App = class extends Component {
                                                 {user ? (
                                                     <React.Fragment>
                                                         <nav className="my-2 my-md-0 hidden-xs-down">
-                                                            {organisation && !organisation.subscription && flagsmith.hasFeature('payments_enabled') && (
+                                                            {organisation && !organisation.subscription && Utils.getFlagsmithHasFeature('payments_enabled') && (
                                                                 <a
                                                                   href="#"
                                                                   disabled={!this.state.manageSubscriptionLoaded}
@@ -326,7 +326,7 @@ const App = class extends Component {
                                                         </nav>
                                                         <div style={{ marginRight: 16, marginTop: 0 }} className="dark-mode">
                                                             <Switch
-                                                              checked={flagsmith.hasFeature('dark_mode')} onChange={this.toggleDarkMode} onMarkup="Light"
+                                                              checked={Utils.getFlagsmithHasFeature('dark_mode')} onChange={this.toggleDarkMode} onMarkup="Light"
                                                               offMarkup="Dark"
                                                             />
                                                         </div>
@@ -367,7 +367,7 @@ const App = class extends Component {
                                                                               }}
                                                                             />
                                                                         )}
-                                                                        {!this.props.hasFeature('disable_create_org') && (!projectOverrides.superUserCreateOnly || (projectOverrides.superUserCreateOnly && AccountStore.model.is_superuser)) && (
+                                                                        {!Utils.getFlagsmithHasFeature('disable_create_org') && (!projectOverrides.superUserCreateOnly || (projectOverrides.superUserCreateOnly && AccountStore.model.is_superuser)) && (
                                                                             <div className="pl-3 pr-3 mt-2 mb-2">
                                                                                 <Link
                                                                                   id="create-org-link" onClick={toggle}

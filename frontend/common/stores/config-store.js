@@ -14,7 +14,7 @@ const controller = {
         store.goneABitWest();
     },
     loaded(oldFlags) { // Occurs whenever flags are changed
-        if (flagsmith.hasFeature('dark_mode')) {
+        if (Utils.getFlagsmithHasFeature('dark_mode')) {
             document.body.classList.add('dark');
         }
         if (!oldFlags || !Object.keys(oldFlags).length) {
