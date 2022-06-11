@@ -9,7 +9,7 @@ const Footer = class extends React.Component {
   }
 
   render() {
-      const { hasFeature, className } = this.props;
+      const { className } = this.props;
       return (
           <footer className={`${className} clearfix`}>
               <div className="container">

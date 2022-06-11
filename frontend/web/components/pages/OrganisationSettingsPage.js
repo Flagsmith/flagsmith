@@ -294,7 +294,6 @@ const OrganisationSettingsPage = class extends Component {
     }
 
     render() {
-        const { hasFeature, getValue } = this.props;
         const { name, webhook_notification_email } = this.state;
         const { props: { webhooks, webhooksLoading } } = this;
         const hasRbacPermission = !Utils.getFlagsmithHasFeature('plan_based_access') || Utils.getPlansPermission('RBAC');

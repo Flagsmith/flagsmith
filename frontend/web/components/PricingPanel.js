@@ -11,7 +11,7 @@ const PricingPanel = class extends React.Component {
 
 
     render() {
-        const { hasFeature, redirect } = this.props;
+        const { redirect } = this.props;
 
         return (
             <div className="pricing" id="pricing">

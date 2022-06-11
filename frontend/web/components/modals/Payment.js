@@ -60,7 +60,6 @@ const PaymentModal = class extends Component {
 
     render() {
         const viewOnly = this.props.viewOnly;
-        const { hasFeature, getValue } = this.props;
 
 
         return (

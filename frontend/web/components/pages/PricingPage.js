@@ -24,7 +24,6 @@ const PricingPage = class extends React.Component {
     }
 
     render = () => {
-        const { hasFeature, getValue } = this.props;
         const redirect = Utils.fromParam().redirect ? `?redirect=${Utils.fromParam().redirect}` : '';
 
         return (

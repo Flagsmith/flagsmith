@@ -55,8 +55,7 @@ const TryIt = class extends Component {
     };
 
     render() {
-        const { hasFeature } = this.props;
-        return hasFeature('try_it') ? (
+        return Utils.getFlagsmithHasFeature('try_it') ? (
             <Panel
               icon="ion-md-code"
               title="Try it out"
