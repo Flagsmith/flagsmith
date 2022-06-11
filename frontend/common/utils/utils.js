@@ -1,6 +1,6 @@
 const React = require('react');
+const semver = require('semver');
 const ProjectStore = require('../../common/stores/project-store');
-const semver = require('semver')
 module.exports = Object.assign({}, require('./base/_utils'), {
     numberWithCommas(x) {
         return x.toString()
@@ -8,7 +8,7 @@ module.exports = Object.assign({}, require('./base/_utils'), {
     },
 
     changeRequestsEnabled(value) {
-        return typeof value ==='number'
+        return typeof value === 'number';
     },
 
     escapeHtml(html) {
@@ -26,14 +26,14 @@ module.exports = Object.assign({}, require('./base/_utils'), {
     },
 
     getTraitEndpointMethod(_project) {
-        let project = _project ? _project : ProjectStore.model
+        const project = _project || ProjectStore.model;
         if (flagsmith.hasFeature('edge_identities') && ProjectStore.model && ProjectStore.model.use_edge_identities) {
             return 'put';
         }
         return 'post';
     },
     getIsEdge(_project) {
-        let project = _project ? _project : ProjectStore.model
+        const project = _project || ProjectStore.model;
         if (flagsmith.hasFeature('edge_identities') && ProjectStore.model && ProjectStore.model.use_edge_identities) {
             return true;
         }
@@ -51,25 +51,25 @@ module.exports = Object.assign({}, require('./base/_utils'), {
         }
         return `${Project.api}environments/${environmentId}/identities/${userId}/traits/`;
     },
-    findOperator (operator,value,operators) {
-        const findAppended = `${value}`.includes(":")?(operators||[]).find((v)=>{
-            const split = value.split(":")
-            const targetKey = ":"+ split[split.length-1]
-            return v.value === operator+targetKey
-        }): false
-        if(findAppended) return findAppended;
+    findOperator(operator, value, operators) {
+        const findAppended = `${value}`.includes(':') ? (operators || []).find((v) => {
+            const split = value.split(':');
+            const targetKey = `:${split[split.length - 1]}`;
+            return v.value === operator + targetKey;
+        }) : false;
+        if (findAppended) return findAppended;
 
-        return operators.find((v)=>v.value === operator)
+        return operators.find(v => v.value === operator);
     },
-    validateRule (rule)  {
-        if(!rule) return false
+    validateRule(rule) {
+        if (!rule) return false;
 
-        const operators = flagsmith.getValue('segment_operators') ? JSON.parse(flagsmith.getValue('segment_operators')) : []
-        const operatorObj = Utils.findOperator(rule.operator, rule.value, operators)
+        const operators = flagsmith.getValue('segment_operators') ? JSON.parse(flagsmith.getValue('segment_operators')) : [];
+        const operatorObj = Utils.findOperator(rule.operator, rule.value, operators);
 
-        if (operatorObj && operatorObj.value && operatorObj.value.toLowerCase().includes("semver")) {
-            console.log(semver)
-            return !!semver.valid(`${rule.value.split(":")[0]}`)
+        if (operatorObj && operatorObj.value && operatorObj.value.toLowerCase().includes('semver')) {
+            console.log(semver);
+            return !!semver.valid(`${rule.value.split(':')[0]}`);
         }
 
         switch (rule.operator) {
@@ -79,29 +79,29 @@ module.exports = Object.assign({}, require('./base/_utils'), {
             }
             case 'REGEX': {
                 try {
-                    if(!rule.value) {
-                        throw new Error("")
+                    if (!rule.value) {
+                        throw new Error('');
                     }
-                    new RegExp(`${rule.value}`)
-                    return true
+                    new RegExp(`${rule.value}`);
+                    return true;
                 } catch (e) {
-                    return false
+                    return false;
                 }
             }
             default:
-                return rule.value !== '' && rule.value  !== undefined && rule.value !== null;
+                return rule.value !== '' && rule.value !== undefined && rule.value !== null;
         }
     },
 
     getShouldSendIdentityToTraits(_project) {
-        let project = _project ? _project : ProjectStore.model
+        const project = _project || ProjectStore.model;
         if (flagsmith.hasFeature('edge_identities') && project && project.use_edge_identities) {
             return false;
         }
         return true;
     },
     getShouldUpdateTraitOnDelete(_project) {
-        let project = _project ? _project : ProjectStore.model
+        const project = _project || ProjectStore.model;
         if (flagsmith.hasFeature('edge_identities') && project && project.use_edge_identities) {
             return true;
         }
@@ -109,7 +109,7 @@ module.exports = Object.assign({}, require('./base/_utils'), {
     },
 
     getShouldShowProjectTraits(_project) {
-        let project = _project ? _project : ProjectStore.model
+        const project = _project || ProjectStore.model;
         if (flagsmith.hasFeature('edge_identities') && project && project.use_edge_identities) {
             return false;
         }
@@ -117,7 +117,7 @@ module.exports = Object.assign({}, require('./base/_utils'), {
     },
 
     getIdentitiesEndpoint(_project) {
-        let project = _project ? _project : ProjectStore.model
+        const project = _project || ProjectStore.model;
         if (flagsmith.hasFeature('edge_identities') && project && project.use_edge_identities) {
             return 'edge-identities';
         }
@@ -125,7 +125,7 @@ module.exports = Object.assign({}, require('./base/_utils'), {
     },
 
     getSDKEndpoint(_project) {
-        let project = _project ? _project : ProjectStore.model
+        const project = _project || ProjectStore.model;
 
         if (flagsmith.hasFeature('edge_identities') && project && project.use_edge_identities) {
             return Project.flagsmithClientEdgeAPI;
@@ -134,7 +134,7 @@ module.exports = Object.assign({}, require('./base/_utils'), {
     },
 
     showUserSegments(_project) {
-        let project = _project ? _project : ProjectStore.model
+        const project = _project || ProjectStore.model;
         if (flagsmith.hasFeature('edge_identities') && project && project.use_edge_identities) {
             return false;
         }
@@ -142,7 +142,7 @@ module.exports = Object.assign({}, require('./base/_utils'), {
     },
 
     getShouldHideIdentityOverridesTab(_project) {
-        let project = _project ? _project : ProjectStore.model
+        const project = _project || ProjectStore.model;
         if (flagsmith.hasFeature('edge_identities') && project && project.use_edge_identities) {
             return true;
         }
@@ -150,7 +150,7 @@ module.exports = Object.assign({}, require('./base/_utils'), {
     },
 
     getFeatureStatesEndpoint(_project) {
-        let project = _project ? _project : ProjectStore.model
+        const project = _project || ProjectStore.model;
         if (flagsmith.hasFeature('edge_identities') && project && project.use_edge_identities) {
             return 'edge-featurestates';
         }
@@ -186,7 +186,7 @@ module.exports = Object.assign({}, require('./base/_utils'), {
         let total = 0;
         multivariateOptions.map((v) => {
             const variation = variations && variations.find(env => env.multivariate_feature_option === v.id);
-            total += variation ? variation.percentage_allocation : v.default_percentage_allocation;
+            total += variation ? variation.percentage_allocation : typeof v.default_percentage_allocation === 'number' ? v.default_percentage_allocation : v.percentage_allocation;
             return null;
         });
         return 100 - total;
@@ -223,7 +223,7 @@ module.exports = Object.assign({}, require('./base/_utils'), {
             type: 'unicode',
             boolean_value: null,
             integer_value: null,
-            string_value: value === null? null : val || '',
+            string_value: value === null ? null : val || '',
         };
     },
     getFlagValue(projectFlag, environmentFlag, identityFlag, multivariate_options) {
