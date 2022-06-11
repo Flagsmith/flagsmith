@@ -194,7 +194,7 @@ const EnvironmentSettingsPage = class extends Component {
                                                 level="environment"
                                             />
                                         </FormGroup>
-                                        {this.props.hasFeature("4eyes") && (
+                                        {Utils.getFlagsmithHasFeature("4eyes") && (
 
                                             <FormGroup className="m-y-3">
                                                 <Row space>

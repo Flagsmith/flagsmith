@@ -120,7 +120,7 @@ const SegmentsPage = class extends Component {
 
     render() {
         const { projectId, environmentId } = this.props.match.params;
-        const hasNoOperators = !this.props.getValue('segment_operators');
+        const hasNoOperators = !Utils.getFlagsmithValue('segment_operators');
         return (
             <div data-test="segments-page" id="segments-page" className="app-container container">
                 <Permission level="project" permission="ADMIN" id={projectId}>

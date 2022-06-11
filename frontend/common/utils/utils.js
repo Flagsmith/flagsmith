@@ -1,6 +1,8 @@
 const React = require('react');
 const semver = require('semver');
 const ProjectStore = require('../../common/stores/project-store');
+
+let flagsmithBetaFeatures = null;
 module.exports = Object.assign({}, require('./base/_utils'), {
     numberWithCommas(x) {
         return x.toString()
@@ -19,7 +21,7 @@ module.exports = Object.assign({}, require('./base/_utils'), {
     },
 
     getManageFeaturePermission() {
-        if (flagsmith.hasFeature('update_feature_state_permission')) {
+        if (Utils.getFlagsmithHasFeature('update_feature_state_permission')) {
             return 'UPDATE_FEATURE_STATE';
         }
         return 'ADMIN';
@@ -27,26 +29,26 @@ module.exports = Object.assign({}, require('./base/_utils'), {
 
     getTraitEndpointMethod(_project) {
         const project = _project || ProjectStore.model;
-        if (flagsmith.hasFeature('edge_identities') && ProjectStore.model && ProjectStore.model.use_edge_identities) {
+        if (Utils.getFlagsmithHasFeature('edge_identities') && ProjectStore.model && ProjectStore.model.use_edge_identities) {
             return 'put';
         }
         return 'post';
     },
     getIsEdge(_project) {
         const project = _project || ProjectStore.model;
-        if (flagsmith.hasFeature('edge_identities') && ProjectStore.model && ProjectStore.model.use_edge_identities) {
+        if (Utils.getFlagsmithHasFeature('edge_identities') && ProjectStore.model && ProjectStore.model.use_edge_identities) {
             return true;
         }
         return false;
     },
     getUpdateTraitEndpoint(environmentId, userId, _project) {
-        if (flagsmith.hasFeature('edge_identities') && ProjectStore.model && ProjectStore.model.use_edge_identities) {
+        if (Utils.getFlagsmithHasFeature('edge_identities') && ProjectStore.model && ProjectStore.model.use_edge_identities) {
             return `${Project.api}environments/${environmentId}/edge-identities/${userId}/update-traits/`;
         }
         return `${Project.api}traits/`;
     },
     getTraitEndpoint(environmentId, userId) {
-        if (flagsmith.hasFeature('edge_identities') && ProjectStore.model && ProjectStore.model.use_edge_identities) {
+        if (Utils.getFlagsmithHasFeature('edge_identities') && ProjectStore.model && ProjectStore.model.use_edge_identities) {
             return `${Project.api}environments/${environmentId}/edge-identities/${userId}/list-traits/`;
         }
         return `${Project.api}environments/${environmentId}/identities/${userId}/traits/`;
@@ -64,7 +66,7 @@ module.exports = Object.assign({}, require('./base/_utils'), {
     validateRule(rule) {
         if (!rule) return false;
 
-        const operators = flagsmith.getValue('segment_operators') ? JSON.parse(flagsmith.getValue('segment_operators')) : [];
+        const operators = Utils.getFlagsmithValue('segment_operators') ? JSON.parse(Utils.getFlagsmithValue('segment_operators')) : [];
         const operatorObj = Utils.findOperator(rule.operator, rule.value, operators);
 
         if (operatorObj && operatorObj.value && operatorObj.value.toLowerCase().includes('semver')) {
@@ -95,14 +97,14 @@ module.exports = Object.assign({}, require('./base/_utils'), {
 
     getShouldSendIdentityToTraits(_project) {
         const project = _project || ProjectStore.model;
-        if (flagsmith.hasFeature('edge_identities') && project && project.use_edge_identities) {
+        if (Utils.getFlagsmithHasFeature('edge_identities') && project && project.use_edge_identities) {
             return false;
         }
         return true;
     },
     getShouldUpdateTraitOnDelete(_project) {
         const project = _project || ProjectStore.model;
-        if (flagsmith.hasFeature('edge_identities') && project && project.use_edge_identities) {
+        if (Utils.getFlagsmithHasFeature('edge_identities') && project && project.use_edge_identities) {
             return true;
         }
         return false;
@@ -110,7 +112,7 @@ module.exports = Object.assign({}, require('./base/_utils'), {
 
     getShouldShowProjectTraits(_project) {
         const project = _project || ProjectStore.model;
-        if (flagsmith.hasFeature('edge_identities') && project && project.use_edge_identities) {
+        if (Utils.getFlagsmithHasFeature('edge_identities') && project && project.use_edge_identities) {
             return false;
         }
         return true;
@@ -118,7 +120,7 @@ module.exports = Object.assign({}, require('./base/_utils'), {
 
     getIdentitiesEndpoint(_project) {
         const project = _project || ProjectStore.model;
-        if (flagsmith.hasFeature('edge_identities') && project && project.use_edge_identities) {
+        if (Utils.getFlagsmithHasFeature('edge_identities') && project && project.use_edge_identities) {
             return 'edge-identities';
         }
         return 'identities';
@@ -127,7 +129,7 @@ module.exports = Object.assign({}, require('./base/_utils'), {
     getSDKEndpoint(_project) {
         const project = _project || ProjectStore.model;
 
-        if (flagsmith.hasFeature('edge_identities') && project && project.use_edge_identities) {
+        if (Utils.getFlagsmithHasFeature('edge_identities') && project && project.use_edge_identities) {
             return Project.flagsmithClientEdgeAPI;
         }
         return Project.api;
@@ -135,7 +137,7 @@ module.exports = Object.assign({}, require('./base/_utils'), {
 
     showUserSegments(_project) {
         const project = _project || ProjectStore.model;
-        if (flagsmith.hasFeature('edge_identities') && project && project.use_edge_identities) {
+        if (Utils.getFlagsmithHasFeature('edge_identities') && project && project.use_edge_identities) {
             return false;
         }
         return true;
@@ -143,7 +145,7 @@ module.exports = Object.assign({}, require('./base/_utils'), {
 
     getShouldHideIdentityOverridesTab(_project) {
         const project = _project || ProjectStore.model;
-        if (flagsmith.hasFeature('edge_identities') && project && project.use_edge_identities) {
+        if (Utils.getFlagsmithHasFeature('edge_identities') && project && project.use_edge_identities) {
             return true;
         }
         return false;
@@ -151,19 +153,60 @@ module.exports = Object.assign({}, require('./base/_utils'), {
 
     getFeatureStatesEndpoint(_project) {
         const project = _project || ProjectStore.model;
-        if (flagsmith.hasFeature('edge_identities') && project && project.use_edge_identities) {
+        if (Utils.getFlagsmithHasFeature('edge_identities') && project && project.use_edge_identities) {
             return 'edge-featurestates';
         }
         return 'featurestates';
     },
 
     getManageFeaturePermissionDescription() {
-        if (flagsmith.hasFeature('update_feature_state_permission')) {
+        if (Utils.getFlagsmithHasFeature('update_feature_state_permission')) {
             return 'Update Feature State';
         }
         return 'Admin';
     },
 
+    parseBetaFeatures() {
+        if (!flagsmith.hasFeature('beta_features')) {
+            return [];
+        } if (flagsmithBetaFeatures) {
+            return flagsmithBetaFeatures;
+        }
+        let res;
+        try {
+            res = JSON.parse(flagsmith.getValue('beta_features'));
+            const features = [];
+            Object.keys(res).map((v) => {
+                res[v].map((v) => {
+                    features.push(v.flag);
+                });
+            });
+            flagsmithBetaFeatures = features;
+        } catch (e) {
+
+        }
+        return flagsmithBetaFeatures || [];
+    },
+
+    getFlagsmithValue(key) {
+        const betaFeatures = Utils.parseBetaFeatures();
+        if (betaFeatures.includes(key)) {
+            if (typeof flagsmith.getTrait(`${key}-opt-in-value`) !== 'undefined') {
+                return flagsmith.getTrait(`${key}-opt-in-value`);
+            }
+        }
+        return flagsmith.getValue(key);
+    },
+
+    getFlagsmithHasFeature(key) {
+        const betaFeatures = Utils.parseBetaFeatures();
+        if (betaFeatures.includes(key)) {
+            if (typeof flagsmith.getTrait(`${key}-opt-in-enabled`) === 'boolean') {
+                return flagsmith.getTrait(`${key}-opt-in-enabled`);
+            }
+        }
+        return flagsmith.hasFeature(key);
+    },
 
     renderWithPermission(permission, name, el) {
         return permission ? (

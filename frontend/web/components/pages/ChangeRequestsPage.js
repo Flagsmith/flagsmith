@@ -39,7 +39,6 @@ const ChangeRequestsPage = class extends Component {
 
     render() {
         const { projectId, environmentId, envId } = this.props.match.params;
-        const readOnly = this.props.hasFeature('read_only_mode');
         const data = ChangeRequestStore.model && ChangeRequestStore.model[environmentId] && ChangeRequestStore.model[environmentId] && ChangeRequestStore.model[environmentId].results;
         const dataPaging = ChangeRequestStore.model && ChangeRequestStore.model[environmentId] && ChangeRequestStore.model[environmentId] && ChangeRequestStore.model[environmentId];
 
@@ -127,7 +126,7 @@ const ChangeRequestsPage = class extends Component {
                                 />
                             </TabItem>
                         )}
-                        {this.props.hasFeature('scheduling') && (
+                        {Utils.getFlagsmithHasFeature('scheduling') && (
                         <TabItem tabLabel={`Scheduled${dataScheduledPaging ? ` (${dataScheduledPaging.count})` : ''}`}>
                             <PanelSearch
                               renderSearchWithNoResults

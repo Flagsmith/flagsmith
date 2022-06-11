@@ -76,7 +76,7 @@ const AuditLogPage = class extends Component {
     render() {
         const { state: { search } } = this;
         const { env: envFilter } = this.getEnvironment();
-        const hasRbacPermission = !this.props.hasFeature('plan_based_access') || Utils.getPlansPermission('AUDIT') || !this.props.hasFeature('scaleup_audit');
+        const hasRbacPermission = !Utils.getFlagsmithHasFeature('plan_based_access') || Utils.getPlansPermission('AUDIT') || !this.props.hasFeature('scaleup_audit');
         if (!hasRbacPermission) {
             return (
                 <div>
