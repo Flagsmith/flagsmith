@@ -58,7 +58,7 @@ const BetaFeaturesPage = class extends Component {
             <div
               data-test="beta-features-page"
               id="beta-features-page"
-              className="app-container container-fluid"
+              className="app-container container"
             >
                 <h3>Beta Features</h3>
                 <p>
