@@ -90,7 +90,7 @@ class IntegrationList extends Component {
     }
 
     fetch = () => {
-        const integrationList = this.props.getValue('integration_data') && JSON.parse(this.props.getValue('integration_data'));
+        const integrationList = Utils.getFlagsmithValue('integration_data') && JSON.parse(Utils.getFlagsmithValue('integration_data'));
         this.setState({ isLoading: true });
         Promise.all(this.props.integrations.map((key) => {
             const integration = integrationList[key];
@@ -120,7 +120,7 @@ class IntegrationList extends Component {
         });
         const params = Utils.fromParam();
         if (params && params.configure) {
-            const integrationList = this.props.getValue('integration_data') && JSON.parse(this.props.getValue('integration_data'));
+            const integrationList = Utils.getFlagsmithValue('integration_data') && JSON.parse(Utils.getFlagsmithValue('integration_data'));
 
             if (integrationList && integrationList[params.configure]) {
                 setTimeout(()=>{
@@ -167,7 +167,7 @@ class IntegrationList extends Component {
     }
 
     render() {
-        const integrationList = this.props.getValue('integration_data') && JSON.parse(this.props.getValue('integration_data'));
+        const integrationList = Utils.getFlagsmithValue('integration_data') && JSON.parse(Utils.getFlagsmithValue('integration_data'));
         return (
             <div>
                 <div>

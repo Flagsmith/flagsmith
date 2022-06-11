@@ -8,13 +8,13 @@ class ButterBar extends Component {
 
     render() {
         return <>
-            {this.props.getValue('butter_bar') && !this.props.hasFeature('read_only_mode')&&(
+            {Utils.getFlagsmithValue('butter_bar') && !Utils.getFlagsmithHasFeature('read_only_mode')&&(
                 <div
-                    dangerouslySetInnerHTML={{ __html: this.props.getValue('butter_bar') }}
+                    dangerouslySetInnerHTML={{ __html: Utils.getFlagsmithValue('butter_bar') }}
                     className="butter-bar"
                 />
             )}
-            {this.props.hasFeature('read_only_mode') && (
+            {Utils.getFlagsmithHasFeature('read_only_mode') && (
                 <div
                     className="butter-bar"
                 >

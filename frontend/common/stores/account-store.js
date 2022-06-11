@@ -333,7 +333,7 @@ const store = Object.assign({}, BaseStore, {
             return false;
         }
 
-        return flagsmith.hasFeature('forced_2fa') && store.getOrganisations() && store.getOrganisations().find(o => o.force_2fa);
+        return Utils.getFlagsmithHasFeature('forced_2fa') && store.getOrganisations() && store.getOrganisations().find(o => o.force_2fa);
     },
     setUser(user) {
         controller.setUser(user);

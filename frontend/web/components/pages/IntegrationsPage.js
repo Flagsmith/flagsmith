@@ -19,7 +19,7 @@ const ProjectSettingsPage = class extends Component {
     };
 
     render() {
-        let integrations = this.props.getValue('integrations') || '[]';
+        let integrations = Utils.getFlagsmithValue('integrations') || '[]';
         try {
             integrations = JSON.parse(integrations).sort();
         } catch (e) {

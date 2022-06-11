@@ -2,6 +2,7 @@ import React from 'react';
 import { Route, Switch } from 'react-router-dom';
 
 import App from './components/App'; // App Wrapper
+import BetaFeaturesPage from './components/pages/BetaFeaturesPage';
 import HomePage from './components/pages/HomePage';
 import DemoPage from './components/pages/DemoPage';
 import Maintenance from './components/Maintenance';
@@ -66,6 +67,7 @@ export default (
             <Route path="/account" exact component={AccountSettingsPage}/>
             <Route path="/project/:projectId/environment/:environmentId/audit-log" exact component={AuditLogPage}/>
             <Route path="/project/:projectId/audit-log" exact component={AuditLogPage}/>
+            <Route path="/project/:projectId/beta-features" exact component={BetaFeaturesPage}/>
             <Route path="/create" exact component={CreateOrganisationPage}/>
             <Route component={NotFoundPage}/>
         </Switch>
