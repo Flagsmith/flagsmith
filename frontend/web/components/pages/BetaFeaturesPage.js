@@ -62,7 +62,7 @@ const BetaFeaturesPage = class extends Component {
             >
                 <h3>Beta Features</h3>
                 <p>
-                    The Flagsmith web application uses Flagsmith to manage all of its features, to demonstrate this here you can manage features for your user!
+                    The Flagsmith web application uses Flagsmith to manage all of its features. To demonstrate this, here you can manage features for your user!
                 </p>
                 {
                     Object.keys(features).map((v) => {
