@@ -48,6 +48,10 @@ class ProjectFeatureSerializer(serializers.ModelSerializer):
         writeonly_fields = ("initial_value", "default_enabled")
 
 
+class FeatureQuerySerializer(serializers.Serializer):
+    search = serializers.CharField(required=False)
+
+
 class ListCreateFeatureSerializer(WritableNestedModelSerializer):
     multivariate_options = NestedMultivariateFeatureOptionSerializer(
         many=True, required=False
