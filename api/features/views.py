@@ -126,10 +126,16 @@ class FeatureViewSet(viewsets.ModelViewSet):
 
         query_serializer = FeatureQuerySerializer(data=self.request.query_params)
         query_serializer.is_valid(raise_exception=True)
-        filters = query_serializer.validated_data
+        query_data = query_serializer.validated_data
 
-        if filters.get("search"):
-            queryset = queryset.filter(name__icontains=filters["search"])
+        if query_data.get("search"):
+            queryset = queryset.filter(name__icontains=query_data["search"])
+
+        sort = "%s%s" % (
+            "-" if query_data["sort_direction"] == "DESC" else "",
+            query_data["sort_field"],
+        )
+        queryset = queryset.order_by(sort)
 
         return queryset
 
