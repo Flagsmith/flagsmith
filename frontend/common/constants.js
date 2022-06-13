@@ -158,11 +158,22 @@ const Constants = {
         }),
 
         'USER_TRAITS': (envId, userId) => ({
+            '.NET': require('./code-help/traits/traits-dotnet')(envId, keywords, userId),
             'cURL': require('./code-help/traits/traits-curl')(envId, keywords, userId),
+            'Flutter': require('./code-help/traits/traits-flutter')(envId, keywords, userId),
+            'Go': require('./code-help/traits/traits-go')(envId, keywords, userId),
+            'iOS': require('./code-help/traits/traits-ios')(envId, keywords, userId),
+            'Java': require('./code-help/traits/traits-java')(envId, keywords, userId),
             'JavaScript': require('./code-help/traits/traits-js')(envId, keywords, userId),
             'Next.js': require('./code-help/traits/traits-next')(envId, keywords, userId),
-            'React Native': require('./code-help/traits/traits-rn')(envId, keywords, userId),
+            'Node JS': require('./code-help/traits/traits-node')(envId, keywords, userId),
+            'PHP': require('./code-help/traits/traits-php')(envId, keywords, userId),
+            'Python': require('./code-help/traits/traits-python')(envId, keywords, userId),
+            'REST': require('./code-help/traits/traits-rest')(envId, keywords, userId),
             'React': require('./code-help/traits/traits-react')(envId, keywords, userId),
+            'React Native': require('./code-help/traits/traits-rn')(envId, keywords, userId),
+            'Ruby': require('./code-help/traits/traits-ruby')(envId, keywords, userId),
+            'Rust': require('./code-help/traits/traits-rust')(envId, keywords, userId),
         }),
 
         'INIT': envId => ({

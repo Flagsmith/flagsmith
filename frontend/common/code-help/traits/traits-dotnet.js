@@ -1,9 +1,20 @@
-module.exports = (envId, { LIB_NAME, USER_ID, TRAIT_NAME, LIB_NAME_JAVA, FEATURE_NAME, FEATURE_FUNCTION, FEATURE_NAME_ALT, FEATURE_NAME_ALT_VALUE, NPM_CLIENT }, userId) => `
-// Set a user trait
-Trait userTrait = await BulletTrainClient.instance.SetTrait("${USER_ID}", "${TRAIT_NAME}", "blue");
+module.exports = (envId, { LIB_NAME, USER_ID, TRAIT_NAME, LIB_NAME_JAVA, FEATURE_NAME, FEATURE_FUNCTION, FEATURE_NAME_ALT, FEATURE_NAME_ALT_VALUE, NPM_CLIENT }, userId) => `using Flagsmith;
 
-Identity userIdentity = await BulletTrainClient.instance.GetUserIdentity("${USER_ID}");
-if (userIdentity != null) {
-  // Run the code to use user identity i.e. userIdentity.flags or userIdentity.traits
-}
+static FlagsmithClient _flagsmithClient;
+_flagsmithClient = new("${envId}");
+
+var Identifier = "delboy@trotterstraders.co.uk";
+var traitKey = "car_type";
+var traitValue = "robin_reliant";
+var traitList = new List<Trait> { new Trait(traitKey, traitValue) };
+
+# Sync
+# The method below triggers a network request
+var flags = _flagsmithClient.GetIdentityFlags(Identifier, traitList);
+var showButton = flags.IsFeatureEnabled("secret_button");
+
+# Async
+# The method below triggers a network request
+var flags = await _flagsmithClient.GetIdentityFlags(Identifier, traitList);
+var showButton = await flags.IsFeatureEnabled("secret_button");
 `;
