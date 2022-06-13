@@ -3,22 +3,46 @@ const OrganisationStore = require('./organisation-store');
 const data = require('../data/base/_data');
 
 let createdFirstFeature = false;
-
+const PAGE_SIZE = 10
 const controller = {
 
-    getFeatures: (projectId, environmentId, force) => {
+    getFeatures: (projectId, environmentId, force, page) => {
         if (!store.model || store.envId != environmentId || force) { // todo: change logic a bit
             store.loading();
             store.envId = environmentId;
 
-            // todo: cache project flags
+            const { feature } = Utils.fromParam()
+
+            let featuresEndpoint = page ? page  : `${Project.api}projects/${projectId}/features/?page_size=${PAGE_SIZE}`
+            if (store.search) {
+                featuresEndpoint+= `&search=${store.search}`
+            }
+            if (store.sort) {
+                featuresEndpoint+= `&sort_field=${store.sort.sortBy}&sort_direction=${store.sort.sortOrder.toUpperCase()}`
+            }
             return Promise.all([
-                data.get(`${Project.api}projects/${projectId}/features/?page_size=999`),
-                data.get(`${Project.api}environments/${environmentId}/featurestates/?page_size=999`),
-            ]).then(([features, environmentFeatures]) => {
+                data.get(featuresEndpoint),
+                data.get(`${Project.api}environments/${environmentId}/featurestates/?page_size=${PAGE_SIZE}`),
+                feature? data.get(`${Project.api}projects/${projectId}/features/${feature}/`) : Promise.resolve(),
+            ]).then(([features, environmentFeatures, feature]) => {
+
+                store.paging.next = features.next;
+                store.paging.pageSize = PAGE_SIZE;
+                store.paging.count = features.count;
+                store.paging.previous = features.previous;
+                store.paging.currentPage = featuresEndpoint.indexOf('?page=') !== -1 ? parseInt(featuresEndpoint.substr(featuresEndpoint.indexOf('?page=') + 6)) : 1;
+
+
+                if (feature) {
+                    const index = features.results.findIndex((v)=>v.id === feature)
+                    if (index === -1) {
+                      features.results.push({...feature, ignore:true})
+                    }
+                }
                 if (features.results.length) {
                     createdFirstFeature = true;
                 }
+
                 store.model = {
                     features: features.results.map((controller.parseFlag)),
                     keyedEnvironmentFeatures: environmentFeatures.results && _.keyBy(environmentFeatures.results, 'feature'),
@@ -291,12 +315,17 @@ const controller = {
                 store.saved();
             });
     },
-
+    searchFeatures: _.throttle((search, environmentId, projectId) => {
+        store.search = search;
+        controller.getFeatures(projectId, environmentId, true);
+    }, 1000),
 };
 
 
 const store = Object.assign({}, BaseStore, {
     id: 'features',
+    paging: {},
+    sort: { label: 'Name', sortBy: 'name', sortOrder: 'asc', default: true },
     getEnvironmentFlags() {
         return store.model && store.model.keyedEnvironmentFeatures;
     },
@@ -314,6 +343,7 @@ const store = Object.assign({}, BaseStore, {
     getFlagInfluxData() {
         return store.model && store.model.influxData;
     },
+
 });
 
 
@@ -321,8 +351,15 @@ store.dispatcherIndex = Dispatcher.register(store, (payload) => {
     const action = payload.action; // this is our action from handleViewAction
 
     switch (action.actionType) {
+        case Actions.SEARCH_FLAGS:
+            controller.searchFeatures(action.search, action.environmentId, action.projectId, action.environmentId);
+            break;
         case Actions.GET_FLAGS:
-            controller.getFeatures(action.projectId, action.environmentId, action.force);
+            store.search = ''
+            if (action.sort) {
+                store.sort = action.sort;
+            }
+            controller.getFeatures(action.projectId, action.environmentId, action.force, action.page);
             break;
         case Actions.TOGGLE_FLAG:
             controller.toggleFlag(action.index, action.environments, action.comment, action.environmentFlags);

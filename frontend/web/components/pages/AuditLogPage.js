@@ -127,8 +127,8 @@ const AuditLogPage = class extends Component {
                                                       className="no-pad"
                                                       icon="ion-md-browsers"
                                                       items={auditLog}
-                                                      search={search}
                                                       filter={envFilter}
+                                                      search={search}
                                                       onChange={(e) => {
                                                           this.setState({ search: Utils.safeParseEventValue(e) });
                                                           AppActions.searchAuditLog(Utils.safeParseEventValue(e), this.props.match.params.projectId, env);

@@ -1,17 +1,11 @@
 import React, { Component } from 'react';
-import EditIdentityModal from './UserPage';
 import CreateFlagModal from '../modals/CreateFlag';
-import ConfirmToggleFeature from '../modals/ConfirmToggleFeature';
 import TryIt from '../TryIt';
-import ConfirmRemoveFeature from '../modals/ConfirmRemoveFeature';
 import TagSelect from '../TagSelect';
-import HistoryIcon from '../HistoryIcon';
-import TagValues from '../TagValues';
-import withAuditWebhooks from '../../../common/providers/withAuditWebhooks';
 import TagStore from '../../../common/stores/tags-store';
 import { Tag } from '../AddEditTags';
 import FeatureRow from '../FeatureRow';
-
+import FeatureListStore from '../../../common/stores/feature-list-store'
 const FeaturesPage = class extends Component {
     static displayName = 'FeaturesPage';
 
@@ -24,12 +18,14 @@ const FeaturesPage = class extends Component {
         this.state = {
             tags: [],
             showArchived: false,
+            search: "",
+            sort: { label: 'Name', sortBy: 'name',  sortOrder:'asc' }
         };
         ES6Component(this);
         this.listenTo(TagStore, 'loaded', () => {
             const tags = TagStore.model && TagStore.model[parseInt(this.props.match.params.projectId)];
         });
-        AppActions.getFeatures(this.props.match.params.projectId, this.props.match.params.environmentId);
+        AppActions.getFeatures(this.props.match.params.projectId, this.props.match.params.environmentId, false, this.state.search, this.state.sort);
     }
 
     componentWillUpdate(newProps) {
@@ -37,7 +33,7 @@ const FeaturesPage = class extends Component {
         const { match: { params: oldParams } } = this.props;
         if (params.environmentId != oldParams.environmentId || params.projectId != oldParams.projectId) {
             this.getTags(params.projectId);
-            AppActions.getFeatures(params.projectId, params.environmentId);
+            AppActions.getFeatures(params.projectId, params.environmentId, false, this.state.search, this.state.sort);
         }
     }
 
@@ -74,17 +70,13 @@ const FeaturesPage = class extends Component {
 
     componentWillReceiveProps(newProps) {
         if (newProps.match.params.environmentId != this.props.match.params.environmentId) {
-            AppActions.getFeatures(newProps.match.params.projectId, newProps.match.params.environmentId);
+            AppActions.getFeatures(newProps.match.params.projectId, newProps.match.params.environmentId, false, this.state.search);
         }
     }
 
     onSave = () => {
         toast('Saved');
     };
-
-    editIdentity = (id, envFlags) => {
-        openModal(<EditIdentityModal id={id} envFlags={envFlags}/>);
-    }
 
     onError = (error) => {
         // Kick user back out to projects
@@ -203,10 +195,22 @@ const FeaturesPage = class extends Component {
                                                               title="Features"
                                                               renderSearchWithNoResults
                                                               itemHeight={65}
-                                                              sorting={Utils.getFlagsmithHasFeature('stale_flags') ? [
-                                                                  { label: 'Name', value: 'name', order: 'asc', default: true },
-                                                                  { label: 'Created Date', value: 'created_date', order: 'asc' },
-                                                              ] : [
+                                                              isLoading={FeatureListStore.isLoading}
+                                                              paging={FeatureListStore.paging}
+                                                              search={this.state.search}
+                                                              onChange={(e) => {
+                                                                  this.setState({ search: Utils.safeParseEventValue(e) });
+                                                                  AppActions.searchFeatures(this.props.match.params.projectId, this.props.match.params.environmentId, true, this.state.search, this.state.sort)
+                                                              }}
+                                                              nextPage={() => AppActions.getFeatures(this.props.match.params.projectId, this.props.match.params.environmentId, true, this.state.search, this.state.sort, FeatureListStore.paging.next)}
+                                                              prevPage={() => AppActions.getFeatures(this.props.match.params.projectId, this.props.match.params.environmentId, true, this.state.search, this.state.sort, FeatureListStore.paging.previous)}
+                                                              goToPage={page => AppActions.getFeatures(this.props.match.params.projectId, this.props.match.params.environmentId, true, this.state.search, this.state.sort, page)}
+                                                              onSortChange={(sort)=>{
+                                                                this.setState({sort},()=>{
+                                                                    AppActions.getFeatures(this.props.match.params.projectId, this.props.match.params.environmentId, true, this.state.search, this.state.sort);
+                                                                })
+                                                              }}
+                                                              sorting={[
                                                                   { label: 'Name', value: 'name', order: 'asc', default: true },
                                                                   { label: 'Created Date', value: 'created_date', order: 'asc' },
                                                               ]}
@@ -258,7 +262,7 @@ const FeaturesPage = class extends Component {
                                                                     projectFlag={projectFlag}
                                                                   />
                                                               )}
-                                                              filterRow={({ name }, search) => name.toLowerCase().indexOf(search) > -1}
+                                                              filterRow={({ name }, search) => true}
                                                             />
                                                         </FormGroup>
                                                     )}
