@@ -84,6 +84,7 @@ class FeatureViewSet(viewsets.ModelViewSet):
     def get_serializer_class(self):
         return {
             "list": ListCreateFeatureSerializer,
+            "retrieve": ListCreateFeatureSerializer,
             "create": ListCreateFeatureSerializer,
             "update": UpdateFeatureSerializer,
             "partial_update": UpdateFeatureSerializer,
