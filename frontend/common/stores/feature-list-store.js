@@ -164,10 +164,9 @@ const controller = {
                     feature_segment: featureSegment.id,
                     feature_state_value: v.feature_segment_value.feature_state_value,
                 }).then((featureSegmentValue) => {
-                    debugger
                     const newValue = {
                         ...featureSegment,
-                        feature_state_value: featureSegmentValue,
+                        feature_segment_value: featureSegmentValue,
                     };
                     segmentOverrides[i] = newValue;
                 }));
