@@ -240,7 +240,7 @@ class FeatureViewSet(viewsets.ModelViewSet):
             queryset = queryset.filter(name__icontains=query_data["search"])
 
         if "tags" in query_serializer.initial_data:
-            if not query_data["tags"]:
+            if query_data.get("tags", "") == "":
                 queryset = queryset.filter(tags__isnull=True)
             else:
                 queryset = reduce(
