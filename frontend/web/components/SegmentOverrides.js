@@ -17,8 +17,21 @@ const arrayMove = (array, from, to) => {
     return array;
 };
 
-const SegmentOverride = ConfigProvider(SortableElement(({ hasFeature, controlValue, multivariateOptions, setVariations, disabled, value: v, onSortEnd, index, confirmRemove, toggle, setValue }) => {
+const SegmentOverride = ConfigProvider(SortableElement(({ controlValue, multivariateOptions, setVariations, disabled, value: v, onSortEnd, index, confirmRemove, toggle, setValue }) => {
+    const mvOptions = multivariateOptions && multivariateOptions.map((mv) => {
+        const foundMv = v.multivariate_options && v.multivariate_options.find(v => v.multivariate_feature_option === mv.id);
+        if (foundMv) {
+            return foundMv;
+        }
+        return {
+            percentage_allocation: 0,
+            multivariate_feature_option: mv.id,
+        };
+    });
     const showValue = !(multivariateOptions && multivariateOptions.length);
+    const controlPercent = Utils.calculateControl(mvOptions);
+    const invalid = !!multivariateOptions && multivariateOptions.length && controlPercent < 0;
+
     return (
         <div data-test={`segment-override-${index}`} style={{ zIndex: 9999999999 }} className="panel panel-without-heading panel--draggable mb-2">
             <Row className="panel-content" space>
@@ -67,7 +80,7 @@ const SegmentOverride = ConfigProvider(SortableElement(({ hasFeature, controlVal
 
             <div className="mx-2 text-left pb-2">
 
-                {showValue && (
+                {showValue ? (
                     <>
                         <label>
                             Value (optional)
@@ -79,15 +92,30 @@ const SegmentOverride = ConfigProvider(SortableElement(({ hasFeature, controlVal
                           placeholder="Value e.g. 'big' "
                         />
                     </>
+                ) : (
+                    <>
+                        <label>
+                            Control Value - {controlPercent}%
+                        </label>
+                        <ValueEditor
+                          value={v.value}
+                          data-test={`segment-override-value-${index}`}
+                          onChange={e => setValue(Utils.getTypedValue(Utils.safeParseEventValue(e)))}
+                          placeholder="Value e.g. 'big' "
+                        />
+                    </>
                 )}
                 {!!controlValue && (!multivariateOptions || !multivariateOptions.length) && (
-                    <div className="mt-2 text-right">
-                        <Button onClick={() => {
+                    <div className="mt-2 mb-3 text-right">
+                        <ButtonLink
+                            className="text-primary" onClick={() => {
                             setValue(Utils.getTypedValue(Utils.safeParseEventValue(controlValue)));
                         }}
                         >
-                            Set as Environment Value
-                        </Button>
+                            <div className="text-primary text-small">
+                                Copy from Environment Value
+                            </div>
+                        </ButtonLink>
                     </div>
                 )}
 
@@ -96,16 +124,26 @@ const SegmentOverride = ConfigProvider(SortableElement(({ hasFeature, controlVal
                     <div>
                         <FormGroup className="mb-4">
                             <VariationOptions
-                              disabled
-                              select={!flagsmith.hasFeature('segment_mv_percentages')}
+                              preventRemove
                               controlValue={controlValue}
-                              variationOverrides={v.multivariate_options}
+                              variationOverrides={mvOptions}
+                              multivariateOptions={multivariateOptions.map((mv) => {
+                                  const foundMv = v.multivariate_options && v.multivariate_options.find(v => v.multivariate_feature_option === mv.id);
+                                  if (foundMv) {
+                                      return {
+                                          ...mv,
+                                          default_percentage_allocation: foundMv.percentage_allocation,
+                                      };
+                                  }
+                                  return {
+                                      ...mv,
+                                      default_percentage_allocation: 0,
+                                  };
+                              })}
                               setVariations={setVariations}
-                              setValue={setValue}
-                              updateVariation={() => {}}
+                              setValue={setVariations}
+                              updateVariation={setVariations}
                               weightTitle="Override Weight %"
-                              multivariateOptions={multivariateOptions}
-                              removeVariation={() => {}}
                             />
                         </FormGroup>
                     </div>
@@ -128,9 +166,19 @@ const SegmentOverrideList = SortableContainer(({ disabled, multivariateOptions, 
               confirmRemove={() => confirmRemove(index)}
               controlValue={controlValue}
               toggle={() => toggle(index)}
-              setVariations={newVariations => setVariations(index, newVariations)}
               setValue={(value) => {
                   setValue(index, value);
+              }}
+              setVariations={(i, override, mvOptions) => {
+                  // multivariate_feature_option: 2228
+                  // multivariate_feature_option_index: 0
+                  // percentage_allocation: 100
+                  const newValue = _.cloneDeep(mvOptions);
+                  newValue[i] = {
+                      ...newValue[i],
+                      percentage_allocation: override.default_percentage_allocation,
+                  };
+                  setVariations(index, newValue);
               }}
             />
         ))}

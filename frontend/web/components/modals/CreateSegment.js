@@ -55,7 +55,9 @@ const CreateSegment = class extends Component {
         if (!rules || !rules[0] || !rules[0].rules) {
             return false;
         }
-        const res = rules[0].rules.find(v => v.conditions.find(c => (!c.property && c.operator !== 'PERCENTAGE_SPLIT') || c.value === ''));
+        const res = rules[0].rules.find(v => v.conditions.find(c => {
+            return !Utils.validateRule(c);
+        }));
 
         return !res;
     }
@@ -132,7 +134,7 @@ const CreateSegment = class extends Component {
 
     render() {
         const { name, description, rules, isSaving, error } = this.state;
-        const { getValue, isEdit, identity, readOnly } = this.props;
+        const { isEdit, identity, readOnly } = this.props;
 
         const rulesEl = (
             <div className="panel--grey overflow-visible">
@@ -152,7 +154,7 @@ const CreateSegment = class extends Component {
                                   data-test={`rule-${i}`}
                                   rule={rule}
                                   operators={
-                                      getValue('segment_operators') ? JSON.parse(getValue('segment_operators')) : null
+                                      Utils.getFlagsmithValue('segment_operators') ? JSON.parse(Utils.getFlagsmithValue('segment_operators')) : null
                                   }
                                   onRemove={v => this.removeRule(0, i, v)}
                                   onChange={v => this.updateRule(0, i, v)}
@@ -171,20 +173,20 @@ const CreateSegment = class extends Component {
                             </ButtonOutline>
                         </div>
                         )}
-                        {!readOnly && this.props.hasFeature('not_operator') && (
+                        {!readOnly && Utils.getFlagsmithHasFeature('not_operator') && (
                             <div
                               onClick={() => this.addRule('NOT')} style={{ marginTop: 20 }}
                               className="text-center"
                             >
                                 {
-                                    this.props.getValue('not_operator') ? (
+                                    Utils.getFlagsmithValue('not_operator') ? (
                                         <Tooltip title={(
                                             <ButtonOutline className="ml-2 btn--outline-danger" data-test="add-rule" type="button">
                                                 Add AND NOT Condition
                                             </ButtonOutline>
                                         )}
                                         >
-                                            {`Note: If using clientside evaluations on your SDK, this feature is only supported by the following SDKs: ${JSON.parse(flagsmith.getValue('not_operator'))}`}
+                                            {`Note: If using clientside evaluations on your SDK, this feature is only supported by the following SDKs: ${JSON.parse(Utils.getFlagsmithValue('not_operator'))}`}
                                         </Tooltip>
                                     ) : (
                                         <ButtonOutline className="ml-2 btn--outline-danger" data-test="add-rule" type="button">

@@ -59,7 +59,6 @@ const UsersPage = class extends Component {
 
     render() {
         const { projectId, environmentId } = this.props.match.params;
-        const { hasFeature, getValue } = this.props;
         const preventAddTrait = !AccountStore.getOrganisation().persist_trait_data;
 
         return (

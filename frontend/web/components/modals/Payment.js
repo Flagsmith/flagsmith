@@ -5,7 +5,7 @@ import _data from '../../../common/data/base/_data';
 
 const PaymentButton = (props) => {
     const activeSubscription = AccountStore.getOrganisationPlan(AccountStore.getOrganisation().id);
-    if (flagsmith.hasFeature('upgrade_subscription') && activeSubscription) {
+    if (Utils.getFlagsmithHasFeature('upgrade_subscription') && activeSubscription) {
         return (
             <a
               onClick={() => {
@@ -60,7 +60,6 @@ const PaymentModal = class extends Component {
 
     render() {
         const viewOnly = this.props.viewOnly;
-        const { hasFeature, getValue } = this.props;
 
 
         return (
@@ -77,7 +76,7 @@ const PaymentModal = class extends Component {
                             <div>
                                 <div>
                                     <div className="col-md-12">
-                                        {flagsmith.hasFeature("annual_plans")&&(
+                                        {Utils.getFlagsmithHasFeature("annual_plans")&&(
                                             <div className="text-center mb-4">
                                                 <Row className="justify-content-center">
                                                     <span className="mr-2">

@@ -1,10 +1,10 @@
 import React from 'react';
 import Constants from '../../../common/constants';
 import VariationValue from './VariationValue';
-import ValueEditor from "../ValueEditor";
-import InfoMessage from "../InfoMessage";
+import ValueEditor from '../ValueEditor';
+import InfoMessage from '../InfoMessage';
 
-export default function VariationOptions({ multivariateOptions, select, controlValue, weightTitle, variationOverrides, removeVariation, updateVariation, setVariations, setValue }) {
+export default function VariationOptions({ multivariateOptions, select, controlValue, weightTitle, variationOverrides, removeVariation, updateVariation, setVariations, setValue, preventRemove }) {
     const invalid = multivariateOptions.length && controlValue < 0;
 
     if (!multivariateOptions || !multivariateOptions.length) {
@@ -18,12 +18,14 @@ export default function VariationOptions({ multivariateOptions, select, controlV
                     Your variation percentage splits total to over 100%
                 </div>
             )}
-            <p>
+            {!preventRemove && (
+                <p>
+                    <InfoMessage>
+                        Variation values are shared amongst environments. Variation weights are specific to this Environment. <a target="_blank" href="https://docs.flagsmith.com/basic-features/managing-features#multi-variate-flags">Check the Docs for more</a>
+                    </InfoMessage>
+                </p>
+            )}
 
-                <InfoMessage>
-                    Variation values are shared amongst environments. Variation weights are specific to this Environment. <a target={"_blank"} href="https://docs.flagsmith.com/basic-features/managing-features#multi-variate-flags">Check the Docs for more</a>
-                </InfoMessage>
-            </p>
             {select && (
                 <div className="panel panel--flat panel-without-heading mb-2">
                     <div className="panel-content">
@@ -45,7 +47,7 @@ export default function VariationOptions({ multivariateOptions, select, controlV
             )}
             {
                 multivariateOptions.map((theValue, i) => {
-                    let override = select
+                    const override = select
                         ? variationOverrides && variationOverrides[0] && typeof variationOverrides[0].multivariate_feature_option_index === 'number' ? i === variationOverrides[0].multivariate_feature_option_index
 && variationOverrides[0] : variationOverrides && variationOverrides.find(v => v.multivariate_feature_option === theValue.id) : variationOverrides && variationOverrides.find(v => v.percentage_allocation === 100);
                     return select ? (
@@ -74,12 +76,13 @@ export default function VariationOptions({ multivariateOptions, select, controlV
                     ) : (
                         <VariationValue
                           key={i}
+                          preventRemove={preventRemove}
                           value={theValue}
                           onChange={(e) => {
                               updateVariation(i, e, variationOverrides);
                           }}
                           weightTitle={weightTitle}
-                          onRemove={() => removeVariation(i)}
+                          onRemove={preventRemove ? null : () => removeVariation(i)}
                         />
                     );
                 })

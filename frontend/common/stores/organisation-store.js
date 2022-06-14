@@ -21,7 +21,7 @@ const controller = {
                     // projects = projects.results;
                     store.model = { ...store.model, users, invites: invites && invites.results };
 
-                    if (AccountStore.getOrganisationRole(id) === 'ADMIN' && !E2E && flagsmith.hasFeature('usage_chart')) {
+                    if (AccountStore.getOrganisationRole(id) === 'ADMIN' && !E2E && Utils.getFlagsmithHasFeature('usage_chart')) {
                         data.get(`${Project.api}organisations/${id}/usage/`).then((usage) => {
                             store.model.usage = usage && usage.events;
                             store.loaded();
@@ -73,10 +73,12 @@ const controller = {
     },
     createProject: (name) => {
         store.saving();
-        const createSampleUser = (res, envName) => data.post(`${Project.api}environments/${res.api_key}/${Utils.getIdentitiesEndpoint()}/`, {
-            environment: res.id,
-            identifier: `${envName}_user_123456`,
-        }).then(() => res);
+        const createSampleUser = (res, envName, project) => {
+            return data.post(`${Project.api}environments/${res.api_key}/${Utils.getIdentitiesEndpoint(project)}/`, {
+                environment: res.id,
+                identifier: `${envName}_user_123456`,
+            }).then(() => res);
+        }
         if (AccountStore.model.organisations.length === 1 && (!store.model.projects || !store.model.projects.length)) {
             API.trackEvent(Constants.events.CREATE_FIRST_PROJECT);
         }
@@ -85,9 +87,9 @@ const controller = {
             .then((project) => {
                 Promise.all([
                     data.post(`${Project.api}environments/`, { name: 'Development', project: project.id })
-                        .then(res => createSampleUser(res, 'development')),
+                        .then(res => createSampleUser(res, 'development', project)),
                     data.post(`${Project.api}environments/`, { name: 'Production', project: project.id })
-                        .then(res => createSampleUser(res, 'production')),
+                        .then(res => createSampleUser(res, 'production', project)),
                 ]).then((res) => {
                     project.environments = res;
                     store.model.projects = store.model.projects.concat(project);

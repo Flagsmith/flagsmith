@@ -80,7 +80,7 @@ class TheComponent extends Component {
             <AccountProvider>
                 {({ isSaving, user }, { enableTwoFactor, disableTwoFactor, confirmTwoFactor }) => {
                     const forced2Factor = AccountStore.forced2Factor();
-                    const has2fPermission = !this.props.hasFeature('plan_based_access') || Utils.getPlansPermission('2FA');
+                    const has2fPermission = !Utils.getFlagsmithHasFeature('plan_based_access') || Utils.getPlansPermission('2FA');
 
                     return forced2Factor ? (
                         <div className="app-container container">

@@ -18,6 +18,7 @@ const VariationValue = ({
                             data-test="featureValue"
                             name="featureValue" className="full-width"
                             value={Utils.getTypedValue(Utils.featureStateToValue(value))}
+                            readOnly={!onRemove}
                             onChange={(e) => {
                                 onChange({
                                     ...value,

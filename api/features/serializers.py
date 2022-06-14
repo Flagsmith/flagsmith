@@ -1,9 +1,11 @@
 import django.core.exceptions
 from rest_framework import serializers
+from rest_framework.exceptions import PermissionDenied
 
 from audit.models import (
     FEATURE_STATE_UPDATED_MESSAGE,
     IDENTITY_FEATURE_STATE_UPDATED_MESSAGE,
+    SEGMENT_FEATURE_STATE_UPDATED_MESSAGE,
     AuditLog,
     RelatedObjectType,
 )
@@ -13,8 +15,8 @@ from util.drf_writable_nested.serializers import WritableNestedModelSerializer
 
 from .models import Feature, FeatureState, FeatureStateValue
 from .multivariate.serializers import (
-    MultivariateFeatureOptionSerializer,
     MultivariateFeatureStateValueSerializer,
+    NestedMultivariateFeatureOptionSerializer,
 )
 
 
@@ -47,7 +49,7 @@ class ProjectFeatureSerializer(serializers.ModelSerializer):
 
 
 class ListCreateFeatureSerializer(WritableNestedModelSerializer):
-    multivariate_options = MultivariateFeatureOptionSerializer(
+    multivariate_options = NestedMultivariateFeatureOptionSerializer(
         many=True, required=False
     )
     owners = UserListSerializer(many=True, read_only=True)
@@ -82,21 +84,28 @@ class ListCreateFeatureSerializer(WritableNestedModelSerializer):
         instance.owners.add(user)
         return instance
 
-    def validate_multivariate_options(self, mv_options):
-        total_percentage_allocation = sum(
-            mv_option.get("default_percentage_allocation", 100)
-            for mv_option in mv_options
-        )
-        if total_percentage_allocation > 100:
-            raise serializers.ValidationError("Invalid percentage allocation")
-        return mv_options
+    def validate_multivariate_options(self, multivariate_options):
+        if multivariate_options:
+            user = self.context["request"].user
+            project = self.context.get("project")
+            if not (user and project and user.is_project_admin(project)):
+                raise PermissionDenied(
+                    "User must be project admin to modify / create MV options."
+                )
+            total_percentage_allocation = sum(
+                mv_option.get("default_percentage_allocation", 100)
+                for mv_option in multivariate_options
+            )
+            if total_percentage_allocation > 100:
+                raise serializers.ValidationError("Invalid percentage allocation")
+        return multivariate_options
 
-    def validate(self, attrs):
+    def validate_name(self, name: str):
         view = self.context["view"]
-        project_id = str(view.kwargs.get("project_pk"))
-        if not project_id.isdigit():
-            raise serializers.ValidationError("Invalid project ID.")
-        unique_filters = {"project__id": project_id, "name__iexact": attrs["name"]}
+        unique_filters = {
+            "project__id": view.kwargs.get("project_pk"),
+            "name__iexact": name,
+        }
         existing_feature_queryset = Feature.objects.filter(**unique_filters)
         if self.instance:
             existing_feature_queryset = existing_feature_queryset.exclude(
@@ -110,6 +119,14 @@ class ListCreateFeatureSerializer(WritableNestedModelSerializer):
                 "insensitive."
             )
 
+        return name
+
+    def validate(self, attrs):
+        view = self.context["view"]
+        project_id = str(view.kwargs.get("project_pk"))
+        if not project_id.isdigit():
+            raise serializers.ValidationError("Invalid project ID.")
+
         # If tags selected check they from the same Project as Feature Project
         if any(tag.project_id != int(project_id) for tag in attrs.get("tags", [])):
             raise serializers.ValidationError(
@@ -120,12 +137,13 @@ class ListCreateFeatureSerializer(WritableNestedModelSerializer):
 
 
 class UpdateFeatureSerializer(ListCreateFeatureSerializer):
-    """prevent users from changing the value of default enabled after creation"""
+    """prevent users from changing certain values after creation"""
 
     class Meta(ListCreateFeatureSerializer.Meta):
         read_only_fields = ListCreateFeatureSerializer.Meta.read_only_fields + (
             "default_enabled",
             "initial_value",
+            "name",
         )
 
 
@@ -252,6 +270,11 @@ def create_feature_state_audit_log(feature_state, request):
         message = IDENTITY_FEATURE_STATE_UPDATED_MESSAGE % (
             feature_state.feature.name,
             feature_state.identity.identifier,
+        )
+    elif feature_state.feature_segment:
+        message = SEGMENT_FEATURE_STATE_UPDATED_MESSAGE % (
+            feature_state.feature.name,
+            feature_state.feature_segment.segment.name,
         )
     else:
         message = FEATURE_STATE_UPDATED_MESSAGE % feature_state.feature.name

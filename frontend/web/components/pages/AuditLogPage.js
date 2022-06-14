@@ -21,16 +21,8 @@ const AuditLogPage = class extends Component {
     }
 
     filterRow = (logMessage, search) => {
-        const { env } = Utils.fromParam();
         const stringToSearch = `${logMessage.log} ${logMessage.author ? logMessage.author.first_name : ''} ${logMessage.author ? logMessage.author.last_name : ''} ${logMessage.author ? logMessage.author.email : ''} ${moment(logMessage.created_date).format('L LTS')}`;
-        let envPassed = true;
-        if (env) {
-            if (logMessage.environment && logMessage.environment.api_key !== env) {
-                envPassed = false;
-            }
-        }
-
-        return envPassed && stringToSearch.toLowerCase().indexOf(search.toLowerCase()) !== -1;
+        return stringToSearch.toLowerCase().indexOf(search.toLowerCase()) !== -1;
     }
 
     renderRow = ({ created_date, log, author }) => (
@@ -76,15 +68,15 @@ const AuditLogPage = class extends Component {
     }
 
 
-    getEnvironment = ()=>{
-        const {env} = Utils.fromParam()
-        return {env}
+    getEnvironment = () => {
+        const { env } = Utils.fromParam();
+        return { env };
     }
+
     render() {
         const { state: { search } } = this;
         const { env: envFilter } = this.getEnvironment();
-        const hasRbacPermission = !this.props.hasFeature('plan_based_access') || Utils.getPlansPermission('AUDIT') || !this.props.hasFeature('scaleup_audit');
-        const apiSearch = flagsmith.hasFeature("audit_api_search");
+        const hasRbacPermission = !Utils.getFlagsmithHasFeature('plan_based_access') || Utils.getPlansPermission('AUDIT') || !Utils.getFlagsmithHasFeature('scaleup_audit');
         if (!hasRbacPermission) {
             return (
                 <div>
@@ -105,9 +97,10 @@ const AuditLogPage = class extends Component {
                         </p>
                         <FormGroup>
                             <AuditLogProvider>
-                                {({ isLoading, auditLog:_auditLog, auditLogPaging }) => {
-                                    const {env} = Utils.fromParam()
-                                    const auditLog = _auditLog && _auditLog[env||this.props.match.params.projectId]
+                                {({ isLoading, auditLog: _auditLog, auditLogPaging: _auditLogPaging }) => {
+                                    const { env } = Utils.fromParam();
+                                    const auditLog = _auditLog && _auditLog[env || this.props.match.params.projectId];
+                                    const auditLogPaging = _auditLogPaging && _auditLogPaging[env || this.props.match.params.projectId];
                                     return (
                                         <div>
                                             <div className="audit">
@@ -127,42 +120,38 @@ const AuditLogPage = class extends Component {
                                                 </ProjectProvider>
                                                 <FormGroup>
                                                     <PanelSearch
-                                                        onBlur={this.saveSearch}
-                                                        id="messages-list"
-                                                        title="Log entries"
-                                                        isLoading={isLoading||(!auditLog)}
-                                                        className="no-pad"
-                                                        icon="ion-md-browsers"
-                                                        items={auditLog}
-                                                        search={search}
-                                                        filter={envFilter}
-                                                        onChange={(e)=>{
-                                                            if (apiSearch) {
-                                                                this.setState({ search: Utils.safeParseEventValue(e) });
-                                                                AppActions.searchAuditLog( Utils.safeParseEventValue(e), this.props.match.params.projectId, env);
-                                                            } else {
-                                                                this.filterSearch(e)
-                                                            }
-                                                        }}
-                                                        paging={auditLogPaging}
-                                                        nextPage={apiSearch? () => AppActions.getAuditLogPage(this.props.match.params.projectId, auditLogPaging.next, env):undefined}
-                                                        prevPage={apiSearch? () => AppActions.getAuditLogPage(this.props.match.params.projectId, auditLogPaging.previous, env): undefined}
-                                                        goToPage={page => AppActions.getAuditLogPage(this.props.match.params.projectId,`${Project.api}audit/?page=${page}`, env)}
-                                                        renderRow={this.renderRow}
-                                                        renderNoResults={(
-                                                            <FormGroup className="text-center">
+                                                      onBlur={this.saveSearch}
+                                                      id="messages-list"
+                                                      title="Log entries"
+                                                      isLoading={isLoading || (!auditLog)}
+                                                      className="no-pad"
+                                                      icon="ion-md-browsers"
+                                                      items={auditLog}
+                                                      search={search}
+                                                      filter={envFilter}
+                                                      onChange={(e) => {
+                                                          this.setState({ search: Utils.safeParseEventValue(e) });
+                                                          AppActions.searchAuditLog(Utils.safeParseEventValue(e), this.props.match.params.projectId, env);
+                                                      }}
+                                                      paging={auditLogPaging}
+                                                      nextPage={() => AppActions.getAuditLogPage(this.props.match.params.projectId, auditLogPaging.next, env)}
+                                                      prevPage={() => AppActions.getAuditLogPage(this.props.match.params.projectId, auditLogPaging.previous, env)}
+                                                      goToPage={page => AppActions.getAuditLogPage(this.props.match.params.projectId, `${Project.api}audit/?page=${page}`, env)}
+                                                      renderRow={this.renderRow}
+                                                      renderNoResults={(
+                                                          <FormGroup className="text-center">
                                                                 You have no
                                                                 log messages
                                                                 for your
                                                                 project.
-                                                            </FormGroup>
+                                                          </FormGroup>
                                                         )}
-                                                        filterRow={this.filterRow}
+                                                      filterRow={this.filterRow}
                                                     />
                                                 </FormGroup>
                                             </div>
                                         </div>
-                                    )
+                                    );
                                 }}
                             </AuditLogProvider>
                         </FormGroup>

@@ -4,6 +4,8 @@ on:
     push:
         tags:
             - "*"
+        branches:
+            - "improvement/docker-fixes"
 
 env:
   FLAGSMITH_SAML_REVISION: v0.1.2
@@ -82,6 +84,9 @@ jobs:
                   file: Dockerfile
                   push: true
                   tags: ${{ steps.meta.outputs.tags }}
+                  context: .
+                  build-args: |
+                      SAML_INSTALLED=1
 
             - name: Image digest
               run: echo ${{ steps.docker_build.outputs.digest }}

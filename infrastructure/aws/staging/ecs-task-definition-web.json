@@ -134,8 +134,19 @@
                 {
                     "name": "IDENTITY_MIGRATION_EVENT_BUS_NAME",
                     "value": "identity_migration-fb41b5d"
+                },
+                {
+                    "name": "ENVIRONMENTS_API_KEY_TABLE_NAME_DYNAMO",
+                    "value": "flagsmith_environment_api_key"
+                },
+                {
+                    "name":"EDGE_RELEASE_DATETIME",
+                    "value":"2022-05-18T09:45:00Z"
+                },
+                {
+                    "name": "CACHE_BAD_ENVIRONMENTS_SECONDS",
+                    "value": "60"
                 }
-
             ],
             "secrets": [
                 {

@@ -177,7 +177,11 @@ const CreateEditIntegration = class extends Component {
                 <ErrorMessage error={this.state.error}/>
                 {!this.props.readOnly && (
                     <div className="text-right">
-                        <Button disabled={this.state.isLoading} type="submit">
+                        <Button
+                          disabled={this.state.isLoading || (
+                              !this.state.data.flagsmithEnvironment && this.props.integration.perEnvironment
+                          )} type="submit"
+                        >
                             {this.props.integration.isOauth && !this.state.authorised ? 'Authorise' : 'Save'}
                         </Button>
                     </div>

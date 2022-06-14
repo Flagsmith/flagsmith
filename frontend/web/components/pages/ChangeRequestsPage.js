@@ -39,7 +39,6 @@ const ChangeRequestsPage = class extends Component {
 
     render() {
         const { projectId, environmentId, envId } = this.props.match.params;
-        const readOnly = this.props.hasFeature('read_only_mode');
         const data = ChangeRequestStore.model && ChangeRequestStore.model[environmentId] && ChangeRequestStore.model[environmentId] && ChangeRequestStore.model[environmentId].results;
         const dataPaging = ChangeRequestStore.model && ChangeRequestStore.model[environmentId] && ChangeRequestStore.model[environmentId] && ChangeRequestStore.model[environmentId];
 
@@ -76,15 +75,16 @@ const ChangeRequestsPage = class extends Component {
                             ) : (
                                 <div>
                                     View and manage requests to change feature flags with <ButtonLink
-                                      href="https://docs.flagsmith.com/advanced-use/change-requests"
-                                      target="_blank"
-                                    >Change Requests</ButtonLink>.
+                                        href="https://docs.flagsmith.com/advanced-use/change-requests"
+                                        target="_blank"
+                                    >Change Requests</ButtonLink> and <ButtonLink
+                                        href="https://docs.flagsmith.com/advanced-use/scheduled-flags"
+                                        target="_blank"
+                                    >Scheduled Flags</ButtonLink>.
                                 </div>
-
                             )}
                         </p>
                     )}
-
                     <Tabs
                       value={this.state.tab}
                       onChange={(tab) => {
@@ -126,7 +126,7 @@ const ChangeRequestsPage = class extends Component {
                                 />
                             </TabItem>
                         )}
-                        {this.props.hasFeature('scheduling') && (
+                        {Utils.getFlagsmithHasFeature('scheduling') && (
                         <TabItem tabLabel={`Scheduled${dataScheduledPaging ? ` (${dataScheduledPaging.count})` : ''}`}>
                             <PanelSearch
                               renderSearchWithNoResults

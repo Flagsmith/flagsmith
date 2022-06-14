@@ -1,19 +1,14 @@
-module.exports = (envId, { LIB_NAME, FEATURE_NAME, USER_ID, FEATURE_FUNCTION, FEATURE_NAME_ALT, FEATURE_NAME_ALT_VALUE, NPM_CLIENT }, userId) => `import ${LIB_NAME} from "${NPM_CLIENT}"; // Add this line if you're using ${LIB_NAME} via npm
+module.exports = (envId, { LIB_NAME, FEATURE_NAME, USER_ID, FEATURE_FUNCTION, FEATURE_NAME_ALT, FEATURE_NAME_ALT_VALUE, NPM_CLIENT }, userId) => `const Flagsmith = require('flagsmith-nodejs');
 
-${LIB_NAME}.init({
-    environmentID:"${envId}"
-});
+const flagsmith = new Flagsmith(
+    environmentKey: '${envId}'
+);
 
 // This will create a user in the dashboard if they don't already exist
-${LIB_NAME}.hasFeature("${FEATURE_NAME}", "${userId || USER_ID}")
-    .then((featureEnabled) => {
-        if (featureEnabled) {
-            // Show my awesome cool new feature to the world
-        }
-    });
+const identifier = 'delboy@trotterstraders.co.uk';
+const traitList = { car_type: 'robin_reliant' };
 
-${LIB_NAME}.getValue("${FEATURE_NAME_ALT}", "${userId || USER_ID}")
-    .then((value) => {
-        // Show a value to the world
-    });
+const flags = await flagsmith.getIdentityFlags(identifier, traitList);
+var showButton = flags.isFeatureEnabled('secret_button');
+var buttonData = flags.getFeatureValue('secret_button');
 `;

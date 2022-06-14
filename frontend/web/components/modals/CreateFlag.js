@@ -109,7 +109,7 @@ const CreateFlag = class extends Component {
     }
 
     getInfluxData = () => {
-        if (this.props.hasFeature('flag_analytics') && this.props.environmentFlag) {
+        if (Utils.getFlagsmithHasFeature('flag_analytics') && this.props.environmentFlag) {
             AppActions.getFlagInfluxData(this.props.projectId, this.props.environmentFlag.environment, this.props.projectFlag.id, this.state.period);
         }
     }
@@ -317,18 +317,18 @@ const CreateFlag = class extends Component {
             enabledSegment,
             enabledIndentity,
         } = this.state;
-        const { isEdit, hasFeature, projectFlag, identity, identityName } = this.props;
+        const { isEdit, projectFlag, identity, identityName } = this.props;
         const Provider = identity ? IdentityProvider : FeatureListProvider;
         const environmentVariations = this.props.environmentVariations;
         const environment = ProjectStore.getEnvironment(this.props.environmentId);
-        const is4Eyes = !!environment && Utils.changeRequestsEnabled(environment.minimum_change_request_approvals) && flagsmith.hasFeature('4eyes');
+        const is4Eyes = !!environment && Utils.changeRequestsEnabled(environment.minimum_change_request_approvals) && Utils.getFlagsmithHasFeature('4eyes');
         const canSchedule = Utils.getPlansPermission('4_EYES');
-        const is4EyesSegmentOverrides = is4Eyes && flagsmith.hasFeature('4eyes_segment_overrides'); //
-        const controlValue = Utils.calculateControl(multivariate_options, environmentVariations);
+        const is4EyesSegmentOverrides = is4Eyes && Utils.getFlagsmithHasFeature('4eyes_segment_overrides'); //
+        const controlValue = Utils.calculateControl(multivariate_options);
         const invalid = !!multivariate_options && multivariate_options.length && controlValue < 0;
         const existingChangeRequest = this.props.changeRequest;
         const hideIdentityOverridesTab = Utils.getShouldHideIdentityOverridesTab();
-        const Settings = projectAdmin => (
+        const Settings = (projectAdmin,createFeature) => (
             <>
                 {!identity && this.state.tags && (
                     <FormGroup className="mb-4 mr-3 ml-3" >
@@ -336,10 +336,10 @@ const CreateFlag = class extends Component {
                           title={identity ? 'Tags' : 'Tags (optional)'}
                           tooltip={Constants.strings.TAGS_DESCRIPTION}
                           component={(
-                              <AddEditTags
-                                readOnly={!!identity || !projectAdmin} projectId={this.props.projectId} value={this.state.tags}
-                                onChange={tags => this.setState({ tags })}
-                              />
+                                      <AddEditTags
+                                          readOnly={!!identity || !createFeature} projectId={this.props.projectId} value={this.state.tags}
+                                          onChange={tags => this.setState({ tags })}
+                                      />
                             )}
                         />
                     </FormGroup>
@@ -360,7 +360,6 @@ const CreateFlag = class extends Component {
                       data-test="featureDesc"
                       inputProps={{
                           className: 'full-width',
-                          readOnly: !!identity || (!projectAdmin && isEdit),
                           name: 'featureDesc',
                       }}
                       onChange={e => this.setState({ description: Utils.safeParseEventValue(e) })}
@@ -375,7 +374,7 @@ const CreateFlag = class extends Component {
                         <InputGroup
                           value={description}
                           component={(
-                              <Switch disabled={!projectAdmin} checked={this.state.is_archived} onChange={is_archived => this.setState({ is_archived })}/>
+                              <Switch checked={this.state.is_archived} onChange={is_archived => this.setState({ is_archived })}/>
                           )}
                           onChange={e => this.setState({ description: Utils.safeParseEventValue(e) })}
                           isValid={name && name.length}
@@ -388,7 +387,7 @@ const CreateFlag = class extends Component {
                 )}
 
 
-                {!identity && hasFeature('hide_flag') && (
+                {!identity && Utils.getFlagsmithHasFeature('hide_flag') && (
                     <FormGroup className="mb-4 mr-3 ml-3">
                         <Tooltip
                           title={<label className="cols-sm-2 control-label">Hide from SDKs <span className="icon ion-ios-information-circle"/></label>}
@@ -408,7 +407,7 @@ const CreateFlag = class extends Component {
                 )}
             </>
         );
-        const Value = projectAdmin => (
+        const Value = (projectAdmin,createFeature) => (
             <>
                 {!isEdit && (
                     <FormGroup className="mb-4 mr-3 ml-3">
@@ -472,7 +471,7 @@ const CreateFlag = class extends Component {
                     />
                 </div>
 
-                {!isEdit && !identity && Settings(projectAdmin)}
+                {!isEdit && !identity && Settings(projectAdmin, createFeature)}
             </>
         );
         return (
@@ -536,12 +535,14 @@ const CreateFlag = class extends Component {
                                 this.save(editFlagSegments, isSaving);
                             };
 
-                            const createFeature = () => {
+                            const onCreateFeature = () => {
                                 this.save(createFlag, isSaving);
                             };
 
                             return (
 
+                                <Permission level="project" permission="CREATE_FEATURE" id={this.props.projectId}>
+                                    {({ permission: createFeature }) => (
                                 <Permission level="project" permission="ADMIN" id={this.props.projectId}>
                                     {({ permission: projectAdmin }) => (
                                         <div
@@ -560,7 +561,7 @@ const CreateFlag = class extends Component {
                                                                 </Tooltip>
                                                     )}
                                                             >
-                                                                {Value(projectAdmin)}
+                                                                {Value(projectAdmin, createFeature)}
                                                             </Panel>
                                                             <p className="text-right mt-4">
                                                                 {is4Eyes ? 'This will create a change request for the environment' : 'This will update the feature value for the environment'}
@@ -572,7 +573,7 @@ const CreateFlag = class extends Component {
                                                                 </strong>
                                                             </p>
                                                             <div className="text-right">
-                                                                {this.props.hasFeature('scheduling') && !is4Eyes && (
+                                                                {Utils.getFlagsmithHasFeature('scheduling') && !is4Eyes && (
                                                                     <>
                                                                         {canSchedule ? (
                                                                             <ButtonOutline
@@ -836,7 +837,7 @@ const CreateFlag = class extends Component {
                                                     </TabItem>
                                                 )
                                             }
-                                                    { !existingChangeRequest && !projectOverrides.disableInflux && (this.props.hasFeature('flag_analytics') && this.props.flagId) && (
+                                                    { !existingChangeRequest && !projectOverrides.disableInflux && (Utils.getFlagsmithHasFeature('flag_analytics') && this.props.flagId) && (
                                                     <TabItem data-test="analytics" tabLabel="Analytics">
                                                         <FormGroup className="mb-4 mr-3 ml-3">
                                                             <Panel
@@ -847,29 +848,29 @@ const CreateFlag = class extends Component {
                                                         </FormGroup>
                                                     </TabItem>
                                                     )}
-                                                    {!existingChangeRequest && (
+                                                    {!existingChangeRequest && createFeature &&  (
                                                     <TabItem data-test="settings" tabLabel="Settings">
-                                                        {Settings(projectAdmin)}
+                                                        {Settings(projectAdmin, createFeature)}
                                                         {isEdit && (
                                                         <div className="text-right">
-                                                            {!projectAdmin ? (
+                                                            {createFeature ? (
+                                                                    <p className="text-right">
+                                                                        This will save the above settings <strong>all environments</strong>.
+                                                                    </p>
+                                                            ) : (
                                                                 <p className="text-right">
                                                                     To edit this feature's settings, you will need <strong>Project Administrator permissions</strong>. Please contact your project administrator.
                                                                 </p>
-                                                            ) : (
-                                                                <p className="text-right">
-                                                                    This will save the above settings <strong>all environments</strong>.
-                                                                </p>
                                                             )}
 
-                                                            {!!projectAdmin && (
+                                                            {createFeature ? (
                                                                 <Button
                                                                   onClick={saveSettings} data-test="update-feature-btn" id="update-feature-btn"
                                                                   disabled={(isSaving || !name || invalid)}
                                                                 >
                                                                     {isSaving ? 'Updating' : 'Update Settings'}
                                                                 </Button>
-                                                            )}
+                                                            ): null}
 
                                                         </div>
                                                         )}
@@ -878,14 +879,14 @@ const CreateFlag = class extends Component {
                                                 </Tabs>
                                             ) : (
                                                 <div>
-                                                    {Value(projectAdmin)}
+                                                    {Value(projectAdmin,createFeature)}
                                                     {!identity && (
                                                     <div className="text-right">
                                                         <p className="text-right">
                                                         This will create the feature for <strong>all environments</strong>, you can edit this feature per environment once the feature is created.
                                                         </p>
                                                         <Button
-                                                          onClick={createFeature} data-test="create-feature-btn" id="create-feature-btn"
+                                                          onClick={onCreateFeature} data-test="create-feature-btn" id="create-feature-btn"
                                                           disabled={isSaving || !name || invalid}
                                                         >
                                                             {isSaving ? 'Creating' : 'Create Feature'}
@@ -933,6 +934,8 @@ const CreateFlag = class extends Component {
                                             </div>
                                             )}
                                         </div>
+                                    )}
+                                </Permission>
                                     )}
                                 </Permission>
                             );

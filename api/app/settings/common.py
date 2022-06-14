@@ -182,12 +182,12 @@ REST_FRAMEWORK = {
     "DEFAULT_PAGINATION_CLASS": "rest_framework.pagination.PageNumberPagination",
     "DEFAULT_THROTTLE_RATES": {
         "login": "20/min",
+        "signup": "10/min",
         "mfa_code": "5/min",
         "invite": "10/min",
     },
     "DEFAULT_FILTER_BACKENDS": ["django_filters.rest_framework.DjangoFilterBackend"],
 }
-
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
     "whitenoise.middleware.WhiteNoiseMiddleware",
@@ -201,12 +201,19 @@ MIDDLEWARE = [
     "simple_history.middleware.HistoryRequestMiddleware",
 ]
 
+ADD_NEVER_CACHE_HEADERS = env.bool("ADD_NEVER_CACHE_HEADERS", True)
+if ADD_NEVER_CACHE_HEADERS:
+    MIDDLEWARE.append("core.middleware.cache_control.NeverCacheMiddleware")
+
 APPLICATION_INSIGHTS_CONNECTION_STRING = env.str(
     "APPLICATION_INSIGHTS_CONNECTION_STRING", default=None
 )
 OPENCENSUS_SAMPLING_RATE = env.float("OPENCENSUS_SAMPLING_RATE", 1.0)
 
 if APPLICATION_INSIGHTS_CONNECTION_STRING:
+    MIDDLEWARE.insert(
+        0, "integrations.opencensus.middleware.OpenCensusDbTraceMiddleware"
+    )
     MIDDLEWARE.insert(0, "opencensus.ext.django.middleware.OpencensusMiddleware")
     OPENCENSUS = {
         "TRACE": {
@@ -299,11 +306,15 @@ MEDIA_URL = "/media/"  # unused but needs to be different from STATIC_URL in dja
 # CORS settings
 
 CORS_ORIGIN_ALLOW_ALL = True
-CORS_ALLOW_HEADERS = default_headers + (
+FLAGSMITH_CORS_EXTRA_ALLOW_HEADERS = env.list(
+    "FLAGSMITH_CORS_EXTRA_ALLOW_HEADERS", default=["sentry-trace"]
+)
+CORS_ALLOW_HEADERS = [
+    *default_headers,
+    *FLAGSMITH_CORS_EXTRA_ALLOW_HEADERS,
     "X-Environment-Key",
     "X-E2E-Test-Auth-Token",
-    "sentry-trace",
-)
+]
 
 DEFAULT_FROM_EMAIL = env("SENDER_EMAIL", default="noreply@flagsmith.com")
 EMAIL_CONFIGURATION = {
@@ -428,6 +439,12 @@ CACHE_FLAGS_SECONDS = env.int("CACHE_FLAGS_SECONDS", default=0)
 FLAGS_CACHE_LOCATION = "environment-flags"
 ENVIRONMENT_CACHE_LOCATION = "environment-objects"
 
+BAD_ENVIRONMENTS_CACHE_LOCATION = "bad-environments"
+CACHE_BAD_ENVIRONMENTS_SECONDS = env.int("CACHE_BAD_ENVIRONMENTS_SECONDS", 0)
+CACHE_BAD_ENVIRONMENTS_AFTER_FAILURES = env.int(
+    "CACHE_BAD_ENVIRONMENTS_AFTER_FAILURES", 1
+)
+
 CACHE_PROJECT_SEGMENTS_SECONDS = env.int("CACHE_PROJECT_SEGMENTS_SECONDS", 0)
 PROJECT_SEGMENTS_CACHE_LOCATION = "project-segments"
 
@@ -447,6 +464,10 @@ CACHES = {
     PROJECT_SEGMENTS_CACHE_LOCATION: {
         "BACKEND": "django.core.cache.backends.locmem.LocMemCache",
         "LOCATION": PROJECT_SEGMENTS_CACHE_LOCATION,
+    },
+    BAD_ENVIRONMENTS_CACHE_LOCATION: {
+        "BACKEND": "django.core.cache.backends.locmem.LocMemCache",
+        "LOCATION": BAD_ENVIRONMENTS_CACHE_LOCATION,
     },
 }
 
@@ -634,3 +655,6 @@ EDGE_RELEASE_DATETIME = env.datetime("EDGE_RELEASE_DATETIME", None)
 DISABLE_WEBHOOKS = env.bool("DISABLE_WEBHOOKS", False)
 
 SERVE_FE_ASSETS = os.path.exists(BASE_DIR + "/app/templates/webpack/index.html")
+
+# Used to configure the number of application proxies that the API runs behind
+NUM_PROXIES = env.int("NUM_PROXIES", 1)

@@ -20,8 +20,14 @@ FEATURE_STATE_UPDATED_MESSAGE = (
 IDENTITY_FEATURE_STATE_UPDATED_MESSAGE = (
     "Flag state / Remote config value updated for feature '%s' and identity '%s'"
 )
+SEGMENT_FEATURE_STATE_UPDATED_MESSAGE = (
+    "Flag state / Remote config value updated for feature '%s' and segment '%s'"
+)
 IDENTITY_FEATURE_STATE_DELETED_MESSAGE = (
     "Flag state / Remote config value deleted for feature '%s' and identity '%s'"
+)
+SEGMENT_FEATURE_STATE_DELETED_MESSAGE = (
+    "Flag state / Remote config value deleted for feature '%s' and segment '%s'"
 )
 
 
@@ -57,6 +63,13 @@ class AuditLog(models.Model):
     related_object_id = models.IntegerField(null=True)
     related_object_type = models.CharField(max_length=20, null=True)
 
+    skip_signals = models.CharField(
+        null=True,
+        blank=True,
+        help_text="comma separated list of signal functions to skip",
+        max_length=500,
+    )
+
     class Meta:
         verbose_name_plural = "Audit Logs"
         ordering = ("-created_date",)
@@ -66,9 +79,16 @@ class AuditLog(models.Model):
 
     @classmethod
     def create_record(
-        cls, obj, obj_type, log_message, author, project=None, environment=None
+        cls,
+        obj,
+        obj_type,
+        log_message,
+        author,
+        project=None,
+        environment=None,
+        persist=True,
     ):
-        cls.objects.create(
+        record = cls(
             related_object_id=obj.id,
             related_object_type=obj_type.name,
             log=log_message,
@@ -76,3 +96,6 @@ class AuditLog(models.Model):
             project=project,
             environment=environment,
         )
+        if persist:
+            record.save()
+        return record

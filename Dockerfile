@@ -5,7 +5,7 @@ FROM node:16 AS build
 WORKDIR /app
 COPY . .
 
-RUN cd frontend && npm install --quiet --production
+RUN cd frontend && npm install --quiet --production --legacy-peer-deps
 ENV ENV=prod
 ENV STATIC_ASSET_CDN_URL=/static/
 RUN cd frontend && npm run bundledjango
@@ -24,6 +24,11 @@ RUN if [ "${TARGETARCH}" != "amd64" ]; then apt-get update && apt-get install -y
 # Install re2
 ARG GOOGLE_RE2_VERSION="0.2.20220401"
 ARG TARGETPLATFORM
+RUN pip install google-re2==${GOOGLE_RE2_VERSION}
+
+# Install SAML dependency if required
+ARG SAML_INSTALLED="0"
+RUN if [ "${SAML_INSTALLED}" = "1" ]; then apt-get update && apt-get install -y xmlsec1; fi;
 
 # Install python dependencies
 RUN pip install -r requirements.txt --no-cache-dir --compile

@@ -1,4 +1,4 @@
-import { Selector, t } from 'testcafe';
+import { RequestLogger, Selector, t } from 'testcafe';
 
 export const byId = id => `[data-test="${id}"]`;
 
@@ -33,6 +33,10 @@ export const gotoSegments = async () => {
     await click('#segments-link');
 };
 
+export const getLogger = ()=>{
+    return RequestLogger(/api\/v1/, {logResponseBody:true, stringifyResponseBody: true})
+}
+
 export const gotoTraits = async () => {
     await click('#users-link');
     await click(byId('user-item-0'));
@@ -45,6 +49,8 @@ export const createTrait = async (index, id, value) => {
     await setText('[name="traitID"]', id);
     await setText('[name="traitValue"]', value);
     await click('#create-trait-btn');
+    await t.wait(500)
+    await t.eval(() => location.reload(true));
     await waitForElementVisible(byId(`user-trait-value-${index}`));
     const expectedValue = typeof value === 'string' ? `"${value}"` : `${value}`;
     await assertTextContent(byId(`user-trait-value-${index}`), expectedValue);
@@ -210,4 +216,11 @@ export const createSegment = async (index, id, rules) => {
     await waitForElementVisible(byId(`segment-${index}-name`));
     await assertTextContent(byId(`segment-${index}-name`), id);
 };
+
+export const waitAndRefresh = async (waitFor = 3000) => {
+    console.log(`Waiting for ${waitFor}ms, then refreshing.`);
+    await t.wait(waitFor);
+    await t.eval(() => location.reload());
+};
+
 export default {};

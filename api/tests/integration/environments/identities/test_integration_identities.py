@@ -4,7 +4,12 @@ from unittest import mock
 import pytest
 from django.urls import reverse
 from rest_framework import status
-from tests.integration.helpers import create_feature_with_api
+from tests.integration.helpers import (
+    create_feature_with_api,
+    create_mv_option_with_api,
+)
+
+from features.feature_types import MULTIVARIATE
 
 variant_1_value = "variant-1-value"
 variant_2_value = "variant-2-value"
@@ -56,10 +61,22 @@ def test_get_feature_states_for_identity(
         project_id=project,
         feature_name="multivariate_feature",
         initial_value=control_value,
-        multivariate_options=[
-            (variant_1_value, variant_1_percentage_allocation),
-            (variant_2_value, variant_2_percentage_allocation),
-        ],
+        feature_type=MULTIVARIATE,
+    )
+    # With two mv options
+    create_mv_option_with_api(
+        admin_client,
+        project,
+        multivariate_feature_id,
+        variant_1_percentage_allocation,
+        variant_1_value,
+    )
+    create_mv_option_with_api(
+        admin_client,
+        project,
+        multivariate_feature_id,
+        variant_2_percentage_allocation,
+        variant_2_value,
     )
 
     # Now, when we mock the hashed percentage that the user gets
@@ -137,15 +154,26 @@ def test_get_feature_states_for_identity_only_makes_one_query_to_get_mv_feature_
 ):
     # Firstly, let's create some features to use
     for i in range(2):
-        create_feature_with_api(
+        feature_id = create_feature_with_api(
             client=admin_client,
             project_id=project,
             feature_name=f"multivariate_feature_{i}",
             initial_value=control_value,
-            multivariate_options=[
-                (variant_1_value, variant_1_percentage_allocation),
-                (variant_2_value, variant_2_percentage_allocation),
-            ],
+            feature_type=MULTIVARIATE,
+        )
+        create_mv_option_with_api(
+            admin_client,
+            project,
+            feature_id,
+            variant_1_percentage_allocation,
+            variant_1_value,
+        )
+        create_mv_option_with_api(
+            admin_client,
+            project,
+            feature_id,
+            variant_2_percentage_allocation,
+            variant_2_value,
         )
 
     # When we make a request to get the flags for the identity, 6 queries are made
@@ -157,15 +185,26 @@ def test_get_feature_states_for_identity_only_makes_one_query_to_get_mv_feature_
         first_identity_response = sdk_client.get(url)
 
     # Now, if we add another feature
-    create_feature_with_api(
+    feature_id = create_feature_with_api(
         client=admin_client,
         project_id=project,
         feature_name="another_multivariate_feature",
         initial_value=control_value,
-        multivariate_options=[
-            (variant_1_value, variant_1_percentage_allocation),
-            (variant_2_value, variant_2_percentage_allocation),
-        ],
+        feature_type=MULTIVARIATE,
+    )
+    create_mv_option_with_api(
+        admin_client,
+        project,
+        feature_id,
+        variant_1_percentage_allocation,
+        variant_1_value,
+    )
+    create_mv_option_with_api(
+        admin_client,
+        project,
+        feature_id,
+        variant_2_percentage_allocation,
+        variant_2_value,
     )
 
     # Then one fewer db queries are made (since the environment is now cached)

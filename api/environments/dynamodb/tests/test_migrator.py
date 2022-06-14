@@ -10,9 +10,11 @@ from environments.models import Environment
 
 
 def test_migrate_calls_internal_methods_with_correct_arguments(
-    mocker, project, identity
+    mocker, project, identity, settings
 ):
     # Given
+    settings.EDGE_RELEASE_DATETIME = None
+
     assert project.enable_dynamo_db is False
     mocked_project_metadata = mocker.patch(
         "environments.dynamodb.migrator.DynamoProjectMetadata"

@@ -38,6 +38,7 @@ from environments.permissions.permissions import (
     EnvironmentKeyPermissions,
     NestedEnvironmentPermissions,
 )
+from projects.models import Project
 from webhooks.webhooks import WebhookEventType
 
 from .models import Feature, FeatureState
@@ -136,6 +137,16 @@ class FeatureViewSet(viewsets.ModelViewSet):
         self._trigger_feature_state_change_webhooks(feature_states)
         instance.delete()
 
+    def get_serializer_context(self):
+        context = super().get_serializer_context()
+        context.update(
+            project=get_object_or_404(
+                Project.objects.all(), pk=self.kwargs["project_pk"]
+            ),
+            user=self.request.user,
+        )
+        return context
+
     def _trigger_feature_state_change_webhooks(
         self, feature_states: typing.List[FeatureState]
     ):
@@ -157,26 +168,28 @@ class FeatureViewSet(viewsets.ModelViewSet):
             "UPDATE": FEATURE_UPDATED_MESSAGE,
             "DELETE": FEATURE_DELETED_MESSAGE,
         }.get(action_type) % feature.name
-        project_audit_log = AuditLog(
+
+        # TODO: optimise these creates to use bulk create again but for now, we need to
+        #  ensure the post_save signals on the AuditLog model class are triggered
+        AuditLog.objects.create(
             author=self.request.user,
             project=feature.project,
             related_object_type=RelatedObjectType.FEATURE.name,
             related_object_id=feature.id,
             log=message,
         )
-        audit_logs = [project_audit_log]
         for feature_state in feature_states:
-            audit_logs.append(
-                AuditLog(
-                    author=self.request.user,
-                    project=feature.project,
-                    environment=feature_state.environment,
-                    related_object_type=RelatedObjectType.FEATURE_STATE.name,
-                    related_object_id=feature_state.id,
-                    log=message,
-                )
+            # for each of these, we skip sending the environments to dynamodb since
+            # we have already sent all the environments for the project audit log above
+            AuditLog.objects.create(
+                author=self.request.user,
+                project=feature.project,
+                environment=feature_state.environment,
+                related_object_type=RelatedObjectType.FEATURE_STATE.name,
+                related_object_id=feature_state.id,
+                log=message,
+                skip_signals="send_environments_to_dynamodb",
             )
-        AuditLog.objects.bulk_create(audit_logs)
 
     @swagger_auto_schema(
         query_serializer=GetInfluxDataQuerySerializer(),
@@ -249,7 +262,7 @@ class BaseFeatureStateViewSet(viewsets.ModelViewSet):
                 raise PermissionDenied()
 
             queryset = FeatureState.get_environment_flags_queryset(
-                environment=environment
+                environment_id=environment.id
             )
             queryset = self._apply_query_param_filters(queryset)
 
@@ -476,7 +489,7 @@ class SimpleFeatureStateViewSet(
                 )
 
             queryset = FeatureState.get_environment_flags_queryset(
-                environment=environment
+                environment_id=environment.id
             )
             return queryset.select_related("feature_state_value").prefetch_related(
                 "multivariate_feature_state_values"
@@ -517,7 +530,7 @@ class SDKFeatureStates(GenericAPIView):
         if "feature" in request.GET:
 
             feature_states = FeatureState.get_environment_flags_list(
-                environment=request.environment,
+                environment_id=request.environment.id,
                 feature_name=request.GET["feature"],
                 additional_filters=self._additional_filters,
             )
@@ -535,7 +548,7 @@ class SDKFeatureStates(GenericAPIView):
         else:
             data = self.get_serializer(
                 FeatureState.get_environment_flags_list(
-                    environment=request.environment,
+                    environment_id=request.environment.id,
                     additional_filters=self._additional_filters,
                 ),
                 many=True,
@@ -555,7 +568,7 @@ class SDKFeatureStates(GenericAPIView):
         if not data:
             data = self.get_serializer(
                 FeatureState.get_environment_flags_list(
-                    environment=environment,
+                    environment_id=environment.id,
                     additional_filters=self._additional_filters,
                 ),
                 many=True,

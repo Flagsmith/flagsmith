@@ -181,9 +181,8 @@ const EnvironmentSettingsPage = class extends Component {
                                                 </Row>
                                             </FormGroup>
                                         </div>
-                                        {this.props.hasFeature("serverside_sdk_keys") && (
-                                            <ServerSideSDKKeys environmentId={this.props.match.params.environmentId}/>
-                                        )}
+
+                                        <ServerSideSDKKeys environmentId={this.props.match.params.environmentId}/>
 
                                         <FormGroup className="mt-1">
                                             <EditPermissions
@@ -195,7 +194,7 @@ const EnvironmentSettingsPage = class extends Component {
                                                 level="environment"
                                             />
                                         </FormGroup>
-                                        {this.props.hasFeature("4eyes") && (
+                                        {Utils.getFlagsmithHasFeature("4eyes") && (
 
                                             <FormGroup className="m-y-3">
                                                 <Row space>

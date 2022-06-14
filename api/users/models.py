@@ -99,7 +99,7 @@ class FFAdminUser(LifecycleModel, AbstractUser):
         verbose_name = "Feature flag admin user"
 
     def __str__(self):
-        return "%s %s" % (self.first_name, self.last_name)
+        return self.email
 
     @hook(AFTER_CREATE)
     def subscribe_to_mailing_list(self):
@@ -236,7 +236,7 @@ class FFAdminUser(LifecycleModel, AbstractUser):
             ).exists()
         )
 
-    def is_project_admin(self, project, allow_org_admin: bool = True):
+    def is_project_admin(self, project: Project, allow_org_admin: bool = True):
         return (
             (allow_org_admin and self.is_organisation_admin(project.organisation))
             or UserProjectPermission.objects.filter(

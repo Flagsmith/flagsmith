@@ -45,8 +45,9 @@ const Aside = class extends Component {
         this.listenTo(ChangeRequestStore, 'change', () => this.forceUpdate());
         this.listenTo(ProjectStore, 'loaded', () => {
             const environment = ProjectStore.getEnvironment(this.props.environmentId);
-
-            AppActions.getChangeRequests(this.props.environmentId, Utils.changeRequestsEnabled(environment.minimum_change_request_approvals) ? {} : { live_from_after: new Date().toISOString() });
+            if (environment) {
+                AppActions.getChangeRequests(this.props.environmentId, Utils.changeRequestsEnabled(environment.minimum_change_request_approvals) ? {} : { live_from_after: new Date().toISOString() });
+            }
         });
     }
 
@@ -80,13 +81,13 @@ const Aside = class extends Component {
     };
 
     render() {
-        const { hasFeature, getValue, toggleAside, asideIsVisible } = this.props;
-        let integrations = this.props.getValue('integrations') || '[]';
+        const { toggleAside, asideIsVisible } = this.props;
+        let integrations = Utils.getFlagsmithValue('integrations') || '[]';
         integrations = JSON.parse(integrations);
         const environmentId = (this.props.environmentId !== 'create' && this.props.environmentId) || (ProjectStore.model && ProjectStore.model.environments[0].api_key);
         const environment = ProjectStore.getEnvironment(this.props.environmentId);
-        const hasRbacPermission = !this.props.hasFeature('plan_based_access') || Utils.getPlansPermission('AUDIT') || !this.props.hasFeature('scaleup_audit');
-        const has4Eyes = flagsmith.hasFeature('4eyes');
+        const hasRbacPermission = !Utils.getFlagsmithHasFeature('plan_based_access') || Utils.getPlansPermission('AUDIT') || !Utils.getFlagsmithHasFeature('scaleup_audit');
+        const has4Eyes = Utils.getFlagsmithHasFeature('4eyes');
         const changeRequest = environment && Utils.changeRequestsEnabled(environment.minimum_change_request_approvals) ? ChangeRequestStore.model[this.props.environmentId] : ChangeRequestStore.scheduled[this.props.environmentId];
         const changeRequests = (changeRequest && changeRequest.count) || 0;
         return (
@@ -182,7 +183,7 @@ const Aside = class extends Component {
                                                         <Row>
                                                             <h1 className="aside__project-title">
                                                                 {project && project.name ? project.name : '...'}
-                                                                {flagsmith.hasFeature('edge_identities') && (
+                                                                {Utils.getFlagsmithHasFeature('edge_identities') && (
                                                                     <span
                                                                       style={{
                                                                           position: 'relative',
@@ -191,7 +192,10 @@ const Aside = class extends Component {
                                                                       }}
                                                                       className="chip chip--active bg-secondary"
                                                                     >
-                                                                        <a href="https://docs.flagsmith.com/next/advanced-use/edge-api#enabling-the-edge-api" className="text-white font-weight-bold">
+                                                                        <a
+                                                                          data-test={Utils.getIsEdge() ? 'edge-project' : 'core-project'}
+                                                                          href="https://docs.flagsmith.com/advanced-use/edge-api#enabling-the-edge-api" className="text-white font-weight-bold"
+                                                                        >
                                                                             {Utils.getIsEdge() ? 'Edge' : 'Core'}
                                                                         </a>
                                                                     </span>
@@ -225,7 +229,7 @@ const Aside = class extends Component {
                                                         Segments
                                                     </NavLink>
 
-                                                    {this.props.hasFeature('compare_environments') && (
+                                                    {Utils.getFlagsmithHasFeature('compare_environments') && (
                                                         <NavLink
                                                           id="integrations-link"
                                                           activeClassName="active"
@@ -281,6 +285,18 @@ const Aside = class extends Component {
                                                             )}
                                                         </Permission>
                                                     )}
+                                                    {!!Utils.getFlagsmithHasFeature('beta_features') && (
+                                                    <NavLink
+                                                      id="integrations-link"
+                                                      activeClassName="active"
+                                                      className="aside__nav-item"
+                                                      to={`/project/${this.props.projectId}/beta-features`}
+                                                      exact
+                                                    >
+                                                        <i className="icon mr-2 ion-ios-flask aside__nav-item--icon"/>
+                                                                    Beta Features
+                                                    </NavLink>
+                                                    )}
                                                     <Permission level="project" permission="CREATE_ENVIRONMENT" id={this.props.projectId}>
                                                         {({ permission, isLoading }) => permission && (
 
@@ -312,7 +328,7 @@ const Aside = class extends Component {
                                                                     onClick={onClick}
                                                                     active={environment.api_key === environmentId} title={environment.name}
                                                                   >
-                                                                      <Permission level="environment" permission={flagsmith.hasFeature('manage_identities_permission') ? 'MANAGE_IDENTITIES' : 'ADMIN'} id={environment.api_key}>
+                                                                      <Permission level="environment" permission="MANAGE_IDENTITIES" id={environment.api_key}>
                                                                           {({ permission: manageIdentityPermission, isLoading: manageIdentityLoading }) => (
                                                                               <Permission level="environment" permission="ADMIN" id={environment.api_key}>
                                                                                   {({ permission: environmentAdmin, isLoading }) => (isLoading || manageIdentityLoading
@@ -388,9 +404,9 @@ const Aside = class extends Component {
                                                     <div className="flex flex-1"/>
 
                                                     <div className="aside__footer">
-                                                        {hasFeature('demo_feature') && (
+                                                        {Utils.getFlagsmithHasFeature('demo_feature') && (
                                                             <a
-                                                              style={{ color: getValue('demo_feature') || '#43424f' }}
+                                                              style={{ color: Utils.getFlagsmithValue('demo_feature') || '#43424f' }}
                                                               className="aside__nav-item"
                                                               href="https://docs.flagsmith.com"
                                                             >

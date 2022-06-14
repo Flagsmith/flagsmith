@@ -32,7 +32,7 @@ const OrganisationSettingsPage = class extends Component {
         }
         AppActions.getOrganisation(AccountStore.getOrganisation().id);
 
-        if (this.props.hasFeature('usage_chart') && !projectOverrides.disableInflux) {
+        if (Utils.getFlagsmithHasFeature('usage_chart') && !projectOverrides.disableInflux) {
             AppActions.getInfluxData(AccountStore.getOrganisation().id);
         }
 
@@ -294,11 +294,10 @@ const OrganisationSettingsPage = class extends Component {
     }
 
     render() {
-        const { hasFeature, getValue } = this.props;
         const { name, webhook_notification_email } = this.state;
         const { props: { webhooks, webhooksLoading } } = this;
-        const hasRbacPermission = !this.props.hasFeature('plan_based_access') || Utils.getPlansPermission('RBAC');
-        const paymentsEnabled = this.props.hasFeature('payments_enabled');
+        const hasRbacPermission = !Utils.getFlagsmithHasFeature('plan_based_access') || Utils.getPlansPermission('RBAC');
+        const paymentsEnabled = Utils.getFlagsmithHasFeature('payments_enabled');
         const force2faPermission = Utils.getPlansPermission('FORCE_2FA');
 
         return (
@@ -670,7 +669,7 @@ const OrganisationSettingsPage = class extends Component {
                                                             />
                                                         </div>
 
-                                                        {this.props.hasFeature('force_2fa') && (
+                                                        {Utils.getFlagsmithHasFeature('force_2fa') && (
                                                             <div>
                                                                 <Row space className="mt-5">
                                                                     <h3 className="m-b-0">Enforce 2FA</h3>
@@ -774,7 +773,7 @@ const OrganisationSettingsPage = class extends Component {
                                     />
                                 )}
                             </FormGroup>
-                            {this.props.hasFeature('restrict_project_create_to_admin') && (
+                            {Utils.getFlagsmithHasFeature('restrict_project_create_to_admin') && (
                                 <FormGroup className="mt-5">
                                     <Row>
                                         <Column>
@@ -790,11 +789,11 @@ const OrganisationSettingsPage = class extends Component {
 
                                 </FormGroup>
                             )}
-                            {this.props.hasFeature('usage_chart') && !projectOverrides.disableInflux && (
+                            {Utils.getFlagsmithHasFeature('usage_chart') && !projectOverrides.disableInflux && (
                                 <div className="panel--grey mt-2">
                                     {!isLoading && usage != null ? (
                                         <div>
-                                            {this.props.hasFeature('usage_chart') ? this.drawChart(influx_data) : (
+                                            {Utils.getFlagsmithHasFeature('usage_chart') ? this.drawChart(influx_data) : (
                                                 <>
                                                     <div className="flex-row header--icon">
                                                         <h5>API usage</h5>

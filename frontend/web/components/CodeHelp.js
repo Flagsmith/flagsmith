@@ -25,6 +25,10 @@ const getGithubLink = (key) => {
             return 'https://docs.flagsmith.com/clients/rest/';
         case 'React Native':
             return 'https://github.com/flagsmith/flagsmith-js-client/';
+        case 'React':
+            return 'https://github.com/flagsmith/flagsmith-js-client/';
+        case 'Next.js':
+            return 'https://github.com/flagsmith/flagsmith-js-client/';
         case 'Ruby':
             return 'https://github.com/flagsmith/flagsmith-ruby-client/';
         case 'Rust':
@@ -55,14 +59,18 @@ const getDocsLink = (key) => {
             return 'https://docs.flagsmith.com/clients/python/';
         case 'REST':
             return null;
+        case 'React':
+            return 'https://docs.flagsmith.com/clients/react';
         case 'React Native':
-            return 'https://docs.flagsmith.com/clients/javascript/';
+            return 'https://docs.flagsmith.com/clients/react';
         case 'Ruby':
             return 'https://docs.flagsmith.com/clients/ruby/';
         case 'Rust':
             return 'https://docs.flagsmith.com/clients/rust/';
         case 'iOS':
             return 'https://docs.flagsmith.com/clients/ios/';
+        case 'Next.js':
+            return 'https://docs.flagsmith.com/clients/next-ssr';
         default:
             return 'https://docs.flagsmith.com';
     }
@@ -169,7 +177,7 @@ Code example:
                                     return (
                                         <TabItem key={key} tabLabel={key}>
                                             <div className="hljs-container mb-2">
-                                                <Highlight className={Constants.codeHelp.keys[key]}>
+                                                <Highlight preventEscape className={Constants.codeHelp.keys[key]}>
                                                     {s}
                                                 </Highlight>
                                                 <Button onClick={() => this.copy(s)} className="btn btn-primary hljs-copy">

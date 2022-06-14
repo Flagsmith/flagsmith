@@ -123,7 +123,7 @@ drf-yasg2==1.19.3
     # via -r requirements.in
 environs==9.2.0
     # via -r requirements.in
-flagsmith-flag-engine==2.0.3
+flagsmith-flag-engine==2.0.6
     # via -r requirements.in
 future==0.18.2
     # via django-ses
@@ -218,7 +218,7 @@ pyasn1-modules==0.2.8
     #   oauth2client
 pycparser==2.21
     # via cffi
-pyjwt[crypto]==1.7.1
+pyjwt[crypto]==2.4.0
     # via
     #   msal
     #   twilio
@@ -305,7 +305,6 @@ six==1.15.0
     #   protobuf
     #   python-dateutil
     #   rudder-sdk-python
-    #   twilio
 slack-sdk==3.9.0
     # via -r requirements.in
 smsapi-client==2.4.3
@@ -314,7 +313,7 @@ sqlparse==0.4.2
     # via
     #   django
     #   django-debug-toolbar
-twilio==6.47.0
+twilio==7.9.1
     # via django-trench
 typing-extensions==4.2.0
     # via azure-core

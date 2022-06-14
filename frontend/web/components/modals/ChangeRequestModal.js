@@ -68,7 +68,7 @@ const ChangeRequestModal = class extends Component {
                                   placeholder="Add an optional description..."
                                 />
                             </FormGroup>
-                            {flagsmith.hasFeature('scheduling') && (
+                            {Utils.getFlagsmithHasFeature('scheduling') && (
                                 <div>
                                     <InputGroup
                                       tooltip="Allows you to set a date and time in which your change will only become active "

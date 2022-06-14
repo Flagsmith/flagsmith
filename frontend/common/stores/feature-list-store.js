@@ -38,8 +38,12 @@ const controller = {
             flagsmith.setTrait('first_feature', 'true');
             API.trackEvent(Constants.events.CREATE_FIRST_FEATURE);
         }
-        data.post(`${Project.api}projects/${projectId}/features/`, Object.assign({}, flag, { project: projectId, type: flag.multivariate_options && flag.multivariate_options.length ? 'MULTIVARIATE' : 'STANDARD',
+        data.post(`${Project.api}projects/${projectId}/features/`, Object.assign({}, flag, { multivariate_options: undefined, project: projectId, type: flag.multivariate_options && flag.multivariate_options.length ? 'MULTIVARIATE' : 'STANDARD',
         }))
+            .then(res => Promise.all((flag.multivariate_options || []).map(v => data.post(`${Project.api}projects/${projectId}/features/${flag.id}/mv-options/`, {
+                ...v,
+                feature: res.id,
+            }).then(() => res))).then(() => data.get(`${Project.api}projects/${projectId}/features/${res.id}`)))
             .then(res => Promise.all([
                 data.get(`${Project.api}projects/${projectId}/features/`),
                 data.get(`${Project.api}environments/${environmentId}/featurestates/`),
@@ -63,31 +67,55 @@ const controller = {
         };
     },
     editFlag(projectId, flag, onComplete) {
-        data.put(`${Project.api}projects/${projectId}/features/${flag.id}/`, {
-            ...flag,
-            type: flag.multivariate_options && flag.multivariate_options.length ? 'MULTIVARIATE' : 'STANDARD',
-            project: projectId,
-        })
-            .then((res) => {
-                if (onComplete) {
-                    onComplete(res);
-                }
-                const index = _.findIndex(store.model.features, { id: flag.id });
-                store.model.features[index] = controller.parseFlag(flag);
-                store.model.lastSaved = new Date().valueOf();
-                store.changed();
-            })
-            .catch((e) => {
-                if (onComplete) {
-                    onComplete({
-                        ...flag,
-                        type: flag.multivariate_options && flag.multivariate_options.length ? 'MULTIVARIATE' : 'STANDARD',
-                        project: projectId,
-                    });
-                } else {
-                    API.ajaxHandler(store, e);
-                }
+        const originalFlag = store.model.features.find(v => v.id === flag.id);
+
+        Promise.all((flag.multivariate_options || []).map((v, i) => {
+            const originalMV = v.id ? originalFlag.multivariate_options.find(m => m.id === v.id) : null;
+            return (originalMV ? data.put(`${Project.api}projects/${projectId}/features/${flag.id}/mv-options/${originalMV.id}/`, {
+                ...v,
+                feature: flag.id,
+                default_percentage_allocation: 0,
+            }) : data.post(`${Project.api}projects/${projectId}/features/${flag.id}/mv-options/`, {
+                ...v,
+                feature: flag.id,
+                default_percentage_allocation: 0,
+            })).then((res) => {
+                flag.multivariate_options[i] = res;
+                return {
+                    ...v,
+                    id: res.id,
+                };
             });
+        })).then(() => {
+            const deletedMv = originalFlag.multivariate_options.filter(v => !flag.multivariate_options.find(x => v.id === x.id));
+            return Promise.all(deletedMv.map(v => data.delete(`${Project.api}projects/${projectId}/features/${flag.id}/mv-options/${v.id}/`)));
+        })
+            .then(() => data.put(`${Project.api}projects/${projectId}/features/${flag.id}/`, {
+                ...flag,
+                multivariate_options: undefined,
+                type: flag.multivariate_options && flag.multivariate_options.length ? 'MULTIVARIATE' : 'STANDARD',
+                project: projectId,
+            })
+                .then((res) => {
+                    if (onComplete) {
+                        onComplete(res);
+                    }
+                    const index = _.findIndex(store.model.features, { id: flag.id });
+                    store.model.features[index] = controller.parseFlag(flag);
+                    store.model.lastSaved = new Date().valueOf();
+                    store.changed();
+                })
+                .catch((e) => {
+                    if (onComplete) {
+                        onComplete({
+                            ...flag,
+                            type: flag.multivariate_options && flag.multivariate_options.length ? 'MULTIVARIATE' : 'STANDARD',
+                            project: projectId,
+                        });
+                    } else {
+                        API.ajaxHandler(store, e);
+                    }
+                }));
     },
     getInfluxDate(projectId, environmentId, flag, period) {
         data.get(`${Project.api}projects/${projectId}/features/${flag}/influx-data/?period=${period}&environment_id=${environmentId}`)
@@ -149,20 +177,18 @@ const controller = {
 
         store.saving();
         API.trackEvent(Constants.events.EDIT_FEATURE);
-
         segmentOverridesProm.then(() => {
             if (mode !== 'VALUE') {
                 prom = Promise.resolve();
             } else if (environmentFlag) {
                 prom = data.get(`${Project.api}environments/${environmentId}/featurestates/${environmentFlag.id}/`)
                     .then((environmentFeatureStates) => {
-                        const multivariate_feature_state_values = environmentFeatureStates.multivariate_feature_state_values && environmentFeatureStates.multivariate_feature_state_values.map((v) => {
-                            const matching = flag.multivariate_options.find(m => m.id === v.multivariate_feature_option);
-                            if (!matching) { // multivariate is new, meaning the value is already correct from the default allocation
-                                return v;
-                            }
-                            // multivariate is existing, override the existing with the new value
-                            return { ...v, percentage_allocation: matching.default_percentage_allocation };
+                        const multivariate_feature_state_values = environmentFeatureStates.multivariate_feature_state_values && environmentFeatureStates.multivariate_feature_state_values.map((v, i) => {
+                            const matching = environmentFlag.multivariate_feature_state_values[i];
+                            return {
+                                ...v,
+                                percentage_allocation: matching.default_percentage_allocation,
+                            };
                         });
                         environmentFlag.multivariate_feature_state_values = multivariate_feature_state_values;
                         return data.put(`${Project.api}environments/${environmentId}/featurestates/${environmentFlag.id}/`, Object.assign({}, environmentFlag, {
@@ -201,7 +227,10 @@ const controller = {
                 store.model.keyedEnvironmentFeatures[projectFlag.id] = res;
                 if (segmentRes) {
                     const feature = _.find(store.model.features, f => f.id === projectFlag.id);
-                    if (feature) feature.feature_segments = _.map(segmentRes.feature_segments, segment => ({ ...segment, segment: segment.segment.id }));
+                    if (feature) feature.feature_segments = _.map(segmentRes.feature_segments, segment => ({
+                        ...segment,
+                        segment: segment.segment.id
+                    }));
                 }
                 store.model.lastSaved = new Date().valueOf();
                 store.saved();
