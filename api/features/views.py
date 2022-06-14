@@ -249,6 +249,9 @@ class FeatureViewSet(viewsets.ModelViewSet):
                     queryset,
                 )
 
+        if "is_archived" in query_serializer.initial_data:
+            queryset = queryset.filter(is_archived=query_data["is_archived"])
+
         return queryset
 
 

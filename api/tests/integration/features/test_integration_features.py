@@ -132,3 +132,57 @@ def test_filter_features_by_tags(admin_client, project):
     all_tags_features_response = admin_client.get(all_tags_features_url)
     all_tags_features_response_json = all_tags_features_response.json()
     assert all_tags_features_response_json["count"] == 0
+
+
+def test_filter_features_by_archived_status(admin_client, project):
+    # First let's create 2 new features, one which is archived and one which isn't
+    features_url = reverse("api-v1:projects:project-features-list", args=[project])
+    create_archived_feature_response = admin_client.post(
+        features_url,
+        data={
+            "name": "archived_feature",
+            "project": project,
+            # in practice, it makes no sense to create a feature with is_archived=true,
+            # but it simplifies the test setup here.
+            "is_archived": True,
+        },
+    )
+    assert create_archived_feature_response.status_code == status.HTTP_201_CREATED
+    archived_feature_id = create_archived_feature_response.json()["id"]
+
+    create_unarchived_feature_response = admin_client.post(
+        features_url, data={"name": "unarchived_feature", "project": project}
+    )
+    assert create_unarchived_feature_response.status_code == status.HTTP_201_CREATED
+    unarchived_feature_id = create_unarchived_feature_response.json()["id"]
+
+    # Now let's verify that the correct features are returned based on the is_archived
+    # query parameter
+    # Case 1: is_archived not provided - both features should be returned
+    list_features_missing_is_archived_response = admin_client.get(features_url)
+    assert list_features_missing_is_archived_response.status_code == status.HTTP_200_OK
+    assert list_features_missing_is_archived_response.json()["count"] == 2
+
+    # Case 2: is_archived=false should return only unarchived feature
+    list_features_is_archived_false_url = f"{features_url}?is_archived=false"
+    list_features_is_archived_false_response = admin_client.get(
+        list_features_is_archived_false_url
+    )
+    assert list_features_is_archived_false_response.status_code == status.HTTP_200_OK
+    assert list_features_is_archived_false_response.json()["count"] == 1
+    assert (
+        list_features_is_archived_false_response.json()["results"][0]["id"]
+        == unarchived_feature_id
+    )
+
+    # Case 3: is_archived=true should return archived feature
+    list_features_is_archived_true_url = f"{features_url}?is_archived=true"
+    list_features_is_archived_true_response = admin_client.get(
+        list_features_is_archived_true_url
+    )
+    assert list_features_is_archived_true_response.status_code == status.HTTP_200_OK
+    assert list_features_is_archived_true_response.json()["count"] == 1
+    assert (
+        list_features_is_archived_true_response.json()["results"][0]["id"]
+        == archived_feature_id
+    )

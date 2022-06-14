@@ -58,6 +58,7 @@ class FeatureQuerySerializer(serializers.Serializer):
     tags = serializers.CharField(
         required=False, help_text="Comma separated list of tag ids to filter on (AND)"
     )
+    is_archived = serializers.BooleanField(required=False)
 
     def validate_tags(self, tags):
         try:
