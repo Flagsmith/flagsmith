@@ -1,5 +1,6 @@
 import logging
 import typing
+from functools import reduce
 
 import coreapi
 from app_analytics.influxdb_wrapper import get_multiple_event_list_for_feature
@@ -90,33 +91,6 @@ class FeatureViewSet(viewsets.ModelViewSet):
             "partial_update": UpdateFeatureSerializer,
         }.get(self.action, ProjectFeatureSerializer)
 
-    @swagger_auto_schema(
-        request_body=FeatureOwnerInputSerializer,
-        responses={200: ProjectFeatureSerializer},
-    )
-    @action(detail=True, methods=["POST"], url_path="add-owners")
-    def add_owners(self, request, *args, **kwargs):
-        serializer = FeatureOwnerInputSerializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
-
-        feature = self.get_object()
-        serializer.add_owners(feature)
-        return Response(self.get_serializer(instance=feature).data)
-
-    @swagger_auto_schema(
-        request_body=FeatureOwnerInputSerializer,
-        responses={200: ProjectFeatureSerializer},
-    )
-    @action(detail=True, methods=["POST"], url_path="remove-owners")
-    def remove_owners(self, request, *args, **kwargs):
-        serializer = FeatureOwnerInputSerializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
-
-        feature = self.get_object()
-        serializer.remove_users(feature)
-
-        return Response(self.get_serializer(instance=feature).data)
-
     def get_queryset(self):
         user_projects = self.request.user.get_permitted_projects(["VIEW_PROJECT"])
         project = get_object_or_404(user_projects, pk=self.kwargs["project_pk"])
@@ -128,8 +102,7 @@ class FeatureViewSet(viewsets.ModelViewSet):
         query_serializer.is_valid(raise_exception=True)
         query_data = query_serializer.validated_data
 
-        if query_data.get("search"):
-            queryset = queryset.filter(name__icontains=query_data["search"])
+        queryset = self._filter_queryset(queryset)
 
         sort = "%s%s" % (
             "-" if query_data["sort_direction"] == "DESC" else "",
@@ -169,6 +142,50 @@ class FeatureViewSet(viewsets.ModelViewSet):
             user=self.request.user,
         )
         return context
+
+    @swagger_auto_schema(
+        request_body=FeatureOwnerInputSerializer,
+        responses={200: ProjectFeatureSerializer},
+    )
+    @action(detail=True, methods=["POST"], url_path="add-owners")
+    def add_owners(self, request, *args, **kwargs):
+        serializer = FeatureOwnerInputSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+
+        feature = self.get_object()
+        serializer.add_owners(feature)
+        return Response(self.get_serializer(instance=feature).data)
+
+    @swagger_auto_schema(
+        request_body=FeatureOwnerInputSerializer,
+        responses={200: ProjectFeatureSerializer},
+    )
+    @action(detail=True, methods=["POST"], url_path="remove-owners")
+    def remove_owners(self, request, *args, **kwargs):
+        serializer = FeatureOwnerInputSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+
+        feature = self.get_object()
+        serializer.remove_users(feature)
+
+        return Response(self.get_serializer(instance=feature).data)
+
+    @swagger_auto_schema(
+        query_serializer=GetInfluxDataQuerySerializer(),
+        responses={200: FeatureInfluxDataSerializer()},
+    )
+    @action(detail=True, methods=["GET"], url_path="influx-data")
+    def get_influx_data(self, request, pk, project_pk):
+        feature = get_object_or_404(Feature, pk=pk)
+
+        query_serializer = GetInfluxDataQuerySerializer(data=request.query_params)
+        query_serializer.is_valid(raise_exception=True)
+
+        events_list = get_multiple_event_list_for_feature(
+            feature_name=feature.name, **query_serializer.data
+        )
+        serializer = FeatureInfluxDataSerializer(instance={"events_list": events_list})
+        return Response(serializer.data)
 
     def _trigger_feature_state_change_webhooks(
         self, feature_states: typing.List[FeatureState]
@@ -214,22 +231,25 @@ class FeatureViewSet(viewsets.ModelViewSet):
                 skip_signals="send_environments_to_dynamodb",
             )
 
-    @swagger_auto_schema(
-        query_serializer=GetInfluxDataQuerySerializer(),
-        responses={200: FeatureInfluxDataSerializer()},
-    )
-    @action(detail=True, methods=["GET"], url_path="influx-data")
-    def get_influx_data(self, request, pk, project_pk):
-        feature = get_object_or_404(Feature, pk=pk)
-
-        query_serializer = GetInfluxDataQuerySerializer(data=request.query_params)
+    def _filter_queryset(self, queryset: QuerySet) -> QuerySet:
+        query_serializer = FeatureQuerySerializer(data=self.request.query_params)
         query_serializer.is_valid(raise_exception=True)
+        query_data = query_serializer.validated_data
 
-        events_list = get_multiple_event_list_for_feature(
-            feature_name=feature.name, **query_serializer.data
-        )
-        serializer = FeatureInfluxDataSerializer(instance={"events_list": events_list})
-        return Response(serializer.data)
+        if query_data.get("search"):
+            queryset = queryset.filter(name__icontains=query_data["search"])
+
+        if "tags" in query_serializer.initial_data:
+            if not query_data["tags"]:
+                queryset = queryset.filter(tags__isnull=True)
+            else:
+                queryset = reduce(
+                    lambda qs, tag_id: qs.filter(tags=tag_id),
+                    query_data["tags"],
+                    queryset,
+                )
+
+        return queryset
 
 
 @method_decorator(
