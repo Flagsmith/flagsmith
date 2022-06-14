@@ -113,7 +113,7 @@ const SegmentOverride = ConfigProvider(SortableElement(({ controlValue, multivar
                           }}
                         >
                             <div className="text-primary text-small">
-                                Set as Environment Value
+                                Copy from Environment Value
                             </div>
                         </ButtonLink>
                     </div>
