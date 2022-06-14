@@ -129,7 +129,7 @@ def default_feature_value():
 @pytest.fixture()
 def feature(admin_client, project, default_feature_value):
     data = {
-        "name": "test feature",
+        "name": "test_feature",
         "initial_value": default_feature_value,
         "project": project,
     }

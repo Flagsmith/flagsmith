@@ -22,6 +22,7 @@ from rest_framework.renderers import JSONRenderer
 from rest_framework.response import Response
 from rest_framework.schemas import AutoSchema
 
+from app.pagination import CustomPagination
 from audit.models import (
     FEATURE_CREATED_MESSAGE,
     FEATURE_DELETED_MESSAGE,
@@ -51,6 +52,7 @@ from .permissions import (
 from .serializers import (
     FeatureInfluxDataSerializer,
     FeatureOwnerInputSerializer,
+    FeatureQuerySerializer,
     FeatureStateSerializerBasic,
     FeatureStateSerializerCreate,
     FeatureStateSerializerFull,
@@ -70,13 +72,19 @@ logger.setLevel(logging.INFO)
 flags_cache = caches[settings.FLAGS_CACHE_LOCATION]
 
 
+@method_decorator(
+    name="list",
+    decorator=swagger_auto_schema(query_serializer=FeatureQuerySerializer()),
+)
 class FeatureViewSet(viewsets.ModelViewSet):
     permission_classes = [IsAuthenticated, FeaturePermissions]
     filterset_fields = ["is_archived"]
+    pagination_class = CustomPagination
 
     def get_serializer_class(self):
         return {
             "list": ListCreateFeatureSerializer,
+            "retrieve": ListCreateFeatureSerializer,
             "create": ListCreateFeatureSerializer,
             "update": UpdateFeatureSerializer,
             "partial_update": UpdateFeatureSerializer,
@@ -112,9 +120,24 @@ class FeatureViewSet(viewsets.ModelViewSet):
     def get_queryset(self):
         user_projects = self.request.user.get_permitted_projects(["VIEW_PROJECT"])
         project = get_object_or_404(user_projects, pk=self.kwargs["project_pk"])
-        return project.features.all().prefetch_related(
+        queryset = project.features.all().prefetch_related(
             "multivariate_options", "owners", "tags"
         )
+
+        query_serializer = FeatureQuerySerializer(data=self.request.query_params)
+        query_serializer.is_valid(raise_exception=True)
+        query_data = query_serializer.validated_data
+
+        if query_data.get("search"):
+            queryset = queryset.filter(name__icontains=query_data["search"])
+
+        sort = "%s%s" % (
+            "-" if query_data["sort_direction"] == "DESC" else "",
+            query_data["sort_field"],
+        )
+        queryset = queryset.order_by(sort)
+
+        return queryset
 
     def perform_create(self, serializer):
         instance = serializer.save(
