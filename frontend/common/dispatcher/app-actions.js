@@ -12,7 +12,7 @@ const AppActions = Object.assign({}, require('./base/_app-actions'), {
             data,
         });
     },
-    getFeatures(projectId, environmentId, force, search, sort, paging) {
+    getFeatures(projectId, environmentId, force, search, sort, page, filter) {
         Dispatcher.handleViewAction({
             actionType: Actions.GET_FLAGS,
             projectId,
@@ -20,10 +20,11 @@ const AppActions = Object.assign({}, require('./base/_app-actions'), {
             force,
             search,
             sort,
-            paging
+            page,
+            filter,
         });
     },
-    searchFeatures(projectId, environmentId, force, search, sort, paging) {
+    searchFeatures(projectId, environmentId, force, search, sort, page, filter) {
         Dispatcher.handleViewAction({
             actionType: Actions.SEARCH_FLAGS,
             projectId,
@@ -31,7 +32,8 @@ const AppActions = Object.assign({}, require('./base/_app-actions'), {
             force,
             search,
             sort,
-            paging
+            page,
+            filter,
         });
     },
     createProject(name) {

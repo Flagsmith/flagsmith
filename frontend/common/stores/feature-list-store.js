@@ -3,7 +3,7 @@ const OrganisationStore = require('./organisation-store');
 const data = require('../data/base/_data');
 
 let createdFirstFeature = false;
-const PAGE_SIZE = 10
+const PAGE_SIZE = 2;
 const controller = {
 
     getFeatures: (projectId, environmentId, force, page) => {
@@ -11,21 +11,20 @@ const controller = {
             store.loading();
             store.envId = environmentId;
 
-            const { feature } = Utils.fromParam()
+            const { feature } = Utils.fromParam();
 
-            let featuresEndpoint = page ? page  : `${Project.api}projects/${projectId}/features/?page_size=${PAGE_SIZE}`
+            let featuresEndpoint = `${Project.api}projects/${projectId}/features/?page=${page || 1}&page_size=${PAGE_SIZE}`;
             if (store.search) {
-                featuresEndpoint+= `&search=${store.search}`
+                featuresEndpoint += `&search=${store.search}`;
             }
             if (store.sort) {
-                featuresEndpoint+= `&sort_field=${store.sort.sortBy}&sort_direction=${store.sort.sortOrder.toUpperCase()}`
+                featuresEndpoint += `&sort_field=${store.sort.sortBy}&sort_direction=${store.sort.sortOrder.toUpperCase()}`;
             }
             return Promise.all([
                 data.get(featuresEndpoint),
                 data.get(`${Project.api}environments/${environmentId}/featurestates/?page_size=${PAGE_SIZE}`),
-                feature? data.get(`${Project.api}projects/${projectId}/features/${feature}/`) : Promise.resolve(),
+                feature ? data.get(`${Project.api}projects/${projectId}/features/${feature}/`) : Promise.resolve(),
             ]).then(([features, environmentFeatures, feature]) => {
-
                 store.paging.next = features.next;
                 store.paging.pageSize = PAGE_SIZE;
                 store.paging.count = features.count;
@@ -34,9 +33,9 @@ const controller = {
 
 
                 if (feature) {
-                    const index = features.results.findIndex((v)=>v.id === feature)
+                    const index = features.results.findIndex(v => v.id === feature.id);
                     if (index === -1) {
-                      features.results.push({...feature, ignore:true})
+                        features.results.push({ ...feature, ignore: true });
                     }
                 }
                 if (features.results.length) {
@@ -355,7 +354,7 @@ store.dispatcherIndex = Dispatcher.register(store, (payload) => {
             controller.searchFeatures(action.search, action.environmentId, action.projectId, action.environmentId);
             break;
         case Actions.GET_FLAGS:
-            store.search = ''
+            store.search = '';
             if (action.sort) {
                 store.sort = action.sort;
             }
