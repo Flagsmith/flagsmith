@@ -17,5 +17,5 @@ jobs:
       - name: Audit
         working-directory: frontend
         run: |
-          npm i
+          npm i --legacy-peer-deps
           npm audit --audit-level high
