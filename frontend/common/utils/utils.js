@@ -34,8 +34,7 @@ module.exports = Object.assign({}, require('./base/_utils'), {
         }
         return 'post';
     },
-    getIsEdge(_project) {
-        const project = _project || ProjectStore.model;
+    getIsEdge() {
         if (Utils.getFlagsmithHasFeature('edge_identities') && ProjectStore.model && ProjectStore.model.use_edge_identities) {
             return true;
         }
