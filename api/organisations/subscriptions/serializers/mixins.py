@@ -38,9 +38,8 @@ class ReadOnlyIfNotValidPlanMixin:
         invalid_plans = self.invalid_plans or []
 
         for field_name in field_names:
-            if (
-                field_name in fields
-                and not (subscription and subscription.plan)
+            if field_name in fields and (
+                not (subscription and subscription.plan)
                 or subscription.plan in invalid_plans
             ):
                 fields[field_name].read_only = True
