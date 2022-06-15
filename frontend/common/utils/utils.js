@@ -239,7 +239,8 @@ module.exports = Object.assign({}, require('./base/_utils'), {
             return null;
         }
 
-        return Utils.getTypedValue(featureState.integer_value || featureState.string_value || featureState.boolean_value);
+
+        return Utils.getTypedValue(typeof featureState.integer_value === 'number'? featureState.integer_value : featureState.string_value || featureState.boolean_value);
     },
     valueToFeatureState(value) {
         const val = Utils.getTypedValue(value);
