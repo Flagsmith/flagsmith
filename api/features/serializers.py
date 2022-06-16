@@ -55,6 +55,17 @@ class FeatureQuerySerializer(serializers.Serializer):
     )
     sort_direction = serializers.ChoiceField(choices=("ASC", "DESC"), default="ASC")
 
+    tags = serializers.CharField(
+        required=False, help_text="Comma separated list of tag ids to filter on (AND)"
+    )
+    is_archived = serializers.BooleanField(required=False)
+
+    def validate_tags(self, tags):
+        try:
+            return [int(tag_id.strip()) for tag_id in tags.split(",")]
+        except ValueError:
+            raise serializers.ValidationError("Tag IDs must be integers.")
+
 
 class ListCreateFeatureSerializer(WritableNestedModelSerializer):
     multivariate_options = NestedMultivariateFeatureOptionSerializer(
