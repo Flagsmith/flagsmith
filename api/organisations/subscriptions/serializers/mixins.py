@@ -28,8 +28,6 @@ class ReadOnlyIfNotValidPlanMixin:
     def get_fields(self, *args, **kwargs):
         fields = super().get_fields(*args, **kwargs)
 
-        if not self.get_subscription:
-            raise AttributeError("get_subscription must be set.")  # custom exception?
         if not (self.context and "view" in self.context):
             raise RuntimeError("view must be in the context.")
 
