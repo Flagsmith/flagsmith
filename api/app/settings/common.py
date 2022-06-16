@@ -405,7 +405,7 @@ CHARGEBEE_SITE = env("CHARGEBEE_SITE", default=None)
 LOG_LEVEL = env.str("LOG_LEVEL", default="WARNING")
 LOGGING = {
     "version": 1,
-    "disable_existing_loggers": False,
+    "disable_existing_loggers": True,
     "formatters": {
         "generic": {"format": "%(name)-12s %(levelname)-8s %(message)s"},
     },
