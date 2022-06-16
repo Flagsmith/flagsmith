@@ -37,7 +37,7 @@ jobs:
                 aws_identity_migration_event_bus_rule_id: identity_migration-08330ed
                 aws_identity_migration_task_role_arn: arn:aws:iam::302456015006:role/task-exec-role-6fb76f6
                 aws_task_definitions_directory_path: infrastructure/aws/staging
-                flagsmith_saml_revision: v0.1.2
+                flagsmith_saml_revision: v0.2.0
                 flagsmith_workflows_revision: v1.0.3
                 flagsmith_auth_controller_revision: v0.0.1
 
