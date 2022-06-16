@@ -41,3 +41,18 @@ class IdentitySerializer(serializers.ModelSerializer):
                 }
             )
         return super(IdentitySerializer, self).save(**kwargs)
+
+
+class SDKIdentitiesResponseSerializer(serializers.Serializer):
+    class _TraitSerializer(serializers.Serializer):
+        trait_key = serializers.CharField()
+        trait_value = serializers.Field(
+            help_text="Can be of type string, boolean, float or integer."
+        )
+
+    flags = serializers.ListField(child=FeatureStateSerializerFull())
+    traits = serializers.ListSerializer(child=_TraitSerializer())
+
+
+class SDKIdentitiesQuerySerializer(serializers.Serializer):
+    identifier = serializers.CharField(required=True)

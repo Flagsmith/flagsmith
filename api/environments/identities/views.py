@@ -1,16 +1,19 @@
 from collections import namedtuple
 
-import coreapi
 from django.conf import settings
+from drf_yasg2.utils import swagger_auto_schema
 from rest_framework import status, viewsets
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
-from rest_framework.schemas import AutoSchema
 
 from app.pagination import CustomPagination
 from edge_api.identities.edge_request_forwarder import forward_identity_request
 from environments.identities.models import Identity
-from environments.identities.serializers import IdentitySerializer
+from environments.identities.serializers import (
+    IdentitySerializer,
+    SDKIdentitiesQuerySerializer,
+    SDKIdentitiesResponseSerializer,
+)
 from environments.identities.traits.serializers import TraitSerializerBasic
 from environments.models import Environment
 from environments.permissions.constants import MANAGE_IDENTITIES
@@ -85,21 +88,7 @@ class SDKIdentitiesDeprecated(SDKAPIView):
 
     serializer_class = IdentifyWithTraitsSerializer
 
-    schema = AutoSchema(
-        manual_fields=[
-            coreapi.Field(
-                "X-Environment-Key",
-                location="header",
-                description="API Key for an Environment",
-            ),
-            coreapi.Field(
-                "identifier",
-                location="path",
-                required=True,
-                description="Identity user identifier",
-            ),
-        ]
-    )
+    schema = None
 
     # identifier is in a path parameter
     def get(self, request, identifier, *args, **kwargs):
@@ -146,6 +135,11 @@ class SDKIdentities(SDKAPIView):
     serializer_class = IdentifyWithTraitsSerializer
     pagination_class = None  # set here to ensure documentation is correct
 
+    @swagger_auto_schema(
+        responses={200: SDKIdentitiesResponseSerializer()},
+        query_serializer=SDKIdentitiesQuerySerializer(),
+        operation_id="identify_user",
+    )
     def get(self, request):
         identifier = request.query_params.get("identifier")
         if not identifier:
@@ -182,6 +176,11 @@ class SDKIdentities(SDKAPIView):
             context["environment"] = self.request.environment
         return context
 
+    @swagger_auto_schema(
+        request_body=IdentifyWithTraitsSerializer(),
+        responses={200: SDKIdentitiesResponseSerializer()},
+        operation_id="identify_user_with_traits",
+    )
     def post(self, request):
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)

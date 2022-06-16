@@ -1,4 +1,3 @@
-import coreapi
 from django.conf import settings
 from django.db.models import Q
 from drf_yasg2 import openapi
@@ -7,7 +6,6 @@ from rest_framework import mixins, status, viewsets
 from rest_framework.decorators import action
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
-from rest_framework.schemas import AutoSchema
 
 from edge_api.identities.edge_request_forwarder import (
     forward_trait_request,
@@ -105,27 +103,7 @@ class SDKTraitsDeprecated(SDKAPIView):
     # if Identity or Trait does not exist it will create one, otherwise will fetch existing
     serializer_class = TraitSerializerBasic
 
-    schema = AutoSchema(
-        manual_fields=[
-            coreapi.Field(
-                "X-Environment-Key",
-                location="header",
-                description="API Key for an Environment",
-            ),
-            coreapi.Field(
-                "identifier",
-                location="path",
-                required=True,
-                description="Identity user identifier",
-            ),
-            coreapi.Field(
-                "trait_key",
-                location="path",
-                required=True,
-                description="User trait unique key",
-            ),
-        ]
-    )
+    schema = None
 
     def post(self, request, identifier, trait_key, *args, **kwargs):
         """
