@@ -4,7 +4,6 @@ flagsmith = Flagsmith(
     environment_key = os.environ.get("${envId}")
 )
 
-# This will create a user in the dashboard if they don't already exist
 identifier = "delboy@trotterstraders.co.uk"
 traits = {"car_type": "robin_reliant"}
 
