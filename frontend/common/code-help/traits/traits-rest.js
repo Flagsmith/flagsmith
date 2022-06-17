@@ -6,16 +6,16 @@ curl -X "POST" "https://edge.api.flagsmith.com/api/v1/identities/"
      -d $'{
   "traits": [
     {
-      "trait_value": 1000,
-      "trait_key": "gagan_1"
+      "trait_key": "age",
+      "trait_value": 44
     },
     {
-      "trait_value": true,
-      "trait_key": "my_other_key"
+      "trait_key": "my_other_key",
+      "trait_value": true
     },
     {
-      "trait_value": "ben2",
-      "trait_key": "my_other_key_string"
+        "trait_key": "my_other_key_string"
+        "trait_value": "my_trait_value",
     }
   ],
   "identifier": "winning2"
