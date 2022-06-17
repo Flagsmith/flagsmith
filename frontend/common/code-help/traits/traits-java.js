@@ -1,15 +1,13 @@
-module.exports = (envId, { LIB_NAME, USER_ID, TRAIT_NAME, LIB_NAME_JAVA, FEATURE_NAME, FEATURE_FUNCTION, FEATURE_NAME_ALT, FEATURE_NAME_ALT_VALUE, NPM_CLIENT }, userId) => `${LIB_NAME_JAVA} ${LIB_NAME} = ${LIB_NAME_JAVA}
+module.exports = (envId, { LIB_NAME, USER_ID, TRAIT_NAME, LIB_NAME_JAVA, FEATURE_NAME }) => `${LIB_NAME_JAVA} ${LIB_NAME} = ${LIB_NAME_JAVA}
 .newBuilder()
 .setApiKey("${envId}")
 .build();
 
-// This will create a user in the dashboard if they don't already exist
-String identifier = "delboy@trotterstraders.co.uk"
 Map<String, Object> traits = new HashMap<String, Object>();
-traits.put("car_type", "robin_reliant");
+traits.put("${TRAIT_NAME}", 42);
 
-// The method below triggers a network request
-Flags flags = flagsmith.getIdentityFlags(identifier, traits);
-Boolean showButton = flags.isFeatureEnabled(featureName);
-Object value = flags.getFeatureValue(featureName);
+// The method below triggers a network request and creates a user in the dashboard if they don't exist alreadt
+Flags flags = flagsmith.getIdentityFlags(${USER_ID}, traits);
+Boolean showButton = flags.isFeatureEnabled(${FEATURE_NAME});
+Object value = flags.getFeatureValue(${FEATURE_NAME});
 `;
