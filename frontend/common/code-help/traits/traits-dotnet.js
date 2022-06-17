@@ -10,11 +10,11 @@ var traitList = new List<Trait> { new Trait(traitKey, traitValue) };
 
 # Sync
 # The method below triggers a network request
-var flags = _flagsmithClient.GetIdentityFlags(Identifier, traitList);
-var showButton = flags.IsFeatureEnabled("secret_button");
+var flags = _flagsmithClient.GetIdentityFlags(identifier, traitList).Result;
+var showButton = flags.IsFeatureEnabled("secret_button").Result;
 
 # Async
 # The method below triggers a network request
-var flags = await _flagsmithClient.GetIdentityFlags(Identifier, traitList);
+var flags = await _flagsmithClient.GetIdentityFlags(identifier, traitList);
 var showButton = await flags.IsFeatureEnabled("secret_button");
 `;
