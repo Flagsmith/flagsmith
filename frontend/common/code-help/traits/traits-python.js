@@ -1,18 +1,9 @@
-module.exports = (envId, { LIB_NAME, USER_ID, LIB_NAME_JAVA, FEATURE_NAME, FEATURE_FUNCTION, FEATURE_NAME_ALT, FEATURE_NAME_ALT_VALUE, NPM_CLIENT }, userId) => `from flagsmith import Flagsmith;
+module.exports = (envId, { USER_ID, TRAIT_NAME }, userId) => `from flagsmith import Flagsmith;
 
-flagsmith = Flagsmith(
-    environment_key = os.environ.get("${envId}")
-)
+flagsmith = Flagsmith(environment_key="${envId}")
 
-identifier = "delboy@trotterstraders.co.uk"
-traits = {"car_type": "robin_reliant"}
+traits = {"${TRAIT_NAME}": 42}
 
-# The method below triggers a network request
-identity_flags = flagsmith.get_identity_flags(identifier=identifier, traits=traits)
-
-# Check for a feature
-show_button = identity_flags.is_feature_enabled("secret_button")
-
-# Or, use the value of a feature
-button_data = json.loads(identity_flags.get_feature_value("secret_button"))
+# Identify a user, set their traits and retrieve the flags
+identity_flags = flagsmith.get_identity_flags(identifier="${userId}", traits=traits)
 `;
