@@ -134,14 +134,6 @@ module.exports = Object.assign({}, require('./base/_utils'), {
         return Project.api;
     },
 
-    showUserSegments(_project) {
-        const project = _project || ProjectStore.model;
-        if (Utils.getFlagsmithHasFeature('edge_identities') && project && project.use_edge_identities) {
-            return false;
-        }
-        return true;
-    },
-
     getShouldHideIdentityOverridesTab(_project) {
         const project = _project || ProjectStore.model;
         if (Utils.getFlagsmithHasFeature('edge_identities') && project && project.use_edge_identities) {
