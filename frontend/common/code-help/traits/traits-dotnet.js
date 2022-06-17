@@ -1,6 +1,6 @@
 module.exports = (envId, { LIB_NAME, USER_ID, TRAIT_NAME, LIB_NAME_JAVA, FEATURE_NAME, FEATURE_FUNCTION, FEATURE_NAME_ALT, FEATURE_NAME_ALT_VALUE, NPM_CLIENT }, userId) => `using Flagsmith;
 
-static FlagsmithClient _flagsmithClient;
+FlagsmithClient _flagsmithClient;
 _flagsmithClient = new("${envId}");
 
 var identifier = "delboy@trotterstraders.co.uk";
