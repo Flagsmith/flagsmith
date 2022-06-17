@@ -4,12 +4,11 @@ $flagsmith = Flagsmith::Client.new(
     environment_key: '${envId}'
 )
 
-// This will create a user in the dashboard if they don't already exist.
-$flags = $flagsmith.get_environment_flags()
+trait_key = params.get(:flagsmith, :trait_key)
+trait_value = params.get(:flagsmith, :trait_value)
+traits = trait_key.nil? ? nil : { trait_key: trait_value }
 
-// Check for a feature
-$show_button = $flags.is_feature_enabled('secret_button')
-
-// Or, use the value of a feature
-$button_data = $flags.get_feature_value('secret_button')
+identity_flags = $flagsmith.get_identity_flags("delboy@trotterstraders.co.uk", traits)
+@show_button = identity_flags.is_feature_enabled('secret_button')
+@button_color = JSON.parse(identity_flags.get_feature_value('secret_button'))['colour']
 `;
