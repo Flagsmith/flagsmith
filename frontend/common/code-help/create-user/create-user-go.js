@@ -7,3 +7,5 @@ enabled, err := c.HasUserFeature(testUser, "${FEATURE_NAME}")
 val, err := c.GetUserValue(testUser, ${FEATURE_NAME_ALT})
 
 `;
+
+// TODO

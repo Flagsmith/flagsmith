@@ -1,15 +1,13 @@
-module.exports = (envId, { FEATURE_NAME, FEATURE_FUNCTION, USER_ID, FEATURE_NAME_ALT }) => `require "flagsmith"
+module.exports = (envId, { FEATURE_NAME, FEATURE_NAME_ALT }, userId) => `require "flagsmith"
 
 $flagsmith = Flagsmith::Client.new(
     environment_key: '${envId}'
 )
 
-// This will create a user in the dashboard if they don't already exist.
-$flags = $flagsmith.get_environment_flags()
+// Identify the user
+$flags = $flagsmith.get_identity_flags('${userId}')
 
-// Check for a feature
-$show_button = $flags.is_feature_enabled('secret_button')
-
-// Or, use the value of a feature
-$button_data = $flags.get_feature_value('secret_button')
+// get the state / value of the user's flags
+$show_button = $flags.is_feature_enabled('${FEATURE_NAME}')
+$button_data = $flags.get_feature_value('${FEATURE_NAME_ALT}')
 `;
