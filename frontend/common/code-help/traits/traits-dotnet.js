@@ -3,7 +3,7 @@ module.exports = (envId, { LIB_NAME, USER_ID, TRAIT_NAME, LIB_NAME_JAVA, FEATURE
 static FlagsmithClient _flagsmithClient;
 _flagsmithClient = new("${envId}");
 
-var Identifier = "delboy@trotterstraders.co.uk";
+var identifier = "delboy@trotterstraders.co.uk";
 var traitKey = "car_type";
 var traitValue = "robin_reliant";
 var traitList = new List<Trait> { new Trait(traitKey, traitValue) };
