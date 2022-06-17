@@ -8,5 +8,5 @@ Flags flags = flagsmith.getIdentityFlags("${userId}");
 
 // get the state / value of the user's flags 
 Boolean isEnabled = flags.isFeatureEnabled("${FEATURE_NAME}");
-Object value = flags.getFeatureValue("${FEATURE_NAME_ALT}");
+Object featureValue = flags.getFeatureValue("${FEATURE_NAME_ALT}");
 `;

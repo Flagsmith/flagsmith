@@ -1,6 +1,4 @@
-import Utils from '../../utils/utils';
-
-module.exports = (envId, { FEATURE_NAME, FEATURE_FUNCTION, FEATURE_NAME_ALT }) => `use Flagsmith\\Flagsmith;
+module.exports = (envId, { FEATURE_NAME, FEATURE_NAME_ALT }) => `use Flagsmith\\Flagsmith;
 
 $flagsmith = new Flagsmith('${envId}');
 

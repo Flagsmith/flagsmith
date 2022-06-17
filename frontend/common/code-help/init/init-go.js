@@ -1,5 +1,3 @@
-import Utils from '../../utils/utils';
-
 module.exports = (envId, {
     FEATURE_NAME,
     FEATURE_FUNCTION,
@@ -23,3 +21,5 @@ if err != nil {
     fmt.Printf(feature_value)
 }
 `;
+
+// TODO

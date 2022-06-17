@@ -8,5 +8,5 @@ var flags = await _flagsmithClient.GetIdentityFlags("${userId}");
 
 // get the state / value of the user's flags 
 var isEnabled = await flags.IsFeatureEnabled("${FEATURE_NAME}");
-var value = await flags.GetFeatureValue("${FEATURE_NAME_ALT}");
+var featureValue = await flags.GetFeatureValue("${FEATURE_NAME_ALT}");
 `;
