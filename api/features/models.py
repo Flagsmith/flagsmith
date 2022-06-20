@@ -26,6 +26,7 @@ from features.custom_lifecycle import CustomLifecycleModelMixin
 from features.feature_states.models import AbstractBaseFeatureValueModel
 from features.feature_types import MULTIVARIATE, STANDARD
 from features.helpers import get_correctly_typed_value
+from features.managers import FeatureManager, FeatureSegmentManager
 from features.multivariate.models import MultivariateFeatureStateValue
 from features.utils import (
     get_boolean_from_string,
@@ -75,10 +76,15 @@ class Feature(CustomLifecycleModelMixin, models.Model):
         "users.FFAdminUser", related_name="owned_features", blank=True
     )
 
+    objects = FeatureManager()
+
     class Meta:
         # Note: uniqueness is changed to reference lowercase name in explicit SQL in the migrations
         unique_together = ("name", "project")
         ordering = ("id",)  # explicit ordering to prevent pagination warnings
+
+    def natural_key(self):
+        return self.name, self.project_id
 
     @hook(AFTER_CREATE)
     def create_feature_states(self):
@@ -172,6 +178,8 @@ class FeatureSegment(OrderedModelBase):
     # used for audit purposes
     history = HistoricalRecords()
 
+    objects = FeatureSegmentManager()
+
     class Meta:
         unique_together = ("feature", "environment", "segment")
         ordering = ("priority",)
@@ -190,6 +198,9 @@ class FeatureSegment(OrderedModelBase):
         priority of the other feature segment.
         """
         return other and self.priority > other.priority
+
+    def natural_key(self):
+        return self.feature_id, self.segment_id, self.environment_id
 
     def clone(self, environment: "Environment") -> "FeatureSegment":
         clone = deepcopy(self)
@@ -248,6 +259,16 @@ class FeatureState(LifecycleModel, models.Model):
 
     class Meta:
         ordering = ["id"]
+
+    def natural_key(self):
+        return (
+            self.feature_id,
+            self.environment_id,
+            self.feature_segment_id,
+            self.identity_id,
+            self.version,
+            self.change_request_id,
+        )
 
     def __gt__(self, other):
         """

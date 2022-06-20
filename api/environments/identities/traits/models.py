@@ -37,6 +37,9 @@ class Trait(models.Model):
         # issues with production deployment due to multi server configuration.
         db_table = "environments_trait"
 
+    def natural_key(self):
+        return self.trait_key, self.identity_id
+
     @property
     def trait_value(self):
         return self.get_trait_value()

@@ -76,6 +76,9 @@ class Environment(LifecycleModel):
     def __str__(self):
         return "Project %s - Environment %s" % (self.project.name, self.name)
 
+    def natural_key(self):
+        return self.api_key
+
     def clone(self, name: str, api_key: str = None) -> "Environment":
         """
         Creates a clone of the environment, related objects and returns the

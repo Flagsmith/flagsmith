@@ -46,6 +46,9 @@ class ChangeRequest(LifecycleModel):
         null=True,
     )
 
+    def natural_key(self):
+        return self.environment_id, self.created_at, self.title, self.user_id
+
     def approve(self, user: "FFAdminUser"):
         if user.id == self.user_id:
             raise CannotApproveOwnChangeRequest(

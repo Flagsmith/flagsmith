@@ -10,6 +10,7 @@ from django_lifecycle import (
 )
 
 from features.feature_states.models import AbstractBaseFeatureValueModel
+from features.multivariate.managers import MultivariateFeatureStateValueManager
 
 if typing.TYPE_CHECKING:
     from features.models import FeatureState
@@ -41,6 +42,15 @@ class MultivariateFeatureOption(LifecycleModelMixin, AbstractBaseFeatureValueMod
                 percentage_allocation=self.default_percentage_allocation,
             )
 
+    def natural_key(self):
+        return (
+            self.feature_id,
+            self.type,
+            self.string_value,
+            self.integer_value,
+            self.boolean_value,
+        )
+
 
 class MultivariateFeatureStateValue(LifecycleModelMixin, models.Model):
     feature_state = models.ForeignKey(
@@ -56,8 +66,13 @@ class MultivariateFeatureStateValue(LifecycleModelMixin, models.Model):
         validators=[MinValueValidator(0), MaxValueValidator(100)],
     )
 
+    objects = MultivariateFeatureStateValueManager()
+
     class Meta:
         unique_together = ("feature_state", "multivariate_feature_option")
+
+    def natural_key(self):
+        return self.feature_state_id, self.multivariate_feature_option_id
 
     @hook(BEFORE_SAVE)
     def validate_unique(self, exclude=None):

@@ -41,6 +41,9 @@ class Project(LifecycleModel):
     def __str__(self):
         return "Project %s" % self.name
 
+    def natural_key(self):
+        return self.name, self.organisation_id, self.created_date
+
     def get_segments_from_cache(self):
         segments = project_segments_cache.get(self.id)
 

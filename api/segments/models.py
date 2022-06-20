@@ -11,6 +11,7 @@ from environments.identities.helpers import (
     get_hashed_percentage_for_object_ids,
 )
 from projects.models import Project
+from segments.managers import SegmentManager
 
 if typing.TYPE_CHECKING:
     from environments.identities.models import Identity
@@ -47,8 +48,11 @@ class Segment(models.Model):
         Project, on_delete=models.CASCADE, related_name="segments"
     )
 
+    objects = SegmentManager()
+
     class Meta:
         ordering = ("id",)  # explicit ordering to prevent pagination warnings
+        unique_together = (("name", "project"),)
 
     def __str__(self):
         return "Segment - %s" % self.name
@@ -60,6 +64,9 @@ class Segment(models.Model):
         return rules.count() > 0 and all(
             rule.does_identity_match(identity, traits) for rule in rules
         )
+
+    def natural_key(self):
+        return self.name, self.project_id
 
 
 class SegmentRule(models.Model):

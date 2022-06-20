@@ -145,6 +145,7 @@ INSTALLED_APPS = [
     "telemetry",
     # for filtering querysets on viewsets
     "django_filters",
+    "import_export",
 ]
 
 if GOOGLE_ANALYTICS_KEY or INFLUXDB_TOKEN:

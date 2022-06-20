@@ -11,6 +11,7 @@ from organisations.chargebee import (
     get_max_seats_for_plan,
     get_portal_url,
 )
+from organisations.managers import OrganisationManager
 from users.utils.mailer_lite import MailerLite
 from webhooks.models import AbstractBaseWebhookModel
 
@@ -45,11 +46,16 @@ class Organisation(models.Model):
         default=False, help_text="Record feature analytics in InfluxDB"
     )
 
+    objects = OrganisationManager()
+
     class Meta:
         ordering = ["id"]
 
     def __str__(self):
         return "Org %s (#%s)" % (self.name, self.id)
+
+    def natural_key(self):
+        return self.name, self.created_date
 
     # noinspection PyTypeChecker
     def get_unique_slug(self):
