@@ -1,11 +1,6 @@
-module.exports = (envId, { LIB_NAME, USER_ID, LIB_NAME_JAVA, FEATURE_NAME, FEATURE_FUNCTION, FEATURE_NAME_ALT, FEATURE_NAME_ALT_VALUE, NPM_CLIENT }, userId) => `var testUser = flagsmith.User{Identifier: "${USER_ID}"}
+module.exports = (envId, { LIB_NAME, USER_ID, LIB_NAME_JAVA, FEATURE_NAME, FEATURE_FUNCTION, FEATURE_NAME_ALT, FEATURE_NAME_ALT_VALUE, NPM_CLIENT }, userId) => `// The method below triggers a network request
+flags, _ := client.GetIdentityFlags("${userId || USER_ID}", nil)
 
-c := flagsmith.DefaultClient("${envId}")
-
-enabled, err := c.HasUserFeature(testUser, "${FEATURE_NAME}")
-
-val, err := c.GetUserValue(testUser, ${FEATURE_NAME_ALT})
-
+showButton, _ := flags.IsFeatureEnabled("${FEATURE_NAME}")
+buttonData, _ := flags.GetFeatureValue("${FEATURE_NAME_ALT}")
 `;
-
-// TODO

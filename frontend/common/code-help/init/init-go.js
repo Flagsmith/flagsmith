@@ -2,24 +2,14 @@ module.exports = (envId, {
     FEATURE_NAME,
     FEATURE_FUNCTION,
     FEATURE_NAME_ALT
-}) => `fs := flagsmith.DefaultClient("${envId}")
-// Check for a feature
-enabled, err := fs.FeatureEnabled("${FEATURE_NAME}")
-if err != nil {
-    log.Fatal(err)
-} else {
-    if (enabled) {
-        ${FEATURE_FUNCTION}()
-    }
-}
+}) => `ctx, cancel := context.WithCancel(context.Background())
+defer cancel()
 
-// Or, use the value of a feature
-feature_value, err := fs.GetValue("${FEATURE_NAME_ALT}")
-if err != nil {
-    log.Fatal(err)
-} else {
-    fmt.Printf(feature_value)
-}
+// Initialise the Flagsmith client
+client := flagsmith.NewClient('${envId}', flagsmith.WithContext(ctx))
+
+// The method below triggers a network request
+flags, _ := client.GetEnvironmentFlags()
+showButton, _ := flags.IsFeatureEnabled("${FEATURE_NAME}")
+buttonData, _ := flags.GetFeatureValue("${FEATURE_NAME_ALT}")
 `;
-
-// TODO
