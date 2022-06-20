@@ -1,14 +1,13 @@
 import Utils from '../../utils/utils';
 
-module.exports = (envId, { FEATURE_NAME, FEATURE_FUNCTION, FEATURE_NAME_ALT }) => `use std::env;
+module.exports = (envId, { FEATURE_NAME, FEATURE_FUNCTION, FEATURE_NAME_ALT }) => `
 use flagsmith::{Flag, Flagsmith, FlagsmithOptions};
 
 let options = FlagsmithOptions {..Default::default()};
 let flagsmith = Flagsmith::new(
-        env::var("${envId}")
-            .expect("FLAGSMITH_ENVIRONMENT_KEY not found in environment"),
-        options,
-    );
+    "${envId}".to_string(),
+    options,
+);
 
 // The method below triggers a network request
 let flags = flagsmith.get_environment_flags().unwrap();
