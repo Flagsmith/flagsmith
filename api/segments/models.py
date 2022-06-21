@@ -1,5 +1,6 @@
 import logging
 import typing
+import uuid
 
 import semver
 from core.constants import BOOLEAN, FLOAT, INTEGER
@@ -85,6 +86,8 @@ class SegmentRule(models.Model):
 
     type = models.CharField(max_length=50, choices=RULE_TYPES)
 
+    uuid = models.UUIDField(default=uuid.uuid4, unique=True, editable=False)
+
     def clean(self):
         super().clean()
         parents = [self.segment, self.rule]
@@ -99,6 +102,9 @@ class SegmentRule(models.Model):
             self.type,
             str(self.segment) if self.segment else str(self.rule),
         )
+
+    def natural_key(self):
+        return self.uuid
 
     def does_identity_match(
         self, identity: "Identity", traits: typing.List["Trait"] = None
@@ -163,6 +169,8 @@ class Condition(models.Model):
         SegmentRule, on_delete=models.CASCADE, related_name="conditions"
     )
 
+    uuid = models.UUIDField(default=uuid.uuid4, unique=True, editable=False)
+
     def __str__(self):
         return "Condition for %s: %s %s %s" % (
             str(self.rule),
@@ -170,6 +178,9 @@ class Condition(models.Model):
             self.operator,
             self.value,
         )
+
+    def natural_key(self):
+        return self.uuid
 
     def does_identity_match(
         self, identity: "Identity", traits: typing.List["Trait"] = None

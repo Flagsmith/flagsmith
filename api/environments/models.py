@@ -191,6 +191,9 @@ class Webhook(AbstractBaseWebhookModel):
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
+    def natural_key(self):
+        return self.environment, self.created_at
+
 
 dynamo_api_key_table = None
 if settings.ENVIRONMENTS_API_KEY_TABLE_NAME_DYNAMO:
@@ -212,6 +215,9 @@ class EnvironmentAPIKey(LifecycleModel):
     name = models.CharField(max_length=100)
     expires_at = models.DateTimeField(blank=True, null=True)
     active = models.BooleanField(default=True)
+
+    def natural_key(self):
+        return self.key
 
     @property
     def is_valid(self) -> bool:

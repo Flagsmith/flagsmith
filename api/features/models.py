@@ -619,6 +619,9 @@ class FeatureStateValue(AbstractBaseFeatureValueModel):
 
     history = HistoricalRecords()
 
+    def natural_key(self):
+        return self.feature_state_id
+
     def clone(self, feature_state: FeatureState) -> "FeatureStateValue":
         clone = deepcopy(self)
         clone.id = None

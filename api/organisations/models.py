@@ -126,6 +126,9 @@ class Subscription(LifecycleModel, models.Model):
     )
     notes = models.CharField(max_length=500, blank=True, null=True)
 
+    def natural_key(self):
+        return self.organisation_id
+
     def update_plan(self, plan_id):
         self.cancellation_date = None
         self.plan = plan_id
@@ -164,3 +167,6 @@ class OrganisationWebhook(AbstractBaseWebhookModel):
 
     class Meta:
         ordering = ("id",)  # explicit ordering to prevent pagination warnings
+
+    def natural_key(self):
+        return self.name, self.organisation_id

@@ -47,5 +47,5 @@ class Migration(migrations.Migration):
                 ('updated_at', models.DateTimeField(auto_now=True))
             ],
         ),
-        migrations.RunPython(create_webhooks),
+        migrations.RunPython(create_webhooks, reverse_code=update_environment_webhooks),
     ]

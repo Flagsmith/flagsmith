@@ -8,3 +8,6 @@ class RudderstackConfiguration(IntegrationsModel):
     environment = models.OneToOneField(
         Environment, related_name="rudderstack_config", on_delete=models.CASCADE
     )
+
+    def natural_key(self):
+        return self.environment_id, self.api_key

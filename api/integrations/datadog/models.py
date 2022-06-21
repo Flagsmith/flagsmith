@@ -13,3 +13,6 @@ class DataDogConfiguration(models.Model):
     )
     base_url = models.URLField(blank=False, null=False)
     api_key = models.CharField(max_length=100, blank=False, null=False)
+
+    def natural_key(self):
+        return self.project_id, self.api_key
