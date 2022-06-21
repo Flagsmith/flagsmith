@@ -18,4 +18,4 @@ class AbstractBaseExportableModel(models.Model):
         abstract = True
 
     def natural_key(self):
-        return self.uuid
+        return str(self.uuid)
