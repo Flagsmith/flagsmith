@@ -5,7 +5,7 @@ FROM node:16 AS build
 WORKDIR /app
 COPY . .
 
-RUN cd frontend && npm install --quiet --production --legacy-peer-deps
+RUN cd frontend && npm install --quiet --production
 ENV ENV=prod
 ENV STATIC_ASSET_CDN_URL=/static/
 RUN cd frontend && npm run bundledjango

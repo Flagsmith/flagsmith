@@ -42,7 +42,7 @@ jobs:
                   VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
                   ENV: staging
               run: |
-                  npm ci --only=prod --legacy-peer-deps
+                  npm ci --only=prod
                   npm run env
                   npm run bundle
                   vercel --prod --token ${{ secrets.VERCEL_TOKEN }}

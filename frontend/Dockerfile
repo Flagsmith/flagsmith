@@ -9,7 +9,7 @@ WORKDIR /srv/bt
 
 COPY --chown=node:node . .
 
-RUN npm install --quiet --production --legacy-peer-deps
+RUN npm install --quiet --production
 ENV ENV=prod
 RUN npm run bundle
 

@@ -28,5 +28,5 @@ jobs:
                sudo apt install --allow-downgrades -y ./google-chrome*.deb -f
                google-chrome --version
                node -v
-               npm i --legacy-peer-deps
+               npm i
                npm run test:staging              
