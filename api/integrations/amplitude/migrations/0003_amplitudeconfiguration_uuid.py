@@ -3,14 +3,7 @@
 from django.db import migrations, models
 import uuid
 
-from core.migration_helpers import add_default_uuids
-
-
-def add_amplitude_config_default_uuids(apps, schema_editor):
-    amplitude_configuration_model_class = apps.get_model(
-        "amplitude", "AmplitudeConfiguration"
-    )
-    add_default_uuids(amplitude_configuration_model_class)
+from core.migration_helpers import AddDefaultUUIDs
 
 
 class Migration(migrations.Migration):
@@ -26,7 +19,8 @@ class Migration(migrations.Migration):
             field=models.UUIDField(null=True, default=uuid.uuid4),
         ),
         migrations.RunPython(
-            add_amplitude_config_default_uuids, reverse_code=migrations.RunPython.noop
+            AddDefaultUUIDs("amplitude", "amplitudeconfiguration"),
+            reverse_code=migrations.RunPython.noop,
         ),
         migrations.AlterField(
             model_name="amplitudeconfiguration",
