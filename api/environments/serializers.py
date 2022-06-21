@@ -82,10 +82,16 @@ class CreateUpdateEnvironmentSerializer(
         view = self.context["view"]
 
         if view.action == "create":
-            project_id = view.request.data["project"]
+            # handle `project` not being part of the data
+            # When request comes from yasg2(as part of schema generation)
+            project_id = view.request.data.get("project")
+            if not project_id:
+                return None
+
             project = Project.objects.select_related(
                 "organisation", "organisation__subscription"
             ).get(id=project_id)
+
             return getattr(project.organisation, "subscription", None)
         elif view.action in ("update", "partial_update"):
             return getattr(self.instance.project.organisation, "subscription", None)
