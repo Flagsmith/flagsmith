@@ -15,7 +15,12 @@ from django.db import models
 from django.db.models import Max, Q, QuerySet
 from django.utils import timezone
 from django.utils.translation import ugettext_lazy as _
-from django_lifecycle import AFTER_CREATE, BEFORE_CREATE, LifecycleModel, hook
+from django_lifecycle import (
+    AFTER_CREATE,
+    BEFORE_CREATE,
+    LifecycleModelMixin,
+    hook,
+)
 from ordered_model.models import OrderedModelBase
 from simple_history.models import HistoricalRecords
 
@@ -204,7 +209,7 @@ class FeatureSegment(AbstractBaseExportableModel, OrderedModelBase):
         return get_correctly_typed_value(self.value_type, self.value)
 
 
-class FeatureState(LifecycleModel, AbstractBaseExportableModel):
+class FeatureState(LifecycleModelMixin, AbstractBaseExportableModel):
     feature = models.ForeignKey(
         Feature, related_name="feature_states", on_delete=models.CASCADE
     )

@@ -5,7 +5,12 @@ from core.models import AbstractBaseExportableModel
 from django.conf import settings
 from django.db import models
 from django.utils import timezone
-from django_lifecycle import AFTER_CREATE, AFTER_SAVE, LifecycleModel, hook
+from django_lifecycle import (
+    AFTER_CREATE,
+    AFTER_SAVE,
+    LifecycleModelMixin,
+    hook,
+)
 
 from organisations.chargebee import (
     get_customer_id_from_subscription_id,
@@ -94,7 +99,7 @@ class UserOrganisation(models.Model):
         )
 
 
-class Subscription(LifecycleModel, AbstractBaseExportableModel):
+class Subscription(LifecycleModelMixin, AbstractBaseExportableModel):
     MAX_SEATS_IN_FREE_PLAN = 1
 
     organisation = models.OneToOneField(
