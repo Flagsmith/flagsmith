@@ -16,7 +16,7 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name="dynatraceconfiguration",
             name="uuid",
-            field=models.UUIDField(default=uuid.uuid4, null=True),
+            field=models.UUIDField(default=uuid.uuid4, editable=False, null=True),
         ),
         migrations.RunPython(
             AddDefaultUUIDs("dynatrace", "dynatraceconfiguration"),
@@ -25,6 +25,6 @@ class Migration(migrations.Migration):
         migrations.AlterField(
             model_name="dynatraceconfiguration",
             name="uuid",
-            field=models.UUIDField(default=uuid.uuid4, unique=True),
+            field=models.UUIDField(default=uuid.uuid4, editable=False, unique=True),
         ),
     ]

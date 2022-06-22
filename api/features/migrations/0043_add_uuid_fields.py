@@ -17,7 +17,7 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name="feature",
             name="uuid",
-            field=models.UUIDField(default=uuid.uuid4, null=True),
+            field=models.UUIDField(default=uuid.uuid4, editable=False, null=True),
         ),
         migrations.RunPython(
             AddDefaultUUIDs("features", "feature"),
@@ -26,13 +26,13 @@ class Migration(migrations.Migration):
         migrations.AlterField(
             model_name="feature",
             name="uuid",
-            field=models.UUIDField(default=uuid.uuid4, unique=True),
+            field=models.UUIDField(default=uuid.uuid4, editable=False, unique=True),
         ),
         # feature segment
         migrations.AddField(
             model_name="featuresegment",
             name="uuid",
-            field=models.UUIDField(default=uuid.uuid4, null=True),
+            field=models.UUIDField(default=uuid.uuid4, editable=False, null=True),
         ),
         migrations.RunPython(
             AddDefaultUUIDs("features", "featuresegment"),
@@ -41,13 +41,13 @@ class Migration(migrations.Migration):
         migrations.AlterField(
             model_name="featuresegment",
             name="uuid",
-            field=models.UUIDField(default=uuid.uuid4, unique=True),
+            field=models.UUIDField(default=uuid.uuid4, editable=False, unique=True),
         ),
         # feature state
         migrations.AddField(
             model_name="featurestate",
             name="uuid",
-            field=models.UUIDField(default=uuid.uuid4, null=True),
+            field=models.UUIDField(default=uuid.uuid4, editable=False, null=True),
         ),
         migrations.RunPython(
             AddDefaultUUIDs("features", "featurestate"),
@@ -56,13 +56,13 @@ class Migration(migrations.Migration):
         migrations.AlterField(
             model_name="featurestate",
             name="uuid",
-            field=models.UUIDField(default=uuid.uuid4, unique=True),
+            field=models.UUIDField(default=uuid.uuid4, editable=False, unique=True),
         ),
         # feature state value
         migrations.AddField(
             model_name="featurestatevalue",
             name="uuid",
-            field=models.UUIDField(default=uuid.uuid4, null=True),
+            field=models.UUIDField(default=uuid.uuid4, editable=False, null=True),
         ),
         migrations.RunPython(
             AddDefaultUUIDs("features", "featurestatevalue"),
@@ -71,7 +71,7 @@ class Migration(migrations.Migration):
         migrations.AlterField(
             model_name="featurestatevalue",
             name="uuid",
-            field=models.UUIDField(default=uuid.uuid4, unique=True),
+            field=models.UUIDField(default=uuid.uuid4, editable=False, unique=True),
         ),
         # historical models...
         migrations.AddField(

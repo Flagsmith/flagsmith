@@ -16,7 +16,7 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name="organisation",
             name="uuid",
-            field=models.UUIDField(default=uuid.uuid4, null=True),
+            field=models.UUIDField(default=uuid.uuid4, editable=False, null=True),
         ),
         migrations.RunPython(
             AddDefaultUUIDs("organisations", "organisation"),
@@ -25,12 +25,12 @@ class Migration(migrations.Migration):
         migrations.AlterField(
             model_name="organisation",
             name="uuid",
-            field=models.UUIDField(default=uuid.uuid4, unique=True),
+            field=models.UUIDField(default=uuid.uuid4, editable=False, unique=True),
         ),
         migrations.AddField(
             model_name="subscription",
             name="uuid",
-            field=models.UUIDField(default=uuid.uuid4, null=True),
+            field=models.UUIDField(default=uuid.uuid4, editable=False, null=True),
         ),
         migrations.RunPython(
             AddDefaultUUIDs("organisations", "subscription"),
@@ -39,6 +39,6 @@ class Migration(migrations.Migration):
         migrations.AlterField(
             model_name="subscription",
             name="uuid",
-            field=models.UUIDField(default=uuid.uuid4, unique=True),
+            field=models.UUIDField(default=uuid.uuid4, editable=False, unique=True),
         ),
     ]
