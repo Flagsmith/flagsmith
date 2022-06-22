@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 from __future__ import unicode_literals
 
+from core.models import AbstractBaseExportableModel
 from django.conf import settings
 from django.db import models
 from django.utils import timezone
@@ -11,7 +12,6 @@ from organisations.chargebee import (
     get_max_seats_for_plan,
     get_portal_url,
 )
-from organisations.managers import OrganisationManager
 from users.utils.mailer_lite import MailerLite
 from webhooks.models import AbstractBaseWebhookModel
 
@@ -21,7 +21,7 @@ class OrganisationRole(models.TextChoices):
     USER = ("USER", "User")
 
 
-class Organisation(models.Model):
+class Organisation(AbstractBaseExportableModel):
     name = models.CharField(max_length=2000)
     has_requested_features = models.BooleanField(default=False)
     webhook_notification_email = models.EmailField(null=True, blank=True)
@@ -46,16 +46,11 @@ class Organisation(models.Model):
         default=False, help_text="Record feature analytics in InfluxDB"
     )
 
-    objects = OrganisationManager()
-
     class Meta:
         ordering = ["id"]
 
     def __str__(self):
         return "Org %s (#%s)" % (self.name, self.id)
-
-    def natural_key(self):
-        return self.name, self.created_date
 
     # noinspection PyTypeChecker
     def get_unique_slug(self):
@@ -99,7 +94,7 @@ class UserOrganisation(models.Model):
         )
 
 
-class Subscription(LifecycleModel, models.Model):
+class Subscription(LifecycleModel, AbstractBaseExportableModel):
     MAX_SEATS_IN_FREE_PLAN = 1
 
     organisation = models.OneToOneField(
@@ -125,9 +120,6 @@ class Subscription(LifecycleModel, models.Model):
         default=CHARGEBEE,
     )
     notes = models.CharField(max_length=500, blank=True, null=True)
-
-    def natural_key(self):
-        return self.organisation_id
 
     def update_plan(self, plan_id):
         self.cancellation_date = None
