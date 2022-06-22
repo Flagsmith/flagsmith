@@ -39,7 +39,7 @@ if ENV not in ("local", "dev", "staging", "production"):
 DEBUG = env.bool("DEBUG", default=False)
 
 # Enables the sending of telemetry data to the central Flagsmith API for usage tracking
-ENABLE_TELEMETRY = env("ENABLE_TELEMETRY", default=True)
+ENABLE_TELEMETRY = env.bool("ENABLE_TELEMETRY", default=True)
 
 # Enables gzip compression
 ENABLE_GZIP_COMPRESSION = env.bool("ENABLE_GZIP_COMPRESSION", default=False)
