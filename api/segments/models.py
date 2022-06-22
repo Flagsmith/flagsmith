@@ -1,9 +1,9 @@
 import logging
 import typing
-import uuid
 
 import semver
 from core.constants import BOOLEAN, FLOAT, INTEGER
+from core.models import AbstractBaseExportableModel
 from django.core.exceptions import ValidationError
 from django.db import models
 from flag_engine.utils.semver import is_semver, remove_semver_suffix
@@ -12,7 +12,6 @@ from environments.identities.helpers import (
     get_hashed_percentage_for_object_ids,
 )
 from projects.models import Project
-from segments.managers import SegmentManager
 
 if typing.TYPE_CHECKING:
     from environments.identities.models import Identity
@@ -42,14 +41,12 @@ REGEX = "REGEX"
 PERCENTAGE_SPLIT = "PERCENTAGE_SPLIT"
 
 
-class Segment(models.Model):
+class Segment(AbstractBaseExportableModel):
     name = models.CharField(max_length=2000)
     description = models.TextField(null=True, blank=True)
     project = models.ForeignKey(
         Project, on_delete=models.CASCADE, related_name="segments"
     )
-
-    objects = SegmentManager()
 
     class Meta:
         ordering = ("id",)  # explicit ordering to prevent pagination warnings
@@ -66,11 +63,8 @@ class Segment(models.Model):
             rule.does_identity_match(identity, traits) for rule in rules
         )
 
-    def natural_key(self):
-        return self.name, self.project_id
 
-
-class SegmentRule(models.Model):
+class SegmentRule(AbstractBaseExportableModel):
     ALL_RULE = "ALL"
     ANY_RULE = "ANY"
     NONE_RULE = "NONE"
@@ -86,8 +80,6 @@ class SegmentRule(models.Model):
 
     type = models.CharField(max_length=50, choices=RULE_TYPES)
 
-    uuid = models.UUIDField(default=uuid.uuid4, unique=True, editable=False)
-
     def clean(self):
         super().clean()
         parents = [self.segment, self.rule]
@@ -102,9 +94,6 @@ class SegmentRule(models.Model):
             self.type,
             str(self.segment) if self.segment else str(self.rule),
         )
-
-    def natural_key(self):
-        return self.uuid
 
     def does_identity_match(
         self, identity: "Identity", traits: typing.List["Trait"] = None
@@ -147,7 +136,7 @@ class SegmentRule(models.Model):
         return rule.segment
 
 
-class Condition(models.Model):
+class Condition(AbstractBaseExportableModel):
     CONDITION_TYPES = (
         (EQUAL, "Exactly Matches"),
         (GREATER_THAN, "Greater than"),
@@ -169,8 +158,6 @@ class Condition(models.Model):
         SegmentRule, on_delete=models.CASCADE, related_name="conditions"
     )
 
-    uuid = models.UUIDField(default=uuid.uuid4, unique=True, editable=False)
-
     def __str__(self):
         return "Condition for %s: %s %s %s" % (
             str(self.rule),
@@ -178,9 +165,6 @@ class Condition(models.Model):
             self.operator,
             self.value,
         )
-
-    def natural_key(self):
-        return self.uuid
 
     def does_identity_match(
         self, identity: "Identity", traits: typing.List["Trait"] = None
