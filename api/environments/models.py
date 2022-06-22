@@ -191,9 +191,6 @@ class Webhook(AbstractBaseWebhookModel):
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
-    def natural_key(self):
-        return self.environment, self.created_at
-
 
 dynamo_api_key_table = None
 if settings.ENVIRONMENTS_API_KEY_TABLE_NAME_DYNAMO:

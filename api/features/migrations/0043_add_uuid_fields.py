@@ -77,21 +77,21 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name="historicalfeature",
             name="uuid",
-            field=models.UUIDField(db_index=True, default=uuid.uuid4),
+            field=models.UUIDField(db_index=True, editable=False, default=uuid.uuid4),
         ),
         migrations.AddField(
             model_name="historicalfeaturesegment",
             name="uuid",
-            field=models.UUIDField(db_index=True, default=uuid.uuid4),
+            field=models.UUIDField(db_index=True, editable=False, default=uuid.uuid4),
         ),
         migrations.AddField(
             model_name="historicalfeaturestate",
             name="uuid",
-            field=models.UUIDField(db_index=True, default=uuid.uuid4),
+            field=models.UUIDField(db_index=True, editable=False, default=uuid.uuid4),
         ),
         migrations.AddField(
             model_name="historicalfeaturestatevalue",
             name="uuid",
-            field=models.UUIDField(db_index=True, default=uuid.uuid4),
+            field=models.UUIDField(db_index=True, editable=False, default=uuid.uuid4),
         ),
     ]

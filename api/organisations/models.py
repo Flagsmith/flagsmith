@@ -159,6 +159,3 @@ class OrganisationWebhook(AbstractBaseWebhookModel):
 
     class Meta:
         ordering = ("id",)  # explicit ordering to prevent pagination warnings
-
-    def natural_key(self):
-        return self.name, self.organisation_id

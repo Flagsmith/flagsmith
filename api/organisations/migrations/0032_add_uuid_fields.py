@@ -41,4 +41,18 @@ class Migration(migrations.Migration):
             name="uuid",
             field=models.UUIDField(default=uuid.uuid4, editable=False, unique=True),
         ),
+        migrations.AddField(
+            model_name="organisationwebhook",
+            name="uuid",
+            field=models.UUIDField(default=uuid.uuid4, editable=False, null=True),
+        ),
+        migrations.RunPython(
+            AddDefaultUUIDs("organisations", "organisationwebhook"),
+            reverse_code=migrations.RunPython.noop,
+        ),
+        migrations.AlterField(
+            model_name="organisationwebhook",
+            name="uuid",
+            field=models.UUIDField(default=uuid.uuid4, editable=False, unique=True),
+        ),
     ]
