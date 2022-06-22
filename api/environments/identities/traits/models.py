@@ -38,7 +38,11 @@ class Trait(models.Model):
         db_table = "environments_trait"
 
     def natural_key(self):
-        return self.trait_key, self.identity_id
+        return (
+            self.trait_key,
+            self.identity.identifier,
+            self.identity.environment.api_key,
+        )
 
     @property
     def trait_value(self):

@@ -31,7 +31,7 @@ class Identity(models.Model):
         db_table = "environments_identity"
 
     def natural_key(self):
-        return self.identifier, self.environment_id
+        return self.identifier, self.environment.api_key
 
     def get_all_feature_states(self, traits: typing.List[Trait] = None):
         """
