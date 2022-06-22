@@ -90,6 +90,8 @@ INSTALLED_APPS = [
     "django.contrib.humanize",
     "rest_framework",
     "rest_framework.authtoken",
+    # Used for managing api keys
+    "rest_framework_api_key",
     "djoser",
     "django.contrib.sites",
     "custom_auth",
@@ -117,6 +119,7 @@ INSTALLED_APPS = [
     "audit",
     "permissions",
     "projects.tags",
+    "api_keys",
     # 2FA
     "trench",
     # health check plugins
@@ -199,6 +202,8 @@ MIDDLEWARE = [
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
     "simple_history.middleware.HistoryRequestMiddleware",
+    # Add master api key object to request
+    "api_keys.middleware.MasterAPIKeyMiddleware",
 ]
 
 ADD_NEVER_CACHE_HEADERS = env.bool("ADD_NEVER_CACHE_HEADERS", True)

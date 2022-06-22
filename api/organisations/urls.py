@@ -1,6 +1,7 @@
 from django.conf.urls import include, url
 from rest_framework_nested import routers
 
+from api_keys.views import MasterAPIKeyViewSet
 from organisations.views import OrganisationWebhookViewSet
 from users.views import FFAdminUserViewSet, UserPermissionGroupViewSet
 
@@ -29,6 +30,9 @@ organisations_router.register(
 )
 organisations_router.register(
     r"webhooks", OrganisationWebhookViewSet, basename="organisation-webhooks"
+)
+organisations_router.register(
+    r"master-api-keys", MasterAPIKeyViewSet, basename="organisation-master-api-keys"
 )
 organisations_router.register(
     "user-permissions",
