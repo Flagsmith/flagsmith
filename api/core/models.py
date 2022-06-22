@@ -1,11 +1,15 @@
+import logging
 import uuid
 
 from django.db import models
 from django.db.models import Manager
 
+logger = logging.getLogger(__name__)
+
 
 class AbstractBaseExportableModelManager(Manager):
     def get_by_natural_key(self, uuid_: str):
+        logger.info("Getting model %s by natural key", self.model.__name__)
         return self.get(uuid=uuid_)
 
 
