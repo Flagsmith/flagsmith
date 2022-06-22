@@ -21,5 +21,6 @@ class Tag(models.Model):
     def __str__(self):
         return "Tag %s" % self.label
 
+    # TODO
     def natural_key(self):
         return self.label, self.project_id

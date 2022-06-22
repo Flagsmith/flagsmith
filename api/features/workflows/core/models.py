@@ -46,6 +46,7 @@ class ChangeRequest(LifecycleModel):
         null=True,
     )
 
+    # TODO
     def natural_key(self):
         return self.environment_id, self.created_at, self.title, self.user_id
 

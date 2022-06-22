@@ -8,6 +8,3 @@ class HeapConfiguration(IntegrationsModel):
     environment = models.OneToOneField(
         Environment, related_name="heap_config", on_delete=models.CASCADE
     )
-
-    def natural_key(self):
-        return self.environment_id, self.api_key

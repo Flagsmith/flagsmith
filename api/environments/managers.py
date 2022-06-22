@@ -63,5 +63,5 @@ class EnvironmentManager(Manager):
             .select_related("project", "project__organisation")
         )
 
-    def get_by_natural_key(self, *args):
-        return self.get(api_key=args[0])
+    def get_by_natural_key(self, api_key):
+        return self.get(api_key=api_key)

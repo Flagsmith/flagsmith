@@ -77,7 +77,7 @@ class Environment(LifecycleModel):
         return "Project %s - Environment %s" % (self.project.name, self.name)
 
     def natural_key(self):
-        return self.api_key
+        return (self.api_key,)
 
     def clone(self, name: str, api_key: str = None) -> "Environment":
         """
@@ -214,7 +214,7 @@ class EnvironmentAPIKey(LifecycleModel):
     active = models.BooleanField(default=True)
 
     def natural_key(self):
-        return self.key
+        return (self.key,)
 
     @property
     def is_valid(self) -> bool:

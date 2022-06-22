@@ -13,6 +13,7 @@ class SlackConfiguration(models.Model):
 
     objects = SlackConfigurationManager()
 
+    # TODO
     def natural_key(self):
         return self.project_id, self.created_date, self.api_token
 
@@ -39,5 +40,6 @@ class SlackEnvironment(models.Model):
     class Meta:
         unique_together = ("slack_configuration", "environment")
 
+    # TODO
     def natural_key(self):
         return self.slack_configuration_id, self.environment_id

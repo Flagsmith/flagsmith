@@ -32,6 +32,7 @@ class InviteLink(AbstractBaseInviteModel):
         "Leave blank to enable indefinitely.",
     )
 
+    # TODO
     def natural_key(self):
         return self.hash, self.organisation_id
 
