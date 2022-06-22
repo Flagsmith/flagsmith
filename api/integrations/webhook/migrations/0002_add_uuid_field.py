@@ -9,13 +9,13 @@ from core.migration_helpers import AddDefaultUUIDs
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('webhook', '0001_initial'),
+        ("webhook", "0001_initial"),
     ]
 
     operations = [
         migrations.AddField(
-            model_name='webhookconfiguration',
-            name='uuid',
+            model_name="webhookconfiguration",
+            name="uuid",
             field=models.UUIDField(default=uuid.uuid4, null=True),
         ),
         migrations.RunPython(

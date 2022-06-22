@@ -9,13 +9,13 @@ from core.migration_helpers import AddDefaultUUIDs
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('rudderstack', '0001_initial'),
+        ("rudderstack", "0001_initial"),
     ]
 
     operations = [
         migrations.AddField(
-            model_name='rudderstackconfiguration',
-            name='uuid',
+            model_name="rudderstackconfiguration",
+            name="uuid",
             field=models.UUIDField(default=uuid.uuid4, null=True),
         ),
         migrations.RunPython(

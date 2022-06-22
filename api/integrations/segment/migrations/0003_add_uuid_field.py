@@ -9,13 +9,13 @@ from core.migration_helpers import AddDefaultUUIDs
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('segment', '0002_auto_20210325_1414'),
+        ("segment", "0002_auto_20210325_1414"),
     ]
 
     operations = [
         migrations.AddField(
-            model_name='segmentconfiguration',
-            name='uuid',
+            model_name="segmentconfiguration",
+            name="uuid",
             field=models.UUIDField(default=uuid.uuid4, null=True),
         ),
         migrations.RunPython(
