@@ -1,0 +1,222 @@
+[
+  {
+    "model": "organisations.organisation",
+    "fields": {
+      "uuid": "35406300-1005-4ba5-8e6c-13a8c089cd22",
+      "name": "Export test",
+      "has_requested_features": false,
+      "webhook_notification_email": null,
+      "created_date": "2022-06-21T10:43:31.503Z",
+      "alerted_over_plan_limit": false,
+      "stop_serving_flags": false,
+      "restrict_project_create_to_admin": false,
+      "persist_trait_data": true,
+      "block_access_to_admin": false,
+      "feature_analytics": false
+    }
+  },
+  {
+    "model": "projects.project",
+    "fields": {
+      "uuid": "1bc839b7-a308-4dff-a151-edbe4e1f405f",
+      "name": "Export test 1",
+      "created_date": "2022-06-21T10:43:31.528Z",
+      "organisation": "35406300-1005-4ba5-8e6c-13a8c089cd22",
+      "hide_disabled_flags": false,
+      "enable_dynamo_db": false
+    }
+  },
+  {
+    "model": "projects.project",
+    "fields": {
+      "uuid": "23f05633-cf56-492f-9487-0a602e287985",
+      "name": "Export test 2",
+      "created_date": "2022-06-21T10:43:31.549Z",
+      "organisation": "35406300-1005-4ba5-8e6c-13a8c089cd22",
+      "hide_disabled_flags": false,
+      "enable_dynamo_db": false
+    }
+  },
+  {
+    "model": "segments.segment",
+    "fields": {
+      "uuid": "990fe73b-b318-472e-a441-3f1a4af00025",
+      "name": "Export test 1",
+      "description": "",
+      "project": "1bc839b7-a308-4dff-a151-edbe4e1f405f"
+    }
+  },
+  {
+    "model": "tags.tag",
+    "fields": {
+      "label": "export test",
+      "color": "#000000",
+      "description": null,
+      "project": "1bc839b7-a308-4dff-a151-edbe4e1f405f"
+    }
+  },
+  {
+    "model": "environments.environment",
+    "fields": {
+      "name": "Export test 1",
+      "created_date": "2022-06-21T10:44:38.253Z",
+      "project": "1bc839b7-a308-4dff-a151-edbe4e1f405f",
+      "api_key": "7byEw89cSJ8MRfDxthNngo",
+      "minimum_change_request_approvals": null,
+      "webhooks_enabled": false,
+      "webhook_url": null
+    }
+  },
+  {
+    "model": "environments.environment",
+    "fields": {
+      "name": "Export test 2",
+      "created_date": "2022-06-21T10:44:38.295Z",
+      "project": "1bc839b7-a308-4dff-a151-edbe4e1f405f",
+      "api_key": "6yTTw89cSasDRfLD8uaf4R",
+      "minimum_change_request_approvals": null,
+      "webhooks_enabled": false,
+      "webhook_url": null
+    }
+  },
+  {
+    "model": "features.feature",
+    "fields": {
+      "uuid": "c4b48a15-c29d-4694-97ce-3a7cb3601efa",
+      "name": "export_test_1",
+      "created_date": "2022-06-21T10:44:38.331Z",
+      "project": "1bc839b7-a308-4dff-a151-edbe4e1f405f",
+      "initial_value": null,
+      "description": "",
+      "default_enabled": false,
+      "type": null,
+      "is_archived": false,
+      "tags": [],
+      "owners": []
+    }
+  },
+  {
+    "model": "features.feature",
+    "fields": {
+      "uuid": "fc09253b-65cb-45ac-994e-6bb8a795ed8e",
+      "name": "export_test_2",
+      "created_date": "2022-06-21T10:44:38.930Z",
+      "project": "1bc839b7-a308-4dff-a151-edbe4e1f405f",
+      "initial_value": null,
+      "description": "",
+      "default_enabled": false,
+      "type": null,
+      "is_archived": false,
+      "tags": [],
+      "owners": []
+    }
+  },
+  {
+    "model": "features.featurestate",
+    "fields": {
+      "uuid": "d642e1f5-1ac6-46e4-984f-7d29ccb46002",
+      "feature": "c4b48a15-c29d-4694-97ce-3a7cb3601efa",
+      "environment": "7byEw89cSJ8MRfDxthNngo",
+      "identity": null,
+      "feature_segment": null,
+      "enabled": false,
+      "created_at": "2022-06-21T10:44:38.458Z",
+      "updated_at": "2022-06-21T10:44:38.458Z",
+      "version": 1,
+      "live_from": "2022-06-21T10:44:38.458Z",
+      "change_request": null
+    }
+  },
+  {
+    "model": "features.featurestate",
+    "fields": {
+      "uuid": "737aaf26-4ceb-4d27-a398-c61f477845bb",
+      "feature": "c4b48a15-c29d-4694-97ce-3a7cb3601efa",
+      "environment": "6yTTw89cSasDRfLD8uaf4R",
+      "identity": null,
+      "feature_segment": null,
+      "enabled": false,
+      "created_at": "2022-06-21T10:44:38.744Z",
+      "updated_at": "2022-06-21T10:44:38.744Z",
+      "version": 1,
+      "live_from": "2022-06-21T10:44:38.743Z",
+      "change_request": null
+    }
+  },
+  {
+    "model": "features.featurestate",
+    "fields": {
+      "uuid": "60888527-88c7-4e06-89bf-120abb47b95e",
+      "feature": "fc09253b-65cb-45ac-994e-6bb8a795ed8e",
+      "environment": "7byEw89cSJ8MRfDxthNngo",
+      "identity": null,
+      "feature_segment": null,
+      "enabled": false,
+      "created_at": "2022-06-21T10:44:39.007Z",
+      "updated_at": "2022-06-21T10:44:39.007Z",
+      "version": 1,
+      "live_from": "2022-06-21T10:44:39.006Z",
+      "change_request": null
+    }
+  },
+  {
+    "model": "features.featurestate",
+    "fields": {
+      "uuid": "38763060-aba4-4ed1-9fed-4c01b1bf9a6e",
+      "feature": "fc09253b-65cb-45ac-994e-6bb8a795ed8e",
+      "environment": "6yTTw89cSasDRfLD8uaf4R",
+      "identity": null,
+      "feature_segment": null,
+      "enabled": false,
+      "created_at": "2022-06-21T10:44:39.214Z",
+      "updated_at": "2022-06-21T10:44:39.214Z",
+      "version": 1,
+      "live_from": "2022-06-21T10:44:39.213Z",
+      "change_request": null
+    }
+  },
+  {
+    "model": "features.featurestatevalue",
+    "fields": {
+      "uuid": "b4c5d939-5b60-4cbf-a92f-cea0298cab46",
+      "type": "unicode",
+      "boolean_value": null,
+      "integer_value": null,
+      "string_value": null,
+      "feature_state": "d642e1f5-1ac6-46e4-984f-7d29ccb46002"
+    }
+  },
+  {
+    "model": "features.featurestatevalue",
+    "fields": {
+      "uuid": "1d760313-5cad-4136-8bcc-f44200f1ef47",
+      "type": "unicode",
+      "boolean_value": null,
+      "integer_value": null,
+      "string_value": null,
+      "feature_state": "737aaf26-4ceb-4d27-a398-c61f477845bb"
+    }
+  },
+  {
+    "model": "features.featurestatevalue",
+    "fields": {
+      "uuid": "724da678-e4fb-4819-bed2-7fe7f2dcd36b",
+      "type": "unicode",
+      "boolean_value": null,
+      "integer_value": null,
+      "string_value": null,
+      "feature_state": "60888527-88c7-4e06-89bf-120abb47b95e"
+    }
+  },
+  {
+    "model": "features.featurestatevalue",
+    "fields": {
+      "uuid": "f54db818-ec0d-4ea3-bbd2-7e1cd0545768",
+      "type": "unicode",
+      "boolean_value": null,
+      "integer_value": null,
+      "string_value": null,
+      "feature_state": "38763060-aba4-4ed1-9fed-4c01b1bf9a6e"
+    }
+  }
+]

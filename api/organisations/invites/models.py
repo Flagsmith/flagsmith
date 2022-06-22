@@ -1,4 +1,5 @@
 from core.helpers import get_current_site_url
+from core.models import AbstractBaseExportableModel
 from django.conf import settings
 from django.core.mail import EmailMultiAlternatives
 from django.db import models
@@ -24,7 +25,7 @@ class AbstractBaseInviteModel(models.Model):
         abstract = True
 
 
-class InviteLink(AbstractBaseInviteModel):
+class InviteLink(AbstractBaseInviteModel, AbstractBaseExportableModel):
     expires_at = models.DateTimeField(
         blank=True,
         null=True,
@@ -32,11 +33,6 @@ class InviteLink(AbstractBaseInviteModel):
         "Leave blank to enable indefinitely.",
     )
 
-    # TODO
-    def natural_key(self):
-        return self.hash, self.organisation_id
-
-    @property
     def is_expired(self):
         return self.expires_at is not None and timezone.now() > self.expires_at
 
