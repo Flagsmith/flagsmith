@@ -5,6 +5,7 @@ import logging
 import typing
 from copy import deepcopy
 
+from core.models import AbstractBaseExportableModel
 from django.core.exceptions import (
     NON_FIELD_ERRORS,
     ObjectDoesNotExist,
@@ -26,7 +27,6 @@ from features.custom_lifecycle import CustomLifecycleModelMixin
 from features.feature_states.models import AbstractBaseFeatureValueModel
 from features.feature_types import MULTIVARIATE, STANDARD
 from features.helpers import get_correctly_typed_value
-from features.managers import FeatureManager, FeatureSegmentManager
 from features.multivariate.models import MultivariateFeatureStateValue
 from features.utils import (
     get_boolean_from_string,
@@ -49,7 +49,7 @@ if typing.TYPE_CHECKING:
     from environments.models import Environment
 
 
-class Feature(CustomLifecycleModelMixin, models.Model):
+class Feature(CustomLifecycleModelMixin, AbstractBaseExportableModel):
     name = models.CharField(max_length=2000)
     created_date = models.DateTimeField("DateCreated", auto_now_add=True)
     project = models.ForeignKey(
@@ -76,15 +76,10 @@ class Feature(CustomLifecycleModelMixin, models.Model):
         "users.FFAdminUser", related_name="owned_features", blank=True
     )
 
-    objects = FeatureManager()
-
     class Meta:
         # Note: uniqueness is changed to reference lowercase name in explicit SQL in the migrations
         unique_together = ("name", "project")
         ordering = ("id",)  # explicit ordering to prevent pagination warnings
-
-    def natural_key(self):
-        return self.name, self.project_id
 
     @hook(AFTER_CREATE)
     def create_feature_states(self):
@@ -136,7 +131,7 @@ def get_next_segment_priority(feature):
         return feature_segments.first().priority + 1
 
 
-class FeatureSegment(OrderedModelBase):
+class FeatureSegment(AbstractBaseExportableModel, OrderedModelBase):
     feature = models.ForeignKey(
         Feature, on_delete=models.CASCADE, related_name="feature_segments"
     )
@@ -178,8 +173,6 @@ class FeatureSegment(OrderedModelBase):
     # used for audit purposes
     history = HistoricalRecords()
 
-    objects = FeatureSegmentManager()
-
     class Meta:
         unique_together = ("feature", "environment", "segment")
         ordering = ("priority",)
@@ -199,9 +192,6 @@ class FeatureSegment(OrderedModelBase):
         """
         return other and self.priority > other.priority
 
-    def natural_key(self):
-        return self.feature_id, self.segment_id, self.environment_id
-
     def clone(self, environment: "Environment") -> "FeatureSegment":
         clone = deepcopy(self)
         clone.id = None
@@ -214,7 +204,7 @@ class FeatureSegment(OrderedModelBase):
         return get_correctly_typed_value(self.value_type, self.value)
 
 
-class FeatureState(LifecycleModel, models.Model):
+class FeatureState(LifecycleModel, AbstractBaseExportableModel):
     feature = models.ForeignKey(
         Feature, related_name="feature_states", on_delete=models.CASCADE
     )
@@ -259,16 +249,6 @@ class FeatureState(LifecycleModel, models.Model):
 
     class Meta:
         ordering = ["id"]
-
-    def natural_key(self):
-        return (
-            self.feature_id,
-            self.environment_id,
-            self.feature_segment_id,
-            self.identity_id,
-            self.version,
-            self.change_request_id,
-        )
 
     def __gt__(self, other):
         """
@@ -612,15 +592,12 @@ class FeatureState(LifecycleModel, models.Model):
         )
 
 
-class FeatureStateValue(AbstractBaseFeatureValueModel):
+class FeatureStateValue(AbstractBaseFeatureValueModel, AbstractBaseExportableModel):
     feature_state = models.OneToOneField(
         FeatureState, related_name="feature_state_value", on_delete=models.CASCADE
     )
 
     history = HistoricalRecords()
-
-    def natural_key(self):
-        return self.feature_state_id
 
     def clone(self, feature_state: FeatureState) -> "FeatureStateValue":
         clone = deepcopy(self)
