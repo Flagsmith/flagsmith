@@ -7,5 +7,5 @@ $flags = $flagsmith->getIdentityFlags('${userId}', $traits);
 
 // get the state / value of the user's flags 
 $isEnabled = $flags->isFeatureEnabled('${FEATURE_NAME}');
-$featureValue$flags->getFeatureValue('${FEATURE_NAME_ALT}');
+$featureValue = $flags->getFeatureValue('${FEATURE_NAME_ALT}');
 `;

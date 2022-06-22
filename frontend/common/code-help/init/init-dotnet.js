@@ -4,7 +4,7 @@ static FlagsmithClient _flagsmithClient;
 
 _flagsmithClient = new("${envId}");
 
-var flags = _flagsmithClient.GetEnvironmentFlags();  # This method triggers a network request
+var flags = await _flagsmithClient.GetEnvironmentFlags();  # This method triggers a network request
 
 // Check for a feature
 var isEnabled = await flags.IsFeatureEnabled("${customFeature || FEATURE_NAME}");

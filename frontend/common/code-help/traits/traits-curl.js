@@ -1,4 +1,4 @@
-module.exports = (envId, { USER_ID, TRAIT_NAME }) => `# This will create a user in the dashboard if they don't already exist
+module.exports = (envId, { USER_ID, TRAIT_NAME }, userId) => `# This will create a user in the dashboard if they don't already exist
 
 curl -X "POST" "https://edge.api.flagsmith.com/api/v1/identities/"
      -H 'x-environment-key: ${envId}'
@@ -10,6 +10,6 @@ curl -X "POST" "https://edge.api.flagsmith.com/api/v1/identities/"
       "trait_value": 42
     },
   ],
-  "identifier": "${USER_ID}"
+  "identifier": "${userId || USER_ID}"
 }'
 `;

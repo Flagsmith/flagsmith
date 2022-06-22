@@ -8,6 +8,6 @@ const flagsmith = new Flagsmith(
 const flags = await flagsmith.getIdentityFlags('${userId}', traitList);
 
 // get the state / value of the user's flags 
-var showButton = flags.isFeatureEnabled('${FEATURE_NAME}');
-var buttonData = flags.getFeatureValue('${FEATURE_NAME_ALT}');
+var isEnabled = flags.isFeatureEnabled('${FEATURE_NAME}');
+var featureValue = flags.getFeatureValue('${FEATURE_NAME_ALT}');
 `;

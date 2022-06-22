@@ -8,6 +8,6 @@ $flagsmith = Flagsmith::Client.new(
 $flags = $flagsmith.get_identity_flags('${userId}')
 
 // get the state / value of the user's flags
-$show_button = $flags.is_feature_enabled('${FEATURE_NAME}')
-$button_data = $flags.get_feature_value('${FEATURE_NAME_ALT}')
+$is_enabled = $flags.is_feature_enabled('${FEATURE_NAME}')
+$feature_value = $flags.get_feature_value('${FEATURE_NAME_ALT}')
 `;
