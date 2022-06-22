@@ -262,3 +262,46 @@ def identity_document(environment_api_key, feature, identity_traits):
 def identity_document_without_fs(identity_document):
     identity_document["identity_features"].clear()
     return identity_document
+
+
+@pytest.fixture()
+def master_api_key(organisation, admin_client):
+    url = reverse(
+        "api-v1:organisations:organisation-master-api-keys-list",
+        args=[organisation],
+    )
+    data = {"name": "test_key", "organisation": organisation}
+    response = admin_client.post(url, data=data)
+
+    return response.json()
+
+
+@pytest.fixture()
+def master_api_key_prefix(master_api_key):
+    return master_api_key["prefix"]
+
+
+@pytest.fixture()
+def master_api_key_client(master_api_key):
+    # Can not use `api_client` fixture here because:
+    # https://docs.pytest.org/en/6.2.x/fixture.html#fixtures-can-be-requested-more-than-once-per-test-return-values-are-cached
+    api_client = APIClient()
+    api_client.credentials(HTTP_AUTHORIZATION="Api-Key " + master_api_key["key"])
+    return api_client
+
+
+@pytest.fixture()
+def non_admin_client(organisation, django_user_model, api_client):
+    user = django_user_model.objects.create(username="non_admin_user")
+    user.add_organisation(Organisation.objects.get(id=organisation))
+    api_client.force_authenticate(user=user)
+    return api_client
+
+
+@pytest.fixture()
+def feature_state(admin_client, environment, feature):
+    base_url = reverse("api-v1:features:featurestates-list")
+    url = f"{base_url}?environment={environment}?feature={feature}"
+
+    response = admin_client.get(url)
+    return response.json()["results"][0]["id"]

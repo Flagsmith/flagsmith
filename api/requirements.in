@@ -46,3 +46,4 @@ asgiref
 semver
 opencensus-ext-azure
 opencensus-ext-django
+djangorestframework-api-key

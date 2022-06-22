@@ -1,7 +1,14 @@
-from rest_framework.permissions import BasePermission
+from contextlib import suppress
+
+from django.http import HttpRequest
+from rest_framework.permissions import BasePermission, IsAuthenticated
 
 from environments.models import Environment
-from environments.permissions.constants import UPDATE_FEATURE_STATE
+from environments.permissions.constants import (
+    UPDATE_FEATURE_STATE,
+    VIEW_ENVIRONMENT,
+)
+from features.models import FeatureState
 from projects.models import Project
 
 ACTION_PERMISSIONS_MAP = {
@@ -46,26 +53,64 @@ class FeaturePermissions(BasePermission):
         return False
 
 
-class FeatureStatePermissions(BasePermission):
+class FeatureStatePermissions(IsAuthenticated):
     def has_permission(self, request, view):
-        try:
-            if view.action == "create" and request.data.get("environment"):
-                environment = Environment.objects.get(id=request.data["environment"])
-                return request.user.has_environment_permission(
-                    UPDATE_FEATURE_STATE, environment
-                )
+        action_permission_map = {
+            "list": VIEW_ENVIRONMENT,
+            "create": UPDATE_FEATURE_STATE,
+        }
+        if not super().has_permission(request, view):
+            return False
 
-            # - detail view means we can just defer to object permissions
-            # - list view means we just need to filter the objects based on permissions
-            return view.detail or view.action == "list"
+        # detail view means we can just defer to object permissions
+        if view.detail:
+            return True
+
+        try:
+            environment = request.data.get("environment") or request.query_params.get(
+                "environment"
+            )
+
+            if environment and (isinstance(environment, int) or environment.isdigit()):
+                environment = Environment.objects.get(id=int(environment))
+                return request.user.has_environment_permission(
+                    action_permission_map.get(view.action), environment
+                )
+            return False
 
         except Environment.DoesNotExist:
             return False
 
     def has_object_permission(self, request, view, obj):
+        if request.user.is_anonymous:
+            return False
+
         return request.user.has_environment_permission(
             UPDATE_FEATURE_STATE, environment=obj.environment
         )
+
+
+class MasterAPIKeyFeatureStatePermissions(BasePermission):
+    def has_permission(self, request: HttpRequest, view: str) -> bool:
+        master_api_key = getattr(request, "master_api_key", None)
+        if not master_api_key:
+            return False
+        environment = request.data.get("environment") or request.query_params.get(
+            "environment"
+        )
+        if environment and (isinstance(environment, int) or environment.isdigit()):
+            with suppress(Environment.DoesNotExist):
+                environment = Environment.objects.get(id=int(environment))
+                return environment.project.organisation == master_api_key.organisation
+        return False
+
+    def has_object_permission(
+        self, request: HttpRequest, view: str, obj: FeatureState
+    ) -> bool:
+        master_api_key = getattr(request, "master_api_key", None)
+        if master_api_key:
+            return obj.environment.project.organisation == master_api_key.organisation
+        return False
 
 
 class EnvironmentFeatureStatePermissions(BasePermission):

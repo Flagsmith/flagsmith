@@ -2,6 +2,7 @@ import enum
 
 from django.db import models
 
+from api_keys.models import MasterAPIKey
 from projects.models import Project
 
 FEATURE_CREATED_MESSAGE = "New Flag / Remote Config created: %s"
@@ -55,6 +56,13 @@ class AuditLog(models.Model):
     log = models.TextField()
     author = models.ForeignKey(
         "users.FFAdminUser",
+        related_name="audit_logs",
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+    )
+    master_api_key = models.ForeignKey(
+        MasterAPIKey,
         related_name="audit_logs",
         null=True,
         blank=True,
