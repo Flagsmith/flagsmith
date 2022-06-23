@@ -55,17 +55,18 @@ def test_feature_states_get_environment_flags_queryset_filter_using_feature_name
     environment, project
 ):
     # Given
-    Feature.objects.create(default_enabled=False, name="disable_flag", project=project)
-    Feature.objects.create(default_enabled=True, name="enabled_flag", project=project)
+    flag_1_name = "flag_1"
+    Feature.objects.create(default_enabled=True, name=flag_1_name, project=project)
+    Feature.objects.create(default_enabled=True, name="flag_2", project=project)
 
     # When
     feature_states = FeatureState.get_environment_flags_queryset(
-        environment_id=environment.id, feature_name="disabled_flag"
+        environment_id=environment.id, feature_name=flag_1_name
     )
 
     # Then
     assert feature_states.count() == 1
-    assert feature_states.first().feature.name == "enabled_flag"
+    assert feature_states.first().feature.name == "flag_1"
 
 
 @pytest.mark.parametrize(
