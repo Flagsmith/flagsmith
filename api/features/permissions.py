@@ -113,14 +113,40 @@ class MasterAPIKeyFeatureStatePermissions(BasePermission):
         return False
 
 
-class EnvironmentFeatureStatePermissions(BasePermission):
+class MasterAPIKeyEnvironmentFeatureStatePermissions(BasePermission):
+    def has_permission(self, request: HttpRequest, view: str) -> bool:
+        master_api_key = getattr(request, "master_api_key", None)
+        if not master_api_key:
+            return False
+        environment_api_key = view.kwargs.get("environment_api_key")
+        if not environment_api_key:
+            return False
+
+        with suppress(Environment.DoesNotExist):
+            environment = Environment.objects.get(api_key=environment_api_key)
+            return environment.project.organisation == master_api_key.organisation
+        return False
+
+    def has_object_permission(
+        self, request: HttpRequest, view: str, obj: FeatureState
+    ) -> bool:
+        master_api_key = getattr(request, "master_api_key", None)
+        if master_api_key:
+            return obj.environment.project.organisation == master_api_key.organisation
+        return False
+
+
+class EnvironmentFeatureStatePermissions(IsAuthenticated):
     def has_permission(self, request, view):
+        if not super().has_permission(request, view):
+            return False
+
         if view.action == "create":
             environment_api_key = view.kwargs.get("environment_api_key")
             if not environment_api_key:
                 return False
-
             environment = Environment.objects.get(api_key=environment_api_key)
+
             return request.user.has_environment_permission(
                 permission=UPDATE_FEATURE_STATE, environment=environment
             )
@@ -132,6 +158,8 @@ class EnvironmentFeatureStatePermissions(BasePermission):
         return view.detail
 
     def has_object_permission(self, request, view, obj):
+        if request.user.is_anonymous:
+            return False
         return request.user.has_environment_permission(
             permission=UPDATE_FEATURE_STATE, environment=obj.environment
         )
