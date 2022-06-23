@@ -12,11 +12,7 @@ from drf_yasg2 import openapi
 from drf_yasg2.utils import swagger_auto_schema
 from rest_framework import mixins, status, viewsets
 from rest_framework.decorators import action
-from rest_framework.exceptions import (
-    NotFound,
-    PermissionDenied,
-    ValidationError,
-)
+from rest_framework.exceptions import NotFound, ValidationError
 from rest_framework.generics import GenericAPIView, get_object_or_404
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.renderers import JSONRenderer
@@ -35,7 +31,6 @@ from audit.models import (
 from environments.authentication import EnvironmentKeyAuthentication
 from environments.identities.models import Identity
 from environments.models import Environment
-from environments.permissions.constants import VIEW_ENVIRONMENT
 from environments.permissions.permissions import (
     EnvironmentKeyPermissions,
     NestedEnvironmentPermissions,
@@ -269,6 +264,13 @@ class FeatureViewSet(viewsets.ModelViewSet):
                 type=openapi.TYPE_INTEGER,
             ),
             openapi.Parameter(
+                "feature_name",
+                openapi.IN_QUERY,
+                "Name of the feature to filter by.",
+                required=False,
+                type=openapi.TYPE_STRING,
+            ),
+            openapi.Parameter(
                 "anyIdentity",
                 openapi.IN_QUERY,
                 "Pass any value to get results that have an identity override. "
@@ -304,13 +306,9 @@ class BaseFeatureStateViewSet(viewsets.ModelViewSet):
 
         try:
             environment = Environment.objects.get(api_key=environment_api_key)
-            if not self.request.user.has_environment_permission(
-                VIEW_ENVIRONMENT, environment
-            ):
-                raise PermissionDenied()
-
             queryset = FeatureState.get_environment_flags_queryset(
-                environment_id=environment.id
+                environment_id=environment.id,
+                feature_name=self.request.query_params.get("feature_name"),
             )
             queryset = self._apply_query_param_filters(queryset)
 
