@@ -1,8 +1,10 @@
 import functools
+import itertools
 import typing
+from dataclasses import dataclass
 
 from django.core import serializers
-from django.db.models import Q
+from django.db.models import Model, Q
 
 from environments.identities.models import Identity
 from environments.identities.traits.models import Trait
@@ -33,170 +35,135 @@ from projects.models import Project
 from projects.tags.models import Tag
 from segments.models import Condition, Segment, SegmentRule
 
-serialize_natural = functools.partial(
-    serializers.serialize, use_natural_primary_keys=True, use_natural_foreign_keys=True
-)
-
 
 def export_organisation(organisation_id: int) -> typing.List[dict]:
-    organisation_model = Organisation.objects.get(id=organisation_id)
-
-    data = []
-
-    # add the organisation
-    data += serialize_natural("python", [organisation_model])
-    data += serialize_natural(
-        "python", InviteLink.objects.filter(organisation=organisation_model)
-    )
-    data += serialize_natural(
-        "python", OrganisationWebhook.objects.filter(organisation=organisation_model)
-    )
-    data += serialize_natural(
-        "python", Subscription.objects.filter(organisation=organisation_model)
+    """
+    Serialize an organisation and all its related objects.
+    """
+    return _export_entities(
+        [
+            _EntityExportConfig(Organisation, Q(id=organisation_id)),
+            _EntityExportConfig(InviteLink, Q(organisation__id=organisation_id)),
+            _EntityExportConfig(
+                OrganisationWebhook, Q(organisation__id=organisation_id)
+            ),
+            _EntityExportConfig(Subscription, Q(organisation__id=organisation_id)),
+        ]
     )
 
-    # add projects and their related models
-    data += serialize_natural(
-        "python", Project.objects.filter(organisation=organisation_model)
-    )
-    data += serialize_natural(
-        "python",
-        Segment.objects.filter(project__organisation=organisation_model),
-    )
-    data += serialize_natural(
-        "python",
-        SegmentRule.objects.filter(
-            Q(segment__project__organisation=organisation_model)
-            | Q(rule__segment__project__organisation=organisation_model)
-        ),
-    )
-    data += serialize_natural(
-        "python",
-        Condition.objects.filter(
-            Q(rule__segment__project__organisation=organisation_model)
-            | Q(rule__rule__segment__project__organisation=organisation_model)
-        ),
-    )
-    data += serialize_natural(
-        "python", Tag.objects.filter(project__organisation=organisation_model)
-    )
-    data += serialize_natural(
-        "python",
-        DataDogConfiguration.objects.filter(project__organisation=organisation_model),
-    )
-    data += serialize_natural(
-        "python",
-        NewRelicConfiguration.objects.filter(project__organisation=organisation_model),
-    )
-    data += serialize_natural(
-        "python",
-        SlackConfiguration.objects.filter(project__organisation=organisation_model),
-    )
-    data += serialize_natural(
-        "python",
-        SlackEnvironment.objects.filter(
-            environment__project__organisation=organisation_model
-        ),
-    )
-    # TODO: integrations
 
-    # add environments and their related models
-    data += serialize_natural(
-        "python",
-        Environment.objects.filter(project__organisation=organisation_model),
-    )
-    data += serialize_natural(
-        "python",
-        EnvironmentAPIKey.objects.filter(
-            environment__project__organisation=organisation_model
-        ),
-    )
-    data += serialize_natural(
-        "python",
-        Webhook.objects.filter(environment__project__organisation=organisation_model),
-    )
-    data += serialize_natural(
-        "python",
-        HeapConfiguration.objects.filter(
-            environment__project__organisation=organisation_model
-        ),
-    )
-    data += serialize_natural(
-        "python",
-        MixpanelConfiguration.objects.filter(
-            environment__project__organisation=organisation_model
-        ),
-    )
-    data += serialize_natural(
-        "python",
-        SegmentConfiguration.objects.filter(
-            environment__project__organisation=organisation_model
-        ),
-    )
-    data += serialize_natural(
-        "python",
-        RudderstackConfiguration.objects.filter(
-            environment__project__organisation=organisation_model
-        ),
-    )
-    data += serialize_natural(
-        "python",
-        WebhookConfiguration.objects.filter(
-            environment__project__organisation=organisation_model
-        ),
-    )
-    # TODO: integrations
+def export_projects(organisation_id: int) -> typing.List[dict]:
+    default_filter = Q(project__organisation__id=organisation_id)
 
-    # add features and their related_models
-    data += serialize_natural(
-        "python",
-        Feature.objects.filter(project__organisation=organisation_model),
-    )
-    data += serialize_natural(
-        "python",
-        MultivariateFeatureOption.objects.filter(
-            feature__project__organisation=organisation_model
-        ),
-    )
-    data += serialize_natural(
-        "python",
-        FeatureSegment.objects.filter(
-            feature__project__organisation=organisation_model
-        ),
+    return _export_entities(
+        [
+            _EntityExportConfig(Project, Q(organisation__id=organisation_id)),
+            _EntityExportConfig(Segment, default_filter),
+            _EntityExportConfig(
+                SegmentRule,
+                Q(segment__project__organisation__id=organisation_id)
+                | Q(rule__segment__project__organisation__id=organisation_id),
+            ),
+            _EntityExportConfig(
+                Condition,
+                Q(rule__segment__project__organisation__id=organisation_id)
+                | Q(rule__rule__segment__project__organisation__id=organisation_id),
+            ),
+            _EntityExportConfig(Tag, default_filter),
+            _EntityExportConfig(DataDogConfiguration, default_filter),
+            _EntityExportConfig(NewRelicConfiguration, default_filter),
+            _EntityExportConfig(SlackConfiguration, default_filter),
+        ]
     )
 
-    # add identities and traits
-    data += serialize_natural(
-        "python",
-        Identity.objects.filter(
-            environment__project__organisation=organisation_model
-        ).select_related("environment"),
-    )
-    data += serialize_natural(
-        "python",
-        Trait.objects.filter(
-            identity__environment__project__organisation=organisation_model
-        ).select_related("identity", "identity__environment"),
+
+def export_environments(organisation_id: int) -> typing.List[dict]:
+    default_filter = Q(environment__project__organisation__id=organisation_id)
+
+    return _export_entities(
+        [
+            _EntityExportConfig(
+                Environment, Q(project__organisation__id=organisation_id)
+            ),
+            _EntityExportConfig(EnvironmentAPIKey, default_filter),
+            _EntityExportConfig(Webhook, default_filter),
+            _EntityExportConfig(HeapConfiguration, default_filter),
+            _EntityExportConfig(MixpanelConfiguration, default_filter),
+            _EntityExportConfig(SegmentConfiguration, default_filter),
+            _EntityExportConfig(RudderstackConfiguration, default_filter),
+            _EntityExportConfig(WebhookConfiguration, default_filter),
+            _EntityExportConfig(SlackEnvironment, default_filter),
+        ]
     )
 
-    # add change requests
-    data += serialize_natural(
-        "python",
-        ChangeRequest.objects.filter(
-            environment__project__organisation=organisation_model
-        ),
+
+def export_identities(organisation_id: int) -> typing.List[dict]:
+    return _export_entities(
+        [
+            _EntityExportConfig(
+                Identity, Q(environment__project__organisation__id=organisation_id)
+            ),
+            _EntityExportConfig(
+                Trait,
+                Q(identity__environment__project__organisation__id=organisation_id),
+            ),
+        ]
     )
 
-    # add the feature states now that we should have all the related entities
-    data += serialize_natural(
-        "python",
-        FeatureState.objects.filter(feature__project__organisation=organisation_model),
-    )
-    data += serialize_natural(
-        "python",
-        FeatureStateValue.objects.filter(
-            feature_state__feature__project__organisation=organisation_model
-        ),
+
+def export_features(organisation_id: int) -> typing.List[dict]:
+    """
+    Export all features and related entities (including ChangeRequests)
+    """
+
+    return _export_entities(
+        [
+            _EntityExportConfig(Feature, Q(project__organisation__id=organisation_id)),
+            _EntityExportConfig(
+                MultivariateFeatureOption,
+                Q(feature__project__organisation__id=organisation_id),
+            ),
+            _EntityExportConfig(
+                FeatureSegment, Q(feature__project__organisation__id=organisation_id)
+            ),
+            _EntityExportConfig(
+                ChangeRequest, Q(environment__project__organisation__id=organisation_id)
+            ),
+            _EntityExportConfig(
+                FeatureState, Q(feature__project__organisation__id=organisation_id)
+            ),
+            _EntityExportConfig(
+                FeatureStateValue,
+                Q(feature_state__feature__project__organisation__id=organisation_id),
+            ),
+        ]
     )
 
-    return data
+
+@dataclass
+class _EntityExportConfig:
+    model_class: type(Model)
+    qs_filter: Q
+
+
+def _export_entities(
+    export_configs: typing.List[_EntityExportConfig],
+) -> typing.List[dict]:
+    return list(
+        itertools.chain(
+            *[
+                _serialize_natural(
+                    "python",
+                    export_config.model_class.objects.filter(export_config.qs_filter),
+                )
+                for export_config in export_configs
+            ]
+        )
+    )
+
+
+_serialize_natural = functools.partial(
+    serializers.serialize,
+    use_natural_primary_keys=True,
+    use_natural_foreign_keys=True,
+)
