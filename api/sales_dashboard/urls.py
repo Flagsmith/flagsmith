@@ -33,4 +33,9 @@ urlpatterns = [
         staff_member_required(views.EmailUsage.as_view()),
         name="email-usage",
     ),
+    path(
+        "organisations/<int:organisation_id>/download_org_data",
+        views.download_org_data,
+        name="download-org-data",
+    ),
 ]

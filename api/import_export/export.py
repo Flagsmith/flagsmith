@@ -36,6 +36,16 @@ from projects.tags.models import Tag
 from segments.models import Condition, Segment, SegmentRule
 
 
+def full_export(organisation_id: int) -> typing.List[dict]:
+    return [
+        *export_organisation(organisation_id),
+        *export_projects(organisation_id),
+        *export_environments(organisation_id),
+        *export_identities(organisation_id),
+        *export_features(organisation_id),
+    ]
+
+
 def export_organisation(organisation_id: int) -> typing.List[dict]:
     """
     Serialize an organisation and all its related objects.
