@@ -6,14 +6,21 @@ let createdFirstFeature = false;
 const PAGE_SIZE = 2;
 const controller = {
 
-    getFeatures: (projectId, environmentId, force, page) => {
+    getFeatures: (projectId, environmentId, force, page,filter) => {
         if (!store.model || store.envId != environmentId || force) { // todo: change logic a bit
             store.loading();
             store.envId = environmentId;
-
+            store.projectId = projectId;
+            store.environmentId = environmentId
+            store.page = page
+            store.filter=filter
+            let filterUrl = ''
             const { feature } = Utils.fromParam();
+            if (Object.keys(store.filter).length) {
+                filterUrl = '&'+Utils.toParam(store.filter)
+            }
 
-            let featuresEndpoint = `${Project.api}projects/${projectId}/features/?page=${page || 1}&page_size=${PAGE_SIZE}`;
+            let featuresEndpoint = `${Project.api}projects/${projectId}/features/?page=${page || 1}&page_size=${PAGE_SIZE}${filterUrl}`;
             if (store.search) {
                 featuresEndpoint += `&search=${store.search}`;
             }
@@ -278,10 +285,10 @@ const controller = {
                     }).then((v) => {
                         if (commit) {
                             AppActions.actionChangeRequest(v.id, 'commit', () => {
-                                AppActions.getFeatures(projectId, environmentId, true);
+                                AppActions.refreshFeatures(projectId, environmentId);
                             });
                         } else {
-                            AppActions.getChangeRequest(v.id);
+                            AppActions.getChangeRequest(v.id, projectId, environmentId);
                         }
                     });
                     prom.then(() => {
@@ -290,7 +297,7 @@ const controller = {
                         AppActions.getChangeRequests(environmentId, { live_from_after: new Date().toISOString() });
 
                         if (featureStateId) {
-                            AppActions.getChangeRequest(changeRequestData.id);
+                            AppActions.getChangeRequest(changeRequestData.id, projectId, environmentId);
                         }
                     });
                 });
@@ -314,9 +321,9 @@ const controller = {
                 store.saved();
             });
     },
-    searchFeatures: _.throttle((search, environmentId, projectId) => {
+    searchFeatures: _.throttle((search, environmentId, projectId, filter) => {
         store.search = search;
-        controller.getFeatures(projectId, environmentId, true);
+        controller.getFeatures(projectId, environmentId, true, 0, filter);
     }, 1000),
 };
 
@@ -351,14 +358,19 @@ store.dispatcherIndex = Dispatcher.register(store, (payload) => {
 
     switch (action.actionType) {
         case Actions.SEARCH_FLAGS:
-            controller.searchFeatures(action.search, action.environmentId, action.projectId, action.environmentId);
+            controller.searchFeatures(action.search, action.environmentId, action.projectId, action.filter);
             break;
         case Actions.GET_FLAGS:
             store.search = '';
             if (action.sort) {
                 store.sort = action.sort;
             }
-            controller.getFeatures(action.projectId, action.environmentId, action.force, action.page);
+            controller.getFeatures(action.projectId, action.environmentId, action.force, action.page, action.filter);
+            break;
+        case Actions.REFRESH_FEATURES:
+            if (action.projectId === store.projectId && action.environmentId === store.environmentId) {
+                controller.getFeatures(store.projectId, store.environmentId, true, store.page, store.filter);
+            }
             break;
         case Actions.TOGGLE_FLAG:
             controller.toggleFlag(action.index, action.environments, action.comment, action.environmentFlags);

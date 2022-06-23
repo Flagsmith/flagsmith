@@ -66,8 +66,15 @@ const controller = {
         store.loading();
         data.get(`${Project.api}features/workflows/change-requests/${id}/`)
             .then((res) => {
-                store.model[id] = res;
-                store.loaded();
+                return Promise.all(
+                    [
+                        data.get(`${Project.api}environments/${environmentId}/featurestates/?page_size=${PAGE_SIZE}`),
+                        data.get(`${Project.api}projects/${projectId}/features/${feature}/`)
+                    ]
+                ).then(([environmentFlag, projectFlag])=>{
+                    store.model[id] = res;
+                    store.loaded();
+                })
             }).catch(e => API.ajaxHandler(store, e));
     },
 };
@@ -88,7 +95,7 @@ store.dispatcherIndex = Dispatcher.register(store, (payload) => {
             controller.getChangeRequests(action.environment, { committed: action.committed, live_from_after: action.live_from_after }, action.page);
             break;
         case Actions.GET_CHANGE_REQUEST:
-            controller.getChangeRequest(action.id);
+            controller.getChangeRequest(action.id, action.projectId, action.environmentId);
             break;
         case Actions.UPDATE_CHANGE_REQUEST:
             controller.updateChangeRequest(action.changeRequest);

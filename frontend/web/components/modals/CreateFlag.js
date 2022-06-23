@@ -483,7 +483,7 @@ const CreateFlag = class extends Component {
                         if (!isEdit || identity) {
                             this.close();
                         }
-                        AppActions.getFeatures(this.props.projectId, this.props.environmentId, true);
+                        AppActions.refreshFeatures(this.props.projectId, this.props.environmentId);
                     }}
                     >
                         {({ isLoading, isSaving, error, influxData }, { createFlag, editFlagSettings, editFlagValue, editFlagSegments, createChangeRequest }) => {

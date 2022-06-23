@@ -76,6 +76,7 @@ const Actions = Object.assign({}, require('./base/_action-constants'), {
     'UPDATE_SUBSCRIPTION': 'UPDATE_SUBSCRIPTION',
     'GET_INFLUX_DATA': 'GET_INFLUX_DATA',
     'GET_FLAG_INFLUX_DATA': 'GET_FLAG_INFLUX_DATA',
+    'REFRESH_FEATURES': 'REFRESH_FEATURES',
 });
 
 window.Actions = Actions;
