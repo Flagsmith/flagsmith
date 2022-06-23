@@ -39,7 +39,7 @@ if ENV not in ("local", "dev", "staging", "production"):
 DEBUG = env.bool("DEBUG", default=False)
 
 # Enables the sending of telemetry data to the central Flagsmith API for usage tracking
-ENABLE_TELEMETRY = env("ENABLE_TELEMETRY", default=True)
+ENABLE_TELEMETRY = env.bool("ENABLE_TELEMETRY", default=True)
 
 # Enables gzip compression
 ENABLE_GZIP_COMPRESSION = env.bool("ENABLE_GZIP_COMPRESSION", default=False)
@@ -90,6 +90,8 @@ INSTALLED_APPS = [
     "django.contrib.humanize",
     "rest_framework",
     "rest_framework.authtoken",
+    # Used for managing api keys
+    "rest_framework_api_key",
     "djoser",
     "django.contrib.sites",
     "custom_auth",
@@ -117,6 +119,7 @@ INSTALLED_APPS = [
     "audit",
     "permissions",
     "projects.tags",
+    "api_keys",
     # 2FA
     "trench",
     # health check plugins
@@ -199,6 +202,8 @@ MIDDLEWARE = [
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
     "simple_history.middleware.HistoryRequestMiddleware",
+    # Add master api key object to request
+    "api_keys.middleware.MasterAPIKeyMiddleware",
 ]
 
 ADD_NEVER_CACHE_HEADERS = env.bool("ADD_NEVER_CACHE_HEADERS", True)
@@ -405,7 +410,7 @@ CHARGEBEE_SITE = env("CHARGEBEE_SITE", default=None)
 LOG_LEVEL = env.str("LOG_LEVEL", default="WARNING")
 LOGGING = {
     "version": 1,
-    "disable_existing_loggers": False,
+    "disable_existing_loggers": True,
     "formatters": {
         "generic": {"format": "%(name)-12s %(levelname)-8s %(message)s"},
     },

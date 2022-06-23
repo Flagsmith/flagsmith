@@ -488,7 +488,7 @@ const CreateFlag = class extends Component {
                     >
                         {({ isLoading, isSaving, error, influxData }, { createFlag, editFlagSettings, editFlagValue, editFlagSegments, createChangeRequest }) => {
                             const saveFeatureValue = (schedule) => {
-                                if (is4Eyes || schedule) {
+                                if ((is4Eyes || schedule) && !identity) {
                                     openModal2(schedule ? 'New Scheduled Flag Update' : this.props.changeRequest ? 'Update Change Request' : 'New Change Request', <ChangeRequestModal
                                       showAssignees={is4Eyes}
                                       changeRequest={this.props.changeRequest}

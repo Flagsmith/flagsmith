@@ -39,6 +39,7 @@ from .permissions.models import (
 )
 from .serializers import (
     CloneEnvironmentSerializer,
+    CreateUpdateEnvironmentSerializer,
     EnvironmentAPIKeySerializer,
     EnvironmentSerializerLight,
     WebhookSerializer,
@@ -72,6 +73,8 @@ class EnvironmentViewSet(viewsets.ModelViewSet):
             return DeleteAllTraitKeysSerializer
         if self.action == "clone":
             return CloneEnvironmentSerializer
+        elif self.action in ("create", "update", "partial_update"):
+            return CreateUpdateEnvironmentSerializer
         return EnvironmentSerializerLight
 
     def get_serializer_context(self):

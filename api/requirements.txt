@@ -111,6 +111,8 @@ djangorestframework==3.12.1
     #   djangorestframework-recursive
     #   drf-nested-routers
     #   drf-yasg2
+djangorestframework-api-key==2.2.0
+    # via -r requirements.in
 djangorestframework-recursive==0.1.2
     # via -r requirements.in
 djoser==2.0.5

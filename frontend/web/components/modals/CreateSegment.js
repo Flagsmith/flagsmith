@@ -307,7 +307,7 @@ const CreateSegment = class extends Component {
                             <div className="mt-2">
                                 <IdentityListProvider>
                                     {({ isLoading, identities, identitiesPaging }) => (
-                                        <div>
+                                        <div className="mt-2">
                                             <FormGroup>
                                                 <PanelSearch
                                                   renderSearchWithNoResults

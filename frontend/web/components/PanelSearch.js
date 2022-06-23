@@ -171,10 +171,10 @@ const PanelSearch = class extends Component {
                                                 this.props.onChange && this.props.onChange(!this.state.exact ? `"${this.props.search}"` : this.props.search.replace(/^"+|"+$/g, ''));
                                             }
                                         }}
-                                        value={{ label: this.state.exact ? 'Exact' : this.props.filterLabel || 'Contains' }}
+                                        value={{ label: this.state.exact ? 'Exact' : this.props.filterLabel || Utils.getIsEdge() ? 'Starts with' : 'Contains' }}
                                         options={[
                                             {
-                                                label: this.props.filterLabel || 'Contains',
+                                                label: Utils.getIsEdge() ? 'Starts with' : 'Contains',
                                                 value: 'Contains',
                                             },
                                             {

@@ -1,5 +1,6 @@
 import pytest
 
+from api_keys.models import MasterAPIKey
 from environments.models import Environment
 from features.models import Feature
 from organisations.models import Organisation, OrganisationRole
@@ -94,3 +95,9 @@ def organisation_one_project_one_feature_one(organisation_one_project_one):
         name="feature_1",
         initial_value="feature_1_value",
     )
+
+
+@pytest.fixture()
+def master_api_key(organisation):
+    _, key = MasterAPIKey.objects.create_key(name="test_key", organisation=organisation)
+    return key

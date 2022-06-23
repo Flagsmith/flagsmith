@@ -12,3 +12,4 @@ responses
 pre-commit
 flake8
 pytest-mock
+pytest-lazy-fixture
