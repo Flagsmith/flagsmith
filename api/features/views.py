@@ -49,6 +49,7 @@ from .permissions import (
     FeaturePermissions,
     FeatureStatePermissions,
     IdentityFeatureStatePermissions,
+    MasterAPIKeyEnvironmentFeatureStatePermissions,
     MasterAPIKeyFeatureStatePermissions,
 )
 from .serializers import (
@@ -484,7 +485,10 @@ class BaseFeatureStateViewSet(viewsets.ModelViewSet):
 
 
 class EnvironmentFeatureStateViewSet(BaseFeatureStateViewSet):
-    permission_classes = [IsAuthenticated, EnvironmentFeatureStatePermissions]
+    permission_classes = [
+        EnvironmentFeatureStatePermissions
+        | MasterAPIKeyEnvironmentFeatureStatePermissions
+    ]
 
     def get_queryset(self):
         queryset = super().get_queryset().filter(feature_segment=None)
