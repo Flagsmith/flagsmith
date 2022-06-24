@@ -56,6 +56,10 @@ class Environment(LifecycleModel):
     webhooks_enabled = models.BooleanField(default=False, help_text="DEPRECATED FIELD.")
     webhook_url = models.URLField(null=True, blank=True, help_text="DEPRECATED FIELD.")
 
+    allow_client_traits = models.BooleanField(
+        default=True, help_text="Allows clients using the client API key to set traits."
+    )
+
     objects = EnvironmentManager()
 
     class Meta:
