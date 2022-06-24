@@ -33,6 +33,7 @@ class InviteLink(AbstractBaseInviteModel, AbstractBaseExportableModel):
         "Leave blank to enable indefinitely.",
     )
 
+    @property
     def is_expired(self):
         return self.expires_at is not None and timezone.now() > self.expires_at
 
