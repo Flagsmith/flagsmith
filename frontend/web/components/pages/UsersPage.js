@@ -233,7 +233,7 @@ const UsersPage = class extends Component {
                                                         test with on your environments.
                                                     </p>
                                                     <div className="row">
-                                                        <div style={{ overflow: 'hidden' }} className="col-md-12">
+                                                        <div className="col-md-12">
                                                             <CodeHelp
                                                               showInitially
                                                               title="Creating users and getting their feature settings"
