@@ -32,6 +32,7 @@ from features.custom_lifecycle import CustomLifecycleModelMixin
 from features.feature_states.models import AbstractBaseFeatureValueModel
 from features.feature_types import MULTIVARIATE, STANDARD
 from features.helpers import get_correctly_typed_value
+from features.managers import FeatureSegmentManager
 from features.multivariate.models import MultivariateFeatureStateValue
 from features.utils import (
     get_boolean_from_string,
@@ -177,6 +178,8 @@ class FeatureSegment(AbstractBaseExportableModel, OrderedModelBase):
 
     # used for audit purposes
     history = HistoricalRecords()
+
+    objects = FeatureSegmentManager()
 
     class Meta:
         unique_together = ("feature", "environment", "segment")
