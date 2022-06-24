@@ -22,7 +22,7 @@ ARG TARGETARCH
 RUN if [ "${TARGETARCH}" != "amd64" ]; then apt-get update && apt-get install -y gcc libpq-dev && rm -rf /var/lib/apt/lists/*; fi;
 
 # Install re2
-ARG GOOGLE_RE2_VERSION="0.2.20220401"
+ARG GOOGLE_RE2_VERSION="0.2.20220601"
 ARG TARGETPLATFORM
 RUN pip install google-re2==${GOOGLE_RE2_VERSION}
 
