@@ -180,7 +180,7 @@ const controller = {
     },
     editFeatureState: (projectId, environmentId, flag, projectFlag, environmentFlag, segmentOverrides, mode) => {
         let prom;
-        const segmentOverridesProm = Promise.all((segmentOverrides || []).map((v, i) => {
+        const segmentOverridesProm = (segmentOverrides || []).map((v, i) => () => {
             if (v.toRemove) {
                 return (v.id ? data.delete(`${Project.api}features/feature-segments/${v.id}/`) : Promise.resolve()).then((res) => {
                     segmentOverrides = segmentOverrides.filter(s => v.id !== s.id);
@@ -209,7 +209,10 @@ const controller = {
                 }));
             }
             return Promise.resolve();
-        }));
+        }).reduce(
+            (promise, currPromise) => promise.then(val => currPromise(val)),
+            Promise.resolve(),
+        );
 
         store.saving();
         API.trackEvent(Constants.events.EDIT_FEATURE);
