@@ -409,7 +409,7 @@ module.exports = Object.assign({}, require('./base/_utils'), {
                 break;
             }
             case '4_EYES': {
-                valid = true;
+                valid = isScaleupOrGreater;
                 break;
             }
             default:
