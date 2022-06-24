@@ -1,6 +1,4 @@
-import Utils from '../../utils/utils';
-
-module.exports = (envId, { FEATURE_NAME, FEATURE_FUNCTION, FEATURE_NAME_ALT }) => `//In your application, initialise the Flagsmith client with your API key:
+module.exports = (envId, { FEATURE_NAME, FEATURE_NAME_ALT }) => `//In your application, initialise the Flagsmith client with your API key:
 
 final flagsmithClient = FlagsmithClient(
         apiKey: '${envId}'
