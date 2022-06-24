@@ -56,9 +56,17 @@ const PanelSearch = class extends Component {
         e.preventDefault();
         const { sortBy, sortOrder } = this.state;
         if (sortOption.value === sortBy) {
-            this.setState({ sortOrder: sortOrder === 'asc' ? 'desc' : 'asc' });
+            this.setState({ sortOrder: sortOrder === 'asc' ? 'desc' : 'asc' },()=>{
+                if (this.props.onSortChange) {
+                    this.props.onSortChange({ sortBy: this.state.sortBy, sortOrder: this.state.sortOrder })
+                }
+            });
         } else {
-            this.setState({ sortBy: sortOption.value, sortOrder: sortOption.order });
+            this.setState({ sortBy: sortOption.value, sortOrder: sortOption.order }, ()=>{
+                if (this.props.onSortChange) {
+                    this.props.onSortChange({ sortBy: this.state.sortBy, sortOrder: this.state.sortOrder })
+                }
+            });
         }
     }
 
@@ -198,16 +206,17 @@ const PanelSearch = class extends Component {
                   </Row>
               ) : action || null}
             >
-                {!!paging && (
-                <Paging
-                  paging={paging}
-                  isLoading={isLoading}
-                  goToPage={goToPage}
-                />
-                )}
+
                 {this.props.searchPanel}
                 <div id={this.props.id} className="search-list" style={isLoading ? { opacity: 0.5 } : {}}>
                     {this.props.header}
+                    {!!paging && (
+                        <Paging
+                            paging={paging}
+                            isLoading={isLoading}
+                            goToPage={goToPage}
+                        />
+                    )}
                     {this.props.isLoading && (!filteredItems||!items) ? <div className="text-center"><Loader/></div> :
                         filteredItems && filteredItems.length
                             ? this.renderContainer(filteredItems) : (renderNoResults && !search) ? renderNoResults : (

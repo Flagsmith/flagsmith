@@ -40,6 +40,7 @@ const Actions = Object.assign({}, require('./base/_action-constants'), {
     'GET_ENVIRONMENT': 'GET_ENVIRONMENT',
     'GET_ENVIRONMENTS': 'GET_ENVIRONMENTS',
     'GET_FLAGS': 'GET_FLAGS',
+    'SEARCH_FLAGS': 'SEARCH_FLAGS',
     'GET_CHANGE_REQUESTS': 'GET_CHANGE_REQUESTS',
     'GET_CHANGE_REQUEST': 'GET_CHANGE_REQUEST',
     'UPDATE_CHANGE_REQUEST': 'UPDATE_CHANGE_REQUEST',
@@ -75,6 +76,7 @@ const Actions = Object.assign({}, require('./base/_action-constants'), {
     'UPDATE_SUBSCRIPTION': 'UPDATE_SUBSCRIPTION',
     'GET_INFLUX_DATA': 'GET_INFLUX_DATA',
     'GET_FLAG_INFLUX_DATA': 'GET_FLAG_INFLUX_DATA',
+    'REFRESH_FEATURES': 'REFRESH_FEATURES',
 });
 
 window.Actions = Actions;

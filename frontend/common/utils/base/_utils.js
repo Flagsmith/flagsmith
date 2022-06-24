@@ -71,7 +71,7 @@ var Utils = {
     },
 
     toParam(obj) { // {min:100,max:200} -> ?min=100&max=200
-        return Object.keys(obj).map(k => `${encodeURIComponent(k)}=${encodeURIComponent(obj[k])}`).join('&');
+        return Object.keys(obj).filter((v)=>obj[v]!==undefined).map(k => `${encodeURIComponent(k)}=${encodeURIComponent(obj[k])}`).join('&');
     },
 
     fromParam(str) { // {min:100,max:200} <- ?min=100&max=200
