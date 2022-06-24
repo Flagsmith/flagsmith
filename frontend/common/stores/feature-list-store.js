@@ -3,7 +3,7 @@ const OrganisationStore = require('./organisation-store');
 const data = require('../data/base/_data');
 
 let createdFirstFeature = false;
-const PAGE_SIZE = 30;
+const PAGE_SIZE = 200;
 const controller = {
 
     getFeatures: (projectId, environmentId, force, page,filter) => {
