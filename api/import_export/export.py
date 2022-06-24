@@ -15,7 +15,10 @@ from features.models import (
     FeatureState,
     FeatureStateValue,
 )
-from features.multivariate.models import MultivariateFeatureOption
+from features.multivariate.models import (
+    MultivariateFeatureOption,
+    MultivariateFeatureStateValue,
+)
 from features.workflows.core.models import ChangeRequest
 from integrations.datadog.models import DataDogConfiguration
 from integrations.heap.models import HeapConfiguration
@@ -144,6 +147,10 @@ def export_features(organisation_id: int) -> typing.List[dict]:
             ),
             _EntityExportConfig(
                 FeatureStateValue,
+                Q(feature_state__feature__project__organisation__id=organisation_id),
+            ),
+            _EntityExportConfig(
+                MultivariateFeatureStateValue,
                 Q(feature_state__feature__project__organisation__id=organisation_id),
             ),
         ]
