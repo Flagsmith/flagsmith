@@ -9,7 +9,7 @@ from core.migration_helpers import AddDefaultUUIDs
 class Migration(migrations.Migration):
 
     dependencies = [
-        ("tags", "0004_add_unique_constraint"),
+        ("tags", "0003_allow_null_tag_description"),
     ]
 
     operations = [

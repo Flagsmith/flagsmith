@@ -9,7 +9,7 @@ from core.migration_helpers import AddDefaultUUIDs
 class Migration(migrations.Migration):
 
     dependencies = [
-        ("segments", "0009_add_unique_constraint"),
+        ("segments", "0008_auto_20210223_1603"),
     ]
 
     operations = [

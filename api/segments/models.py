@@ -50,7 +50,6 @@ class Segment(AbstractBaseExportableModel):
 
     class Meta:
         ordering = ("id",)  # explicit ordering to prevent pagination warnings
-        unique_together = (("name", "project"),)
 
     def __str__(self):
         return "Segment - %s" % self.name

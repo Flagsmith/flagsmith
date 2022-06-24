@@ -14,7 +14,6 @@ class Tag(AbstractBaseExportableModel):
 
     class Meta:
         ordering = ("id",)  # explicit ordering to prevent pagination warnings
-        unique_together = (("project", "label"),)
 
     def __str__(self):
         return "Tag %s" % self.label
