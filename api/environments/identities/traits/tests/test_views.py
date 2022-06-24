@@ -533,7 +533,7 @@ class SDKTraitsTest(APITestCase):
 
     def test_create_trait_returns_403_if_client_cannot_set_traits(self):
         # Given
-        url = reverse("api-v1:sdk-traits")
+        url = reverse("api-v1:sdk-traits-list")
         data = {
             "identity": {"identifier": self.identity.identifier},
             "trait_key": "foo",
@@ -544,14 +544,16 @@ class SDKTraitsTest(APITestCase):
         self.environment.save()
 
         # When
-        response = self.client.post(url, data=data)
+        response = self.client.post(
+            url, data=json.dumps(data), content_type="application/json"
+        )
 
         # Then
         assert response.status_code == status.HTTP_403_FORBIDDEN
 
     def test_server_key_can_create_trait_if_not_allow_client_traits(self):
         # Given
-        url = reverse("api-v1:sdk-traits")
+        url = reverse("api-v1:sdk-traits-list")
         data = {
             "identity": {"identifier": self.identity.identifier},
             "trait_key": "foo",
@@ -565,7 +567,9 @@ class SDKTraitsTest(APITestCase):
         self.environment.save()
 
         # When
-        response = self.client.post(url, data=data)
+        response = self.client.post(
+            url, data=json.dumps(data), content_type="application/json"
+        )
 
         # Then
         assert response.status_code == status.HTTP_200_OK
@@ -585,7 +589,9 @@ class SDKTraitsTest(APITestCase):
         self.environment.save()
 
         # When
-        response = self.client.post(url, data=data)
+        response = self.client.put(
+            url, data=json.dumps(data), content_type="application/json"
+        )
 
         # Then
         assert response.status_code == status.HTTP_403_FORBIDDEN
@@ -608,7 +614,9 @@ class SDKTraitsTest(APITestCase):
         self.environment.save()
 
         # When
-        response = self.client.post(url, data=data)
+        response = self.client.put(
+            url, data=json.dumps(data), content_type="application/json"
+        )
 
         # Then
         assert response.status_code == status.HTTP_200_OK

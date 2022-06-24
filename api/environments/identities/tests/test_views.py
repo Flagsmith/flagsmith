@@ -761,7 +761,9 @@ class SDKIdentitiesTestCase(APITestCase):
         self.environment.save()
 
         # When
-        response = self.client.post(url, data=data)
+        response = self.client.post(
+            url, data=json.dumps(data), content_type="application/json"
+        )
 
         # Then
         assert response.status_code == status.HTTP_403_FORBIDDEN
@@ -785,7 +787,9 @@ class SDKIdentitiesTestCase(APITestCase):
         self.environment.save()
 
         # When
-        response = self.client.post(url, data=data)
+        response = self.client.post(
+            url, data=json.dumps(data), content_type="application/json"
+        )
 
         # Then
         assert response.status_code == status.HTTP_200_OK

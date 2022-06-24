@@ -1,5 +1,7 @@
 from core.constants import BOOLEAN, FLOAT, INTEGER, STRING
+from core.request_origin import RequestOrigin
 from rest_framework import serializers
+from rest_framework.exceptions import PermissionDenied
 
 from environments.identities.models import Identity
 from environments.identities.serializers import (
@@ -75,11 +77,18 @@ class IdentifyWithTraitsSerializer(serializers.Serializer):
         (optionally store traits if flag set on org)
         """
         environment = self.context["environment"]
+        request = self.context["request"]
         identity, created = Identity.objects.get_or_create(
             identifier=self.validated_data["identifier"], environment=environment
         )
 
         trait_data_items = self.validated_data.get("traits", [])
+
+        if trait_data_items and not (
+            environment.allow_client_traits
+            or request.originated_from == RequestOrigin.SERVER
+        ):
+            raise PermissionDenied("Unable to set traits with client key.")
 
         if not created and environment.project.organisation.persist_trait_data:
             # if this is an update and we're persisting traits, then we need to
