@@ -15,7 +15,6 @@ const SegmentsPage = class extends Component {
         this.state = {
             preselect: Utils.fromParam().id
         };
-        AppActions.getFeatures(this.props.match.params.projectId, this.props.match.params.environmentId);
         AppActions.getSegments(this.props.match.params.projectId, this.props.match.params.environmentId);
     }
 
@@ -23,7 +22,6 @@ const SegmentsPage = class extends Component {
         const { match: { params } } = newProps;
         const { match: { params: oldParams } } = this.props;
         if (params.environmentId != oldParams.environmentId || params.projectId != oldParams.projectId) {
-            AppActions.getFeatures(this.props.match.params.projectId, this.props.match.params.environmentId);
             AppActions.getSegments(params.projectId, params.environmentId);
         }
     }

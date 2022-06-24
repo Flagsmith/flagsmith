@@ -12,12 +12,35 @@ const AppActions = Object.assign({}, require('./base/_app-actions'), {
             data,
         });
     },
-    getFeatures(projectId, environmentId, force) {
+    refreshFeatures(projectId, environmentId) {
+        Dispatcher.handleViewAction({
+            actionType: Actions.REFRESH_FEATURES,
+            projectId,
+            environmentId,
+        });
+    },
+    getFeatures(projectId, environmentId, force, search, sort, page, filter) {
         Dispatcher.handleViewAction({
             actionType: Actions.GET_FLAGS,
             projectId,
             environmentId,
             force,
+            search,
+            sort,
+            page,
+            filter,
+        });
+    },
+    searchFeatures(projectId, environmentId, force, search, sort, page, filter) {
+        Dispatcher.handleViewAction({
+            actionType: Actions.SEARCH_FLAGS,
+            projectId,
+            environmentId,
+            force,
+            search,
+            sort,
+            page,
+            filter,
         });
     },
     createProject(name) {
@@ -500,10 +523,12 @@ const AppActions = Object.assign({}, require('./base/_app-actions'), {
             page,
         });
     },
-    getChangeRequest(id) {
+    getChangeRequest(id, projectId, environmentId) {
         Dispatcher.handleViewAction({
             actionType: Actions.GET_CHANGE_REQUEST,
             id,
+            projectId,
+            environmentId
         });
     },
     updateChangeRequest(changeRequest) {

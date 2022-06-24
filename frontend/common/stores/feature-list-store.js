@@ -3,22 +3,52 @@ const OrganisationStore = require('./organisation-store');
 const data = require('../data/base/_data');
 
 let createdFirstFeature = false;
-
+const PAGE_SIZE = 30;
 const controller = {
 
-    getFeatures: (projectId, environmentId, force) => {
+    getFeatures: (projectId, environmentId, force, page,filter) => {
         if (!store.model || store.envId != environmentId || force) { // todo: change logic a bit
             store.loading();
             store.envId = environmentId;
+            store.projectId = projectId;
+            store.environmentId = environmentId
+            store.page = page
+            store.filter=filter
+            let filterUrl = ''
+            const { feature } = Utils.fromParam();
+            if (Object.keys(store.filter).length) {
+                filterUrl = '&'+Utils.toParam(store.filter)
+            }
 
-            // todo: cache project flags
+            let featuresEndpoint = `${Project.api}projects/${projectId}/features/?page=${page || 1}&page_size=${PAGE_SIZE}${filterUrl}`;
+            if (store.search) {
+                featuresEndpoint += `&search=${store.search}`;
+            }
+            if (store.sort) {
+                featuresEndpoint += `&sort_field=${store.sort.sortBy}&sort_direction=${store.sort.sortOrder.toUpperCase()}`;
+            }
             return Promise.all([
-                data.get(`${Project.api}projects/${projectId}/features/?page_size=999`),
-                data.get(`${Project.api}environments/${environmentId}/featurestates/?page_size=999`),
-            ]).then(([features, environmentFeatures]) => {
+                data.get(featuresEndpoint),
+                data.get(`${Project.api}environments/${environmentId}/featurestates/?page_size=${PAGE_SIZE}`),
+                feature ? data.get(`${Project.api}projects/${projectId}/features/${feature}/`) : Promise.resolve(),
+            ]).then(([features, environmentFeatures, feature]) => {
+                store.paging.next = features.next;
+                store.paging.pageSize = PAGE_SIZE;
+                store.paging.count = features.count;
+                store.paging.previous = features.previous;
+                store.paging.currentPage = featuresEndpoint.indexOf('?page=') !== -1 ? parseInt(featuresEndpoint.substr(featuresEndpoint.indexOf('?page=') + 6)) : 1;
+
+
+                if (feature) {
+                    const index = features.results.findIndex(v => v.id === feature.id);
+                    if (index === -1) {
+                        features.results.push({ ...feature, ignore: true });
+                    }
+                }
                 if (features.results.length) {
                     createdFirstFeature = true;
                 }
+
                 store.model = {
                     features: features.results.map((controller.parseFlag)),
                     keyedEnvironmentFeatures: environmentFeatures.results && _.keyBy(environmentFeatures.results, 'feature'),
@@ -255,10 +285,10 @@ const controller = {
                     }).then((v) => {
                         if (commit) {
                             AppActions.actionChangeRequest(v.id, 'commit', () => {
-                                AppActions.getFeatures(projectId, environmentId, true);
+                                AppActions.refreshFeatures(projectId, environmentId);
                             });
                         } else {
-                            AppActions.getChangeRequest(v.id);
+                            AppActions.getChangeRequest(v.id, projectId, environmentId);
                         }
                     });
                     prom.then(() => {
@@ -267,7 +297,7 @@ const controller = {
                         AppActions.getChangeRequests(environmentId, { live_from_after: new Date().toISOString() });
 
                         if (featureStateId) {
-                            AppActions.getChangeRequest(changeRequestData.id);
+                            AppActions.getChangeRequest(changeRequestData.id, projectId, environmentId);
                         }
                     });
                 });
@@ -291,12 +321,17 @@ const controller = {
                 store.saved();
             });
     },
-
+    searchFeatures: _.throttle((search, environmentId, projectId, filter) => {
+        store.search = search;
+        controller.getFeatures(projectId, environmentId, true, 0, filter);
+    }, 1000),
 };
 
 
 const store = Object.assign({}, BaseStore, {
     id: 'features',
+    paging: {},
+    sort: { label: 'Name', sortBy: 'name', sortOrder: 'asc', default: true },
     getEnvironmentFlags() {
         return store.model && store.model.keyedEnvironmentFeatures;
     },
@@ -314,6 +349,7 @@ const store = Object.assign({}, BaseStore, {
     getFlagInfluxData() {
         return store.model && store.model.influxData;
     },
+
 });
 
 
@@ -321,8 +357,20 @@ store.dispatcherIndex = Dispatcher.register(store, (payload) => {
     const action = payload.action; // this is our action from handleViewAction
 
     switch (action.actionType) {
+        case Actions.SEARCH_FLAGS:
+            controller.searchFeatures(action.search, action.environmentId, action.projectId, action.filter);
+            break;
         case Actions.GET_FLAGS:
-            controller.getFeatures(action.projectId, action.environmentId, action.force);
+            store.search = action.search || '';
+            if (action.sort) {
+                store.sort = action.sort;
+            }
+            controller.getFeatures(action.projectId, action.environmentId, action.force, action.page, action.filter);
+            break;
+        case Actions.REFRESH_FEATURES:
+            if (action.projectId === store.projectId && action.environmentId === store.environmentId) {
+                controller.getFeatures(store.projectId, store.environmentId, true, store.page, store.filter);
+            }
             break;
         case Actions.TOGGLE_FLAG:
             controller.toggleFlag(action.index, action.environments, action.comment, action.environmentFlags);

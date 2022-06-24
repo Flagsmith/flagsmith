@@ -105,7 +105,7 @@ class TheComponent extends Component {
         return (
             <Row
               style={{ flexWrap: 'nowrap' }}
-              className={this.props.canDelete ? 'list-item clickable' : 'list-item'} key={id} space
+              className={this.props.canDelete ? 'list-item clickable py-2' : 'list-item py-1'} key={id} space
               data-test={`feature-item-${this.props.index}`}
             >
                 <div

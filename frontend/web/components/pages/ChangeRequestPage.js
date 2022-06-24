@@ -33,8 +33,7 @@ const ChangeRequestsPage = class extends Component {
         this.listenTo(ChangeRequestStore, 'change', () => this.forceUpdate());
         this.listenTo(FeatureListStore, 'change', () => this.forceUpdate());
         this.listenTo(OrganisationStore, 'change', () => this.forceUpdate());
-        AppActions.getFeatures(this.props.match.params.projectId, this.props.match.params.environmentId);
-        AppActions.getChangeRequest(this.props.match.params.id);
+        AppActions.getChangeRequest(this.props.match.params.id, this.props.match.params.projectId, this.props.match.params.environmentId);
         AppActions.getOrganisation(AccountStore.getOrganisation().id);
     }
 
@@ -118,7 +117,7 @@ const ChangeRequestsPage = class extends Component {
             </p>
         ), ()=>{
             AppActions.actionChangeRequest(this.props.match.params.id, "commit", ()=>{
-                AppActions.getFeatures(this.props.match.params.projectId, this.props.match.params.environmentId, true)
+                AppActions.refreshFeatures(this.props.match.params.projectId, this.props.match.params.environmentId, true)
             })
         });
     }
@@ -128,7 +127,11 @@ const ChangeRequestsPage = class extends Component {
     render() {
         const id = this.props.match.params.id;
         const changeRequest = ChangeRequestStore.model[id];
-        if (!changeRequest || OrganisationStore.isLoading || (ChangeRequestStore.isLoading && !changeRequest) || !FeatureListStore.getEnvironmentFlags()) {
+        const flags = ChangeRequestStore.flags[id];
+        const environmentFlag = flags&&flags.environmentFlag
+        const projectFlag = flags&&flags.projectFlag
+
+        if (!changeRequest || OrganisationStore.isLoading || !projectFlag || !environmentFlag) {
             return (
                 <div data-test="change-requests-page" id="change-requests-page" className="app-container container">
                     <div className="text-center"><Loader/></div>
@@ -145,49 +148,45 @@ const ChangeRequestsPage = class extends Component {
         const committedBy = changeRequest.committed_by && orgUsers && orgUsers.find((v)=>v.id === changeRequest.committed_by) || {}
         const isScheduled = new Date(changeRequest.feature_states[0].live_from).valueOf() > new Date().valueOf()
         const scheduledDate =  moment(changeRequest.feature_states[0].live_from)
+        const isMv = projectFlag && projectFlag.multivariate_options && !!projectFlag.multivariate_options.length;
+        const { name, feature_state_value, description, is_archived, tags, enabled, hide_from_client, multivariate_options } = projectFlag ? Utils.getFlagValue(projectFlag, environmentFlag, null)
+            : {
+                multivariate_options: [],
+            };
+
+        const approval = changeRequest && changeRequest.approvals.find((v)=>v.user === AccountStore.getUser().id)
+        const approvedBy = changeRequest.approvals.filter((v)=>!!v.approved_at).map((v)=>{
+            const matchingUser = orgUsers.find((u)=>u.id === v.user) || {}
+            return `${matchingUser.first_name} ${matchingUser.last_name}`
+        })
+        const approved = !!approval && !!approval.approved_at
+        const environment = ProjectStore.getEnvironment(this.props.match.params.environmentId);
+
+        const minApprovals = environment.minimum_change_request_approvals || 0;
+        const newValue = changeRequest.feature_states[0] && Utils.featureStateToValue(changeRequest.feature_states[0].feature_state_value);
+        const oldValue = environmentFlag && environmentFlag.feature_state_value
+        const newEnabled = changeRequest.feature_states[0] && changeRequest.feature_states[0].enabled
+        const oldEnabled = environmentFlag && environmentFlag.enabled
+        let mvData = []
+        let mvChanged = false;
+        if (isMv) {
+            mvData = projectFlag.multivariate_options.map((v)=>{
+                let matchingOldValue = environmentFlag.multivariate_feature_state_values.find((e)=>e.multivariate_feature_option === v.id)
+                let matchingNewValue = changeRequest.feature_states[0].multivariate_feature_state_values.find((e)=>e.multivariate_feature_option === v.id)
+                if (matchingOldValue.percentage_allocation !== matchingNewValue.percentage_allocation) {
+                    mvChanged = true;
+                }
+                return {
+                    value:Utils.featureStateToValue(v),
+                    changed: matchingOldValue.percentage_allocation !== matchingNewValue.percentage_allocation,
+                    oldValue: matchingOldValue.percentage_allocation,
+                    newValue: matchingNewValue.percentage_allocation,
+                }
+            })
+        }
+        const isYourChangeRequest = changeRequest.user === AccountStore.getUser().id
+
         return (
-            <FeatureListProvider onSave={this.onSave} onError={this.onError}>
-                {({ isLoading, projectFlags, environmentFlags }) => {
-                    const environmentFlag = environmentFlags[changeRequest.feature_states[0] && changeRequest.feature_states[0].feature]
-                    const projectFlag = environmentFlag && projectFlags.find((v)=>v.id === changeRequest.feature_states[0].feature)
-                    const isMv = projectFlag && projectFlag.multivariate_options && !!projectFlag.multivariate_options.length;
-                    const { name, feature_state_value, description, is_archived, tags, enabled, hide_from_client, multivariate_options } = projectFlag ? Utils.getFlagValue(projectFlag, environmentFlag, null)
-                        : {
-                            multivariate_options: [],
-                        };
-
-                    const approval = changeRequest && changeRequest.approvals.find((v)=>v.user === AccountStore.getUser().id)
-                    const approvedBy = changeRequest.approvals.filter((v)=>!!v.approved_at).map((v)=>{
-                        const matchingUser = orgUsers.find((u)=>u.id === v.user) || {}
-                        return `${matchingUser.first_name} ${matchingUser.last_name}`
-                    })
-                    const approved = !!approval && !!approval.approved_at
-                    const environment = ProjectStore.getEnvironment(this.props.match.params.environmentId);
-
-                    const minApprovals = environment.minimum_change_request_approvals || 0;
-                    const newValue = changeRequest.feature_states[0] && Utils.featureStateToValue(changeRequest.feature_states[0].feature_state_value);
-                    const oldValue = environmentFlag && environmentFlag.feature_state_value
-                    const newEnabled = changeRequest.feature_states[0] && changeRequest.feature_states[0].enabled
-                    const oldEnabled = environmentFlag && environmentFlag.enabled
-                    let mvData = []
-                    let mvChanged = false;
-                    if (isMv) {
-                        mvData = projectFlag.multivariate_options.map((v)=>{
-                            let matchingOldValue = environmentFlag.multivariate_feature_state_values.find((e)=>e.multivariate_feature_option === v.id)
-                            let matchingNewValue = changeRequest.feature_states[0].multivariate_feature_state_values.find((e)=>e.multivariate_feature_option === v.id)
-                            if (matchingOldValue.percentage_allocation !== matchingNewValue.percentage_allocation) {
-                                mvChanged = true;
-                            }
-                            return {
-                                value:Utils.featureStateToValue(v),
-                                changed: matchingOldValue.percentage_allocation !== matchingNewValue.percentage_allocation,
-                                oldValue: matchingOldValue.percentage_allocation,
-                                newValue: matchingNewValue.percentage_allocation,
-                            }
-                        })
-                    }
-                    const isYourChangeRequest = changeRequest.user === AccountStore.getUser().id
-                    return (
                         <div
                             style={{ opacity: ChangeRequestStore.isLoading ? 0.25 : 1 }} data-test="change-requests-page"
                             id="change-requests-page"
@@ -440,13 +439,8 @@ const ChangeRequestsPage = class extends Component {
                                 </div>
                                     <Row>
                                         <div style={{ minHeight: 300 }}/>
-
                                     </Row>
-
-
                         </div>
-                )}}
-            </FeatureListProvider>
         );
     }
 };
