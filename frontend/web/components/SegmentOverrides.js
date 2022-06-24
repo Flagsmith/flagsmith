@@ -5,7 +5,7 @@ import _data from '../../common/data/base/_data';
 import ProjectStore from '../../common/stores/project-store';
 import ValueEditor from './ValueEditor';
 import VariationOptions from './mv/VariationOptions';
-import AddVariationButton from './mv/AddVariationButton';
+import FeatureListStore from '../../common/stores/feature-list-store';
 
 const arrayMoveMutate = (array, from, to) => {
     array.splice(to < 0 ? array.length + to : to, 0, array.splice(from, 1)[0]);
@@ -21,6 +21,13 @@ const SegmentOverride = ConfigProvider(SortableElement(class Override extends Re
     constructor(props) {
         super(props);
         this.state = {};
+        ES6Component(this);
+    }
+
+    componentDidMount() {
+        this.listenTo(FeatureListStore, 'saved', () => {
+            this.setState({ changed: false });
+        });
     }
 
     render() {
@@ -40,6 +47,7 @@ const SegmentOverride = ConfigProvider(SortableElement(class Override extends Re
         const showValue = !(multivariateOptions && multivariateOptions.length);
         const controlPercent = Utils.calculateControl(mvOptions);
         const invalid = !!multivariateOptions && multivariateOptions.length && controlPercent < 0;
+        if (!v || v.toRemove) return null;
         return (
             <div data-test={`segment-override-${index}`} style={{ zIndex: 9999999999 }} className="panel panel-without-heading panel--draggable mb-2">
                 <Row className="panel-content" space>
@@ -120,9 +128,9 @@ const SegmentOverride = ConfigProvider(SortableElement(class Override extends Re
                              <ValueEditor
                                value={v.value}
                                data-test={`segment-override-value-${index}`}
-                               onChange={e => {
+                               onChange={(e) => {
                                    this.setState({ changed: true });
-                                   setValue(Utils.getTypedValue(Utils.safeParseEventValue(e)))
+                                   setValue(Utils.getTypedValue(Utils.safeParseEventValue(e)));
                                }}
                                placeholder="Value e.g. 'big' "
                              />
@@ -233,6 +241,12 @@ class TheComponent extends Component {
 
     addItem = () => {
         const value = (this.props.value || []).map(val => ({ ...val, priority: val.priority }));
+        const matchingValue = value.find(v => v.segment === this.state.selectedSegment.value);
+        if (matchingValue) {
+            matchingValue.toRemove = false;
+            this.props.onChange(value);
+            return;
+        }
         const newValue = {
             feature: this.props.feature,
             segment: this.state.selectedSegment.value,
@@ -261,20 +275,11 @@ class TheComponent extends Component {
         openConfirm(
             <h3>Delete Segment Override</h3>,
             <p>
-                {'Are you sure you want to delete this segment override?'}
+                {'Are you sure you want to delete this segment override? This will be applied when you click Update Segment Overrides.'}
                 <strong>{name}</strong>
             </p>,
             () => {
-                if (this.props.value[i].id) {
-                    _data.delete(`${Project.api}features/feature-segments/${this.props.value[i].id}/`)
-                        .then((res) => {
-                            this.props.onChange(_.filter(this.props.value, (v, index) => index !== i).map((v, i) => ({
-                                ...v,
-                                priority: i,
-                            })));
-                            this.setState({ isLoading: false });
-                        });
-                }
+                this.props.value[i].toRemove = true;
             },
             () => {
                 this.setState({ isLoading: false });
@@ -308,7 +313,10 @@ class TheComponent extends Component {
     render() {
         const { state: { isLoading }, props: { value, segments, multivariateOptions } } = this;
         const segmentOptions = _.filter(
-            segments, segment => !value || !_.find(value, v => v.segment === segment.id),
+            segments, (segment) => {
+                const foundSegment = _.find(value, v => v.segment === segment.id);
+                return !value || (!foundSegment || (foundSegment && foundSegment.toRemove));
+            },
         )
             .map(({ name: label, id: value }) => ({ value, label }));
         return (

@@ -6,18 +6,18 @@ let createdFirstFeature = false;
 const PAGE_SIZE = 200;
 const controller = {
 
-    getFeatures: (projectId, environmentId, force, page,filter) => {
+    getFeatures: (projectId, environmentId, force, page, filter) => {
         if (!store.model || store.envId != environmentId || force) { // todo: change logic a bit
             store.loading();
             store.envId = environmentId;
             store.projectId = projectId;
-            store.environmentId = environmentId
-            store.page = page
-            store.filter=filter
-            let filterUrl = ''
+            store.environmentId = environmentId;
+            store.page = page;
+            store.filter = filter;
+            let filterUrl = '';
             const { feature } = Utils.fromParam();
             if (Object.keys(store.filter).length) {
-                filterUrl = '&'+Utils.toParam(store.filter)
+                filterUrl = `&${Utils.toParam(store.filter)}`;
             }
 
             let featuresEndpoint = `${Project.api}projects/${projectId}/features/?page=${page || 1}&page_size=${PAGE_SIZE}${filterUrl}`;
@@ -181,22 +181,29 @@ const controller = {
     editFeatureState: (projectId, environmentId, flag, projectFlag, environmentFlag, segmentOverrides, mode) => {
         let prom;
         const segmentOverridesProm = Promise.all((segmentOverrides || []).map((v, i) => {
-            if (!v.id) {
+            if (v.toRemove) {
+                return (v.id ? data.delete(`${Project.api}features/feature-segments/${v.id}/`) : Promise.resolve()).then((res) => {
+                    segmentOverrides = segmentOverrides.filter(s => v.id !== s.id);
+                });
+            } if (!v.id) {
                 return data.post(`${Project.api}features/feature-segments/`, {
                     feature: v.feature,
                     segment: v.segment,
                     environment: v.environment,
                     priority: v.priority,
                 }).then(featureSegment => data.post(`${Project.api}features/featurestates/`, {
-                    enabled: v.feature_segment_value.enabled,
+                    enabled: v.enabled,
                     feature: v.feature_segment_value.feature,
                     environment: v.feature_segment_value.environment,
                     feature_segment: featureSegment.id,
-                    feature_state_value: v.feature_segment_value.feature_state_value,
+                    feature_state_value: Utils.valueToFeatureState(v.value),
                 }).then((featureSegmentValue) => {
                     const newValue = {
                         ...featureSegment,
                         feature_segment_value: featureSegmentValue,
+                        enabled: segmentOverrides[i].enabled,
+                        value: segmentOverrides[i].value,
+                        multivariate_options: segmentOverrides[i].multivariate_options,
                     };
                     segmentOverrides[i] = newValue;
                 }));
@@ -256,10 +263,12 @@ const controller = {
                 store.model.keyedEnvironmentFeatures[projectFlag.id] = res;
                 if (segmentRes) {
                     const feature = _.find(store.model.features, f => f.id === projectFlag.id);
-                    if (feature) feature.feature_segments = _.map(segmentRes.feature_segments, segment => ({
-                        ...segment,
-                        segment: segment.segment.id
-                    }));
+                    if (feature) {
+                        feature.feature_segments = _.map(segmentRes.feature_segments, segment => ({
+                            ...segment,
+                            segment: segment.segment.id,
+                        }));
+                    }
                 }
                 store.model.lastSaved = new Date().valueOf();
                 store.saved();
