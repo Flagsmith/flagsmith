@@ -36,7 +36,6 @@ class TheComponent extends Component {
 
     fetch =() => {
         this.setState({ isLoading: true });
-        AppActions.getFeatures(this.props.match.params.projectId, this.state.environmentLeft);
         return Promise.all([
             this.state.projectFlags ? Promise.resolve({ results: this.state.projectFlags }) : data.get(`${Project.api}projects/${this.props.match.params.projectId}/features/?page_size=999`),
             data.get(`${Project.api}environments/${this.state.environmentLeft}/featurestates/?page_size=999`),
@@ -108,7 +107,7 @@ class TheComponent extends Component {
                 {
                     this.state.environmentLeft && this.state.environmentRight ? (
                         <FeatureListProvider onSave={this.onSave} onError={this.onError}>
-                            {({ isLoading, projectFlags, environmentFlags }, {
+                            {({  }, {
                                 environmentHasFlag,
                                 toggleFlag,
                                 editFlag,

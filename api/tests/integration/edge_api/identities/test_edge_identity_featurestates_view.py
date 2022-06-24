@@ -237,7 +237,7 @@ def test_edge_identities_create_featurestate(
     # Next, let's append the fs that we created
     expected_identity_document["identity_features"].append(
         {
-            "feature": {"type": None, "name": "test feature", "id": feature},
+            "feature": {"type": "STANDARD", "name": "test_feature", "id": feature},
             "multivariate_feature_state_values": [],
             "enabled": expected_fs_enabled,
             "feature_segment": None,
@@ -307,7 +307,7 @@ def test_edge_identities_create_mv_featurestate(
     # Next, let's append the fs that we created
     expected_identity_document["identity_features"].append(
         {
-            "feature": {"type": None, "name": "test feature", "id": feature},
+            "feature": {"type": "STANDARD", "name": "test_feature", "id": feature},
             "multivariate_feature_state_values": [
                 {
                     "percentage_allocation": expected_percentage_allocation,

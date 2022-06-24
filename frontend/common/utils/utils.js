@@ -34,8 +34,7 @@ module.exports = Object.assign({}, require('./base/_utils'), {
         }
         return 'post';
     },
-    getIsEdge(_project) {
-        const project = _project || ProjectStore.model;
+    getIsEdge() {
         if (Utils.getFlagsmithHasFeature('edge_identities') && ProjectStore.model && ProjectStore.model.use_edge_identities) {
             return true;
         }
@@ -135,14 +134,6 @@ module.exports = Object.assign({}, require('./base/_utils'), {
         return Project.api;
     },
 
-    showUserSegments(_project) {
-        const project = _project || ProjectStore.model;
-        if (Utils.getFlagsmithHasFeature('edge_identities') && project && project.use_edge_identities) {
-            return false;
-        }
-        return true;
-    },
-
     getShouldHideIdentityOverridesTab(_project) {
         const project = _project || ProjectStore.model;
         if (Utils.getFlagsmithHasFeature('edge_identities') && project && project.use_edge_identities) {
@@ -239,7 +230,8 @@ module.exports = Object.assign({}, require('./base/_utils'), {
             return null;
         }
 
-        return Utils.getTypedValue(featureState.integer_value || featureState.string_value || featureState.boolean_value);
+
+        return Utils.getTypedValue(typeof featureState.integer_value === 'number'? featureState.integer_value : featureState.string_value || featureState.boolean_value);
     },
     valueToFeatureState(value) {
         const val = Utils.getTypedValue(value);
@@ -417,7 +409,7 @@ module.exports = Object.assign({}, require('./base/_utils'), {
                 break;
             }
             case '4_EYES': {
-                valid = true;
+                valid = isScaleupOrGreater;
                 break;
             }
             default:

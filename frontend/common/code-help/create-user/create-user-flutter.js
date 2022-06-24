@@ -17,7 +17,7 @@ module.exports = (envId, { LIB_NAME, USER_ID, LIB_NAME_JAVA, FEATURE_NAME, FEATU
 //    );
 
 // This will create a user in the dashboard if they don't already exist
-final user = FeatureUser(identifier: '${USER_ID}');
+final user = Identity(identifier: '${USER_ID}');
 
 bool featureEnabled = await flagsmithClient
   .hasFeatureFlag('${FEATURE_NAME}', user: user);

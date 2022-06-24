@@ -1,5 +1,6 @@
 import logging
 import typing
+from functools import reduce
 
 import coreapi
 from app_analytics.influxdb_wrapper import get_multiple_event_list_for_feature
@@ -22,6 +23,7 @@ from rest_framework.renderers import JSONRenderer
 from rest_framework.response import Response
 from rest_framework.schemas import AutoSchema
 
+from app.pagination import CustomPagination
 from audit.models import (
     FEATURE_CREATED_MESSAGE,
     FEATURE_DELETED_MESSAGE,
@@ -47,10 +49,12 @@ from .permissions import (
     FeaturePermissions,
     FeatureStatePermissions,
     IdentityFeatureStatePermissions,
+    MasterAPIKeyFeatureStatePermissions,
 )
 from .serializers import (
     FeatureInfluxDataSerializer,
     FeatureOwnerInputSerializer,
+    FeatureQuerySerializer,
     FeatureStateSerializerBasic,
     FeatureStateSerializerCreate,
     FeatureStateSerializerFull,
@@ -70,51 +74,44 @@ logger.setLevel(logging.INFO)
 flags_cache = caches[settings.FLAGS_CACHE_LOCATION]
 
 
+@method_decorator(
+    name="list",
+    decorator=swagger_auto_schema(query_serializer=FeatureQuerySerializer()),
+)
 class FeatureViewSet(viewsets.ModelViewSet):
     permission_classes = [IsAuthenticated, FeaturePermissions]
     filterset_fields = ["is_archived"]
+    pagination_class = CustomPagination
 
     def get_serializer_class(self):
         return {
             "list": ListCreateFeatureSerializer,
+            "retrieve": ListCreateFeatureSerializer,
             "create": ListCreateFeatureSerializer,
             "update": UpdateFeatureSerializer,
             "partial_update": UpdateFeatureSerializer,
         }.get(self.action, ProjectFeatureSerializer)
 
-    @swagger_auto_schema(
-        request_body=FeatureOwnerInputSerializer,
-        responses={200: ProjectFeatureSerializer},
-    )
-    @action(detail=True, methods=["POST"], url_path="add-owners")
-    def add_owners(self, request, *args, **kwargs):
-        serializer = FeatureOwnerInputSerializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
-
-        feature = self.get_object()
-        serializer.add_owners(feature)
-        return Response(self.get_serializer(instance=feature).data)
-
-    @swagger_auto_schema(
-        request_body=FeatureOwnerInputSerializer,
-        responses={200: ProjectFeatureSerializer},
-    )
-    @action(detail=True, methods=["POST"], url_path="remove-owners")
-    def remove_owners(self, request, *args, **kwargs):
-        serializer = FeatureOwnerInputSerializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
-
-        feature = self.get_object()
-        serializer.remove_users(feature)
-
-        return Response(self.get_serializer(instance=feature).data)
-
     def get_queryset(self):
         user_projects = self.request.user.get_permitted_projects(["VIEW_PROJECT"])
         project = get_object_or_404(user_projects, pk=self.kwargs["project_pk"])
-        return project.features.all().prefetch_related(
+        queryset = project.features.all().prefetch_related(
             "multivariate_options", "owners", "tags"
         )
+
+        query_serializer = FeatureQuerySerializer(data=self.request.query_params)
+        query_serializer.is_valid(raise_exception=True)
+        query_data = query_serializer.validated_data
+
+        queryset = self._filter_queryset(queryset)
+
+        sort = "%s%s" % (
+            "-" if query_data["sort_direction"] == "DESC" else "",
+            query_data["sort_field"],
+        )
+        queryset = queryset.order_by(sort)
+
+        return queryset
 
     def perform_create(self, serializer):
         instance = serializer.save(
@@ -146,6 +143,50 @@ class FeatureViewSet(viewsets.ModelViewSet):
             user=self.request.user,
         )
         return context
+
+    @swagger_auto_schema(
+        request_body=FeatureOwnerInputSerializer,
+        responses={200: ProjectFeatureSerializer},
+    )
+    @action(detail=True, methods=["POST"], url_path="add-owners")
+    def add_owners(self, request, *args, **kwargs):
+        serializer = FeatureOwnerInputSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+
+        feature = self.get_object()
+        serializer.add_owners(feature)
+        return Response(self.get_serializer(instance=feature).data)
+
+    @swagger_auto_schema(
+        request_body=FeatureOwnerInputSerializer,
+        responses={200: ProjectFeatureSerializer},
+    )
+    @action(detail=True, methods=["POST"], url_path="remove-owners")
+    def remove_owners(self, request, *args, **kwargs):
+        serializer = FeatureOwnerInputSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+
+        feature = self.get_object()
+        serializer.remove_users(feature)
+
+        return Response(self.get_serializer(instance=feature).data)
+
+    @swagger_auto_schema(
+        query_serializer=GetInfluxDataQuerySerializer(),
+        responses={200: FeatureInfluxDataSerializer()},
+    )
+    @action(detail=True, methods=["GET"], url_path="influx-data")
+    def get_influx_data(self, request, pk, project_pk):
+        feature = get_object_or_404(Feature, pk=pk)
+
+        query_serializer = GetInfluxDataQuerySerializer(data=request.query_params)
+        query_serializer.is_valid(raise_exception=True)
+
+        events_list = get_multiple_event_list_for_feature(
+            feature_name=feature.name, **query_serializer.data
+        )
+        serializer = FeatureInfluxDataSerializer(instance={"events_list": events_list})
+        return Response(serializer.data)
 
     def _trigger_feature_state_change_webhooks(
         self, feature_states: typing.List[FeatureState]
@@ -191,22 +232,28 @@ class FeatureViewSet(viewsets.ModelViewSet):
                 skip_signals="send_environments_to_dynamodb",
             )
 
-    @swagger_auto_schema(
-        query_serializer=GetInfluxDataQuerySerializer(),
-        responses={200: FeatureInfluxDataSerializer()},
-    )
-    @action(detail=True, methods=["GET"], url_path="influx-data")
-    def get_influx_data(self, request, pk, project_pk):
-        feature = get_object_or_404(Feature, pk=pk)
-
-        query_serializer = GetInfluxDataQuerySerializer(data=request.query_params)
+    def _filter_queryset(self, queryset: QuerySet) -> QuerySet:
+        query_serializer = FeatureQuerySerializer(data=self.request.query_params)
         query_serializer.is_valid(raise_exception=True)
+        query_data = query_serializer.validated_data
 
-        events_list = get_multiple_event_list_for_feature(
-            feature_name=feature.name, **query_serializer.data
-        )
-        serializer = FeatureInfluxDataSerializer(instance={"events_list": events_list})
-        return Response(serializer.data)
+        if query_data.get("search"):
+            queryset = queryset.filter(name__icontains=query_data["search"])
+
+        if "tags" in query_serializer.initial_data:
+            if query_data.get("tags", "") == "":
+                queryset = queryset.filter(tags__isnull=True)
+            else:
+                queryset = reduce(
+                    lambda qs, tag_id: qs.filter(tags=tag_id),
+                    query_data["tags"],
+                    queryset,
+                )
+
+        if "is_archived" in query_serializer.initial_data:
+            queryset = queryset.filter(is_archived=query_data["is_archived"])
+
+        return queryset
 
 
 @method_decorator(
@@ -466,30 +513,20 @@ class SimpleFeatureStateViewSet(
     viewsets.GenericViewSet,
 ):
     serializer_class = WritableNestedFeatureStateSerializer
-    permission_classes = [IsAuthenticated, FeatureStatePermissions]
+    permission_classes = [FeatureStatePermissions | MasterAPIKeyFeatureStatePermissions]
     filterset_fields = ["environment", "feature", "feature_segment"]
 
     def get_queryset(self):
         if not self.action == "list":
-            # permissions are handled in permission class
             return FeatureState.objects.all()
 
         try:
-            if not self.request.query_params.get("environment"):
+            environment_id = self.request.query_params.get("environment")
+            if not environment_id:
                 raise ValidationError("'environment' GET parameter is required.")
 
-            environment = Environment.objects.get(
-                id=self.request.query_params["environment"]
-            )
-            if not self.request.user.has_environment_permission(
-                VIEW_ENVIRONMENT, environment
-            ):
-                raise PermissionDenied(
-                    "User does not have permission to perform action in environment."
-                )
-
             queryset = FeatureState.get_environment_flags_queryset(
-                environment_id=environment.id
+                environment_id=environment_id
             )
             return queryset.select_related("feature_state_value").prefetch_related(
                 "multivariate_feature_state_values"

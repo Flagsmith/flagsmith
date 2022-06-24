@@ -5,6 +5,9 @@ import CreateFlagModal from '../modals/CreateFlag';
 import CreateTraitModal from '../modals/CreateTrait';
 import TryIt from '../TryIt';
 import CreateSegmentModal from '../modals/CreateSegment';
+import FeatureListStore from "../../../common/stores/feature-list-store";
+import TagSelect from "../TagSelect";
+import { Tag } from "../AddEditTags";
 
 const returnIfDefined = (value, value2) => {
     if (value === null || value === undefined) {
@@ -26,16 +29,30 @@ const UserPage = class extends Component {
     constructor(props, context) {
         super(props, context);
         this.state = {
+            tags: [],
             preselect: Utils.fromParam().flag,
         };
     }
 
+    getFilter = () => ({
+        tags: !this.state.tags || !this.state.tags.length ? undefined : this.state.tags.join(','),
+        is_archived: this.state.showArchived,
+    })
+
     componentDidMount() {
+        const { match: { params } } = this.props;
+
         AppActions.getIdentity(this.props.match.params.environmentId, this.props.match.params.id);
         AppActions.getIdentitySegments(this.props.match.params.projectId, this.props.match.params.id);
-        AppActions.getFeatures(this.props.match.params.projectId, this.props.match.params.environmentId);
+        AppActions.getFeatures(this.props.match.params.projectId, this.props.match.params.environmentId, true, this.state.search, this.state.sort, 0, this.getFilter());
+        this.getTags(params.projectId);
+
         this.getActualFlags();
         API.trackPage(Constants.pages.USER);
+    }
+
+    getTags = (projectId) => {
+        AppActions.getTags(projectId);
     }
 
     onSave = () => {
@@ -157,14 +174,19 @@ const UserPage = class extends Component {
             () => AppActions.deleteIdentityTrait(this.props.match.params.environmentId, this.props.match.params.id, id || trait_key),
         );
     }
-
+    filter = ()=> {
+        AppActions.searchFeatures(this.props.match.params.projectId, this.props.match.params.environmentId, true, this.state.search, this.state.sort, 0, this.getFilter());
+    }
     render() {
         const { actualFlags } = this.state;
+        const { projectId, environmentId } = this.props.match.params;
+
         const preventAddTrait = !AccountStore.getOrganisation().persist_trait_data;
         return (
             <div className="app-container">
                 <IdentityProvider onSave={this.onSave}>
-                    {({ isSaving, isLoading, error, environmentFlags, projectFlags, traits, identityFlags, identity }, { toggleFlag, removeFlag, editFlag }) => (isLoading || !identityFlags || !actualFlags || !projectFlags
+                    {({ isSaving, isLoading, error, environmentFlags, projectFlags, traits, identityFlags, identity }, { toggleFlag, removeFlag, editFlag }) =>
+                        (isLoading && !this.state.tags.length &&  !this.state.tags.length && !this.state.showArchived && typeof this.state.search !== 'string' && (!identityFlags || !actualFlags || !projectFlags)
                         ? <div className="text-center"><Loader/></div> : (
                             <div className="container">
                                 <div className="row">
@@ -187,6 +209,47 @@ const UserPage = class extends Component {
                                                   itemHeight={70}
                                                   icon="ion-ios-rocket"
                                                   title="Features"
+
+                                                  header={(
+                                                      <Row className="px-0 pt-0 pb-2">
+                                                          <TagSelect
+                                                              showUntagged
+                                                              showClearAll={(this.state.tags && !!this.state.tags.length) || this.state.showArchived}
+                                                              onClearAll={() => this.setState({ showArchived: false, tags: [] }, this.filter)}
+                                                              projectId={projectId} value={this.state.tags} onChange={(tags) => {
+                                                              FeatureListStore.isLoading = true
+                                                              if (tags.includes('') && tags.length>1) {
+                                                                  if (!this.state.tags.includes('')) {
+                                                                      this.setState({ tags: [''] }, this.filter);
+                                                                  } else {
+                                                                      this.setState({ tags: tags.filter(v => !!v) }, this.filter);
+                                                                  }
+                                                              } else {
+                                                                  this.setState({ tags }, this.filter);
+                                                              }
+                                                              AsyncStorage.setItem(`${projectId}tags`, JSON.stringify(tags));
+                                                          }}
+                                                          >
+                                                              <div className="mr-2 mb-2">
+                                                                  <Tag
+                                                                      selected={this.state.showArchived}
+                                                                      onClick={() => {
+                                                                          FeatureListStore.isLoading = true
+                                                                          this.setState({ showArchived: !this.state.showArchived }, this.filter)
+                                                                      }}
+                                                                      className="px-2 py-2 ml-2 mr-2"
+                                                                      tag={{ label: 'Archived' }}
+                                                                  />
+                                                              </div>
+                                                          </TagSelect>
+                                                      </Row>
+                                                  )}
+                                                  isLoading={FeatureListStore.isLoading}
+                                                  onSortChange={(sort) => {
+                                                      this.setState({ sort }, () => {
+                                                          AppActions.getFeatures(this.props.match.params.projectId, this.props.match.params.environmentId, true, this.state.search, this.state.sort, 0, this.getFilter());
+                                                      });
+                                                  }}
                                                   items={projectFlags}
                                                   sorting={[
                                                       { label: 'Name', value: 'name', order: 'asc', default: true },
@@ -371,7 +434,18 @@ const UserPage = class extends Component {
 
                                                       </Panel>
                                                     )}
-                                                  filterRow={({ name }, search) => name.toLowerCase().indexOf(search) > -1}
+                                                  paging={FeatureListStore.paging}
+                                                  search={this.state.search}
+
+                                                  nextPage={() => AppActions.getFeatures(this.props.match.params.projectId, this.props.match.params.environmentId, true, this.state.search, this.state.sort, FeatureListStore.paging.next, this.getFilter())}
+                                                  prevPage={() => AppActions.getFeatures(this.props.match.params.projectId, this.props.match.params.environmentId, true, this.state.search, this.state.sort, FeatureListStore.paging.previous, this.getFilter())}
+                                                  goToPage={page => AppActions.getFeatures(this.props.match.params.projectId, this.props.match.params.environmentId, true, this.state.search, this.state.sort, page, this.getFilter())}
+                                                  onChange={(e) => {
+                                                      this.setState({ search: Utils.safeParseEventValue(e) }, () => {
+                                                          AppActions.searchFeatures(this.props.match.params.projectId, this.props.match.params.environmentId, true, this.state.search, this.state.sort, 0, this.getFilter());
+                                                      });
+                                                  }}
+                                                  filterRow={({ name }, search) => true}
                                                 />
                                             </FormGroup>
                                             {!preventAddTrait && (
@@ -390,7 +464,7 @@ const UserPage = class extends Component {
                                                       )}
                                                       renderRow={({ id, trait_value, trait_key }, i) => (
                                                           <Row
-                                                            className="list-item clickable" key={trait_key}
+                                                            className="list-item clickable py-2" key={trait_key}
                                                             space data-test={`user-trait-${i}`}
                                                           >
                                                               <div
@@ -446,7 +520,6 @@ const UserPage = class extends Component {
                                                     />
                                                 </FormGroup>
                                             )}
-                                            {Utils.showUserSegments() && (
                                                 <IdentitySegmentsProvider id={this.props.match.params.id}>
                                                     {({ isLoading: segmentsLoading, segments }) => (segmentsLoading ? <div className="text-center"><Loader/></div> : (
                                                         <FormGroup>
@@ -501,7 +574,6 @@ const UserPage = class extends Component {
                                                         </FormGroup>
                                                     ))}
                                                 </IdentitySegmentsProvider>
-                                            )}
                                         </FormGroup>
                                     </div>
                                     <div className="col-md-12 mt-2">

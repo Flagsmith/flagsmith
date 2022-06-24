@@ -1,3 +1,5 @@
+import typing
+
 from rest_framework import serializers
 
 from audit.models import (
@@ -8,6 +10,11 @@ from audit.models import (
 )
 from environments.models import Environment, EnvironmentAPIKey, Webhook
 from features.serializers import FeatureStateSerializerFull
+from organisations.models import Subscription
+from organisations.subscriptions.serializers.mixins import (
+    ReadOnlyIfNotValidPlanMixin,
+)
+from projects.models import Project
 from projects.serializers import ProjectSerializer
 
 
@@ -63,6 +70,33 @@ class EnvironmentSerializerLight(serializers.ModelSerializer):
             project=instance.project,
             log=message,
         )
+
+
+class CreateUpdateEnvironmentSerializer(
+    ReadOnlyIfNotValidPlanMixin, EnvironmentSerializerLight
+):
+    invalid_plans = ("free",)
+    field_names = ("minimum_change_request_approvals",)
+
+    def get_subscription(self) -> typing.Optional[Subscription]:
+        view = self.context["view"]
+
+        if view.action == "create":
+            # handle `project` not being part of the data
+            # When request comes from yasg2(as part of schema generation)
+            project_id = view.request.data.get("project")
+            if not project_id:
+                return None
+
+            project = Project.objects.select_related(
+                "organisation", "organisation__subscription"
+            ).get(id=project_id)
+
+            return getattr(project.organisation, "subscription", None)
+        elif view.action in ("update", "partial_update"):
+            return getattr(self.instance.project.organisation, "subscription", None)
+
+        return None
 
 
 class CloneEnvironmentSerializer(EnvironmentSerializerLight):

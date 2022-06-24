@@ -64,10 +64,12 @@ const EnvironmentSettingsPage = class extends Component {
         if (ProjectStore.isSaving || (!name)) {
             return;
         }
+        const has4EyesPermission = Utils.getPlansPermission('4_EYES');
+
         const env = _.find(ProjectStore.getEnvs(), { api_key: this.props.match.params.environmentId });
         AppActions.editEnv(Object.assign({}, env, {
             name: name || env.name,
-            minimum_change_request_approvals: this.state.minimum_change_request_approvals,
+            minimum_change_request_approvals: has4EyesPermission ? this.state.minimum_change_request_approvals : null,
         }));
     }
 

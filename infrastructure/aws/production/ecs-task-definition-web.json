@@ -141,7 +141,7 @@
                 },
                 {
                     "name": "CACHE_BAD_ENVIRONMENTS_SECONDS",
-                    "value": "60"
+                    "value": "0"
                 },
                 {
                     "name": "EDGE_RELEASE_DATETIME",

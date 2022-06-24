@@ -48,6 +48,25 @@ class ProjectFeatureSerializer(serializers.ModelSerializer):
         writeonly_fields = ("initial_value", "default_enabled")
 
 
+class FeatureQuerySerializer(serializers.Serializer):
+    search = serializers.CharField(required=False)
+    sort_field = serializers.ChoiceField(
+        choices=("created_date", "name"), default="created_date"
+    )
+    sort_direction = serializers.ChoiceField(choices=("ASC", "DESC"), default="ASC")
+
+    tags = serializers.CharField(
+        required=False, help_text="Comma separated list of tag ids to filter on (AND)"
+    )
+    is_archived = serializers.BooleanField(required=False)
+
+    def validate_tags(self, tags):
+        try:
+            return [int(tag_id.strip()) for tag_id in tags.split(",")]
+        except ValueError:
+            raise serializers.ValidationError("Tag IDs must be integers.")
+
+
 class ListCreateFeatureSerializer(WritableNestedModelSerializer):
     multivariate_options = NestedMultivariateFeatureOptionSerializer(
         many=True, required=False
@@ -280,12 +299,13 @@ def create_feature_state_audit_log(feature_state, request):
         message = FEATURE_STATE_UPDATED_MESSAGE % feature_state.feature.name
 
     AuditLog.objects.create(
-        author=getattr(request, "user", None),
+        author=None if request.user.is_anonymous else request.user,
         related_object_id=feature_state.id,
         related_object_type=RelatedObjectType.FEATURE_STATE.name,
         environment=feature_state.environment,
         project=feature_state.environment.project,
         log=message,
+        master_api_key=request.master_api_key if request.user.is_anonymous else None,
     )
 
 
