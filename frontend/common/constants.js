@@ -140,7 +140,7 @@ const Constants = {
 
         'CREATE_USER': (envId, userId) => ({
             '.NET': require('./code-help/create-user/create-user-dotnet')(envId, keywords),
-            'cURL': require('./code-help/create-user/create-user-curl')(envId, keywords, userId),
+            'curl': require('./code-help/create-user/create-user-curl')(envId, keywords, userId),
             'Flutter': require('./code-help/create-user/create-user-flutter')(envId, keywords),
             'Go': require('./code-help/create-user/create-user-go')(envId, keywords),
             'iOS': require('./code-help/create-user/create-user-ios')(envId, keywords),
@@ -150,7 +150,6 @@ const Constants = {
             'Node JS': require('./code-help/create-user/create-user-node')(envId, keywords),
             'PHP': require('./code-help/create-user/create-user-php')(envId, keywords),
             'Python': require('./code-help/create-user/create-user-python')(envId, keywords),
-            'REST': require('./code-help/create-user/create-user-rest')(envId, keywords),
             'React': require('./code-help/create-user/create-user-react')(envId, keywords),
             'React Native': require('./code-help/create-user/create-user-rn')(envId, keywords),
             'Ruby': require('./code-help/create-user/create-user-ruby')(envId, keywords),
@@ -158,15 +157,26 @@ const Constants = {
         }),
 
         'USER_TRAITS': (envId, userId) => ({
-            'cURL': require('./code-help/traits/traits-curl')(envId, keywords, userId),
+            '.NET': require('./code-help/traits/traits-dotnet')(envId, keywords, userId),
+            'curl': require('./code-help/traits/traits-curl')(envId, keywords, userId),
+            'Flutter': require('./code-help/traits/traits-flutter')(envId, keywords, userId),
+            'Go': require('./code-help/traits/traits-go')(envId, keywords, userId),
+            'iOS': require('./code-help/traits/traits-ios')(envId, keywords, userId),
+            'Java': require('./code-help/traits/traits-java')(envId, keywords, userId),
             'JavaScript': require('./code-help/traits/traits-js')(envId, keywords, userId),
             'Next.js': require('./code-help/traits/traits-next')(envId, keywords, userId),
-            'React Native': require('./code-help/traits/traits-rn')(envId, keywords, userId),
+            'Node JS': require('./code-help/traits/traits-node')(envId, keywords, userId),
+            'PHP': require('./code-help/traits/traits-php')(envId, keywords, userId),
+            'Python': require('./code-help/traits/traits-python')(envId, keywords, userId),
             'React': require('./code-help/traits/traits-react')(envId, keywords, userId),
+            'React Native': require('./code-help/traits/traits-rn')(envId, keywords, userId),
+            'Ruby': require('./code-help/traits/traits-ruby')(envId, keywords, userId),
+            'Rust': require('./code-help/traits/traits-rust')(envId, keywords, userId),
         }),
 
         'INIT': envId => ({
             '.NET': require('./code-help/init/init-dotnet')(envId, keywords),
+            'curl': require('./code-help/init/init-curl')(envId, keywords),
             'Flutter': require('./code-help/init/init-flutter')(envId, keywords),
             'Go': require('./code-help/init/init-go')(envId, keywords),
             'iOS': require('./code-help/init/init-ios')(envId, keywords),
@@ -176,7 +186,6 @@ const Constants = {
             'Node JS': require('./code-help/init/init-node')(envId, keywords),
             'PHP': require('./code-help/init/init-php')(envId, keywords),
             'Python': require('./code-help/init/init-python')(envId, keywords),
-            'REST': require('./code-help/init/init-rest')(envId, keywords),
             'React Native': require('./code-help/init/init-rn')(envId, keywords),
             'React': require('./code-help/init/init-react')(envId, keywords),
             'Ruby': require('./code-help/init/init-ruby')(envId, keywords),
@@ -185,6 +194,7 @@ const Constants = {
 
         'INSTALL': {
             '.NET': require('./code-help/install/install-dotnet')(keywords),
+            'curl': require('./code-help/install/install-curl')(keywords),
             'Flutter': require('./code-help/install/install-flutter')(keywords),
             'Go': require('./code-help/install/install-go')(keywords),
             'Java': require('./code-help/install/install-java')(keywords),
@@ -193,7 +203,6 @@ const Constants = {
             'Node JS': require('./code-help/install/install-node')(keywords),
             'PHP': require('./code-help/install/install-php')(keywords),
             'Python': require('./code-help/install/install-python')(keywords),
-            'REST': require('./code-help/install/install-rest')(keywords),
             'React Native': require('./code-help/install/install-rn')(keywords),
             'React': require('./code-help/install/install-js')(keywords),
             'Ruby': require('./code-help/install/install-ruby')(keywords),

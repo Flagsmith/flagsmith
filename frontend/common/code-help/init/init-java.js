@@ -6,8 +6,8 @@ module.exports = (envId, { LIB_NAME, LIB_NAME_JAVA, FEATURE_NAME, FEATURE_FUNCTI
 Flags flags = flagsmith.getEnvironmentFlags();
 
 // Check for a feature
-boolean featureEnabled = ${LIB_NAME}.hasFeatureFlag("${customFeature || FEATURE_NAME}");
+boolean isEnabled = flags.isFeatureEnabled("${customFeature || FEATURE_NAME}");
 
 // Or, use the value of a feature
-String myRemoteConfig = ${LIB_NAME}.getFeatureFlagValue("${customFeature || FEATURE_NAME_ALT}");
+Object featureValue = flags.GetFeatureValue("${customFeature || FEATURE_NAME_ALT}");
 `;

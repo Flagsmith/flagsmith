@@ -1,14 +1,13 @@
-module.exports = (envId, { LIB_NAME, FEATURE_NAME, USER_ID, FEATURE_FUNCTION, FEATURE_NAME_ALT, FEATURE_NAME_ALT_VALUE, NPM_CLIENT }, userId) => `const Flagsmith = require('flagsmith-nodejs');
+module.exports = (envId, { FEATURE_NAME, FEATURE_NAME_ALT }, userId) => `const Flagsmith = require('flagsmith-nodejs');
 
 const flagsmith = new Flagsmith(
     environmentKey: '${envId}'
 );
 
-// This will create a user in the dashboard if they don't already exist
-const identifier = 'delboy@trotterstraders.co.uk';
-const traitList = { car_type: 'robin_reliant' };
+// Identify the user
+const flags = await flagsmith.getIdentityFlags('${userId}', traitList);
 
-const flags = await flagsmith.getIdentityFlags(identifier, traitList);
-var showButton = flags.isFeatureEnabled('secret_button');
-var buttonData = flags.getFeatureValue('secret_button');
+// get the state / value of the user's flags 
+var isEnabled = flags.isFeatureEnabled('${FEATURE_NAME}');
+var featureValue = flags.getFeatureValue('${FEATURE_NAME_ALT}');
 `;

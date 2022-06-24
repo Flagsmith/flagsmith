@@ -1,16 +1,21 @@
-module.exports = (envId, { LIB_NAME, USER_ID, LIB_NAME_JAVA, TRAIT_NAME, FEATURE_NAME, FEATURE_FUNCTION, FEATURE_NAME_ALT, FEATURE_NAME_ALT_VALUE, NPM_CLIENT }, userId) => `final user = FeatureUser(identifier: '${USER_ID}');
+module.exports = (envId, { USER_ID, TRAIT_NAME }, userId) => `
+final user = Identity(identifier: '${userId || USER_ID}');
 
-final userTrait = await flagsmithClient.getTrait(user, '${TRAIT_NAME}');
-if (userTrait != null) {
-    // run the code to use user trait
-} else {
-    // run the code without user trait
-}
+// Create a new user trait for the above identity
+flagsmithClient.createTrait(
+    value: TraitWithIdentity(
+    identity: user
+    key: '${TRAIT_NAME}',
+    value: '21',
+    ),
+);
 
-// Or get specific traits 
-final userTraits = await flagsmithClient.getTraits(user, keys: ['${TRAIT_NAME}', 'other_trait']);
-
-// Or get all traits
-final userTraits = await flagsmithClient.getTraits(user)
-
+// Update the previously created trait with a new value
+flagsmithClient.updateTraits(value: [
+    TraitWithIdentity(
+    identity: user,
+    key: '${TRAIT_NAME}',
+    value: '20',
+    ),
+]);
 `;

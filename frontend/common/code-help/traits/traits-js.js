@@ -2,6 +2,4 @@ module.exports = (envId, { SEGMENT_NAME, FEATURE_FUNCTION, LIB_NAME, NPM_CLIENT,
 
 // Set a user trait, setting traits will retrieve new flags and trigger an onChange event
 ${LIB_NAME}.setTrait("${TRAIT_NAME}", 21);
-// Decrease the current age trait by 1
-${LIB_NAME}.incrementTrait("${TRAIT_NAME}", -1);
 `;
