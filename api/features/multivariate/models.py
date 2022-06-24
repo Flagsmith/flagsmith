@@ -1,4 +1,5 @@
 import typing
+import uuid
 
 from core.models import AbstractBaseExportableModel
 from django.core.validators import MaxValueValidator, MinValueValidator
@@ -74,6 +75,7 @@ class MultivariateFeatureStateValue(LifecycleModelMixin, AbstractBaseExportableM
             feature_state=feature_state,
             multivariate_feature_option=self.multivariate_feature_option,
             percentage_allocation=self.percentage_allocation,
+            uuid=uuid.uuid4(),
         )
 
         if persist:

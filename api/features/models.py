@@ -3,6 +3,7 @@ from __future__ import unicode_literals
 import datetime
 import logging
 import typing
+import uuid
 from copy import deepcopy
 
 from core.models import AbstractBaseExportableModel
@@ -203,6 +204,7 @@ class FeatureSegment(AbstractBaseExportableModel, OrderedModelBase):
     def clone(self, environment: "Environment") -> "FeatureSegment":
         clone = deepcopy(self)
         clone.id = None
+        clone.uuid = uuid.uuid4()
         clone.environment = environment
         clone.save()
         return clone
@@ -354,6 +356,7 @@ class FeatureState(LifecycleModelMixin, AbstractBaseExportableModel):
         assert self.identity is None
         clone = deepcopy(self)
         clone.id = None
+        clone.uuid = uuid.uuid4()
         clone.feature_segment = (
             FeatureSegment.objects.get(
                 environment=env,
@@ -610,6 +613,7 @@ class FeatureStateValue(AbstractBaseFeatureValueModel, AbstractBaseExportableMod
     def clone(self, feature_state: FeatureState) -> "FeatureStateValue":
         clone = deepcopy(self)
         clone.id = None
+        clone.uuid = uuid.uuid4()
         clone.feature_state = feature_state
         clone.save()
         return clone
