@@ -3,7 +3,7 @@ from unittest import mock
 
 import pytest
 from core.constants import STRING
-from django.test import TestCase, override_settings
+from django.test import TestCase
 from django.utils import timezone
 from flag_engine.api.document_builders import (
     build_environment_api_key_document,
@@ -216,17 +216,6 @@ class EnvironmentTestCase(TestCase):
 
         # Then
         assert environment is None
-
-    @override_settings(
-        CACHE_BAD_ENVIRONMENTS_SECONDS=60, CACHE_BAD_ENVIRONMENTS_AFTER_FAILURES=1
-    )
-    def test_get_from_cache_does_not_hit_database_if_api_key_in_bad_env_cache(self):
-        # Given
-        api_key = "bad-key"
-
-        # When
-        with self.assertNumQueries(1):
-            [Environment.get_from_cache(api_key) for _ in range(10)]
 
 
 def test_saving_environment_api_key_calls_put_item_with_correct_arguments(

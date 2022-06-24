@@ -140,10 +140,6 @@
                     "value": "flagsmith_environment_api_key"
                 },
                 {
-                    "name": "CACHE_BAD_ENVIRONMENTS_SECONDS",
-                    "value": "0"
-                },
-                {
                     "name": "EDGE_RELEASE_DATETIME",
                     "value": "2022-06-07T10:00:00Z"
                 }
