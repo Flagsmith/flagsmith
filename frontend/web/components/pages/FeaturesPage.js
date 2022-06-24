@@ -19,7 +19,7 @@ const FeaturesPage = class extends Component {
         this.state = {
             tags: [],
             showArchived: false,
-            search: '',
+            search: null,
             sort: { label: 'Name', sortBy: 'name', sortOrder: 'asc' },
         };
         ES6Component(this);
@@ -60,13 +60,6 @@ const FeaturesPage = class extends Component {
 
     getTags = (projectId) => {
         AppActions.getTags(projectId);
-        // AsyncStorage.getItem(`${projectId}tags`).then((res) => {
-        //     if (res) {
-        //         this.setState({
-        //             tags: JSON.parse(res),
-        //         });
-        //     }
-        // });
     }
 
     componentWillReceiveProps(newProps) {
@@ -120,7 +113,7 @@ const FeaturesPage = class extends Component {
                                 {isLoading && (!projectFlags || !projectFlags.length) && <div className="centered-container"><Loader/></div>}
                                 {(!isLoading || (projectFlags && !!projectFlags.length)) && (
                                     <div>
-                                        {(projectFlags && projectFlags.length) || ((this.state.showArchived ||this.state.search || !!this.state.tags.length) && !isLoading) ? (
+                                        {(projectFlags && projectFlags.length) || ((this.state.showArchived || typeof this.state.search === 'string' || !!this.state.tags.length) && !isLoading) ? (
                                             <div>
                                                 <Row>
                                                     <Flex>

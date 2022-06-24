@@ -131,7 +131,7 @@ const ChangeRequestsPage = class extends Component {
         const environmentFlag = flags&&flags.environmentFlag
         const projectFlag = flags&&flags.projectFlag
 
-        if (!changeRequest || OrganisationStore.isLoading || (ChangeRequestStore.isLoading && !changeRequest) || !FeatureListStore.getEnvironmentFlags()) {
+        if (!changeRequest || OrganisationStore.isLoading || !projectFlag || !environmentFlag) {
             return (
                 <div data-test="change-requests-page" id="change-requests-page" className="app-container container">
                     <div className="text-center"><Loader/></div>

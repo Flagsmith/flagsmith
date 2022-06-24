@@ -62,17 +62,21 @@ const controller = {
                 store.loaded();
             }).catch(e => API.ajaxHandler(store, e));
     },
-    getChangeRequest: (id) => {
+    getChangeRequest: (id, projectId, environmentId) => {
         store.loading();
         data.get(`${Project.api}features/workflows/change-requests/${id}/`)
             .then((res) => {
                 return Promise.all(
                     [
-                        data.get(`${Project.api}environments/${environmentId}/featurestates/?page_size=${PAGE_SIZE}`),
-                        data.get(`${Project.api}projects/${projectId}/features/${feature}/`)
+                        data.get(`${Project.api}environments/${environmentId}/featurestates/?feature=${res.feature_states[0].feature}`),
+                        data.get(`${Project.api}projects/${projectId}/features/${res.feature_states[0].feature}/`)
                     ]
                 ).then(([environmentFlag, projectFlag])=>{
                     store.model[id] = res;
+                    store.flags[id] = {
+                        environmentFlag: environmentFlag.results[0],
+                        projectFlag: projectFlag
+                    }
                     store.loaded();
                 })
             }).catch(e => API.ajaxHandler(store, e));
@@ -83,6 +87,7 @@ const controller = {
 const store = Object.assign({}, BaseStore, {
     id: 'change-request-store',
     model: {},
+    flags: {},
     committed: {},
     scheduled: {},
 });

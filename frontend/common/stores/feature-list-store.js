@@ -3,7 +3,7 @@ const OrganisationStore = require('./organisation-store');
 const data = require('../data/base/_data');
 
 let createdFirstFeature = false;
-const PAGE_SIZE = 2;
+const PAGE_SIZE = 10;
 const controller = {
 
     getFeatures: (projectId, environmentId, force, page,filter) => {
@@ -361,7 +361,7 @@ store.dispatcherIndex = Dispatcher.register(store, (payload) => {
             controller.searchFeatures(action.search, action.environmentId, action.projectId, action.filter);
             break;
         case Actions.GET_FLAGS:
-            store.search = '';
+            store.search = action.search || '';
             if (action.sort) {
                 store.sort = action.sort;
             }
