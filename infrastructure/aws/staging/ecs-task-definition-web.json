@@ -140,6 +140,10 @@
                     "value": "flagsmith_environment_api_key"
                 },
                 {
+                    "name":"EDGE_RELEASE_DATETIME",
+                    "value":"2022-05-18T09:45:00Z"
+                },
+                {
                     "name": "ADD_NEVER_CACHE_HEADERS",
                     "value": "False"
                 },
