@@ -12,6 +12,7 @@ function serve() {
              --workers ${GUNICORN_WORKERS:-3} \
              --threads ${GUNICORN_THREADS:-2} \
              --access-logfile $ACCESS_LOG_LOCATION \
+             --keep-alive ${GUNICORN_KEEP_ALIVE:-2} \
              app.wsgi
 }
 function migrate_identities(){
