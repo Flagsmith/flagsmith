@@ -142,6 +142,10 @@
                 {
                     "name": "ADD_NEVER_CACHE_HEADERS",
                     "value": "False"
+                },
+                {
+                    "name": "GUNICORN_KEEP_ALIVE",
+                    "value": "60"
                 }
             ],
             "secrets": [
