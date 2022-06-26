@@ -84,6 +84,10 @@
                     "value": "15"
                 },
                 {
+                    "name": "GUNICORN_KEEP_ALIVE",
+                    "value": "60"
+                },
+                {
                     "name": "IDENTITIES_TABLE_NAME_DYNAMO",
                     "value": "flagsmith_identities"
                 },
