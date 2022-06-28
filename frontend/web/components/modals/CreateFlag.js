@@ -228,7 +228,7 @@ const CreateFlag = class extends Component {
                 </ResponsiveContainer>
             ) : (
                 <div className="text-center">
-                There has been no activity for this flag within the past 24 hours. Find out about Flag Analytics <a target="_blank" href="https://docs.flagsmith.com/advanced-use/flag-analytics">here</a>.
+                There has been no activity for this flag within the past month. Find out about Flag Analytics <a target="_blank" href="https://docs.flagsmith.com/advanced-use/flag-analytics">here</a>.
                 </div>
             );
         }
