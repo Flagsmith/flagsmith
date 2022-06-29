@@ -6,7 +6,7 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('environments', '0019_allow_blank_minimum_change_request_approvals'),
+        ('environments', '0020_add_uuid_field_to_environment_webhook'),
     ]
 
     operations = [
