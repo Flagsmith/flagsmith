@@ -69,7 +69,7 @@ const EnvironmentSettingsPage = class extends Component {
         const env = _.find(ProjectStore.getEnvs(), { api_key: this.props.match.params.environmentId });
         AppActions.editEnv(Object.assign({}, env, {
             name: name || env.name,
-            allow_client_traits: !!env.allow_client_traits,
+            allow_client_traits: !!this.state.allow_client_traits,
             minimum_change_request_approvals: has4EyesPermission ? this.state.minimum_change_request_approvals : null,
         }));
     }
@@ -278,6 +278,7 @@ const EnvironmentSettingsPage = class extends Component {
                                                         <div className="col-md-4 pr-0 text-right">
                                                             <div>
                                                                 <Switch className="float-right" checked={allow_client_traits} onChange={(v)=>{
+                                                                    debugger
                                                                     this.setState({allow_client_traits: v}, this.saveEnv)
                                                                 }} />
                                                             </div>
