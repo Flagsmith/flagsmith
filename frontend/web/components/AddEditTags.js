@@ -168,12 +168,11 @@ class _CreateEditTag extends PureComponent {
               />
               <div className="text-center">
                   <Permission level="project" permission="ADMIN" id={this.props.projectId}>
-                      {({ permission, isLoading }) => Utils.renderWithPermission(permission, Constants.projectPermissions('Admin'), ()=>(
+                      {({ permission, isLoading }) => Utils.renderWithPermission(permission, Constants.projectPermissions('Admin'),
                           <Button onClick={this.save} type="button" disabled={this.props.tagsSaving || !this.state.tag.color || !this.state.tag.label || !permission}>
                               {isEdit ? 'Save Tag' : 'Create Tag' }
                           </Button>
-                      ))
-                          }
+                      )}
                   </Permission>
               </div>
           </div>
