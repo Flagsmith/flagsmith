@@ -8,6 +8,7 @@ from app_analytics.influxdb_wrapper import (
 )
 from django.conf import settings
 from django.contrib.admin.views.decorators import staff_member_required
+from django.core.serializers.json import DjangoJSONEncoder
 from django.db.models import Case, Count, IntegerField, Q, Value, When
 from django.http import (
     HttpResponse,
@@ -24,6 +25,7 @@ from django.views.generic.edit import FormView
 from edge_api.identities.events import send_migration_event
 from environments.dynamodb.migrator import IdentityMigrator
 from environments.identities.models import Identity
+from import_export.export import full_export
 from organisations.models import Organisation
 from projects.models import Project
 from users.models import FFAdminUser
@@ -221,3 +223,15 @@ class EmailUsage(FormView):
     def form_valid(self, form):
         form.save()
         return super().form_valid(form)
+
+
+@staff_member_required()
+def download_org_data(request, organisation_id):
+    data = full_export(organisation_id)
+    response = HttpResponse(
+        json.dumps(data, cls=DjangoJSONEncoder), content_type="application/json"
+    )
+    response.headers["Content-Disposition"] = (
+        "attachment; filename=org-%d.json" % organisation_id
+    )
+    return response

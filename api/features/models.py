@@ -3,8 +3,10 @@ from __future__ import unicode_literals
 import datetime
 import logging
 import typing
+import uuid
 from copy import deepcopy
 
+from core.models import AbstractBaseExportableModel
 from django.core.exceptions import (
     NON_FIELD_ERRORS,
     ObjectDoesNotExist,
@@ -14,7 +16,12 @@ from django.db import models
 from django.db.models import Max, Q, QuerySet
 from django.utils import timezone
 from django.utils.translation import ugettext_lazy as _
-from django_lifecycle import AFTER_CREATE, BEFORE_CREATE, LifecycleModel, hook
+from django_lifecycle import (
+    AFTER_CREATE,
+    BEFORE_CREATE,
+    LifecycleModelMixin,
+    hook,
+)
 from ordered_model.models import OrderedModelBase
 from simple_history.models import HistoricalRecords
 
@@ -26,6 +33,7 @@ from features.custom_lifecycle import CustomLifecycleModelMixin
 from features.feature_states.models import AbstractBaseFeatureValueModel
 from features.feature_types import MULTIVARIATE, STANDARD
 from features.helpers import get_correctly_typed_value
+from features.managers import FeatureSegmentManager
 from features.multivariate.models import MultivariateFeatureStateValue
 from features.utils import (
     get_boolean_from_string,
@@ -48,7 +56,7 @@ if typing.TYPE_CHECKING:
     from environments.models import Environment
 
 
-class Feature(CustomLifecycleModelMixin, models.Model):
+class Feature(CustomLifecycleModelMixin, AbstractBaseExportableModel):
     name = models.CharField(max_length=2000)
     created_date = models.DateTimeField("DateCreated", auto_now_add=True)
     project = models.ForeignKey(
@@ -130,7 +138,7 @@ def get_next_segment_priority(feature):
         return feature_segments.first().priority + 1
 
 
-class FeatureSegment(OrderedModelBase):
+class FeatureSegment(AbstractBaseExportableModel, OrderedModelBase):
     feature = models.ForeignKey(
         Feature, on_delete=models.CASCADE, related_name="feature_segments"
     )
@@ -172,6 +180,8 @@ class FeatureSegment(OrderedModelBase):
     # used for audit purposes
     history = HistoricalRecords()
 
+    objects = FeatureSegmentManager()
+
     class Meta:
         unique_together = ("feature", "environment", "segment")
         ordering = ("priority",)
@@ -194,6 +204,7 @@ class FeatureSegment(OrderedModelBase):
     def clone(self, environment: "Environment") -> "FeatureSegment":
         clone = deepcopy(self)
         clone.id = None
+        clone.uuid = uuid.uuid4()
         clone.environment = environment
         clone.save()
         return clone
@@ -203,7 +214,7 @@ class FeatureSegment(OrderedModelBase):
         return get_correctly_typed_value(self.value_type, self.value)
 
 
-class FeatureState(LifecycleModel, models.Model):
+class FeatureState(LifecycleModelMixin, AbstractBaseExportableModel):
     feature = models.ForeignKey(
         Feature, related_name="feature_states", on_delete=models.CASCADE
     )
@@ -345,6 +356,7 @@ class FeatureState(LifecycleModel, models.Model):
         assert self.identity is None
         clone = deepcopy(self)
         clone.id = None
+        clone.uuid = uuid.uuid4()
         clone.feature_segment = (
             FeatureSegment.objects.get(
                 environment=env,
@@ -595,7 +607,7 @@ class FeatureState(LifecycleModel, models.Model):
         )
 
 
-class FeatureStateValue(AbstractBaseFeatureValueModel):
+class FeatureStateValue(AbstractBaseFeatureValueModel, AbstractBaseExportableModel):
     feature_state = models.OneToOneField(
         FeatureState, related_name="feature_state_value", on_delete=models.CASCADE
     )
@@ -605,6 +617,7 @@ class FeatureStateValue(AbstractBaseFeatureValueModel):
     def clone(self, feature_state: FeatureState) -> "FeatureStateValue":
         clone = deepcopy(self)
         clone.id = None
+        clone.uuid = uuid.uuid4()
         clone.feature_state = feature_state
         clone.save()
         return clone

@@ -1,5 +1,7 @@
 import typing
+import uuid
 
+from core.models import AbstractBaseExportableModel
 from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import models
 from django_lifecycle import (
@@ -15,7 +17,9 @@ if typing.TYPE_CHECKING:
     from features.models import FeatureState
 
 
-class MultivariateFeatureOption(LifecycleModelMixin, AbstractBaseFeatureValueModel):
+class MultivariateFeatureOption(
+    LifecycleModelMixin, AbstractBaseFeatureValueModel, AbstractBaseExportableModel
+):
     feature = models.ForeignKey(
         "features.Feature",
         on_delete=models.CASCADE,
@@ -42,7 +46,7 @@ class MultivariateFeatureOption(LifecycleModelMixin, AbstractBaseFeatureValueMod
             )
 
 
-class MultivariateFeatureStateValue(LifecycleModelMixin, models.Model):
+class MultivariateFeatureStateValue(LifecycleModelMixin, AbstractBaseExportableModel):
     feature_state = models.ForeignKey(
         "features.FeatureState",
         on_delete=models.CASCADE,
@@ -71,6 +75,7 @@ class MultivariateFeatureStateValue(LifecycleModelMixin, models.Model):
             feature_state=feature_state,
             multivariate_feature_option=self.multivariate_feature_option,
             percentage_allocation=self.percentage_allocation,
+            uuid=uuid.uuid4(),
         )
 
         if persist:

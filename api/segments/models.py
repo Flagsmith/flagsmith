@@ -3,6 +3,7 @@ import typing
 
 import semver
 from core.constants import BOOLEAN, FLOAT, INTEGER
+from core.models import AbstractBaseExportableModel
 from django.core.exceptions import ValidationError
 from django.db import models
 from flag_engine.utils.semver import is_semver, remove_semver_suffix
@@ -40,7 +41,7 @@ REGEX = "REGEX"
 PERCENTAGE_SPLIT = "PERCENTAGE_SPLIT"
 
 
-class Segment(models.Model):
+class Segment(AbstractBaseExportableModel):
     name = models.CharField(max_length=2000)
     description = models.TextField(null=True, blank=True)
     project = models.ForeignKey(
@@ -62,7 +63,7 @@ class Segment(models.Model):
         )
 
 
-class SegmentRule(models.Model):
+class SegmentRule(AbstractBaseExportableModel):
     ALL_RULE = "ALL"
     ANY_RULE = "ANY"
     NONE_RULE = "NONE"
@@ -134,7 +135,7 @@ class SegmentRule(models.Model):
         return rule.segment
 
 
-class Condition(models.Model):
+class Condition(AbstractBaseExportableModel):
     CONDITION_TYPES = (
         (EQUAL, "Exactly Matches"),
         (GREATER_THAN, "Greater than"),

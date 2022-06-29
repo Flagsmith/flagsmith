@@ -1,7 +1,8 @@
+from core.models import AbstractBaseExportableModel
 from django.db import models
 
 
-class AbstractBaseWebhookModel(models.Model):
+class AbstractBaseWebhookModel(AbstractBaseExportableModel):
     url = models.URLField()
     secret = models.CharField(max_length=255, blank=True)
 

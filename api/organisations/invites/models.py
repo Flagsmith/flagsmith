@@ -1,4 +1,5 @@
 from core.helpers import get_current_site_url
+from core.models import AbstractBaseExportableModel
 from django.conf import settings
 from django.core.mail import EmailMultiAlternatives
 from django.db import models
@@ -24,7 +25,7 @@ class AbstractBaseInviteModel(models.Model):
         abstract = True
 
 
-class InviteLink(AbstractBaseInviteModel):
+class InviteLink(AbstractBaseInviteModel, AbstractBaseExportableModel):
     expires_at = models.DateTimeField(
         blank=True,
         null=True,

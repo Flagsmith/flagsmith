@@ -1,12 +1,19 @@
 import typing
 
 from core.helpers import get_current_site_url
+from core.models import AbstractBaseExportableModel
 from django.conf import settings
 from django.core.mail import send_mail
 from django.db import models
 from django.template.loader import render_to_string
 from django.utils import timezone
-from django_lifecycle import AFTER_CREATE, AFTER_UPDATE, LifecycleModel, hook
+from django_lifecycle import (
+    AFTER_CREATE,
+    AFTER_UPDATE,
+    LifecycleModel,
+    LifecycleModelMixin,
+    hook,
+)
 
 from features.models import FeatureState
 
@@ -19,7 +26,7 @@ if typing.TYPE_CHECKING:
     from users.models import FFAdminUser
 
 
-class ChangeRequest(LifecycleModel):
+class ChangeRequest(LifecycleModelMixin, AbstractBaseExportableModel):
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
