@@ -51,6 +51,24 @@ def test_project_hide_disabled_flags_have_no_effect_on_feature_state_get_environ
     assert feature_states.count() == 2
 
 
+def test_feature_states_get_environment_flags_queryset_filter_using_feature_name(
+    environment, project
+):
+    # Given
+    flag_1_name = "flag_1"
+    Feature.objects.create(default_enabled=True, name=flag_1_name, project=project)
+    Feature.objects.create(default_enabled=True, name="flag_2", project=project)
+
+    # When
+    feature_states = FeatureState.get_environment_flags_queryset(
+        environment_id=environment.id, feature_name=flag_1_name
+    )
+
+    # Then
+    assert feature_states.count() == 1
+    assert feature_states.first().feature.name == "flag_1"
+
+
 @pytest.mark.parametrize(
     "feature_state_version_generator",
     (
