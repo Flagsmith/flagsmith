@@ -278,7 +278,6 @@ const EnvironmentSettingsPage = class extends Component {
                                                         <div className="col-md-4 pr-0 text-right">
                                                             <div>
                                                                 <Switch className="float-right" checked={allow_client_traits} onChange={(v)=>{
-                                                                    debugger
                                                                     this.setState({allow_client_traits: v}, this.saveEnv)
                                                                 }} />
                                                             </div>
