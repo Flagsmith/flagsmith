@@ -1,9 +1,10 @@
+from core.models import AbstractBaseExportableModel
 from django.db import models
 
 from projects.models import Project
 
 
-class SlackConfiguration(models.Model):
+class SlackConfiguration(AbstractBaseExportableModel):
     api_token = models.CharField(max_length=100, blank=False, null=False)
     project = models.OneToOneField(
         Project, on_delete=models.CASCADE, related_name="slack_config"
@@ -11,7 +12,7 @@ class SlackConfiguration(models.Model):
     created_date = models.DateTimeField(auto_now_add=True)
 
 
-class SlackEnvironment(models.Model):
+class SlackEnvironment(AbstractBaseExportableModel):
     slack_configuration = models.ForeignKey(
         SlackConfiguration, related_name="env_config", on_delete=models.CASCADE
     )

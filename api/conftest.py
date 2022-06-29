@@ -6,11 +6,12 @@ from environments.identities.models import Identity
 from environments.identities.traits.models import Trait
 from environments.models import Environment
 from features.feature_types import MULTIVARIATE
-from features.models import Feature
+from features.models import Feature, FeatureSegment
 from features.multivariate.models import MultivariateFeatureOption
 from features.value_types import STRING
 from organisations.models import Organisation, OrganisationRole
 from projects.models import Project
+from projects.tags.models import Tag
 from segments.models import EQUAL, Condition, Segment, SegmentRule
 from users.models import FFAdminUser
 
@@ -35,6 +36,16 @@ def organisation(db, admin_user):
 @pytest.fixture()
 def project(organisation):
     return Project.objects.create(name="Test Project", organisation=organisation)
+
+
+@pytest.fixture()
+def tag(project):
+    return Tag.objects.create(label="tag", project=project, color="#000000")
+
+
+@pytest.fixture()
+def segment(project):
+    return Segment.objects.create(name="segment", project=project)
 
 
 @pytest.fixture()
@@ -110,3 +121,10 @@ def reset_cache():
     cache.clear()
     yield
     cache.clear()
+
+
+@pytest.fixture()
+def feature_segment(feature, segment, environment):
+    return FeatureSegment.objects.create(
+        feature=feature, segment=segment, environment=environment
+    )

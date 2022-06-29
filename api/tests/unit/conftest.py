@@ -1,4 +1,5 @@
 import pytest
+from rest_framework.test import APIClient
 
 from api_keys.models import MasterAPIKey
 from environments.models import Environment
@@ -101,3 +102,12 @@ def organisation_one_project_one_feature_one(organisation_one_project_one):
 def master_api_key(organisation):
     _, key = MasterAPIKey.objects.create_key(name="test_key", organisation=organisation)
     return key
+
+
+@pytest.fixture()
+def master_api_key_client(master_api_key):
+    # Can not use `api_client` fixture here because:
+    # https://docs.pytest.org/en/6.2.x/fixture.html#fixtures-can-be-requested-more-than-once-per-test-return-values-are-cached
+    api_client = APIClient()
+    api_client.credentials(HTTP_AUTHORIZATION="Api-Key " + master_api_key)
+    return api_client

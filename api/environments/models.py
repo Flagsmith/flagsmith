@@ -81,6 +81,9 @@ class Environment(LifecycleModel):
     def __str__(self):
         return "Project %s - Environment %s" % (self.project.name, self.name)
 
+    def natural_key(self):
+        return (self.api_key,)
+
     def clone(self, name: str, api_key: str = None) -> "Environment":
         """
         Creates a clone of the environment, related objects and returns the
@@ -199,6 +202,9 @@ class EnvironmentAPIKey(LifecycleModel):
     name = models.CharField(max_length=100)
     expires_at = models.DateTimeField(blank=True, null=True)
     active = models.BooleanField(default=True)
+
+    def natural_key(self):
+        return (self.key,)
 
     @property
     def is_valid(self) -> bool:

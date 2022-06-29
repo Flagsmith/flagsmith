@@ -113,25 +113,53 @@ class MasterAPIKeyFeatureStatePermissions(BasePermission):
         return False
 
 
-class EnvironmentFeatureStatePermissions(BasePermission):
-    def has_permission(self, request, view):
-        if view.action == "create":
-            environment_api_key = view.kwargs.get("environment_api_key")
-            if not environment_api_key:
-                return False
+class MasterAPIKeyEnvironmentFeatureStatePermissions(BasePermission):
+    def has_permission(self, request: HttpRequest, view: str) -> bool:
+        master_api_key = getattr(request, "master_api_key", None)
+        if not master_api_key:
+            return False
+        environment_api_key = view.kwargs.get("environment_api_key")
+        if not environment_api_key:
+            return False
 
+        with suppress(Environment.DoesNotExist):
             environment = Environment.objects.get(api_key=environment_api_key)
-            return request.user.has_environment_permission(
-                permission=UPDATE_FEATURE_STATE, environment=environment
-            )
+            return environment.project.organisation == master_api_key.organisation
+        return False
 
-        if view.action == "list":
+    def has_object_permission(
+        self, request: HttpRequest, view: str, obj: FeatureState
+    ) -> bool:
+        master_api_key = getattr(request, "master_api_key", None)
+        if master_api_key:
+            return obj.environment.project.organisation == master_api_key.organisation
+        return False
+
+
+class EnvironmentFeatureStatePermissions(IsAuthenticated):
+    def has_permission(self, request, view):
+        action_permission_map = {
+            "list": VIEW_ENVIRONMENT,
+            "create": UPDATE_FEATURE_STATE,
+        }
+        if not super().has_permission(request, view):
+            return False
+
+        # detail view means we can just defer to object permissions
+        if view.detail:
             return True
 
-        # move on to object specific permissions
-        return view.detail
+        environment_api_key = view.kwargs.get("environment_api_key")
+        with suppress(Environment.DoesNotExist):
+            environment = Environment.objects.get(api_key=environment_api_key)
+            return request.user.has_environment_permission(
+                action_permission_map.get(view.action), environment
+            )
+        return False
 
     def has_object_permission(self, request, view, obj):
+        if request.user.is_anonymous:
+            return False
         return request.user.has_environment_permission(
             permission=UPDATE_FEATURE_STATE, environment=obj.environment
         )
