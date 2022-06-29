@@ -58,7 +58,7 @@ def _get_previous_state(
 ) -> dict:
     if event_type == WebhookEventType.FLAG_DELETED:
         return _get_feature_state_webhook_data(history_instance.instance)
-    if history_instance.prev_record:
+    if history_instance and history_instance.prev_record:
         return _get_feature_state_webhook_data(
             history_instance.prev_record.instance, previous=True
         )

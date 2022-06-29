@@ -146,6 +146,10 @@
                 {
                     "name": "CACHE_BAD_ENVIRONMENTS_SECONDS",
                     "value": "60"
+                },
+                {
+                    "name": "GUNICORN_KEEP_ALIVE",
+                    "value": "60"
                 }
             ],
             "secrets": [

@@ -1,10 +1,16 @@
 # -*- coding: utf-8 -*-
 from __future__ import unicode_literals
 
+from core.models import AbstractBaseExportableModel
 from django.conf import settings
 from django.db import models
 from django.utils import timezone
-from django_lifecycle import AFTER_CREATE, AFTER_SAVE, LifecycleModel, hook
+from django_lifecycle import (
+    AFTER_CREATE,
+    AFTER_SAVE,
+    LifecycleModelMixin,
+    hook,
+)
 
 from organisations.chargebee import (
     get_customer_id_from_subscription_id,
@@ -20,7 +26,7 @@ class OrganisationRole(models.TextChoices):
     USER = ("USER", "User")
 
 
-class Organisation(models.Model):
+class Organisation(AbstractBaseExportableModel):
     name = models.CharField(max_length=2000)
     has_requested_features = models.BooleanField(default=False)
     webhook_notification_email = models.EmailField(null=True, blank=True)
@@ -93,7 +99,7 @@ class UserOrganisation(models.Model):
         )
 
 
-class Subscription(LifecycleModel, models.Model):
+class Subscription(LifecycleModelMixin, AbstractBaseExportableModel):
     MAX_SEATS_IN_FREE_PLAN = 1
 
     organisation = models.OneToOneField(

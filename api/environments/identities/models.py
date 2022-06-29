@@ -5,6 +5,7 @@ from django.db.models import Prefetch, Q
 from django.utils import timezone
 
 from environments.dynamodb import DynamoIdentityWrapper
+from environments.identities.managers import IdentityManager
 from environments.identities.traits.models import Trait
 from environments.models import Environment
 from features.models import FeatureState
@@ -19,6 +20,7 @@ class Identity(models.Model):
     )
 
     dynamo_wrapper = DynamoIdentityWrapper()
+    objects = IdentityManager()
 
     class Meta:
         verbose_name_plural = "Identities"
@@ -27,6 +29,9 @@ class Identity(models.Model):
         # hard code the table name after moving from the environments app to prevent
         # issues with production deployment due to multi server configuration.
         db_table = "environments_identity"
+
+    def natural_key(self):
+        return self.identifier, self.environment.api_key
 
     def get_all_feature_states(self, traits: typing.List[Trait] = None):
         """
