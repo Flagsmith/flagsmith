@@ -1,11 +1,12 @@
 # -*- coding: utf-8 -*-
 from __future__ import unicode_literals
 
+from core.models import AbstractBaseExportableModel
 from django.conf import settings
 from django.core.cache import caches
 from django.db import models
 from django.utils import timezone
-from django_lifecycle import BEFORE_CREATE, LifecycleModel, hook
+from django_lifecycle import BEFORE_CREATE, LifecycleModelMixin, hook
 
 from organisations.models import Organisation
 from permissions.models import (
@@ -18,7 +19,7 @@ from projects.managers import ProjectManager
 project_segments_cache = caches[settings.PROJECT_SEGMENTS_CACHE_LOCATION]
 
 
-class Project(LifecycleModel):
+class Project(LifecycleModelMixin, AbstractBaseExportableModel):
     name = models.CharField(max_length=2000)
     created_date = models.DateTimeField("DateCreated", auto_now_add=True)
     organisation = models.ForeignKey(

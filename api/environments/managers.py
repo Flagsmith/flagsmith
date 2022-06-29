@@ -62,3 +62,6 @@ class EnvironmentManager(Manager):
             .get_queryset(*args, **kwargs)
             .select_related("project", "project__organisation")
         )
+
+    def get_by_natural_key(self, api_key):
+        return self.get(api_key=api_key)
