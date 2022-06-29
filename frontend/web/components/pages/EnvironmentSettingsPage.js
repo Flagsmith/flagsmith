@@ -60,7 +60,7 @@ const EnvironmentSettingsPage = class extends Component {
 
     saveEnv = (e) => {
         e && e.preventDefault();
-        const { name } = this.state;
+        const { name, allow_client_traits } = this.state;
         if (ProjectStore.isSaving || (!name)) {
             return;
         }
@@ -69,6 +69,7 @@ const EnvironmentSettingsPage = class extends Component {
         const env = _.find(ProjectStore.getEnvs(), { api_key: this.props.match.params.environmentId });
         AppActions.editEnv(Object.assign({}, env, {
             name: name || env.name,
+            allow_client_traits: !!env.allow_client_traits,
             minimum_change_request_approvals: has4EyesPermission ? this.state.minimum_change_request_approvals : null,
         }));
     }
@@ -120,7 +121,7 @@ const EnvironmentSettingsPage = class extends Component {
     };
 
     render() {
-        const { props: { webhooks, webhooksLoading }, state: { name } } = this;
+        const { props: { webhooks, webhooksLoading }, state: { name, allow_client_traits } } = this;
         const has4EyesPermission = Utils.getPlansPermission('4_EYES');
 
         return (
@@ -135,6 +136,7 @@ const EnvironmentSettingsPage = class extends Component {
                             setTimeout(()=>{
                                 this.setState({
                                     name:env.name,
+                                    allow_client_traits: !!env.allow_client_traits,
                                     minimum_change_request_approvals:Utils.changeRequestsEnabled(env.minimum_change_request_approvals)? env.minimum_change_request_approvals : null,
                                 })
                             },10)
@@ -231,6 +233,7 @@ const EnvironmentSettingsPage = class extends Component {
                                                             </div>
                                                     </div>
                                                 </Row>
+
                                                 {Utils.changeRequestsEnabled(this.state.minimum_change_request_approvals) && has4EyesPermission&& (
                                                     <div>
                                                         <div className="mb-2">
@@ -267,6 +270,21 @@ const EnvironmentSettingsPage = class extends Component {
                                                         </Row>
                                                     </div>
                                                 )}
+                                                {flagsmith.hasFeature("allow_client_traits") && (
+                                                    <Row className="mt-4" space>
+                                                        <div className="col-md-8 pl-0">
+                                                            <h3 className="m-b-0">Allow client SDKs to set user traits</h3>
+                                                        </div>
+                                                        <div className="col-md-4 pr-0 text-right">
+                                                            <div>
+                                                                <Switch className="float-right" checked={allow_client_traits} onChange={(v)=>{
+                                                                    this.setState({allow_client_traits: v}, this.saveEnv)
+                                                                }} />
+                                                            </div>
+                                                        </div>
+                                                    </Row>
+                                                )}
+
                                             </FormGroup>
                                         )}
                                         <FormGroup className="m-y-3">
