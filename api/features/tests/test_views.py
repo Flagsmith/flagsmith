@@ -721,6 +721,7 @@ class ProjectFeatureTestCase(TestCase):
             feature_name=feature.name,
             environment_id=str(self.environment_1.id),  # provided as a GET param
             period="24h",  # this is the default but can be provided as a GET param
+            aggregate_every="24h",  # this is the default but can be provided as a GET param
         )
 
     def test_project_admin_can_create_mv_options_when_creating_feature(self):
