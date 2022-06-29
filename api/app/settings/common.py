@@ -653,3 +653,5 @@ SERVE_FE_ASSETS = os.path.exists(BASE_DIR + "/app/templates/webpack/index.html")
 
 # Used to configure the number of application proxies that the API runs behind
 NUM_PROXIES = env.int("NUM_PROXIES", 1)
+
+SAML_USE_NAME_ID_AS_EMAIL = env.bool("SAML_USE_NAME_ID_AS_EMAIL", False)
