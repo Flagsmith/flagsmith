@@ -138,24 +138,24 @@ class MasterAPIKeyEnvironmentFeatureStatePermissions(BasePermission):
 
 class EnvironmentFeatureStatePermissions(IsAuthenticated):
     def has_permission(self, request, view):
+        action_permission_map = {
+            "list": VIEW_ENVIRONMENT,
+            "create": UPDATE_FEATURE_STATE,
+        }
         if not super().has_permission(request, view):
             return False
 
-        if view.action == "create":
-            environment_api_key = view.kwargs.get("environment_api_key")
-            if not environment_api_key:
-                return False
-            environment = Environment.objects.get(api_key=environment_api_key)
-
-            return request.user.has_environment_permission(
-                permission=UPDATE_FEATURE_STATE, environment=environment
-            )
-
-        if view.action == "list":
+        # detail view means we can just defer to object permissions
+        if view.detail:
             return True
 
-        # move on to object specific permissions
-        return view.detail
+        environment_api_key = view.kwargs.get("environment_api_key")
+        with suppress(Environment.DoesNotExist):
+            environment = Environment.objects.get(api_key=environment_api_key)
+            return request.user.has_environment_permission(
+                action_permission_map.get(view.action), environment
+            )
+        return False
 
     def has_object_permission(self, request, view, obj):
         if request.user.is_anonymous:
