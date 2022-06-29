@@ -562,12 +562,16 @@ class FeatureState(LifecycleModel, models.Model):
         return list(feature_states_dict.values())
 
     @classmethod
-    def get_environment_flags_queryset(cls, environment_id: int) -> QuerySet:
+    def get_environment_flags_queryset(
+        cls, environment_id: int, feature_name: str = None
+    ) -> QuerySet:
         """
         Get a queryset of the latest live versions of an environments' feature states
         """
 
-        feature_states_list = cls.get_environment_flags_list(environment_id)
+        feature_states_list = cls.get_environment_flags_list(
+            environment_id, feature_name
+        )
         return FeatureState.objects.filter(id__in=[fs.id for fs in feature_states_list])
 
     @classmethod

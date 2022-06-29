@@ -6,7 +6,6 @@ import pytest
 import pytz
 from django.forms import model_to_dict
 from django.urls import reverse
-from django.utils import timezone
 from rest_framework import status
 from rest_framework.test import APIClient, APITestCase
 
@@ -868,131 +867,6 @@ class ProjectFeatureTestCase(TestCase):
 
         # Then
         mock_dynamo_environment_wrapper.write_environments.assert_called_once()
-
-
-@pytest.mark.django_db()
-class FeatureStateViewSetTestCase(TestCase):
-    def setUp(self) -> None:
-        self.organisation = Organisation.objects.create(name="Test org")
-        self.project = Project.objects.create(
-            name="Test project", organisation=self.organisation
-        )
-        self.environment = Environment.objects.create(
-            project=self.project, name="Test environment"
-        )
-        self.feature = Feature.objects.create(
-            name="test-feature", project=self.project, type="CONFIG", initial_value=12
-        )
-        self.user = FFAdminUser.objects.create(email="test@example.com")
-        self.user.add_organisation(self.organisation, OrganisationRole.ADMIN)
-        self.client = APIClient()
-        self.client.force_authenticate(self.user)
-
-    def test_update_feature_state_value_updates_feature_state_value(self):
-        # Given
-        feature_state = FeatureState.objects.get(
-            environment=self.environment, feature=self.feature
-        )
-        url = reverse(
-            "api-v1:environments:environment-featurestates-detail",
-            args=[self.environment.api_key, feature_state.id],
-        )
-        new_value = "new-value"
-        data = {
-            "id": feature_state.id,
-            "feature_state_value": new_value,
-            "enabled": False,
-            "feature": self.feature.id,
-            "environment": self.environment.id,
-            "identity": None,
-            "feature_segment": None,
-        }
-
-        # When
-        self.client.put(url, data=json.dumps(data), content_type="application/json")
-
-        # Then
-        feature_state.refresh_from_db()
-        assert feature_state.get_feature_state_value() == new_value
-
-    def test_can_filter_feature_states_to_show_identity_overrides_only(self):
-        # Given
-        FeatureState.objects.get(environment=self.environment, feature=self.feature)
-
-        identifier = "test-identity"
-        identity = Identity.objects.create(
-            identifier=identifier, environment=self.environment
-        )
-        FeatureState.objects.create(
-            environment=self.environment, feature=self.feature, identity=identity
-        )
-
-        base_url = reverse(
-            "api-v1:environments:environment-featurestates-list",
-            args=[self.environment.api_key],
-        )
-        url = base_url + "?anyIdentity&feature=" + str(self.feature.id)
-
-        # When
-        res = self.client.get(url)
-
-        # Then
-        assert res.status_code == status.HTTP_200_OK
-
-        # and
-        assert len(res.json().get("results")) == 1
-
-        # and
-        assert res.json()["results"][0]["identity"]["identifier"] == identifier
-
-    def test_get_feature_states_only_returns_latest_versions(self):
-        # Given
-        feature_state = FeatureState.objects.get(
-            environment=self.environment, feature=self.feature
-        )
-        feature_state_v2 = feature_state.clone(
-            env=self.environment, live_from=timezone.now(), version=2
-        )
-
-        url = reverse(
-            "api-v1:environments:environment-featurestates-list",
-            args=[self.environment.api_key],
-        )
-
-        # When
-        response = self.client.get(url)
-
-        # Then
-        assert response.status_code == status.HTTP_200_OK
-
-        response_json = response.json()
-        assert len(response_json["results"]) == 1
-        assert response_json["results"][0]["id"] == feature_state_v2.id
-
-    def test_get_feature_states_does_not_return_null_versions(self):
-        # Given
-        feature_state = FeatureState.objects.get(
-            environment=self.environment, feature=self.feature
-        )
-
-        FeatureState.objects.create(
-            environment=self.environment, feature=self.feature, version=None
-        )
-
-        url = reverse(
-            "api-v1:environments:environment-featurestates-list",
-            args=[self.environment.api_key],
-        )
-
-        # When
-        response = self.client.get(url)
-
-        # Then
-        assert response.status_code == status.HTTP_200_OK
-
-        response_json = response.json()
-        assert len(response_json["results"]) == 1
-        assert response_json["results"][0]["id"] == feature_state.id
 
 
 @pytest.mark.django_db

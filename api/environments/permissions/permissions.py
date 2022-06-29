@@ -5,6 +5,7 @@ from rest_framework import exceptions
 from rest_framework.permissions import BasePermission
 
 from environments.models import Environment
+from environments.permissions.constants import VIEW_ENVIRONMENT
 from projects.models import Project
 
 
@@ -101,7 +102,12 @@ class NestedEnvironmentPermissions(BasePermission):
         elif view.action == "create":
             return request.user.is_environment_admin(environment)
 
-        return view.action == "list" or view.detail
+        elif view.action == "list":
+            return request.user.has_environment_permission(
+                VIEW_ENVIRONMENT, environment
+            )
+
+        return view.detail
 
     def has_object_permission(self, request, view, obj):
         if view.action in self.action_permission_map:
