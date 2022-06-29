@@ -274,6 +274,9 @@ const EnvironmentSettingsPage = class extends Component {
                                                     <Row className="mt-4" space>
                                                         <div className="col-md-8 pl-0">
                                                             <h3 className="m-b-0">Allow client SDKs to set user traits</h3>
+                                                            <p>
+                                                                Disabling this option will prevent client SDKs from using the client key from setting traits.
+                                                            </p>
                                                         </div>
                                                         <div className="col-md-4 pr-0 text-right">
                                                             <div>
