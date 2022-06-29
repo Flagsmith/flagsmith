@@ -1,7 +1,7 @@
+import typing
+
 from core.constants import BOOLEAN, FLOAT, INTEGER, STRING
-from core.request_origin import RequestOrigin
 from rest_framework import serializers
-from rest_framework.exceptions import PermissionDenied
 
 from environments.identities.models import Identity
 from environments.identities.serializers import (
@@ -44,6 +44,14 @@ class SDKCreateUpdateTraitSerializer(serializers.ModelSerializer):
             identity=identity, trait_key=trait_key, defaults=defaults
         )[0]
 
+    def validate(self, attrs):
+        request = self.context["request"]
+        if not request.environment.trait_persistence_allowed(request):
+            raise serializers.ValidationError(
+                "Setting traits not allowed with client key."
+            )
+        return attrs
+
     def _get_identity(self, identifier):
         return Identity.objects.get_or_create(
             identifier=identifier, environment=self.context["environment"]
@@ -77,18 +85,11 @@ class IdentifyWithTraitsSerializer(serializers.Serializer):
         (optionally store traits if flag set on org)
         """
         environment = self.context["environment"]
-        request = self.context["request"]
         identity, created = Identity.objects.get_or_create(
             identifier=self.validated_data["identifier"], environment=environment
         )
 
         trait_data_items = self.validated_data.get("traits", [])
-
-        if trait_data_items and not (
-            environment.allow_client_traits
-            or request.originated_from == RequestOrigin.SERVER
-        ):
-            raise PermissionDenied("Unable to set traits with client key.")
 
         if not created and environment.project.organisation.persist_trait_data:
             # if this is an update and we're persisting traits, then we need to
@@ -109,3 +110,11 @@ class IdentifyWithTraitsSerializer(serializers.Serializer):
             "traits": trait_models,
             "flags": all_feature_states,
         }
+
+    def validate_traits(self, traits: typing.List[dict] = None):
+        request = self.context["request"]
+        if traits and not request.environment.trait_persistence_allowed(request):
+            raise serializers.ValidationError(
+                "Setting traits not allowed with client key."
+            )
+        return traits

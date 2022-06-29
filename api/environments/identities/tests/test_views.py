@@ -747,9 +747,7 @@ class SDKIdentitiesTestCase(APITestCase):
         assert isinstance(args[0], Request)
         assert args[1] == self.environment.project.id
 
-    def test_post_identities_with_traits_fails_with_403_if_client_cannot_set_traits(
-        self,
-    ):
+    def test_post_identities_with_traits_fails_if_client_cannot_set_traits(self):
         # Given
         url = reverse("api-v1:sdk-identities")
         data = {
@@ -766,7 +764,7 @@ class SDKIdentitiesTestCase(APITestCase):
         )
 
         # Then
-        assert response.status_code == status.HTTP_403_FORBIDDEN
+        assert response.status_code == status.HTTP_400_BAD_REQUEST
 
     def test_post_identities_with_traits_success_if_client_cannot_set_traits_server_key(
         self,

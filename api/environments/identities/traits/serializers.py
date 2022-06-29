@@ -67,6 +67,14 @@ class IncrementTraitValueSerializer(serializers.Serializer):
     def _build_default_data(self):
         return {"value_type": INTEGER, "integer_value": 0}
 
+    def validate(self, attrs):
+        request = self.context["request"]
+        if not request.environment.trait_persistence_allowed(request):
+            raise serializers.ValidationError(
+                "Setting traits not allowed with client key."
+            )
+        return attrs
+
 
 class TraitKeysSerializer(serializers.Serializer):
     keys = serializers.ListSerializer(child=serializers.CharField())

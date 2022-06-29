@@ -1,11 +1,10 @@
-from core.request_origin import RequestOrigin
 from django.conf import settings
+from django.core.exceptions import BadRequest
 from django.db.models import Q
 from drf_yasg2 import openapi
 from drf_yasg2.utils import swagger_auto_schema
 from rest_framework import mixins, status, viewsets
 from rest_framework.decorators import action
-from rest_framework.exceptions import PermissionDenied
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 
@@ -188,12 +187,6 @@ class SDKTraits(mixins.CreateModelMixin, viewsets.GenericViewSet):
 
     @swagger_auto_schema(request_body=SDKCreateUpdateTraitSerializer)
     def create(self, request, *args, **kwargs):
-        if not (
-            request.environment.allow_client_traits
-            or request.originated_from == RequestOrigin.SERVER
-        ):
-            raise PermissionDenied("Unable to set traits with client key.")
-
         response = super(SDKTraits, self).create(request, *args, **kwargs)
         response.status_code = status.HTTP_200_OK
         if settings.EDGE_API_URL:
@@ -222,11 +215,8 @@ class SDKTraits(mixins.CreateModelMixin, viewsets.GenericViewSet):
     @action(detail=False, methods=["PUT"], url_path="bulk")
     def bulk_create(self, request):
         try:
-            if not (
-                request.environment.allow_client_traits
-                or request.originated_from == RequestOrigin.SERVER
-            ):
-                raise PermissionDenied("Unable to set traits with client key.")
+            if not request.environment.trait_persistence_allowed(request):
+                raise BadRequest("Unable to set traits with client key.")
 
             # endpoint allows users to delete existing traits by sending null values
             # for the trait value so we need to filter those out here

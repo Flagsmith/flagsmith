@@ -549,7 +549,7 @@ class SDKTraitsTest(APITestCase):
         )
 
         # Then
-        assert response.status_code == status.HTTP_403_FORBIDDEN
+        assert response.status_code == status.HTTP_400_BAD_REQUEST
 
     def test_server_key_can_create_trait_if_not_allow_client_traits(self):
         # Given
@@ -594,7 +594,7 @@ class SDKTraitsTest(APITestCase):
         )
 
         # Then
-        assert response.status_code == status.HTTP_403_FORBIDDEN
+        assert response.status_code == status.HTTP_400_BAD_REQUEST
 
     def test_server_key_can_bulk_create_traits_if_not_allow_client_traits(self):
         # Given
