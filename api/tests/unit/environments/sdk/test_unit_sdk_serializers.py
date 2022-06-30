@@ -1,4 +1,5 @@
 import pytest
+from core.request_origin import RequestOrigin
 
 from environments.identities.models import Identity
 from environments.sdk.serializers import IdentifyWithTraitsSerializer
@@ -22,12 +23,14 @@ def test_identify_with_traits_serializer_runs_identity_integrations_on_create(
     environment.project.organisation.persist_trait_data = persist_traits
     environment.project.organisation.save()
 
+    mock_request = mocker.MagicMock(originated_from=RequestOrigin.CLIENT)
+
     data = {
         "identifier": identifier,
         "traits": [{"trait_key": trait_key, "trait_value": trait_value}],
     }
     serializer = IdentifyWithTraitsSerializer(
-        data=data, context={"environment": environment}
+        data=data, context={"environment": environment, "request": mock_request}
     )
 
     mock_identify_integrations = mocker.patch(

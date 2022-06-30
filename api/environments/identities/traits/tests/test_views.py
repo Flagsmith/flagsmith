@@ -15,7 +15,7 @@ from environments.identities.traits.constants import (
     TRAIT_STRING_VALUE_MAX_LENGTH,
 )
 from environments.identities.traits.models import Trait
-from environments.models import Environment
+from environments.models import Environment, EnvironmentAPIKey
 from organisations.models import Organisation, OrganisationRole
 from projects.models import Project
 from util.tests import Helper
@@ -530,6 +530,96 @@ class SDKTraitsTest(APITestCase):
         assert isinstance(args[0], Request)
         assert args[0].data == request_data
         assert args[1] == self.environment.project.id
+
+    def test_create_trait_returns_403_if_client_cannot_set_traits(self):
+        # Given
+        url = reverse("api-v1:sdk-traits-list")
+        data = {
+            "identity": {"identifier": self.identity.identifier},
+            "trait_key": "foo",
+            "trait_value": "bar",
+        }
+
+        self.environment.allow_client_traits = False
+        self.environment.save()
+
+        # When
+        response = self.client.post(
+            url, data=json.dumps(data), content_type="application/json"
+        )
+
+        # Then
+        assert response.status_code == status.HTTP_400_BAD_REQUEST
+
+    def test_server_key_can_create_trait_if_not_allow_client_traits(self):
+        # Given
+        url = reverse("api-v1:sdk-traits-list")
+        data = {
+            "identity": {"identifier": self.identity.identifier},
+            "trait_key": "foo",
+            "trait_value": "bar",
+        }
+
+        server_api_key = EnvironmentAPIKey.objects.create(environment=self.environment)
+        self.client.credentials(HTTP_X_ENVIRONMENT_KEY=server_api_key.key)
+
+        self.environment.allow_client_traits = False
+        self.environment.save()
+
+        # When
+        response = self.client.post(
+            url, data=json.dumps(data), content_type="application/json"
+        )
+
+        # Then
+        assert response.status_code == status.HTTP_200_OK
+
+    def test_bulk_create_traits_returns_403_if_client_cannot_set_traits(self):
+        # Given
+        url = reverse("api-v1:sdk-traits-bulk-create")
+        data = [
+            {
+                "identity": {"identifier": self.identity.identifier},
+                "trait_key": "foo",
+                "trait_value": "bar",
+            }
+        ]
+
+        self.environment.allow_client_traits = False
+        self.environment.save()
+
+        # When
+        response = self.client.put(
+            url, data=json.dumps(data), content_type="application/json"
+        )
+
+        # Then
+        assert response.status_code == status.HTTP_400_BAD_REQUEST
+
+    def test_server_key_can_bulk_create_traits_if_not_allow_client_traits(self):
+        # Given
+        url = reverse("api-v1:sdk-traits-bulk-create")
+        data = [
+            {
+                "identity": {"identifier": self.identity.identifier},
+                "trait_key": "foo",
+                "trait_value": "bar",
+            }
+        ]
+
+        server_api_key = EnvironmentAPIKey.objects.create(environment=self.environment)
+        self.client.credentials(HTTP_X_ENVIRONMENT_KEY=server_api_key.key)
+
+        self.environment.allow_client_traits = False
+        self.environment.save()
+
+        # When
+        response = self.client.put(
+            url, data=json.dumps(data), content_type="application/json"
+        )
+
+        # Then
+        assert response.status_code == status.HTTP_200_OK
 
     def _generate_trait_data(self, identifier=None, trait_key=None, trait_value=None):
         identifier = identifier or self.identity.identifier

@@ -1,8 +1,10 @@
+from core.request_origin import RequestOrigin
 from django.conf import settings
 from django.core.cache import caches
 from rest_framework.authentication import BaseAuthentication
 from rest_framework.exceptions import AuthenticationFailed
 
+from environments.api_keys import SERVER_API_KEY_PREFIX
 from environments.models import Environment
 
 environment_cache = caches[settings.ENVIRONMENT_CACHE_LOCATION]
@@ -31,6 +33,11 @@ class EnvironmentKeyAuthentication(BaseAuthentication):
             raise AuthenticationFailed("Organisation is disabled from serving flags.")
 
         request.environment = environment
+        request.originated_from = (
+            RequestOrigin.SERVER
+            if api_key.startswith(SERVER_API_KEY_PREFIX)
+            else RequestOrigin.CLIENT
+        )
 
         # DRF authentication expects a two tuple to be returned containing User, auth
         return None, None

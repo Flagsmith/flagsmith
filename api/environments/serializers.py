@@ -31,6 +31,7 @@ class EnvironmentSerializerFull(serializers.ModelSerializer):
             "project",
             "api_key",
             "minimum_change_request_approvals",
+            "allow_client_traits",
         )
 
 
@@ -43,6 +44,7 @@ class EnvironmentSerializerLight(serializers.ModelSerializer):
             "api_key",
             "project",
             "minimum_change_request_approvals",
+            "allow_client_traits",
         )
 
     def create(self, validated_data):

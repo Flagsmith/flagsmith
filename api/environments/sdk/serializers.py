@@ -1,3 +1,5 @@
+import typing
+
 from core.constants import BOOLEAN, FLOAT, INTEGER, STRING
 from rest_framework import serializers
 
@@ -41,6 +43,14 @@ class SDKCreateUpdateTraitSerializer(serializers.ModelSerializer):
         return Trait.objects.update_or_create(
             identity=identity, trait_key=trait_key, defaults=defaults
         )[0]
+
+    def validate(self, attrs):
+        request = self.context["request"]
+        if not request.environment.trait_persistence_allowed(request):
+            raise serializers.ValidationError(
+                "Setting traits not allowed with client key."
+            )
+        return attrs
 
     def _get_identity(self, identifier):
         return Identity.objects.get_or_create(
@@ -100,3 +110,11 @@ class IdentifyWithTraitsSerializer(serializers.Serializer):
             "traits": trait_models,
             "flags": all_feature_states,
         }
+
+    def validate_traits(self, traits: typing.List[dict] = None):
+        request = self.context["request"]
+        if traits and not request.environment.trait_persistence_allowed(request):
+            raise serializers.ValidationError(
+                "Setting traits not allowed with client key."
+            )
+        return traits
