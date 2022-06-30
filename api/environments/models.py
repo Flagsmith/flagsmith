@@ -6,6 +6,7 @@ import typing
 from copy import deepcopy
 
 import boto3
+from core.request_origin import RequestOrigin
 from django.conf import settings
 from django.core.cache import caches
 from django.db import models
@@ -16,6 +17,7 @@ from django_lifecycle import AFTER_CREATE, AFTER_SAVE, LifecycleModel, hook
 from flag_engine.api.document_builders import (
     build_environment_api_key_document,
 )
+from rest_framework.request import Request
 
 from app.utils import create_hash
 from environments.api_keys import (
@@ -55,6 +57,10 @@ class Environment(LifecycleModel):
 
     webhooks_enabled = models.BooleanField(default=False, help_text="DEPRECATED FIELD.")
     webhook_url = models.URLField(null=True, blank=True, help_text="DEPRECATED FIELD.")
+
+    allow_client_traits = models.BooleanField(
+        default=True, help_text="Allows clients using the client API key to set traits."
+    )
 
     objects = EnvironmentManager()
 
@@ -157,6 +163,13 @@ class Environment(LifecycleModel):
                 lambda fs: fs.feature.id == feature_id,
                 self.feature_states.filter(**filter_kwargs),
             )
+        )
+
+    def trait_persistence_allowed(self, request: Request) -> bool:
+        return (
+            self.allow_client_traits
+            or getattr(request, "originated_from", RequestOrigin.CLIENT)
+            == RequestOrigin.SERVER
         )
 
 

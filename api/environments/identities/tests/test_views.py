@@ -15,7 +15,7 @@ from environments.identities.helpers import (
 )
 from environments.identities.models import Identity
 from environments.identities.traits.models import Trait
-from environments.models import Environment
+from environments.models import Environment, EnvironmentAPIKey
 from features.models import Feature, FeatureSegment, FeatureState
 from integrations.amplitude.models import AmplitudeConfiguration
 from organisations.models import Organisation, OrganisationRole
@@ -746,3 +746,48 @@ class SDKIdentitiesTestCase(APITestCase):
         assert kwargs == {}
         assert isinstance(args[0], Request)
         assert args[1] == self.environment.project.id
+
+    def test_post_identities_with_traits_fails_if_client_cannot_set_traits(self):
+        # Given
+        url = reverse("api-v1:sdk-identities")
+        data = {
+            "identifier": self.identity.identifier,
+            "traits": [{"trait_key": "foo", "trait_value": "bar"}],
+        }
+
+        self.environment.allow_client_traits = False
+        self.environment.save()
+
+        # When
+        response = self.client.post(
+            url, data=json.dumps(data), content_type="application/json"
+        )
+
+        # Then
+        assert response.status_code == status.HTTP_400_BAD_REQUEST
+
+    def test_post_identities_with_traits_success_if_client_cannot_set_traits_server_key(
+        self,
+    ):
+        # Given
+        url = reverse("api-v1:sdk-identities")
+        data = {
+            "identifier": self.identity.identifier,
+            "traits": [{"trait_key": "foo", "trait_value": "bar"}],
+        }
+
+        environment_api_key = EnvironmentAPIKey.objects.create(
+            environment=self.environment
+        )
+        self.client.credentials(HTTP_X_ENVIRONMENT_KEY=environment_api_key.key)
+
+        self.environment.allow_client_traits = False
+        self.environment.save()
+
+        # When
+        response = self.client.post(
+            url, data=json.dumps(data), content_type="application/json"
+        )
+
+        # Then
+        assert response.status_code == status.HTTP_200_OK
