@@ -126,10 +126,11 @@ def test_export_environments(project):
     # TODO: test whether the export is importable
 
 
-def test_export_features(project, environment, segment):
+def test_export_features(project, environment, segment, admin_user):
     # Given
     # a standard feature
     standard_feature = Feature.objects.create(project=project, name="standard_feature")
+    standard_feature.owners.add(admin_user)
 
     # and a multivariate feature
     mv_feature = Feature.objects.create(
@@ -157,5 +158,8 @@ def test_export_features(project, environment, segment):
 
     # Then
     assert export
+
+    # verify that owners are not included in the export
+    assert "owners" not in export
 
     # TODO: test whether the export is importable
