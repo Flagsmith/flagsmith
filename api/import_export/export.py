@@ -1,5 +1,4 @@
 import functools
-import itertools
 import typing
 from dataclasses import dataclass
 
@@ -131,7 +130,11 @@ def export_features(organisation_id: int) -> typing.List[dict]:
 
     return _export_entities(
         [
-            _EntityExportConfig(Feature, Q(project__organisation__id=organisation_id)),
+            _EntityExportConfig(
+                Feature,
+                Q(project__organisation__id=organisation_id),
+                exclude_fields=["owners"],
+            ),
             _EntityExportConfig(
                 MultivariateFeatureOption,
                 Q(feature__project__organisation__id=organisation_id),
@@ -161,22 +164,24 @@ def export_features(organisation_id: int) -> typing.List[dict]:
 class _EntityExportConfig:
     model_class: type(Model)
     qs_filter: Q
+    exclude_fields: typing.List[str] = None
 
 
 def _export_entities(
     export_configs: typing.List[_EntityExportConfig],
 ) -> typing.List[dict]:
-    return list(
-        itertools.chain(
-            *[
-                _serialize_natural(
-                    "python",
-                    export_config.model_class.objects.filter(export_config.qs_filter),
-                )
-                for export_config in export_configs
+    entities = []
+    for config in export_configs:
+        args = ("python", config.model_class.objects.filter(config.qs_filter))
+        kwargs = {}
+        if config.exclude_fields:
+            kwargs["fields"] = [
+                f.name
+                for f in config.model_class._meta.get_fields()
+                if f.name not in config.exclude_fields
             ]
-        )
-    )
+        entities.extend(_serialize_natural(*args, **kwargs))
+    return entities
 
 
 _serialize_natural = functools.partial(
