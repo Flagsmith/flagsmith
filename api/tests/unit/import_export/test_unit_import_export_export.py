@@ -1,10 +1,15 @@
+import json
+import re
+
 from core.constants import STRING
+from django.core.serializers.json import DjangoJSONEncoder
 from flag_engine.segments.constants import ALL_RULE
 
 from environments.models import Environment, EnvironmentAPIKey, Webhook
 from features.feature_types import MULTIVARIATE
 from features.models import Feature, FeatureSegment, FeatureState
 from features.multivariate.models import MultivariateFeatureOption
+from features.workflows.core.models import ChangeRequest
 from import_export.export import (
     export_environments,
     export_features,
@@ -153,13 +158,28 @@ def test_export_features(project, environment, segment, admin_user):
         environment=environment,
     )
 
+    # and a feature state associated with a change request
+    cr = ChangeRequest.objects.create(
+        environment=environment, title="Test CR", user=admin_user
+    )
+    FeatureState.objects.create(
+        feature=standard_feature, environment=environment, version=2, change_request=cr
+    )
+
     # When
     export = export_features(organisation_id=project.organisation_id)
 
     # Then
     assert export
 
+    json_export = json.dumps(export, cls=DjangoJSONEncoder)
+
     # verify that owners are not included in the export
-    assert "owners" not in export
+    assert "owners" not in json_export
+
+    # verify that change requests are not included in the export and that any feature
+    # states associated with a change request are no longer associated with that CR.
+    assert "workflows_core.changerequest" not in json_export
+    assert not re.findall(r"\"change_request\": \[\"[a-z0-9\-]{36}\"\]", json_export)
 
     # TODO: test whether the export is importable
