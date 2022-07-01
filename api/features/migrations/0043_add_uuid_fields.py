@@ -73,25 +73,4 @@ class Migration(migrations.Migration):
             name="uuid",
             field=models.UUIDField(default=uuid.uuid4, editable=False, unique=True),
         ),
-        # historical models...
-        migrations.AddField(
-            model_name="historicalfeature",
-            name="uuid",
-            field=models.UUIDField(db_index=True, editable=False, default=uuid.uuid4),
-        ),
-        migrations.AddField(
-            model_name="historicalfeaturesegment",
-            name="uuid",
-            field=models.UUIDField(db_index=True, editable=False, default=uuid.uuid4),
-        ),
-        migrations.AddField(
-            model_name="historicalfeaturestate",
-            name="uuid",
-            field=models.UUIDField(db_index=True, editable=False, default=uuid.uuid4),
-        ),
-        migrations.AddField(
-            model_name="historicalfeaturestatevalue",
-            name="uuid",
-            field=models.UUIDField(db_index=True, editable=False, default=uuid.uuid4),
-        ),
     ]
