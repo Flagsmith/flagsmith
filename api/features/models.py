@@ -76,7 +76,7 @@ class Feature(CustomLifecycleModelMixin, AbstractBaseExportableModel):
     description = models.TextField(null=True, blank=True)
     default_enabled = models.BooleanField(default=False)
     type = models.CharField(max_length=50, null=True, blank=True, default=STANDARD)
-    history = HistoricalRecords()
+    history = HistoricalRecords(excluded_fields=["uuid"])
     tags = models.ManyToManyField(Tag, blank=True)
     is_archived = models.BooleanField(default=False)
     owners = models.ManyToManyField(
@@ -178,7 +178,7 @@ class FeatureSegment(AbstractBaseExportableModel, OrderedModelBase):
     order_with_respect_to = ("feature", "environment")
 
     # used for audit purposes
-    history = HistoricalRecords()
+    history = HistoricalRecords(excluded_fields=["uuid"])
 
     objects = FeatureSegmentManager()
 
@@ -243,7 +243,7 @@ class FeatureState(LifecycleModelMixin, AbstractBaseExportableModel):
     )
 
     enabled = models.BooleanField(default=False)
-    history = HistoricalRecords()
+    history = HistoricalRecords(excluded_fields=["uuid"])
 
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
@@ -612,7 +612,7 @@ class FeatureStateValue(AbstractBaseFeatureValueModel, AbstractBaseExportableMod
         FeatureState, related_name="feature_state_value", on_delete=models.CASCADE
     )
 
-    history = HistoricalRecords()
+    history = HistoricalRecords(excluded_fields=["uuid"])
 
     def clone(self, feature_state: FeatureState) -> "FeatureStateValue":
         clone = deepcopy(self)
