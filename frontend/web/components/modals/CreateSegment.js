@@ -326,7 +326,7 @@ const CreateSegment = class extends Component {
                                                       id,
                                                       identifier,
                                                   }, index) => (
-                                                      <div>
+                                                      <div key={id}>
                                                           <IdentitySegmentsProvider fetch id={id} projectId={this.props.projectId}>{({ isLoading: segmentsLoading, segments }) => {
                                                               let inSegment = false;
                                                               if (segments && segments.find(v => v.name === name)) {
