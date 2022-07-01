@@ -18,7 +18,6 @@ from features.multivariate.models import (
     MultivariateFeatureOption,
     MultivariateFeatureStateValue,
 )
-from features.workflows.core.models import ChangeRequest
 from integrations.datadog.models import DataDogConfiguration
 from integrations.heap.models import HeapConfiguration
 from integrations.mixpanel.models import MixpanelConfiguration
@@ -128,36 +127,52 @@ def export_features(organisation_id: int) -> typing.List[dict]:
     Export all features and related entities (including ChangeRequests)
     """
 
-    return _export_entities(
+    feature_states = []
+    for feature_state in _export_entities(
         [
             _EntityExportConfig(
-                Feature,
-                Q(project__organisation__id=organisation_id),
-                exclude_fields=["owners"],
-            ),
-            _EntityExportConfig(
-                MultivariateFeatureOption,
-                Q(feature__project__organisation__id=organisation_id),
-            ),
-            _EntityExportConfig(
-                FeatureSegment, Q(feature__project__organisation__id=organisation_id)
-            ),
-            _EntityExportConfig(
-                ChangeRequest, Q(environment__project__organisation__id=organisation_id)
-            ),
-            _EntityExportConfig(
                 FeatureState, Q(feature__project__organisation__id=organisation_id)
-            ),
-            _EntityExportConfig(
-                FeatureStateValue,
-                Q(feature_state__feature__project__organisation__id=organisation_id),
-            ),
-            _EntityExportConfig(
-                MultivariateFeatureStateValue,
-                Q(feature_state__feature__project__organisation__id=organisation_id),
-            ),
+            )
         ]
-    )
+    ):
+        # Since we're not exporting any user objects, we want to exclude change
+        # requests from the export. This means, however, that we need to remove the
+        # FK dependency on the change request from the FeatureState before export.
+        feature_state["fields"]["change_request"] = None
+        feature_states.append(feature_state)
+
+    return [
+        *_export_entities(
+            [
+                _EntityExportConfig(
+                    Feature,
+                    Q(project__organisation__id=organisation_id),
+                    exclude_fields=["owners"],
+                ),
+                _EntityExportConfig(
+                    MultivariateFeatureOption,
+                    Q(feature__project__organisation__id=organisation_id),
+                ),
+                _EntityExportConfig(
+                    FeatureSegment,
+                    Q(feature__project__organisation__id=organisation_id),
+                ),
+                _EntityExportConfig(
+                    FeatureStateValue,
+                    Q(
+                        feature_state__feature__project__organisation__id=organisation_id
+                    ),
+                ),
+                _EntityExportConfig(
+                    MultivariateFeatureStateValue,
+                    Q(
+                        feature_state__feature__project__organisation__id=organisation_id
+                    ),
+                ),
+            ]
+        ),
+        *feature_states,
+    ]
 
 
 @dataclass
