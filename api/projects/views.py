@@ -1,21 +1,24 @@
 # -*- coding: utf-8 -*-
 from __future__ import unicode_literals
 
+from django.conf import settings
 from django.utils.decorators import method_decorator
 from drf_yasg2 import openapi
 from drf_yasg2.utils import swagger_auto_schema
-from rest_framework import viewsets
+from rest_framework import status, viewsets
 from rest_framework.decorators import action, api_view, permission_classes
 from rest_framework.exceptions import ValidationError
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.request import Request
 from rest_framework.response import Response
 
+from environments.dynamodb.migrator import IdentityMigrator
 from environments.serializers import EnvironmentSerializerLight
 from permissions.serializers import (
     PermissionModelSerializer,
     UserObjectPermissionsSerializer,
 )
+from projects.exceptions import DynamoNotEnabledError, ProjectMigrationError
 from projects.models import (
     ProjectPermissionModel,
     UserPermissionGroupProjectPermission,
@@ -102,6 +105,20 @@ class ProjectViewSet(viewsets.ModelViewSet):
         )
         serializer = UserObjectPermissionsSerializer(instance=permission_data)
         return Response(serializer.data)
+
+    @action(detail=True, methods=["POST"], url_path="migrate-to-edge")
+    def migrate_to_edge(self, request: Request, pk: int = None):
+        if not settings.PROJECT_METADATA_TABLE_NAME_DYNAMO:
+            raise DynamoNotEnabledError()
+
+        project = self.get_object()
+        identity_migrator = IdentityMigrator(project.id)
+
+        if not identity_migrator.can_migrate:
+            raise ProjectMigrationError()
+
+        identity_migrator.start_migration()
+        return Response(status=status.HTTP_202_ACCEPTED)
 
 
 class BaseProjectPermissionsViewSet(viewsets.ModelViewSet):

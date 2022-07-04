@@ -412,3 +412,40 @@ class UserPermissionGroupProjectPermissionsViewSetTestCase(TestCase):
         assert not UserPermissionGroupProjectPermission.objects.filter(
             id=self.user_group_project_permission.id
         ).exists()
+
+
+def test_project_migrate_to_edge_calls_start_migration(
+    admin_client, project, mocker, settings
+):
+    # Given
+    settings.PROJECT_METADATA_TABLE_NAME_DYNAMO = "some_table"
+    mocked_identity_migrator = mocker.patch("projects.views.IdentityMigrator")
+
+    url = reverse("api-v1:projects:project-migrate-to-edge", args=[project.id])
+
+    # When
+    response = admin_client.post(url)
+
+    # Then
+    assert response.status_code == status.HTTP_202_ACCEPTED
+    mocked_identity_migrator.assert_called_once_with(project.id)
+    mocked_identity_migrator.return_value.start_migration.assert_called_once()
+
+
+def test_project_migrate_to_edge_returns_400_if_can_migrate_is_false(
+    admin_client, project, mocker, settings
+):
+    # Given
+    settings.PROJECT_METADATA_TABLE_NAME_DYNAMO = "some_table"
+    mocked_identity_migrator = mocker.patch("projects.views.IdentityMigrator")
+    mocked_identity_migrator.return_value.can_migrate = False
+
+    url = reverse("api-v1:projects:project-migrate-to-edge", args=[project.id])
+
+    # When
+    response = admin_client.post(url)
+
+    # Then
+    assert response.status_code == status.HTTP_400_BAD_REQUEST
+    mocked_identity_migrator.assert_called_once_with(project.id)
+    mocked_identity_migrator.return_value.start_migration.assert_not_called()
