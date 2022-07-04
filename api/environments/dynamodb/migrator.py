@@ -1,5 +1,6 @@
 from django.db.models import Prefetch
 
+from edge_api.identities.events import send_migration_event
 from environments.identities.models import Identity
 from environments.models import Environment
 from features.models import FeatureState
@@ -29,10 +30,12 @@ class IdentityMigrator:
         migration_status = self.migration_status
         return migration_status == ProjectIdentityMigrationStatus.MIGRATION_NOT_STARTED
 
+    def start_migration(self):
+        send_migration_event(self.project_metadata.id)
+        self.project_metadata.start_identity_migration()
+
     def migrate(self):
         project_id = self.project_metadata.id
-
-        self.project_metadata.start_identity_migration()
 
         Project.objects.filter(id=project_id).update(enable_dynamo_db=True)
         environment_wrapper = DynamoEnvironmentWrapper()
