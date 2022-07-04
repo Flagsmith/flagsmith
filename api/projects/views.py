@@ -1,10 +1,11 @@
 # -*- coding: utf-8 -*-
 from __future__ import unicode_literals
 
+from core.serializers import EmptySerializer
 from django.conf import settings
 from django.utils.decorators import method_decorator
 from drf_yasg2 import openapi
-from drf_yasg2.utils import swagger_auto_schema
+from drf_yasg2.utils import no_body, swagger_auto_schema
 from rest_framework import status, viewsets
 from rest_framework.decorators import action, api_view, permission_classes
 from rest_framework.exceptions import ValidationError
@@ -80,7 +81,7 @@ class ProjectViewSet(viewsets.ModelViewSet):
         environments = project.environments.all()
         return Response(EnvironmentSerializerLight(environments, many=True).data)
 
-    @swagger_auto_schema(responses={200: PermissionModelSerializer})
+    @swagger_auto_schema(responses={200: PermissionModelSerializer}, request_body=None)
     @action(detail=False, methods=["GET"])
     def permissions(self, *args, **kwargs):
         return Response(
@@ -106,7 +107,12 @@ class ProjectViewSet(viewsets.ModelViewSet):
         serializer = UserObjectPermissionsSerializer(instance=permission_data)
         return Response(serializer.data)
 
-    @action(detail=True, methods=["POST"], url_path="migrate-to-edge")
+    @swagger_auto_schema(responses={202: EmptySerializer()}, request_body=no_body)
+    @action(
+        detail=True,
+        methods=["POST"],
+        url_path="migrate-to-edge",
+    )
     def migrate_to_edge(self, request: Request, pk: int = None):
         if not settings.PROJECT_METADATA_TABLE_NAME_DYNAMO:
             raise DynamoNotEnabledError()
