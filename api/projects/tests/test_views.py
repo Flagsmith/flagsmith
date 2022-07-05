@@ -61,7 +61,7 @@ class ProjectTestCase(TestCase):
         assert Project.objects.filter(name=project_name).count() == 1
         assert (
             response.json()["migration_status"]
-            == ProjectIdentityMigrationStatus.MIGRATION_NOT_STARTED
+            == ProjectIdentityMigrationStatus.MIGRATION_NOT_STARTED.value
         )
 
         # and user is admin
