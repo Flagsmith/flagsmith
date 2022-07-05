@@ -68,3 +68,20 @@ def test_create_project_sets_enable_dynamo_db(
 
     # Then
     assert project.enable_dynamo_db == expected_enable_dynamo_db_value
+
+
+@pytest.mark.parametrize(
+    "edge_release_datetime, expected",
+    ((yesterday, True), (tomorrow, False), (None, False)),
+)
+def test_is_edge_project_by_default(
+    settings, organisation, edge_release_datetime, expected
+):
+    # Given
+    settings.EDGE_RELEASE_DATETIME = edge_release_datetime
+
+    # When
+    project = Project.objects.create(name="Test project", organisation=organisation)
+
+    # Then
+    assert project.is_edge_project_by_default == expected

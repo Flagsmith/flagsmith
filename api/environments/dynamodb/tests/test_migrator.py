@@ -53,12 +53,36 @@ def test_migrate_calls_internal_methods_with_correct_arguments(
 
     # and, Make sure that Project Metadata Wrapper was called correctly
     mocked_project_metadata.get_or_new.assert_called_with(project.id)
-    mocked_project_metadata_instance.start_identity_migration.assert_called_once_with()
     mocked_project_metadata_instance.finish_identity_migration.assert_called_once_with()
     project.refresh_from_db()
 
     # and enable dynamodb was updated to True
     assert project.enable_dynamo_db is True
+
+
+def test_start_migration_calls_internal_methods_with_correct_arguments(mocker, project):
+    # Given
+    mocked_project_metadata = mocker.patch(
+        "environments.dynamodb.migrator.DynamoProjectMetadata"
+    )
+    mocked_send_migration_event = mocker.patch(
+        "environments.dynamodb.migrator.send_migration_event", autospec=True
+    )
+
+    mocked_project_metadata_instance = mocker.MagicMock(
+        spec=DynamoProjectMetadata, id=project.id
+    )
+    mocked_project_metadata.get_or_new.return_value = mocked_project_metadata_instance
+
+    identity_migrator = IdentityMigrator(project.id)
+
+    # When
+    identity_migrator.start_migration()
+
+    # Then
+    mocked_project_metadata.get_or_new.assert_called_with(project.id)
+    mocked_project_metadata_instance.start_identity_migration.assert_called_once_with()
+    mocked_send_migration_event.assert_called_once_with(project.id)
 
 
 def test_is_migration_done_returns_true_if_migration_is_completed(

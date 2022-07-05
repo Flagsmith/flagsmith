@@ -9,6 +9,7 @@ from django.utils import timezone
 from rest_framework import status
 from rest_framework.test import APIClient
 
+from environments.dynamodb.types import ProjectIdentityMigrationStatus
 from organisations.models import Organisation, OrganisationRole
 from organisations.permissions.models import (
     OrganisationPermissionModel,
@@ -47,17 +48,6 @@ class ProjectTestCase(TestCase):
         return reverse("api-v1:projects:project-detail", args=[project_id])
 
     @override_settings(PROJECT_METADATA_TABLE_NAME_DYNAMO=None)
-    def test_project_response_use_edge_identities_is_false_if_not_configured(self):
-        # Given
-        project_name = "project1"
-        data = {"name": project_name, "organisation": self.organisation.id}
-
-        # When
-        response = self.client.post(self.list_url, data=data)
-
-        # Then
-        assert response.json()["use_edge_identities"] is False
-
     def test_should_create_a_project(self):
         # Given
         project_name = "project1"
@@ -69,6 +59,11 @@ class ProjectTestCase(TestCase):
         # Then
         assert response.status_code == status.HTTP_201_CREATED
         assert Project.objects.filter(name=project_name).count() == 1
+        assert (
+            response.json()["migration_status"]
+            == ProjectIdentityMigrationStatus.NOT_APPLICABLE.value
+        )
+        assert response.json()["use_edge_identities"] is False
 
         # and user is admin
         assert UserProjectPermission.objects.filter(
@@ -412,3 +407,40 @@ class UserPermissionGroupProjectPermissionsViewSetTestCase(TestCase):
         assert not UserPermissionGroupProjectPermission.objects.filter(
             id=self.user_group_project_permission.id
         ).exists()
+
+
+def test_project_migrate_to_edge_calls_start_migration(
+    admin_client, project, mocker, settings
+):
+    # Given
+    settings.PROJECT_METADATA_TABLE_NAME_DYNAMO = "some_table"
+    mocked_identity_migrator = mocker.patch("projects.views.IdentityMigrator")
+
+    url = reverse("api-v1:projects:project-migrate-to-edge", args=[project.id])
+
+    # When
+    response = admin_client.post(url)
+
+    # Then
+    assert response.status_code == status.HTTP_202_ACCEPTED
+    mocked_identity_migrator.assert_called_once_with(project.id)
+    mocked_identity_migrator.return_value.start_migration.assert_called_once()
+
+
+def test_project_migrate_to_edge_returns_400_if_can_migrate_is_false(
+    admin_client, project, mocker, settings
+):
+    # Given
+    settings.PROJECT_METADATA_TABLE_NAME_DYNAMO = "some_table"
+    mocked_identity_migrator = mocker.patch("projects.views.IdentityMigrator")
+    mocked_identity_migrator.return_value.can_migrate = False
+
+    url = reverse("api-v1:projects:project-migrate-to-edge", args=[project.id])
+
+    # When
+    response = admin_client.post(url)
+
+    # Then
+    assert response.status_code == status.HTTP_400_BAD_REQUEST
+    mocked_identity_migrator.assert_called_once_with(project.id)
+    mocked_identity_migrator.return_value.start_migration.assert_not_called()
