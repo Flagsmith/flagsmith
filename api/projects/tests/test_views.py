@@ -9,6 +9,7 @@ from django.utils import timezone
 from rest_framework import status
 from rest_framework.test import APIClient
 
+from environments.dynamodb.types import ProjectIdentityMigrationStatus
 from organisations.models import Organisation, OrganisationRole
 from organisations.permissions.models import (
     OrganisationPermissionModel,
@@ -47,17 +48,6 @@ class ProjectTestCase(TestCase):
         return reverse("api-v1:projects:project-detail", args=[project_id])
 
     @override_settings(PROJECT_METADATA_TABLE_NAME_DYNAMO=None)
-    def test_project_response_use_edge_identities_is_false_if_not_configured(self):
-        # Given
-        project_name = "project1"
-        data = {"name": project_name, "organisation": self.organisation.id}
-
-        # When
-        response = self.client.post(self.list_url, data=data)
-
-        # Then
-        assert response.json()["use_edge_identities"] is False
-
     def test_should_create_a_project(self):
         # Given
         project_name = "project1"
@@ -69,6 +59,10 @@ class ProjectTestCase(TestCase):
         # Then
         assert response.status_code == status.HTTP_201_CREATED
         assert Project.objects.filter(name=project_name).count() == 1
+        assert (
+            response.json()["migration_status"]
+            == ProjectIdentityMigrationStatus.MIGRATION_NOT_STARTED
+        )
 
         # and user is admin
         assert UserProjectPermission.objects.filter(
