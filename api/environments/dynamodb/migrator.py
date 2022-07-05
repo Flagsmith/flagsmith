@@ -31,6 +31,10 @@ class IdentityMigrator:
         return migration_status == ProjectIdentityMigrationStatus.MIGRATION_NOT_STARTED
 
     def start_migration(self):
+        # Note: since we mark the project as `migration in progress` before we start the migration,
+        # there is a small chance for the project of being stuck in `migration in progress`
+        # if the migration event is lost or the task fails.
+        # Since the probability of this happening is low, we don't worry about it.
         send_migration_event(self.project_metadata.id)
         self.project_metadata.start_identity_migration()
 
