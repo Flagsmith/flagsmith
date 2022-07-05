@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 from __future__ import unicode_literals
 
-from core.serializers import EmptySerializer
 from django.conf import settings
 from django.utils.decorators import method_decorator
 from drf_yasg2 import openapi
@@ -81,7 +80,9 @@ class ProjectViewSet(viewsets.ModelViewSet):
         environments = project.environments.all()
         return Response(EnvironmentSerializerLight(environments, many=True).data)
 
-    @swagger_auto_schema(responses={200: PermissionModelSerializer}, request_body=None)
+    @swagger_auto_schema(
+        responses={200: PermissionModelSerializer}, request_body=no_body
+    )
     @action(detail=False, methods=["GET"])
     def permissions(self, *args, **kwargs):
         return Response(
@@ -107,7 +108,9 @@ class ProjectViewSet(viewsets.ModelViewSet):
         serializer = UserObjectPermissionsSerializer(instance=permission_data)
         return Response(serializer.data)
 
-    @swagger_auto_schema(responses={202: EmptySerializer()}, request_body=no_body)
+    @swagger_auto_schema(
+        responses={202: "Migration event generated"}, request_body=no_body
+    )
     @action(
         detail=True,
         methods=["POST"],
