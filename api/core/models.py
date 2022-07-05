@@ -9,7 +9,7 @@ logger = logging.getLogger(__name__)
 
 class UUIDNaturalKeyManagerMixin:
     def get_by_natural_key(self, uuid_: str):
-        logger.info("Getting model %s by natural key", self.model.__name__)
+        logger.debug("Getting model %s by natural key", self.model.__name__)
         return self.get(uuid=uuid_)
 
 
