@@ -12,6 +12,7 @@ import CreateAuditWebhookModal from '../modals/CreateAuditWebhook';
 import ConfirmRemoveAuditWebhook from '../modals/ConfirmRemoveAuditWebhook';
 import Button from '../base/forms/Button';
 import { EditPermissionsModal } from '../EditPermissions';
+import AdminAPIKeys from '../AdminAPIKeys';
 
 
 const OrganisationSettingsPage = class extends Component {
@@ -280,7 +281,7 @@ const OrganisationSettingsPage = class extends Component {
     }
 
     editGroupPermissions = (group) => {
-        openModal(`Edit Organisation Permissions`, <EditPermissionsModal
+        openModal('Edit Organisation Permissions', <EditPermissionsModal
           name={`${group.name}`}
           id={AccountStore.getOrganisation().id}
           isGroup
@@ -313,81 +314,85 @@ const OrganisationSettingsPage = class extends Component {
                         <OrganisationProvider>
                             {({ isLoading, name, error, projects, usage, users, invites, influx_data, inviteLinks }) => (
                                 <div>
-                            <FormGroup>
-                                <div className="margin-bottom">
-                                    <div className="panel--grey" style={{ marginTop: '3em' }}>
-                                        <form key={organisation.id} onSubmit={this.save}>
-                                            <h5>Organisation Name</h5>
-                                            <Row>
-                                                <Column className="m-l-0">
-                                                    <Input
-                                                      ref={e => this.input = e}
-                                                      data-test="organisation-name"
-                                                      value={this.state.name || organisation.name}
-                                                      onChange={e => this.setState({ name: Utils.safeParseEventValue(e) })}
-                                                      isValid={name && name.length}
-                                                      type="text"
-                                                      inputClassName="input--wide"
-                                                      placeholder="My Organisation"
-                                                    />
-                                                </Column>
-                                                <Button disabled={this.saveDisabled()} className="float-right">
-                                                    {isSaving ? 'Saving' : 'Save'}
-                                                </Button>
-                                            </Row>
-                                        </form>
-                                        {paymentsEnabled && (
-                                            <div className="plan plan--current flex-row m-t-2">
-                                                <div className="plan__prefix">
-                                                    <img
-                                                      src="/static/images/nav-logo.svg" className="plan__prefix__image"
-                                                      alt="BT"
-                                                    />
-                                                </div>
-                                                <div className="plan__details flex flex-1">
-                                                    <p className="text-small m-b-0">Your plan</p>
-                                                    <h3 className="m-b-0">{Utils.getPlanName(_.get(organisation, 'subscription.plan')) ? Utils.getPlanName(_.get(organisation, 'subscription.plan')) : 'Free'}</h3>
-                                                </div>
-                                                <div>
-                                                    {organisation.subscription && (
+
+                                    {Utils.getFlagsmithHasFeature('master_api_key') && (
+                                        <AdminAPIKeys/>
+                                    )}
+                                    <FormGroup>
+                                        <div className="margin-bottom">
+                                            <div className="panel--grey" style={{ marginTop: '3em' }}>
+                                                <form key={organisation.id} onSubmit={this.save}>
+                                                    <h5>Organisation Name</h5>
+                                                    <Row>
+                                                        <Column className="m-l-0">
+                                                            <Input
+                                                              ref={e => this.input = e}
+                                                              data-test="organisation-name"
+                                                              value={this.state.name || organisation.name}
+                                                              onChange={e => this.setState({ name: Utils.safeParseEventValue(e) })}
+                                                              isValid={name && name.length}
+                                                              type="text"
+                                                              inputClassName="input--wide"
+                                                              placeholder="My Organisation"
+                                                            />
+                                                        </Column>
+                                                        <Button disabled={this.saveDisabled()} className="float-right">
+                                                            {isSaving ? 'Saving' : 'Save'}
+                                                        </Button>
+                                                    </Row>
+                                                </form>
+                                                {paymentsEnabled && (
+                                                <div className="plan plan--current flex-row m-t-2">
+                                                    <div className="plan__prefix">
+                                                        <img
+                                                          src="/static/images/nav-logo.svg" className="plan__prefix__image"
+                                                          alt="BT"
+                                                        />
+                                                    </div>
+                                                    <div className="plan__details flex flex-1">
+                                                        <p className="text-small m-b-0">Your plan</p>
+                                                        <h3 className="m-b-0">{Utils.getPlanName(_.get(organisation, 'subscription.plan')) ? Utils.getPlanName(_.get(organisation, 'subscription.plan')) : 'Free'}</h3>
+                                                    </div>
+                                                    <div>
+                                                        {organisation.subscription && (
                                                         <a className="btn btn-primary mr-2" href="https://flagsmith.chargebeeportal.com/" target="_blank">
                                                             Manage Invoices
                                                         </a>
-                                                    )}
-                                                    { organisation.subscription ? (
-                                                        <button
-                                                          disabled={!this.state.manageSubscriptionLoaded}
-                                                          type="button" className="btn btn-primary text-center ml-auto mt-2 mb-2"
-                                                          onClick={() => {
-                                                              if (this.state.chargebeeURL) {
-                                                                  window.location = this.state.chargebeeURL;
-                                                              } else {
-                                                                  openModal('Payment plans', <PaymentModal
+                                                        )}
+                                                        { organisation.subscription ? (
+                                                            <button
+                                                              disabled={!this.state.manageSubscriptionLoaded}
+                                                              type="button" className="btn btn-primary text-center ml-auto mt-2 mb-2"
+                                                              onClick={() => {
+                                                                  if (this.state.chargebeeURL) {
+                                                                      window.location = this.state.chargebeeURL;
+                                                                  } else {
+                                                                      openModal('Payment plans', <PaymentModal
                                                                     viewOnly={false}
                                                                   />, null, { large: true });
-                                                              }
-                                                          }}
-                                                        >
+                                                                  }
+                                                              }}
+                                                            >
                                                             Manage payment plan
-                                                        </button>
-                                                    ) : (
-                                                        <button
-                                                          type="button" className="btn btn-primary text-center ml-auto mt-2 mb-2"
-                                                          onClick={() => openModal('Payment Plans', <PaymentModal
+                                                            </button>
+                                                        ) : (
+                                                            <button
+                                                              type="button" className="btn btn-primary text-center ml-auto mt-2 mb-2"
+                                                              onClick={() => openModal('Payment Plans', <PaymentModal
                                                             viewOnly={false}
                                                           />, null, { large: true })}
-                                                        >
+                                                            >
                                                             View plans
-                                                        </button>
-                                                    ) }
+                                                            </button>
+                                                        ) }
+                                                    </div>
                                                 </div>
+                                                )}
                                             </div>
-                                        )}
-                                    </div>
-                                </div>
-                            </FormGroup>
-                            <FormGroup className="mt-5">
-                                <div>
+                                        </div>
+                                    </FormGroup>
+                                    <FormGroup className="mt-5">
+                                        <div>
                                             <div>
                                                 <Row space className="mt-5">
                                                     <h3 className="m-b-0">Team Members</h3>
@@ -401,14 +406,14 @@ const OrganisationSettingsPage = class extends Component {
                                                     </Button>
                                                 </Row>
                                                 {paymentsEnabled && (
-                                                    <p>
-                                                        {'You are currently using '}
-                                                        <strong className={organisation.num_seats > (_.get(organisation, 'subscription.max_seats') || 1) ? 'text-danger' : ''}>
-                                                            {`${organisation.num_seats} of ${_.get(organisation, 'subscription.max_seats') || 1}`}
-                                                        </strong>
-                                                        {` seat${organisation.num_seats === 1 ? '' : 's'}. `} for your plan.
-                                                        {' '}
-                                                        {organisation.num_seats > (_.get(organisation, 'subscription.max_seats') || 1)
+                                                <p>
+                                                    {'You are currently using '}
+                                                    <strong className={organisation.num_seats > (_.get(organisation, 'subscription.max_seats') || 1) ? 'text-danger' : ''}>
+                                                        {`${organisation.num_seats} of ${_.get(organisation, 'subscription.max_seats') || 1}`}
+                                                    </strong>
+                                                    {` seat${organisation.num_seats === 1 ? '' : 's'}. `} for your plan.
+                                                    {' '}
+                                                    {organisation.num_seats > (_.get(organisation, 'subscription.max_seats') || 1)
                                                         && (
                                                             <a
                                                               href="#" onClick={() => openModal('Payment Plans', <PaymentModal
@@ -419,7 +424,7 @@ const OrganisationSettingsPage = class extends Component {
                                                             </a>
                                                         )
                                                         }
-                                                    </p>
+                                                </p>
                                                 )}
                                                 {
                                                      inviteLinks && (
@@ -509,12 +514,12 @@ const OrganisationSettingsPage = class extends Component {
                                                                       }
                                                                   };
                                                                   return (
-                                                                      <Row
-                                                                        data-test={`user-${i}`}
+                                                              <Row
+                                                                data-test={`user-${i}`}
 
-                                                                        space className={'list-item clickable'} key={id}
-                                                                      >
-                                                                          <Flex onClick={onEditClick}>
+                                                                space className="list-item clickable" key={id}
+                                                              >
+                                                                  <Flex onClick={onEditClick}>
 
                                                                               {`${first_name} ${last_name}`}
 
@@ -525,7 +530,7 @@ const OrganisationSettingsPage = class extends Component {
                                                                                   {email}
                                                                               </div>
                                                                           </Flex>
-                                                                          <Row>
+                                                                  <Row>
                                                                               <Column>
                                                                                   {organisation.role === 'ADMIN' && id !== AccountStore.getUserId() ? (
                                                                                       <div style={{ width: 250 }}>
@@ -570,13 +575,13 @@ const OrganisationSettingsPage = class extends Component {
                                                                                   </button>
                                                                               </Column>
                                                                           </Row>
-                                                                      </Row>
+                                                              </Row>
                                                                   );
                                                               }}
                                                               renderNoResults={(
                                                                   <div>
                                                                   You have no users in this organisation.
-                                                                  </div>
+                                                          </div>
                                                               )}
                                                               filterRow={(item, search) => {
                                                                   const strToSearch = `${item.first_name} ${item.last_name} ${item.email}`;
@@ -595,11 +600,11 @@ const OrganisationSettingsPage = class extends Component {
                                                                   className="no-pad"
                                                                   items={invites}
                                                                   renderRow={({ id, email, date_created, invited_by, link }, i) => (
-                                                                      <Row
-                                                                        data-test={`pending-invite-${i}`}
-                                                                        className="list-item" key={id}
-                                                                      >
-                                                                          <div className="flex flex-1">
+                                                              <Row
+                                                                data-test={`pending-invite-${i}`}
+                                                                className="list-item" key={id}
+                                                              >
+                                                                  <div className="flex flex-1">
                                                                               {email || link}
                                                                               <div className="list-item-footer faint">
                                                                                     Created
@@ -616,7 +621,7 @@ const OrganisationSettingsPage = class extends Component {
                                                                                   </div>
                                                                               ) : null}
                                                                           </div>
-                                                                          <Row>
+                                                                  <Row>
                                                                               <Column>
                                                                                   {link ? ' '
                                                                                       : (
@@ -642,8 +647,8 @@ const OrganisationSettingsPage = class extends Component {
                                                                                   </button>
                                                                               </Column>
                                                                           </Row>
-                                                                      </Row>
-                                                                  )}
+                                                              </Row>
+                                                          )}
                                                                   filterRow={(item, search) => item.email.toLowerCase().indexOf(search.toLowerCase()) !== -1}
                                                                 />
                                                             </FormGroup>
@@ -655,7 +660,7 @@ const OrganisationSettingsPage = class extends Component {
                                                                 <Button
                                                                   className="mr-2"
                                                                   id="btn-invite" onClick={() => openModal('Create Group',
-                                                                      <CreateGroupModal orgId={organisation.id}/>)}
+                                                              <CreateGroupModal orgId={organisation.id}/>)}
                                                                   type="button"
                                                                 >
                                                                   Create Group
@@ -670,130 +675,130 @@ const OrganisationSettingsPage = class extends Component {
                                                         </div>
 
                                                         {Utils.getFlagsmithHasFeature('force_2fa') && (
-                                                            <div>
-                                                                <Row space className="mt-5">
-                                                                    <h3 className="m-b-0">Enforce 2FA</h3>
-                                                                    {!force2faPermission ? (
-                                                                        <Tooltip title={<Switch checked={organisation.force_2fa} onChange={this.save2FA}/>}>
+                                                        <div>
+                                                            <Row space className="mt-5">
+                                                                <h3 className="m-b-0">Enforce 2FA</h3>
+                                                                {!force2faPermission ? (
+                                                            <Tooltip title={<Switch checked={organisation.force_2fa} onChange={this.save2FA}/>}>
                                                                             To access this feature please upgrade your account to scaleup or higher."
-                                                                        </Tooltip>
-                                                                    ) : (
-                                                                        <Switch checked={organisation.force_2fa} onChange={this.save2FA}/>
-                                                                    )}
-                                                                </Row>
-                                                                <p>Enabling this setting forces users within the organisation to setup 2 factor security.</p>
-                                                            </div>
+                                                            </Tooltip>
+                                                        ) : (
+                                                            <Switch checked={organisation.force_2fa} onChange={this.save2FA}/>
+                                                        )}
+                                                            </Row>
+                                                            <p>Enabling this setting forces users within the organisation to setup 2 factor security.</p>
+                                                        </div>
 
                                                         )}
                                                     </div>
                                                     )}
                                                 </div>
                                             </div>
-                                </div>
-                            </FormGroup>
-                            <FormGroup className="m-y-3">
-                                <Row className="mb-3" space>
-                                    <h3 className="m-b-0">Audit Webhooks</h3>
-                                    <Button onClick={this.createWebhook}>
+                                        </div>
+                                    </FormGroup>
+                                    <FormGroup className="m-y-3">
+                                        <Row className="mb-3" space>
+                                            <h3 className="m-b-0">Audit Webhooks</h3>
+                                            <Button onClick={this.createWebhook}>
                                     Create audit webhook
-                                    </Button>
-                                </Row>
-                                <p>
+                                            </Button>
+                                        </Row>
+                                        <p>
                                 Audit webhooks let you know when audit logs occur, you can configure 1 or more audit webhooks per organisation.
-                                    {' '}
-                                    <ButtonLink href="https://docs.flagsmith.com/advanced-use/system-administration#audit-log-webhooks/">Learn about Audit Webhooks.</ButtonLink>
-                                </p>
-                                {webhooksLoading && !webhooks ? (
-                                    <Loader/>
-                                ) : (
-                                    <PanelSearch
-                                      id="webhook-list"
-                                      title={(
-                                          <Tooltip
-                                            title={<h6 className="mb-0">Webhooks <span className="icon ion-ios-information-circle"/></h6>}
-                                            place="right"
-                                          >
-                                              {Constants.strings.WEBHOOKS_DESCRIPTION}
-                                          </Tooltip>
-                                    )}
-                                      className="no-pad"
-                                      icon="ion-md-cloud"
-                                      items={webhooks}
-                                      renderRow={webhook => (
-                                          <Row
-                                            onClick={() => {
-                                                this.editWebhook(webhook);
-                                            }} space className="list-item clickable cursor-pointer"
-                                            key={webhook.id}
-                                          >
-                                              <div>
-                                                  <ButtonLink>
-                                                      {webhook.url}
-                                                  </ButtonLink>
-                                                  <div className="list-item-footer faint">
-                                                Created
-                                                      {' '}
-                                                      {moment(webhook.created_date).format('DD/MMM/YYYY')}
-                                                  </div>
-                                              </div>
-                                              <Row>
-                                                  <Switch checked={webhook.enabled}/>
-                                                  <button
-                                                    id="delete-invite"
-                                                    type="button"
-                                                    onClick={(e) => {
-                                                        e.stopPropagation();
-                                                        e.preventDefault();
-                                                        this.deleteWebhook(webhook);
-                                                    }}
-                                                    className="btn btn--with-icon ml-auto btn--remove"
+                                            {' '}
+                                            <ButtonLink href="https://docs.flagsmith.com/advanced-use/system-administration#audit-log-webhooks/">Learn about Audit Webhooks.</ButtonLink>
+                                        </p>
+                                        {webhooksLoading && !webhooks ? (
+                                            <Loader/>
+                                        ) : (
+                                            <PanelSearch
+                                              id="webhook-list"
+                                              title={(
+                                                  <Tooltip
+                                                    title={<h6 className="mb-0">Webhooks <span className="icon ion-ios-information-circle"/></h6>}
+                                                    place="right"
                                                   >
-                                                      <RemoveIcon/>
-                                                  </button>
-                                              </Row>
-                                          </Row>
-                                      )}
-                                      renderNoResults={(
-                                          <Panel
-                                            id="users-list"
-                                            icon="ion-md-cloud"
-                                            title={(
-                                                <Tooltip
-                                                  title={<h6 className="mb-0">Webhooks <span className="icon ion-ios-information-circle"/></h6>}
-                                                  place="right"
-                                                >
-                                                    {Constants.strings.AUDIT_WEBHOOKS_DESCRIPTION}
-                                                </Tooltip>
+                                                      {Constants.strings.WEBHOOKS_DESCRIPTION}
+                                                  </Tooltip>
                                     )}
-                                          >
+                                              className="no-pad"
+                                              icon="ion-md-cloud"
+                                              items={webhooks}
+                                              renderRow={webhook => (
+                                                  <Row
+                                                    onClick={() => {
+                                                        this.editWebhook(webhook);
+                                                    }} space className="list-item clickable cursor-pointer"
+                                                    key={webhook.id}
+                                                  >
+                                                      <div>
+                                                          <ButtonLink>
+                                                              {webhook.url}
+                                                          </ButtonLink>
+                                                          <div className="list-item-footer faint">
+                                                Created
+                                                              {' '}
+                                                              {moment(webhook.created_date).format('DD/MMM/YYYY')}
+                                                          </div>
+                                                      </div>
+                                                      <Row>
+                                                          <Switch checked={webhook.enabled}/>
+                                                          <button
+                                                            id="delete-invite"
+                                                            type="button"
+                                                            onClick={(e) => {
+                                                                e.stopPropagation();
+                                                                e.preventDefault();
+                                                                this.deleteWebhook(webhook);
+                                                            }}
+                                                            className="btn btn--with-icon ml-auto btn--remove"
+                                                          >
+                                                              <RemoveIcon/>
+                                                          </button>
+                                                      </Row>
+                                                  </Row>
+                                              )}
+                                              renderNoResults={(
+                                                  <Panel
+                                                    id="users-list"
+                                                    icon="ion-md-cloud"
+                                                    title={(
+                                                        <Tooltip
+                                                          title={<h6 className="mb-0">Webhooks <span className="icon ion-ios-information-circle"/></h6>}
+                                                          place="right"
+                                                        >
+                                                            {Constants.strings.AUDIT_WEBHOOKS_DESCRIPTION}
+                                                        </Tooltip>
+                                    )}
+                                                  >
                                     You currently have no webhooks configured for this organisation.
-                                          </Panel>
+                                                  </Panel>
                                 )}
-                                      isLoading={this.props.webhookLoading}
-                                    />
-                                )}
-                            </FormGroup>
-                            {Utils.getFlagsmithHasFeature('restrict_project_create_to_admin') && (
-                                <FormGroup className="mt-5">
-                                    <Row>
-                                        <Column>
-                                            <h3>Admin Settings</h3>
-                                            <Row>
+                                              isLoading={this.props.webhookLoading}
+                                            />
+                                        )}
+                                    </FormGroup>
+                                    {Utils.getFlagsmithHasFeature('restrict_project_create_to_admin') && (
+                                    <FormGroup className="mt-5">
+                                        <Row>
+                                            <Column>
+                                                <h3>Admin Settings</h3>
+                                                <Row>
                                                 Only allow organisation admins to create projects
-                                                <Switch
-                                                  checked={organisation.restrict_project_create_to_admin} onChange={() => this.setAdminCanCreateProject(!organisation.restrict_project_create_to_admin)}
-                                                />
-                                            </Row>
-                                        </Column>
-                                    </Row>
+                                                    <Switch
+                                                      checked={organisation.restrict_project_create_to_admin} onChange={() => this.setAdminCanCreateProject(!organisation.restrict_project_create_to_admin)}
+                                                    />
+                                                </Row>
+                                            </Column>
+                                        </Row>
 
-                                </FormGroup>
-                            )}
-                            {Utils.getFlagsmithHasFeature('usage_chart') && !projectOverrides.disableInflux && (
-                                <div className="panel--grey mt-2">
-                                    {!isLoading && usage != null ? (
-                                        <div>
-                                            {Utils.getFlagsmithHasFeature('usage_chart') ? this.drawChart(influx_data) : (
+                                    </FormGroup>
+                                    )}
+                                    {Utils.getFlagsmithHasFeature('usage_chart') && !projectOverrides.disableInflux && (
+                                    <div className="panel--grey mt-2">
+                                        {!isLoading && usage != null ? (
+                                            <div>
+                                                {Utils.getFlagsmithHasFeature('usage_chart') ? this.drawChart(influx_data) : (
                                                 <>
                                                     <div className="flex-row header--icon">
                                                         <h5>API usage</h5>
@@ -804,31 +809,31 @@ const OrganisationSettingsPage = class extends Component {
                                                         {' requests over the past 30 days.'}
                                                     </span>
                                                 </>
-                                            )}
-                                        </div>
-                                    ) : <div className="text-center"><Loader/></div> }
-                                </div>
-                            )}
-                            <FormGroup className="mt-5">
-                                <Row>
-                                    <Column>
-                                        <h3>Delete Organisation</h3>
-                                        <p>
+                                                )}
+                                            </div>
+                                        ) : <div className="text-center"><Loader/></div> }
+                                    </div>
+                                    )}
+                                    <FormGroup className="mt-5">
+                                        <Row>
+                                            <Column>
+                                                <h3>Delete Organisation</h3>
+                                                <p>
                                         This organisation will be  permanently deleted, along with all projects and features.
-                                        </p>
-                                    </Column>
-                                    <Button
-                                      id="delete-org-btn"
-                                      onClick={() => this.confirmRemove(organisation, () => {
-                                          deleteOrganisation();
-                                      })}
-                                      className="btn btn--with-icon ml-auto btn--remove"
-                                    >
-                                        <RemoveIcon/>
-                                    </Button>
-                                </Row>
-                            </FormGroup>
-                        </div>
+                                                </p>
+                                            </Column>
+                                            <Button
+                                              id="delete-org-btn"
+                                              onClick={() => this.confirmRemove(organisation, () => {
+                                                  deleteOrganisation();
+                                              })}
+                                              className="btn btn--with-icon ml-auto btn--remove"
+                                            >
+                                                <RemoveIcon/>
+                                            </Button>
+                                        </Row>
+                                    </FormGroup>
+                                </div>
                             )}
                         </OrganisationProvider>
                     )}
