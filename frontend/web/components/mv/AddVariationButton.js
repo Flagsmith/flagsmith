@@ -4,7 +4,10 @@ import Constants from '../../../common/constants';
 export default function AddVariationButton({ onClick }) {
     return (
         <div className="text-center">
-            <button type="button" onClick={onClick} className="btn btn--outline ">
+            <button
+              data-test="add-variation" type="button" onClick={onClick}
+              className="btn btn--outline "
+            >
                 Add Variation
             </button>
         </div>
