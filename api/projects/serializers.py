@@ -20,6 +20,7 @@ class ProjectSerializer(serializers.ModelSerializer):
         help_text="Edge migration status of the project; can be one of: "
         + ", ".join([k.value for k in ProjectIdentityMigrationStatus])
     )
+    use_edge_identities = serializers.SerializerMethodField()
 
     class Meta:
         model = Project
@@ -30,19 +31,29 @@ class ProjectSerializer(serializers.ModelSerializer):
             "hide_disabled_flags",
             "enable_dynamo_db",
             "migration_status",
+            "use_edge_identities",
         )
 
     def get_migration_status(self, obj: Project) -> str:
         if not settings.PROJECT_METADATA_TABLE_NAME_DYNAMO:
-            return ProjectIdentityMigrationStatus.MIGRATION_NOT_STARTED.value
-        if (
-            settings.EDGE_RELEASE_DATETIME
-            and obj.created_date >= settings.EDGE_RELEASE_DATETIME
-        ):
-            return ProjectIdentityMigrationStatus.MIGRATION_COMPLETED.value
+            migration_status = ProjectIdentityMigrationStatus.NOT_APPLICABLE.value
 
-        identity_migrator = IdentityMigrator(obj.id)
-        return identity_migrator.migration_status.value
+        elif obj.is_edge_project_by_default:
+            migration_status = ProjectIdentityMigrationStatus.MIGRATION_COMPLETED.value
+
+        else:
+            migration_status = IdentityMigrator(obj.id).migration_status.value
+
+        # Add migration status to the context - to be used by `get_use_edge_identities`
+        self.context["migration_status"] = migration_status
+
+        return migration_status
+
+    def get_use_edge_identities(self, obj: Project) -> bool:
+        return (
+            self.context["migration_status"]
+            == ProjectIdentityMigrationStatus.MIGRATION_COMPLETED.value
+        )
 
 
 class CreateUpdateUserProjectPermissionSerializer(

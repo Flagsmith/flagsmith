@@ -61,8 +61,9 @@ class ProjectTestCase(TestCase):
         assert Project.objects.filter(name=project_name).count() == 1
         assert (
             response.json()["migration_status"]
-            == ProjectIdentityMigrationStatus.MIGRATION_NOT_STARTED.value
+            == ProjectIdentityMigrationStatus.NOT_APPLICABLE.value
         )
+        assert response.json()["use_edge_identities"] is False
 
         # and user is admin
         assert UserProjectPermission.objects.filter(
