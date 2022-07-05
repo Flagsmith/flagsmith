@@ -69,6 +69,13 @@ class Project(LifecycleModelMixin, AbstractBaseExportableModel):
             and settings.EDGE_RELEASE_DATETIME < timezone.now()
         )
 
+    @property
+    def is_edge_project_by_default(self) -> bool:
+        return bool(
+            settings.EDGE_RELEASE_DATETIME
+            and self.created_date >= settings.EDGE_RELEASE_DATETIME
+        )
+
 
 class ProjectPermissionManager(models.Manager):
     def get_queryset(self):
