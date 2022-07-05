@@ -28,4 +28,4 @@ jobs:
                 pip install -r requirements-dev.txt
                 pip install packaging==21.3
                 python -m pip install pip-audit
-                pip-audit -v
+                pip-audit
