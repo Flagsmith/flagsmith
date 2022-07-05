@@ -9,7 +9,7 @@ import {
     setText,
     waitForElementVisible,
     waitForXPathElementVisible,
-} from '../e2e/helpers.cafe';
+} from '../helpers.cafe';
 
 const invitePrefix = `flagsmith${new Date().valueOf()}`;
 const inviteEmail = `${invitePrefix}@restmail.net`;

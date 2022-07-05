@@ -12,7 +12,7 @@ import {
     setText, viewFeature,
     waitForElementVisible,
     waitAndRefresh,
-} from '../e2e/helpers.cafe';
+} from '../helpers.cafe';
 import {t} from 'testcafe'
 const email = 'nightwatch@solidstategroup.com';
 const password = 'str0ngp4ssw0rd!';
