@@ -7,6 +7,7 @@ const VariationValue = ({
     onChange,
     weightTitle,
     onRemove,
+    index,
 }) => (
     <div className="panel panel--flat panel-without-heading mb-2">
         <div className="panel-content">
@@ -15,7 +16,7 @@ const VariationValue = ({
                     <InputGroup
                       component={(
                           <ValueEditor
-                            data-test="featureValue"
+                            data-test={`featureVariationValue${index}`}
                             name="featureValue" className="full-width"
                             value={Utils.getTypedValue(Utils.featureStateToValue(value))}
                             readOnly={!onRemove}
@@ -35,6 +36,7 @@ const VariationValue = ({
                 <div className="ml-2" style={{ width: 210 }}>
                     <InputGroup
                       type="text"
+                      data-test={`featureVariationWeight${index}`}
                       onChange={(e) => {
                           onChange({
                               ...value,

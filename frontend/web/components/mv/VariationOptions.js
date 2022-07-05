@@ -76,6 +76,7 @@ export default function VariationOptions({ multivariateOptions, select, controlV
                     ) : (
                         <VariationValue
                           key={i}
+                          index={i}
                           preventRemove={preventRemove}
                           value={theValue}
                           onChange={(e) => {

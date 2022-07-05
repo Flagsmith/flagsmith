@@ -1,4 +1,4 @@
-import { byId, click, getLogger, log, login, setText, waitForElementVisible } from '../helpers.cafe';
+import { byId, click, getLogger, log, login, setText, waitForElementVisible } from '../e2e/helpers.cafe';
 
 const email = 'nightwatch@solidstategroup.com';
 const password = 'str0ngp4ssw0rd!';

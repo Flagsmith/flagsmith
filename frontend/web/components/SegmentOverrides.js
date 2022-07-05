@@ -49,7 +49,7 @@ const SegmentOverride = ConfigProvider(SortableElement(class Override extends Re
         const invalid = !!multivariateOptions && multivariateOptions.length && controlPercent < 0;
         if (!v || v.toRemove) return null;
         return (
-            <div data-test={`segment-override-${index}`} style={{ zIndex: 9999999999 }} className="panel panel-without-heading panel--draggable mb-2">
+            <div data-test={`segment-override-${index}`} style={{ zIndex: 9999999999 }} className="panel segment-overrides panel-without-heading panel--draggable mb-2">
                 <Row className="panel-content" space>
                     <div
                       className="flex flex-1 text-left"
