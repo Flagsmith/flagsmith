@@ -220,7 +220,11 @@ const CreateFlag = class extends Component {
                 <ResponsiveContainer height={400} width="100%">
                     <BarChart data={data.events_list}>
                         <CartesianGrid strokeDasharray="3 5"/>
-                        <XAxis allowDataOverflow={false} dataKey="datetime"/>
+                        <XAxis
+                            interval={0}
+                            height={100} angle={-90}
+                          textAnchor="end" allowDataOverflow={false} dataKey="datetime"
+                        />
                         <YAxis allowDataOverflow={false}/>
                         <RechartsTooltip/>
                         <Bar dataKey={name} stackId="a" fill="#6633ff" />
@@ -845,7 +849,7 @@ const CreateFlag = class extends Component {
                                                             <TabItem data-test="analytics" tabLabel="Analytics">
                                                                 <FormGroup className="mb-4 mr-3 ml-3">
                                                                     <Panel
-                                                                      title={<h6 className="mb-0">Flag events for last {this.state.period}</h6>}
+                                                                      title={!!influxData && <h6 className="mb-0">Flag events for last {influxData.timespan} days</h6>}
                                                                     >
                                                                         {this.drawChart(influxData)}
                                                                     </Panel>
