@@ -141,8 +141,8 @@ def export_features(organisation_id: int) -> typing.List[dict]:
         feature_state["fields"]["change_request"] = None
         feature_states.append(feature_state)
 
-    return [
-        *_export_entities(
+    return (
+        _export_entities(
             [
                 _EntityExportConfig(
                     Feature,
@@ -157,6 +157,11 @@ def export_features(organisation_id: int) -> typing.List[dict]:
                     FeatureSegment,
                     Q(feature__project__organisation__id=organisation_id),
                 ),
+            ]
+        )
+        + feature_states  # feature states need to be imported in correct order
+        + _export_entities(
+            [
                 _EntityExportConfig(
                     FeatureStateValue,
                     Q(
@@ -170,9 +175,8 @@ def export_features(organisation_id: int) -> typing.List[dict]:
                     ),
                 ),
             ]
-        ),
-        *feature_states,
-    ]
+        )
+    )
 
 
 @dataclass
