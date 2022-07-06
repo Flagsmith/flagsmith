@@ -33,7 +33,7 @@ export const gotoSegments = async () => {
     await click('#segments-link');
 };
 
-export const getLogger = () => RequestLogger(/api\/v1/, { logResponseBody: true, stringifyResponseBody: true });
+export const getLogger = () => RequestLogger(/api\/v1/, { logResponseBody: false, stringifyResponseBody: false });
 
 export const gotoTraits = async () => {
     await click('#users-link');
