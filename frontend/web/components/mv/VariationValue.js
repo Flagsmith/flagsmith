@@ -36,7 +36,7 @@ const VariationValue = ({
                 <div className="ml-2" style={{ width: 210 }}>
                     <InputGroup
                       type="text"
-                      data-test={`featureVariationWeight${index}`}
+                      data-test={`featureVariationWeight${Utils.featureStateToValue(value)}`}
                       onChange={(e) => {
                           onChange({
                               ...value,
