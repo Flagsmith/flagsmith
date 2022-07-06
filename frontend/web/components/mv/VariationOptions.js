@@ -58,7 +58,8 @@ export default function VariationOptions({ multivariateOptions, select, controlV
                                         <ValueEditor value={Utils.getTypedValue(Utils.featureStateToValue(theValue))}/>
                                     </Flex>
                                     <div
-                                      onMouseDown={(e) => {
+                                        data-test={`select-variation-${i+1}`}
+                                        onMouseDown={(e) => {
                                           e.stopPropagation();
                                           e.preventDefault();
                                           setVariations([{

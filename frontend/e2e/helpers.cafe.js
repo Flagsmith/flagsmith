@@ -33,9 +33,7 @@ export const gotoSegments = async () => {
     await click('#segments-link');
 };
 
-export const getLogger = ()=>{
-    return RequestLogger(/api\/v1/, {logResponseBody:true, stringifyResponseBody: true})
-}
+export const getLogger = () => RequestLogger(/api\/v1/, { logResponseBody: true, stringifyResponseBody: true });
 
 export const gotoTraits = async () => {
     await click('#users-link');
@@ -49,7 +47,7 @@ export const createTrait = async (index, id, value) => {
     await setText('[name="traitID"]', id);
     await setText('[name="traitValue"]', value);
     await click('#create-trait-btn');
-    await t.wait(500)
+    await t.wait(500);
     await t.eval(() => location.reload(true));
     await waitForElementVisible(byId(`user-trait-value-${index}`));
     const expectedValue = typeof value === 'string' ? `"${value}"` : `${value}`;
@@ -79,15 +77,19 @@ export const addSegmentOverrideConfig = async (index, value, selectionIndex = 0)
     await click(byId('segment-override-toggle-0'));
 };
 
-export const addSegmentOverride = async (index, value, selectionIndex = 0) => {
+export const addSegmentOverride = async (index, value, selectionIndex = 0, mvs) => {
     await click(byId('segment_overrides'));
     await click(byId(`select-segment-option-${selectionIndex}`));
     await waitForElementVisible(byId(`segment-override-value-${index}`));
     if (value) {
         await click(`${byId(`segment-override-${0}`)} [role="switch"]`);
     }
+    if (mvs) {
+        await Promise.all(mvs.map(async (v, i) => {
+            await setText(`.segment-overrides ${byId(`featureVariationWeight${i}`)}`, v.weight);
+        }));
+    }
 };
-
 
 export const saveFeature = async () => {
     await click('#update-feature-btn');
@@ -139,7 +141,7 @@ export const login = async (email, password) => {
     await waitForElementVisible('#project-select-page');
 };
 
-export const createRemoteConfig = async (index, name, value, description = 'description', defaultOff) => {
+export const createRemoteConfig = async (index, name, value, description = 'description', defaultOff, mvs = []) => {
     const expectedValue = typeof value === 'string' ? `"${value}"` : `${value}`;
     await gotoFeatures();
     await click('#show-create-feature-btn');
@@ -149,6 +151,12 @@ export const createRemoteConfig = async (index, name, value, description = 'desc
     if (!defaultOff) {
         await click(byId('toggle-feature-button'));
     }
+    await Promise.all(mvs.map(async (v, i) => {
+        await click(byId('add-variation'));
+
+        await setText(byId(`featureVariationValue${i}`), v.value);
+        await setText(byId(`featureVariationWeight${i}`), v.weight);
+    }));
     await click(byId('create-feature-btn'));
     await waitForElementVisible(byId(`feature-value-${index}`));
     await assertTextContent(byId(`feature-value-${index}`), expectedValue);

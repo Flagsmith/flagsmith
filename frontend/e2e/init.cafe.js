@@ -10,7 +10,7 @@ import {
     deleteFeature, deleteSegment, deleteTrait, getText, gotoSegments, gotoTraits, log,
     setText,
     toggleFeature,
-    waitForElementVisible,
+    waitForElementVisible, gotoFeatures, gotoFeature, addSegmentOverride, waitAndRefresh,
 } from './helpers.cafe';
 
 require('dotenv').config();
@@ -18,7 +18,7 @@ require('dotenv').config();
 const email = 'nightwatch@solidstategroup.com';
 const password = 'str0ngp4ssw0rd!';
 const url = `http://localhost:${process.env.PORT || 8080}/`;
-const logger = getLogger()
+const logger = getLogger();
 fixture`Initialise`
     .requestHooks(logger)
     .before(async () => {
@@ -81,11 +81,15 @@ test('[Initialise]', async () => {
 
     log('Create Features');
     await createRemoteConfig(0, 'header_size', 'big');
+    await createRemoteConfig(0, 'mv_flag', 'big', null, null, [
+        { value: 'medium', weight: 100 },
+        { value: 'small', weight: 0 },
+    ]);
     await createFeature(1, 'header_enabled', false);
 
     log('Create Short Life Feature');
-    await createFeature(2, 'short_life_feature', false);
-    await deleteFeature(2, 'short_life_feature');
+    await createFeature(3, 'short_life_feature', false);
+    await deleteFeature(3, 'short_life_feature');
 
     log('Toggle Feature');
     await toggleFeature(0, true);
@@ -98,6 +102,7 @@ test('[Initialise]', async () => {
     let json;
     try { json = JSON.parse(text); } catch (e) { throw new Error('Try it results are not valid JSON'); }
     await t.expect(json.header_size.value).eql('big');
+    await t.expect(json.mv_flag.value).eql('big');
     await t.expect(json.header_enabled.enabled).eql(true);
 
     log('Update feature');
@@ -194,22 +199,50 @@ test('[Initialise]', async () => {
         },
     ]);
 
+
     log('Add segment trait for user');
     await gotoTraits();
     await createTrait(0, 'age', 18);
 
-    // log('Check user now belongs to segment');
-    // await assertTextContent(byId('segment-0-name'), '18_or_19');
+    await assertTextContent(byId('user-feature-value-0'), '"medium"');
+    await gotoFeatures();
+    await gotoFeature(0);
 
-    log('Delete segment trait for user');
+    await addSegmentOverride(0, true, 0, [
+        { value: 'medium', weight: 0 },
+        { value: 'small', weight: 100 },
+
+    ]);
+    await click('#update-feature-segments-btn');
+    await closeModal();
+    await waitAndRefresh();
+
+    await gotoTraits();
+    await assertTextContent(byId('user-feature-value-0'), '"small"');
+
+    // log('Check user now belongs to segment');
+    await assertTextContent(byId('segment-0-name'), '18_or_19');
+
+    // log('Delete segment trait for user');
     await deleteTrait(0);
+
+
+    log('Set user MV override');
+    await click(byId("user-feature-0"));
+    await click(byId("select-variation-1"));
+    await click(byId("update-feature-btn"));
+    await waitAndRefresh()
+    await assertTextContent(byId('user-feature-value-0'), '"medium"');
 
     log('Delete segment');
     await gotoSegments();
     await deleteSegment(0, '18_or_19');
-}).after(async (t)=>{
-    console.log("Start of Initialise Requests")
-    console.log(JSON.stringify(logger.requests, null,2))
+    await gotoFeatures();
+    await deleteFeature(0, 'mv_flag');
+
+}).after(async (t) => {
+    console.log('Start of Initialise Requests');
+    console.log(JSON.stringify(logger.requests, null, 2));
     console.error(JSON.stringify((await t.getBrowserConsoleMessages()).error));
-    console.log("Start of Initialise Requests")
-})
+    console.log('Start of Initialise Requests');
+});
