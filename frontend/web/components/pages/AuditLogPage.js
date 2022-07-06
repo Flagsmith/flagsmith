@@ -33,11 +33,14 @@ const AuditLogPage = class extends Component {
                 >
                     {log}
                 </div>
-                <div
-                  className="audit__author"
-                >
-                    {author ? `${author.first_name} ${author.last_name}` : 'Unknown'}
-                </div>
+                {!!author && (
+                    <div
+                        className="audit__author"
+                    >
+                        {`${author.first_name} ${author.last_name}`}
+                    </div>
+                )}
+
             </Flex>
             <div className="audit__date">{moment(created_date).format('Do MMM YYYY HH:mma')}</div>
         </Row>
