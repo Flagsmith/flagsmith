@@ -229,7 +229,7 @@ test('[Initialise]', async () => {
 
     log('Set user MV override');
     await click(byId("user-feature-0"));
-    await click(byId("select-variation-2"));
+    await click(byId("select-variation-1"));
     await click(byId("update-feature-btn"));
     await waitAndRefresh()
     await assertTextContent(byId('user-feature-value-0'), '"medium"');
