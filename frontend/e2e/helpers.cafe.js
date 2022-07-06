@@ -86,7 +86,7 @@ export const addSegmentOverride = async (index, value, selectionIndex = 0, mvs) 
     }
     if (mvs) {
         await Promise.all(mvs.map(async (v, i) => {
-            await setText(`.segment-overrides ${byId(`featureVariationWeight${i}`)}`, v.weight);
+            await setText(`.segment-overrides ${byId(`featureVariationWeight${v.value}`)}`, v.weight);
         }));
     }
 };
@@ -155,7 +155,7 @@ export const createRemoteConfig = async (index, name, value, description = 'desc
         await click(byId('add-variation'));
 
         await setText(byId(`featureVariationValue${i}`), v.value);
-        await setText(byId(`featureVariationWeight${i}`), v.weight);
+        await setText(byId(`featureVariationWeight${v.value}`), v.weight);
     }));
     await click(byId('create-feature-btn'));
     await waitForElementVisible(byId(`feature-value-${index}`));
