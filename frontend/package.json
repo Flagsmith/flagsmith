@@ -77,7 +77,7 @@
     "lodash": "4.17.21",
     "material-ui-chip-input": "^1.1.0",
     "mini-css-extract-plugin": "^2.6.0",
-    "moment": "2.29.2",
+    "moment": "2.29.4",
     "node-fetch": "2.6.7",
     "node-sass": "^7.0.1",
     "polyfill-react-native": "1.0.5",
