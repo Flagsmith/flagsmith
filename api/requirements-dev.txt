@@ -13,4 +13,4 @@ pre-commit
 flake8
 pytest-mock
 pytest-lazy-fixture
-moto3
+moto
