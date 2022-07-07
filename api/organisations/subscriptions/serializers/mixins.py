@@ -1,5 +1,7 @@
 import typing
 
+from django.conf import settings
+
 from organisations.models import Subscription
 
 
@@ -30,6 +32,9 @@ class ReadOnlyIfNotValidPlanMixin:
 
         if not (self.context and "view" in self.context):
             raise RuntimeError("view must be in the context.")
+
+        if settings.NO_SUBSCRIPTION_NEEDED:
+            return fields
 
         subscription = self.get_subscription()
         field_names = self.field_names or []

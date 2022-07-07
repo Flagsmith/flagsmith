@@ -1,5 +1,6 @@
 import typing
 
+from django.conf import settings
 from rest_framework.request import Request
 
 from organisations.models import Subscription
@@ -24,6 +25,8 @@ def require_plan(
                     "require_plan decorator must be used on methods / functions whose "
                     "first argument is a Request object."
                 )
+            if settings.NO_SUBSCRIPTION_NEEDED:
+                return func(*args, **kwargs)
 
             sub = subscription_retriever(args[0])
             if not sub or sub.plan not in valid_plan_ids:
