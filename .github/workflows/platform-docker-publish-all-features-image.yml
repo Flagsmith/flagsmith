@@ -8,8 +8,8 @@ on:
             - "improvement/docker-fixes"
 
 env:
-  FLAGSMITH_SAML_REVISION: v0.1.2
-  FLAGSMITH_WORKFLOWS_REVISION: v1.0.2
+  FLAGSMITH_SAML_REVISION: v0.2.1
+  FLAGSMITH_WORKFLOWS_REVISION: v1.0.4
 
 jobs:
     build-dockerhub:
