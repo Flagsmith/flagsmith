@@ -1,4 +1,3 @@
-import os
 import uuid
 
 import boto3
@@ -27,11 +26,7 @@ class OrganisationImporter:
         obj = self._s3_client.get_object(Bucket=s3_bucket, Key=s3_key)
         file_path = f"/tmp/{uuid.uuid4()}.json"
 
-        with open(file_path, "w+") as f:
+        with open(file_path, "a+") as f:
             f.write(obj["Body"].read().decode("utf-8"))
-
-        with open(file_path, "r") as f:
-            try:
-                call_command("loaddata", f.name, format="json")
-            finally:
-                os.remove(f.name)
+            f.seek(0)
+            call_command("loaddata", f.name, format="json")
