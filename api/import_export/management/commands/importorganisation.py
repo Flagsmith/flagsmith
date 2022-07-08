@@ -11,7 +11,7 @@ class Command(BaseCommand):
     def add_arguments(self, parser: CommandParser):
         parser.add_argument(
             "bucket-name",
-            type=int,
+            type=str,
             help="Name of the S3 bucket to get the organisation data from.",
         )
         parser.add_argument(
