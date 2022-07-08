@@ -11,6 +11,7 @@ from audit.models import AuditLog, RelatedObjectType
 from environments.identities.models import Identity
 from environments.identities.traits.models import Trait
 from environments.models import Environment
+from features.models import Feature
 from organisations.models import Organisation, OrganisationRole
 from projects.models import Project
 from segments.models import EQUAL, Condition, Segment, SegmentRule
@@ -185,3 +186,25 @@ def test_can_filter_by_edge_identity_to_get_only_matching_segments(
     assert response.json().get("count") == len(expected_segment_ids)
     assert response.json()["results"][0]["id"] == expected_segment_ids[0]
     mocked_identity_wrapper.get_segment_ids.assert_called_with(identity_uuid)
+
+
+def test_associated_features_returns_all_the_associated_features(
+    project, environment, feature, segment, admin_client, segment_featurestate
+):
+    # Given
+    # Firstly, let's create extra environment and feature to make sure we
+    # have some features that are not associated with the segment
+    Environment.objects.create(name="Another environment", project=project)
+    Feature.objects.create(name="another feature", project=project)
+
+    url = reverse(
+        "api-v1:projects:project-segments-associated-features",
+        args=[project.id, segment.id],
+    )
+    # When
+    response = admin_client.get(url)
+
+    # Then
+    assert response.json().get("count") == 1
+    assert response.json()["results"][0]["feature"] == feature.id
+    assert response.json()["results"][0]["environment"] == environment.id

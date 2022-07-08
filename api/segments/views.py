@@ -4,10 +4,14 @@ from django.utils.decorators import method_decorator
 from drf_yasg2 import openapi
 from drf_yasg2.utils import swagger_auto_schema
 from rest_framework import viewsets
+from rest_framework.decorators import action
 from rest_framework.generics import get_object_or_404
 from rest_framework.permissions import IsAuthenticated
+from rest_framework.response import Response
 
 from environments.identities.models import Identity
+from features.models import FeatureState
+from features.serializers import SegmentAssociatedFeatureStateSerializer
 
 from .permissions import SegmentPermissions
 from .serializers import SegmentSerializer
@@ -50,3 +54,21 @@ class SegmentViewSet(viewsets.ModelViewSet):
             queryset = queryset.filter(id__in=segment_ids)
 
         return queryset
+
+    @action(
+        detail=True,
+        methods=["GET"],
+        url_path="associated-features",
+        serializer_class=SegmentAssociatedFeatureStateSerializer,
+    )
+    def associated_features(self, request, *args, **kwargs):
+        segment = self.get_object()
+        queryset = FeatureState.objects.filter(feature_segment__segment=segment)
+
+        page = self.paginate_queryset(queryset)
+        if page is not None:
+            serializer = self.get_serializer(page, many=True)
+            return self.get_paginated_response(serializer.data)
+
+        serializer = self.get_serializer(queryset, many=True)
+        return Response(serializer.data)

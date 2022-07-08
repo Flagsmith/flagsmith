@@ -6,7 +6,7 @@ from environments.identities.models import Identity
 from environments.identities.traits.models import Trait
 from environments.models import Environment
 from features.feature_types import MULTIVARIATE
-from features.models import Feature, FeatureSegment
+from features.models import Feature, FeatureSegment, FeatureState
 from features.multivariate.models import MultivariateFeatureOption
 from features.value_types import STRING
 from organisations.models import Organisation, OrganisationRole
@@ -127,4 +127,11 @@ def reset_cache():
 def feature_segment(feature, segment, environment):
     return FeatureSegment.objects.create(
         feature=feature, segment=segment, environment=environment
+    )
+
+
+@pytest.fixture()
+def segment_featurestate(feature_segment, feature, environment):
+    return FeatureState.objects.create(
+        feature_segment=feature_segment, feature=feature, environment=environment
     )
