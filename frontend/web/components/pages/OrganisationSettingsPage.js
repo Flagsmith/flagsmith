@@ -314,10 +314,6 @@ const OrganisationSettingsPage = class extends Component {
                         <OrganisationProvider>
                             {({ isLoading, name, error, projects, usage, users, invites, influx_data, inviteLinks }) => (
                                 <div>
-
-                                    {Utils.getFlagsmithHasFeature('master_api_key') && (
-                                        <AdminAPIKeys/>
-                                    )}
                                     <FormGroup>
                                         <div className="margin-bottom">
                                             <div className="panel--grey" style={{ marginTop: '3em' }}>
@@ -391,6 +387,9 @@ const OrganisationSettingsPage = class extends Component {
                                             </div>
                                         </div>
                                     </FormGroup>
+                                    {Utils.getFlagsmithHasFeature('master_api_key') && (
+                                        <AdminAPIKeys/>
+                                    )}
                                     <FormGroup className="mt-5">
                                         <div>
                                             <div>
