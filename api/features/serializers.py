@@ -322,6 +322,7 @@ class FeatureInfluxDataSerializer(serializers.Serializer):
 class GetInfluxDataQuerySerializer(serializers.Serializer):
     period = serializers.CharField(required=False, default="24h")
     environment_id = serializers.CharField(required=True)
+    aggregate_every = serializers.CharField(required=False, default="24h")
 
 
 class WritableNestedFeatureStateSerializer(FeatureStateSerializerBasic):
@@ -329,3 +330,15 @@ class WritableNestedFeatureStateSerializer(FeatureStateSerializerBasic):
 
     class Meta(FeatureStateSerializerBasic.Meta):
         extra_kwargs = {"environment": {"required": True}}
+
+
+class SegmentAssociatedFeatureStateSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = FeatureState
+        fields = ("id", "feature", "environment")
+
+
+class SDKFeatureStatesQuerySerializer(serializers.Serializer):
+    feature = serializers.CharField(
+        required=False, help_text="Name of the feature to get the state of"
+    )
