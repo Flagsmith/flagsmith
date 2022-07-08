@@ -27,7 +27,6 @@ const controller = {
                     AppActions.getOrganisation(project.organisation);
                 }
                 store.id = id;
-                debugger
                 store.loaded();
                 if(cb) {
                     cb()
