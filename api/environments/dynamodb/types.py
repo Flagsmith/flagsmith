@@ -50,14 +50,20 @@ class DynamoProjectMetadata:
         return ProjectIdentityMigrationStatus.MIGRATION_COMPLETED
 
     def trigger_identity_migration(self):
+        if self.triggered_at:
+            raise AttributeError("Migration has already been triggered.")
         self.triggered_at = datetime.now().isoformat()
         self._save()
 
     def start_identity_migration(self):
+        if self.migration_start_time:
+            raise AttributeError("Migration has already been started.")
         self.migration_start_time = datetime.now().isoformat()
         self._save()
 
     def finish_identity_migration(self):
+        if self.migration_end_time:
+            raise AttributeError("Migration has already been finished.")
         self.migration_end_time = datetime.now().isoformat()
         self._save()
 
