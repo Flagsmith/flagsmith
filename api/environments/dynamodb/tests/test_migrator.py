@@ -19,7 +19,7 @@ def test_migrate_calls_internal_methods_with_correct_arguments(
     mocked_project_metadata = mocker.patch(
         "environments.dynamodb.migrator.DynamoProjectMetadata"
     )
-    mocked_environment_wrapper = mocked_identity_wrapper = mocker.patch(
+    mocked_environment_wrapper = mocker.patch(
         "environments.dynamodb.migrator.DynamoEnvironmentWrapper"
     )
     mocked_project_metadata_instance = mocker.MagicMock(
@@ -60,7 +60,9 @@ def test_migrate_calls_internal_methods_with_correct_arguments(
     assert project.enable_dynamo_db is True
 
 
-def test_start_migration_calls_internal_methods_with_correct_arguments(mocker, project):
+def test_trigger_migration_calls_internal_methods_with_correct_arguments(
+    mocker, project
+):
     # Given
     mocked_project_metadata = mocker.patch(
         "environments.dynamodb.migrator.DynamoProjectMetadata"
@@ -77,11 +79,11 @@ def test_start_migration_calls_internal_methods_with_correct_arguments(mocker, p
     identity_migrator = IdentityMigrator(project.id)
 
     # When
-    identity_migrator.start_migration()
+    identity_migrator.trigger_migration()
 
     # Then
     mocked_project_metadata.get_or_new.assert_called_with(project.id)
-    mocked_project_metadata_instance.start_identity_migration.assert_called_once_with()
+    mocked_project_metadata_instance.trigger_identity_migration.assert_called_once_with()
     mocked_send_migration_event.assert_called_once_with(project.id)
 
 

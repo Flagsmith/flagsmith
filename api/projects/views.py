@@ -126,7 +126,7 @@ class ProjectViewSet(viewsets.ModelViewSet):
         if not identity_migrator.can_migrate:
             raise ProjectMigrationError()
 
-        identity_migrator.start_migration()
+        identity_migrator.trigger_migration()
         return Response(status=status.HTTP_202_ACCEPTED)
 
 

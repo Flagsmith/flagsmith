@@ -200,7 +200,7 @@ def migrate_identities_to_edge(request, project_id):
         return HttpResponseBadRequest(
             "Migration is either already done or is in progress"
         )
-    identity_migrator.start_migration()
+    identity_migrator.trigger_migration()
 
     return HttpResponseRedirect(reverse("sales_dashboard:index"))
 

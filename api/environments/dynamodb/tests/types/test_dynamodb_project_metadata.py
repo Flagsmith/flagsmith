@@ -92,6 +92,10 @@ def test_start_identity_migration_calls_put_item_with_correct_arguments(mocker):
             ProjectIdentityMigrationStatus.MIGRATION_NOT_STARTED,
         ),
         (
+            DynamoProjectMetadata(id=1, triggered_at=datetime.now().isoformat()),
+            ProjectIdentityMigrationStatus.MIGRATION_SCHEDULED,
+        ),
+        (
             DynamoProjectMetadata(
                 id=1, migration_start_time=datetime.now().isoformat()
             ),
@@ -107,7 +111,7 @@ def test_start_identity_migration_calls_put_item_with_correct_arguments(mocker):
         ),
     ),
 )
-def test_identity_migration_status(mocker, instance, status):
+def test_identity_migration_status(instance, status):
     assert instance.identity_migration_status == status
 
 
