@@ -1,9 +1,13 @@
 from django.core.management import BaseCommand, CommandParser
 
-from import_export.import_ import import_organisation
+from import_export.import_ import OrganisationImporter
 
 
 class Command(BaseCommand):
+    def __init__(self, *args, **kwargs):
+        super(Command, self).__init__(*args, **kwargs)
+        self.importer = OrganisationImporter()
+
     def add_arguments(self, parser: CommandParser):
         parser.add_argument(
             "bucket-name",
@@ -20,4 +24,4 @@ class Command(BaseCommand):
         bucket_name = options["bucket-name"]
         key = options["key"]
 
-        import_organisation(bucket_name, key)
+        self.importer.import_organisation(bucket_name, key)
