@@ -40,6 +40,12 @@ module.exports = Object.assign({}, require('./base/_utils'), {
         }
         return false;
     },
+    isMigrating() {
+        if (Utils.getFlagsmithHasFeature('edge_migrator') && ProjectStore.model && ProjectStore.model.migration_status === 'MIGRATION_IN_PROGRESS') {
+            return true;
+        }
+        return false;
+    },
     getUpdateTraitEndpoint(environmentId, userId, _project) {
         if (Utils.getFlagsmithHasFeature('edge_identities') && ProjectStore.model && ProjectStore.model.use_edge_identities) {
             return `${Project.api}environments/${environmentId}/edge-identities/${userId}/update-traits/`;

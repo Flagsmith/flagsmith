@@ -196,7 +196,12 @@ const Aside = class extends Component {
                                                                           data-test={Utils.getIsEdge() ? 'edge-project' : 'core-project'}
                                                                           href="https://docs.flagsmith.com/advanced-use/edge-api#enabling-the-edge-api" className="text-white font-weight-bold"
                                                                         >
-                                                                            {Utils.getIsEdge() ? 'Edge' : 'Core'}
+                                                                            {Utils.getIsEdge() ? 'Edge' : Utils.isMigrating()?(
+                                                                                <Tooltip title={'Migrating to Edge'}>
+
+                                                                                    Depending on the amount of project data, migrating can take a while. Refresh the page to track progress.
+                                                                                </Tooltip>
+                                                                            ):'Core'}
                                                                         </a>
                                                                     </span>
                                                                 )}

@@ -83,6 +83,13 @@ const AppActions = Object.assign({}, require('./base/_app-actions'), {
         });
     },
 
+    migrateProject(projectId) {
+        Dispatcher.handleViewAction({
+            actionType: Actions.MIGRATE_PROJECT,
+            projectId
+        });
+    },
+
     deleteTag(projectId, data, onComplete) {
         Dispatcher.handleViewAction({
             actionType: Actions.DELETE_TAG,

@@ -17,6 +17,7 @@ const Actions = Object.assign({}, require('./base/_action-constants'), {
     'UPDATE_TAG': 'UPDATE_TAG',
     'CREATE_TAG': 'CREATE_TAG',
     'DELETE_TAG': 'DELETE_TAG',
+    'MIGRATE_PROJECT': 'MIGRATE_PROJECT',
     'CREATE_GROUP': 'CREATE_GROUP',
     'GET_GROUPS': 'GET_GROUPS',
     'GET_GROUPS_PAGE': 'GET_GROUPS_PAGE',
