@@ -163,16 +163,18 @@ export default class AdminAPIKeys extends PureComponent {
         const apiKeys = this.state.apiKeys && this.state.apiKeys.results;
         return (
             <div>
-                <h3>Admin API Keys</h3>
+                <Row space className="mt-5">
+                <h3>Terraform API Keys</h3>
+                <Button onClick={this.createAPIKey} disabled={this.state.isLoading}>
+                    Create Terraform API Key
+                </Button>
                 <p>
-                    Master API keys are used to authenticate with the admin API's, find out more <a href="https://docs.flagsmith.com/">here</a>.
+                    Terraform API keys are used to authenticate with the Admin API. <a href="https://docs.flagsmith.com/advanced-use/system-administration#terraform-api-keys-for-organisations" target="_blank">Learn about Terraform Keys.</a>
                 </p>
+                </Row>
                 {
                     this.state.isLoading && <div className="text-center"><Loader/></div>
                 }
-                <Button onClick={this.createAPIKey} disabled={this.state.isLoading}>
-                    Create Admin API Key
-                </Button>
                 {!!apiKeys && !!apiKeys.length && (
                     <Panel className="mt-4" title="API Keys">
                         {apiKeys && apiKeys.map(v => !v.revoked && (
