@@ -329,3 +329,9 @@ class WritableNestedFeatureStateSerializer(FeatureStateSerializerBasic):
 
     class Meta(FeatureStateSerializerBasic.Meta):
         extra_kwargs = {"environment": {"required": True}}
+
+
+class SDKFeatureStatesQuerySerializer(serializers.Serializer):
+    feature = serializers.CharField(
+        required=False, help_text="Name of the feature to get the state of"
+    )
