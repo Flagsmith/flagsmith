@@ -329,3 +329,9 @@ class WritableNestedFeatureStateSerializer(FeatureStateSerializerBasic):
 
     class Meta(FeatureStateSerializerBasic.Meta):
         extra_kwargs = {"environment": {"required": True}}
+
+
+class SegmentAssociatedFeatureStateSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = FeatureState
+        fields = ("feature", "environment")
