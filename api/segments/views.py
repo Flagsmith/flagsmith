@@ -55,9 +55,20 @@ class SegmentViewSet(viewsets.ModelViewSet):
 
         return queryset
 
-    @action(detail=True, methods=["GET"], url_path="associated-features")
+    @action(
+        detail=True,
+        methods=["GET"],
+        url_path="associated-features",
+        serializer_class=SegmentAssociatedFeatureStateSerializer,
+    )
     def associated_features(self, request, *args, **kwargs):
         segment = self.get_object()
-        feature_states = FeatureState.objects.filter(feature_segment__segment=segment)
-        serializer = SegmentAssociatedFeatureStateSerializer(feature_states, many=True)
+        queryset = FeatureState.objects.filter(feature_segment__segment=segment)
+
+        page = self.paginate_queryset(queryset)
+        if page is not None:
+            serializer = self.get_serializer(page, many=True)
+            return self.get_paginated_response(serializer.data)
+
+        serializer = self.get_serializer(queryset, many=True)
         return Response(serializer.data)
