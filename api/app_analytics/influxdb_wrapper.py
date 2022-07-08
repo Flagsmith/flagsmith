@@ -173,7 +173,10 @@ def get_multiple_event_list_for_organisation(organisation_id: int):
 
 
 def get_multiple_event_list_for_feature(
-    environment_id: int, feature_name: str, period: str = "30d"
+    environment_id: int,
+    feature_name: str,
+    period: str = "30d",
+    aggregate_every: str = "24h",
 ) -> typing.List[dict]:
     """
     Get aggregated request data for the given feature in a given environment across
@@ -194,16 +197,18 @@ def get_multiple_event_list_for_feature(
     :param environment_id: an id of the environment to get usage for
     :param feature_name: the name of the feature to get usage for
     :param period: the influx time period to filter on, e.g. 30d, 7d, etc.
+    :param aggregate_every: the influx time period to aggregate the data by, e.g. 24h
 
     :return: a list of dicts with feature and request count in a specific environment
     """
 
     results = InfluxDBWrapper.influx_query_manager(
+        date_range=period,
         filters=f'|> filter(fn:(r) => r._measurement == "feature_evaluation") \
                   |> filter(fn: (r) => r["_field"] == "request_count") \
                   |> filter(fn: (r) => r["environment_id"] == "{environment_id}") \
                   |> filter(fn: (r) => r["feature_id"] == "{feature_name}")',
-        extra=f'|> aggregateWindow(every: {period}, fn: sum, createEmpty: false) \
+        extra=f'|> aggregateWindow(every: {aggregate_every}, fn: sum, createEmpty: false) \
                    |> yield(name: "sum")',
     )
     if not results:
