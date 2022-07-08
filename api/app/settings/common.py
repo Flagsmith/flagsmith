@@ -146,6 +146,7 @@ INSTALLED_APPS = [
     # for filtering querysets on viewsets
     "django_filters",
     "import_export",
+    "task_processor",
 ]
 
 if GOOGLE_ANALYTICS_KEY or INFLUXDB_TOKEN:
