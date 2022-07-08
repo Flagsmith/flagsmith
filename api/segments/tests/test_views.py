@@ -206,5 +206,6 @@ def test_associated_features_returns_all_the_associated_features(
 
     # Then
     assert response.json().get("count") == 1
+    assert response.json()["results"][0]["id"] == segment_featurestate.id
     assert response.json()["results"][0]["feature"] == feature.id
     assert response.json()["results"][0]["environment"] == environment.id
