@@ -75,7 +75,7 @@ class Feature(CustomLifecycleModelMixin, AbstractBaseExportableModel):
     )
     description = models.TextField(null=True, blank=True)
     default_enabled = models.BooleanField(default=False)
-    type = models.CharField(max_length=50, null=True, blank=True, default=STANDARD)
+    type = models.CharField(max_length=50, blank=True, default=STANDARD)
     history = HistoricalRecords(excluded_fields=["uuid"])
     tags = models.ManyToManyField(Tag, blank=True)
     is_archived = models.BooleanField(default=False)
