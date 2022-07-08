@@ -357,6 +357,7 @@ const CreateSegment = class extends Component {
                                                       AppActions.searchIdentities(this.props.environmentId, Utils.safeParseEventValue(e));
                                                   }}
                                                 />
+                                                <p className="text-right mt-4">This is a random sample of users who are either in or out of the Segment.</p>
                                             </FormGroup>
                                         </div>
                                     )}
