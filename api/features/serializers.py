@@ -335,7 +335,7 @@ class WritableNestedFeatureStateSerializer(FeatureStateSerializerBasic):
 class SegmentAssociatedFeatureStateSerializer(serializers.ModelSerializer):
     class Meta:
         model = FeatureState
-        fields = ("feature", "environment")
+        fields = ("id", "feature", "environment")
 
 
 class SDKFeatureStatesQuerySerializer(serializers.Serializer):
