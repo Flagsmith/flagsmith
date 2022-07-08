@@ -342,4 +342,3 @@ class SDKFeatureStatesQuerySerializer(serializers.Serializer):
     feature = serializers.CharField(
         required=False, help_text="Name of the feature to get the state of"
     )
-
