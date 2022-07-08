@@ -128,7 +128,7 @@ def test_influx_db_query_when_get_multiple_events_for_feature_then_query_api_cal
         f'|> filter(fn: (r) => r["feature_id"] == "{feature_name}") '
         '|> drop(columns: ["organisation", "organisation_id", "type", "project", '
         '"project_id", "environment", "environment_id", "host"])'
-        "|> aggregateWindow(every: 30d, fn: sum, createEmpty: false)                    "
+        "|> aggregateWindow(every: 24h, fn: sum, createEmpty: false)                    "
         '|> yield(name: "sum")'
     )
 
