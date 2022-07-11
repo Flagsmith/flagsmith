@@ -656,3 +656,6 @@ SERVE_FE_ASSETS = os.path.exists(BASE_DIR + "/app/templates/webpack/index.html")
 NUM_PROXIES = env.int("NUM_PROXIES", 1)
 
 SAML_USE_NAME_ID_AS_EMAIL = env.bool("SAML_USE_NAME_ID_AS_EMAIL", False)
+
+# Used to control the size(number of identities) of the project that can be self migrated to edge
+MAX_SELF_MIGRATABLE_IDENTITIES = env.int("MAX_SELF_MIGRATABLE_IDENTITIES", 100000)
