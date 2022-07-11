@@ -9,3 +9,8 @@ class DynamoNotEnabledError(APIException):
 class ProjectMigrationError(APIException):
     status_code = 400
     default_detail = "Migration is either already done or is in progress"
+
+
+class TooManyIdentitiesError(APIException):
+    status_code = 400
+    default_detail = "Too many identities; Please contact support"
