@@ -14,6 +14,7 @@ if settings.PROJECT_METADATA_TABLE_NAME_DYNAMO:
 
 
 class ProjectIdentityMigrationStatus(enum.Enum):
+    MIGRATION_SCHEDULED = "MIGRATION_SCHEDULED"
     MIGRATION_COMPLETED = "MIGRATION_COMPLETED"
     MIGRATION_IN_PROGRESS = "MIGRATION_IN_PROGRESS"
     MIGRATION_NOT_STARTED = "MIGRATION_NOT_STARTED"
@@ -27,6 +28,7 @@ class DynamoProjectMetadata:
     id: int
     migration_start_time: str = None
     migration_end_time: str = None
+    triggered_at: str = None
 
     @classmethod
     def get_or_new(cls, project_id: int) -> "DynamoProjectMetadata":
@@ -38,16 +40,30 @@ class DynamoProjectMetadata:
     @property
     def identity_migration_status(self) -> ProjectIdentityMigrationStatus:
         if not self.migration_start_time:
-            return ProjectIdentityMigrationStatus.MIGRATION_NOT_STARTED
+            return (
+                ProjectIdentityMigrationStatus.MIGRATION_SCHEDULED
+                if self.triggered_at
+                else ProjectIdentityMigrationStatus.MIGRATION_NOT_STARTED
+            )
         elif self.migration_start_time and not self.migration_end_time:
             return ProjectIdentityMigrationStatus.MIGRATION_IN_PROGRESS
         return ProjectIdentityMigrationStatus.MIGRATION_COMPLETED
 
+    def trigger_identity_migration(self):
+        if self.triggered_at:
+            raise AttributeError("Migration has already been triggered.")
+        self.triggered_at = datetime.now().isoformat()
+        self._save()
+
     def start_identity_migration(self):
+        if self.migration_start_time:
+            raise AttributeError("Migration has already been started.")
         self.migration_start_time = datetime.now().isoformat()
         self._save()
 
     def finish_identity_migration(self):
+        if self.migration_end_time:
+            raise AttributeError("Migration has already been finished.")
         self.migration_end_time = datetime.now().isoformat()
         self._save()
 
