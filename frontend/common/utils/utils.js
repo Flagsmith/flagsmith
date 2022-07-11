@@ -41,7 +41,7 @@ module.exports = Object.assign({}, require('./base/_utils'), {
         return false;
     },
     isMigrating() {
-        if (Utils.getFlagsmithHasFeature('edge_migrator') && ProjectStore.model && ProjectStore.model.migration_status === 'MIGRATION_IN_PROGRESS') {
+        if (Utils.getFlagsmithHasFeature('edge_migrator') && ProjectStore.model && (ProjectStore.model.migration_status === 'MIGRATION_IN_PROGRESS'|| ProjectStore.model.migration_status === 'MIGRATION_SCHEDULED')) {
             return true;
         }
         return false;
