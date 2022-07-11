@@ -13,12 +13,17 @@ from rest_framework.request import Request
 from rest_framework.response import Response
 
 from environments.dynamodb.migrator import IdentityMigrator
+from environments.identities.models import Identity
 from environments.serializers import EnvironmentSerializerLight
 from permissions.serializers import (
     PermissionModelSerializer,
     UserObjectPermissionsSerializer,
 )
-from projects.exceptions import DynamoNotEnabledError, ProjectMigrationError
+from projects.exceptions import (
+    DynamoNotEnabledError,
+    ProjectMigrationError,
+    TooManyIdentitiesError,
+)
 from projects.models import (
     ProjectPermissionModel,
     UserPermissionGroupProjectPermission,
@@ -37,6 +42,8 @@ from projects.serializers import (
     ListUserProjectPermissionSerializer,
     ProjectSerializer,
 )
+
+MAX_SELF_MIGRATABLE_IDENTITIES = 100000
 
 
 @method_decorator(
@@ -121,6 +128,11 @@ class ProjectViewSet(viewsets.ModelViewSet):
             raise DynamoNotEnabledError()
 
         project = self.get_object()
+        identity_count = Identity.objects.filter(environment__project=project).count()
+
+        if identity_count > MAX_SELF_MIGRATABLE_IDENTITIES:
+            raise TooManyIdentitiesError()
+
         identity_migrator = IdentityMigrator(project.id)
 
         if not identity_migrator.can_migrate:
