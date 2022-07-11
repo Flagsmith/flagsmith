@@ -17,7 +17,7 @@ from organisations.chargebee import (
 
 class MockChargeBeePlanResponse:
     def __init__(self, max_seats=0, max_api_calls=50000):
-        self.max_seats = (max_seats,)
+        self.max_seats = max_seats
         self.max_api_calls = 50000
         self.plan = MockChargeBeePlan(max_seats, max_api_calls)
 
