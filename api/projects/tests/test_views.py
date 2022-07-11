@@ -453,7 +453,7 @@ def test_project_migrate_to_edge_returns_400_if_project_have_too_many_identities
     # Given
     Identity.objects.create(environment=environment, identifier="identity2")
     settings.PROJECT_METADATA_TABLE_NAME_DYNAMO = "some_table"
-    mocker.patch("projects.views.MAX_SELF_MIGRATABLE_IDENTITIES", 1)
+    settings.MAX_SELF_MIGRATABLE_IDENTITIES = 1
     mocked_identity_migrator = mocker.patch("projects.views.IdentityMigrator")
 
     url = reverse("api-v1:projects:project-migrate-to-edge", args=[project.id])

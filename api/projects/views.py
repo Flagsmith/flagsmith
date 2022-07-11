@@ -43,8 +43,6 @@ from projects.serializers import (
     ProjectSerializer,
 )
 
-MAX_SELF_MIGRATABLE_IDENTITIES = 100000
-
 
 @method_decorator(
     name="list",
@@ -130,7 +128,7 @@ class ProjectViewSet(viewsets.ModelViewSet):
         project = self.get_object()
         identity_count = Identity.objects.filter(environment__project=project).count()
 
-        if identity_count > MAX_SELF_MIGRATABLE_IDENTITIES:
+        if identity_count > settings.MAX_SELF_MIGRATABLE_IDENTITIES:
             raise TooManyIdentitiesError()
 
         identity_migrator = IdentityMigrator(project.id)
