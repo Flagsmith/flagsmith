@@ -561,14 +561,18 @@ class ChargeBeeWebhookTestCase(TestCase):
             max_seats=self.old_max_seats,
         )
 
-    @mock.patch("organisations.models.get_max_seats_for_plan")
-    def test_when_subscription_plan_is_changed_max_seats_updated(
-        self, mock_get_max_seats
+    @mock.patch("organisations.models.get_plan_meta_data")
+    def test_when_subscription_plan_is_changed_max_seats_and_max_api_calls_are_updated(
+        self, mock_get_plan_meta_data
     ):
         # Given
         new_plan_id = "new-plan-id"
         new_max_seats = 3
-        mock_get_max_seats.return_value = new_max_seats
+        new_max_api_calls = 100
+        mock_get_plan_meta_data.return_value = {
+            "seats": new_max_seats,
+            "api_calls": new_max_api_calls,
+        }
 
         data = {
             "content": {
@@ -592,6 +596,7 @@ class ChargeBeeWebhookTestCase(TestCase):
         self.subscription.refresh_from_db()
         assert self.subscription.plan == new_plan_id
         assert self.subscription.max_seats == new_max_seats
+        assert self.subscription.max_api_calls == new_max_api_calls
 
     def test_when_subscription_is_set_to_non_renewing_then_cancellation_date_set_and_alert_sent(
         self,
