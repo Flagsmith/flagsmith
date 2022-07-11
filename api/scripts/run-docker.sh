@@ -15,10 +15,10 @@ function serve() {
              app.wsgi
 }
 function migrate_identities(){
-    python manage.py migrate_to_edge $1
+    python manage.py migrate_to_edge "$1"
 }
 function import_organisation(){
-    python manage.py importorganisation $1 $2
+    python manage.py importorganisation "$1" "$2"
 }
 
 if [ "$1" == "migrate" ]; then
