@@ -80,6 +80,7 @@ def test_start_identity_migration_calls_put_item_with_correct_arguments(mocker):
             "id": project_id,
             "migration_end_time": None,
             "migration_start_time": migration_start_time.isoformat(),
+            "triggered_at": None,
         }
     )
 
@@ -90,6 +91,10 @@ def test_start_identity_migration_calls_put_item_with_correct_arguments(mocker):
         (
             DynamoProjectMetadata(id=1),
             ProjectIdentityMigrationStatus.MIGRATION_NOT_STARTED,
+        ),
+        (
+            DynamoProjectMetadata(id=1, triggered_at=datetime.now().isoformat()),
+            ProjectIdentityMigrationStatus.MIGRATION_SCHEDULED,
         ),
         (
             DynamoProjectMetadata(
@@ -107,7 +112,7 @@ def test_start_identity_migration_calls_put_item_with_correct_arguments(mocker):
         ),
     ),
 )
-def test_identity_migration_status(mocker, instance, status):
+def test_identity_migration_status(instance, status):
     assert instance.identity_migration_status == status
 
 
@@ -138,5 +143,6 @@ def test_finish_identity_migration_calls_put_item_with_correct_arguments(
             "id": project_id,
             "migration_start_time": migration_start_time,
             "migration_end_time": migration_end_time.isoformat(),
+            "triggered_at": None,
         }
     )
