@@ -34,4 +34,11 @@ class Command(BaseCommand):
         bucket_name = options["bucket-name"]
         key = options["key"]
 
+        logger.info(
+            "Dumping organisation '%d' to bucket '%s' and key '%s'",
+            organisation_id,
+            bucket_name,
+            key,
+        )
+
         self.exporter.export_to_s3(organisation_id, bucket_name, key)
