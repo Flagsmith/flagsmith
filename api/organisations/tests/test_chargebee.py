@@ -7,21 +7,24 @@ from pytz import UTC
 from organisations.chargebee import (
     get_customer_id_from_subscription_id,
     get_hosted_page_url_for_subscription_upgrade,
+    get_max_api_calls_for_plan,
     get_max_seats_for_plan,
+    get_plan_meta_data,
     get_portal_url,
     get_subscription_data_from_hosted_page,
 )
 
 
 class MockChargeBeePlanResponse:
-    def __init__(self, max_seats=0):
+    def __init__(self, max_seats=0, max_api_calls=50000):
         self.max_seats = max_seats
-        self.plan = MockChargeBeePlan(max_seats)
+        self.max_api_calls = 50000
+        self.plan = MockChargeBeePlan(max_seats, max_api_calls)
 
 
 class MockChargeBeePlan:
-    def __init__(self, max_seats=0):
-        self.meta_data = {"seats": max_seats}
+    def __init__(self, max_seats=0, max_api_calls=50000):
+        self.meta_data = {"seats": max_seats, "api_calls": max_api_calls}
 
 
 class MockChargeBeeHostedPageResponse:
@@ -111,18 +114,43 @@ class ChargeBeeTestCase(TestCase):
 
     def test_get_max_seats_for_plan_returns_max_seats_for_plan(self):
         # Given
+        meta_data = {"seats": 3, "api_calls": 50000}
+
+        # When
+        max_seats = get_max_seats_for_plan(meta_data)
+
+        # Then
+        assert max_seats == meta_data["seats"]
+
+    def test_get_max_api_calls_for_plan_returns_max_api_calls_for_plan(self):
+        # Given
+        meta_data = {"seats": 3, "api_calls": 50000}
+
+        # When
+        max_api_calls = get_max_api_calls_for_plan(meta_data)
+
+        # Then
+        assert max_api_calls == meta_data["api_calls"]
+
+    def test_get_plan_meta_data_returns_correct_metadata(self):
+        # Given
         plan_id = "startup"
         expected_max_seats = 3
+        expected_max_api_calls = 50
 
         self.mock_cb.Plan.retrieve.return_value = MockChargeBeePlanResponse(
-            expected_max_seats
+            expected_max_seats, expected_max_api_calls
         )
 
         # When
-        max_seats = get_max_seats_for_plan(plan_id)
+        plan_meta_data = get_plan_meta_data(plan_id)
 
         # Then
-        assert max_seats == expected_max_seats
+        assert plan_meta_data == {
+            "api_calls": expected_max_api_calls,
+            "seats": expected_max_seats,
+        }
+        self.mock_cb.Plan.retrieve.assert_called_with(plan_id)
 
     def test_get_subscription_data_from_hosted_page_returns_expected_values(self):
         # Given
