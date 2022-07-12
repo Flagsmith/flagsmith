@@ -7,7 +7,7 @@ from permissions.models import PROJECT_PERMISSION_TYPE
 
 def add_manage_segments_permission(apps, schema_editor):
     permission_model_class = apps.get_model("permissions", "permissionmodel")
-    permission_model_class.objects.create(
+    permission_model_class.objects.get_or_create(
         key="MANAGE_SEGMENTS",
         description="Ability to manage segments in the given project.",
         type=PROJECT_PERMISSION_TYPE,
