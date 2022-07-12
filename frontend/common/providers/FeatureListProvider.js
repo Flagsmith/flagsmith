@@ -42,8 +42,8 @@ const FeatureListProvider = class extends Component {
         });
     }
 
-    toggleFlag = (i, environments, comment, environmentFlags) => {
-        AppActions.toggleFlag(i, environments, comment, environmentFlags);
+    toggleFlag = (i, environments, comment, environmentFlags, projectFlags) => {
+        AppActions.toggleFlag(i, environments, comment, environmentFlags, projectFlags);
     };
 
     setFlag = (i, flag, environments) => {
