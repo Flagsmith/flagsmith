@@ -260,13 +260,14 @@ const AppActions = Object.assign({}, require('./base/_app-actions'), {
             name,
         });
     },
-    toggleFlag(index, environments, comment, environmentFlags) {
+    toggleFlag(index, environments, comment, environmentFlags, projectFlags) {
         Dispatcher.handleViewAction({
             actionType: Actions.TOGGLE_FLAG,
             index,
             environments,
             comment,
             environmentFlags,
+            projectFlags,
         });
     },
     editUserFlag(params) {
@@ -528,7 +529,7 @@ const AppActions = Object.assign({}, require('./base/_app-actions'), {
             actionType: Actions.GET_CHANGE_REQUEST,
             id,
             projectId,
-            environmentId
+            environmentId,
         });
     },
     updateChangeRequest(changeRequest) {

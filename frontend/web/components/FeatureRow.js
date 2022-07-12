@@ -86,7 +86,7 @@ class TheComponent extends Component {
                                   return;
                               }
                               this.confirmToggle(projectFlag, environmentFlags[id], (environments) => {
-                                  toggleFlag(_.findIndex(projectFlags, { id }), environments, null, this.props.environmentFlags);
+                                  toggleFlag(_.findIndex(projectFlags, { id }), environments, null, this.props.environmentFlags, this.props.projectFlags);
                               });
                           }}
                         />
