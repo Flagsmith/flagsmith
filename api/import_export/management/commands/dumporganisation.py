@@ -1,14 +1,17 @@
-import json
-from datetime import datetime
+import logging
 
 from django.core.management import BaseCommand, CommandParser
-from django.core.serializers.json import DjangoJSONEncoder
-from django.utils import timezone
 
-from import_export.export import full_export
+from import_export.export import OrganisationExporter
+
+logger = logging.getLogger(__name__)
 
 
 class Command(BaseCommand):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.exporter = OrganisationExporter()
+
     def add_arguments(self, parser: CommandParser):
         parser.add_argument(
             "organisation-id",
@@ -16,29 +19,26 @@ class Command(BaseCommand):
             help="Id of the Organisation to dump",
         )
         parser.add_argument(
-            "output-dir",
+            "bucket-name",
             type=str,
-            help="Directory path to output json file.",
+            help="Name of the s3 bucket to export to.",
         )
         parser.add_argument(
-            "--output-filename",
+            "key",
             type=str,
-            help="Filename of JSON output.",
+            help="S3 key to export to.",
         )
 
     def handle(self, *args, **options):
         organisation_id = options["organisation-id"]
+        bucket_name = options["bucket-name"]
+        key = options["key"]
 
-        output_filepath = options["output-dir"]
-        if not output_filepath.endswith("/"):
-            output_filepath += "/"
-        if options.get("output-filename"):
-            output_filepath += options["output-filename"]
-        else:
-            output_filepath += "flagsmith-org-export-%s-%s.json" % (
-                organisation_id,
-                datetime.strftime(timezone.now(), "%Y%m%d%H%M%S%f"),
-            )
+        logger.info(
+            "Dumping organisation '%d' to bucket '%s' and key '%s'",
+            organisation_id,
+            bucket_name,
+            key,
+        )
 
-        with open(output_filepath, "w") as f:
-            f.write(json.dumps(full_export(organisation_id), cls=DjangoJSONEncoder))
+        self.exporter.export_to_s3(organisation_id, bucket_name, key)

@@ -15,10 +15,13 @@ function serve() {
              app.wsgi
 }
 function migrate_identities(){
-    python manage.py migrate_to_edge $1
+    python manage.py migrate_to_edge "$1"
 }
 function import_organisation(){
-    python manage.py importorganisation $1 $2
+    python manage.py importorganisation "$1" "$2"
+}
+function dump_organisation(){
+    python manage.py dumporganisation "$1" "$2" "$3"
 }
 
 if [ "$1" == "migrate" ]; then
@@ -26,9 +29,11 @@ if [ "$1" == "migrate" ]; then
 elif [ "$1" == "serve" ]; then
     serve
 elif [ "$1" == "migrate_identities" ]; then
-    migrate_identities $2
+    migrate_identities "$2"
 elif [ "$1" == "import-organisation" ]; then
-    import_organisation $2 $3
+    import_organisation "$2" "$3"
+elif [ "$1" == "dump-organisation" ]; then
+    dump_organisation "$2" "$3" "$4"
 elif [ "$1" == "migrate-and-serve" ]; then
     migrate
     serve

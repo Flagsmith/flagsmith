@@ -1,7 +1,10 @@
+import logging
 import uuid
 
 import boto3
 from django.core.management import call_command
+
+logger = logging.getLogger(__name__)
 
 
 class OrganisationImporter:
@@ -23,10 +26,16 @@ class OrganisationImporter:
         the task's storage.
         """
 
+        logger.info("Starting organisation import.")
+
         obj = self._s3_client.get_object(Bucket=s3_bucket, Key=s3_key)
         file_path = f"/tmp/{uuid.uuid4()}.json"
 
         with open(file_path, "a+") as f:
+            logger.debug("Writing file to '%s'", file_path)
             f.write(obj["Body"].read().decode("utf-8"))
+            logger.debug("Finished writing file.")
             f.seek(0)
+            logger.debug("Calling loaddata")
             call_command("loaddata", f.name, format="json")
+            logger.debug("Finished loading data")
