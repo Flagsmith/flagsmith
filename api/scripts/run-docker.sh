@@ -21,7 +21,7 @@ function import_organisation(){
     python manage.py importorganisation "$1" "$2"
 }
 function dump_organisation(){
-    python manage.py dumporganisation "$1" "$2"
+    python manage.py dumporganisation "$1" "$2" "$3"
 }
 
 if [ "$1" == "migrate" ]; then
