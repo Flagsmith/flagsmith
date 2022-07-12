@@ -152,7 +152,7 @@ class ProjectTestCase(TestCase):
         # Then
         assert response.status_code == status.HTTP_200_OK
         assert (
-            len(response.json()) == 4
+            len(response.json()) == 5
         )  # hard code how many permissions we expect there to be
 
     def test_user_with_view_project_permission_can_view_project(self):
