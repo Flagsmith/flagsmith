@@ -849,7 +849,7 @@ class ProjectFeatureTestCase(TestCase):
         feature.refresh_from_db()
         assert feature.description == data["description"]
 
-    @mock.patch("audit.signals.environment_wrapper")
+    @mock.patch("environments.models.environment_wrapper")
     def test_create_feature_only_triggers_write_to_dynamodb_once_per_environment(
         self, mock_dynamo_environment_wrapper
     ):

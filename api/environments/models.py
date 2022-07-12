@@ -169,9 +169,7 @@ class Environment(LifecycleModel):
             if not environment.project == project:
                 raise RuntimeError("Environments must all belong to the same project.")
 
-        if not (
-            project and project.enable_dynamo_db and environment_wrapper.is_enabled
-        ):
+        if not all([project, project.enable_dynamo_db, environment_wrapper.is_enabled]):
             return
 
         environment_wrapper.write_environments(environments)
