@@ -1,8 +1,13 @@
 import functools
+import json
+import logging
 import typing
 from dataclasses import dataclass
+from tempfile import TemporaryFile
 
+import boto3
 from django.core import serializers
+from django.core.serializers.json import DjangoJSONEncoder
 from django.db.models import Model, Q
 
 from environments.identities.models import Identity
@@ -35,6 +40,25 @@ from organisations.models import (
 from projects.models import Project
 from projects.tags.models import Tag
 from segments.models import Condition, Segment, SegmentRule
+
+logger = logging.getLogger(__name__)
+
+
+class OrganisationExporter:
+    def __init__(self, s3_client=None):
+        self.s3_client = s3_client or boto3.client("s3")
+
+    def export_to_s3(self, organisation_id: int, bucket_name: str, key: str):
+        data = full_export(organisation_id)
+        logger.debug("Got data export for organisation.")
+
+        file = TemporaryFile()
+        file.write(json.dumps(data, cls=DjangoJSONEncoder).encode("utf-8"))
+        file.seek(0)
+        logger.debug("Wrote data export to temporary file.")
+
+        self.s3_client.upload_fileobj(file, bucket_name, key)
+        logger.info("Finished writing data export to s3.")
 
 
 def full_export(organisation_id: int) -> typing.List[dict]:

@@ -1,6 +1,10 @@
+import logging
+
 from django.core.management import BaseCommand, CommandParser
 
 from import_export.import_ import OrganisationImporter
+
+logger = logging.getLogger(__name__)
 
 
 class Command(BaseCommand):
@@ -23,5 +27,9 @@ class Command(BaseCommand):
     def handle(self, *args, **options):
         bucket_name = options["bucket-name"]
         key = options["key"]
+
+        logger.info(
+            "Importing organisation from bucket '%s' with key '%s'", bucket_name, key
+        )
 
         self.importer.import_organisation(bucket_name, key)
