@@ -7,7 +7,7 @@ const controller = {
     getIdentities: (envId, page, pageSize) => {
         store.loading();
         store.envId = envId;
-        const endpoint = (page && `${page}${store.search ? `&q=${store.search}&page_size=${pageSize || PAGE_SIZE}` : `&page_size=${pageSize || PAGE_SIZE}`}`) || `${Project.api}environments/${envId}/${Utils.getIdentitiesEndpoint()}/${store.search ? `?q=${store.search}&page_size=${pageSize || PAGE_SIZE}` : `?page_size=${pageSize || PAGE_SIZE}`}`;
+        const endpoint = (page && `${page}${store.search ? `&q=${encodeURIComponent(store.search)}&page_size=${pageSize || PAGE_SIZE}` : `&page_size=${pageSize || PAGE_SIZE}`}`) || `${Project.api}environments/${envId}/${Utils.getIdentitiesEndpoint()}/${store.search ? `?q=${encodeURIComponent(store.search)}&page_size=${pageSize || PAGE_SIZE}` : `?page_size=${pageSize || PAGE_SIZE}`}`;
         data.get(endpoint)
             .then((res) => {
                 store.model = res && res.results && res.results.map((v)=>{
