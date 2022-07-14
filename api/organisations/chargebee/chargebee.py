@@ -1,13 +1,14 @@
-import logging
 from datetime import datetime
 
-import chargebee as chargebee
+import chargebee
 from django.conf import settings
 from pytz import UTC
 
-chargebee.configure(settings.CHARGEBEE_API_KEY, settings.CHARGEBEE_SITE)
+from .cache import ChargebeeCache
+from .exceptions import InvalidAddonIDError, InvalidPlanIDError
+from .types import ChargebeeObjMetadata
 
-logger = logging.getLogger(__name__)
+chargebee.configure(settings.CHARGEBEE_API_KEY, settings.CHARGEBEE_SITE)
 
 
 def get_subscription_data_from_hosted_page(hosted_page_id):
@@ -88,3 +89,35 @@ def get_hosted_page_url_for_subscription_upgrade(
     params = {"subscription": {"id": subscription_id, "plan_id": plan_id}}
     checkout_existing_response = chargebee.HostedPage.checkout_existing(params)
     return checkout_existing_response.hosted_page.url
+
+
+chargebee_cache = None
+
+
+def init_cache():
+    global chargebee_cache
+    chargebee_cache = ChargebeeCache()
+
+
+def get_subscription_details(subscription_id: str) -> ChargebeeObjMetadata:
+    if chargebee_cache is None:
+        init_cache()
+
+    result = chargebee.Subscription.retrieve(subscription_id)
+    subscription = result.subscription
+
+    plan_metadata = chargebee_cache.get_plan_metadata(subscription.plan_id)
+    if not plan_metadata:
+        raise InvalidPlanIDError()
+
+    subscription_metadata = plan_metadata
+
+    addon_ids = [addon.id for addon in subscription.addons]
+    for addon_id in addon_ids:
+        addon_metadata = chargebee_cache.get_addon_metadata(addon_id)
+
+        if not addon_metadata:
+            raise InvalidAddonIDError(addon_id)
+        subscription_metadata = subscription_metadata + addon_metadata
+
+    return subscription_metadata
