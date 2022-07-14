@@ -135,7 +135,7 @@ const ProjectSettingsPage = class extends Component {
                                     <div className="row">
                                         <div className="col-md-10">
                                             <p>
-                                                Migrate your project to enable the use our Global Edge API, existing endpoints will work whilst the migration takes place. Find out more <a href="https://docs.flagsmith.com/advanced-use/edge-api">here</a>.
+                                                Migrate your project onto our Global Edge API. Existing Core API endpoints will continue to work whilst the migration takes place. Find out more <a href="https://docs.flagsmith.com/advanced-use/edge-api">here</a>.
                                             </p>
                                         </div>
                                         <div className="col-md-2 text-right">
