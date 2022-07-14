@@ -12,6 +12,7 @@ PROJECT_PERMISSIONS = [
     ("DELETE_FEATURE", "Ability to delete features in the given project."),
     ("CREATE_FEATURE", "Ability to create features in the given project."),
     ("EDIT_FEATURE", "Ability to edit features in the given project."),
+    ("MANAGE_SEGMENTS", "Ability to manage segments in the given project."),
 ]
 
 
