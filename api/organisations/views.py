@@ -18,7 +18,10 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.throttling import ScopedRateThrottle
 
-from organisations.exceptions import OrganisationHasNoSubscription
+from organisations.exceptions import (
+    OrganisationHasNoSubscription,
+    SubscriptionNotFound,
+)
 from organisations.models import (
     OrganisationRole,
     OrganisationWebhook,
@@ -36,6 +39,7 @@ from organisations.serializers import (
     OrganisationSerializerFull,
     OrganisationWebhookSerializer,
     PortalUrlSerializer,
+    SubscriptionDetailsSerializer,
     UpdateSubscriptionSerializer,
 )
 from permissions.serializers import (
@@ -46,6 +50,8 @@ from projects.serializers import ProjectSerializer
 from users.serializers import UserIdSerializer
 from webhooks.mixins import TriggerSampleWebhookMixin
 from webhooks.webhooks import WebhookType
+
+from .chargebee import get_subscription_details
 
 logger = logging.getLogger(__name__)
 
@@ -155,6 +161,22 @@ class OrganisationViewSet(viewsets.ModelViewSet):
             status=status.HTTP_200_OK,
         )
 
+    @action(
+        detail=True,
+        methods=["GET"],
+        url_path="get-subscription-details",
+        serializer_class=SubscriptionDetailsSerializer,
+    )
+    def get_subscription_details(self, request, pk):
+        organisation = self.get_object()
+        if not organisation.has_subscription:
+            raise SubscriptionNotFound()
+        subscription_details = get_subscription_details(
+            organisation.subscription.subscription_id
+        )
+        serializer = self.get_serializer(instance=subscription_details)
+        return Response(serializer.data)
+
     @action(detail=True, methods=["GET"], url_path="portal-url")
     def get_portal_url(self, request, pk):
         organisation = self.get_object()
@@ -245,6 +267,7 @@ def chargebee_webhook(request):
         if subscription_status == "active":
             if subscription_data.get("plan_id") != existing_subscription.plan:
                 existing_subscription.update_plan(subscription_data.get("plan_id"))
+                # existing_subscription.update_subscription(subscription_data)
         elif subscription_status in ("non_renewing", "cancelled"):
             existing_subscription.cancel(
                 datetime.fromtimestamp(subscription_data.get("current_term_end"))

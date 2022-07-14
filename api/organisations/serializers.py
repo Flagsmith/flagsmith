@@ -218,3 +218,9 @@ class GetHostedPageForSubscriptionUpgradeSerializer(serializers.Serializer):
         url = get_hosted_page_url_for_subscription_upgrade(**self.validated_data)
         self.validated_data["url"] = url
         return self.validated_data
+
+
+class SubscriptionDetailsSerializer(serializers.Serializer):
+    max_seats = serializers.IntegerField()
+    max_projects = serializers.IntegerField()
+    max_api_calls = serializers.IntegerField()
