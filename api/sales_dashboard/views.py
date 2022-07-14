@@ -104,7 +104,9 @@ class OrganisationList(ListView):
 
 @staff_member_required
 def organisation_info(request, organisation_id):
-    organisation = get_object_or_404(Organisation, pk=organisation_id)
+    organisation = get_object_or_404(
+        Organisation.objects.select_related("subscription"), pk=organisation_id
+    )
     template = loader.get_template("sales_dashboard/organisation.html")
     max_seats_form = MaxSeatsForm(
         {
