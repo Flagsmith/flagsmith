@@ -221,6 +221,6 @@ class GetHostedPageForSubscriptionUpgradeSerializer(serializers.Serializer):
 
 
 class SubscriptionDetailsSerializer(serializers.Serializer):
-    max_seats = serializers.IntegerField()
-    max_projects = serializers.IntegerField()
-    max_api_calls = serializers.IntegerField()
+    max_seats = serializers.IntegerField(source="seats")
+    max_projects = serializers.IntegerField(source="projects")
+    max_api_calls = serializers.IntegerField(source="api_calls")

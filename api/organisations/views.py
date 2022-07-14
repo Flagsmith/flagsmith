@@ -76,6 +76,8 @@ class OrganisationViewSet(viewsets.ModelViewSet):
             return PermissionModelSerializer
         elif self.action == "my_permissions":
             return UserObjectPermissionsSerializer
+        elif self.action == "get_subscription_details":
+            return SubscriptionDetailsSerializer
         return OrganisationSerializerFull
 
     def get_serializer_context(self):
@@ -165,7 +167,6 @@ class OrganisationViewSet(viewsets.ModelViewSet):
         detail=True,
         methods=["GET"],
         url_path="get-subscription-details",
-        serializer_class=SubscriptionDetailsSerializer,
     )
     def get_subscription_details(self, request, pk):
         organisation = self.get_object()
