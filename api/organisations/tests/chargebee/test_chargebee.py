@@ -110,7 +110,7 @@ class ChargeBeeTestCase(TestCase):
         monkeypatch = MonkeyPatch()
         self.mock_cb = mock.MagicMock()
 
-        monkeypatch.setattr("organisations.chargebee.chargebee", self.mock_cb)
+        monkeypatch.setattr("organisations.chargebee.chargebee.chargebee", self.mock_cb)
 
     def test_get_max_seats_for_plan_returns_max_seats_for_plan(self):
         # Given
