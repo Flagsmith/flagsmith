@@ -1,42 +1,61 @@
-from datetime import datetime
-from typing import Optional
-
 import chargebee as chargebee
+from django.conf import settings
+from django.core.cache import caches
 
 from .types import ChargebeeObjMetadata
+
+CHARGEBEE_CACHE_KEY = "chargebee_items"
+
+
+def _get_item_generator(item_type):
+    next_offset = None
+    while True:
+        entries = getattr(chargebee, item_type).list(
+            {"limit": 100, "offset": next_offset}
+        )
+        for entry in entries:
+            yield entry
+        if entries.next_offset:
+            next_offset = entries.next_offset
+        break
 
 
 class ChargebeeCache:
     def __init__(self):
-        self.cache = {"plans": {}, "addons": {}}
-        self.refreshed_at = None
-        self.refresh()
+        self._cache = caches[settings.CHARGEBEE_CACHE_LOCATION]
 
     def refresh(self):
-        self.refresh_plans()
-        self.refresh_addons()
-        self.refreshed_at = datetime.now()
+        plans = self.fetch_plans()
+        addons = self.fetch_addons()
+        self._cache.set(CHARGEBEE_CACHE_KEY, {"plans": plans, "addons": addons})
 
-    def get_plan_metadata(self, plan_id) -> Optional[ChargebeeObjMetadata]:
-        return self.cache["plans"].get(plan_id)
+    @property
+    def plans(self):
+        self.refresh()
+        return self._get_items()["plans"]
 
-    def get_addon_metadata(self, plan_id) -> Optional[ChargebeeObjMetadata]:
-        return self.cache["addons"].get(plan_id)
+    @property
+    def addons(self):
+        return self._get_items()["addons"]
 
-    def refresh_plans(self):
-        entries = chargebee.Plan.list(limit=100)
-        while entries.next_offset:
-            for entry in entries:
-                plan = entry.plan
-                plan_metadata = plan.meta_data or {}
-                self.cache["plans"][plan.id] = ChargebeeObjMetadata(**plan_metadata)
-            entries = chargebee.Plan.list(limit=100, offset=entries.next_offset)
+    def _get_items(self):
+        chargebee_items = self._cache.get(CHARGEBEE_CACHE_KEY)
+        if chargebee_items is None:
+            self.refresh()
+        return self._cache.get(CHARGEBEE_CACHE_KEY)
 
-    def refresh_addons(self):
-        entries = chargebee.Addon.list(limit=100)
-        while entries.next_offset:
-            for entry in entries:
-                addon = entry.addon
-                addon_metadata = addon.meta_data or {}
-                self.cache["addons"][addon.id] = ChargebeeObjMetadata(**addon_metadata)
-            entries = chargebee.Addon.list(limit=100, offset=entries.next_offset)
+    def fetch_plans(self) -> dict:
+        plans = {}
+        for entry in _get_item_generator("Plan"):
+            plan = entry.plan
+            plan_metadata = plan.meta_data or {}
+            plans[plan.id] = ChargebeeObjMetadata(**plan_metadata)
+        return plans
+
+    def fetch_addons(self) -> dict:
+        addons = {}
+        for entry in _get_item_generator("Addon"):
+            addon = entry.addon
+            addon_metadata = addon.meta_data or {}
+            addons[addon.id] = ChargebeeObjMetadata(**addon_metadata)
+        return addons
