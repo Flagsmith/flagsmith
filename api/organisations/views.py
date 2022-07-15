@@ -268,7 +268,6 @@ def chargebee_webhook(request):
         if subscription_status == "active":
             if subscription_data.get("plan_id") != existing_subscription.plan:
                 existing_subscription.update_plan(subscription_data.get("plan_id"))
-                # existing_subscription.update_subscription(subscription_data)
         elif subscription_status in ("non_renewing", "cancelled"):
             existing_subscription.cancel(
                 datetime.fromtimestamp(subscription_data.get("current_term_end"))
