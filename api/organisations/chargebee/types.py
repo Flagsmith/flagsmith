@@ -1,4 +1,5 @@
 from dataclasses import dataclass
+from enum import Enum
 
 
 @dataclass
@@ -13,3 +14,8 @@ class ChargebeeObjMetadata:
             api_calls=self.api_calls + other.api_calls,
             projects=self.projects + other.projects,
         )
+
+
+class ChargebeeItem(Enum):
+    PLAN = "Plan"
+    ADDON = "Addon"

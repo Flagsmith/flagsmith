@@ -2,22 +2,9 @@ import chargebee as chargebee
 from django.conf import settings
 from django.core.cache import caches
 
-from .types import ChargebeeObjMetadata
+from .types import ChargebeeItem, ChargebeeObjMetadata
 
 CHARGEBEE_CACHE_KEY = "chargebee_items"
-
-
-def _get_item_generator(item_type):
-    next_offset = None
-    while True:
-        entries = getattr(chargebee, item_type).list(
-            {"limit": 100, "offset": next_offset}
-        )
-        for entry in entries:
-            yield entry
-        if entries.next_offset:
-            next_offset = entries.next_offset
-        break
 
 
 class ChargebeeCache:
@@ -31,7 +18,6 @@ class ChargebeeCache:
 
     @property
     def plans(self):
-        self.refresh()
         return self._get_items()["plans"]
 
     @property
@@ -46,7 +32,7 @@ class ChargebeeCache:
 
     def fetch_plans(self) -> dict:
         plans = {}
-        for entry in _get_item_generator("Plan"):
+        for entry in get_item_generator(ChargebeeItem.PLAN):
             plan = entry.plan
             plan_metadata = plan.meta_data or {}
             plans[plan.id] = ChargebeeObjMetadata(**plan_metadata)
@@ -54,8 +40,24 @@ class ChargebeeCache:
 
     def fetch_addons(self) -> dict:
         addons = {}
-        for entry in _get_item_generator("Addon"):
+        for entry in get_item_generator(ChargebeeItem.ADDON):
             addon = entry.addon
             addon_metadata = addon.meta_data or {}
             addons[addon.id] = ChargebeeObjMetadata(**addon_metadata)
         return addons
+
+
+def get_item_generator(item: ChargebeeItem):
+    next_offset = None
+    while True:
+        entries = getattr(chargebee, item.value).list(
+            {"limit": 100, "offset": next_offset}
+        )
+        for entry in entries:
+            yield entry
+
+        if entries.next_offset:
+            next_offset = entries.next_offset
+            continue
+
+        break
