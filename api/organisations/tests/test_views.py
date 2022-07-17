@@ -14,6 +14,7 @@ from rest_framework.test import APIClient, override_settings
 from environments.models import Environment
 from environments.permissions.models import UserEnvironmentPermission
 from features.models import Feature, FeatureSegment
+from organisations.chargebee.types import ChargebeeObjMetadata
 from organisations.invites.models import Invite
 from organisations.models import (
     Organisation,
@@ -770,3 +771,57 @@ class OrganisationWebhookViewSetTestCase(TestCase):
         assert response.status_code == status.HTTP_200_OK
         args, _ = trigger_sample_webhook.call_args
         assert args[0].url == self.valid_webhook_url
+
+
+def test_get_subscription_metadata(mocker, organisation, admin_client, subscription):
+    # Given
+    expected_seats = 10
+    expected_projects = 5
+    expected_api_calls = 100
+
+    get_subscription_metadata = mocker.patch(
+        "organisations.views.get_subscription_metadata",
+        return_value=ChargebeeObjMetadata(
+            seats=expected_seats,
+            projects=expected_projects,
+            api_calls=expected_api_calls,
+        ),
+    )
+
+    url = reverse(
+        "api-v1:organisations:organisation-get-subscription-metadata",
+        args=[organisation.pk],
+    )
+
+    # When
+    response = admin_client.get(url)
+
+    # Then
+    assert response.status_code == status.HTTP_200_OK
+    assert response.json() == {
+        "max_seats": expected_seats,
+        "max_projects": expected_projects,
+        "max_api_calls": expected_api_calls,
+    }
+    get_subscription_metadata.assert_called_once_with(subscription.subscription_id)
+
+
+def test_get_subscription_metadata_returns_404_if_the_organisation_have_no_subscription(
+    mocker, organisation, admin_client
+):
+    # Given
+    get_subscription_metadata = mocker.patch(
+        "organisations.views.get_subscription_metadata"
+    )
+
+    url = reverse(
+        "api-v1:organisations:organisation-get-subscription-metadata",
+        args=[organisation.pk],
+    )
+
+    # When
+    response = admin_client.get(url)
+
+    # Then
+    assert response.status_code == status.HTTP_404_NOT_FOUND
+    get_subscription_metadata.assert_not_called()

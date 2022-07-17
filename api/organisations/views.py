@@ -166,11 +166,11 @@ class OrganisationViewSet(viewsets.ModelViewSet):
     @action(
         detail=True,
         methods=["GET"],
-        url_path="get-subscription-details",
+        url_path="get-subscription-metadata",
     )
     def get_subscription_metadata(self, request, pk):
         organisation = self.get_object()
-        if not organisation.has_subscription:
+        if not organisation.has_subscription():
             raise SubscriptionNotFound()
         subscription_details = get_subscription_metadata(
             organisation.subscription.subscription_id
