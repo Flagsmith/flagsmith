@@ -90,16 +90,16 @@ def get_hosted_page_url_for_subscription_upgrade(
     return checkout_existing_response.hosted_page.url
 
 
-def get_subscription_details(subscription_id: str) -> ChargebeeObjMetadata:
+def get_subscription_metadata(subscription_id: str) -> ChargebeeObjMetadata:
+    subscription = chargebee.Subscription.retrieve(subscription_id).subscription
+    addon_ids = (
+        [addon.id for addon in subscription.addons] if subscription.addons else []
+    )
+
     chargebee_cache = ChargebeeCache()
-
-    result = chargebee.Subscription.retrieve(subscription_id)
-    subscription = result.subscription
-
     plan_metadata = chargebee_cache.plans[subscription.plan_id]
     subscription_metadata = plan_metadata
 
-    addon_ids = [addon.id for addon in subscription.addons]
     for addon_id in addon_ids:
         addon_metadata = chargebee_cache.addons[addon_id]
         subscription_metadata = subscription_metadata + addon_metadata

@@ -6,5 +6,5 @@ from .chargebee import (  # noqa
     get_plan_meta_data,
     get_portal_url,
     get_subscription_data_from_hosted_page,
-    get_subscription_details,
+    get_subscription_metadata,
 )

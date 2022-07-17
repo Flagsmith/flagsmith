@@ -51,7 +51,7 @@ from users.serializers import UserIdSerializer
 from webhooks.mixins import TriggerSampleWebhookMixin
 from webhooks.webhooks import WebhookType
 
-from .chargebee import get_subscription_details
+from .chargebee import get_subscription_metadata
 
 logger = logging.getLogger(__name__)
 
@@ -76,7 +76,7 @@ class OrganisationViewSet(viewsets.ModelViewSet):
             return PermissionModelSerializer
         elif self.action == "my_permissions":
             return UserObjectPermissionsSerializer
-        elif self.action == "get_subscription_details":
+        elif self.action == "get_subscription_metadata":
             return SubscriptionDetailsSerializer
         return OrganisationSerializerFull
 
@@ -168,11 +168,11 @@ class OrganisationViewSet(viewsets.ModelViewSet):
         methods=["GET"],
         url_path="get-subscription-details",
     )
-    def get_subscription_details(self, request, pk):
+    def get_subscription_metadata(self, request, pk):
         organisation = self.get_object()
         if not organisation.has_subscription:
             raise SubscriptionNotFound()
-        subscription_details = get_subscription_details(
+        subscription_details = get_subscription_metadata(
             organisation.subscription.subscription_id
         )
         serializer = self.get_serializer(instance=subscription_details)

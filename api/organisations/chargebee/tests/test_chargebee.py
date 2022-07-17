@@ -12,6 +12,7 @@ from organisations.chargebee import (
     get_plan_meta_data,
     get_portal_url,
     get_subscription_data_from_hosted_page,
+    get_subscription_metadata,
 )
 
 
@@ -226,3 +227,36 @@ class ChargeBeeTestCase(TestCase):
         self.mock_cb.HostedPage.checkout_existing.assert_called_once_with(
             {"subscription": {"id": subscription_id, "plan_id": plan_id}}
         )
+
+
+def test_get_subscription_metadata(mocker, chargebee_object_metadata):
+    # Given
+    plan_id = "plan-id"
+    addon_id = "addon-id"
+    subscription_id = "subscription-id"
+
+    # Let's create a (mocked) subscription object
+    mocked_subscription = mocker.MagicMock(
+        id=subscription_id, plan_id=plan_id, addons=[mocker.MagicMock(id=addon_id)]
+    )
+    mocked_chargebee = mocker.patch("organisations.chargebee.chargebee.chargebee")
+
+    # tie that subscription object to the mocked chargebee object
+    mocked_chargebee.Subscription.retrieve.return_value.subscription = (
+        mocked_subscription
+    )
+
+    # now, let's mock chargebee cache object
+    mocked_chargebee_cache = mocker.patch(
+        "organisations.chargebee.chargebee.ChargebeeCache", autospec=True
+    )
+    mocked_chargebee_cache.return_value.plans = {plan_id: chargebee_object_metadata}
+    mocked_chargebee_cache.return_value.addons = {addon_id: chargebee_object_metadata}
+
+    # When
+    subscription_metadata = get_subscription_metadata(subscription_id)
+
+    # Then
+    assert subscription_metadata.seats == chargebee_object_metadata.seats * 2
+    assert subscription_metadata.api_calls == chargebee_object_metadata.api_calls * 2
+    assert subscription_metadata.projects == chargebee_object_metadata.projects * 2
