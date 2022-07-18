@@ -36,7 +36,7 @@ class TheComponent extends Component {
     getOwners = (users, owners) => users ? users.filter(v => owners.includes(v.id)): []
 
     render() {
-        const hasPermission = !Utils.getFlagsmithHasFeature('plan_based_access') || Utils.getPlansPermission('FLAG_OWNERS');
+        const hasPermission = Utils.getPlansPermission('FLAG_OWNERS');
 
         return (
             <OrganisationProvider>
