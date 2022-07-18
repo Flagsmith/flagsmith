@@ -28,7 +28,6 @@ class ChargebeeCache:
         return self._get_items()["addons"]
 
     def _get_items(self) -> dict:
-        self.refresh()
         chargebee_items = self._cache.get(CHARGEBEE_CACHE_KEY)
         if chargebee_items is None:
             self.refresh()
