@@ -8,6 +8,7 @@ import IdentityListProvider from '../../../common/providers/IdentityListProvider
 import Constants from '../../../common/constants';
 import Tabs from '../base/forms/Tabs';
 import TabItem from '../base/forms/TabItem';
+import AssociatedSegmentOverrides from './AssociatedSegmentOverrides';
 
 const SEGMENT_ID_MAXLENGTH = Constants.forms.maxLength.SEGMENT_ID;
 
@@ -302,6 +303,9 @@ const CreateSegment = class extends Component {
                             <div className="mt-2">
                                 {Tab1}
                             </div>
+                        </TabItem>
+                        <TabItem tabLabel="Features">
+                            <AssociatedSegmentOverrides projectId={this.props.projectId} id={this.props.segment.id}/>
                         </TabItem>
                         <TabItem tabLabel="Users">
                             <div className="mt-2">
