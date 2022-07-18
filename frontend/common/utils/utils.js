@@ -398,6 +398,10 @@ module.exports = Object.assign({}, require('./base/_utils'), {
                 valid = true;
                 break;
             }
+            case 'CREATE_ADDITIONAL_PROJECT': {
+                valid = isSideProjectOrGreater;
+                break;
+            }
             case '2FA': {
                 valid = isSideProjectOrGreater;
                 break;
