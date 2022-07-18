@@ -1,4 +1,7 @@
-import chargebee as chargebee
+from typing import Generator, List
+
+import chargebee
+from chargebee.result import Result as ChargebeeResult
 from django.conf import settings
 from django.core.cache import caches
 
@@ -17,14 +20,15 @@ class ChargebeeCache:
         self._cache.set(CHARGEBEE_CACHE_KEY, {"plans": plans, "addons": addons})
 
     @property
-    def plans(self):
+    def plans(self) -> List[ChargebeeObjMetadata]:
         return self._get_items()["plans"]
 
     @property
-    def addons(self):
+    def addons(self) -> List[ChargebeeObjMetadata]:
         return self._get_items()["addons"]
 
-    def _get_items(self):
+    def _get_items(self) -> dict:
+        self.refresh()
         chargebee_items = self._cache.get(CHARGEBEE_CACHE_KEY)
         if chargebee_items is None:
             self.refresh()
@@ -47,7 +51,7 @@ class ChargebeeCache:
         return addons
 
 
-def get_item_generator(item: ChargebeeItem):
+def get_item_generator(item: ChargebeeItem) -> Generator[ChargebeeResult, None, None]:
     next_offset = None
     while True:
         entries = getattr(chargebee, item.value).list(
