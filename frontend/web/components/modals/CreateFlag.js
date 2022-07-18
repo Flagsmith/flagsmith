@@ -45,7 +45,7 @@ const CreateFlag = class extends Component {
             enabledIndentity: false,
             enabledSegment: false,
             is_archived,
-            period: '24h',
+            period: '28d',
         };
     }
 
