@@ -19,6 +19,8 @@ export default class Paging extends PureComponent {
             paging,
             isLoading,
             goToPage,
+            nextPage,
+            prevPage,
         } } = this;
         const currentIndex = paging.currentPage - 1;
         const lastPage = Math.ceil(paging.count / paging.pageSize);
@@ -35,7 +37,7 @@ export default class Paging extends PureComponent {
             <Row className="list-item paging" style={isLoading ? { opacity: 0.5 } : {}}>
                 <Button
                   disabled={!paging.previous} className="icon btn-paging ion-ios-arrow-back"
-                  onClick={() => goToPage(currentIndex)}
+                  onClick={() => noPages? prevPage() : goToPage(currentIndex)}
                 />
                 <Row className="list-item">
                     {!range.includes(0) && !noPages&& (
@@ -96,7 +98,7 @@ export default class Paging extends PureComponent {
                 </Row>
                 <Button
                   className="icon btn-paging ion-ios-arrow-forward" disabled={!paging.next}
-                  onClick={() => goToPage(currentIndex + 2)}
+                  onClick={() => noPages? nextPage() : goToPage(currentIndex + 2)}
                 />
             </Row>
         );
