@@ -115,7 +115,7 @@ class _EditPermissionsModal extends Component {
           },
       } = this;
       const isAdmin = this.admin();
-      const hasRbacPermission = !Utils.getFlagsmithHasFeature('plan_based_access') || Utils.getPlansPermission('RBAC');
+      const hasRbacPermission = Utils.getPlansPermission('RBAC');
 
       return (
           <AvailablePermissionsProvider level={level}>
