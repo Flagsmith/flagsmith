@@ -362,6 +362,9 @@ module.exports = Object.assign({}, require('./base/_utils'), {
     },
 
     getPlansPermission: (permission) => {
+        if (!Utils.getFlagsmithHasFeature('plan_based_access')) {
+            return true
+        }
         const isOrgPermission = permission !== '2FA';
         const plans = isOrgPermission ? AccountStore.getActiveOrgPlan() ? [AccountStore.getActiveOrgPlan()] : null
             : AccountStore.getPlans();
@@ -382,6 +385,9 @@ module.exports = Object.assign({}, require('./base/_utils'), {
     },
     getPlanPermission: (plan, permission) => {
         let valid = true;
+        if (!Utils.getFlagsmithHasFeature('plan_based_access')) {
+            return true
+        }
         if (!plan) {
             return false;
         }
