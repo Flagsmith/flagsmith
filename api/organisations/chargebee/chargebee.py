@@ -5,7 +5,7 @@ from django.conf import settings
 from pytz import UTC
 
 from .cache import ChargebeeCache
-from .types import ChargebeeObjMetadata
+from .metadata import ChargebeeObjMetadata
 
 chargebee.configure(settings.CHARGEBEE_API_KEY, settings.CHARGEBEE_SITE)
 

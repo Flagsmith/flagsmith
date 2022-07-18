@@ -1,6 +1,6 @@
 import pytest
 
-from organisations.chargebee.types import ChargebeeObjMetadata
+from organisations.chargebee.metadata import ChargebeeObjMetadata
 
 
 @pytest.fixture

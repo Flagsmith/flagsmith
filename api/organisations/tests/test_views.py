@@ -14,7 +14,7 @@ from rest_framework.test import APIClient, override_settings
 from environments.models import Environment
 from environments.permissions.models import UserEnvironmentPermission
 from features.models import Feature, FeatureSegment
-from organisations.chargebee.types import ChargebeeObjMetadata
+from organisations.chargebee.metadata import ChargebeeObjMetadata
 from organisations.invites.models import Invite
 from organisations.models import (
     Organisation,

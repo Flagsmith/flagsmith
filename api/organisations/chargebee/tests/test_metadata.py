@@ -1,4 +1,4 @@
-from organisations.chargebee.types import ChargebeeObjMetadata
+from organisations.chargebee.metadata import ChargebeeObjMetadata
 
 
 def test_add_chargebee_object_meta_data():

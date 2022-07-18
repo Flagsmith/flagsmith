@@ -2,7 +2,7 @@ from chargebee.list_result import ListResult
 from chargebee.models import Addon, Plan
 
 from organisations.chargebee.cache import ChargebeeCache, get_item_generator
-from organisations.chargebee.types import ChargebeeItem
+from organisations.chargebee.metadata import ChargebeeItem
 
 
 def test_get_item_generator_fetches_all_items(mocker):

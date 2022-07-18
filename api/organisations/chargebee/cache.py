@@ -2,7 +2,7 @@ import chargebee as chargebee
 from django.conf import settings
 from django.core.cache import caches
 
-from .types import ChargebeeItem, ChargebeeObjMetadata
+from .metadata import ChargebeeItem, ChargebeeObjMetadata
 
 CHARGEBEE_CACHE_KEY = "chargebee_items"
 
