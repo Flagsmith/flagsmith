@@ -4,6 +4,24 @@ const data = require('../data/base/_data');
 
 let createdFirstFeature = false;
 const PAGE_SIZE = 200;
+const recursivePageGet = function (url, parentRes) {
+    return data.get(url).then((res)=>{
+        let response;
+        if (parentRes) {
+            response = {
+                ...parentRes,
+                results: parentRes.results.concat(res.results)
+            }
+        } else {
+            response = res;
+        }
+        if (res.next) {
+            return recursivePageGet(res.next, response)
+        } else {
+            return Promise.resolve(response)
+        }
+    })
+}
 const controller = {
 
     getFeatures: (projectId, environmentId, force, page, filter) => {
@@ -29,7 +47,9 @@ const controller = {
             }
             return Promise.all([
                 data.get(featuresEndpoint),
-                data.get(`${Project.api}environments/${environmentId}/featurestates/?page_size=${PAGE_SIZE}`),
+                recursivePageGet(
+                    `${Project.api}environments/${environmentId}/featurestates/?page_size=${PAGE_SIZE}`
+                ),
                 feature ? data.get(`${Project.api}projects/${projectId}/features/${feature}/`) : Promise.resolve(),
             ]).then(([features, environmentFeatures, feature]) => {
                 store.paging.next = features.next;
