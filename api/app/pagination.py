@@ -7,7 +7,6 @@ from drf_yasg2.inspectors import PaginatorInspector
 from flag_engine.identities.builders import build_identity_model
 from rest_framework.pagination import PageNumberPagination
 from rest_framework.response import Response
-from rest_framework.utils.urls import replace_query_param
 
 
 class CustomPagination(PageNumberPagination):
@@ -33,7 +32,7 @@ class EdgeIdentityPaginationInspector(PaginatorInspector):
             openapi.Parameter(
                 "last_evaluated_key",
                 openapi.IN_QUERY,
-                "last evaluated key that's part of next/previous uri",
+                "Used as the starting point for the page",
                 required=False,
                 type=openapi.TYPE_INTEGER,
             ),
@@ -51,18 +50,9 @@ class EdgeIdentityPaginationInspector(PaginatorInspector):
             properties=OrderedDict(
                 (
                     (
-                        "next",
+                        "last_evaluated_key",
                         openapi.Schema(
                             type=openapi.TYPE_STRING,
-                            format=openapi.FORMAT_URI,
-                            x_nullable=True,
-                        ),
-                    ),
-                    (
-                        "previous",
-                        openapi.Schema(
-                            type=openapi.TYPE_STRING,
-                            format=openapi.FORMAT_URI,
                             x_nullable=True,
                         ),
                     ),
@@ -75,8 +65,6 @@ class EdgeIdentityPaginationInspector(PaginatorInspector):
 
 class EdgeIdentityPagination(CustomPagination):
     def paginate_queryset(self, dynamo_queryset, request, view=None):
-        self.previous_last_evaluated_key = request.GET.get("last_evaluated_key")
-        self.request = request
         last_evaluated_key = dynamo_queryset.get("LastEvaluatedKey")
         if last_evaluated_key:
             self.last_evaluated_key = base64.b64encode(
@@ -87,26 +75,6 @@ class EdgeIdentityPagination(CustomPagination):
             build_identity_model(identity_document)
             for identity_document in dynamo_queryset["Items"]
         ]
-
-    def get_next_link(self) -> str:
-        url = self.request.build_absolute_uri()
-        next_url = (
-            replace_query_param(url, "last_evaluated_key", self.last_evaluated_key)
-            if hasattr(self, "last_evaluated_key")
-            else None
-        )
-        return next_url
-
-    def get_previous_link(self) -> str:
-        url = self.request.build_absolute_uri()
-        previous_url = (
-            replace_query_param(
-                url, "last_evaluated_key", self.previous_last_evaluated_key
-            )
-            if self.previous_last_evaluated_key
-            else None
-        )
-        return previous_url
 
     def get_paginated_response(self, data) -> Response:
         """
@@ -121,8 +89,12 @@ class EdgeIdentityPagination(CustomPagination):
             OrderedDict(
                 [
                     ("results", data),
-                    ("previous", self.get_previous_link()),
-                    ("next", self.get_next_link()),
+                    (
+                        "last_evaluated_key",
+                        self.last_evaluated_key
+                        if hasattr(self, "last_evaluated_key")
+                        else None,
+                    ),
                 ]
             )
         )
@@ -131,21 +103,9 @@ class EdgeIdentityPagination(CustomPagination):
         return {
             "type": "object",
             "properties": {
-                "next": {
+                "last_evaluated_key": {
                     "type": "string",
                     "nullable": True,
-                    "format": "uri",
-                    "example": "http://api.example.org/accounts/?{page_query_param}=4".format(
-                        page_query_param=self.page_query_param
-                    ),
-                },
-                "previous": {
-                    "type": "string",
-                    "nullable": True,
-                    "format": "uri",
-                    "example": "http://api.example.org/accounts/?{page_query_param}=2".format(
-                        page_query_param=self.page_query_param
-                    ),
                 },
                 "results": schema,
             },
