@@ -12,8 +12,9 @@
                 <h1 class="h2 float-left">
                     Organisation: <strong>{{organisation.name}}</strong>
                     - Plan: <strong>{{ organisation.subscription.plan|default:"Free"}}</strong>
-                    {% if organisation.has_subscription and not organisation.is_paid %}<span class="badge badge-danger">Subscription Cancelled</button>{% endif %}
+                    {% if organisation.has_subscription and not organisation.is_paid %}<span class="badge badge-danger">Subscription Cancelled</button>{% endif %} 
                 </h1>
+                <div class="float-right"><a href="/admin/organisations/organisation/{{organisation.id}}/change">Django Admin</a></div>
                 <div class="float-right">
                     <form method="POST" action="{% url 'sales_dashboard:download-org-data' organisation.id %}">
                         {% csrf_token %}
@@ -21,7 +22,6 @@
                     </form>
                 </div>
             </div>
-
             <div class="clearfix"></div>
 
             {% if organisation.has_subscription %}
@@ -64,8 +64,8 @@
                         <tr>
                             <th>Start</th>
                             <th>End</th>
-                            <th>CB Subscription Id</th>
                             <th>CB Customer ID</th>
+                            <th>CB Subscription Id</th>
                             <th>Plan</th>
                             <th>Max Seats</th>
                             <th>Max API calls</th>
@@ -75,8 +75,8 @@
                         <tr>
                             <td>{{ organisation.subscription.subscription_date }}</td>
                             <td>{{ organisation.subscription.cancellation_date }}</td>
-                            <td>{{ organisation.subscription.subscription_id }}</td>
-                            <td>{{ organisation.subscription.customer_id }}</td>
+                            <td><a target="_blank" href="https://flagsmith.chargebee.com/customers?view_code=all&Customers.search={{ organisation.subscription.customer_id }}">{{ organisation.subscription.customer_id }}</a></td>
+                            <td><a target="_blank" href="https://flagsmith.chargebee.com/subscriptions?view_code=all&Subscriptions.search={{ organisation.subscription.subscription_id }}">{{ organisation.subscription.subscription_id }}</a></td>
                             <td>{{ organisation.subscription.plan }}</td>
                             <td>{{ organisation.subscription.max_seats }}</td>
                             <td>{{ organisation.subscription.max_api_calls }}</td>
