@@ -444,6 +444,7 @@ if ENABLE_DB_LOGGING:
 CACHE_FLAGS_SECONDS = env.int("CACHE_FLAGS_SECONDS", default=0)
 FLAGS_CACHE_LOCATION = "environment-flags"
 ENVIRONMENT_CACHE_LOCATION = "environment-objects"
+CHARGEBEE_CACHE_LOCATION = "chargebee-objects"
 
 CACHE_PROJECT_SEGMENTS_SECONDS = env.int("CACHE_PROJECT_SEGMENTS_SECONDS", 0)
 PROJECT_SEGMENTS_CACHE_LOCATION = "project-segments"
@@ -464,6 +465,11 @@ CACHES = {
     PROJECT_SEGMENTS_CACHE_LOCATION: {
         "BACKEND": "django.core.cache.backends.locmem.LocMemCache",
         "LOCATION": PROJECT_SEGMENTS_CACHE_LOCATION,
+    },
+    CHARGEBEE_CACHE_LOCATION: {
+        "BACKEND": "django.core.cache.backends.db.DatabaseCache",
+        "LOCATION": CHARGEBEE_CACHE_LOCATION,
+        "TIMEOUT": 12 * 60 * 60,  # 12 hours
     },
 }
 
