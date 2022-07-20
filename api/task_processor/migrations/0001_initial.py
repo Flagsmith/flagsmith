@@ -25,6 +25,7 @@ class Migration(migrations.Migration):
                 ('pickled_callable', models.BinaryField()),
                 ('pickled_args', models.BinaryField(blank=True, null=True)),
                 ('pickled_kwargs', models.BinaryField(blank=True, null=True)),
+                ('num_failures', models.IntegerField(blank=True, null=True, default=0)),
             ],
         ),
         migrations.CreateModel(

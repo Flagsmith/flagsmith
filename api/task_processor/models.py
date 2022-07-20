@@ -1,6 +1,7 @@
 import pickle
 import typing
 import uuid
+from datetime import datetime
 
 from django.db import models
 from django.utils import timezone
@@ -16,6 +17,9 @@ class Task(models.Model):
     pickled_args = models.BinaryField(blank=True, null=True)
     pickled_kwargs = models.BinaryField(blank=True, null=True)
 
+    # denormalise failures so that we can use select_for_update
+    num_failures = models.IntegerField(blank=True, null=True, default=0)
+
     @classmethod
     def create(cls, callable_: typing.Callable, *args, **kwargs) -> "Task":
         return Task(
@@ -23,6 +27,14 @@ class Task(models.Model):
             pickled_args=pickle.dumps(args),
             pickled_kwargs=pickle.dumps(kwargs),
         )
+
+    @classmethod
+    def schedule_task(
+        cls, schedule_for: datetime, callable_: typing.Callable, *args, **kwargs
+    ) -> "Task":
+        task = cls.create(callable_, *args, **kwargs)
+        task.scheduled_for = schedule_for
+        return task
 
     def run(self):
         return self._callable(*self._args, **self._kwargs)
@@ -38,6 +50,9 @@ class Task(models.Model):
     @property
     def _kwargs(self) -> typing.Dict[str, typing.Any]:
         return pickle.loads(self.pickled_kwargs)
+
+    def fail(self):
+        self.num_failures += 1
 
 
 class TaskResult(models.Choices):
