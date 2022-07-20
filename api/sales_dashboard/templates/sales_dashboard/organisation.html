@@ -76,12 +76,12 @@
                             <td>{{ organisation.subscription.subscription_date }}</td>
                             <td>{{ organisation.subscription.cancellation_date }}</td>
                             <td>
-                                {% if organisation.subscription.customer_id %}
+                                {% if organisation.subscription.payment_method == "CHARGEBEE" %}
                                     <a target="_blank" href="https://flagsmith.chargebee.com/customers?view_code=all&Customers.search={{ organisation.subscription.customer_id }}">{{ organisation.subscription.customer_id }}</a>
                                 {% endif %}
                             </td>
                             <td>
-                                {% if organisation.subscription.subscription_id %}
+                                {% if organisation.subscription.payment_method == "CHARGEBEE" %}
                                     <a target="_blank" href="https://flagsmith.chargebee.com/subscriptions?view_code=all&Subscriptions.search={{ organisation.subscription.subscription_id }}">{{ organisation.subscription.subscription_id }}</a>
                                 {% endif %}
                             </td>
