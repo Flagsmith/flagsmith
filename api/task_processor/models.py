@@ -23,9 +23,9 @@ class Task(models.Model):
     @classmethod
     def create(cls, callable_: typing.Callable, *args, **kwargs) -> "Task":
         return Task(
-            pickled_callable=pickle.dumps(callable_),
-            pickled_args=pickle.dumps(args),
-            pickled_kwargs=pickle.dumps(kwargs),
+            pickled_callable=cls._serialize_data(callable_),
+            pickled_args=cls._serialize_data(args),
+            pickled_kwargs=cls._serialize_data(kwargs),
         )
 
     @classmethod
@@ -39,20 +39,28 @@ class Task(models.Model):
     def run(self):
         return self._callable(*self._args, **self._kwargs)
 
+    def fail(self):
+        self.num_failures += 1
+
     @property
     def _callable(self) -> typing.Callable:
-        return pickle.loads(self.pickled_callable)
+        return self._deserialize_data(self.pickled_callable)
 
     @property
     def _args(self) -> typing.List[typing.Any]:
-        return pickle.loads(self.pickled_args)
+        return self._deserialize_data(self.pickled_args)
 
     @property
     def _kwargs(self) -> typing.Dict[str, typing.Any]:
-        return pickle.loads(self.pickled_kwargs)
+        return self._deserialize_data(self.pickled_kwargs)
 
-    def fail(self):
-        self.num_failures += 1
+    @staticmethod
+    def _serialize_data(data: typing.Any):
+        return pickle.dumps(data)
+
+    @staticmethod
+    def _deserialize_data(data: typing.Any):
+        return pickle.loads(data)
 
 
 class TaskResult(models.Choices):
