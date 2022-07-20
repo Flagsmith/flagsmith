@@ -1,4 +1,4 @@
-from typing import Generator, Mapping
+from typing import Dict, Generator
 
 import chargebee
 from chargebee.result import Result as ChargebeeResult
@@ -20,11 +20,11 @@ class ChargebeeCache:
         self._cache.set(CHARGEBEE_CACHE_KEY, {"plans": plans, "addons": addons})
 
     @property
-    def plans(self) -> Mapping[str, ChargebeeObjMetadata]:
+    def plans(self) -> Dict[str, ChargebeeObjMetadata]:
         return self._get_items()["plans"]
 
     @property
-    def addons(self) -> Mapping[str, ChargebeeObjMetadata]:
+    def addons(self) -> Dict[str, ChargebeeObjMetadata]:
         return self._get_items()["addons"]
 
     def _get_items(self) -> dict:
