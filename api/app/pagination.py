@@ -98,15 +98,3 @@ class EdgeIdentityPagination(CustomPagination):
                 ]
             )
         )
-
-    def get_paginated_response_schema(self, schema):
-        return {
-            "type": "object",
-            "properties": {
-                "last_evaluated_key": {
-                    "type": "string",
-                    "nullable": True,
-                },
-                "results": schema,
-            },
-        }
