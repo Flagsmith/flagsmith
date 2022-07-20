@@ -9,7 +9,7 @@ from features.feature_types import MULTIVARIATE
 from features.models import Feature, FeatureSegment, FeatureState
 from features.multivariate.models import MultivariateFeatureOption
 from features.value_types import STRING
-from organisations.models import Organisation, OrganisationRole
+from organisations.models import Organisation, OrganisationRole, Subscription
 from projects.models import Project
 from projects.tags.models import Tag
 from segments.models import EQUAL, Condition, Segment, SegmentRule
@@ -31,6 +31,13 @@ def organisation(db, admin_user):
     org = Organisation.objects.create(name="Test Org")
     admin_user.add_organisation(org, role=OrganisationRole.ADMIN)
     return org
+
+
+@pytest.fixture()
+def subscription(organisation):
+    return Subscription.objects.create(
+        organisation=organisation, subscription_id="subscription_id"
+    )
 
 
 @pytest.fixture()

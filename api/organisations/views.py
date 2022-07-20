@@ -18,7 +18,10 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.throttling import ScopedRateThrottle
 
-from organisations.exceptions import OrganisationHasNoSubscription
+from organisations.exceptions import (
+    OrganisationHasNoSubscription,
+    SubscriptionNotFound,
+)
 from organisations.models import (
     OrganisationRole,
     OrganisationWebhook,
@@ -36,6 +39,7 @@ from organisations.serializers import (
     OrganisationSerializerFull,
     OrganisationWebhookSerializer,
     PortalUrlSerializer,
+    SubscriptionDetailsSerializer,
     UpdateSubscriptionSerializer,
 )
 from permissions.serializers import (
@@ -46,6 +50,8 @@ from projects.serializers import ProjectSerializer
 from users.serializers import UserIdSerializer
 from webhooks.mixins import TriggerSampleWebhookMixin
 from webhooks.webhooks import WebhookType
+
+from .chargebee import get_subscription_metadata
 
 logger = logging.getLogger(__name__)
 
@@ -70,6 +76,8 @@ class OrganisationViewSet(viewsets.ModelViewSet):
             return PermissionModelSerializer
         elif self.action == "my_permissions":
             return UserObjectPermissionsSerializer
+        elif self.action == "get_subscription_metadata":
+            return SubscriptionDetailsSerializer
         return OrganisationSerializerFull
 
     def get_serializer_context(self):
@@ -154,6 +162,21 @@ class OrganisationViewSet(viewsets.ModelViewSet):
             OrganisationSerializerFull(instance=self.get_object()).data,
             status=status.HTTP_200_OK,
         )
+
+    @action(
+        detail=True,
+        methods=["GET"],
+        url_path="get-subscription-metadata",
+    )
+    def get_subscription_metadata(self, request, pk):
+        organisation = self.get_object()
+        if not organisation.has_subscription():
+            raise SubscriptionNotFound()
+        subscription_details = get_subscription_metadata(
+            organisation.subscription.subscription_id
+        )
+        serializer = self.get_serializer(instance=subscription_details)
+        return Response(serializer.data)
 
     @action(detail=True, methods=["GET"], url_path="portal-url")
     def get_portal_url(self, request, pk):
