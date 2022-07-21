@@ -24,6 +24,7 @@ from django.views.generic.edit import FormView
 from environments.dynamodb.migrator import IdentityMigrator
 from environments.identities.models import Identity
 from import_export.export import full_export
+from organisations.chargebee import get_subscription_metadata
 from organisations.models import Organisation
 from projects.models import Project
 from users.models import FFAdminUser
@@ -108,25 +109,14 @@ def organisation_info(request, organisation_id):
         Organisation.objects.select_related("subscription"), pk=organisation_id
     )
     template = loader.get_template("sales_dashboard/organisation.html")
-    max_seats_form = MaxSeatsForm(
-        {
-            "max_seats": (
-                0
-                if (organisation.has_subscription() is False)
-                else organisation.subscription.max_seats
-            )
-        }
-    )
-
-    max_api_calls_form = MaxAPICallsForm(
-        {
-            "max_api_calls": (
-                50000
-                if (organisation.has_subscription() is False)
-                else organisation.subscription.max_api_calls
-            )
-        }
-    )
+    subscription_metadata = None
+    if organisation.has_subscription():
+        subscription_metadata = get_subscription_metadata(
+            organisation.subscription.subscription_id
+        )
+    max_api_calls = getattr(subscription_metadata, "api_calls", 50000)
+    max_seats = getattr(subscription_metadata, "seats", 0)
+    max_projects = getattr(subscription_metadata, "projects", 1)
 
     event_list, labels = get_event_list_for_organisation(organisation_id)
 
@@ -143,8 +133,9 @@ def organisation_info(request, organisation_id):
 
     context = {
         "organisation": organisation,
-        "max_seats_form": max_seats_form,
-        "max_api_calls_form": max_api_calls_form,
+        "max_api_calls": max_api_calls,
+        "max_seats": max_seats,
+        "max_projects": max_projects,
         "event_list": event_list,
         "traits": mark_safe(json.dumps(event_list["traits"])),
         "identities": mark_safe(json.dumps(event_list["identities"])),
