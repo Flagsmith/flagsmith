@@ -118,10 +118,6 @@ def organisation_info(request, organisation_id):
     max_seats = getattr(subscription_metadata, "seats", 0)
     max_projects = getattr(subscription_metadata, "projects", 1)
 
-    max_seats_form = MaxSeatsForm({"max_seats": max_seats})
-
-    max_api_calls_form = MaxAPICallsForm({"max_api_calls": max_api_calls})
-
     event_list, labels = get_event_list_for_organisation(organisation_id)
 
     identity_count_dict = {}
@@ -137,8 +133,6 @@ def organisation_info(request, organisation_id):
 
     context = {
         "organisation": organisation,
-        "max_seats_form": max_seats_form,
-        "max_api_calls_form": max_api_calls_form,
         "max_api_calls": max_api_calls,
         "max_seats": max_seats,
         "max_projects": max_projects,
