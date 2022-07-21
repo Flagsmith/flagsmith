@@ -23,6 +23,9 @@ function import_organisation_from_s3(){
 function dump_organisation_to_s3(){
     python manage.py dumporganisationtos3 "$1" "$2" "$3"
 }
+function dump_organisation_to_local_fs(){
+    python manage.py dumporganisationtolocalfs "$1" "$2"
+}
 
 if [ "$1" == "migrate" ]; then
     migrate
@@ -34,6 +37,8 @@ elif [ "$1" == "import-organisation-from-s3" ]; then
     import_organisation_from_s3 "$2" "$3"
 elif [ "$1" == "dump-organisation-to-s3" ]; then
     dump_organisation_to_s3 "$2" "$3" "$4"
+elif [ "$1" == "dump-organisation-to-local-fs" ]; then
+    dump_organisation_to_local_fs "$2" "$3"
 elif [ "$1" == "migrate-and-serve" ]; then
     migrate
     serve
