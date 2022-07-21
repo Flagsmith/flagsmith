@@ -13,7 +13,7 @@ from features.models import Feature, FeatureSegment, FeatureState
 from features.multivariate.models import MultivariateFeatureOption
 from features.workflows.core.models import ChangeRequest
 from import_export.export import (
-    OrganisationExporter,
+    S3OrganisationExporter,
     export_environments,
     export_features,
     export_organisation,
@@ -202,7 +202,7 @@ def test_organisation_exporter_export_to_s3(organisation):
 
     s3_client = boto3.client("s3")
 
-    exporter = OrganisationExporter(s3_client=s3_client)
+    exporter = S3OrganisationExporter(s3_client=s3_client)
 
     # When
     exporter.export_to_s3(organisation.id, bucket_name, file_key)
