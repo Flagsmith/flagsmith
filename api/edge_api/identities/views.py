@@ -4,6 +4,7 @@ import typing
 
 import marshmallow
 from boto3.dynamodb.conditions import Key
+from django.utils.decorators import method_decorator
 from drf_yasg2.utils import swagger_auto_schema
 from flag_engine.api.schemas import APITraitSchema
 from flag_engine.identities.builders import (
@@ -16,7 +17,10 @@ from rest_framework.exceptions import NotFound, ValidationError
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 
-from app.pagination import EdgeIdentityPagination
+from app.pagination import (
+    EdgeIdentityPagination,
+    EdgeIdentityPaginationInspector,
+)
 from edge_api.identities.serializers import (
     EdgeIdentityFeatureStateSerializer,
     EdgeIdentityFsQueryparamSerializer,
@@ -35,6 +39,13 @@ from .exceptions import TraitPersistenceError
 trait_schema = APITraitSchema()
 
 
+@method_decorator(
+    name="list",
+    decorator=swagger_auto_schema(
+        pagination_class=EdgeIdentityPagination,
+        paginator_inspectors=[EdgeIdentityPaginationInspector],
+    ),
+)
 class EdgeIdentityViewSet(viewsets.ModelViewSet):
     serializer_class = EdgeIdentitySerializer
     pagination_class = EdgeIdentityPagination
