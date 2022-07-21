@@ -69,6 +69,7 @@
                             <th>Plan</th>
                             <th>Max Seats</th>
                             <th>Max API calls</th>
+                            <th>Max Projects</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -86,8 +87,9 @@
                                 {% endif %}
                             </td>
                             <td>{{ organisation.subscription.plan }}</td>
-                            <td>{{ organisation.subscription.max_seats }}</td>
-                            <td>{{ organisation.subscription.max_api_calls }}</td>
+                            <td>{{ max_seats }}</td>
+                            <td>{{ max_api_calls }}</td>
+                            <td>{{ max_projects }}</td>
                         </tr>
                     </tbody>
                 </table>
