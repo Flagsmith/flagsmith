@@ -74,7 +74,7 @@ const UserPage = class extends Component {
 
 
     getActualFlags = () => {
-        const url = `${Utils.getSDKEndpoint()}identities/?identifier=${this.props.match.params.identity}`;
+        const url = `${Project.api}identities/?identifier=${this.props.match.params.identity}`;
         fetch(url, {
             headers: { 'X-Environment-Key': this.props.match.params.environmentId },
         }).then(res => res.json()).then((res) => {
