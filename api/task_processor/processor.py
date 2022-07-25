@@ -11,7 +11,7 @@ def run_next_task() -> typing.Optional[TaskRun]:
     with transaction.atomic():
         available_tasks = (
             Task.objects.exclude(task_runs__result=TaskResult.SUCCESS)
-            .filter(num_failures__lte=3, scheduled_for__lte=timezone.now())
+            .filter(num_failures__lt=3, scheduled_for__lte=timezone.now())
             .select_for_update(skip_locked=True)
             .order_by("scheduled_for")
         )
