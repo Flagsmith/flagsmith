@@ -7,7 +7,6 @@ from django.dispatch import receiver
 from audit.decorators import handle_skipped_signals
 from audit.models import AuditLog, RelatedObjectType
 from audit.serializers import AuditLogSerializer
-from environments.dynamodb import DynamoEnvironmentWrapper
 from environments.models import Environment
 from integrations.datadog.datadog import DataDogWrapper
 from integrations.dynatrace.dynatrace import DynatraceWrapper
@@ -119,10 +118,6 @@ def send_audit_log_event_to_dynatrace(sender, instance, **kwargs):
     _track_event_async(instance, dynatrace)
 
 
-# Intialize the dynamo environment wrapper globaly
-environment_wrapper = DynamoEnvironmentWrapper()
-
-
 @receiver(post_save, sender=AuditLog)
 @handle_skipped_signals
 def send_environments_to_dynamodb(sender, instance, **kwargs):
@@ -131,12 +126,7 @@ def send_environments_to_dynamodb(sender, instance, **kwargs):
         if instance.environment_id
         else Q(project=instance.project)
     )
-    environments = Environment.objects.filter_for_document_builder(environments_filter)
-
-    project = instance.project or getattr(environments.first(), "project", None)
-    if not (project and project.enable_dynamo_db and environment_wrapper.is_enabled):
-        return
-    environment_wrapper.write_environments(environments)
+    Environment.write_environments_to_dynamodb(environments_filter)
 
 
 @receiver(post_save, sender=AuditLog)
