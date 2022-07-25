@@ -17,9 +17,10 @@ class Command(BaseCommand):
 
     def handle(self, *args, **options):
         num_threads = options["numthreads"]
-        threads = [
-            TaskRunner(main=threading.current_thread()) for _ in range(num_threads)
-        ]
+        current_thread = threading.current_thread()
+        threads = [TaskRunner(main=current_thread) for _ in range(num_threads)]
 
         for thread in threads:
             thread.start()
+
+        [t.join() for t in threads]
