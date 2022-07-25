@@ -76,14 +76,10 @@ def export_organisation(organisation_id: int) -> typing.List[dict]:
     Serialize an organisation and all its related objects.
     """
     return _export_entities(
-        [
-            _EntityExportConfig(Organisation, Q(id=organisation_id)),
-            _EntityExportConfig(InviteLink, Q(organisation__id=organisation_id)),
-            _EntityExportConfig(
-                OrganisationWebhook, Q(organisation__id=organisation_id)
-            ),
-            _EntityExportConfig(Subscription, Q(organisation__id=organisation_id)),
-        ]
+        _EntityExportConfig(Organisation, Q(id=organisation_id)),
+        _EntityExportConfig(InviteLink, Q(organisation__id=organisation_id)),
+        _EntityExportConfig(OrganisationWebhook, Q(organisation__id=organisation_id)),
+        _EntityExportConfig(Subscription, Q(organisation__id=organisation_id)),
     )
 
 
@@ -91,24 +87,22 @@ def export_projects(organisation_id: int) -> typing.List[dict]:
     default_filter = Q(project__organisation__id=organisation_id)
 
     return _export_entities(
-        [
-            _EntityExportConfig(Project, Q(organisation__id=organisation_id)),
-            _EntityExportConfig(Segment, default_filter),
-            _EntityExportConfig(
-                SegmentRule,
-                Q(segment__project__organisation__id=organisation_id)
-                | Q(rule__segment__project__organisation__id=organisation_id),
-            ),
-            _EntityExportConfig(
-                Condition,
-                Q(rule__segment__project__organisation__id=organisation_id)
-                | Q(rule__rule__segment__project__organisation__id=organisation_id),
-            ),
-            _EntityExportConfig(Tag, default_filter),
-            _EntityExportConfig(DataDogConfiguration, default_filter),
-            _EntityExportConfig(NewRelicConfiguration, default_filter),
-            _EntityExportConfig(SlackConfiguration, default_filter),
-        ]
+        _EntityExportConfig(Project, Q(organisation__id=organisation_id)),
+        _EntityExportConfig(Segment, default_filter),
+        _EntityExportConfig(
+            SegmentRule,
+            Q(segment__project__organisation__id=organisation_id)
+            | Q(rule__segment__project__organisation__id=organisation_id),
+        ),
+        _EntityExportConfig(
+            Condition,
+            Q(rule__segment__project__organisation__id=organisation_id)
+            | Q(rule__rule__segment__project__organisation__id=organisation_id),
+        ),
+        _EntityExportConfig(Tag, default_filter),
+        _EntityExportConfig(DataDogConfiguration, default_filter),
+        _EntityExportConfig(NewRelicConfiguration, default_filter),
+        _EntityExportConfig(SlackConfiguration, default_filter),
     )
 
 
@@ -116,34 +110,36 @@ def export_environments(organisation_id: int) -> typing.List[dict]:
     default_filter = Q(environment__project__organisation__id=organisation_id)
 
     return _export_entities(
-        [
-            _EntityExportConfig(
-                Environment, Q(project__organisation__id=organisation_id)
-            ),
-            _EntityExportConfig(EnvironmentAPIKey, default_filter),
-            _EntityExportConfig(Webhook, default_filter),
-            _EntityExportConfig(HeapConfiguration, default_filter),
-            _EntityExportConfig(MixpanelConfiguration, default_filter),
-            _EntityExportConfig(SegmentConfiguration, default_filter),
-            _EntityExportConfig(RudderstackConfiguration, default_filter),
-            _EntityExportConfig(WebhookConfiguration, default_filter),
-            _EntityExportConfig(SlackEnvironment, default_filter),
-        ]
+        _EntityExportConfig(Environment, Q(project__organisation__id=organisation_id)),
+        _EntityExportConfig(EnvironmentAPIKey, default_filter),
+        _EntityExportConfig(Webhook, default_filter),
+        _EntityExportConfig(HeapConfiguration, default_filter),
+        _EntityExportConfig(MixpanelConfiguration, default_filter),
+        _EntityExportConfig(SegmentConfiguration, default_filter),
+        _EntityExportConfig(RudderstackConfiguration, default_filter),
+        _EntityExportConfig(WebhookConfiguration, default_filter),
+        _EntityExportConfig(SlackEnvironment, default_filter),
     )
 
 
 def export_identities(organisation_id: int) -> typing.List[dict]:
-    return _export_entities(
-        [
-            _EntityExportConfig(
-                Identity, Q(environment__project__organisation__id=organisation_id)
-            ),
-            _EntityExportConfig(
-                Trait,
-                Q(identity__environment__project__organisation__id=organisation_id),
-            ),
-        ]
+    traits = _export_entities(
+        _EntityExportConfig(
+            Trait,
+            Q(identity__environment__project__organisation__id=organisation_id),
+        ),
     )
+    identities = _export_entities(
+        _EntityExportConfig(
+            Identity, Q(environment__project__organisation__id=organisation_id)
+        ),
+    )
+
+    # We export the traits first so that we take a 'snapshot' before exporting the
+    # identities, otherwise we end up with issues where new traits are created for new
+    # identities during the export process and the identity doesn't exist in the import.
+    # We then need to reverse the order so that the identities are imported first.
+    return [*identities, *traits]
 
 
 def export_features(organisation_id: int) -> typing.List[dict]:
@@ -153,11 +149,9 @@ def export_features(organisation_id: int) -> typing.List[dict]:
 
     feature_states = []
     for feature_state in _export_entities(
-        [
-            _EntityExportConfig(
-                FeatureState, Q(feature__project__organisation__id=organisation_id)
-            )
-        ]
+        _EntityExportConfig(
+            FeatureState, Q(feature__project__organisation__id=organisation_id)
+        )
     ):
         # Since we're not exporting any user objects, we want to exclude change
         # requests from the export. This means, however, that we need to remove the
@@ -167,38 +161,30 @@ def export_features(organisation_id: int) -> typing.List[dict]:
 
     return (
         _export_entities(
-            [
-                _EntityExportConfig(
-                    Feature,
-                    Q(project__organisation__id=organisation_id),
-                    exclude_fields=["owners"],
-                ),
-                _EntityExportConfig(
-                    MultivariateFeatureOption,
-                    Q(feature__project__organisation__id=organisation_id),
-                ),
-                _EntityExportConfig(
-                    FeatureSegment,
-                    Q(feature__project__organisation__id=organisation_id),
-                ),
-            ]
+            _EntityExportConfig(
+                Feature,
+                Q(project__organisation__id=organisation_id),
+                exclude_fields=["owners"],
+            ),
+            _EntityExportConfig(
+                MultivariateFeatureOption,
+                Q(feature__project__organisation__id=organisation_id),
+            ),
+            _EntityExportConfig(
+                FeatureSegment,
+                Q(feature__project__organisation__id=organisation_id),
+            ),
         )
         + feature_states  # feature states need to be imported in correct order
         + _export_entities(
-            [
-                _EntityExportConfig(
-                    FeatureStateValue,
-                    Q(
-                        feature_state__feature__project__organisation__id=organisation_id
-                    ),
-                ),
-                _EntityExportConfig(
-                    MultivariateFeatureStateValue,
-                    Q(
-                        feature_state__feature__project__organisation__id=organisation_id
-                    ),
-                ),
-            ]
+            _EntityExportConfig(
+                FeatureStateValue,
+                Q(feature_state__feature__project__organisation__id=organisation_id),
+            ),
+            _EntityExportConfig(
+                MultivariateFeatureStateValue,
+                Q(feature_state__feature__project__organisation__id=organisation_id),
+            ),
         )
     )
 
@@ -211,7 +197,7 @@ class _EntityExportConfig:
 
 
 def _export_entities(
-    export_configs: typing.List[_EntityExportConfig],
+    *export_configs: _EntityExportConfig,
 ) -> typing.List[dict]:
     entities = []
     for config in export_configs:
