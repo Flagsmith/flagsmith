@@ -15,10 +15,9 @@ from flag_engine.identities.builders import build_identity_model
 from flag_engine.segments.evaluator import get_identity_segments
 from rest_framework.exceptions import NotFound
 
-from environments.models import Environment
-
 if typing.TYPE_CHECKING:
     from environments.identities.models import Identity
+    from environments.models import Environment
 
 
 class DynamoWrapper:
@@ -122,7 +121,7 @@ class DynamoIdentityWrapper(DynamoWrapper):
 class DynamoEnvironmentWrapper(DynamoWrapper):
     table_name = settings.ENVIRONMENTS_TABLE_NAME_DYNAMO
 
-    def write_environments(self, environments: Iterable[Environment]):
+    def write_environments(self, environments: Iterable["Environment"]):
         with self._table.batch_writer() as writer:
             for environment in environments:
                 writer.put_item(Item=build_environment_document(environment))
