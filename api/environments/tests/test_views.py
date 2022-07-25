@@ -62,13 +62,19 @@ class EnvironmentTestCase(TestCase):
     def test_should_create_environments(self):
         # Given
         url = reverse("api-v1:environments:environment-list")
-        data = {"name": "Test environment", "project": self.project.id}
+        description = "This is the description"
+        data = {
+            "name": "Test environment",
+            "project": self.project.id,
+            "description": description,
+        }
 
         # When
         response = self.client.post(url, data=data)
 
         # Then
         assert response.status_code == status.HTTP_201_CREATED
+        assert response.json()["description"] == description
 
         # and user is admin
         assert UserEnvironmentPermission.objects.filter(
