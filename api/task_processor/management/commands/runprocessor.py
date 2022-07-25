@@ -1,3 +1,4 @@
+import signal
 import threading
 from argparse import ArgumentParser
 
@@ -7,6 +8,13 @@ from task_processor.threads import TaskRunner
 
 
 class Command(BaseCommand):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+        signal.signal(signal.SIGINT, self._exit_gracefully)
+        signal.signal(signal.SIGTERM, self._exit_gracefully)
+        self._stop = False
+
     def add_arguments(self, parser: ArgumentParser):
         parser.add_argument(
             "--numthreads",
@@ -23,4 +31,8 @@ class Command(BaseCommand):
         for thread in threads:
             thread.start()
 
-        [t.join() for t in threads]
+        while not self._stop:
+            continue
+
+    def _exit_gracefully(self, *args):
+        self._stop = True

@@ -15,4 +15,4 @@ class TaskRunner(Thread):
     def run(self) -> None:
         while self._main.is_alive():
             run_next_task()
-            time.sleep(self.sleep_interval_millis)
+            time.sleep(self.sleep_interval_millis / 1000)
