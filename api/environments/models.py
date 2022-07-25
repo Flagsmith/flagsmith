@@ -37,7 +37,7 @@ environment_cache = caches[settings.ENVIRONMENT_CACHE_LOCATION]
 class Environment(LifecycleModel):
     name = models.CharField(max_length=2000)
     created_date = models.DateTimeField("DateCreated", auto_now_add=True)
-    description = models.TextField(null=True, blank=True)
+    description = models.TextField(null=True, blank=True, max_length=20000)
     project = models.ForeignKey(
         Project,
         related_name="environments",
