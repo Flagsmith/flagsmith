@@ -10,19 +10,6 @@ from task_processor.models import Task, TaskResult, TaskRun
 from task_processor.processor import run_next_task
 
 
-def _create_organisation(name: str):
-    """function used to test that task is being run successfully"""
-    Organisation.objects.create(name=name)
-
-
-def _raise_exception():
-    raise Exception()
-
-
-def _sleep(seconds: int):
-    time.sleep(seconds)
-
-
 def test_run_task_runs_task_and_creates_task_run_object_when_success(db):
     # Given
     organisation_name = f"test-org-{uuid.uuid4()}"
@@ -87,26 +74,49 @@ def test_run_next_task_runs_tasks_in_correct_order(db):
 
 class TestProcessor(TransactionTestCase):
     def test_get_next_task_skips_locked_rows(self):
+        """
+        This test verifies that tasks are locked while being executed, and hence
+        new task runners are not able to pick up 'in progress' tasks.
+        """
         # Given
         # 2 tasks
-        task_1 = Task.create(_sleep, 2)
+        # One which is configured to just sleep for 3 seconds, to simulate a task
+        # being held for a short period of time
+        task_1 = Task.create(_sleep, 3)
         task_1.save()
 
+        # and another which should create an organisation
         task_2 = Task.create(_create_organisation, "task 2 organisation")
         task_2.save()
 
         threads = []
 
         # When
+        # we spawn a new thread to run the first task (configured to just sleep)
         task_runner_thread = Thread(target=run_next_task)
         threads.append(task_runner_thread)
         task_runner_thread.start()
 
         with transaction.atomic():
+            # and subsequently attempt to run another task in the main thread
             time.sleep(1)  # wait for the thread to start and hold the task
             task_run = run_next_task()
 
             # Then
+            # the second task is run while the 1st task is held
             assert task_run.task == task_2
 
         [t.join() for t in threads]
+
+
+def _create_organisation(name: str):
+    """function used to test that task is being run successfully"""
+    Organisation.objects.create(name=name)
+
+
+def _raise_exception():
+    raise Exception()
+
+
+def _sleep(seconds: int):
+    time.sleep(seconds)
