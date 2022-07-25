@@ -24,3 +24,27 @@ def test_amplitude_configuration_save_writes_environment_to_dynamodb(
     mock_environment_model_class.write_environments_to_dynamodb.assert_called_once_with(
         Q(id=environment.id)
     )
+
+
+def test_amplitude_configuration_delete_writes_environment_to_dynamodb(
+    environment, mocker
+):
+    """
+    Test to verify that AmplitudeConfiguration's base model class works as expected
+    """
+    # Given
+    mock_environment_model_class = mocker.patch(
+        "integrations.common.models.Environment"
+    )
+    amplitude_config = AmplitudeConfiguration.objects.create(
+        environment=environment, api_key="api-key", base_url="https://base.url.com"
+    )
+    mock_environment_model_class.reset_mock()
+
+    # When
+    amplitude_config.delete()
+
+    # Then
+    mock_environment_model_class.write_environments_to_dynamodb.assert_called_once_with(
+        Q(id=environment.id)
+    )
