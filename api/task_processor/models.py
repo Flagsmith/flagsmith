@@ -36,21 +36,21 @@ class Task(models.Model):
         return task
 
     def run(self):
-        return self._callable(*self._args, **self._kwargs)
+        return self.callable(*self.args, **self.kwargs)
 
     def fail(self):
         self.num_failures += 1
 
     @property
-    def _callable(self) -> typing.Callable:
+    def callable(self) -> typing.Callable:
         return self._deserialize_data(self.pickled_callable)
 
     @property
-    def _args(self) -> typing.List[typing.Any]:
+    def args(self) -> typing.List[typing.Any]:
         return self._deserialize_data(self.pickled_args)
 
     @property
-    def _kwargs(self) -> typing.Dict[str, typing.Any]:
+    def kwargs(self) -> typing.Dict[str, typing.Any]:
         return self._deserialize_data(self.pickled_kwargs)
 
     @staticmethod
