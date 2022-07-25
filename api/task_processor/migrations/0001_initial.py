@@ -21,7 +21,6 @@ class Migration(migrations.Migration):
                 ('uuid', models.UUIDField(default=uuid.uuid4, unique=True)),
                 ('created_at', models.DateTimeField(auto_now_add=True)),
                 ('scheduled_for', models.DateTimeField(blank=True, default=django.utils.timezone.now, null=True)),
-                ('completed_at', models.DateTimeField(blank=True, null=True)),
                 ('pickled_callable', models.BinaryField()),
                 ('pickled_args', models.BinaryField(blank=True, null=True)),
                 ('pickled_kwargs', models.BinaryField(blank=True, null=True)),

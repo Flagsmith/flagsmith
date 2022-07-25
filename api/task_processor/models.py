@@ -11,7 +11,6 @@ class Task(models.Model):
     uuid = models.UUIDField(unique=True, default=uuid.uuid4)
     created_at = models.DateTimeField(auto_now_add=True)
     scheduled_for = models.DateTimeField(blank=True, null=True, default=timezone.now)
-    completed_at = models.DateTimeField(blank=True, null=True)
 
     pickled_callable = models.BinaryField()
     pickled_args = models.BinaryField(blank=True, null=True)
