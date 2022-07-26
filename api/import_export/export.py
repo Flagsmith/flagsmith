@@ -44,7 +44,7 @@ from segments.models import Condition, Segment, SegmentRule
 logger = logging.getLogger(__name__)
 
 
-class OrganisationExporter:
+class S3OrganisationExporter:
     def __init__(self, s3_client=None):
         self.s3_client = s3_client or boto3.client("s3")
 
