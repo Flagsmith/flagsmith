@@ -10,7 +10,11 @@ from flag_engine.api.document_builders import (
 )
 
 from environments.identities.models import Identity
-from environments.models import Environment, EnvironmentAPIKey
+from environments.models import (
+    Environment,
+    EnvironmentAPIKey,
+    environment_cache,
+)
 from features.feature_types import MULTIVARIATE
 from features.models import Feature, FeatureState
 from features.multivariate.models import MultivariateFeatureOption
@@ -309,3 +313,16 @@ def test_existence_of_multiple_environment_api_keys_does_not_break_get_from_cach
         retrieved_environment == environment
         for retrieved_environment in retrieved_environments
     )
+
+
+def test_get_from_cache_sets_the_cache_correctly_with_environment_api_key(
+    environment, environment_api_key, mocker
+):
+    # When
+    returned_environment = Environment.get_from_cache(environment_api_key.key)
+
+    # Then
+    assert returned_environment == environment
+
+    # and
+    assert environment == environment_cache.get(environment_api_key.key)
