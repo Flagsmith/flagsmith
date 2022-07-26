@@ -2,7 +2,7 @@ import logging
 
 from django.core.management import BaseCommand, CommandParser
 
-from import_export.export import OrganisationExporter
+from import_export.export import S3OrganisationExporter
 
 logger = logging.getLogger(__name__)
 
@@ -10,7 +10,7 @@ logger = logging.getLogger(__name__)
 class Command(BaseCommand):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.exporter = OrganisationExporter()
+        self.exporter = S3OrganisationExporter()
 
     def add_arguments(self, parser: CommandParser):
         parser.add_argument(
