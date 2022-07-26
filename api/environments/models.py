@@ -146,7 +146,7 @@ class Environment(LifecycleModel):
                     .distinct()
                     .get()
                 )
-                environment_cache.set(environment.api_key, environment, timeout=60)
+                environment_cache.set(api_key, environment, timeout=60)
             return environment
         except cls.DoesNotExist:
             logger.info("Environment with api_key %s does not exist" % api_key)
