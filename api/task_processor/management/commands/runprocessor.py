@@ -1,5 +1,5 @@
 import signal
-import threading
+import typing
 from argparse import ArgumentParser
 
 from django.core.management import BaseCommand
@@ -13,7 +13,9 @@ class Command(BaseCommand):
 
         signal.signal(signal.SIGINT, self._exit_gracefully)
         signal.signal(signal.SIGTERM, self._exit_gracefully)
-        self._stop = False
+
+        self._threads: typing.List[TaskRunner] = []
+        self._monitor_threads = False
 
     def add_arguments(self, parser: ArgumentParser):
         parser.add_argument(
@@ -25,15 +27,19 @@ class Command(BaseCommand):
 
     def handle(self, *args, **options):
         num_threads = options["numthreads"]
-        current_thread = threading.current_thread()
-        threads = [TaskRunner(main=current_thread) for _ in range(num_threads)]
+        self._threads.extend([TaskRunner() for _ in range(num_threads)])
 
-        for thread in threads:
+        for thread in self._threads:
             thread.start()
 
-        while not self._stop:
-            # TODO: add some monitoring here
+        self._monitor_threads = True
+        while self._monitor_threads:
+            # TODO: add monitoring logic
             continue
 
+        [t.join() for t in self._threads]
+
     def _exit_gracefully(self, *args):
-        self._stop = True
+        self._monitor_threads = False
+        for t in self._threads:
+            t.stop()
