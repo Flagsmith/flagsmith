@@ -31,6 +31,7 @@ urlpatterns = [
         views.project_overrides,
         name="project_overrides",
     ),
+    path("processor/", include("task_processor.urls")),
 ]
 
 if settings.DEBUG:

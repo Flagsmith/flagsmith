@@ -32,6 +32,7 @@ class Command(BaseCommand):
             thread.start()
 
         while not self._stop:
+            # TODO: add some monitoring here
             continue
 
     def _exit_gracefully(self, *args):
