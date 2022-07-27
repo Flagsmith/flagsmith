@@ -23,7 +23,8 @@ class MultivariateFeatureOptionViewSet(viewsets.ModelViewSet):
                     "update": "CREATE_FEATURE",
                     "partial_update": "CREATE_FEATURE",
                     "destroy": "CREATE_FEATURE",
-                }
+                },
+                get_project_from_object_callable=lambda o: o.feature.project,
             ),
         ]
 
