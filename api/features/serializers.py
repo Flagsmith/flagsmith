@@ -206,6 +206,10 @@ class FeatureStateSerializerBasic(WritableNestedModelSerializer):
     multivariate_feature_state_values = MultivariateFeatureStateValueSerializer(
         many=True, required=False
     )
+    identifier = serializers.CharField(
+        required=False,
+        help_text="Can be passed as an alternative to `identity`",
+    )
 
     class Meta:
         model = FeatureState
@@ -240,6 +244,15 @@ class FeatureStateSerializerBasic(WritableNestedModelSerializer):
         environment = attrs.get("environment")
         identity = attrs.get("identity")
         feature_segment = attrs.get("feature_segment")
+        identifier = attrs.pop("identifier", None)
+        if identifier:
+            try:
+                identity = Identity.objects.get(
+                    identifier=identifier, environment=environment
+                )
+                attrs["identity"] = identity
+            except Identity.DoesNotExist:
+                raise serializers.ValidationError("Invalid identifier")
 
         if identity and not identity.environment == environment:
             raise serializers.ValidationError("Identity does not exist in environment.")
