@@ -42,6 +42,7 @@ class EnvironmentSerializerLight(serializers.ModelSerializer):
             "id",
             "name",
             "api_key",
+            "description",
             "project",
             "minimum_change_request_approvals",
             "allow_client_traits",

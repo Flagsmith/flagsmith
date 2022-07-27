@@ -4,12 +4,12 @@ from rest_framework.test import APIClient
 
 from environments.identities.models import Identity
 from environments.identities.traits.models import Trait
-from environments.models import Environment
+from environments.models import Environment, EnvironmentAPIKey
 from features.feature_types import MULTIVARIATE
 from features.models import Feature, FeatureSegment, FeatureState
 from features.multivariate.models import MultivariateFeatureOption
 from features.value_types import STRING
-from organisations.models import Organisation, OrganisationRole
+from organisations.models import Organisation, OrganisationRole, Subscription
 from projects.models import Project
 from projects.tags.models import Tag
 from segments.models import EQUAL, Condition, Segment, SegmentRule
@@ -31,6 +31,13 @@ def organisation(db, admin_user):
     org = Organisation.objects.create(name="Test Org")
     admin_user.add_organisation(org, role=OrganisationRole.ADMIN)
     return org
+
+
+@pytest.fixture()
+def subscription(organisation):
+    return Subscription.objects.create(
+        organisation=organisation, subscription_id="subscription_id"
+    )
 
 
 @pytest.fixture()
@@ -134,4 +141,11 @@ def feature_segment(feature, segment, environment):
 def segment_featurestate(feature_segment, feature, environment):
     return FeatureState.objects.create(
         feature_segment=feature_segment, feature=feature, environment=environment
+    )
+
+
+@pytest.fixture()
+def environment_api_key(environment):
+    return EnvironmentAPIKey.objects.create(
+        environment=environment, name="Test API Key"
     )
