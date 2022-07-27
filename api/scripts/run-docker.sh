@@ -42,4 +42,6 @@ elif [ "$1" == "dump-organisation-to-local-fs" ]; then
 elif [ "$1" == "migrate-and-serve" ]; then
     migrate
     serve
+else
+   echo "ERROR: unrecognised command '$1'"
 fi
