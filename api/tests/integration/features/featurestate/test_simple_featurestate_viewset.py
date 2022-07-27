@@ -34,7 +34,7 @@ def test_create_feature_state_for_identity_override(
 @pytest.mark.parametrize(
     "client", [(lazy_fixture("master_api_key_client")), (lazy_fixture("admin_client"))]
 )
-def test_create_feature_state_for_identity_override_with_identifier(
+def test_create_feature_state_for_identity_with_identifier(
     client, environment, identity, feature, identity_identifier
 ):
     # Given

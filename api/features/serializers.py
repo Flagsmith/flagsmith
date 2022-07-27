@@ -245,7 +245,7 @@ class FeatureStateSerializerBasic(WritableNestedModelSerializer):
         identity = attrs.get("identity")
         feature_segment = attrs.get("feature_segment")
         identifier = attrs.pop("identifier", None)
-        if identifier and not identity:
+        if identifier:
             try:
                 identity = Identity.objects.get(
                     identifier=identifier, environment=environment
