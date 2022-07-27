@@ -90,7 +90,7 @@ class NestedEnvironmentPermissions(BasePermission):
         self.action_permission_map = action_permission_map or {}
         self.action_permission_map.setdefault("list", VIEW_ENVIRONMENT)
 
-        self.admin_actions = set(admin_actions) or set()
+        self.admin_actions = set(admin_actions or set())
         self.admin_actions.add("create")
 
         self.get_environment_from_object_callable = get_environment_from_object_callable
