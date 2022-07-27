@@ -101,7 +101,7 @@ def dynamo_enabled_environment(
 
 @pytest.fixture()
 def identity_identifier():
-    return uuid.uuid4()
+    return str(uuid.uuid4())
 
 
 @pytest.fixture()
@@ -305,3 +305,19 @@ def feature_state(admin_client, environment, feature):
 
     response = admin_client.get(url)
     return response.json()["results"][0]["id"]
+
+
+@pytest.fixture()
+def identity_featurestate(admin_client, environment, feature, identity):
+    url = reverse("api-v1:features:featurestates-list")
+    data = {
+        "enabled": True,
+        "feature_state_value": {"type": "unicode", "string_value": "identity override"},
+        "identity": identity,
+        "environment": environment,
+        "feature": feature,
+    }
+    response = admin_client.post(
+        url, data=json.dumps(data), content_type="application/json"
+    )
+    return response.json()["id"]
