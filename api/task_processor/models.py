@@ -38,9 +38,6 @@ class Task(models.Model):
     def run(self):
         return self.callable(*self.args, **self.kwargs)
 
-    def fail(self):
-        self.num_failures += 1
-
     @property
     def callable(self) -> typing.Callable:
         return self._deserialize_data(self.pickled_callable)

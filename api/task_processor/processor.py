@@ -26,7 +26,7 @@ def run_next_task() -> typing.Optional[TaskRun]:
             task_run.result = TaskResult.SUCCESS
             task_run.finished_at = timezone.now()
         except Exception:
-            task.fail()
+            task.num_failures += 1
             task.save()
 
             task_run.result = TaskResult.FAILURE
