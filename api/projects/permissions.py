@@ -100,7 +100,7 @@ class NestedProjectPermissions(BasePermission):
         action_permission_map: typing.Dict[str, str] = None,
         get_project_from_object_callable: typing.Callable[
             [Model], Project
-        ] = lambda o: o.environment,
+        ] = lambda o: o.project,
         **kwargs,
     ):
         super().__init__(*args, **kwargs)
@@ -112,21 +112,21 @@ class NestedProjectPermissions(BasePermission):
 
     def has_permission(self, request, view):
         try:
-            environment_api_key = view.kwargs.get("project_pk")
-            environment = Project.objects.get(api_key=environment_api_key)
+            pk = view.kwargs.get("project_pk")
+            project = Project.objects.get(pk=pk)
         except Project.DoesNotExist:
             return False
 
         if view.action in self.action_permission_map:
             return request.user.has_project_permission(
-                self.action_permission_map[view.action], environment
+                self.action_permission_map[view.action], project
             )
 
         return view.detail
 
     def has_object_permission(self, request, view, obj):
         if view.action in self.action_permission_map:
-            return request.user.has_environment_permission(
+            return request.user.has_project_permission(
                 self.action_permission_map[view.action],
                 self.get_project_from_object_callable(obj),
             )
