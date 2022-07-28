@@ -82,10 +82,14 @@ class NestedEnvironmentPermissions(BasePermission):
         get_environment_from_object_callable: typing.Callable[
             [Model], Environment
         ] = lambda o: o.environment,
+        admin_actions: typing.Iterable[str] = None,
         **kwargs,
     ):
         super(NestedEnvironmentPermissions, self).__init__(*args, **kwargs)
+
         self.action_permission_map = action_permission_map or {}
+        self.action_permission_map.setdefault("list", VIEW_ENVIRONMENT)
+
         self.get_environment_from_object_callable = get_environment_from_object_callable
 
     def has_permission(self, request, view):
@@ -100,12 +104,8 @@ class NestedEnvironmentPermissions(BasePermission):
                 self.action_permission_map[view.action], environment
             )
         elif view.action == "create":
+            # default to always allow environment admins to create
             return request.user.is_environment_admin(environment)
-
-        elif view.action == "list":
-            return request.user.has_environment_permission(
-                VIEW_ENVIRONMENT, environment
-            )
 
         return view.detail
 
