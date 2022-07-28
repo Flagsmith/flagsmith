@@ -29,11 +29,7 @@ from projects.models import (
     UserPermissionGroupProjectPermission,
     UserProjectPermission,
 )
-from projects.permissions import (
-    IsProjectAdmin,
-    NestedProjectPermissions,
-    ProjectPermissions,
-)
+from projects.permissions import IsProjectAdmin, ProjectPermissions
 from projects.permissions_calculator import ProjectPermissionsCalculator
 from projects.serializers import (
     CreateUpdateUserPermissionGroupProjectPermissionSerializer,
@@ -143,7 +139,7 @@ class ProjectViewSet(viewsets.ModelViewSet):
 class BaseProjectPermissionsViewSet(viewsets.ModelViewSet):
     model_class = None
     pagination_class = None
-    permission_classes = [IsAuthenticated, NestedProjectPermissions]
+    permission_classes = [IsAuthenticated, IsProjectAdmin]
 
     def get_queryset(self):
         if not self.kwargs.get("project_pk"):

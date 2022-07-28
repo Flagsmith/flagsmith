@@ -109,7 +109,7 @@ class EdgeIdentityViewSet(viewsets.ModelViewSet):
                     "retrieve": MANAGE_IDENTITIES,
                     "get_traits": MANAGE_IDENTITIES,
                     "update_traits": MANAGE_IDENTITIES,
-                }
+                },
             ),
         ]
 

@@ -59,4 +59,7 @@ def test_identity_view_set_get_permissions():
     assert isinstance(permissions[0], IsAuthenticated)
     assert isinstance(permissions[1], NestedEnvironmentPermissions)
 
-    assert permissions[1].action_permission_map == {"retrieve": MANAGE_IDENTITIES}
+    assert permissions[1].action_permission_map == {
+        "list": VIEW_ENVIRONMENT,
+        "retrieve": MANAGE_IDENTITIES,
+    }

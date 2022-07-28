@@ -9,7 +9,7 @@ from projects.models import (
     UserPermissionGroupProjectPermission,
     UserProjectPermission,
 )
-from projects.permissions import NestedProjectPermissions, ProjectPermissions
+from projects.permissions import IsProjectAdmin, ProjectPermissions
 from users.models import FFAdminUser, UserPermissionGroup
 
 mock_request = mock.MagicMock
@@ -232,7 +232,7 @@ class ProjectPermissionPermissionsTestCase(TestCase):
             name="Test project", organisation=organisation
         )
 
-        self.permissions = NestedProjectPermissions()
+        self.permissions = IsProjectAdmin()
 
         mock_view.kwargs = {"project_pk": self.project.id}
 
