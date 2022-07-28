@@ -10,9 +10,7 @@ const theDispatcher = Object.assign(Dispatcher, {
             source: 'VIEW_ACTION',
             action,
         };
-
-        API.log(payload.action.actionType, payload.action);
-
+        
         that.dispatch(payload);
     },
 
