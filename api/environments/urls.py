@@ -4,6 +4,7 @@ from rest_framework_nested import routers
 from edge_api.identities.views import (
     EdgeIdentityFeatureStateViewSet,
     EdgeIdentityViewSet,
+    EdgeIdentityWithIdentifierFeatureStateViewSet,
 )
 from features.views import (
     EnvironmentFeatureStateViewSet,
@@ -90,6 +91,12 @@ environments_router.register(
     r"integrations/webhook",
     WebhookConfigurationViewSet,
     basename="integrations-webhook",
+)
+
+environments_router.register(
+    r"edge-identities-with-identifier/featurestates",
+    EdgeIdentityWithIdentifierFeatureStateViewSet,
+    basename="edge-identities-with-identifier-featurestates",
 )
 edge_identity_router = routers.NestedSimpleRouter(
     environments_router,

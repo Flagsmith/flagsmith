@@ -7,6 +7,9 @@ from boto3.dynamodb.conditions import Key
 from django.utils.decorators import method_decorator
 from drf_yasg2.utils import swagger_auto_schema
 from flag_engine.api.schemas import APITraitSchema
+from flag_engine.features.models import (
+    FeatureStateModel as EngineFeatureStateModel,
+)
 from flag_engine.identities.builders import (
     build_identity_dict,
     build_identity_model,
@@ -29,8 +32,10 @@ from edge_api.identities.serializers import (
     EdgeIdentityAllFeatureStatesSerializer,
     EdgeIdentityFeatureStateSerializer,
     EdgeIdentityFsQueryparamSerializer,
+    EdgeIdentityIdentifierSerializer,
     EdgeIdentitySerializer,
     EdgeIdentityTraitsSerializer,
+    EdgeIdentityWithIdentifierFeatureStateRequestBody,
 )
 from environments.identities.models import Identity
 from environments.models import Environment
@@ -161,6 +166,7 @@ class EdgeIdentityViewSet(viewsets.ModelViewSet):
 class EdgeIdentityFeatureStateViewSet(viewsets.ModelViewSet):
     permission_classes = [IsAuthenticated, IdentityFeatureStatePermissions]
     lookup_field = "featurestate_uuid"
+
     serializer_class = EdgeIdentityFeatureStateSerializer
 
     # Patch is not supported
@@ -200,6 +206,7 @@ class EdgeIdentityFeatureStateViewSet(viewsets.ModelViewSet):
             )
         except StopIteration:
             raise NotFound()
+
         return featurestate
 
     @swagger_auto_schema(query_serializer=EdgeIdentityFsQueryparamSerializer())
@@ -242,6 +249,72 @@ class EdgeIdentityFeatureStateViewSet(viewsets.ModelViewSet):
                 "identity": self.identity,
                 "identity_feature_names": identity_feature_names,
             },
-        )
+            )
 
         return Response(serializer.data)
+
+@method_decorator(
+    name="create_or_update",
+    decorator=swagger_auto_schema(
+        request_body=EdgeIdentityWithIdentifierFeatureStateRequestBody,
+        responses={200: EdgeIdentityFeatureStateSerializer()},
+    ),
+)
+@method_decorator(
+    name="remove",
+    decorator=swagger_auto_schema(
+        request_body=EdgeIdentityIdentifierSerializer,
+    ),
+)
+class EdgeIdentityWithIdentifierFeatureStateViewSet(
+    viewsets.ViewSet,
+):
+    permission_classes = [IsAuthenticated, IdentityFeatureStatePermissions]
+    serializer_class = EdgeIdentityFeatureStateSerializer
+    pagination_class = None
+
+    def initial(self, request, *args, **kwargs):
+        super().initial(request, *args, **kwargs)
+
+        serializer = EdgeIdentityIdentifierSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+
+        identity_document = Identity.dynamo_wrapper.get_item(
+            f"{self.kwargs['environment_api_key']}_{serializer.data['identifier']}"
+        )
+
+        if not identity_document:
+            raise NotFound()
+        self.identity = build_identity_model(identity_document)
+
+    def _get_feature_state(
+        self, feature_id: int
+    ) -> typing.Optional[EngineFeatureStateModel]:
+        feature_state = next(
+            filter(
+                lambda fs: fs.feature.id == feature_id,
+                self.identity.identity_features,
+            ),
+            None,
+        return feature_state
+
+    @action(detail=False, methods=["post"], url_path="create-or-update")
+    def create_or_update(self, request, *args, **kwargs):
+        feature = request.data.get("feature")
+        feature_state = self._get_feature_state(feature)
+        serializer = EdgeIdentityFeatureStateSerializer(
+            instance=feature_state, data=request.data, context={"view": self}
+        )
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+
+        return Response(serializer.data, status=200)
+
+    @action(detail=False, methods=["delete"])
+    def remove(self, request, *args, **kwargs):
+        feature = request.data.get("feature")
+        feature_state = self._get_feature_state(feature)
+        if feature_state:
+            self.identity.identity_features.remove(feature_state)
+            Identity.dynamo_wrapper.put_item(build_identity_dict(self.identity))
+        return Response(status=status.HTTP_204_NO_CONTENT)

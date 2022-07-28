@@ -106,7 +106,7 @@ class EdgeIdentityFeatureStateSerializer(serializers.Serializer):
     featurestate_uuid = serializers.CharField(required=False, read_only=True)
 
     def get_identity_uuid(self, obj=None):
-        return self.context["view"].kwargs["edge_identity_identity_uuid"]
+        return self.context["view"].identity.identity_uuid
 
     def save(self, **kwargs):
         identity = self.context["view"].identity
@@ -140,6 +140,17 @@ class EdgeIdentityFeatureStateSerializer(serializers.Serializer):
 
         Identity.dynamo_wrapper.put_item(identity_dict)
         return self.instance
+
+
+class EdgeIdentityIdentifierSerializer(serializers.Serializer):
+    identifier = serializers.CharField(required=True, max_length=2000)
+
+
+# NOTE: This is only used for generating swagger docs
+class EdgeIdentityWithIdentifierFeatureStateRequestBody(
+    EdgeIdentityFeatureStateSerializer, EdgeIdentityIdentifierSerializer
+):
+    pass
 
 
 class EdgeIdentityTraitsSerializer(serializers.Serializer):
