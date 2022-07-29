@@ -249,9 +249,10 @@ class EdgeIdentityFeatureStateViewSet(viewsets.ModelViewSet):
                 "identity": self.identity,
                 "identity_feature_names": identity_feature_names,
             },
-            )
+        )
 
         return Response(serializer.data)
+
 
 @method_decorator(
     name="create_or_update",
@@ -296,6 +297,8 @@ class EdgeIdentityWithIdentifierFeatureStateViewSet(
                 self.identity.identity_features,
             ),
             None,
+        )
+
         return feature_state
 
     @action(detail=False, methods=["post"], url_path="create-or-update")
