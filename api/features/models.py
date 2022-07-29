@@ -397,10 +397,10 @@ class FeatureState(LifecycleModelMixin, AbstractBaseExportableModel):
             self.get_feature_state_key_name(fsv_type): value,
         }
 
-    def get_feature_state_value(self, identity: "Identity" = None) -> typing.Any:
+    def get_feature_state_value_by_id(self, identity_id: int = None) -> typing.Any:
         feature_state_value = (
-            self.get_multivariate_feature_state_value(identity)
-            if self.feature.type == MULTIVARIATE and identity
+            self.get_multivariate_feature_state_value(identity_id)
+            if self.feature.type == MULTIVARIATE and identity_id
             else getattr(self, "feature_state_value", None)
         )
 
@@ -408,6 +408,9 @@ class FeatureState(LifecycleModelMixin, AbstractBaseExportableModel):
         # has a related feature state value. Note that we use getattr rather than
         # hasattr as we want to return None if no feature state value exists.
         return feature_state_value and feature_state_value.value
+
+    def get_feature_state_value(self, identity: "Identity" = None) -> typing.Any:
+        return self.get_feature_state_value_by_id(getattr(identity, "id", None))
 
     def get_feature_state_value_defaults(self) -> dict:
         if self.feature.initial_value is None:
@@ -424,7 +427,7 @@ class FeatureState(LifecycleModelMixin, AbstractBaseExportableModel):
         return {"type": type, key_name: parse_func(value)}
 
     def get_multivariate_feature_state_value(
-        self, identity: "Identity"
+        self, identity_id: int
     ) -> AbstractBaseFeatureValueModel:
         # the multivariate_feature_state_values should be prefetched at this point
         # so we just convert them to a list and use python operations from here to
@@ -432,7 +435,7 @@ class FeatureState(LifecycleModelMixin, AbstractBaseExportableModel):
         mv_options = list(self.multivariate_feature_state_values.all())
 
         percentage_value = (
-            get_hashed_percentage_for_object_ids([self.id, identity.id]) * 100
+            get_hashed_percentage_for_object_ids([self.id, identity_id]) * 100
         )
 
         # Iterate over the mv options in order of id (so we get the same value each

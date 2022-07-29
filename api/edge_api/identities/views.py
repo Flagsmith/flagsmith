@@ -13,7 +13,11 @@ from flag_engine.identities.builders import (
 )
 from rest_framework import status, viewsets
 from rest_framework.decorators import action
-from rest_framework.exceptions import NotFound, ValidationError
+from rest_framework.exceptions import (
+    NotFound,
+    PermissionDenied,
+    ValidationError,
+)
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 
@@ -22,6 +26,7 @@ from app.pagination import (
     EdgeIdentityPaginationInspector,
 )
 from edge_api.identities.serializers import (
+    EdgeIdentityAllFeatureStatesSerializer,
     EdgeIdentityFeatureStateSerializer,
     EdgeIdentityFsQueryparamSerializer,
     EdgeIdentitySerializer,
@@ -34,6 +39,7 @@ from environments.permissions.permissions import NestedEnvironmentPermissions
 from features.permissions import IdentityFeatureStatePermissions
 from projects.exceptions import DynamoNotEnabledError
 
+from .edge_identity_service import get_all_feature_states_for_edge_identity
 from .exceptions import TraitPersistenceError
 
 trait_schema = APITraitSchema()
@@ -174,6 +180,13 @@ class EdgeIdentityFeatureStateViewSet(viewsets.ModelViewSet):
         identity_document = Identity.dynamo_wrapper.get_item_from_uuid_or_404(
             self.kwargs["edge_identity_identity_uuid"]
         )
+
+        if (
+            identity_document["environment_api_key"]
+            != self.kwargs["environment_api_key"]
+        ):
+            raise PermissionDenied("Identity does not belong to this environment.")
+
         self.identity = build_identity_model(identity_document)
 
     def get_object(self):
@@ -210,3 +223,25 @@ class EdgeIdentityFeatureStateViewSet(viewsets.ModelViewSet):
     def perform_destroy(self, instance):
         self.identity.identity_features.remove(instance)
         Identity.dynamo_wrapper.put_item(build_identity_dict(self.identity))
+
+    @swagger_auto_schema(
+        responses={200: EdgeIdentityAllFeatureStatesSerializer(many=True)}
+    )
+    @action(detail=False, methods=["GET"])
+    def all(self, request, *args, **kwargs):
+        (
+            feature_states,
+            identity_feature_names,
+        ) = get_all_feature_states_for_edge_identity(self.identity)
+
+        serializer = EdgeIdentityAllFeatureStatesSerializer(
+            instance=feature_states,
+            many=True,
+            context={
+                "request": request,
+                "identity": self.identity,
+                "identity_feature_names": identity_feature_names,
+            },
+        )
+
+        return Response(serializer.data)
