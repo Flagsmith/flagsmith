@@ -603,7 +603,9 @@ def test_edge_identities_with_identifier_create_featurestate(
     # Next, let's verify that the document that we put
     # have the fs that we created
 
+    assert len(args[0]["identity_features"]) == 1
     actual_feature_state = args[0]["identity_features"][0]
+
     assert actual_feature_state["feature"] == {
         "type": "STANDARD",
         "name": "test_feature",
