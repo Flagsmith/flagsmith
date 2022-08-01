@@ -617,7 +617,7 @@ def test_edge_identities_with_identifier_create_featurestate(
 @pytest.mark.parametrize(
     "lazy_feature", [(lazy_fixture("feature")), (lazy_fixture("feature_name"))]
 )
-def test_edge_identities_with_identifier_featurestate_delete(
+def test_edge_identities_with_identifier_delete_featurestate(
     admin_client,
     environment,
     environment_api_key,
