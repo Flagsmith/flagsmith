@@ -18,6 +18,7 @@ from rest_framework import serializers
 from rest_framework.exceptions import ValidationError
 
 from environments.identities.models import Identity
+from environments.models import Environment
 from features.models import Feature, FeatureState, FeatureStateValue
 from features.multivariate.models import MultivariateFeatureOption
 from features.serializers import FeatureStateValueSerializer
@@ -82,21 +83,28 @@ class FeatureStateValueEdgeIdentityField(serializers.Field):
         return FeatureStateValue(**feature_state_value_dict).value
 
 
-class EdgeFeatureField(serializers.IntegerField):
+class EdgeFeatureField(serializers.Field):
     def to_representation(self, obj):
         return obj.id
 
     def to_internal_value(self, data):
-        data = super().to_internal_value(data)
-        feature = Feature.objects.get(id=data)
-        return feature
+        if isinstance(data, int):
+            return Feature.objects.get(id=data)
+
+        environment = Environment.objects.get(
+            api_key=self.context["view"].kwargs["environment_api_key"]
+        )
+        return Feature.objects.get(
+            name=data,
+            project=environment.project,
+        )
 
 
 class EdgeIdentityFeatureStateSerializer(serializers.Serializer):
     feature_state_value = FeatureStateValueEdgeIdentityField(
         allow_null=True, required=False, default=None
     )
-    feature = EdgeFeatureField()
+    feature = EdgeFeatureField(help_text="ID or name of the feature")
     multivariate_feature_state_values = EdgeMultivariateFeatureStateValueSerializer(
         many=True, required=False
     )

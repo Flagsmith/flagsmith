@@ -289,11 +289,16 @@ class EdgeIdentityWithIdentifierFeatureStateViewSet(
         self.identity = build_identity_model(identity_document)
 
     def _get_feature_state(
-        self, feature_id: int
+        self, feature: typing.Union[str, int]
     ) -> typing.Optional[EngineFeatureStateModel]:
+        def match_feature_state(fs):
+            if isinstance(feature, int):
+                return fs.feature.id == feature
+            return fs.feature.name == feature
+
         feature_state = next(
             filter(
-                lambda fs: fs.feature.id == feature_id,
+                match_feature_state,
                 self.identity.identity_features,
             ),
             None,
