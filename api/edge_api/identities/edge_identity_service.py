@@ -51,11 +51,12 @@ def get_all_feature_states_for_edge_identity(
 
     feature_states = {}
     for feature_state in environment_and_segment_feature_states:
+        feature_name = feature_state.feature.name
         if (
-            feature_state.feature.name not in feature_states
-            or feature_state.feature_segment_id is not None
+            feature_name not in feature_states
+            or feature_state > feature_states[feature_name]
         ):
-            feature_states[feature_state.feature.name] = feature_state
+            feature_states[feature_name] = feature_state
 
     identity_feature_states = identity.identity_features
     identity_feature_names = set()
