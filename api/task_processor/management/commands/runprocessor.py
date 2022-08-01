@@ -1,10 +1,14 @@
+import logging
 import signal
 import typing
 from argparse import ArgumentParser
 
 from django.core.management import BaseCommand
 
+from task_processor.tasks import registered_tasks
 from task_processor.threads import TaskRunner
+
+logger = logging.getLogger(__name__)
 
 
 class Command(BaseCommand):
@@ -28,6 +32,11 @@ class Command(BaseCommand):
     def handle(self, *args, **options):
         num_threads = options["numthreads"]
         self._threads.extend([TaskRunner() for _ in range(num_threads)])
+
+        logger.info(
+            "Processor starting. Registered tasks are: %s",
+            list(registered_tasks.keys()),
+        )
 
         for thread in self._threads:
             thread.start()

@@ -1,4 +1,4 @@
-import pickle
+import json
 import typing
 import uuid
 from datetime import datetime
@@ -6,32 +6,35 @@ from datetime import datetime
 from django.db import models
 from django.utils import timezone
 
+from task_processor.exceptions import TaskProcessingError
+from task_processor.tasks import registered_tasks
+
 
 class Task(models.Model):
     uuid = models.UUIDField(unique=True, default=uuid.uuid4)
     created_at = models.DateTimeField(auto_now_add=True)
     scheduled_for = models.DateTimeField(blank=True, null=True, default=timezone.now)
 
-    pickled_callable = models.BinaryField()
-    pickled_args = models.BinaryField(blank=True, null=True)
-    pickled_kwargs = models.BinaryField(blank=True, null=True)
+    task_identifier = models.CharField(max_length=200)
+    serialized_args = models.TextField(blank=True, null=True)
+    serialized_kwargs = models.TextField(blank=True, null=True)
 
     # denormalise failures so that we can use select_for_update
     num_failures = models.IntegerField(blank=True, null=True, default=0)
 
     @classmethod
-    def create(cls, callable_: typing.Callable, *args, **kwargs) -> "Task":
+    def create(cls, task_identifier: str, *args, **kwargs) -> "Task":
         return Task(
-            pickled_callable=cls._serialize_data(callable_),
-            pickled_args=cls._serialize_data(args),
-            pickled_kwargs=cls._serialize_data(kwargs),
+            task_identifier=task_identifier,
+            serialized_args=cls._serialize_data(args),
+            serialized_kwargs=cls._serialize_data(kwargs),
         )
 
     @classmethod
     def schedule_task(
-        cls, schedule_for: datetime, callable_: typing.Callable, *args, **kwargs
+        cls, schedule_for: datetime, task_identifier: str, *args, **kwargs
     ) -> "Task":
-        task = cls.create(callable_, *args, **kwargs)
+        task = cls.create(task_identifier, *args, **kwargs)
         task.scheduled_for = schedule_for
         return task
 
@@ -40,23 +43,31 @@ class Task(models.Model):
 
     @property
     def callable(self) -> typing.Callable:
-        return self._deserialize_data(self.pickled_callable)
+        try:
+            return registered_tasks[self.task_identifier]
+        except KeyError as e:
+            raise TaskProcessingError(
+                "No task registered with identifier '%s'. Ensure your task is "
+                "decorated with @register_task_handler.",
+                self.task_identifier,
+            ) from e
 
     @property
     def args(self) -> typing.List[typing.Any]:
-        return self._deserialize_data(self.pickled_args)
+        return self._deserialize_data(self.serialized_args)
 
     @property
     def kwargs(self) -> typing.Dict[str, typing.Any]:
-        return self._deserialize_data(self.pickled_kwargs)
+        return self._deserialize_data(self.serialized_kwargs)
 
     @staticmethod
     def _serialize_data(data: typing.Any):
-        return pickle.dumps(data)
+        # TODO: add datetime support if needed
+        return json.dumps(data)
 
     @staticmethod
     def _deserialize_data(data: typing.Any):
-        return pickle.loads(data)
+        return json.loads(data)
 
 
 class TaskResult(models.Choices):
