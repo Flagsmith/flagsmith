@@ -569,7 +569,7 @@ def test_edge_identities_with_identifier_create_featurestate(
     dynamo_wrapper_mock.get_item.return_value = identity_document_without_fs
     identity_identifier = identity_document_without_fs["identifier"]
     url = reverse(
-        "api-v1:environments:edge-identities-with-identifier-featurestates-create-or-update",
+        "api-v1:environments:edge-identities-with-identifier-featurestates",
         args=[environment_api_key],
     )
     expected_feature_state_value = "random_value"
@@ -630,7 +630,7 @@ def test_edge_identities_with_identifier_delete_featurestate(
     dynamo_wrapper_mock.get_item.return_value = identity_document
     identifier = identity_document["identifier"]
     url = reverse(
-        "api-v1:environments:edge-identities-with-identifier-featurestates-remove",
+        "api-v1:environments:edge-identities-with-identifier-featurestates",
         args=[environment_api_key],
     )
     data = {"identifier": identifier, "feature": lazy_feature}
@@ -670,7 +670,7 @@ def test_edge_identities_with_identifier_update_featurestate(
     dynamo_wrapper_mock.get_item.return_value = identity_document
     identifier = identity_document["identifier"]
     url = reverse(
-        "api-v1:environments:edge-identities-with-identifier-featurestates-create-or-update",
+        "api-v1:environments:edge-identities-with-identifier-featurestates",
         args=[environment_api_key],
     )
     expected_feature_state_value = "new_feature_state_value"
@@ -684,7 +684,7 @@ def test_edge_identities_with_identifier_update_featurestate(
     }
 
     # When
-    response = admin_client.post(
+    response = admin_client.put(
         url, data=json.dumps(data), content_type="application/json"
     )
     # Then

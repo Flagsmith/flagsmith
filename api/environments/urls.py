@@ -1,10 +1,11 @@
 from django.conf.urls import include, url
+from django.urls import path
 from rest_framework_nested import routers
 
 from edge_api.identities.views import (
     EdgeIdentityFeatureStateViewSet,
     EdgeIdentityViewSet,
-    EdgeIdentityWithIdentifierFeatureStateViewSet,
+    EdgeIdentityWithIdentifierFeatureStateView,
 )
 from features.views import (
     EnvironmentFeatureStateViewSet,
@@ -92,12 +93,6 @@ environments_router.register(
     WebhookConfigurationViewSet,
     basename="integrations-webhook",
 )
-
-environments_router.register(
-    r"edge-identities-with-identifier/featurestates",
-    EdgeIdentityWithIdentifierFeatureStateViewSet,
-    basename="edge-identities-with-identifier-featurestates",
-)
 edge_identity_router = routers.NestedSimpleRouter(
     environments_router,
     r"edge-identities",
@@ -136,4 +131,9 @@ urlpatterns = [
     url(r"^", include(environments_router.urls)),
     url(r"^", include(identity_router.urls)),
     url(r"^", include(edge_identity_router.urls)),
+    path(
+        "environments/<str:environment_api_key>/edge-identities-with-identifier/edge-featurestates",
+        EdgeIdentityWithIdentifierFeatureStateView.as_view(),
+        name="edge-identities-with-identifier-featurestates",
+    ),
 ]

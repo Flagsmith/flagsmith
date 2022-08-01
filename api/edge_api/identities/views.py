@@ -23,6 +23,7 @@ from rest_framework.exceptions import (
 )
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
+from rest_framework.views import APIView
 
 from app.pagination import (
     EdgeIdentityPagination,
@@ -47,6 +48,7 @@ from projects.exceptions import DynamoNotEnabledError
 
 from .edge_identity_service import get_all_feature_states_for_edge_identity
 from .exceptions import TraitPersistenceError
+from .permissions import EdgeIdentityWithIdentifierViewPermissions
 
 trait_schema = APITraitSchema()
 
@@ -255,11 +257,8 @@ class EdgeIdentityFeatureStateViewSet(viewsets.ModelViewSet):
         return Response(serializer.data)
 
 
-class EdgeIdentityWithIdentifierFeatureStateViewSet(
-    viewsets.ViewSet,
-):
-    permission_classes = [IsAuthenticated, IdentityFeatureStatePermissions]
-    serializer_class = EdgeIdentityFeatureStateSerializer
+class EdgeIdentityWithIdentifierFeatureStateView(APIView):
+    permission_classes = [IsAuthenticated, EdgeIdentityWithIdentifierViewPermissions]
     pagination_class = None
 
     def initial(self, request, *args, **kwargs):
@@ -298,8 +297,7 @@ class EdgeIdentityWithIdentifierFeatureStateViewSet(
         request_body=EdgeIdentityWithIdentifierFeatureStateRequestBody,
         responses={200: EdgeIdentityFeatureStateSerializer()},
     )
-    @action(detail=False, methods=["post"], url_path="create-or-update")
-    def create_or_update(self, request, *args, **kwargs):
+    def post(self, request, *args, **kwargs):
         feature = request.data.get("feature")
         feature_state = self._get_feature_state(feature)
         serializer = EdgeIdentityFeatureStateSerializer(
@@ -311,10 +309,16 @@ class EdgeIdentityWithIdentifierFeatureStateViewSet(
         return Response(serializer.data, status=200)
 
     @swagger_auto_schema(
+        request_body=EdgeIdentityWithIdentifierFeatureStateRequestBody,
+        responses={200: EdgeIdentityFeatureStateSerializer()},
+    )
+    def put(self, request, *args, **kwargs):
+        return self.post(request, *args, **kwargs)
+
+    @swagger_auto_schema(
         request_body=EdgeIdentityWithIdentifierFeatureStateDeleteRequestBody,
     )
-    @action(detail=False, methods=["delete"])
-    def remove(self, request, *args, **kwargs):
+    def delete(self, request, *args, **kwargs):
         feature = request.data.get("feature")
         feature_state = self._get_feature_state(feature)
         if feature_state:
