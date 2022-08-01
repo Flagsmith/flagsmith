@@ -1,5 +1,6 @@
 import typing
 
+from drf_yasg2.utils import swagger_serializer_method
 from flag_engine.features.models import FeatureStateModel
 from flag_engine.features.models import (
     FeatureStateModel as EngineFeatureStateModel,
@@ -165,9 +166,11 @@ class EdgeIdentityAllFeatureStatesSegmentSerializer(serializers.Serializer):
 
 
 class EdgeIdentityAllFeatureStatesMVFeatureOptionSerializer(serializers.Serializer):
-    value = serializers.SerializerMethodField()
+    value = serializers.SerializerMethodField(
+        help_text="Can be any of the following types: integer, boolean, string."
+    )
 
-    def get_value(self, instance) -> typing.Union[int, bool, str]:
+    def get_value(self, instance) -> typing.Union[str, int, bool]:
         return instance.value
 
 
@@ -181,8 +184,12 @@ class EdgeIdentityAllFeatureStatesMVFeatureStateValueSerializer(serializers.Seri
 class EdgeIdentityAllFeatureStatesSerializer(serializers.Serializer):
     feature = EdgeIdentityAllFeatureStatesFeatureSerializer()
     enabled = serializers.BooleanField()
-    feature_state_value = serializers.SerializerMethodField()
-    overridden_by = serializers.SerializerMethodField()
+    feature_state_value = serializers.SerializerMethodField(
+        help_text="Can be any of the following types: integer, boolean, string."
+    )
+    overridden_by = serializers.SerializerMethodField(
+        help_text="One of: null, 'SEGMENT', 'IDENTITY'."
+    )
     segment = serializers.SerializerMethodField()
     multivariate_feature_state_values = (
         EdgeIdentityAllFeatureStatesMVFeatureStateValueSerializer(many=True)
@@ -208,9 +215,10 @@ class EdgeIdentityAllFeatureStatesSerializer(serializers.Serializer):
             return "IDENTITY"
         return None
 
-    def get_segment(
-        self, instance
-    ) -> typing.Optional[EdgeIdentityAllFeatureStatesSegmentSerializer]:
+    @swagger_serializer_method(
+        serializer_or_field=EdgeIdentityAllFeatureStatesSegmentSerializer
+    )
+    def get_segment(self, instance) -> typing.Optional[typing.Dict[str, typing.Any]]:
         if getattr(instance, "feature_segment_id", None) is not None:
             return EdgeIdentityAllFeatureStatesSegmentSerializer(
                 instance=instance.feature_segment.segment
