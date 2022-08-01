@@ -35,6 +35,7 @@ from edge_api.identities.serializers import (
     EdgeIdentityIdentifierSerializer,
     EdgeIdentitySerializer,
     EdgeIdentityTraitsSerializer,
+    EdgeIdentityWithIdentifierFeatureStateDeleteRequestBody,
     EdgeIdentityWithIdentifierFeatureStateRequestBody,
 )
 from environments.identities.models import Identity
@@ -254,19 +255,6 @@ class EdgeIdentityFeatureStateViewSet(viewsets.ModelViewSet):
         return Response(serializer.data)
 
 
-@method_decorator(
-    name="create_or_update",
-    decorator=swagger_auto_schema(
-        request_body=EdgeIdentityWithIdentifierFeatureStateRequestBody,
-        responses={200: EdgeIdentityFeatureStateSerializer()},
-    ),
-)
-@method_decorator(
-    name="remove",
-    decorator=swagger_auto_schema(
-        request_body=EdgeIdentityIdentifierSerializer,
-    ),
-)
 class EdgeIdentityWithIdentifierFeatureStateViewSet(
     viewsets.ViewSet,
 ):
@@ -306,6 +294,10 @@ class EdgeIdentityWithIdentifierFeatureStateViewSet(
 
         return feature_state
 
+    @swagger_auto_schema(
+        request_body=EdgeIdentityWithIdentifierFeatureStateRequestBody,
+        responses={200: EdgeIdentityFeatureStateSerializer()},
+    )
     @action(detail=False, methods=["post"], url_path="create-or-update")
     def create_or_update(self, request, *args, **kwargs):
         feature = request.data.get("feature")
@@ -318,6 +310,9 @@ class EdgeIdentityWithIdentifierFeatureStateViewSet(
 
         return Response(serializer.data, status=200)
 
+    @swagger_auto_schema(
+        request_body=EdgeIdentityWithIdentifierFeatureStateDeleteRequestBody,
+    )
     @action(detail=False, methods=["delete"])
     def remove(self, request, *args, **kwargs):
         feature = request.data.get("feature")

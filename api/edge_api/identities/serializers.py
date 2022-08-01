@@ -84,10 +84,10 @@ class FeatureStateValueEdgeIdentityField(serializers.Field):
 
 
 class EdgeFeatureField(serializers.Field):
-    def to_representation(self, obj):
+    def to_representation(self, obj: Feature) -> int:
         return obj.id
 
-    def to_internal_value(self, data):
+    def to_internal_value(self, data: typing.Union[int, str]) -> Feature:
         if isinstance(data, int):
             return Feature.objects.get(id=data)
 
@@ -98,6 +98,9 @@ class EdgeFeatureField(serializers.Field):
             name=data,
             project=environment.project,
         )
+
+    class Meta:
+        swagger_schema_fields = {"type": "integer/string"}
 
 
 class EdgeIdentityFeatureStateSerializer(serializers.Serializer):
@@ -159,6 +162,13 @@ class EdgeIdentityWithIdentifierFeatureStateRequestBody(
     EdgeIdentityFeatureStateSerializer, EdgeIdentityIdentifierSerializer
 ):
     pass
+
+
+# NOTE: This is only used for generating swagger docs
+class EdgeIdentityWithIdentifierFeatureStateDeleteRequestBody(
+    EdgeIdentityIdentifierSerializer
+):
+    feature = EdgeFeatureField(help_text="ID or name of the feature")
 
 
 class EdgeIdentityTraitsSerializer(serializers.Serializer):
