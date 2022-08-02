@@ -20,7 +20,12 @@ class Task(models.Model):
     serialized_kwargs = models.TextField(blank=True, null=True)
 
     # denormalise failures so that we can use select_for_update
-    num_failures = models.IntegerField(blank=True, null=True, default=0)
+    num_failures = models.IntegerField(default=0)
+
+    class Meta:
+        index_together = [
+            ["scheduled_for", "num_failures"],
+        ]
 
     @classmethod
     def create(cls, task_identifier: str, *args, **kwargs) -> "Task":
@@ -84,6 +89,6 @@ class TaskRun(models.Model):
     started_at = models.DateTimeField()
     finished_at = models.DateTimeField(blank=True, null=True)
     result = models.CharField(
-        max_length=50, choices=TaskResult.choices, blank=True, null=True
+        max_length=50, choices=TaskResult.choices, blank=True, null=True, db_index=True
     )
     error_details = models.TextField(blank=True, null=True)
