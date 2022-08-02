@@ -54,11 +54,15 @@ class Task(models.Model):
 
     @property
     def args(self) -> typing.List[typing.Any]:
-        return self._deserialize_data(self.serialized_args)
+        if self.serialized_args:
+            return self._deserialize_data(self.serialized_args)
+        return []
 
     @property
     def kwargs(self) -> typing.Dict[str, typing.Any]:
-        return self._deserialize_data(self.serialized_kwargs)
+        if self.serialized_kwargs:
+            return self._deserialize_data(self.serialized_kwargs)
+        return {}
 
     @staticmethod
     def _serialize_data(data: typing.Any):

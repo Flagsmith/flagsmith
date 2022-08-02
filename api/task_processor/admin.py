@@ -15,7 +15,7 @@ class TaskAdmin(admin.ModelAdmin):
     inlines = (TaskRunInline,)
     list_display = (
         "uuid",
-        "function_name",
+        "task_identifier",
         "scheduled_for",
         "num_failures",
         "completed",
@@ -35,9 +35,3 @@ class TaskAdmin(admin.ModelAdmin):
 
     def completed(self, instance: Task) -> bool:
         return instance.successful_task_runs == 1
-
-    def function_name(self, instance: Task) -> str:
-        try:
-            return instance.callable.__name__
-        except AttributeError:
-            return "-- function no longer exists --"
