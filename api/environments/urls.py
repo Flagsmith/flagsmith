@@ -132,7 +132,7 @@ urlpatterns = [
     url(r"^", include(identity_router.urls)),
     url(r"^", include(edge_identity_router.urls)),
     path(
-        "environments/<str:environment_api_key>/edge-identities-with-identifier/edge-featurestates",
+        "environments/<str:environment_api_key>/edge-identities-featurestates",
         EdgeIdentityWithIdentifierFeatureStateView.as_view(),
         name="edge-identities-with-identifier-featurestates",
     ),
