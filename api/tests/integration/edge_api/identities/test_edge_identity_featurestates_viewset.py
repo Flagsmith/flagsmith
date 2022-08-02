@@ -583,7 +583,7 @@ def test_edge_identities_with_identifier_create_featurestate(
     }
 
     # When
-    response = admin_client.post(
+    response = admin_client.put(
         url, data=json.dumps(data), content_type="application/json"
     )
 

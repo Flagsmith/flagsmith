@@ -297,7 +297,7 @@ class EdgeIdentityWithIdentifierFeatureStateView(APIView):
         request_body=EdgeIdentityWithIdentifierFeatureStateRequestBody,
         responses={200: EdgeIdentityFeatureStateSerializer()},
     )
-    def post(self, request, *args, **kwargs):
+    def put(self, request, *args, **kwargs):
         feature = request.data.get("feature")
         feature_state = self._get_feature_state(feature)
         serializer = EdgeIdentityFeatureStateSerializer(
@@ -307,13 +307,6 @@ class EdgeIdentityWithIdentifierFeatureStateView(APIView):
         serializer.save()
 
         return Response(serializer.data, status=200)
-
-    @swagger_auto_schema(
-        request_body=EdgeIdentityWithIdentifierFeatureStateRequestBody,
-        responses={200: EdgeIdentityFeatureStateSerializer()},
-    )
-    def put(self, request, *args, **kwargs):
-        return self.post(request, *args, **kwargs)
 
     @swagger_auto_schema(
         request_body=EdgeIdentityWithIdentifierFeatureStateDeleteRequestBody,
