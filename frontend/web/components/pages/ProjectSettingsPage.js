@@ -66,6 +66,10 @@ const ProjectSettingsPage = class extends Component {
         />);
     };
 
+    migrate = ()=> {
+        AppActions.migrateProject(this.props.match.params.projectId);
+    }
+
     render() {
         const { name } = this.state;
 
@@ -77,7 +81,6 @@ const ProjectSettingsPage = class extends Component {
                             {(
                                 <div className="panel--grey">
                                     <FormGroup>
-
                                         <form onSubmit={(e) => {
                                             e.preventDefault();
                                             !isSaving && name && editProject(Object.assign({}, project, { name }));
@@ -126,6 +129,28 @@ const ProjectSettingsPage = class extends Component {
                                     </div>
                                 </div>
                             </FormGroup>
+                            {!Utils.getIsEdge() && this.props.hasFeature("edge_migrator") && (
+                                <FormGroup className="mt-4">
+                                    <h3>Global Edge API Opt in</h3>
+                                    <div className="row">
+                                        <div className="col-md-10">
+                                            <p>
+                                                Migrate your project onto our Global Edge API. Existing Core API endpoints will continue to work whilst the migration takes place. Find out more <a href="https://docs.flagsmith.com/advanced-use/edge-api">here</a>.
+                                            </p>
+                                        </div>
+                                        <div className="col-md-2 text-right">
+                                            <Button
+                                                disabled={isSaving||Utils.isMigrating()}
+                                                onClick={() => openConfirm("Are you sure?", "This will migrate your project to the Global Edge API.", ()=>{
+                                                    this.migrate(project)
+                                                })}
+                                            >
+                                                {this.state.migrating || Utils.isMigrating()?"Migrating to Edge":"Start Migration"}
+                                            </Button>
+                                        </div>
+                                    </div>
+                                </FormGroup>
+                            )}
 
                             <FormGroup className="mt-4">
                                 <h3>Delete Project</h3>
@@ -147,6 +172,7 @@ const ProjectSettingsPage = class extends Component {
                                     </div>
                                 </div>
                             </FormGroup>
+
                         </div>
                     )}
                 </ProjectProvider>

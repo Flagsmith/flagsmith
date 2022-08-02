@@ -25,10 +25,10 @@ class TheComponent extends Component {
 
     componentDidMount() {
         const { projectFlag, environmentFlags } = this.props;
-        const {feature} = Utils.fromParam()
+        const {feature, tab} = Utils.fromParam()
         const {  id } = projectFlag;
         if (`${id}` === feature) {
-            this.editFlag(projectFlag, environmentFlags[id]);
+            this.editFlag(projectFlag, environmentFlags[id],tab);
         }
     }
 
@@ -40,13 +40,13 @@ class TheComponent extends Component {
         />);
     }
 
-    editFlag = (projectFlag, environmentFlag) => {
+    editFlag = (projectFlag, environmentFlag,tab) => {
         API.trackEvent(Constants.events.VIEW_FEATURE);
 
         history.replaceState(
             {},
             null,
-            `${document.location.pathname}?feature=${projectFlag.id}`
+            `${document.location.pathname}?feature=${projectFlag.id}${tab?`&tab=${tab}`:""}`
         );
         openModal(`Edit Feature: ${projectFlag.name}`, <CreateFlagModal
           isEdit
@@ -86,7 +86,7 @@ class TheComponent extends Component {
                                   return;
                               }
                               this.confirmToggle(projectFlag, environmentFlags[id], (environments) => {
-                                  toggleFlag(_.findIndex(projectFlags, { id }), environments, null, this.props.environmentFlags);
+                                  toggleFlag(_.findIndex(projectFlags, { id }), environments, null, this.props.environmentFlags, this.props.projectFlags);
                               });
                           }}
                         />

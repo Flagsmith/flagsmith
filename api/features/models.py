@@ -75,7 +75,7 @@ class Feature(CustomLifecycleModelMixin, AbstractBaseExportableModel):
     )
     description = models.TextField(null=True, blank=True)
     default_enabled = models.BooleanField(default=False)
-    type = models.CharField(max_length=50, null=True, blank=True, default=STANDARD)
+    type = models.CharField(max_length=50, blank=True, default=STANDARD)
     history = HistoricalRecords(excluded_fields=["uuid"])
     tags = models.ManyToManyField(Tag, blank=True)
     is_archived = models.BooleanField(default=False)
@@ -267,28 +267,30 @@ class FeatureState(LifecycleModelMixin, AbstractBaseExportableModel):
         :param other: (FeatureState) the feature state to compare the priority of
         :return: True if self is higher priority than other
         """
-        if self.environment != other.environment:
+        if self.environment_id != other.environment_id:
             raise ValueError(
                 "Cannot compare feature states as they belong to different environments."
             )
 
-        if self.feature != other.feature:
+        if self.feature_id != other.feature_id:
             raise ValueError(
                 "Cannot compare feature states as they belong to different features."
             )
 
-        if self.identity:
+        if self.identity_id:
             # identity is the highest priority so we can always return true
-            if other.identity and self.identity != other.identity:
+            if other.identity_id and self.identity_id != other.identity_id:
                 raise ValueError(
                     "Cannot compare feature states as they are for different identities."
                 )
             return True
 
-        if self.feature_segment:
+        if self.feature_segment_id:
             # Return true if other_feature_state has a lower priority feature segment and not an identity overridden
             # flag, else False.
-            return not (other.identity or self.feature_segment < other.feature_segment)
+            return not (
+                other.identity_id or self.feature_segment < other.feature_segment
+            )
 
         if self.type == other.type:
             return (
@@ -299,7 +301,7 @@ class FeatureState(LifecycleModelMixin, AbstractBaseExportableModel):
 
         # if we've reached here, then self is just the environment default. In this case, other is higher priority if
         # it has a feature_segment or an identity
-        return not (other.feature_segment or other.identity)
+        return not (other.feature_segment_id or other.identity_id)
 
     def __str__(self):
         s = f"Feature {self.feature.name} - Enabled: {self.enabled}"
@@ -397,10 +399,10 @@ class FeatureState(LifecycleModelMixin, AbstractBaseExportableModel):
             self.get_feature_state_key_name(fsv_type): value,
         }
 
-    def get_feature_state_value(self, identity: "Identity" = None) -> typing.Any:
+    def get_feature_state_value_by_id(self, identity_id: int = None) -> typing.Any:
         feature_state_value = (
-            self.get_multivariate_feature_state_value(identity)
-            if self.feature.type == MULTIVARIATE and identity
+            self.get_multivariate_feature_state_value(identity_id)
+            if self.feature.type == MULTIVARIATE and identity_id
             else getattr(self, "feature_state_value", None)
         )
 
@@ -408,6 +410,9 @@ class FeatureState(LifecycleModelMixin, AbstractBaseExportableModel):
         # has a related feature state value. Note that we use getattr rather than
         # hasattr as we want to return None if no feature state value exists.
         return feature_state_value and feature_state_value.value
+
+    def get_feature_state_value(self, identity: "Identity" = None) -> typing.Any:
+        return self.get_feature_state_value_by_id(getattr(identity, "id", None))
 
     def get_feature_state_value_defaults(self) -> dict:
         if self.feature.initial_value is None:
@@ -424,7 +429,7 @@ class FeatureState(LifecycleModelMixin, AbstractBaseExportableModel):
         return {"type": type, key_name: parse_func(value)}
 
     def get_multivariate_feature_state_value(
-        self, identity: "Identity"
+        self, identity_id: int
     ) -> AbstractBaseFeatureValueModel:
         # the multivariate_feature_state_values should be prefetched at this point
         # so we just convert them to a list and use python operations from here to
@@ -432,7 +437,7 @@ class FeatureState(LifecycleModelMixin, AbstractBaseExportableModel):
         mv_options = list(self.multivariate_feature_state_values.all())
 
         percentage_value = (
-            get_hashed_percentage_for_object_ids([self.id, identity.id]) * 100
+            get_hashed_percentage_for_object_ids([self.id, identity_id]) * 100
         )
 
         # Iterate over the mv options in order of id (so we get the same value each

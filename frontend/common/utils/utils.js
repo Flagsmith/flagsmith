@@ -40,6 +40,12 @@ module.exports = Object.assign({}, require('./base/_utils'), {
         }
         return false;
     },
+    isMigrating() {
+        if (Utils.getFlagsmithHasFeature('edge_migrator') && ProjectStore.model && (ProjectStore.model.migration_status === 'MIGRATION_IN_PROGRESS'|| ProjectStore.model.migration_status === 'MIGRATION_SCHEDULED')) {
+            return true;
+        }
+        return false;
+    },
     getUpdateTraitEndpoint(environmentId, userId, _project) {
         if (Utils.getFlagsmithHasFeature('edge_identities') && ProjectStore.model && ProjectStore.model.use_edge_identities) {
             return `${Project.api}environments/${environmentId}/edge-identities/${userId}/update-traits/`;
@@ -356,6 +362,9 @@ module.exports = Object.assign({}, require('./base/_utils'), {
     },
 
     getPlansPermission: (permission) => {
+        if (!Utils.getFlagsmithHasFeature('plan_based_access')) {
+            return true
+        }
         const isOrgPermission = permission !== '2FA';
         const plans = isOrgPermission ? AccountStore.getActiveOrgPlan() ? [AccountStore.getActiveOrgPlan()] : null
             : AccountStore.getPlans();
@@ -376,6 +385,9 @@ module.exports = Object.assign({}, require('./base/_utils'), {
     },
     getPlanPermission: (plan, permission) => {
         let valid = true;
+        if (!Utils.getFlagsmithHasFeature('plan_based_access')) {
+            return true
+        }
         if (!plan) {
             return false;
         }
@@ -390,6 +402,10 @@ module.exports = Object.assign({}, require('./base/_utils'), {
         switch (permission) {
             case 'FLAG_OWNERS': {
                 valid = true;
+                break;
+            }
+            case 'CREATE_ADDITIONAL_PROJECT': {
+                valid = isSideProjectOrGreater;
                 break;
             }
             case '2FA': {
@@ -433,6 +449,7 @@ module.exports = Object.assign({}, require('./base/_utils'), {
             case 'scale-up-annual':
             case 'scale-up-v2':
             case 'scale-up-annual-v2':
+            case 'scale-up-12-months-v2':
                 return 'Scale-Up';
             case 'enterprise':
             case 'enterprise-annual':

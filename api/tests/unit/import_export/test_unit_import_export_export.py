@@ -1,9 +1,11 @@
 import json
 import re
 
+import boto3
 from core.constants import STRING
 from django.core.serializers.json import DjangoJSONEncoder
 from flag_engine.segments.constants import ALL_RULE
+from moto import mock_s3
 
 from environments.models import Environment, EnvironmentAPIKey, Webhook
 from features.feature_types import MULTIVARIATE
@@ -11,6 +13,7 @@ from features.models import Feature, FeatureSegment, FeatureState
 from features.multivariate.models import MultivariateFeatureOption
 from features.workflows.core.models import ChangeRequest
 from import_export.export import (
+    S3OrganisationExporter,
     export_environments,
     export_features,
     export_organisation,
@@ -183,3 +186,27 @@ def test_export_features(project, environment, segment, admin_user):
     assert not re.findall(r"\"change_request\": \[\"[a-z0-9\-]{36}\"\]", json_export)
 
     # TODO: test whether the export is importable
+
+
+@mock_s3
+def test_organisation_exporter_export_to_s3(organisation):
+    # Given
+    bucket_name = "test-bucket"
+    file_key = "organisation-exports/org-1.json"
+
+    s3_resource = boto3.resource("s3", region_name="eu-west-2")
+    s3_resource.create_bucket(
+        Bucket=bucket_name,
+        CreateBucketConfiguration={"LocationConstraint": "eu-west-2"},
+    )
+
+    s3_client = boto3.client("s3")
+
+    exporter = S3OrganisationExporter(s3_client=s3_client)
+
+    # When
+    exporter.export_to_s3(organisation.id, bucket_name, file_key)
+
+    # Then
+    retrieved_object = s3_client.get_object(Bucket=bucket_name, Key=file_key)
+    assert retrieved_object.get("ContentLength", 0) > 0

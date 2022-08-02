@@ -4,6 +4,24 @@ const data = require('../data/base/_data');
 
 let createdFirstFeature = false;
 const PAGE_SIZE = 200;
+const recursivePageGet = function (url, parentRes) {
+    return data.get(url).then((res)=>{
+        let response;
+        if (parentRes) {
+            response = {
+                ...parentRes,
+                results: parentRes.results.concat(res.results)
+            }
+        } else {
+            response = res;
+        }
+        if (res.next) {
+            return recursivePageGet(res.next, response)
+        } else {
+            return Promise.resolve(response)
+        }
+    })
+}
 const controller = {
 
     getFeatures: (projectId, environmentId, force, page, filter) => {
@@ -29,7 +47,9 @@ const controller = {
             }
             return Promise.all([
                 data.get(featuresEndpoint),
-                data.get(`${Project.api}environments/${environmentId}/featurestates/?page_size=${PAGE_SIZE}`),
+                recursivePageGet(
+                    `${Project.api}environments/${environmentId}/featurestates/?page_size=${PAGE_SIZE}`
+                ),
                 feature ? data.get(`${Project.api}projects/${projectId}/features/${feature}/`) : Promise.resolve(),
             ]).then(([features, environmentFeatures, feature]) => {
                 store.paging.next = features.next;
@@ -169,13 +189,13 @@ const controller = {
                     ...v,
                     datetime: moment(v.datetime, 'YYYY-MM-DD').format('Do MMM'),
                 }));
-                result.timespan = diff
+                result.timespan = diff;
                 store.model.influxData = result;
                 store.changed();
             }).catch(e => API.ajaxHandler(store, e));
     },
-    toggleFlag: (index, environments, comment, environmentFlags) => {
-        const flag = store.model.features[index];
+    toggleFlag: (index, environments, comment, environmentFlags, projectFlags) => {
+        const flag = (projectFlags || store.model.features)[index];
         store.saving();
 
         API.trackEvent(Constants.events.TOGGLE_FEATURE);
@@ -194,7 +214,9 @@ const controller = {
                 if (!environmentFlags) {
                     store.model.keyedEnvironmentFeatures[flag.id] = res[0];
                 }
-                store.model.lastSaved = new Date().valueOf();
+                if (store.model) {
+                    store.model.lastSaved = new Date().valueOf();
+                }
                 store.saved();
             });
     },
@@ -434,7 +456,7 @@ store.dispatcherIndex = Dispatcher.register(store, (payload) => {
             }
             break;
         case Actions.TOGGLE_FLAG:
-            controller.toggleFlag(action.index, action.environments, action.comment, action.environmentFlags);
+            controller.toggleFlag(action.index, action.environments, action.comment, action.environmentFlags, action.projectFlags);
             break;
         case Actions.GET_FLAG_INFLUX_DATA:
             controller.getInfluxDate(action.projectId, action.environmentId, action.flag, action.period);

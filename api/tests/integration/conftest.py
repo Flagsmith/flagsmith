@@ -101,7 +101,7 @@ def dynamo_enabled_environment(
 
 @pytest.fixture()
 def identity_identifier():
-    return uuid.uuid4()
+    return str(uuid.uuid4())
 
 
 @pytest.fixture()
@@ -127,9 +127,14 @@ def default_feature_value():
 
 
 @pytest.fixture()
-def feature(admin_client, project, default_feature_value):
+def feature_name():
+    return "feature_1"
+
+
+@pytest.fixture()
+def feature(admin_client, project, default_feature_value, feature_name):
     data = {
-        "name": "test_feature",
+        "name": feature_name,
         "initial_value": default_feature_value,
         "project": project,
     }
@@ -147,10 +152,15 @@ def mv_option_50_percent(project, admin_client, feature, mv_option_value):
 
 
 @pytest.fixture()
-def segment(admin_client, project):
+def segment_name():
+    return "Test Segment"
+
+
+@pytest.fixture()
+def segment(admin_client, project, segment_name):
     url = reverse("api-v1:projects:project-segments-list", args=[project])
     data = {
-        "name": "Test Segment",
+        "name": segment_name,
         "project": project,
         "rules": [{"type": "ALL", "rules": [], "conditions": []}],
     }
@@ -305,3 +315,19 @@ def feature_state(admin_client, environment, feature):
 
     response = admin_client.get(url)
     return response.json()["results"][0]["id"]
+
+
+@pytest.fixture()
+def identity_featurestate(admin_client, environment, feature, identity):
+    url = reverse("api-v1:features:featurestates-list")
+    data = {
+        "enabled": True,
+        "feature_state_value": {"type": "unicode", "string_value": "identity override"},
+        "identity": identity,
+        "environment": environment,
+        "feature": feature,
+    }
+    response = admin_client.post(
+        url, data=json.dumps(data), content_type="application/json"
+    )
+    return response.json()["id"]

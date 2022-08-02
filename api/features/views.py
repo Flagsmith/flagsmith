@@ -2,7 +2,6 @@ import logging
 import typing
 from functools import reduce
 
-import coreapi
 from app_analytics.influxdb_wrapper import get_multiple_event_list_for_feature
 from django.conf import settings
 from django.core.cache import caches
@@ -17,7 +16,6 @@ from rest_framework.generics import GenericAPIView, get_object_or_404
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.renderers import JSONRenderer
 from rest_framework.response import Response
-from rest_framework.schemas import AutoSchema
 
 from app.pagination import CustomPagination
 from audit.models import (
@@ -59,6 +57,7 @@ from .serializers import (
     GetInfluxDataQuerySerializer,
     ListCreateFeatureSerializer,
     ProjectFeatureSerializer,
+    SDKFeatureStatesQuerySerializer,
     UpdateFeatureSerializer,
     WritableNestedFeatureStateSerializer,
 )
@@ -543,26 +542,20 @@ class SDKFeatureStates(GenericAPIView):
     permission_classes = (EnvironmentKeyPermissions,)
     authentication_classes = (EnvironmentKeyAuthentication,)
     renderer_classes = [JSONRenderer]
+    pagination_class = None
 
-    schema = AutoSchema(
-        manual_fields=[
-            coreapi.Field(
-                "X-Environment-Key",
-                location="header",
-                description="API Key for an Environment",
-            ),
-            coreapi.Field(
-                "feature",
-                location="query",
-                description="Name of the feature to get the state of",
-            ),
-        ]
+    @swagger_auto_schema(
+        query_serializer=SDKFeatureStatesQuerySerializer(),
+        responses={200: FeatureStateSerializerFull(many=True)},
     )
-
     def get(self, request, identifier=None, *args, **kwargs):
         """
         USING THIS ENDPOINT WITH AN IDENTIFIER IS DEPRECATED.
         Please use `/identities/?identifier=<identifier>` instead.
+        ---
+        Note that when providing the `feature` query argument, this endpoint will
+        return either a single object or a 404 (if the feature does not exist) rather
+        than a list.
         """
         if identifier:
             return self._get_flags_response_with_identifier(request, identifier)

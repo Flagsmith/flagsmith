@@ -10,6 +10,7 @@ from rest_framework import status
 from rest_framework.test import APIClient
 
 from environments.dynamodb.types import ProjectIdentityMigrationStatus
+from environments.identities.models import Identity
 from organisations.models import Organisation, OrganisationRole
 from organisations.permissions.models import (
     OrganisationPermissionModel,
@@ -151,7 +152,7 @@ class ProjectTestCase(TestCase):
         # Then
         assert response.status_code == status.HTTP_200_OK
         assert (
-            len(response.json()) == 4
+            len(response.json()) == 5
         )  # hard code how many permissions we expect there to be
 
     def test_user_with_view_project_permission_can_view_project(self):
@@ -409,7 +410,7 @@ class UserPermissionGroupProjectPermissionsViewSetTestCase(TestCase):
         ).exists()
 
 
-def test_project_migrate_to_edge_calls_start_migration(
+def test_project_migrate_to_edge_calls_trigger_migration(
     admin_client, project, mocker, settings
 ):
     # Given
@@ -424,7 +425,7 @@ def test_project_migrate_to_edge_calls_start_migration(
     # Then
     assert response.status_code == status.HTTP_202_ACCEPTED
     mocked_identity_migrator.assert_called_once_with(project.id)
-    mocked_identity_migrator.return_value.start_migration.assert_called_once()
+    mocked_identity_migrator.return_value.trigger_migration.assert_called_once()
 
 
 def test_project_migrate_to_edge_returns_400_if_can_migrate_is_false(
@@ -443,4 +444,24 @@ def test_project_migrate_to_edge_returns_400_if_can_migrate_is_false(
     # Then
     assert response.status_code == status.HTTP_400_BAD_REQUEST
     mocked_identity_migrator.assert_called_once_with(project.id)
-    mocked_identity_migrator.return_value.start_migration.assert_not_called()
+    mocked_identity_migrator.return_value.trigger_migration.assert_not_called()
+
+
+def test_project_migrate_to_edge_returns_400_if_project_have_too_many_identities(
+    admin_client, project, mocker, settings, identity, environment
+):
+    # Given
+    Identity.objects.create(environment=environment, identifier="identity2")
+    settings.PROJECT_METADATA_TABLE_NAME_DYNAMO = "some_table"
+    settings.MAX_SELF_MIGRATABLE_IDENTITIES = 1
+    mocked_identity_migrator = mocker.patch("projects.views.IdentityMigrator")
+
+    url = reverse("api-v1:projects:project-migrate-to-edge", args=[project.id])
+
+    # When
+    response = admin_client.post(url)
+
+    # Then
+    assert response.status_code == status.HTTP_400_BAD_REQUEST
+    assert response.json()["detail"] == "Too many identities; Please contact support"
+    mocked_identity_migrator.assert_not_called()

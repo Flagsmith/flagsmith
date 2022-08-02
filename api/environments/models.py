@@ -24,6 +24,7 @@ from environments.api_keys import (
     generate_client_api_key,
     generate_server_api_key,
 )
+from environments.dynamodb import DynamoEnvironmentWrapper
 from environments.exceptions import EnvironmentHeaderNotPresentError
 from environments.managers import EnvironmentManager
 from features.models import FeatureState
@@ -33,10 +34,14 @@ from webhooks.models import AbstractBaseWebhookModel
 logger = logging.getLogger(__name__)
 environment_cache = caches[settings.ENVIRONMENT_CACHE_LOCATION]
 
+# Intialize the dynamo environment wrapper globaly
+environment_wrapper = DynamoEnvironmentWrapper()
+
 
 class Environment(LifecycleModel):
     name = models.CharField(max_length=2000)
     created_date = models.DateTimeField("DateCreated", auto_now_add=True)
+    description = models.TextField(null=True, blank=True, max_length=20000)
     project = models.ForeignKey(
         Project,
         related_name="environments",
@@ -141,10 +146,33 @@ class Environment(LifecycleModel):
                     .distinct()
                     .get()
                 )
-                environment_cache.set(environment.api_key, environment, timeout=60)
+                environment_cache.set(api_key, environment, timeout=60)
             return environment
         except cls.DoesNotExist:
             logger.info("Environment with api_key %s does not exist" % api_key)
+
+    @classmethod
+    def write_environments_to_dynamodb(cls, environments_filter: Q) -> None:
+        # use a list to make sure the entire qs is evaluated up front
+        environments = list(
+            Environment.objects.filter_for_document_builder(environments_filter)
+        )
+
+        if not environments:
+            return
+
+        # grab the first project and verify that each environment is for the same
+        # project (which should always be the case). Since we're working with fairly
+        # small querysets here, this shouldn't have a noticeable impact on performance.
+        project = getattr(environments[0], "project", None)
+        for environment in environments[1:]:
+            if not environment.project == project:
+                raise RuntimeError("Environments must all belong to the same project.")
+
+        if not all([project, project.enable_dynamo_db, environment_wrapper.is_enabled]):
+            return
+
+        environment_wrapper.write_environments(environments)
 
     def get_feature_state(
         self, feature_id: int, filter_kwargs: dict = None

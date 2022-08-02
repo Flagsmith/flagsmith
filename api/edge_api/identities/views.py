@@ -4,24 +4,40 @@ import typing
 
 import marshmallow
 from boto3.dynamodb.conditions import Key
+from django.utils.decorators import method_decorator
 from drf_yasg2.utils import swagger_auto_schema
 from flag_engine.api.schemas import APITraitSchema
+from flag_engine.features.models import (
+    FeatureStateModel as EngineFeatureStateModel,
+)
 from flag_engine.identities.builders import (
     build_identity_dict,
     build_identity_model,
 )
 from rest_framework import status, viewsets
 from rest_framework.decorators import action
-from rest_framework.exceptions import NotFound, ValidationError
+from rest_framework.exceptions import (
+    NotFound,
+    PermissionDenied,
+    ValidationError,
+)
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
+from rest_framework.views import APIView
 
-from app.pagination import EdgeIdentityPagination
+from app.pagination import (
+    EdgeIdentityPagination,
+    EdgeIdentityPaginationInspector,
+)
 from edge_api.identities.serializers import (
+    EdgeIdentityAllFeatureStatesSerializer,
     EdgeIdentityFeatureStateSerializer,
     EdgeIdentityFsQueryparamSerializer,
+    EdgeIdentityIdentifierSerializer,
     EdgeIdentitySerializer,
     EdgeIdentityTraitsSerializer,
+    EdgeIdentityWithIdentifierFeatureStateDeleteRequestBody,
+    EdgeIdentityWithIdentifierFeatureStateRequestBody,
 )
 from environments.identities.models import Identity
 from environments.models import Environment
@@ -30,11 +46,20 @@ from environments.permissions.permissions import NestedEnvironmentPermissions
 from features.permissions import IdentityFeatureStatePermissions
 from projects.exceptions import DynamoNotEnabledError
 
+from .edge_identity_service import get_all_feature_states_for_edge_identity
 from .exceptions import TraitPersistenceError
+from .permissions import EdgeIdentityWithIdentifierViewPermissions
 
 trait_schema = APITraitSchema()
 
 
+@method_decorator(
+    name="list",
+    decorator=swagger_auto_schema(
+        pagination_class=EdgeIdentityPagination,
+        paginator_inspectors=[EdgeIdentityPaginationInspector],
+    ),
+)
 class EdgeIdentityViewSet(viewsets.ModelViewSet):
     serializer_class = EdgeIdentitySerializer
     pagination_class = EdgeIdentityPagination
@@ -98,7 +123,7 @@ class EdgeIdentityViewSet(viewsets.ModelViewSet):
                     "retrieve": MANAGE_IDENTITIES,
                     "get_traits": MANAGE_IDENTITIES,
                     "update_traits": MANAGE_IDENTITIES,
-                }
+                },
             ),
         ]
 
@@ -144,6 +169,7 @@ class EdgeIdentityViewSet(viewsets.ModelViewSet):
 class EdgeIdentityFeatureStateViewSet(viewsets.ModelViewSet):
     permission_classes = [IsAuthenticated, IdentityFeatureStatePermissions]
     lookup_field = "featurestate_uuid"
+
     serializer_class = EdgeIdentityFeatureStateSerializer
 
     # Patch is not supported
@@ -163,6 +189,13 @@ class EdgeIdentityFeatureStateViewSet(viewsets.ModelViewSet):
         identity_document = Identity.dynamo_wrapper.get_item_from_uuid_or_404(
             self.kwargs["edge_identity_identity_uuid"]
         )
+
+        if (
+            identity_document["environment_api_key"]
+            != self.kwargs["environment_api_key"]
+        ):
+            raise PermissionDenied("Identity does not belong to this environment.")
+
         self.identity = build_identity_model(identity_document)
 
     def get_object(self):
@@ -176,6 +209,7 @@ class EdgeIdentityFeatureStateViewSet(viewsets.ModelViewSet):
             )
         except StopIteration:
             raise NotFound()
+
         return featurestate
 
     @swagger_auto_schema(query_serializer=EdgeIdentityFsQueryparamSerializer())
@@ -199,3 +233,88 @@ class EdgeIdentityFeatureStateViewSet(viewsets.ModelViewSet):
     def perform_destroy(self, instance):
         self.identity.identity_features.remove(instance)
         Identity.dynamo_wrapper.put_item(build_identity_dict(self.identity))
+
+    @swagger_auto_schema(
+        responses={200: EdgeIdentityAllFeatureStatesSerializer(many=True)}
+    )
+    @action(detail=False, methods=["GET"])
+    def all(self, request, *args, **kwargs):
+        (
+            feature_states,
+            identity_feature_names,
+        ) = get_all_feature_states_for_edge_identity(self.identity)
+
+        serializer = EdgeIdentityAllFeatureStatesSerializer(
+            instance=feature_states,
+            many=True,
+            context={
+                "request": request,
+                "identity": self.identity,
+                "identity_feature_names": identity_feature_names,
+            },
+        )
+
+        return Response(serializer.data)
+
+
+class EdgeIdentityWithIdentifierFeatureStateView(APIView):
+    permission_classes = [IsAuthenticated, EdgeIdentityWithIdentifierViewPermissions]
+    pagination_class = None
+
+    def initial(self, request, *args, **kwargs):
+        super().initial(request, *args, **kwargs)
+
+        serializer = EdgeIdentityIdentifierSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+
+        identity_document = Identity.dynamo_wrapper.get_item(
+            f"{self.kwargs['environment_api_key']}_{serializer.data['identifier']}"
+        )
+
+        if not identity_document:
+            raise NotFound()
+        self.identity = build_identity_model(identity_document)
+
+    def _get_feature_state(
+        self, feature: typing.Union[str, int]
+    ) -> typing.Optional[EngineFeatureStateModel]:
+        def match_feature_state(fs):
+            if isinstance(feature, int):
+                return fs.feature.id == feature
+            return fs.feature.name == feature
+
+        feature_state = next(
+            filter(
+                match_feature_state,
+                self.identity.identity_features,
+            ),
+            None,
+        )
+
+        return feature_state
+
+    @swagger_auto_schema(
+        request_body=EdgeIdentityWithIdentifierFeatureStateRequestBody,
+        responses={200: EdgeIdentityFeatureStateSerializer()},
+    )
+    def put(self, request, *args, **kwargs):
+        feature = request.data.get("feature")
+        feature_state = self._get_feature_state(feature)
+        serializer = EdgeIdentityFeatureStateSerializer(
+            instance=feature_state, data=request.data, context={"view": self}
+        )
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+
+        return Response(serializer.data, status=200)
+
+    @swagger_auto_schema(
+        request_body=EdgeIdentityWithIdentifierFeatureStateDeleteRequestBody,
+    )
+    def delete(self, request, *args, **kwargs):
+        feature = request.data.get("feature")
+        feature_state = self._get_feature_state(feature)
+        if feature_state:
+            self.identity.identity_features.remove(feature_state)
+            Identity.dynamo_wrapper.put_item(build_identity_dict(self.identity))
+        return Response(status=status.HTTP_204_NO_CONTENT)

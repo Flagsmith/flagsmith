@@ -13,22 +13,23 @@ from rest_framework.request import Request
 from rest_framework.response import Response
 
 from environments.dynamodb.migrator import IdentityMigrator
+from environments.identities.models import Identity
 from environments.serializers import EnvironmentSerializerLight
 from permissions.serializers import (
     PermissionModelSerializer,
     UserObjectPermissionsSerializer,
 )
-from projects.exceptions import DynamoNotEnabledError, ProjectMigrationError
+from projects.exceptions import (
+    DynamoNotEnabledError,
+    ProjectMigrationError,
+    TooManyIdentitiesError,
+)
 from projects.models import (
     ProjectPermissionModel,
     UserPermissionGroupProjectPermission,
     UserProjectPermission,
 )
-from projects.permissions import (
-    IsProjectAdmin,
-    NestedProjectPermissions,
-    ProjectPermissions,
-)
+from projects.permissions import IsProjectAdmin, ProjectPermissions
 from projects.permissions_calculator import ProjectPermissionsCalculator
 from projects.serializers import (
     CreateUpdateUserPermissionGroupProjectPermissionSerializer,
@@ -121,19 +122,24 @@ class ProjectViewSet(viewsets.ModelViewSet):
             raise DynamoNotEnabledError()
 
         project = self.get_object()
+        identity_count = Identity.objects.filter(environment__project=project).count()
+
+        if identity_count > settings.MAX_SELF_MIGRATABLE_IDENTITIES:
+            raise TooManyIdentitiesError()
+
         identity_migrator = IdentityMigrator(project.id)
 
         if not identity_migrator.can_migrate:
             raise ProjectMigrationError()
 
-        identity_migrator.start_migration()
+        identity_migrator.trigger_migration()
         return Response(status=status.HTTP_202_ACCEPTED)
 
 
 class BaseProjectPermissionsViewSet(viewsets.ModelViewSet):
     model_class = None
     pagination_class = None
-    permission_classes = [IsAuthenticated, NestedProjectPermissions]
+    permission_classes = [IsAuthenticated, IsProjectAdmin]
 
     def get_queryset(self):
         if not self.kwargs.get("project_pk"):

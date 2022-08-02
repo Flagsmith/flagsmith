@@ -64,7 +64,7 @@ const InviteUsers = class extends Component {
 
     render() {
         const { invites } = this.state;
-        const hasRbacPermission = !Utils.getFlagsmithHasFeature('plan_based_access') || Utils.getPlansPermission('RBAC');
+        const hasRbacPermission = Utils.getPlansPermission('RBAC');
 
         return <OrganisationProvider>
             {({ isSaving, error }) => (

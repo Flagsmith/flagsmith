@@ -43,9 +43,10 @@ const CreateFlag = class extends Component {
             selectedIdentity: null,
             allowEditDescription,
             enabledIndentity: false,
+            tab: Utils.fromParam().tab || 0,
             enabledSegment: false,
             is_archived,
-            period: '24h',
+            period: '28d',
         };
     }
 

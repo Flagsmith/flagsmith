@@ -5,8 +5,16 @@ const data = require('../data/base/_data');
 
 const controller = {
 
-    getProject: (id) => {
-        if (!store.model || !store.model.environments || store.id != id) {
+    migrateProject: (id) => {
+        store.loading()
+        data.post(`${Project.api}projects/${id}/migrate-to-edge/`).then(()=>{
+            controller.getProject(id,()=>store.saved(), true)
+        })
+
+    },
+
+    getProject: (id, cb, force) => {
+        if (force || (!store.model || !store.model.environments || store.id != id)) {
             store.loading();
 
             Promise.all([
@@ -20,6 +28,9 @@ const controller = {
                 }
                 store.id = id;
                 store.loaded();
+                if(cb) {
+                    cb()
+                }
             }).catch(() => {
                 document.location.href = '/404?entity=project';
             });
@@ -93,6 +104,9 @@ store.dispatcherIndex = Dispatcher.register(store, (payload) => {
     const action = payload.action; // this is our action from handleViewAction
 
     switch (action.actionType) {
+        case Actions.MIGRATE_PROJECT:
+            controller.migrateProject(action.projectId);
+            break;
         case Actions.GET_PROJECT:
             controller.getProject(action.projectId);
             break;

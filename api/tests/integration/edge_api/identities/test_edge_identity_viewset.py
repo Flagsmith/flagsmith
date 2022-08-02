@@ -1,19 +1,11 @@
 import json
 import urllib
 
-import pytest
 from django.urls import reverse
 from rest_framework import status
 from rest_framework.exceptions import NotFound
 
 from edge_api.identities.views import EdgeIdentityViewSet
-
-
-@pytest.fixture()
-def dynamo_wrapper_mock(mocker):
-    return mocker.patch(
-        "environments.identities.models.Identity.dynamo_wrapper",
-    )
 
 
 def test_get_identities_returns_bad_request_if_dynamo_is_not_enabled(
@@ -174,31 +166,34 @@ def test_identity_list_pagination(
         args=[environment_api_key],
     )
     url = f"{base_url}?page_size=1"
-    dynamo_wrapper_mock.get_all_items.return_value = {
-        "Items": [identity_document],
-        "Count": 1,
-        "LastEvaluatedKey": identity_item_key,
-    }
+    dynamo_wrapper_mock.get_all_items.side_effect = [
+        {
+            "Items": [identity_document],
+            "Count": 1,
+            "LastEvaluatedKey": identity_item_key,
+        },
+        {"Items": [identity_document], "Count": 1, "LastEvaluatedKey": None},
+    ]
 
     response = admin_client.get(url)
     # Next, Test the response
     assert response.status_code == 200
     response = response.json()
-    assert response["previous"] is None
 
-    # Fetch the next url from the response since LastEvaluatedKey was part of the response from dynamodb
-    next_url = response["next"]
+    # Fetch the `last_evaluated_key` from the response since LastEvaluatedKey was part of the response from dynamodb
+    last_evaluated_key = response["last_evaluated_key"]
 
-    # Make the call using the next url
-    response = admin_client.get(next_url)
+    # Make the call using the `last_evaluated_key`
+    url = f"{url}&last_evaluated_key={last_evaluated_key}"
+    response = admin_client.get(url)
 
     # And verify that get_all_items was called with correct arguments
     dynamo_wrapper_mock.get_all_items.assert_called_with(
         environment_api_key, 1, identity_item_key
     )
-    # And previous_url is same as last next_url
+    # And `last_evaluated_key` is now None
     assert response.status_code == 200
-    assert response.json()["previous"] == next_url
+    assert response.json()["last_evaluated_key"] is None
 
 
 def test_get_identities_list(

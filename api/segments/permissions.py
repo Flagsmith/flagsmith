@@ -1,6 +1,5 @@
 from rest_framework.permissions import BasePermission
 
-from environments.identities.models import Identity
 from projects.models import Project
 
 
@@ -12,14 +11,8 @@ class SegmentPermissions(BasePermission):
 
         project = Project.objects.get(pk=project_pk)
 
-        if request.user.is_project_admin(project):
+        if request.user.has_project_permission("MANAGE_SEGMENTS", project):
             return True
-
-        # environment admins should be able to get segments for an identity
-        if "identity" in request.query_params:
-            identity = Identity.objects.get(pk=request.query_params["identity"])
-            if request.user.is_environment_admin(identity.environment):
-                return True
 
         if view.action == "list" and request.user.has_project_permission(
             "VIEW_PROJECT", project
@@ -31,7 +24,7 @@ class SegmentPermissions(BasePermission):
         return view.detail
 
     def has_object_permission(self, request, view, obj):
-        return request.user.is_project_admin(obj.project) or (
+        return request.user.has_project_permission("MANAGE_SEGMENTS", obj.project) or (
             view.action == "detail"
             and request.user.has_project_permission("VIEW_PROJECT", obj.project)
         )

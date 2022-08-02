@@ -720,6 +720,7 @@ class ProjectFeatureTestCase(TestCase):
             feature_name=feature.name,
             environment_id=str(self.environment_1.id),  # provided as a GET param
             period="24h",  # this is the default but can be provided as a GET param
+            aggregate_every="24h",  # this is the default but can be provided as a GET param
         )
 
     def test_project_admin_can_create_mv_options_when_creating_feature(self):
@@ -848,7 +849,7 @@ class ProjectFeatureTestCase(TestCase):
         feature.refresh_from_db()
         assert feature.description == data["description"]
 
-    @mock.patch("audit.signals.environment_wrapper")
+    @mock.patch("environments.models.environment_wrapper")
     def test_create_feature_only_triggers_write_to_dynamodb_once_per_environment(
         self, mock_dynamo_environment_wrapper
     ):
