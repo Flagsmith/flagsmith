@@ -19,6 +19,7 @@ from rest_framework import serializers
 from rest_framework.exceptions import ValidationError
 
 from environments.identities.models import Identity
+from environments.models import Environment
 from features.models import Feature, FeatureState, FeatureStateValue
 from features.multivariate.models import MultivariateFeatureOption
 from features.serializers import FeatureStateValueSerializer
@@ -83,14 +84,30 @@ class FeatureStateValueEdgeIdentityField(serializers.Field):
         return FeatureStateValue(**feature_state_value_dict).value
 
 
-class EdgeFeatureField(serializers.IntegerField):
-    def to_representation(self, obj):
+class EdgeFeatureField(serializers.Field):
+    def __init__(self, *args, **kwargs):
+        help_text = "ID(integer) or name(string) of the feature"
+        kwargs.setdefault("help_text", help_text)
+
+        return super().__init__(*args, **kwargs)
+
+    def to_representation(self, obj: Feature) -> int:
         return obj.id
 
-    def to_internal_value(self, data):
-        data = super().to_internal_value(data)
-        feature = Feature.objects.get(id=data)
-        return feature
+    def to_internal_value(self, data: typing.Union[int, str]) -> Feature:
+        if isinstance(data, int):
+            return Feature.objects.get(id=data)
+
+        environment = Environment.objects.get(
+            api_key=self.context["view"].kwargs["environment_api_key"]
+        )
+        return Feature.objects.get(
+            name=data,
+            project=environment.project,
+        )
+
+    class Meta:
+        swagger_schema_fields = {"type": "integer/string"}
 
 
 class EdgeIdentityFeatureStateSerializer(serializers.Serializer):
@@ -107,7 +124,7 @@ class EdgeIdentityFeatureStateSerializer(serializers.Serializer):
     featurestate_uuid = serializers.CharField(required=False, read_only=True)
 
     def get_identity_uuid(self, obj=None):
-        return self.context["view"].kwargs["edge_identity_identity_uuid"]
+        return self.context["view"].identity.identity_uuid
 
     def save(self, **kwargs):
         identity = self.context["view"].identity
@@ -141,6 +158,24 @@ class EdgeIdentityFeatureStateSerializer(serializers.Serializer):
 
         Identity.dynamo_wrapper.put_item(identity_dict)
         return self.instance
+
+
+class EdgeIdentityIdentifierSerializer(serializers.Serializer):
+    identifier = serializers.CharField(required=True, max_length=2000)
+
+
+# NOTE: This is only used for generating swagger docs
+class EdgeIdentityWithIdentifierFeatureStateRequestBody(
+    EdgeIdentityFeatureStateSerializer, EdgeIdentityIdentifierSerializer
+):
+    pass
+
+
+# NOTE: This is only used for generating swagger docs
+class EdgeIdentityWithIdentifierFeatureStateDeleteRequestBody(
+    EdgeIdentityIdentifierSerializer
+):
+    feature = EdgeFeatureField()
 
 
 class EdgeIdentityTraitsSerializer(serializers.Serializer):
