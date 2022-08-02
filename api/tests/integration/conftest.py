@@ -128,7 +128,7 @@ def default_feature_value():
 
 @pytest.fixture()
 def feature_name():
-    return "test_feature"
+    return "feature_1"
 
 
 @pytest.fixture()
