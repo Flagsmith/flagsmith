@@ -84,6 +84,12 @@ class FeatureStateValueEdgeIdentityField(serializers.Field):
 
 
 class EdgeFeatureField(serializers.Field):
+    def __init__(self, *args, **kwargs):
+        help_text = "ID(integer) or name(string) of the feature"
+        kwargs.setdefault("help_text", help_text)
+
+        return super().__init__(*args, **kwargs)
+
     def to_representation(self, obj: Feature) -> int:
         return obj.id
 
@@ -107,7 +113,7 @@ class EdgeIdentityFeatureStateSerializer(serializers.Serializer):
     feature_state_value = FeatureStateValueEdgeIdentityField(
         allow_null=True, required=False, default=None
     )
-    feature = EdgeFeatureField(help_text="ID or name of the feature")
+    feature = EdgeFeatureField()
     multivariate_feature_state_values = EdgeMultivariateFeatureStateValueSerializer(
         many=True, required=False
     )
@@ -168,7 +174,7 @@ class EdgeIdentityWithIdentifierFeatureStateRequestBody(
 class EdgeIdentityWithIdentifierFeatureStateDeleteRequestBody(
     EdgeIdentityIdentifierSerializer
 ):
-    feature = EdgeFeatureField(help_text="ID or name of the feature")
+    feature = EdgeFeatureField()
 
 
 class EdgeIdentityTraitsSerializer(serializers.Serializer):
