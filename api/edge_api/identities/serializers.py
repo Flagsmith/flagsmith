@@ -1,7 +1,5 @@
 import typing
 
-from drf_yasg2.utils import swagger_serializer_method
-from flag_engine.features.models import FeatureStateModel
 from flag_engine.features.models import (
     FeatureStateModel as EngineFeatureStateModel,
 )
@@ -187,75 +185,3 @@ class EdgeIdentityFsQueryparamSerializer(serializers.Serializer):
     feature = serializers.IntegerField(
         required=False, help_text="ID of the feature to filter by"
     )
-
-
-class EdgeIdentityAllFeatureStatesFeatureSerializer(serializers.Serializer):
-    id = serializers.IntegerField()
-    name = serializers.CharField()
-    type = serializers.CharField()
-
-
-class EdgeIdentityAllFeatureStatesSegmentSerializer(serializers.Serializer):
-    id = serializers.IntegerField()
-    name = serializers.CharField()
-
-
-class EdgeIdentityAllFeatureStatesMVFeatureOptionSerializer(serializers.Serializer):
-    value = serializers.SerializerMethodField(
-        help_text="Can be any of the following types: integer, boolean, string."
-    )
-
-    def get_value(self, instance) -> typing.Union[str, int, bool]:
-        return instance.value
-
-
-class EdgeIdentityAllFeatureStatesMVFeatureStateValueSerializer(serializers.Serializer):
-    multivariate_feature_option = (
-        EdgeIdentityAllFeatureStatesMVFeatureOptionSerializer()
-    )
-    percentage_allocation = serializers.FloatField()
-
-
-class EdgeIdentityAllFeatureStatesSerializer(serializers.Serializer):
-    feature = EdgeIdentityAllFeatureStatesFeatureSerializer()
-    enabled = serializers.BooleanField()
-    feature_state_value = serializers.SerializerMethodField(
-        help_text="Can be any of the following types: integer, boolean, string."
-    )
-    overridden_by = serializers.SerializerMethodField(
-        help_text="One of: null, 'SEGMENT', 'IDENTITY'."
-    )
-    segment = serializers.SerializerMethodField()
-    multivariate_feature_state_values = (
-        EdgeIdentityAllFeatureStatesMVFeatureStateValueSerializer(many=True)
-    )
-
-    def get_feature_state_value(
-        self, instance: typing.Union[FeatureState, FeatureStateModel]
-    ) -> typing.Union[str, int, bool]:
-        identity = self.context["identity"]
-        identity_id = getattr(identity, "id", None) or getattr(
-            identity, "django_id", identity.identity_uuid
-        )
-
-        if type(instance) == FeatureState:
-            return instance.get_feature_state_value_by_id(identity_id)
-
-        return instance.get_value(identity_id)
-
-    def get_overridden_by(self, instance) -> typing.Optional[str]:
-        if getattr(instance, "feature_segment_id", None) is not None:
-            return "SEGMENT"
-        elif instance.feature.name in self.context.get("identity_feature_names", []):
-            return "IDENTITY"
-        return None
-
-    @swagger_serializer_method(
-        serializer_or_field=EdgeIdentityAllFeatureStatesSegmentSerializer
-    )
-    def get_segment(self, instance) -> typing.Optional[typing.Dict[str, typing.Any]]:
-        if getattr(instance, "feature_segment_id", None) is not None:
-            return EdgeIdentityAllFeatureStatesSegmentSerializer(
-                instance=instance.feature_segment.segment
-            ).data
-        return None
