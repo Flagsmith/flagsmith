@@ -1,19 +1,11 @@
 import json
 import urllib
 
-import pytest
 from django.urls import reverse
 from rest_framework import status
 from rest_framework.exceptions import NotFound
 
 from edge_api.identities.views import EdgeIdentityViewSet
-
-
-@pytest.fixture()
-def dynamo_wrapper_mock(mocker):
-    return mocker.patch(
-        "environments.identities.models.Identity.dynamo_wrapper",
-    )
 
 
 def test_get_identities_returns_bad_request_if_dynamo_is_not_enabled(

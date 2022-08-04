@@ -1,3 +1,7 @@
+import typing
+
+from drf_yasg2.utils import swagger_serializer_method
+from flag_engine.features.models import FeatureStateModel
 from flag_engine.features.models import (
     FeatureStateModel as EngineFeatureStateModel,
 )
@@ -15,6 +19,7 @@ from rest_framework import serializers
 from rest_framework.exceptions import ValidationError
 
 from environments.identities.models import Identity
+from environments.models import Environment
 from features.models import Feature, FeatureState, FeatureStateValue
 from features.multivariate.models import MultivariateFeatureOption
 from features.serializers import FeatureStateValueSerializer
@@ -79,14 +84,30 @@ class FeatureStateValueEdgeIdentityField(serializers.Field):
         return FeatureStateValue(**feature_state_value_dict).value
 
 
-class EdgeFeatureField(serializers.IntegerField):
-    def to_representation(self, obj):
+class EdgeFeatureField(serializers.Field):
+    def __init__(self, *args, **kwargs):
+        help_text = "ID(integer) or name(string) of the feature"
+        kwargs.setdefault("help_text", help_text)
+
+        return super().__init__(*args, **kwargs)
+
+    def to_representation(self, obj: Feature) -> int:
         return obj.id
 
-    def to_internal_value(self, data):
-        data = super().to_internal_value(data)
-        feature = Feature.objects.get(id=data)
-        return feature
+    def to_internal_value(self, data: typing.Union[int, str]) -> Feature:
+        if isinstance(data, int):
+            return Feature.objects.get(id=data)
+
+        environment = Environment.objects.get(
+            api_key=self.context["view"].kwargs["environment_api_key"]
+        )
+        return Feature.objects.get(
+            name=data,
+            project=environment.project,
+        )
+
+    class Meta:
+        swagger_schema_fields = {"type": "integer/string"}
 
 
 class EdgeIdentityFeatureStateSerializer(serializers.Serializer):
@@ -103,7 +124,7 @@ class EdgeIdentityFeatureStateSerializer(serializers.Serializer):
     featurestate_uuid = serializers.CharField(required=False, read_only=True)
 
     def get_identity_uuid(self, obj=None):
-        return self.context["view"].kwargs["edge_identity_identity_uuid"]
+        return self.context["view"].identity.identity_uuid
 
     def save(self, **kwargs):
         identity = self.context["view"].identity
@@ -139,6 +160,24 @@ class EdgeIdentityFeatureStateSerializer(serializers.Serializer):
         return self.instance
 
 
+class EdgeIdentityIdentifierSerializer(serializers.Serializer):
+    identifier = serializers.CharField(required=True, max_length=2000)
+
+
+# NOTE: This is only used for generating swagger docs
+class EdgeIdentityWithIdentifierFeatureStateRequestBody(
+    EdgeIdentityFeatureStateSerializer, EdgeIdentityIdentifierSerializer
+):
+    pass
+
+
+# NOTE: This is only used for generating swagger docs
+class EdgeIdentityWithIdentifierFeatureStateDeleteRequestBody(
+    EdgeIdentityIdentifierSerializer
+):
+    feature = EdgeFeatureField()
+
+
 class EdgeIdentityTraitsSerializer(serializers.Serializer):
     trait_key = serializers.CharField()
     trait_value = serializers.CharField(allow_null=True)
@@ -148,3 +187,75 @@ class EdgeIdentityFsQueryparamSerializer(serializers.Serializer):
     feature = serializers.IntegerField(
         required=False, help_text="ID of the feature to filter by"
     )
+
+
+class EdgeIdentityAllFeatureStatesFeatureSerializer(serializers.Serializer):
+    id = serializers.IntegerField()
+    name = serializers.CharField()
+    type = serializers.CharField()
+
+
+class EdgeIdentityAllFeatureStatesSegmentSerializer(serializers.Serializer):
+    id = serializers.IntegerField()
+    name = serializers.CharField()
+
+
+class EdgeIdentityAllFeatureStatesMVFeatureOptionSerializer(serializers.Serializer):
+    value = serializers.SerializerMethodField(
+        help_text="Can be any of the following types: integer, boolean, string."
+    )
+
+    def get_value(self, instance) -> typing.Union[str, int, bool]:
+        return instance.value
+
+
+class EdgeIdentityAllFeatureStatesMVFeatureStateValueSerializer(serializers.Serializer):
+    multivariate_feature_option = (
+        EdgeIdentityAllFeatureStatesMVFeatureOptionSerializer()
+    )
+    percentage_allocation = serializers.FloatField()
+
+
+class EdgeIdentityAllFeatureStatesSerializer(serializers.Serializer):
+    feature = EdgeIdentityAllFeatureStatesFeatureSerializer()
+    enabled = serializers.BooleanField()
+    feature_state_value = serializers.SerializerMethodField(
+        help_text="Can be any of the following types: integer, boolean, string."
+    )
+    overridden_by = serializers.SerializerMethodField(
+        help_text="One of: null, 'SEGMENT', 'IDENTITY'."
+    )
+    segment = serializers.SerializerMethodField()
+    multivariate_feature_state_values = (
+        EdgeIdentityAllFeatureStatesMVFeatureStateValueSerializer(many=True)
+    )
+
+    def get_feature_state_value(
+        self, instance: typing.Union[FeatureState, FeatureStateModel]
+    ) -> typing.Union[str, int, bool]:
+        identity = self.context["identity"]
+        identity_id = getattr(identity, "id", None) or getattr(
+            identity, "django_id", identity.identity_uuid
+        )
+
+        if type(instance) == FeatureState:
+            return instance.get_feature_state_value_by_id(identity_id)
+
+        return instance.get_value(identity_id)
+
+    def get_overridden_by(self, instance) -> typing.Optional[str]:
+        if getattr(instance, "feature_segment_id", None) is not None:
+            return "SEGMENT"
+        elif instance.feature.name in self.context.get("identity_feature_names", []):
+            return "IDENTITY"
+        return None
+
+    @swagger_serializer_method(
+        serializer_or_field=EdgeIdentityAllFeatureStatesSegmentSerializer
+    )
+    def get_segment(self, instance) -> typing.Optional[typing.Dict[str, typing.Any]]:
+        if getattr(instance, "feature_segment_id", None) is not None:
+            return EdgeIdentityAllFeatureStatesSegmentSerializer(
+                instance=instance.feature_segment.segment
+            ).data
+        return None
