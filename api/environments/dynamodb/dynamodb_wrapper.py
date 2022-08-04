@@ -129,6 +129,9 @@ class DynamoIdentityWrapper(DynamoWrapper):
 class DynamoEnvironmentWrapper(DynamoWrapper):
     table_name = settings.ENVIRONMENTS_TABLE_NAME_DYNAMO
 
+    def write_environment(self, environment: "Environment"):
+        self.write_environments([environment])
+
     def write_environments(self, environments: Iterable["Environment"]):
         with self._table.batch_writer() as writer:
             for environment in environments:

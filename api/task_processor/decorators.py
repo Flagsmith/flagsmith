@@ -1,8 +1,10 @@
 import logging
 import typing
+from datetime import datetime
 from inspect import getmodule
 
 from django.conf import settings
+from django.utils import timezone
 
 from task_processor.models import Task
 from task_processor.tasks import register_task
@@ -20,13 +22,18 @@ def register_task_handler(task_name: str = None):
 
         register_task(task_identifier, f)
 
-        def delay(*args, **kwargs):
+        def delay(*args, delay_until: datetime = None, **kwargs):
             if settings.RUN_TASKS_SYNCHRONOUSLY:
                 logger.debug("Running task '%s' synchronously", task_identifier)
                 f(*args, **kwargs)
             else:
                 logger.debug("Creating task for function '%s'...", task_identifier)
-                Task.create(task_identifier, *args, **kwargs)
+                Task.schedule_task(
+                    schedule_for=delay_until or timezone.now(),
+                    task_identifier=task_identifier,
+                    *args,
+                    **kwargs,
+                )
 
         f.delay = delay
         f.task_identifier = task_identifier
