@@ -56,6 +56,20 @@ services:
             - postgres
             # - influxdb:influxdb
 
+    flagsmith_processor:
+        build:
+            dockerfile: api/Dockerfile
+            context: .
+        environment:
+            DATABASE_URL: postgresql://postgres:password@postgres:5432/flagsmith
+        command:
+            - "python"
+            - "manage.py"
+            - "runprocessor"
+        depends_on:
+            - flagsmith
+            - postgres
+
     # InfluxDB requires additional setup - please see https://docs.flagsmith.com/deployment-overview/#influxdb
     # Note that InfluxDB is optional, but enabling it will provide additional functionality to the Flagsmith platform
     # influxdb:

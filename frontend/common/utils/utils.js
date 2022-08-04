@@ -449,6 +449,7 @@ module.exports = Object.assign({}, require('./base/_utils'), {
             case 'scale-up-annual':
             case 'scale-up-v2':
             case 'scale-up-annual-v2':
+            case 'scale-up-12-months-v2':
                 return 'Scale-Up';
             case 'enterprise':
             case 'enterprise-annual':
