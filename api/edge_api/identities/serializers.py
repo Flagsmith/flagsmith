@@ -1,3 +1,4 @@
+import copy
 import typing
 
 from drf_yasg2.utils import swagger_serializer_method
@@ -23,6 +24,8 @@ from environments.models import Environment
 from features.models import Feature, FeatureState, FeatureStateValue
 from features.multivariate.models import MultivariateFeatureOption
 from features.serializers import FeatureStateValueSerializer
+
+from .tasks import call_environment_webhook
 
 engine_multi_fs_value_schema = MultivariateFeatureStateValueSchema()
 
@@ -129,6 +132,9 @@ class EdgeIdentityFeatureStateSerializer(serializers.Serializer):
     def save(self, **kwargs):
         identity = self.context["view"].identity
         feature_state_value = self.validated_data.pop("feature_state_value", None)
+
+        previous_state = copy.deepcopy(self.instance)
+
         if not self.instance:
             self.instance = EngineFeatureStateModel(**self.validated_data)
             try:
@@ -157,6 +163,21 @@ class EdgeIdentityFeatureStateSerializer(serializers.Serializer):
             ) from e
 
         Identity.dynamo_wrapper.put_item(identity_dict)
+
+        call_environment_webhook.delay(
+            feature_id=self.instance.feature.id,
+            environment_id=identity.environment.id,
+            identity_id=identity.id or identity.identity_uuid,
+            identity_identifier=identity.identifier,
+            changed_by_user_id=self.context["user"].id,
+            new_enabled_state=self.instance.enabled,
+            new_value=self.instance.get_value(identity.id or identity.identity_uuid),
+            previous_enabled_state=previous_state.enabled,
+            previous_value=previous_state.get_value(
+                identity.id or identity.identity_uuid
+            ),
+        )
+
         return self.instance
 
 
