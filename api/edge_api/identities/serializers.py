@@ -1,6 +1,7 @@
 import copy
 import typing
 
+from django.utils import timezone
 from drf_yasg2.utils import swagger_serializer_method
 from flag_engine.features.models import FeatureStateModel
 from flag_engine.features.models import (
@@ -24,6 +25,7 @@ from environments.models import Environment
 from features.models import Feature, FeatureState, FeatureStateValue
 from features.multivariate.models import MultivariateFeatureOption
 from features.serializers import FeatureStateValueSerializer
+from features.tasks import date_format
 
 from .tasks import call_environment_webhook
 
@@ -166,16 +168,23 @@ class EdgeIdentityFeatureStateSerializer(serializers.Serializer):
 
         call_environment_webhook.delay(
             feature_id=self.instance.feature.id,
-            environment_id=identity.environment.id,
-            identity_id=identity.id or identity.identity_uuid,
+            environment_api_key=identity.environment_api_key,
+            identity_id=identity.django_id or identity.identity_uuid,
             identity_identifier=identity.identifier,
-            changed_by_user_id=self.context["user"].id,
+            changed_by_user_id=self.context["request"].user.id,
             new_enabled_state=self.instance.enabled,
-            new_value=self.instance.get_value(identity.id or identity.identity_uuid),
-            previous_enabled_state=previous_state.enabled,
-            previous_value=previous_state.get_value(
-                identity.id or identity.identity_uuid
+            new_value=self.instance.get_value(
+                identity.django_id or identity.identity_uuid
             ),
+            previous_enabled_state=getattr(previous_state, "enabled", None),
+            previous_value=previous_state.get_value(
+                identity.django_id or identity.identity_uuid
+            )
+            if previous_state
+            else None,
+            timestamp=timezone.now().strftime(
+                date_format
+            ),  # TODO: refactor date_format
         )
 
         return self.instance

@@ -5,15 +5,16 @@ from edge_api.identities.serializers import EdgeIdentityFeatureStateSerializer
 
 
 def test_edge_identity_feature_state_serializer_save_allows_missing_mvfsvs(
-    mocker, identity, feature
+    mocker, identity, feature, admin_user
 ):
     # Given
     identity_model = build_identity_model(build_identity_document(identity))
     view = mocker.MagicMock(identity=identity_model)
+    request = mocker.MagicMock(user=admin_user)
 
     serializer = EdgeIdentityFeatureStateSerializer(
         data={"feature_state_value": "foo", "feature": feature.id},
-        context={"view": view},
+        context={"view": view, "request": request},
     )
 
     mock_dynamo_wrapper = mocker.patch(

@@ -301,7 +301,9 @@ class EdgeIdentityWithIdentifierFeatureStateView(APIView):
         feature = request.data.get("feature")
         feature_state = self._get_feature_state(feature)
         serializer = EdgeIdentityFeatureStateSerializer(
-            instance=feature_state, data=request.data, context={"view": self}
+            instance=feature_state,
+            data=request.data,
+            context={"view": self, "request": request},
         )
         serializer.is_valid(raise_exception=True)
         serializer.save()
