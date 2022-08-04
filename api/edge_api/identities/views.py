@@ -30,7 +30,6 @@ from app.pagination import (
     EdgeIdentityPaginationInspector,
 )
 from edge_api.identities.serializers import (
-    EdgeIdentityAllFeatureStatesSerializer,
     EdgeIdentityFeatureStateSerializer,
     EdgeIdentityFsQueryparamSerializer,
     EdgeIdentityIdentifierSerializer,
@@ -40,6 +39,9 @@ from edge_api.identities.serializers import (
     EdgeIdentityWithIdentifierFeatureStateRequestBody,
 )
 from environments.identities.models import Identity
+from environments.identities.serializers import (
+    IdentityAllFeatureStatesSerializer,
+)
 from environments.models import Environment
 from environments.permissions.constants import MANAGE_IDENTITIES
 from environments.permissions.permissions import NestedEnvironmentPermissions
@@ -234,9 +236,7 @@ class EdgeIdentityFeatureStateViewSet(viewsets.ModelViewSet):
         self.identity.identity_features.remove(instance)
         Identity.dynamo_wrapper.put_item(build_identity_dict(self.identity))
 
-    @swagger_auto_schema(
-        responses={200: EdgeIdentityAllFeatureStatesSerializer(many=True)}
-    )
+    @swagger_auto_schema(responses={200: IdentityAllFeatureStatesSerializer(many=True)})
     @action(detail=False, methods=["GET"])
     def all(self, request, *args, **kwargs):
         (
@@ -244,7 +244,7 @@ class EdgeIdentityFeatureStateViewSet(viewsets.ModelViewSet):
             identity_feature_names,
         ) = get_all_feature_states_for_edge_identity(self.identity)
 
-        serializer = EdgeIdentityAllFeatureStatesSerializer(
+        serializer = IdentityAllFeatureStatesSerializer(
             instance=feature_states,
             many=True,
             context={
