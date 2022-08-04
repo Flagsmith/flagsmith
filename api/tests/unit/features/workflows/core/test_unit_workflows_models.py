@@ -354,3 +354,63 @@ def test_change_request_email_subject(change_request_no_required_approvals):
             change_request_no_required_approvals.id,
         )
     )
+
+
+def test_schedule_environment_rebuild_does_nothing_if_edge_not_enabled(
+    settings, change_request_no_required_approvals, mocker
+):
+    # Given
+    settings.EDGE_ENABLED = False
+    mock_rebuild_environment_document = mocker.patch(
+        "features.workflows.core.models.rebuild_environment_document"
+    )
+
+    # When
+    change_request_no_required_approvals.schedule_environment_rebuild()
+
+    # Then
+    mock_rebuild_environment_document.delay.assert_not_called()
+
+
+def test_schedule_environment_rebuild_does_nothing_if_not_scheduled_for_future(
+    settings, change_request_no_required_approvals, mocker
+):
+    # Given
+    settings.EDGE_ENABLED = True
+    mock_rebuild_environment_document = mocker.patch(
+        "features.workflows.core.models.rebuild_environment_document"
+    )
+    now = timezone.now()
+
+    assert change_request_no_required_approvals.feature_states.exists()
+    assert not change_request_no_required_approvals.feature_states.filter(
+        live_from__gt=now
+    ).exists()
+
+    # When
+    change_request_no_required_approvals.schedule_environment_rebuild()
+
+    # Then
+    mock_rebuild_environment_document.delay.assert_not_called()
+
+
+def test_schedule_environment_rebuild_schedules_rebuild_environment_task(
+    settings, change_request_no_required_approvals, mocker
+):
+    # Given
+    settings.EDGE_ENABLED = True
+    mock_rebuild_environment_document = mocker.patch(
+        "features.workflows.core.models.rebuild_environment_document"
+    )
+    now = timezone.now()
+    tomorrow = now + timedelta(days=1)
+    change_request_no_required_approvals.feature_states.all().update(live_from=tomorrow)
+
+    # When
+    change_request_no_required_approvals.schedule_environment_rebuild()
+
+    # Then
+    mock_rebuild_environment_document.delay.assert_called_once_with(
+        delay_util=tomorrow,
+        environment_id=change_request_no_required_approvals.environment_id,
+    )
