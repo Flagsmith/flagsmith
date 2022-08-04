@@ -28,6 +28,9 @@ from audit.models import (
 )
 from environments.authentication import EnvironmentKeyAuthentication
 from environments.identities.models import Identity
+from environments.identities.serializers import (
+    IdentityAllFeatureStatesSerializer,
+)
 from environments.models import Environment
 from environments.permissions.permissions import (
     EnvironmentKeyPermissions,
@@ -506,6 +509,19 @@ class IdentityFeatureStateViewSet(BaseFeatureStateViewSet):
 
     def get_queryset(self):
         return super().get_queryset().filter(identity__pk=self.kwargs["identity_pk"])
+
+    @action(methods=["GET"], detail=False)
+    def all(self, request, *args, **kwargs):
+        identity = get_object_or_404(Identity, pk=self.kwargs["identity_pk"])
+        feature_states = identity.get_all_feature_states()
+
+        serializer = IdentityAllFeatureStatesSerializer(
+            instance=feature_states,
+            many=True,
+            context={"request": request, "identity": identity},
+        )
+
+        return Response(serializer.data)
 
 
 class SimpleFeatureStateViewSet(
