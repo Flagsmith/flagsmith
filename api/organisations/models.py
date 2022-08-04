@@ -103,6 +103,13 @@ class UserOrganisation(models.Model):
 
 class Subscription(LifecycleModelMixin, AbstractBaseExportableModel):
     MAX_SEATS_IN_FREE_PLAN = 1
+    MAX_API_CALLS_IN_FREE_PLAN = 50000
+    MAX_PROJECTS_IN_FREE_PLAN = 1
+    SUBSCRIPTION_DEFAULT_LIMITS = (
+        MAX_API_CALLS_IN_FREE_PLAN,
+        MAX_SEATS_IN_FREE_PLAN,
+        MAX_PROJECTS_IN_FREE_PLAN,
+    )
 
     organisation = models.OneToOneField(
         Organisation, on_delete=models.CASCADE, related_name="subscription"

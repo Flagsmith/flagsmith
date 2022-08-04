@@ -74,7 +74,7 @@
                             <td>{{ organisation.subscription.plan }}</td>
                             <td>{{ max_seats }}</td>
                             <td>{{ max_api_calls }}</td>
-                            <td>{{ max_projects }}</td>
+                            <td>{{ max_projects|default_if_none:"No limit configured" }}</td>
                         </tr>
                     </tbody>
                 </table>
