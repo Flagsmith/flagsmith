@@ -4,7 +4,6 @@ from __future__ import unicode_literals
 import logging
 import typing
 from copy import deepcopy
-from types import NoneType
 
 import boto3
 from core.request_origin import RequestOrigin
@@ -215,7 +214,7 @@ class Webhook(AbstractBaseWebhookModel):
         feature: Feature,
         environment: Environment,
         enabled: bool,
-        value: typing.Union[str, int, bool, NoneType],
+        value: typing.Union[str, int, bool, type(None)],
         identity_id: typing.Union[int, str] = None,
         identity_identifier: str = None,
         feature_segment: FeatureSegment = None,
