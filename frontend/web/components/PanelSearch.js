@@ -94,7 +94,7 @@ const PanelSearch = class extends Component {
 
     render() {
         const { sortBy, sortOrder } = this.state;
-        const { title, items, renderRow, renderNoResults, paging, goToPage, isLoading, sorting, action } = this.props;
+        const { title, items, renderRow, renderNoResults, paging, prevPage, nextPage, goToPage, isLoading, sorting, action } = this.props;
         const filteredItems = this.filter(items);
         const currentSort = _.find(sorting, { value: sortBy });
 
@@ -214,6 +214,8 @@ const PanelSearch = class extends Component {
                         <Paging
                             paging={paging}
                             isLoading={isLoading}
+                            nextPage={nextPage}
+                            prevPage={prevPage}
                             goToPage={goToPage}
                         />
                     )}

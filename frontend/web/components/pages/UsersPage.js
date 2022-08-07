@@ -124,8 +124,8 @@ const UsersPage = class extends Component {
                                                             items={identities}
                                                             paging={identitiesPaging}
                                                             showExactFilter
-                                                            nextPage={() => AppActions.getIdentitiesPage(environmentId, identitiesPaging.next)}
-                                                            prevPage={() => AppActions.getIdentitiesPage(environmentId, identitiesPaging.previous)}
+                                                            nextPage={() => AppActions.getIdentitiesPage(environmentId, identitiesPaging.next, "NEXT")}
+                                                            prevPage={() => AppActions.getIdentitiesPage(environmentId, identitiesPaging.previous, "PREVIOUS")}
                                                             goToPage={page => AppActions.getIdentitiesPage(environmentId, `${Project.api}environments/${environmentId}/${Utils.getIdentitiesEndpoint()}/?page=${page}`)}
                                                             renderRow={({ id, identifier }, index) => (permission ? (
                                                                 <Row
