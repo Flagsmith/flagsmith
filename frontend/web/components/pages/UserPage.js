@@ -8,6 +8,7 @@ import CreateSegmentModal from '../modals/CreateSegment';
 import FeatureListStore from "../../../common/stores/feature-list-store";
 import TagSelect from "../TagSelect";
 import { Tag } from "../AddEditTags";
+import _data from '../../../common/data/base/_data'
 
 const returnIfDefined = (value, value2) => {
     if (value === null || value === undefined) {
@@ -74,10 +75,9 @@ const UserPage = class extends Component {
 
 
     getActualFlags = () => {
-        const url = `${Utils.getSDKEndpoint()}identities/?identifier=${this.props.match.params.identity}`;
-        fetch(url, {
-            headers: { 'X-Environment-Key': this.props.match.params.environmentId },
-        }).then(res => res.json()).then((res) => {
+        const {identity,id, environmentId} = this.props.match.params;
+        const url = `${Project.api}environments/${environmentId}/${Utils.getIdentitiesEndpoint()}/${Utils.getIsEdge()?id:identity}/${Utils.getFeatureStatesEndpoint()}/all/`;
+        _data.get(url,).then(res => res.json()).then((res) => {
             this.setState({ actualFlags: _.keyBy(res.flags, v => v.feature.name) });
         }).catch((err) => {
         });
