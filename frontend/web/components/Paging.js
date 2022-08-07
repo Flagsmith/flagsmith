@@ -19,6 +19,8 @@ export default class Paging extends PureComponent {
             paging,
             isLoading,
             goToPage,
+            nextPage,
+            prevPage,
         } } = this;
         const currentIndex = paging.currentPage - 1;
         const lastPage = Math.ceil(paging.count / paging.pageSize);
@@ -27,17 +29,18 @@ export default class Paging extends PureComponent {
         const from = Math.max(0, (currentIndex+1) - spaceBetween);
         const to = Math.min(lastPage, (currentIndex? currentIndex: currentIndex+1) + spaceBetween);
         const range = _.range(from, to);
-        if (range.length < 2) {
+        const noPages = range.length < 2;
+        if (noPages  && !(paging.next||paging.previous) ) {
             return <div/>;
         }
         return (
             <Row className="list-item paging" style={isLoading ? { opacity: 0.5 } : {}}>
                 <Button
                   disabled={!paging.previous} className="icon btn-paging ion-ios-arrow-back"
-                  onClick={() => goToPage(currentIndex)}
+                  onClick={() => prevPage()}
                 />
                 <Row className="list-item">
-                    {!range.includes(0) && (
+                    {!range.includes(0) && !noPages&& (
                       <>
                           <div
                             role="button"
@@ -57,7 +60,7 @@ export default class Paging extends PureComponent {
                           </div>
                       </>
                     )}
-                    {_.map(range, index => (
+                    {!noPages&&_.map(range, index => (
                         <div
                           key={index} role="button"
                           className={cn({
@@ -69,7 +72,7 @@ export default class Paging extends PureComponent {
                             {index + 1}
                         </div>
                     ))}
-                    {!range.includes(lastPage-1) && (
+                    {!noPages&&!range.includes(lastPage-1) && (
                       <>
 
                           <div
@@ -95,7 +98,7 @@ export default class Paging extends PureComponent {
                 </Row>
                 <Button
                   className="icon btn-paging ion-ios-arrow-forward" disabled={!paging.next}
-                  onClick={() => goToPage(currentIndex + 2)}
+                  onClick={() => nextPage()}
                 />
             </Row>
         );

@@ -338,11 +338,12 @@ const AppActions = Object.assign({}, require('./base/_app-actions'), {
             pageSize,
         });
     },
-    getIdentitiesPage(envId, page) {
+    getIdentitiesPage(envId, page,pageType) {
         Dispatcher.handleViewAction({
             actionType: Actions.GET_IDENTITIES_PAGE,
             envId,
             page,
+            pageType
         });
     },
     getIdentity(envId, id) {
