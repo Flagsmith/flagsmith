@@ -4,12 +4,19 @@ import _data from '../../../common/data/base/_data'
 import ProjectStore from '../../../common/stores/project-store'
 import { groupBy } from "lodash";
 import TagValues from "../TagValues";
+import SegmentOverrides from "../SegmentOverrides";
+import withSegmentOverrides from "../../../common/providers/withSegmentOverrides";
+import FeatureListStore from "../../../common/stores/feature-list-store";
 class TheComponent extends Component {
     state = {
         isLoading: true
     }
 
     componentDidMount() {
+        this.fetch()
+    }
+
+    fetch = () => {
         _data.get(`${Project.api}projects/${this.props.projectId}/segments/${this.props.id}/associated-features/`).then((v)=>{
             return Promise.all((v.results.map((result)=>{
                 return _data.get(`${Project.api}projects/${this.props.projectId}/features/${result.feature}/`)
@@ -76,9 +83,10 @@ class TheComponent extends Component {
                             className="no-pad" title="Associated Features"
                             items={selectedResults}
                             renderRow={(v)=>(
+                                <div key={v.feature.id} className="m-3 mb-4">
                                 <div onClick={()=>{
-                                    window.open(`${document.location.origin}/project/${this.props.projectId}/environment/${v.env.api_key}/features?feature=${v.feature.id}&tab=1`)
-                                }} className="list-item py-3 clickable">
+                                    // window.open(`${document.location.origin}/project/${this.props.projectId}/environment/${v.env.api_key}/features?feature=${v.feature.id}&tab=1`)
+                                }} className="list-item panel panel-without-heading py-3 clickable">
                                     <div>
                                         <strong>
                                             {v.feature.name}
@@ -93,6 +101,15 @@ class TheComponent extends Component {
                                         </Row>
                                     </div>
 
+                                    <WrappedSegmentOverrides
+                                        onSave={this.fetch}
+                                        projectFlag={v.feature}
+                                        id={this.props.id}
+                                        projectId={this.props.projectId}
+                                        environmentId={v.env.api_key}
+                                    />
+
+                                </div>
                                 </div>
                             )}
                         />
@@ -103,4 +120,66 @@ class TheComponent extends Component {
     }
 }
 
-export default TheComponent
+class SegmentOverridesInner extends Component {
+    state = {}
+
+    componentDidMount() {
+        ES6Component(this)
+        this.listenTo(FeatureListStore, 'change', ()=>{
+            this.setState({isSaving:FeatureListStore.isSaving})
+        })
+    }
+
+    render() {
+
+        const {projectFlag, id, segmentOverrides, projectId,updateSegments,segments, environmentId} = this.props;
+
+
+            return (
+                <FeatureListProvider>
+                    {({}, {editFlagSegments, isSaving})=> {
+
+                        const save = ()=> {
+                            FeatureListStore.isSaving = true;
+                            FeatureListStore.trigger('change');
+                            !isSaving && name && editFlagSegments(projectId, environmentId, projectFlag, projectFlag, { }, segmentOverrides, ()=>{
+                                toast("Segment override saved")
+                                this.props.onSave()
+                            });
+                        }
+
+                        return (
+                            <div>
+                                <SegmentOverrides
+                                    feature={projectFlag.id}
+                                    id={id}
+                                    name={" "}
+                                    projectId={projectId}
+                                    multivariateOptions={_.cloneDeep(projectFlag.multivariate_options)}
+                                    environmentId={environmentId}
+                                    value={segmentOverrides}
+                                    controlValue={projectFlag.feature_state_value}
+                                    segments={segments}
+                                    onChange={updateSegments}
+                                />
+                                <div className="text-right">
+                                    <Button disabled={this.state.isSaving} onClick={save}>
+                                        {this.state.isSaving? "Saving": "Save"}
+                                    </Button>
+                                </div>
+
+                            </div>
+
+                        )
+                    }}
+                </FeatureListProvider>
+
+
+            )
+    }
+}
+
+const WrappedSegmentOverrides  = withSegmentOverrides(SegmentOverridesInner)
+
+
+module.exports = ConfigProvider(TheComponent);

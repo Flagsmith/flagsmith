@@ -126,8 +126,8 @@ const SegmentsPage = class extends Component {
                         <SegmentListProvider onSave={this.onSave} onError={this.onError}>
                             {({ isLoading, segments }, { removeSegment }) => (
                                 <div className="segments-page">
-                                    {isLoading && <div className="centered-container"><Loader/></div>}
-                                    {!isLoading && (
+                                    {isLoading && !segments && <div className="centered-container"><Loader/></div>}
+                                    {(!isLoading || segments) && (
                                     <div>
                                         {segments && segments.length ? (
                                             <div>
