@@ -39,7 +39,7 @@ class TheComponent extends Component {
                         return val.feature.name
                     })
                 })
-                this.setState({isLoading: false, results:v, selectedEnv: keys && keys.length && keys.sort()[0] })
+                this.setState({isLoading: false, results:v, selectedEnv: this.state.selectedEnv || keys && keys.length && keys.sort()[0] })
             })
         })
     }
@@ -125,9 +125,6 @@ class SegmentOverridesInner extends Component {
 
     componentDidMount() {
         ES6Component(this)
-        this.listenTo(FeatureListStore, 'change', ()=>{
-            this.setState({isSaving:FeatureListStore.isSaving})
-        })
     }
 
     render() {
@@ -142,8 +139,10 @@ class SegmentOverridesInner extends Component {
                         const save = ()=> {
                             FeatureListStore.isSaving = true;
                             FeatureListStore.trigger('change');
+                            this.setState({isSaving: true})
                             !isSaving && name && editFlagSegments(projectId, environmentId, projectFlag, projectFlag, { }, segmentOverrides, ()=>{
                                 toast("Segment override saved")
+                                this.setState({isSaving: false})
                                 this.props.onSave()
                             });
                         }
@@ -157,9 +156,11 @@ class SegmentOverridesInner extends Component {
                                     projectId={projectId}
                                     multivariateOptions={_.cloneDeep(projectFlag.multivariate_options)}
                                     environmentId={environmentId}
-                                    value={segmentOverrides}
+                                    value={ segmentOverrides && segmentOverrides.filter((v)=> {
+                                            return v.segment === id
+                                        }
+                                    )}
                                     controlValue={projectFlag.feature_state_value}
-                                    segments={segments}
                                     onChange={updateSegments}
                                 />
                                 <div className="text-right">
