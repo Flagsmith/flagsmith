@@ -76,11 +76,19 @@ const UserPage = class extends Component {
 
     getActualFlags = () => {
         const {identity,id, environmentId} = this.props.match.params;
-        const url = `${Project.api}environments/${environmentId}/${Utils.getIdentitiesEndpoint()}/${Utils.getIsEdge()?id:identity}/${Utils.getFeatureStatesEndpoint()}/all/`;
-        _data.get(url,).then(res => res.json()).then((res) => {
-            this.setState({ actualFlags: _.keyBy(res.flags, v => v.feature.name) });
-        }).catch((err) => {
-        });
+        if (Utils.getFlagsmithHasFeature("use_admin_identity_featurestates")) {
+            const url = `${Project.api}environments/${environmentId}/${Utils.getIdentitiesEndpoint()}/${id}/${Utils.getFeatureStatesEndpoint()}/all/`;
+            _data.get(url,).then((res) => {
+                this.setState({ actualFlags: _.keyBy(res, v => v.feature.name) });
+            }).catch((err) => {
+            });
+        } else {
+            const url = `${Project.api}environments/${environmentId}/${Utils.getIdentitiesEndpoint()}/${Utils.getIsEdge()?id:identity}/${Utils.getFeatureStatesEndpoint()}/all/`;
+            _data.get(url,).then(res => res.json()).then((res) => {
+                this.setState({ actualFlags: _.keyBy(res.flags, v => v.feature.name) });
+            }).catch((err) => {
+            });
+        }
     }
 
     onTraitSaved = () => {
@@ -394,7 +402,6 @@ const UserPage = class extends Component {
                                                                   <Column>
                                                                       <Button
                                                                         onClick={() => this.confirmRemove(_.find(projectFlags, { id }), () => {
-                                                                            debugger;
                                                                             removeFlag({
                                                                                 environmentId: this.props.match.params.environmentId,
                                                                                 identity: this.props.match.params.id,
