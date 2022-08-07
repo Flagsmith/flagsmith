@@ -74,13 +74,20 @@ var Utils = {
         return Object.keys(obj).filter((v)=>obj[v]!==undefined).map(k => `${encodeURIComponent(k)}=${encodeURIComponent(obj[k])}`).join('&');
     },
 
-    fromParam(str) { // {min:100,max:200} <- ?min=100&max=200
-        if (!str && !document.location.search) {
-            return {};
+    fromParam(str) {
+        // {min:100,max:200} <- ?min=100&max=200
+        const documentSearch =
+            typeof document === 'undefined' ? '' : document.location.search
+
+        if (!str && !documentSearch) {
+            return {}
         }
         // eslint-disable-next-line
-        const urlString= (str || document.location.search).replace(/(^\?)/, '');
-        return JSON.parse(`{"${urlString.replace(/&/g, '","').replace(/=/g, '":"')}"}`, (key, value) => (key === '' ? value : decodeURIComponent(value)));
+        const urlString = (str || documentSearch).replace(/(^\?)/, '');
+        return JSON.parse(
+            `{"${urlString.replace(/&/g, '","').replace(/=/g, '":"')}"}`,
+            (key, value) => (key === '' ? value : decodeURIComponent(value)),
+        )
     },
 
     preventDefault(e) {

@@ -3,15 +3,44 @@ const data = require('../data/base/_data');
 
 const PAGE_SIZE = 10;
 
+const pages = [
+    null,
+    "eyJlbnZpcm9ubWVudF9hcGlfa2V5IjogIjhLekVUZERlTVk3eGtxa1NrWTNHc2ciLCAiaWRlbnRpZmllciI6ICJEYW5pZWxfcmFuYWxsb0B5YWhvby5jb20iLCAiY29tcG9zaXRlX2tleSI6ICI4S3pFVGREZU1ZN3hrcWtTa1kzR3NnX0RhbmllbF9yYW5hbGxvQHlhaG9vLmNvbSJ9",
+    "eyJlbnZpcm9ubWVudF9hcGlfa2V5IjogIjhLekVUZERlTVk3eGtxa1NrWTNHc2ciLCAiaWRlbnRpZmllciI6ICJhYXJub3V0QGxlbm92by5jb20iLCAiY29tcG9zaXRlX2tleSI6ICI4S3pFVGREZU1ZN3hrcWtTa1kzR3NnX2Fhcm5vdXRAbGVub3ZvLmNvbSJ9",
+    "eyJlbnZpcm9ubWVudF9hcGlfa2V5IjogIjhLekVUZERlTVk3eGtxa1NrWTNHc2ciLCAiaWRlbnRpZmllciI6ICJhZG1pbkBkZXYubG9jYWwiLCAiY29tcG9zaXRlX2tleSI6ICI4S3pFVGREZU1ZN3hrcWtTa1kzR3NnX2FkbWluQGRldi5sb2NhbCJ9",
+
+]
+const findPage = (str) =>{
+    if(!str) return 0
+    const res = pages.findIndex((v)=>{
+        return str.includes(v)
+    })
+    return res === -1? 0 : res
+}
 const controller = {
     getIdentities: (envId, page, pageSize, pageType) => {
+        if (store.isLoading) return
         store.loading();
         store.envId = envId;
-        const endpoint = (page && `${page}${store.search ? `&q=${encodeURIComponent(store.search)}&page_size=${pageSize || PAGE_SIZE}` : `&page_size=${pageSize || PAGE_SIZE}`}`) || `${Project.api}environments/${envId}/${Utils.getIdentitiesEndpoint()}/${store.search ? `?q=${encodeURIComponent(store.search)}&page_size=${pageSize || PAGE_SIZE}` : `?page_size=${pageSize || PAGE_SIZE}`}`;
+        let endpoint = (page && `${page}${store.search ? `&q=${encodeURIComponent(store.search)}&page_size=${pageSize || PAGE_SIZE}` : `&page_size=${pageSize || PAGE_SIZE}`}`) || `${Project.api}environments/${envId}/${Utils.getIdentitiesEndpoint()}/${store.search ? `?q=${encodeURIComponent(store.search)}&page_size=${pageSize || PAGE_SIZE}` : `?page_size=${pageSize || PAGE_SIZE}`}`;
+
+        if (Utils.getIsEdge()) {
+            if (!pageType) {
+                store.pages = [];
+            }
+            if (pageType === 'PREVIOUS') {
+                store.pages.splice(-1);
+                endpoint = store.paging.previous;
+
+            } else if (pageType === 'NEXT') {
+                endpoint = store.paging.next;
+            }
+
+
+        }
 
         data.get(endpoint)
             .then((res) => {
-
 
                 store.model = res && res.results && res.results.map((v)=>{
                     if (v.id) {
@@ -26,25 +55,18 @@ const controller = {
                 store.paging.count = res.count;
                 store.paging.previous = res.previous;
                 if (Utils.getIsEdge()) {
+                    const current_evaluated_key = Utils.fromParam(endpoint).last_evaluated_key;
 
-                    if (!pageType) {
-                        store.paging = [endpoint]
-                    } else if (store.current) {
-                        
+                    if (pageType === 'NEXT') { // Push the requested key as history
+                        store.pages.push(current_evaluated_key)
                     }
 
+                    const next_evaluated_key =  res.last_evaluated_key;
+                    const previous_evaluated_key = !store.pages.length ? null : store.pages[store.pages.length-2] || null;
+                    const strippedUrl = endpoint.replace(/&last_evaluated_key.*/g,"")
 
-                    //
-                    if (pageType === "PREVIOUS") {
-                        store.paging.slice(0,-1)
-                    } else if (pageType === "NEXT") {
-                        store.paging.push(endpoint)
-                    } else
-
-
-                    const params = Utils.fromParam(store.paging[store.paging.length-1])
-                    store.paging.next =
-                    store.paging.previous = `${store.paging[store.paging.length-1]}`
+                    store.paging.next = res.results && res.results.length === PAGE_SIZE ? strippedUrl + `&last_evaluated_key=${encodeURIComponent(next_evaluated_key)}` : null
+                    store.paging.previous = store.pages.length >= 1 ? strippedUrl + (previous_evaluated_key?`&last_evaluated_key=${encodeURIComponent(previous_evaluated_key)}`:"") : pageType ==="NEXT"? strippedUrl: null
                 }
                 store.paging.currentPage = endpoint.indexOf('?page=') !== -1 ? parseInt(endpoint.substr(endpoint.indexOf('?page=') + 6)) : 1;
                 store.loaded();
