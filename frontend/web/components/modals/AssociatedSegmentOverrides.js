@@ -139,12 +139,13 @@ class SegmentOverridesInner extends Component {
                         const save = ()=> {
                             FeatureListStore.isSaving = true;
                             FeatureListStore.trigger('change');
-                            this.setState({isSaving: true})
-                            !isSaving && name && editFlagSegments(projectId, environmentId, projectFlag, projectFlag, { }, segmentOverrides, ()=>{
+                            !isSaving && editFlagSegments(projectId, environmentId, projectFlag, projectFlag, { }, segmentOverrides, ()=>{
                                 toast("Segment override saved")
                                 this.setState({isSaving: false})
                                 this.props.onSave()
                             });
+                            this.setState({isSaving: true})
+
                         }
 
                         return (
