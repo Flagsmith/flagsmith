@@ -3,20 +3,6 @@ const data = require('../data/base/_data');
 
 const PAGE_SIZE = 10;
 
-const pages = [
-    null,
-    "eyJlbnZpcm9ubWVudF9hcGlfa2V5IjogIjhLekVUZERlTVk3eGtxa1NrWTNHc2ciLCAiaWRlbnRpZmllciI6ICJEYW5pZWxfcmFuYWxsb0B5YWhvby5jb20iLCAiY29tcG9zaXRlX2tleSI6ICI4S3pFVGREZU1ZN3hrcWtTa1kzR3NnX0RhbmllbF9yYW5hbGxvQHlhaG9vLmNvbSJ9",
-    "eyJlbnZpcm9ubWVudF9hcGlfa2V5IjogIjhLekVUZERlTVk3eGtxa1NrWTNHc2ciLCAiaWRlbnRpZmllciI6ICJhYXJub3V0QGxlbm92by5jb20iLCAiY29tcG9zaXRlX2tleSI6ICI4S3pFVGREZU1ZN3hrcWtTa1kzR3NnX2Fhcm5vdXRAbGVub3ZvLmNvbSJ9",
-    "eyJlbnZpcm9ubWVudF9hcGlfa2V5IjogIjhLekVUZERlTVk3eGtxa1NrWTNHc2ciLCAiaWRlbnRpZmllciI6ICJhZG1pbkBkZXYubG9jYWwiLCAiY29tcG9zaXRlX2tleSI6ICI4S3pFVGREZU1ZN3hrcWtTa1kzR3NnX2FkbWluQGRldi5sb2NhbCJ9",
-
-]
-const findPage = (str) =>{
-    if(!str) return 0
-    const res = pages.findIndex((v)=>{
-        return str.includes(v)
-    })
-    return res === -1? 0 : res
-}
 const controller = {
     getIdentities: (envId, page, pageSize, pageType) => {
         if (store.isLoading) return
