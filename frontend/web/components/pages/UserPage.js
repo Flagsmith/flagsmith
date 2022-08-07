@@ -83,8 +83,10 @@ const UserPage = class extends Component {
             }).catch((err) => {
             });
         } else {
-            const url = `${Project.api}environments/${environmentId}/${Utils.getIdentitiesEndpoint()}/${Utils.getIsEdge()?id:identity}/${Utils.getFeatureStatesEndpoint()}/all/`;
-            _data.get(url,).then(res => res.json()).then((res) => {
+            const url = `${Utils.getSDKEndpoint()}identities/?identifier=${this.props.match.params.identity}`;
+            fetch(url, {
+                headers: { 'X-Environment-Key': this.props.match.params.environmentId },
+            }).then(res => res.json()).then((res) => {
                 this.setState({ actualFlags: _.keyBy(res.flags, v => v.feature.name) });
             }).catch((err) => {
             });
