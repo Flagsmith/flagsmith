@@ -24,7 +24,7 @@ def get_all_feature_states_for_edge_identity(
     :return: tuple of (list of feature states, set of feature names that were overridden
         for the identity specifically)
     """
-    segment_ids = Identity.dynamo_wrapper.get_segment_ids(identity)
+    segment_ids = Identity.dynamo_wrapper.get_segment_ids(identity_model=identity)
     django_environment = Environment.objects.get(api_key=identity.environment_api_key)
 
     q = Q(identity__isnull=True) & (
