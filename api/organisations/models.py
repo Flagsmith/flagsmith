@@ -18,12 +18,16 @@ from organisations.chargebee import (
     get_max_seats_for_plan,
     get_plan_meta_data,
     get_portal_url,
+    get_subscription_metadata,
 )
 from organisations.subscriptions.constants import (
     CHARGEBEE,
+    FREE_PLAN_SUBSCRIPTION_METADATA,
     MAX_SEATS_IN_FREE_PLAN,
     SUBSCRIPTION_PAYMENT_METHODS,
+    XERO,
 )
+from organisations.subscriptions.dataclasses import BaseSubscriptionMetadata
 from users.utils.mailer_lite import MailerLite
 from webhooks.models import AbstractBaseWebhookModel
 
@@ -154,6 +158,24 @@ class Subscription(LifecycleModelMixin, AbstractBaseExportableModel):
             )
             self.save()
         return get_portal_url(self.customer_id, redirect_url)
+
+    def get_subscription_metadata(self) -> BaseSubscriptionMetadata:
+        metadata = None
+
+        if self.payment_method == CHARGEBEE and self.subscription_id:
+            metadata = get_subscription_metadata(self.subscription_id)
+        elif self.payment_method == XERO and self.subscription_id:
+            metadata = BaseSubscriptionMetadata(
+                seats=self.max_seats,
+                api_calls=self.max_api_calls,
+                projects=None,
+                payment_source=XERO,
+            )
+
+        if not metadata:
+            metadata = FREE_PLAN_SUBSCRIPTION_METADATA
+
+        return metadata
 
 
 class OrganisationWebhook(AbstractBaseWebhookModel):

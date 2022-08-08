@@ -25,6 +25,7 @@ from organisations.models import (
 from organisations.permissions.models import UserOrganisationPermission
 from organisations.permissions.permissions import CREATE_PROJECT
 from organisations.subscriptions.constants import (
+    CHARGEBEE,
     MAX_API_CALLS_IN_FREE_PLAN,
     MAX_PROJECTS_IN_FREE_PLAN,
     MAX_SEATS_IN_FREE_PLAN,
@@ -778,14 +779,16 @@ class OrganisationWebhookViewSetTestCase(TestCase):
         assert args[0].url == self.valid_webhook_url
 
 
-def test_get_subscription_metadata(mocker, organisation, admin_client, subscription):
+def test_get_subscription_metadata(
+    mocker, organisation, admin_client, chargebee_subscription
+):
     # Given
     expected_seats = 10
     expected_projects = 5
     expected_api_calls = 100
 
     get_subscription_metadata = mocker.patch(
-        "organisations.views.get_subscription_metadata",
+        "organisations.models.get_subscription_metadata",
         return_value=ChargebeeObjMetadata(
             seats=expected_seats,
             projects=expected_projects,
@@ -807,8 +810,11 @@ def test_get_subscription_metadata(mocker, organisation, admin_client, subscript
         "max_seats": expected_seats,
         "max_projects": expected_projects,
         "max_api_calls": expected_api_calls,
+        "payment_source": CHARGEBEE,
     }
-    get_subscription_metadata.assert_called_once_with(subscription.subscription_id)
+    get_subscription_metadata.assert_called_once_with(
+        chargebee_subscription.subscription_id
+    )
 
 
 def test_get_subscription_metadata_returns_404_if_the_organisation_have_no_subscription(
@@ -816,7 +822,7 @@ def test_get_subscription_metadata_returns_404_if_the_organisation_have_no_subsc
 ):
     # Given
     get_subscription_metadata = mocker.patch(
-        "organisations.views.get_subscription_metadata"
+        "organisations.models.get_subscription_metadata"
     )
 
     url = reverse(
@@ -833,11 +839,11 @@ def test_get_subscription_metadata_returns_404_if_the_organisation_have_no_subsc
 
 
 def test_get_subscription_metadata_returns_defaults_if_chargebee_error(
-    mocker, organisation, admin_client, subscription
+    mocker, organisation, admin_client, chargebee_subscription
 ):
     # Given
     get_subscription_metadata = mocker.patch(
-        "organisations.views.get_subscription_metadata"
+        "organisations.models.get_subscription_metadata"
     )
     get_subscription_metadata.return_value = None
 
@@ -851,7 +857,9 @@ def test_get_subscription_metadata_returns_defaults_if_chargebee_error(
 
     # Then
     assert response.status_code == status.HTTP_200_OK
-    get_subscription_metadata.assert_called_once_with(subscription.subscription_id)
+    get_subscription_metadata.assert_called_once_with(
+        chargebee_subscription.subscription_id
+    )
     assert response.json() == {
         "max_seats": MAX_SEATS_IN_FREE_PLAN,
         "max_api_calls": MAX_API_CALLS_IN_FREE_PLAN,

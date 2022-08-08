@@ -7,7 +7,9 @@ from organisations.subscriptions.dataclasses import BaseSubscriptionMetadata
 
 @dataclass
 class ChargebeeObjMetadata(BaseSubscriptionMetadata):
-    payment_source = CHARGEBEE
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.payment_source = CHARGEBEE
 
 
 class ChargebeeItem(Enum):

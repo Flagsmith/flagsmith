@@ -4,7 +4,14 @@ import pytest
 from django.test import TestCase
 from rest_framework.test import override_settings
 
+from organisations.chargebee.metadata import ChargebeeObjMetadata
 from organisations.models import Organisation, Subscription
+from organisations.subscriptions.constants import (
+    CHARGEBEE,
+    FREE_PLAN_SUBSCRIPTION_METADATA,
+    XERO,
+)
+from organisations.subscriptions.dataclasses import BaseSubscriptionMetadata
 
 
 @pytest.mark.django_db
@@ -147,3 +154,57 @@ def test_organisation_is_paid_returns_false_if_cancelled_subscription_exists(db)
     )
     # Then
     assert organisation.is_paid is False
+
+
+def test_subscription_get_subscription_metadata_returns_cb_metadata_for_cb_subscription(
+    mocker,
+):
+    # Given
+    subscription = Subscription(
+        payment_method=CHARGEBEE, subscription_id="cb-subscription"
+    )
+
+    expected_metadata = ChargebeeObjMetadata(seats=10, api_calls=50000000, projects=10)
+    mock_cb_get_subscription_metadata = mocker.patch(
+        "organisations.models.get_subscription_metadata"
+    )
+    mock_cb_get_subscription_metadata.return_value = expected_metadata
+
+    # When
+    subscription_metadata = subscription.get_subscription_metadata()
+
+    # Then
+    mock_cb_get_subscription_metadata.assert_called_once_with(
+        subscription.subscription_id
+    )
+    assert subscription_metadata == expected_metadata
+
+
+def test_subscription_get_subscription_metadata_returns_xero_metadata_for_xero_sub():
+    # Given
+    subscription = Subscription(
+        payment_method=XERO, subscription_id="xero-subscription"
+    )
+
+    expected_metadata = BaseSubscriptionMetadata(
+        seats=subscription.max_seats,
+        api_calls=subscription.max_api_calls,
+        payment_source=XERO,
+    )
+
+    # When
+    subscription_metadata = subscription.get_subscription_metadata()
+
+    # Then
+    assert subscription_metadata == expected_metadata
+
+
+def test_subscription_get_subscription_metadata_returns_free_plan_metadata_for_no_plan():
+    # Given
+    subscription = Subscription()
+
+    # When
+    subscription_metadata = subscription.get_subscription_metadata()
+
+    # Then
+    assert subscription_metadata == FREE_PLAN_SUBSCRIPTION_METADATA
