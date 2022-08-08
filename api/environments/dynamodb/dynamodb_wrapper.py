@@ -109,7 +109,7 @@ class DynamoIdentityWrapper(DynamoWrapper):
     def get_segment_ids(
         self, identity_pk: str = None, identity_model: IdentityModel = None
     ) -> list:
-        if not identity_pk or identity_model:
+        if not (identity_pk or identity_model):
             raise ValueError("Must provide one of identity_pk or identity_model.")
 
         with suppress(ObjectDoesNotExist):
