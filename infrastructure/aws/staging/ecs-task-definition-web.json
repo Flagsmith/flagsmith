@@ -154,6 +154,10 @@
             ],
             "secrets": [
                 {
+                    "name": "CHARGEBEE_API_KEY",
+                    "valueFrom": "arn:aws:secretsmanager:eu-west-2:302456015006:secret:ECS-API-heAdoB:CHARGEBEE_API_KEY::"
+                },
+                {
                     "name": "DATABASE_URL",
                     "valueFrom": "arn:aws:secretsmanager:eu-west-2:302456015006:secret:ECS-API-heAdoB:DATABASE_URL::"
                 },
