@@ -9,6 +9,7 @@ import Constants from '../../../common/constants';
 import Tabs from '../base/forms/Tabs';
 import TabItem from '../base/forms/TabItem';
 import AssociatedSegmentOverrides from './AssociatedSegmentOverrides';
+import InfoMessage from "../InfoMessage";
 
 const SEGMENT_ID_MAXLENGTH = Constants.forms.maxLength.SEGMENT_ID;
 
@@ -208,6 +209,12 @@ const CreateSegment = class extends Component {
                 id="create-segment-modal"
                 onSubmit={this.save}
             >
+                <div className="mt-4">
+
+                    <InfoMessage>
+                        Learn more about rule and trait value type conversions <a href="https://docs-git-improvement-segment-rule-value-typing-flagsmith.vercel.app/basic-features/managing-segments#rule-typing">here</a>.
+                    </InfoMessage>
+                </div>
                 <FormGroup className="mb-4">
                     <InputGroup
                         ref={e => this.input = e}
