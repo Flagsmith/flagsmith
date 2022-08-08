@@ -219,6 +219,14 @@ class Webhook(AbstractBaseWebhookModel):
         identity_identifier: str = None,
         feature_segment: FeatureSegment = None,
     ) -> dict:
+        if (identity_id or identity_identifier) and not (
+            identity_id and identity_identifier
+        ):
+            raise ValueError("Must provide both identity_id and identity_identifier.")
+
+        if (identity_id and identity_identifier) and feature_segment:
+            raise ValueError("Cannot provide identity information and feature segment")
+
         # TODO: refactor to use a serializer / schema
         data = {
             "feature": {
