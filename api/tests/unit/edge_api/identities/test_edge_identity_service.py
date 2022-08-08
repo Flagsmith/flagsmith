@@ -47,3 +47,7 @@ def test_get_all_feature_states_for_edge_identity_uses_segment_priorities(
     # Then
     assert len(feature_states) == 1
     assert feature_states[0] == segment_override_p1
+
+    dynamo_wrapper_mock.get_segment_ids.assert_called_once_with(
+        identity_model=identity_model
+    )
