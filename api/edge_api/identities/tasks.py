@@ -20,8 +20,11 @@ def call_environment_webhook(
     previous_enabled_state: bool = None,
     previous_value: typing.Union[bool, int, str] = None,
 ):
-    feature = Feature.objects.get(id=feature_id)
     environment = Environment.objects.get(api_key=environment_api_key)
+    if not environment.webhooks.exists():
+        return
+
+    feature = Feature.objects.get(id=feature_id)
     changed_by = FFAdminUser.objects.get(id=changed_by_user_id)
 
     data = {
