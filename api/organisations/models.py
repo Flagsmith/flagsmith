@@ -19,6 +19,11 @@ from organisations.chargebee import (
     get_plan_meta_data,
     get_portal_url,
 )
+from organisations.subscriptions.constants import (
+    CHARGEBEE,
+    MAX_SEATS_IN_FREE_PLAN,
+    SUBSCRIPTION_PAYMENT_METHODS,
+)
 from users.utils.mailer_lite import MailerLite
 from webhooks.models import AbstractBaseWebhookModel
 
@@ -81,7 +86,7 @@ class Organisation(AbstractBaseExportableModel):
         if self.has_subscription():
             return self.num_seats > self.subscription.max_seats
 
-        return self.num_seats > Subscription.MAX_SEATS_IN_FREE_PLAN
+        return self.num_seats > MAX_SEATS_IN_FREE_PLAN
 
     def reset_alert_status(self):
         self.alerted_over_plan_limit = False
@@ -102,15 +107,6 @@ class UserOrganisation(models.Model):
 
 
 class Subscription(LifecycleModelMixin, AbstractBaseExportableModel):
-    MAX_SEATS_IN_FREE_PLAN = 1
-    MAX_API_CALLS_IN_FREE_PLAN = 50000
-    MAX_PROJECTS_IN_FREE_PLAN = 1
-    SUBSCRIPTION_DEFAULT_LIMITS = (
-        MAX_API_CALLS_IN_FREE_PLAN,
-        MAX_SEATS_IN_FREE_PLAN,
-        MAX_PROJECTS_IN_FREE_PLAN,
-    )
-
     organisation = models.OneToOneField(
         Organisation, on_delete=models.CASCADE, related_name="subscription"
     )
@@ -122,15 +118,9 @@ class Subscription(LifecycleModelMixin, AbstractBaseExportableModel):
     cancellation_date = models.DateTimeField(blank=True, null=True)
     customer_id = models.CharField(max_length=100, blank=True, null=True)
 
-    CHARGEBEE = "CHARGEBEE"
-    XERO = "XERO"
-    PAYMENT_METHODS = [
-        (CHARGEBEE, "Chargebee"),
-        (XERO, "Xero"),
-    ]
     payment_method = models.CharField(
         max_length=20,
-        choices=PAYMENT_METHODS,
+        choices=SUBSCRIPTION_PAYMENT_METHODS,
         default=CHARGEBEE,
     )
     notes = models.CharField(max_length=500, blank=True, null=True)

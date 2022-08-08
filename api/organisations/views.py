@@ -52,6 +52,7 @@ from webhooks.mixins import TriggerSampleWebhookMixin
 from webhooks.webhooks import WebhookType
 
 from .chargebee import get_subscription_metadata
+from .subscriptions.constants import FREE_PLAN_SUBSCRIPTION_METADATA
 
 logger = logging.getLogger(__name__)
 
@@ -172,9 +173,13 @@ class OrganisationViewSet(viewsets.ModelViewSet):
         organisation = self.get_object()
         if not organisation.has_subscription():
             raise SubscriptionNotFound()
+
         subscription_details = get_subscription_metadata(
             organisation.subscription.subscription_id
         )
+        if not subscription_details:
+            subscription_details = FREE_PLAN_SUBSCRIPTION_METADATA
+
         serializer = self.get_serializer(instance=subscription_details)
         return Response(serializer.data)
 

@@ -2,6 +2,7 @@ from datetime import datetime
 from unittest import TestCase, mock
 
 from _pytest.monkeypatch import MonkeyPatch
+from chargebee import APIError
 from pytz import UTC
 
 from organisations.chargebee import (
@@ -260,3 +261,21 @@ def test_get_subscription_metadata(mocker, chargebee_object_metadata):
     assert subscription_metadata.seats == chargebee_object_metadata.seats * 2
     assert subscription_metadata.api_calls == chargebee_object_metadata.api_calls * 2
     assert subscription_metadata.projects == chargebee_object_metadata.projects * 2
+
+
+def test_get_subscription_metadata_returns_null_if_chargebee_error(
+    mocker, chargebee_object_metadata
+):
+    # Given
+    mocked_chargebee = mocker.patch("organisations.chargebee.chargebee.chargebee")
+    mocked_chargebee.Subscription.retrieve.side_effect = APIError(
+        http_code=200, json_obj=mocker.MagicMock()
+    )
+
+    subscription_id = "foo"  # arbitrary subscription id
+
+    # When
+    subscription_metadata = get_subscription_metadata(subscription_id)
+
+    # Then
+    assert subscription_metadata is None
