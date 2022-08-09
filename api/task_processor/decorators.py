@@ -31,7 +31,7 @@ def register_task_handler(task_name: str = None):
 
         # TODO: remove this functionality and use delay in all scenarios
         def run_in_thread(*args, **kwargs):
-            logger.warning("Running function %s in unmanaged thread.", f.__name__)
+            logger.info("Running function %s in unmanaged thread.", f.__name__)
             Thread(target=f, args=args, kwargs=kwargs, daemon=True).start()
 
         f.delay = delay

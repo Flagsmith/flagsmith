@@ -1,11 +1,13 @@
 from django.utils import timezone
 
-from edge_api.identities.tasks import call_environment_webhook
+from edge_api.identities.tasks import (
+    call_environment_webhook_for_feature_state_change,
+)
 from environments.models import Webhook
 from webhooks.webhooks import WebhookEventType
 
 
-def test_call_environment_webhook_with_new_state_only(
+def test_call_environment_webhook_for_feature_state_change_with_new_state_only(
     mocker, environment, feature, identity, admin_user
 ):
     # Given
@@ -26,7 +28,7 @@ def test_call_environment_webhook_with_new_state_only(
     new_value = "foo"
 
     # When
-    call_environment_webhook(
+    call_environment_webhook_for_feature_state_change(
         feature_id=feature.id,
         environment_api_key=environment.api_key,
         identity_id=identity.id,
@@ -58,7 +60,7 @@ def test_call_environment_webhook_with_new_state_only(
     assert data["timestamp"] == now_isoformat
 
 
-def test_call_environment_webhook_with_previous_state_only(
+def test_call_environment_webhook_for_feature_state_change_with_previous_state_only(
     mocker, environment, feature, identity, admin_user
 ):
     # Given
@@ -79,7 +81,7 @@ def test_call_environment_webhook_with_previous_state_only(
     previous_value = "foo"
 
     # When
-    call_environment_webhook(
+    call_environment_webhook_for_feature_state_change(
         feature_id=feature.id,
         environment_api_key=environment.api_key,
         identity_id=identity.id,
@@ -111,7 +113,7 @@ def test_call_environment_webhook_with_previous_state_only(
     assert data["timestamp"] == now_isoformat
 
 
-def test_call_environment_webhook_with_both_states(
+def test_call_environment_webhook_for_feature_state_change_with_both_states(
     mocker, environment, feature, identity, admin_user
 ):
     # Given
@@ -135,7 +137,7 @@ def test_call_environment_webhook_with_both_states(
     new_value = "bar"
 
     # When
-    call_environment_webhook(
+    call_environment_webhook_for_feature_state_change(
         feature_id=feature.id,
         environment_api_key=environment.api_key,
         identity_id=identity.id,
@@ -181,3 +183,31 @@ def test_call_environment_webhook_with_both_states(
     assert data["new_state"] == mock_feature_state_data
     assert data["changed_by"] == admin_user.email
     assert data["timestamp"] == now_isoformat
+
+
+def test_call_environment_webhook_for_feature_state_change_does_nothing_if_no_webhooks(
+    mocker, environment, feature, identity, admin_user
+):
+    # Given
+    mock_call_environment_webhooks = mocker.patch(
+        "edge_api.identities.tasks.call_environment_webhooks"
+    )
+    Webhook.objects.create(
+        environment=environment, url="https://foo.com/webhook", enabled=False
+    )
+    now_isoformat = timezone.now().isoformat()
+
+    # When
+    call_environment_webhook_for_feature_state_change(
+        feature_id=feature.id,
+        environment_api_key=environment.api_key,
+        identity_id=identity.id,
+        identity_identifier=identity.identifier,
+        changed_by_user_id=admin_user.id,
+        timestamp=now_isoformat,
+        new_enabled_state=True,
+        new_value="foo",
+    )
+
+    # Then
+    mock_call_environment_webhooks.assert_not_called()

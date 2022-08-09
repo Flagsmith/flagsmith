@@ -2,7 +2,7 @@ from threading import Thread
 
 from environments.models import Webhook
 from features.models import FeatureState
-from webhooks.constants import DATETIME_FORMAT
+from webhooks.constants import WEBHOOK_DATETIME_FORMAT
 from webhooks.webhooks import (
     WebhookEventType,
     call_environment_webhooks,
@@ -19,7 +19,7 @@ def trigger_feature_state_change_webhooks(
 
     history_instance = instance.history.first()
     timestamp = (
-        history_instance.history_date.strftime(DATETIME_FORMAT)
+        history_instance.history_date.strftime(WEBHOOK_DATETIME_FORMAT)
         if history_instance and history_instance.history_date
         else ""
     )

@@ -23,9 +23,9 @@ from environments.models import Environment
 from features.models import Feature, FeatureState, FeatureStateValue
 from features.multivariate.models import MultivariateFeatureOption
 from features.serializers import FeatureStateValueSerializer
-from webhooks.constants import DATETIME_FORMAT
+from webhooks.constants import WEBHOOK_DATETIME_FORMAT
 
-from .tasks import call_environment_webhook
+from .tasks import call_environment_webhook_for_feature_state_change
 
 engine_multi_fs_value_schema = MultivariateFeatureStateValueSchema()
 
@@ -171,7 +171,7 @@ class EdgeIdentityFeatureStateSerializer(serializers.Serializer):
         )
 
         # TODO: use async processor instead of `run_in_thread`
-        call_environment_webhook.run_in_thread(
+        call_environment_webhook_for_feature_state_change.run_in_thread(
             feature_id=self.instance.feature.id,
             environment_api_key=identity.environment_api_key,
             identity_id=identity_id,
@@ -181,7 +181,7 @@ class EdgeIdentityFeatureStateSerializer(serializers.Serializer):
             new_value=new_value,
             previous_enabled_state=getattr(previous_state, "enabled", None),
             previous_value=previous_value,
-            timestamp=timezone.now().strftime(DATETIME_FORMAT),
+            timestamp=timezone.now().strftime(WEBHOOK_DATETIME_FORMAT),
         )
 
         return self.instance

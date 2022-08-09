@@ -1,1 +1,1 @@
-DATETIME_FORMAT = "%Y-%m-%dT%H:%M:%S.%fZ"
+WEBHOOK_DATETIME_FORMAT = "%Y-%m-%dT%H:%M:%S.%fZ"
