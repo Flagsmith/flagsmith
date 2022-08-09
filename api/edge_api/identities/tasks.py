@@ -11,7 +11,7 @@ logger = logging.getLogger(__name__)
 
 
 @register_task_handler()
-def call_environment_webhook(
+def call_environment_webhook_for_feature_state_change(
     feature_id: int,
     environment_api_key: str,
     identity_id: typing.Union[id, str],
