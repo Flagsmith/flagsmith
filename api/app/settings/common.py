@@ -667,4 +667,5 @@ SAML_USE_NAME_ID_AS_EMAIL = env.bool("SAML_USE_NAME_ID_AS_EMAIL", False)
 # Used to control the size(number of identities) of the project that can be self migrated to edge
 MAX_SELF_MIGRATABLE_IDENTITIES = env.int("MAX_SELF_MIGRATABLE_IDENTITIES", 100000)
 
+# Setting to allow asynchronous tasks to be run synchronously for testing purposes
 RUN_TASKS_SYNCHRONOUSLY = env.bool("RUN_TASKS_SYNCHRONOUSLY", True)

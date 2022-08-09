@@ -1,6 +1,8 @@
 from threading import Thread
 
+from environments.models import Webhook
 from features.models import FeatureState
+from webhooks.constants import DATETIME_FORMAT
 from webhooks.webhooks import (
     WebhookEventType,
     call_environment_webhooks,
@@ -8,8 +10,6 @@ from webhooks.webhooks import (
 )
 
 from .models import HistoricalFeatureState
-
-date_format = "%Y-%m-%dT%H:%M:%S.%fZ"
 
 
 def trigger_feature_state_change_webhooks(
@@ -19,7 +19,7 @@ def trigger_feature_state_change_webhooks(
 
     history_instance = instance.history.first()
     timestamp = (
-        history_instance.history_date.strftime(date_format)
+        history_instance.history_date.strftime(DATETIME_FORMAT)
         if history_instance and history_instance.history_date
         else ""
     )
@@ -67,50 +67,18 @@ def _get_previous_state(
 
 def _get_feature_state_webhook_data(feature_state, previous=False):
     # TODO: fix circular imports and use serializers instead.
-    feature = feature_state.feature
     feature_state_value = (
         feature_state.get_feature_state_value()
         if not previous
         else feature_state.previous_feature_state_value
     )
-    identity_identifier = (
-        feature_state.identity.identifier if feature_state.identity else None
+
+    return Webhook.generate_webhook_feature_state_data(
+        feature_state.feature,
+        environment=feature_state.environment,
+        enabled=feature_state.enabled,
+        value=feature_state_value,
+        identity_id=feature_state.identity_id,
+        identity_identifier=getattr(feature_state.identity, "identifier", None),
+        feature_segment=feature_state.feature_segment,
     )
-
-    data = {
-        "feature": {
-            "id": feature.id,
-            "created_date": feature.created_date.strftime(date_format),
-            "default_enabled": feature.default_enabled,
-            "description": feature.description,
-            "initial_value": feature.initial_value,
-            "name": feature.name,
-            "project": {
-                "id": feature.project_id,
-                "name": feature.project.name,
-            },
-            "type": feature.type,
-        },
-        "environment": {
-            "id": feature_state.environment_id,
-            "name": feature_state.environment.name,
-        },
-        "identity": feature_state.identity_id,
-        "identity_identifier": identity_identifier,
-        "feature_segment": None,  # default to none, will be updated below if it exists
-        "enabled": feature_state.enabled,
-        "feature_state_value": feature_state_value,
-    }
-
-    if feature_state.feature_segment:
-        feature_segment = feature_state.feature_segment
-        data["feature_segment"] = {
-            "segment": {
-                "id": feature_segment.segment.id,
-                "name": feature_segment.segment.name,
-                "description": feature_segment.segment.description,
-            },
-            "priority": feature_segment.priority,
-        }
-
-    return data

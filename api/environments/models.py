@@ -27,7 +27,7 @@ from environments.api_keys import (
 from environments.dynamodb import DynamoEnvironmentWrapper
 from environments.exceptions import EnvironmentHeaderNotPresentError
 from environments.managers import EnvironmentManager
-from features.models import FeatureState
+from features.models import Feature, FeatureSegment, FeatureState
 from projects.models import Project
 from webhooks.models import AbstractBaseWebhookModel
 
@@ -208,6 +208,60 @@ class Webhook(AbstractBaseWebhookModel):
     enabled = models.BooleanField(default=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
+
+    @staticmethod
+    def generate_webhook_feature_state_data(
+        feature: Feature,
+        environment: Environment,
+        enabled: bool,
+        value: typing.Union[str, int, bool, type(None)],
+        identity_id: typing.Union[int, str] = None,
+        identity_identifier: str = None,
+        feature_segment: FeatureSegment = None,
+    ) -> dict:
+        if (identity_id or identity_identifier) and not (
+            identity_id and identity_identifier
+        ):
+            raise ValueError("Must provide both identity_id and identity_identifier.")
+
+        if (identity_id and identity_identifier) and feature_segment:
+            raise ValueError("Cannot provide identity information and feature segment")
+
+        # TODO: refactor to use a serializer / schema
+        data = {
+            "feature": {
+                "id": feature.id,
+                "created_date": feature.created_date.strftime("%Y-%m-%dT%H:%M:%S.%fZ"),
+                "default_enabled": feature.default_enabled,
+                "description": feature.description,
+                "initial_value": feature.initial_value,
+                "name": feature.name,
+                "project": {
+                    "id": feature.project_id,
+                    "name": feature.project.name,
+                },
+                "type": feature.type,
+            },
+            "environment": {
+                "id": environment.id,
+                "name": environment.name,
+            },
+            "identity": identity_id,
+            "identity_identifier": identity_identifier,
+            "feature_segment": None,
+            "enabled": enabled,
+            "feature_state_value": value,
+        }
+        if feature_segment:
+            data["feature_segment"] = {
+                "segment": {
+                    "id": feature_segment.segment_id,
+                    "name": feature_segment.segment.name,
+                    "description": feature_segment.segment.description,
+                },
+                "priority": feature_segment.priority,
+            }
+        return data
 
 
 dynamo_api_key_table = None
