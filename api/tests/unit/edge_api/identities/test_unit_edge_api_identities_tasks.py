@@ -181,3 +181,31 @@ def test_call_environment_webhook_with_both_states(
     assert data["new_state"] == mock_feature_state_data
     assert data["changed_by"] == admin_user.email
     assert data["timestamp"] == now_isoformat
+
+
+def test_call_environment_webhook_does_nothing_if_no_enabled_environment_webhooks(
+    mocker, environment, feature, identity, admin_user
+):
+    # Given
+    mock_call_environment_webhooks = mocker.patch(
+        "edge_api.identities.tasks.call_environment_webhooks"
+    )
+    Webhook.objects.create(
+        environment=environment, url="https://foo.com/webhook", enabled=False
+    )
+    now_isoformat = timezone.now().isoformat()
+
+    # When
+    call_environment_webhook(
+        feature_id=feature.id,
+        environment_api_key=environment.api_key,
+        identity_id=identity.id,
+        identity_identifier=identity.identifier,
+        changed_by_user_id=admin_user.id,
+        timestamp=now_isoformat,
+        new_enabled_state=True,
+        new_value="foo",
+    )
+
+    # Then
+    mock_call_environment_webhooks.assert_not_called()

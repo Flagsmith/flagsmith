@@ -1,3 +1,4 @@
+import logging
 import typing
 
 from environments.models import Environment, Webhook
@@ -5,6 +6,8 @@ from features.models import Feature
 from task_processor.decorators import register_task_handler
 from users.models import FFAdminUser
 from webhooks.webhooks import WebhookEventType, call_environment_webhooks
+
+logger = logging.getLogger(__name__)
 
 
 @register_task_handler()
@@ -22,6 +25,10 @@ def call_environment_webhook(
 ):
     environment = Environment.objects.get(api_key=environment_api_key)
     if not environment.webhooks.filter(enabled=True).exists():
+        logger.debug(
+            "No webhooks exist for environment %d. Not calling webhooks.",
+            environment.id,
+        )
         return
 
     feature = Feature.objects.get(id=feature_id)
