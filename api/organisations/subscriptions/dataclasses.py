@@ -20,10 +20,20 @@ class BaseSubscriptionMetadata:
                 "Cannot add SubscriptionMetadata from multiple payment sources."
             )
 
+        # TODO: test this logic and confirm that it's correct
+        if self.projects is not None and other.projects is not None:
+            projects = self.projects + other.projects
+        elif self.projects is None and other.projects is not None:
+            projects = other.projects
+        elif other.projects is None and self.projects is None:
+            projects = self.projects
+        else:
+            projects = None
+
         return BaseSubscriptionMetadata(
             seats=self.seats + other.seats,
             api_calls=self.api_calls + other.api_calls,
-            projects=self.projects + other.projects,
+            projects=projects,
             payment_source=self.payment_source,
         )
 
