@@ -66,7 +66,7 @@ def test_edge_identity_feature_state_serializer_save_calls_webhook_for_new_overr
 
     mocker.patch("edge_api.identities.serializers.Identity.dynamo_wrapper")
     mock_call_environment_webhook = mocker.patch(
-        "edge_api.identities.serializers.call_environment_webhook"
+        "edge_api.identities.serializers.call_environment_webhook_for_feature_state_change"
     )
 
     now = timezone.now()
@@ -123,7 +123,7 @@ def test_edge_identity_feature_state_serializer_save_calls_webhook_for_update(
 
     mocker.patch("edge_api.identities.serializers.Identity.dynamo_wrapper")
     mock_call_environment_webhook = mocker.patch(
-        "edge_api.identities.serializers.call_environment_webhook"
+        "edge_api.identities.serializers.call_environment_webhook_for_feature_state_change"
     )
 
     now = timezone.now()
