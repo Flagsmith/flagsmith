@@ -106,11 +106,13 @@ class IdentityAllFeatureStatesSerializer(serializers.Serializer):
         self, instance: typing.Union[FeatureState, FeatureStateModel]
     ) -> typing.Union[str, int, bool]:
         identity = self.context["identity"]
-        identity_id = getattr(identity, "id", None) or getattr(
-            identity, "django_id", identity.identity_uuid
-        )
 
-        if type(instance) == FeatureState:
+        if isinstance(identity, Identity):
+            identity_id = identity.id
+        else:
+            identity_id = identity.django_id or identity.identity_uuid
+
+        if isinstance(instance, FeatureState):
             return instance.get_feature_state_value_by_id(identity_id)
 
         return instance.get_value(identity_id)
