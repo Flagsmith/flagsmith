@@ -4,7 +4,11 @@ from flag_engine.features.models import FeatureModel, FeatureStateModel
 from flag_engine.identities.builders import build_identity_model
 
 from edge_api.identities.serializers import EdgeIdentityFeatureStateSerializer
+from environments.identities.serializers import (
+    IdentityAllFeatureStatesSerializer,
+)
 from features.feature_types import STANDARD
+from features.models import FeatureState
 from webhooks.constants import WEBHOOK_DATETIME_FORMAT
 
 
@@ -146,3 +150,26 @@ def test_edge_identity_feature_state_serializer_save_calls_webhook_for_update(
         previous_value=previous_value,
         timestamp=now.strftime(WEBHOOK_DATETIME_FORMAT),
     )
+
+
+def test_all_feature_states_serializer_get_feature_state_value_uses_mv_values_for_edge(
+    identity, multivariate_feature, environment
+):
+    # Given
+    identity_document = build_identity_document(identity)
+    del identity_document["django_id"]  # delete django id to simulate an edge identity
+    identity_model = build_identity_model(identity_document)
+
+    feature_state = FeatureState.objects.get(
+        feature=multivariate_feature, environment=environment
+    )
+
+    serializer = IdentityAllFeatureStatesSerializer(
+        context={"identity": identity_model}
+    )
+
+    # When
+    value = serializer.get_feature_state_value(instance=feature_state)
+
+    # Then
+    assert value != multivariate_feature.initial_value
