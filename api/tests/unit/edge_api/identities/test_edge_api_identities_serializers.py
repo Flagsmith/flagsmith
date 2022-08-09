@@ -5,7 +5,7 @@ from flag_engine.identities.builders import build_identity_model
 
 from edge_api.identities.serializers import EdgeIdentityFeatureStateSerializer
 from features.feature_types import STANDARD
-from webhooks.constants import DATETIME_FORMAT
+from webhooks.constants import WEBHOOK_DATETIME_FORMAT
 
 
 def test_edge_identity_feature_state_serializer_save_allows_missing_mvfsvs(
@@ -87,7 +87,7 @@ def test_edge_identity_feature_state_serializer_save_calls_webhook_for_new_overr
         new_value=new_value,
         previous_enabled_state=None,
         previous_value=None,
-        timestamp=now.strftime(DATETIME_FORMAT),
+        timestamp=now.strftime(WEBHOOK_DATETIME_FORMAT),
     )
 
 
@@ -144,5 +144,5 @@ def test_edge_identity_feature_state_serializer_save_calls_webhook_for_update(
         new_value=new_value,
         previous_enabled_state=previous_enabled_state,
         previous_value=previous_value,
-        timestamp=now.strftime(DATETIME_FORMAT),
+        timestamp=now.strftime(WEBHOOK_DATETIME_FORMAT),
     )
