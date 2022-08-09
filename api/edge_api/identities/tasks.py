@@ -14,14 +14,14 @@ def call_environment_webhook(
     identity_id: typing.Union[id, str],
     identity_identifier: str,
     changed_by_user_id: int,
-    new_enabled_state: bool,
-    new_value: typing.Union[bool, int, str],
     timestamp: str,
+    new_enabled_state: bool = None,
+    new_value: typing.Union[bool, int, str] = None,
     previous_enabled_state: bool = None,
     previous_value: typing.Union[bool, int, str] = None,
 ):
     environment = Environment.objects.get(api_key=environment_api_key)
-    if not environment.webhooks.exists():
+    if not environment.webhooks.filter(enabled=True).exists():
         return
 
     feature = Feature.objects.get(id=feature_id)

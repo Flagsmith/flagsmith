@@ -164,7 +164,8 @@ class EdgeIdentityFeatureStateSerializer(serializers.Serializer):
 
         Identity.dynamo_wrapper.put_item(identity_dict)
 
-        call_environment_webhook.delay(
+        # TODO: use async processor instead of `run_in_thread`
+        call_environment_webhook.run_in_thread(
             feature_id=self.instance.feature.id,
             environment_api_key=identity.environment_api_key,
             identity_id=identity.django_id or identity.identity_uuid,
