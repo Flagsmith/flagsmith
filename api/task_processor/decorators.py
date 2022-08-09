@@ -1,6 +1,7 @@
 import logging
 import typing
 from inspect import getmodule
+from threading import Thread
 
 from django.conf import settings
 
@@ -28,7 +29,13 @@ def register_task_handler(task_name: str = None):
                 logger.debug("Creating task for function '%s'...", task_identifier)
                 Task.create(task_identifier, *args, **kwargs)
 
+        # TODO: remove this functionality and use delay in all scenarios
+        def run_in_thread(*args, **kwargs):
+            logger.warning("Running function %s in unmanaged thread.", f.__name__)
+            Thread(target=f, args=args, kwargs=kwargs, daemon=True).start()
+
         f.delay = delay
+        f.run_in_thread = run_in_thread
         f.task_identifier = task_identifier
 
         return f

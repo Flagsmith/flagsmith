@@ -1,5 +1,7 @@
+import copy
 import typing
 
+from django.utils import timezone
 from flag_engine.features.models import (
     FeatureStateModel as EngineFeatureStateModel,
 )
@@ -21,6 +23,9 @@ from environments.models import Environment
 from features.models import Feature, FeatureState, FeatureStateValue
 from features.multivariate.models import MultivariateFeatureOption
 from features.serializers import FeatureStateValueSerializer
+from webhooks.constants import DATETIME_FORMAT
+
+from .tasks import call_environment_webhook
 
 engine_multi_fs_value_schema = MultivariateFeatureStateValueSchema()
 
@@ -127,6 +132,9 @@ class EdgeIdentityFeatureStateSerializer(serializers.Serializer):
     def save(self, **kwargs):
         identity = self.context["view"].identity
         feature_state_value = self.validated_data.pop("feature_state_value", None)
+
+        previous_state = copy.deepcopy(self.instance)
+
         if not self.instance:
             self.instance = EngineFeatureStateModel(**self.validated_data)
             try:
@@ -155,6 +163,27 @@ class EdgeIdentityFeatureStateSerializer(serializers.Serializer):
             ) from e
 
         Identity.dynamo_wrapper.put_item(identity_dict)
+
+        identity_id = identity.django_id or identity.identity_uuid
+        new_value = self.instance.get_value(identity_id)
+        previous_value = (
+            previous_state.get_value(identity_id) if previous_state else None
+        )
+
+        # TODO: use async processor instead of `run_in_thread`
+        call_environment_webhook.run_in_thread(
+            feature_id=self.instance.feature.id,
+            environment_api_key=identity.environment_api_key,
+            identity_id=identity_id,
+            identity_identifier=identity.identifier,
+            changed_by_user_id=self.context["request"].user.id,
+            new_enabled_state=self.instance.enabled,
+            new_value=new_value,
+            previous_enabled_state=getattr(previous_state, "enabled", None),
+            previous_value=previous_value,
+            timestamp=timezone.now().strftime(DATETIME_FORMAT),
+        )
+
         return self.instance
 
 
