@@ -192,6 +192,7 @@ class UncontrolledSegmentOverrides extends Component  {
 
         return  <SegmentOverrides
             {...this.props}
+            disableCreate
             onChange={this.onChange}
             value={this.state.value}
         />;

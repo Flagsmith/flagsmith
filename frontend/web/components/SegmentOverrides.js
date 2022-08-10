@@ -355,7 +355,7 @@ class TheComponent extends Component {
 
                 <div className="text-center mt-2 mb-2">
 
-                    {segments && !this.props.id && (
+                    {segments && !this.props.id && !this.props.disableCreate&& (
                         <Flex className="text-left">
                             <Select
                               data-test="select-segment"
