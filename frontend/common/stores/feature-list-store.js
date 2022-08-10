@@ -88,7 +88,12 @@ const controller = {
             flagsmith.setTrait('first_feature', 'true');
             API.trackEvent(Constants.events.CREATE_FIRST_FEATURE);
         }
-        data.post(`${Project.api}projects/${projectId}/features/`, Object.assign({}, flag, { multivariate_options: undefined, project: projectId, type: flag.multivariate_options && flag.multivariate_options.length ? 'MULTIVARIATE' : 'STANDARD',
+
+        data.post(`${Project.api}projects/${projectId}/features/`, Object.assign({}, flag, {
+            multivariate_options: undefined,
+            project: projectId,
+            initial_value: typeof flag.initial_value !== 'undefined' && flag.initial_value !== null ? `${flag.initial_value}`: flag.initial_value,
+            type: flag.multivariate_options && flag.multivariate_options.length ? 'MULTIVARIATE' : 'STANDARD',
         }))
             .then(res => Promise.all((flag.multivariate_options || []).map(v => data.post(`${Project.api}projects/${projectId}/features/${flag.id}/mv-options/`, {
                 ...v,
