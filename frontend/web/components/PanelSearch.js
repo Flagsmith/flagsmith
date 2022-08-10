@@ -38,7 +38,9 @@ const PanelSearch = class extends Component {
         const filter = this.props.filter;
         const { items, filterRow } = this.props;
         if (filterRow && (search || filter)) {
-            return this.sort(_.filter(items, i => filterRow(i, search.toLowerCase())));
+            return this.sort(_.filter(items, (value,index) => {
+                return filterRow(value, search.toLowerCase(), index)
+            }));
         }
         return this.sort(items);
     }
@@ -201,7 +203,6 @@ const PanelSearch = class extends Component {
                                   <span style={{ marginLeft: 10, position: 'absolute' }} className="icon ion-ios-search" />
                               </Row>
                           </Row>
-
                       )}
                   </Row>
               ) : action || null}

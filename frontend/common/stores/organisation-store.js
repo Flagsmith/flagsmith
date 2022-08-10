@@ -14,12 +14,14 @@ const controller = {
                 data.get(`${Project.api}organisations/${id}/users/`),
             ].concat(AccountStore.getOrganisationRole(id) === 'ADMIN' ? [
                 data.get(`${Project.api}organisations/${id}/invites/`),
+                data.get(`${Project.api}organisations/${id}/get-subscription-metadata/`).catch(()=>null),
+
             ] : [])).then((res) => {
                 if (id === store.id) {
                     // eslint-disable-next-line prefer-const
-                    let [projects, users, invites] = res;
+                    let [projects, users, invites, subscriptionMeta] = res;
                     // projects = projects.results;
-                    store.model = { ...store.model, users, invites: invites && invites.results };
+                    store.model = { ...store.model, subscriptionMeta, users, invites: invites && invites.results };
 
                     if (AccountStore.getOrganisationRole(id) === 'ADMIN' && !E2E && Utils.getFlagsmithHasFeature('usage_chart')) {
                         data.get(`${Project.api}organisations/${id}/usage/`).then((usage) => {
@@ -220,6 +222,9 @@ var store = Object.assign({}, BaseStore, {
     },
     getUsage() {
         return store.model && store.model.usage;
+    },
+    getSubscriptionMeta() {
+        return store.model && store.model.subscriptionMeta;
     },
     getProjects() {
         return store.model && store.model.projects;
