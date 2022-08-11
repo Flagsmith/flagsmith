@@ -114,7 +114,7 @@ class ValueEditor extends Component {
     render() {
         const { ...rest } = this.props;
         return (
-            <div className={cx('value-editor')}>
+            <div className={cx('value-editor', { light: this.state.language === 'txt' })}>
                 <Row className="select-language">
                     <span
                       onMouseDown={(e) => {

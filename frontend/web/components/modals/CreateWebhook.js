@@ -101,7 +101,7 @@ const CreateWebhook = class extends Component {
                           <div>
                               <label>Example Payload </label>
                               <ButtonLink className="ml-1" href="https://docs.flagsmith.com/advanced-use/system-administration" target="_blank">View docs</ButtonLink>
-                              <Highlight style={{ marginBottom: 10 }} className="json">
+                              <Highlight forceExpanded style={{ marginBottom: 10 }} className="json">
                                   {exampleJSON}
                               </Highlight>
                               <div className="text-center">

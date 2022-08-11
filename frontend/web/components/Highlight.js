@@ -47,6 +47,7 @@ class Highlight extends React.Component {
   setEl(el) {
       this.el = el;
       this.measure = (force) => {
+          if (this.props.forceExpanded) return;
           if (!this.el) return;
           const height = this.el.clientHeight;
           if (!this.state.expandable && height>collapsedHeight) {
@@ -100,9 +101,9 @@ class Highlight extends React.Component {
     onBlur= () => {
         this.setState({ focus: false });
         this.highlightCode();
-        setTimeout(()=>{
-            this.measure(true)
-        },0)
+        setTimeout(() => {
+            this.measure(true);
+        }, 0);
     }
 
     render() {
@@ -122,7 +123,7 @@ class Highlight extends React.Component {
         }
         return (
             <div className={this.state.expandable ? 'expandable' : ''}>
-                <pre style={{ ...(this.props.style || {}), opacity: typeof this.state.expandable === 'boolean'?1:0, height: (this.state.expanded || !this.state.expandable) ? 'auto' : collapsedHeight }} ref={this.setEl}>
+                <pre style={{ ...(this.props.style || {}), opacity: typeof this.state.expandable === 'boolean' ? 1 : 0, height: (this.state.expanded || !this.state.expandable) ? 'auto' : collapsedHeight }} ref={this.setEl}>
                     <code
                       style={this.props.style}
                       data-test={this.props['data-test']}
@@ -130,7 +131,7 @@ class Highlight extends React.Component {
                       onBlur={this.onBlur}
                       onFocus={this.onFocus}
                       onInput={this._handleInput}
-                      className={className}
+                      className={`${className} ${!this.state.value || !this.state.value.__html ? 'empty' : ''}`}
                       dangerouslySetInnerHTML={this.props.preventEscape ? this.state.focus ? this.state.value : this.props.children ? { ...this.state.value } : defaultValue
                           : escapeHtml(this.state.focus ? this.state.value : this.props.children ? { ...this.state.value } : defaultValue)}
                     />
