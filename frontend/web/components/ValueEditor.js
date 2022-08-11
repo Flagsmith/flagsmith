@@ -5,13 +5,13 @@ import Highlight from './Highlight';
 import ConfigProvider from '../../common/providers/ConfigProvider';
 
 
-var toml = require('toml');
-const yaml = require('yaml')
+const toml = require('toml');
+const yaml = require('yaml');
 
 function xmlIsInvalid(xmlStr) {
     const parser = new DOMParser();
-    const dom = parser.parseFromString(xmlStr, "application/xml");
-    for (const element of Array.from(dom.querySelectorAll("parsererror"))) {
+    const dom = parser.parseFromString(xmlStr, 'application/xml');
+    for (const element of Array.from(dom.querySelectorAll('parsererror'))) {
         if (element instanceof HTMLElement) {
             // Found the error.
             return element.innerText;
@@ -24,74 +24,70 @@ function xmlIsInvalid(xmlStr) {
 class Validation extends Component {
     constructor(props) {
         super(props);
-        this.state = {}
-        this.validateLanguage(this.props.language, this.props.value)
+        this.state = {};
+        this.validateLanguage(this.props.language, this.props.value);
     }
+
     componentDidUpdate(prevProps, prevState, snapshot) {
-        if(prevProps.value!==this.props.value || prevProps.language!==this.props.language) {
-            this.validateLanguage(this.props.language, this.props.value)
+        if (prevProps.value !== this.props.value || prevProps.language !== this.props.language) {
+            this.validateLanguage(this.props.language, this.props.value);
         }
     }
 
-    validateLanguage = (language, value)=>{
-        const validate = new Promise((resolve)=>{
+    validateLanguage = (language, value) => {
+        const validate = new Promise((resolve) => {
             switch (language) {
                 case 'json': {
                     try {
-                        JSON.parse(value)
-                        resolve(false)
+                        JSON.parse(value);
+                        resolve(false);
                     } catch (e) {
-                        resolve(e.message)
+                        resolve(e.message);
                     }
                     break;
                 }
                 case 'ini': {
                     try {
-                        toml.parse(value)
-                        resolve(false)
+                        toml.parse(value);
+                        resolve(false);
                     } catch (e) {
-                        resolve(e.message)
+                        resolve(e.message);
                     }
                     break;
                 }
                 case 'yaml': {
                     try {
-                        yaml.parse(value)
-                        resolve(false)
+                        yaml.parse(value);
+                        resolve(false);
                     } catch (e) {
-                        resolve(e.message)
+                        resolve(e.message);
                     }
                     break;
                 }
                 case 'xml': {
                     try {
-                        const error = xmlIsInvalid(value)
-                        resolve(error)
+                        const error = xmlIsInvalid(value);
+                        resolve(error);
                     } catch (e) {
-                        resolve("Failed to parse XML")
+                        resolve('Failed to parse XML');
                     }
                     break;
                 }
             }
-        })
+        });
 
-        validate.then((error)=>{
-            this.setState({error:error})
-        })
-
+        validate.then((error) => {
+            this.setState({ error });
+        });
     }
 
     render() {
-        const displayLanguage = this.props.language === 'ini' ? 'toml' :this.props.language
+        const displayLanguage = this.props.language === 'ini' ? 'toml' : this.props.language;
         return (
-            <Tooltip position="top" title={!this.state.error?<ion className="text-white ion-ios-checkmark-circle"/>:<ion id="language-validation-error" className="text-white ion-ios-warning"/>}>
-                {!this.state.error? displayLanguage + " validation passed": displayLanguage + " validation error, please check your value.<br/>Error: " + this.state.error}
+            <Tooltip position="top" title={!this.state.error ? <ion className="text-white ion-ios-checkmark-circle"/> : <ion id="language-validation-error" className="text-white ion-ios-warning"/>}>
+                {!this.state.error ? `${displayLanguage} validation passed` : `${displayLanguage} validation error, please check your value.<br/>Error: ${this.state.error}`}
             </Tooltip>
-        )
-        if(this.state.error) {
-            return
-        }
-        return
+        );
     }
 }
 class ValueEditor extends Component {
@@ -113,14 +109,12 @@ class ValueEditor extends Component {
         // });
     }
 
-    renderValidation = ()=> {
-        return <Validation language={this.state.language} value={this.props.value}/>
-    }
+    renderValidation = () => <Validation language={this.state.language} value={this.props.value}/>
 
     render() {
         const { ...rest } = this.props;
         return (
-            <div className={cx('value-editor', { light: this.state.language === 'txt' })}>
+            <div className={cx('value-editor')}>
                 <Row className="select-language">
                     <span
                       onMouseDown={(e) => {
@@ -174,25 +168,20 @@ class ValueEditor extends Component {
                         .yaml {this.state.language === 'yaml' && this.renderValidation()}
                     </span>
                     <span
-                        onMouseDown={(e) => {
-                            const res = Clipboard.setString(this.props.value);
-                            toast(res ? 'Clipboard set' : 'Could not set clipboard :(');
-                        }}
-                        className={cx('txt primary' )}
+                      onMouseDown={(e) => {
+                          const res = Clipboard.setString(this.props.value);
+                          toast(res ? 'Clipboard set' : 'Could not set clipboard :(');
+                      }}
+                      className={cx('txt primary')}
                     >
                         <span className="ion ion-md-clipboard mr-0 ml-2 txt primary"/> copy
 
                     </span>
                 </Row>
-                {this.state.language === 'txt' ? (
-                    <textarea
-                      {...rest}
-                    />
-                ) : (
-                    <Highlight data-test={rest['data-test']} onChange={rest.onChange} className={this.state.language}>
-                        {rest.value}
-                    </Highlight>
-                )}
+
+                <Highlight data-test={rest['data-test']} onChange={rest.onChange} className={this.state.language}>
+                    {rest.value}
+                </Highlight>
 
 
             </div>

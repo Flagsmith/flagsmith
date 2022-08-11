@@ -49,6 +49,7 @@
     }
   }
   code {
+    outline-color: transparent !important;
   }
   .select-language {
     position: absolute;
@@ -267,4 +268,6 @@
 .hljs-deletion,
 .hljs-meta {
   color: #7f7f7f;
+}
+.value-editor pre {
 }
