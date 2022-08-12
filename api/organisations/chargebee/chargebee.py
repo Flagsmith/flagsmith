@@ -105,3 +105,7 @@ def get_subscription_metadata(subscription_id: str) -> ChargebeeObjMetadata:
         subscription_metadata = subscription_metadata + addon_metadata
 
     return subscription_metadata
+
+
+def cancel_subscription(subscription_id: str):
+    chargebee.Subscription.cancel(subscription_id, {"end_of_term": True})
