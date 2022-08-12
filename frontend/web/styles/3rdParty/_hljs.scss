@@ -306,3 +306,8 @@ code.txt {
     color: white;
   }
 }
+
+
+code[contenteditable="false"].hljs {
+  cursor: default !important;
+}
