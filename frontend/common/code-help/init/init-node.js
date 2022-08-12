@@ -7,7 +7,7 @@ const ${LIB_NAME} = new Flagsmith({
 const flags = await flagsmith.getEnvironmentFlags();
 
 // Check for a feature
-var isEnabled flags.isFeatureEnabled("${customFeature || FEATURE_NAME}")
+var isEnabled = flags.isFeatureEnabled("${customFeature || FEATURE_NAME}")
 
 // Or, use the value of a feature
 var featureValue = flags.getFeatureValue('${customFeature || FEATURE_NAME_ALT}');
