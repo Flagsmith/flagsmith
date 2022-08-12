@@ -179,9 +179,16 @@ class ValueEditor extends Component {
                     </span>
                 </Row>
 
-                <Highlight data-test={rest['data-test']} onChange={rest.onChange} className={this.state.language}>
-                    {rest.value}
-                </Highlight>
+                {E2E? (
+                    <textarea
+                        {...rest}
+                    />
+                ): (
+                    <Highlight data-test={rest['data-test']} onChange={rest.onChange} className={this.state.language}>
+                        {rest.value}
+                    </Highlight>
+                )}
+
 
 
             </div>

@@ -474,7 +474,8 @@ const CreateFlag = class extends Component {
                       environmentFlag={this.props.environmentFlag}
                       projectFlag={projectFlag}
                       onValueChange={(e) => {
-                          this.setState({ initial_value: Utils.getTypedValue(Utils.safeParseEventValue(e)) });
+                          const initial_value = Utils.getTypedValue(Utils.safeParseEventValue(e))
+                          this.setState({ initial_value });
                       }}
                       onCheckedChange={default_enabled => this.setState({ default_enabled })}
                     />

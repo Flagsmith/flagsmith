@@ -15,7 +15,7 @@ function escapeHtml(unsafe) {
     };
 }
 const defaultValue = { __html: 'Enter a value...' };
-const collapsedHeight = 100;
+const collapsedHeight = 110;
 class Highlight extends React.Component {
   state = {
       value: { __html: this.props.children },
@@ -36,7 +36,13 @@ class Highlight extends React.Component {
 
   highlightCode = () => {
       const nodes = this.el.querySelectorAll('pre code');
-
+      if (nodes[0] && nodes[0].innerHTML && nodes[0].innerHTML.match(/[<>]/)) {
+          if (!this.state.focus) {
+              nodes[0].innerHTML = nodes[0].innerText
+          }
+              this.highlightCode()
+          return
+      }
       if (typeof hljs !== 'undefined') {
           for (let i = 0; i < nodes.length; i++) {
               hljs.highlightBlock(nodes[i]);
@@ -100,10 +106,7 @@ class Highlight extends React.Component {
 
     onBlur= () => {
         this.setState({ focus: false });
-        this.highlightCode();
-        setTimeout(() => {
-            this.measure(true);
-        }, 0);
+
     }
 
     render() {
@@ -121,6 +124,9 @@ class Highlight extends React.Component {
         if (Element) {
             return <Element {...props}>{children}</Element>;
         }
+
+        const html = this.props.preventEscape ? this.state.focus ? this.state.value : this.props.children ? { ...this.state.value } : defaultValue
+            : escapeHtml(this.state.focus ? this.state.value : this.props.children ? { ...this.state.value } : defaultValue)
         return (
             <div className={this.state.expandable ? 'expandable' : ''}>
                 <pre style={{ ...(this.props.style || {}), opacity: typeof this.state.expandable === 'boolean' ? 1 : 0, height: (this.state.expanded || !this.state.expandable) ? 'auto' : collapsedHeight }} ref={this.setEl}>
@@ -132,8 +138,7 @@ class Highlight extends React.Component {
                       onFocus={this.onFocus}
                       onInput={this._handleInput}
                       className={`${className} ${!this.state.value || !this.state.value.__html ? 'empty' : ''}`}
-                      dangerouslySetInnerHTML={this.props.preventEscape ? this.state.focus ? this.state.value : this.props.children ? { ...this.state.value } : defaultValue
-                          : escapeHtml(this.state.focus ? this.state.value : this.props.children ? { ...this.state.value } : defaultValue)}
+                      dangerouslySetInnerHTML={html}
                     />
 
                 </pre>
