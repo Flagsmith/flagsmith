@@ -8,7 +8,7 @@ from datetime import timedelta
 from django.core.management import BaseCommand
 from django.utils import timezone
 
-from task_processor.tasks import registered_tasks
+from task_processor.task_registry import registered_tasks
 from task_processor.thread_monitoring import (
     clear_unhealthy_threads,
     write_unhealthy_threads,
