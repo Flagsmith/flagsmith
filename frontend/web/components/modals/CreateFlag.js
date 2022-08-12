@@ -77,7 +77,6 @@ const CreateFlag = class extends Component {
             if (this.state.valueChanged || this.state.segmentsChanged || this.state.settingsChanged) {
                 openConfirm("Are you sure", "You have unsaved changes, closing this will discard your changes", ()=>resolve(true), ()=>resolve(false), "Ok", "Cancel")
             } else {
-                debugger
                 resolve(true)
             }
         })
@@ -556,10 +555,13 @@ const CreateFlag = class extends Component {
                             };
 
                             const saveSettings = () => {
+                                this.setState({settingsChanged:false})
                                 this.save(editFlagSettings, isSaving);
                             };
 
                             const saveFeatureSegments = () => {
+                                this.setState({segmentsChanged:false})
+
                                 this.save(editFlagSegments, isSaving);
                             };
 
