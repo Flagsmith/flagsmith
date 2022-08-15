@@ -124,6 +124,7 @@
             </div>
 
             <h2>Seats in Use: <strong>{{ organisation.users.count }}</strong></h2>
+            <h3><a href="mailto:{% for user in organisation.users.all %}{{user.email}},{% endfor %}">Mail All Users</a></h3>
             <div class="table-responsive">
                 <table class="table table-striped table-sm">
                     <thead class="thead-dark">
