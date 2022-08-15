@@ -20,7 +20,9 @@ from organisations.chargebee import (
     get_plan_meta_data,
     get_portal_url,
 )
-from organisations.chargebee.chargebee import cancel_subscription
+from organisations.chargebee.chargebee import (
+    cancel_subscription as cancel_chargebee_subscription,
+)
 from users.utils.mailer_lite import MailerLite
 from webhooks.models import AbstractBaseWebhookModel
 
@@ -90,10 +92,10 @@ class Organisation(LifecycleModelMixin, AbstractBaseExportableModel):
         self.save()
 
     @hook(BEFORE_DELETE)
-    def do_something(self):
+    def cancel_subscription(self):
         if self.has_subscription():
-            self.subscription.cancel()
-            cancel_subscription(self.subscription.subscription_id)
+            self.subscription.cancel()  # cancels the subscription in the database
+            cancel_chargebee_subscription(self.subscription.subscription_id)
 
 
 class UserOrganisation(models.Model):
@@ -161,6 +163,8 @@ class Subscription(LifecycleModelMixin, AbstractBaseExportableModel):
     def cancel(self, cancellation_date=timezone.now()):
         self.cancellation_date = cancellation_date
         self.save()
+        if self.payment_method == self.CHARGEBEE:
+            cancel_chargebee_subscription(self.subscription_id)
 
     def get_portal_url(self, redirect_url):
         if not self.subscription_id:

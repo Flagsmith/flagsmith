@@ -1,13 +1,18 @@
+import logging
 from datetime import datetime
 
 import chargebee
+from chargebee import APIError
 from django.conf import settings
 from pytz import UTC
 
+from ..subscriptions.exceptions import CannotCancelChargebeeSubscription
 from .cache import ChargebeeCache
 from .metadata import ChargebeeObjMetadata
 
 chargebee.configure(settings.CHARGEBEE_API_KEY, settings.CHARGEBEE_SITE)
+
+logger = logging.getLogger(__name__)
 
 
 def get_subscription_data_from_hosted_page(hosted_page_id):
@@ -108,4 +113,9 @@ def get_subscription_metadata(subscription_id: str) -> ChargebeeObjMetadata:
 
 
 def cancel_subscription(subscription_id: str):
-    chargebee.Subscription.cancel(subscription_id, {"end_of_term": True})
+    try:
+        chargebee.Subscription.cancel(subscription_id, {"end_of_term": True})
+    except APIError as e:
+        msg = "Cannot cancel CB subscription for subscription id: %s" % subscription_id
+        logger.error(msg)
+        raise CannotCancelChargebeeSubscription(msg) from e
