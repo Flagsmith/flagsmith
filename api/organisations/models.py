@@ -94,8 +94,7 @@ class Organisation(LifecycleModelMixin, AbstractBaseExportableModel):
     @hook(BEFORE_DELETE)
     def cancel_subscription(self):
         if self.has_subscription():
-            self.subscription.cancel()  # cancels the subscription in the database
-            cancel_chargebee_subscription(self.subscription.subscription_id)
+            self.subscription.cancel()
 
 
 class UserOrganisation(models.Model):
