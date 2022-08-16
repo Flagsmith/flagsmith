@@ -38,10 +38,10 @@ class Highlight extends React.Component {
       const nodes = this.el.querySelectorAll('pre code');
       if (nodes[0] && nodes[0].innerHTML && nodes[0].innerHTML.match(/[<>]/)) {
           if (!this.state.focus) {
-              nodes[0].innerHTML = nodes[0].innerText
+              nodes[0].innerHTML = nodes[0].innerText;
           }
-              this.highlightCode()
-          return
+          this.highlightCode();
+          return;
       }
       if (typeof hljs !== 'undefined') {
           for (let i = 0; i < nodes.length; i++) {
@@ -106,7 +106,6 @@ class Highlight extends React.Component {
 
     onBlur= () => {
         this.setState({ focus: false });
-
     }
 
     render() {
@@ -126,10 +125,10 @@ class Highlight extends React.Component {
         }
 
         const html = this.props.preventEscape ? this.state.focus ? this.state.value : this.props.children ? { ...this.state.value } : defaultValue
-            : escapeHtml(this.state.focus ? this.state.value : this.props.children ? { ...this.state.value } : defaultValue)
+            : escapeHtml(this.state.focus ? this.state.value : this.props.children ? { ...this.state.value } : defaultValue);
         return (
             <div className={this.state.expandable ? 'expandable' : ''}>
-                <pre style={{ ...(this.props.style || {}), opacity: typeof this.state.expandable === 'boolean' ? 1 : 0, height: (this.state.expanded || !this.state.expandable) ? 'auto' : collapsedHeight }} ref={this.setEl}>
+                <pre style={{ ...(this.props.style || {}), opacity: typeof this.state.expandable === 'boolean' || this.props.forceExpanded ? 1 : 0, height: (this.state.expanded || !this.state.expandable) ? 'auto' : collapsedHeight }} ref={this.setEl}>
                     <code
                       style={this.props.style}
                       data-test={this.props['data-test']}
