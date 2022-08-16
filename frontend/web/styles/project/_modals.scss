@@ -84,7 +84,7 @@ $side-width: 66%;
 
     .modal-body {
         padding: 0;
-        height: 100%;
+        height: calc(100% - 60px);
         overflow-y: auto;
     }
 
