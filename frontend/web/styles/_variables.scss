@@ -27,8 +27,7 @@ $button-bg-dark-hover: darken($button-bg-dark,1);
 $bt-brand-primary: #7B51FB;
 $bt-brand-primary-faint: #1d0d4d;
 //$bt-brand-primary-faint: #003100;
-$bt-brand-primary-light: lighten($bt-brand-primary,40);
-$bt-brand-primary-lighter: lighten($bt-brand-primary,70);
+$bt-brand-primary-light: lighten($bt-brand-primary,5);
 
 $bt-brand-primary-dark: #1E0D26;
 $bt-brand-primary-dark-alt: #17103A;
