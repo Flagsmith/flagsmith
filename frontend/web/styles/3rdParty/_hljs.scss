@@ -49,6 +49,7 @@
     }
   }
   code {
+    outline-color: transparent !important;
   }
   .select-language {
     position: absolute;
@@ -267,4 +268,46 @@
 .hljs-deletion,
 .hljs-meta {
   color: #7f7f7f;
+}
+.value-editor pre {
+  overflow: hidden;
+}
+.value-editor pre code {
+  height:100%;
+}
+
+code.txt {
+    font-size: 16px;
+    font-weight: 400;
+    background: transparent !important;
+    border: 1px solid $input-border-color;
+    font-family: "OpenSans", sans-serif;
+    color: $body-color;
+  &.empty {
+    color: rgba(46, 46, 46, 0.25) !important;
+  }
+  &:focus, &:focus.empty {
+    color: $body-color !important;
+    border-color: $bt-input-border-active;
+  }
+ }
+
+.dark {
+  code.txt {
+
+    &:focus, &:focus.empty {
+      color: white !important;
+    }
+    &.empty {
+      color: rgba(210, 210, 210, 0.5) !important;
+    }
+    border-color: transparent;
+    background: $input-bg-dark !important;
+    color: white;
+  }
+}
+
+
+code[contenteditable="false"].hljs {
+  cursor: default !important;
 }

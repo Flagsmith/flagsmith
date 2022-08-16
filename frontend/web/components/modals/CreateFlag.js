@@ -75,7 +75,7 @@ const CreateFlag = class extends Component {
     onClosing = ()=> {
         return new Promise((resolve)=>{
             if (this.state.valueChanged || this.state.segmentsChanged || this.state.settingsChanged) {
-                openConfirm("Are you sure", "You have unsaved changes, closing this will discard your changes", ()=>resolve(true), ()=>resolve(false), "Ok", "Cancel")
+                openConfirm("Are you sure", "Closing this will discard your unsaved changes.", ()=>resolve(true), ()=>resolve(false), "Ok", "Cancel")
             } else {
                 resolve(true)
             }
@@ -490,8 +490,8 @@ const CreateFlag = class extends Component {
                       environmentFlag={this.props.environmentFlag}
                       projectFlag={projectFlag}
                       onValueChange={(e) => {
-                          this.setState({                               valueChanged:true,
-                              initial_value: Utils.getTypedValue(Utils.safeParseEventValue(e)) });
+                          const initial_value = Utils.getTypedValue(Utils.safeParseEventValue(e))
+                          this.setState({ valueChanged:true, initial_value });
                       }}
                       onCheckedChange={default_enabled => this.setState({ default_enabled })}
                     />
