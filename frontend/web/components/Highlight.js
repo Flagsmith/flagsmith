@@ -6,7 +6,7 @@ if (typeof hljs !== 'undefined') {
 function escapeHtml(unsafe) {
     if (!unsafe || !unsafe.__html) return unsafe;
     return {
-        __html: unsafe.__html
+        __html: `${unsafe.__html}`
             .replace(/&/g, '&amp;')
             .replace(/</g, '&lt;')
             .replace(/>/g, '&gt;')
@@ -40,7 +40,9 @@ class Highlight extends React.Component {
           if (!this.state.focus) {
               nodes[0].innerHTML = nodes[0].innerText;
           }
-          this.highlightCode();
+          setTimeout(() => {
+              this.highlightCode();
+          }, 100);
           return;
       }
       if (typeof hljs !== 'undefined') {
