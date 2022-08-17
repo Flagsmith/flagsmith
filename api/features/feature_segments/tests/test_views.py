@@ -201,3 +201,29 @@ class FeatureSegmentViewSetTestCase(TestCase):
             environment=self.environment_1,
             log=expected_audit_log_message,
         ).exists()
+
+
+def test_creating_segment_override_for_feature_based_segment_returns_400_for_wrong_feature(
+    admin_client, feature_based_segment, project, environment
+):
+    # Given - A different feature
+    feature = Feature.objects.create(name="Feature 2", project=project)
+    data = {
+        "feature": feature.id,
+        "segment": feature_based_segment.id,
+        "environment": environment.id,
+    }
+    url = reverse("api-v1:features:feature-segment-list")
+
+    # When
+    response = admin_client.post(
+        url, data=json.dumps(data), content_type="application/json"
+    )
+
+    # Then
+    assert response.status_code == status.HTTP_400_BAD_REQUEST
+    assert (
+        response.json()["feature"]
+        == "Can only create segment override(using this segment) for feature %d"
+        % feature_based_segment.feature.id
+    )
