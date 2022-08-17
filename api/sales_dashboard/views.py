@@ -50,7 +50,9 @@ class OrganisationList(ListView):
         if self.request.GET.get("search"):
             search_term = self.request.GET["search"]
             queryset = queryset.filter(
-                Q(name__icontains=search_term) | Q(users__email__icontains=search_term)
+                Q(name__icontains=search_term)
+                | Q(users__email__icontains=search_term)
+                | Q(subscription__subscription_id=search_term)
             )
 
         if self.request.GET.get("filter_plan"):
