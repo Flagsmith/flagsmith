@@ -116,6 +116,11 @@ def feature(project, environment):
 
 
 @pytest.fixture()
+def feature_based_segment(project, feature):
+    return Segment.objects.create(name="segment", project=project, feature=feature)
+
+
+@pytest.fixture()
 def user_password():
     return FFAdminUser.objects.make_random_password()
 

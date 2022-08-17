@@ -11,6 +11,7 @@ from flag_engine.utils.semver import is_semver, remove_semver_suffix
 from environments.identities.helpers import (
     get_hashed_percentage_for_object_ids,
 )
+from features.models import Feature
 from projects.models import Project
 
 if typing.TYPE_CHECKING:
@@ -46,6 +47,9 @@ class Segment(AbstractBaseExportableModel):
     description = models.TextField(null=True, blank=True)
     project = models.ForeignKey(
         Project, on_delete=models.CASCADE, related_name="segments"
+    )
+    feature = models.ForeignKey(
+        Feature, on_delete=models.CASCADE, related_name="segments", null=True
     )
 
     class Meta:
