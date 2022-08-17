@@ -1,7 +1,7 @@
 from django.apps import AppConfig
 
 
-class TaskProcessorAppConfig(AppConfig):
+class EdgeAPIIdentitiesAppConfig(AppConfig):
     name = "edge_api.identities"
 
     def ready(self):
