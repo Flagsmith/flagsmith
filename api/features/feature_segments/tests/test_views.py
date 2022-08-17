@@ -223,7 +223,7 @@ def test_creating_segment_override_for_feature_based_segment_returns_400_for_wro
     # Then
     assert response.status_code == status.HTTP_400_BAD_REQUEST
     assert (
-        response.json()["feature"]
+        response.json()["feature"][0]
         == "Can only create segment override(using this segment) for feature %d"
         % feature_based_segment.feature.id
     )
