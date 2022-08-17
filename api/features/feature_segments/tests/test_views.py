@@ -227,3 +227,23 @@ def test_creating_segment_override_for_feature_based_segment_returns_400_for_wro
         == "Can only create segment override(using this segment) for feature %d"
         % feature_based_segment.feature.id
     )
+
+
+def test_creating_segment_override_for_feature_based_segment_returns_201_for_correct_feature(
+    admin_client, feature_based_segment, project, environment, feature
+):
+    # Given
+    data = {
+        "feature": feature.id,
+        "segment": feature_based_segment.id,
+        "environment": environment.id,
+    }
+    url = reverse("api-v1:features:feature-segment-list")
+
+    # When
+    response = admin_client.post(
+        url, data=json.dumps(data), content_type="application/json"
+    )
+
+    # Then
+    assert response.status_code == status.HTTP_201_CREATED
