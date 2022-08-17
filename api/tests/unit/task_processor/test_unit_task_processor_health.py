@@ -1,8 +1,8 @@
-from task_processor.health import check_processor_health
+from task_processor.health import is_processor_healthy
 from task_processor.models import HealthCheckModel
 
 
-def test_check_processor_health_returns_false_if_task_not_processed(mocker):
+def test_is_processor_healthy_returns_false_if_task_not_processed(mocker):
     # Given
     mocker.patch("task_processor.health.create_health_check_model")
     mocked_health_check_model_class = mocker.patch(
@@ -13,18 +13,18 @@ def test_check_processor_health_returns_false_if_task_not_processed(mocker):
     )
 
     # When
-    result = check_processor_health(max_tries=3)
+    result = is_processor_healthy(max_tries=3)
 
     # Then
     assert result is False
 
 
-def test_check_processor_health_returns_true_if_task_processed(db, settings):
+def test_is_processor_healthy_returns_true_if_task_processed(db, settings):
     # Given
     settings.RUN_TASKS_SYNCHRONOUSLY = True
 
     # When
-    result = check_processor_health(max_tries=3)
+    result = is_processor_healthy(max_tries=3)
 
     # Then
     # the health is reported as success

@@ -8,7 +8,7 @@ from task_processor.models import HealthCheckModel
 from task_processor.tasks import create_health_check_model
 
 
-def check_processor_health(max_tries: int = 5, factor: float = 0.1):
+def is_processor_healthy(max_tries: int = 5, factor: float = 0.1):
     health_check_model_uuid = str(uuid.uuid4())
 
     create_health_check_model.delay(health_check_model_uuid)
@@ -37,7 +37,7 @@ class TaskProcessorHealthCheckBackend(BaseHealthCheckBackend):
     critical_service = False
 
     def check_status(self):
-        if not check_processor_health():
+        if not is_processor_healthy():
             raise HealthCheckException("Task processor is not processing tasks.")
 
     def identifier(self):
