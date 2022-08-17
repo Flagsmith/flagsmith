@@ -17,6 +17,9 @@ inputs:
   aws_task_definitions_directory_path:
     description: "The local path in the repository to the json file containing the task definition template"
     required: true
+  api_ecr_image_url:
+    description: "The ECR URL of the latest API image."
+    required: true
 
 
 runs:
@@ -29,6 +32,14 @@ runs:
           aws-access-key-id: ${{ inputs.aws_access_key_id }}
           aws-secret-access-key: ${{ inputs.aws_secret_access_key }}
           aws-region: eu-west-2
+
+      - name: Fill in the new image ID in the Amazon ECS Task Processor task definition
+        id: task-def-task-processor
+        uses: aws-actions/amazon-ecs-render-task-definition@v1
+        with:
+          task-definition: ${{ inputs.aws_task_definitions_directory_path }}/ecs-task-definition-task-processor.json
+          container-name: flagsmith-task-processor
+          image: ${{ inputs.api_ecr_image_url }}
 
       - name: Deploy Amazon ECS Task Processor task definition
         uses: aws-actions/amazon-ecs-deploy-task-definition@v1

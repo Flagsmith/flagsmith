@@ -54,7 +54,10 @@ inputs:
     description: "The flagsmith-auth-controller git revision to use when building deployment package."
     required: false
     default: main
-
+outputs:
+  api_ecr_image_url:
+    description: "The image URL from ECR"
+    value: ${{ steps.build-image.outputs.image }}
 
 runs:
     using: composite
