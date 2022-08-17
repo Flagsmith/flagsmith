@@ -8,6 +8,7 @@ from django.utils import timezone
 from django_lifecycle import (
     AFTER_CREATE,
     AFTER_SAVE,
+    BEFORE_DELETE,
     LifecycleModelMixin,
     hook,
 )
@@ -19,6 +20,9 @@ from organisations.chargebee import (
     get_plan_meta_data,
     get_portal_url,
 )
+from organisations.chargebee.chargebee import (
+    cancel_subscription as cancel_chargebee_subscription,
+)
 from users.utils.mailer_lite import MailerLite
 from webhooks.models import AbstractBaseWebhookModel
 
@@ -28,7 +32,7 @@ class OrganisationRole(models.TextChoices):
     USER = ("USER", "User")
 
 
-class Organisation(AbstractBaseExportableModel):
+class Organisation(LifecycleModelMixin, AbstractBaseExportableModel):
     name = models.CharField(max_length=2000)
     has_requested_features = models.BooleanField(default=False)
     webhook_notification_email = models.EmailField(null=True, blank=True)
@@ -86,6 +90,11 @@ class Organisation(AbstractBaseExportableModel):
     def reset_alert_status(self):
         self.alerted_over_plan_limit = False
         self.save()
+
+    @hook(BEFORE_DELETE)
+    def cancel_subscription(self):
+        if self.has_subscription():
+            self.subscription.cancel()
 
 
 class UserOrganisation(models.Model):
@@ -153,6 +162,8 @@ class Subscription(LifecycleModelMixin, AbstractBaseExportableModel):
     def cancel(self, cancellation_date=timezone.now()):
         self.cancellation_date = cancellation_date
         self.save()
+        if self.payment_method == self.CHARGEBEE:
+            cancel_chargebee_subscription(self.subscription_id)
 
     def get_portal_url(self, redirect_url):
         if not self.subscription_id:
