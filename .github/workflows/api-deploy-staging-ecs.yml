@@ -41,6 +41,16 @@ jobs:
                 flagsmith_workflows_revision: v1.0.4
                 flagsmith_auth_controller_revision: v0.0.1
 
+            - name: Deploy task processor to Staging
+              uses: ./.github/actions/task-processor-deploy-ecs
+              with:
+                github_access_token: ${{ secrets.GH_PRIVATE_ACCESS_TOKEN }}
+                aws_access_key_id: AKIAUM26IRCPASKFW2X5
+                aws_secret_access_key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+                aws_ecs_cluster_name: flagsmith-api-cluster-eu-west-2-f241261
+                aws_ecs_service_name: flagsmith-task-processor-svc-eu-west-2-792c644
+                aws_task_definitions_directory_path: infrastructure/aws/staging
+
     run-tests:
         runs-on: ubuntu-latest
         name: Run E2E Tests

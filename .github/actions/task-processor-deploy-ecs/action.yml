@@ -1,0 +1,42 @@
+name: Task Processor Deploy to ECS
+description: "Deploy the Flagsmith Task Processor to ECS"
+
+inputs:
+  aws_access_key_id:
+    description: "The AWS access key ID to use for deploying to ECS."
+    required: true
+  aws_secret_access_key:
+    description: "The AWS secret access key to use for deploying to ECS."
+    required: true
+  aws_ecs_cluster_name:
+    description: "The name of the ECS cluster to deploy to."
+    required: true
+  aws_ecs_service_name:
+    description: "The name of the ECS service to deploy to."
+    required: true
+  aws_task_definitions_directory_path:
+    description: "The local path in the repository to the json file containing the task definition template"
+    required: true
+
+
+runs:
+    using: composite
+
+    steps:
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          aws-access-key-id: ${{ inputs.aws_access_key_id }}
+          aws-secret-access-key: ${{ inputs.aws_secret_access_key }}
+          aws-region: eu-west-2
+
+      - name: Deploy Amazon ECS Task Processor task definition
+        uses: aws-actions/amazon-ecs-deploy-task-definition@v1
+        with:
+          cluster: ${{ inputs.aws_ecs_cluster_name }}
+          service: ${{ inputs.aws_ecs_service_name }}
+          task-definition: ${{ steps.task-def-task-processor.outputs.task-definition }}
+
+      - name: Wait for service to be stable
+        run: aws ecs wait services-stable --cluster ${{ inputs.aws_ecs_cluster_name }} --services ${{ inputs.aws_ecs_service_name }}
+        shell: bash
