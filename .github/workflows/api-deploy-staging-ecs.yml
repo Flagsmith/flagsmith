@@ -47,7 +47,6 @@ jobs:
             - name: Deploy task processor to Staging
               uses: ./.github/actions/task-processor-deploy-ecs
               with:
-                github_access_token: ${{ secrets.GH_PRIVATE_ACCESS_TOKEN }}
                 aws_access_key_id: AKIAUM26IRCPASKFW2X5
                 aws_secret_access_key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
                 aws_ecs_cluster_name: flagsmith-api-cluster-eu-west-2-f241261
