@@ -38,7 +38,7 @@ class TaskProcessorHealthCheckBackend(BaseHealthCheckBackend):
 
     def check_status(self):
         if not is_processor_healthy():
-            raise HealthCheckException("Task processor is not processing tasks.")
+            raise HealthCheckException("Task processor is unable to process tasks.")
 
     def identifier(self):
         return self.__class__.__name__  # Display name on the endpoint.
