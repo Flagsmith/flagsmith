@@ -9,6 +9,19 @@ class FeatureSegmentCreateSerializer(serializers.ModelSerializer):
         fields = ("id", "feature", "segment", "environment", "priority")
         read_only_fields = ("id", "priority")
 
+    def validate(self, data):
+        data = super().validate(data)
+        segment = data["segment"]
+        if segment.feature is not None and segment.feature != data["feature"]:
+            raise serializers.ValidationError(
+                {
+                    "feature": "Can only create segment override(using this segment) for feature %d"
+                    % segment.feature.id,
+                }
+            )
+
+        return data
+
 
 class FeatureSegmentQuerySerializer(serializers.Serializer):
     environment = serializers.IntegerField()
