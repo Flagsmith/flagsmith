@@ -20,12 +20,11 @@ class BaseSubscriptionMetadata:
                 "Cannot add SubscriptionMetadata from multiple payment sources."
             )
 
-        # TODO: test this logic and confirm that it's correct
         if self.projects is not None and other.projects is not None:
             projects = self.projects + other.projects
         elif self.projects is None and other.projects is not None:
             projects = other.projects
-        elif other.projects is None and self.projects is None:
+        elif other.projects is None and self.projects is not None:
             projects = self.projects
         else:
             projects = None
