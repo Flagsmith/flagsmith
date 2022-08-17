@@ -42,6 +42,7 @@ jobs:
                 flagsmith_saml_revision: v0.2.1
                 flagsmith_workflows_revision: v1.0.4
                 flagsmith_auth_controller_revision: v0.0.1
+                image_tag: main
 
             - name: Deploy task processor to Staging
               uses: ./.github/actions/task-processor-deploy-ecs
