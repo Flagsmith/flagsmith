@@ -20,6 +20,7 @@ azure-identity==1.10.0
     # via opencensus-ext-azure
 backoff==1.10.0
     # via
+    #   -r requirements.in
     #   analytics-python
     #   rudder-sdk-python
 boto3==1.24.16
