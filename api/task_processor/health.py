@@ -8,7 +8,7 @@ from task_processor.models import HealthCheckModel
 from task_processor.tasks import create_health_check_model
 
 
-def is_processor_healthy(max_tries: int = 5, factor: float = 0.1):
+def is_processor_healthy(max_tries: int = 5, factor: float = 0.1) -> bool:
     health_check_model_uuid = str(uuid.uuid4())
 
     create_health_check_model.delay(health_check_model_uuid)
