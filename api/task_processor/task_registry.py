@@ -20,5 +20,4 @@ def register_task(task_identifier: str, callable_: typing.Callable):
 
 
 def get_task(task_identifier: str) -> typing.Callable:
-    global registered_tasks
     return registered_tasks[task_identifier]
