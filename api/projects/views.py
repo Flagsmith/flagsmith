@@ -50,7 +50,14 @@ from projects.serializers import (
                 "ID of the organisation to filter by.",
                 required=False,
                 type=openapi.TYPE_INTEGER,
-            )
+            ),
+            openapi.Parameter(
+                "uuid",
+                openapi.IN_QUERY,
+                "uuid of the project to filter by.",
+                required=False,
+                type=openapi.TYPE_STRING,
+            ),
         ]
     ),
 )
@@ -66,6 +73,10 @@ class ProjectViewSet(viewsets.ModelViewSet):
         organisation_id = self.request.query_params.get("organisation")
         if organisation_id:
             queryset = queryset.filter(organisation__id=organisation_id)
+
+        project_uuid = self.request.query_params.get("uuid")
+        if project_uuid:
+            queryset = queryset.filter(uuid=project_uuid)
 
         return queryset
 

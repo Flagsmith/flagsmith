@@ -465,3 +465,22 @@ def test_project_migrate_to_edge_returns_400_if_project_have_too_many_identities
     assert response.status_code == status.HTTP_400_BAD_REQUEST
     assert response.json()["detail"] == "Too many identities; Please contact support"
     mocked_identity_migrator.assert_not_called()
+
+
+def test_list_project_with_uuid_filter_returns_correct_project(
+    admin_client, project, mocker, settings, organisation
+):
+    # Given
+    # another project
+    Project.objects.create(name="Other project", organisation=organisation)
+
+    base_url = reverse("api-v1:projects:project-list")
+    url = f"{base_url}?uuid={project.uuid}"
+
+    # When
+    response = admin_client.get(url)
+
+    # Then
+    assert response.status_code == status.HTTP_200_OK
+    assert len(response.json()) == 1
+    assert response.json()[0]["uuid"] == project.uuid
