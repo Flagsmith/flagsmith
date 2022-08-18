@@ -150,6 +150,10 @@
                 {
                     "name": "GUNICORN_KEEP_ALIVE",
                     "value": "60"
+                },
+                {
+                    "name": "RUN_TASKS_SYNCHRONOUSLY",
+                    "value": "False"
                 }
             ],
             "secrets": [
