@@ -1,24 +1,12 @@
 import logging
-import typing
+
+from task_processor.decorators import register_task_handler
+from task_processor.models import HealthCheckModel
 
 logger = logging.getLogger(__name__)
 
-registered_tasks: typing.Dict[str, typing.Callable] = {}
 
-
-def register_task(task_identifier: str, callable_: typing.Callable):
-    global registered_tasks
-
-    logger.debug("Registering task '%s'", task_identifier)
-
-    registered_tasks[task_identifier] = callable_
-
-    logger.debug(
-        "Registered tasks now has the following tasks registered: %s",
-        list(registered_tasks.keys()),
-    )
-
-
-def get_task(task_identifier: str) -> typing.Callable:
-    global registered_tasks
-    return registered_tasks[task_identifier]
+@register_task_handler()
+def create_health_check_model(health_check_model_uuid: str):
+    logger.info("Creating health check model.")
+    HealthCheckModel.objects.create(uuid=health_check_model_uuid)

@@ -6,7 +6,7 @@ from threading import Thread
 from django.conf import settings
 
 from task_processor.models import Task
-from task_processor.tasks import register_task
+from task_processor.task_registry import register_task
 
 logger = logging.getLogger(__name__)
 
@@ -27,7 +27,8 @@ def register_task_handler(task_name: str = None):
                 f(*args, **kwargs)
             else:
                 logger.debug("Creating task for function '%s'...", task_identifier)
-                Task.create(task_identifier, *args, **kwargs)
+                task = Task.create(task_identifier, *args, **kwargs)
+                task.save()
 
         # TODO: remove this functionality and use delay in all scenarios
         def run_in_thread(*args, **kwargs):
