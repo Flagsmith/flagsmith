@@ -19,11 +19,13 @@ GOOGLE_ANALYTICS_COLLECT_URL = GOOGLE_ANALYTICS_BASE_URL + "/collect"
 GOOGLE_ANALYTICS_BATCH_URL = GOOGLE_ANALYTICS_BASE_URL + "/batch"
 DEFAULT_DATA = "v=1&tid=" + settings.GOOGLE_ANALYTICS_KEY
 
-# dictionary of resources to their corresponding actions when tracking events in GA
+# dictionary of resources to their corresponding actions
+# when tracking events in GA / Influx
 TRACKED_RESOURCE_ACTIONS = {
     "flags": "flags",
     "identities": "identity_flags",
     "traits": "traits",
+    "environment-document": "environment_document",
 }
 
 
