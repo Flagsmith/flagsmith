@@ -3,9 +3,9 @@ from datetime import timedelta
 from unittest import TestCase
 
 import pytest
-from django.test import override_settings
 from django.urls import reverse
 from django.utils import timezone
+from pytest_lazyfixture import lazy_fixture
 from rest_framework import status
 from rest_framework.test import APIClient
 
@@ -29,6 +29,109 @@ now = timezone.now()
 yesterday = now - timedelta(days=1)
 
 
+def test_should_create_a_project(settings, admin_user, admin_client, organisation):
+    # Given
+    project_name = "project1"
+    settings.PROJECT_METADATA_TABLE_NAME_DYNAMO = None
+    data = {"name": project_name, "organisation": organisation.id}
+    url = reverse("api-v1:projects:project-list")
+
+    # When
+    response = admin_client.post(url, data=data)
+
+    # Then
+    assert response.status_code == status.HTTP_201_CREATED
+    assert Project.objects.filter(name=project_name).count() == 1
+    assert (
+        response.json()["migration_status"]
+        == ProjectIdentityMigrationStatus.NOT_APPLICABLE.value
+    )
+    assert response.json()["use_edge_identities"] is False
+
+    # and user is admin
+    assert UserProjectPermission.objects.filter(
+        user=admin_user, project__id=response.json()["id"], admin=True
+    )
+
+    # and they can get the project
+    url = reverse("api-v1:projects:project-detail", args=[response.json()["id"]])
+    get_project_response = admin_client.get(url)
+    assert get_project_response.status_code == status.HTTP_200_OK
+
+
+def test_should_create_a_project_with_master_api_key_client(
+    settings, organisation, master_api_key_client
+):
+    # Given
+    project_name = "project1"
+    settings.PROJECT_METADATA_TABLE_NAME_DYNAMO = None
+    data = {"name": project_name, "organisation": organisation.id}
+    url = reverse("api-v1:projects:project-list")
+
+    # When
+    response = master_api_key_client.post(url, data=data)
+
+    # Then
+    assert response.status_code == status.HTTP_201_CREATED
+    assert Project.objects.filter(name=project_name).count() == 1
+    assert (
+        response.json()["migration_status"]
+        == ProjectIdentityMigrationStatus.NOT_APPLICABLE.value
+    )
+    assert response.json()["use_edge_identities"] is False
+
+
+@pytest.mark.parametrize(
+    "client", [(lazy_fixture("master_api_key_client")), (lazy_fixture("admin_client"))]
+)
+def test_can_update_project(client, project, organisation):
+    # Given
+    new_name = "New project name"
+    data = {"name": new_name, "organisation": organisation.id}
+    url = reverse("api-v1:projects:project-detail", args=[project.id])
+
+    # When
+    response = client.put(url, data=data)
+
+    # Then
+    assert response.status_code == status.HTTP_200_OK
+    assert response.json()["name"] == new_name
+
+
+@pytest.mark.parametrize(
+    "client", [(lazy_fixture("master_api_key_client")), (lazy_fixture("admin_client"))]
+)
+def test_can_list_project_permission(client, project):
+    # Given
+    url = reverse("api-v1:projects:project-permissions")
+
+    # When
+    response = client.get(url)
+
+    # Then
+    assert response.status_code == status.HTTP_200_OK
+    assert (
+        len(response.json()) == 5
+    )  # hard code how many permissions we expect there to be
+
+
+def test_my_permissions_for_a_project_return_400_with_master_api_key(
+    master_api_key_client, project, organisation
+):
+    # Given
+    url = reverse("api-v1:projects:project-my-permissions", args=[project.id])
+
+    # When
+    response = master_api_key_client.get(url)
+
+    # Then
+    assert response.status_code == status.HTTP_400_BAD_REQUEST
+    assert (
+        response.json()["detail"]
+        == "This endpoint can only be used with a user and not Master API Key"
+    )
+
+
 @pytest.mark.django_db
 class ProjectTestCase(TestCase):
     def setUp(self):
@@ -47,34 +150,6 @@ class ProjectTestCase(TestCase):
 
     def _get_detail_url(self, project_id):
         return reverse("api-v1:projects:project-detail", args=[project_id])
-
-    @override_settings(PROJECT_METADATA_TABLE_NAME_DYNAMO=None)
-    def test_should_create_a_project(self):
-        # Given
-        project_name = "project1"
-        data = {"name": project_name, "organisation": self.organisation.id}
-
-        # When
-        response = self.client.post(self.list_url, data=data)
-
-        # Then
-        assert response.status_code == status.HTTP_201_CREATED
-        assert Project.objects.filter(name=project_name).count() == 1
-        assert (
-            response.json()["migration_status"]
-            == ProjectIdentityMigrationStatus.NOT_APPLICABLE.value
-        )
-        assert response.json()["use_edge_identities"] is False
-
-        # and user is admin
-        assert UserProjectPermission.objects.filter(
-            user=self.user, project__id=response.json()["id"], admin=True
-        )
-
-        # and they can get the project
-        url = reverse("api-v1:projects:project-detail", args=[response.json()["id"]])
-        get_project_response = self.client.get(url)
-        assert get_project_response.status_code == status.HTTP_200_OK
 
     def test_create_project_returns_403_if_user_is_not_organisation_admin(self):
         # Given
@@ -141,19 +216,6 @@ class ProjectTestCase(TestCase):
 
         # Then
         assert response.status_code == status.HTTP_403_FORBIDDEN
-
-    def test_user_can_list_project_permission(self):
-        # Given
-        url = reverse("api-v1:projects:project-permissions")
-
-        # When
-        response = self.client.get(url)
-
-        # Then
-        assert response.status_code == status.HTTP_200_OK
-        assert (
-            len(response.json()) == 5
-        )  # hard code how many permissions we expect there to be
 
     def test_user_with_view_project_permission_can_view_project(self):
         # Given
@@ -483,4 +545,4 @@ def test_list_project_with_uuid_filter_returns_correct_project(
     # Then
     assert response.status_code == status.HTTP_200_OK
     assert len(response.json()) == 1
-    assert response.json()[0]["uuid"] == project.uuid
+    assert response.json()[0]["uuid"] == str(project.uuid)

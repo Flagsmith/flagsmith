@@ -1,8 +1,9 @@
 import typing
 
 from django.db.models import Model
+from django.http import HttpRequest
 from rest_framework.exceptions import APIException, PermissionDenied
-from rest_framework.permissions import BasePermission
+from rest_framework.permissions import BasePermission, IsAuthenticated
 
 from organisations.models import Organisation
 from organisations.permissions.permissions import CREATE_PROJECT
@@ -19,9 +20,12 @@ PROJECT_PERMISSIONS = [
 ]
 
 
-class ProjectPermissions(BasePermission):
+class ProjectPermissions(IsAuthenticated):
     def has_permission(self, request, view):
         """Check if user has permission to list / create project"""
+        if not super().has_permission(request, view):
+            return False
+
         if view.action == "create" and request.user.belongs_to(
             int(request.data.get("organisation"))
         ):
@@ -42,6 +46,9 @@ class ProjectPermissions(BasePermission):
 
     def has_object_permission(self, request, view, obj):
         """Check if user has permission to view / edit / delete project"""
+        if request.user.is_anonymous:
+            return False
+
         if request.user.is_project_admin(obj):
             return True
 
@@ -57,6 +64,30 @@ class ProjectPermissions(BasePermission):
             return True
 
         return False
+
+
+class MasterAPIKeyProjectPermissions(BasePermission):
+    def has_permission(self, request: HttpRequest, view: str) -> bool:
+        master_api_key = getattr(request, "master_api_key", None)
+
+        if not master_api_key:
+            return False
+
+        if view.action == "create":
+            organisation = int(request.data.get("organisation"))
+            return organisation == master_api_key.organisation.id
+
+        if view.action in ("list", "permissions"):
+            return True
+
+        # move on to object specific permissions
+        return view.detail
+
+    def has_object_permission(
+        self, request: HttpRequest, view: str, obj: Project
+    ) -> bool:
+        master_api_key = request.master_api_key
+        return master_api_key.organisation == obj.organisation
 
 
 class IsProjectAdmin(BasePermission):
