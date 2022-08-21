@@ -804,15 +804,15 @@ const CreateFlag = class extends Component {
                                                                 }
                                                               renderRow={({ id, feature_state_value, enabled, identity }) => (
                                                                   <Row
-                                                                    onClick={() => {
-                                                                        window.open(`${document.location.origin}/project/${this.props.projectId}/environment/${this.props.environmentId}/users/${identity.identifier}/${identity.id}?flag=${projectFlag.name}`, '_blank');
-                                                                    }} space className="list-item cursor-pointer"
+                                                                    space className="list-item cursor-pointer"
                                                                     key={id}
                                                                   >
-                                                                      <Flex>
+                                                                      <Flex onClick={() => {
+                                                                        window.open(`${document.location.origin}/project/${this.props.projectId}/environment/${this.props.environmentId}/users/${identity.identifier}/${identity.id}?flag=${projectFlag.name}`, '_blank');
+                                                                      }}>
                                                                           {identity.identifier}
                                                                       </Flex>
-                                                                      <Switch disabled checked={enabled}/>
+                                                                      <Switch checked={enabled} onChange={() => this.toggleUserFlag({ id, identity, enabled })}/>
                                                                       <div className="ml-2">
                                                                           {feature_state_value && (
                                                                           <FeatureValue
