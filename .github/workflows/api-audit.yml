@@ -15,10 +15,10 @@ jobs:
               with:
                   fetch-depth: 0
 
-            - name: Set up Python 3.10 # todo: move to python 3.11
+            - name: Set up Python 3.11
               uses: actions/setup-python@v2
               with:
-                  python-version:  "3.10"
+                  python-version:  "3.11"
 
             - name: Run Audit
             # todo: remove the hack to upgrade `packaging` as drf-yasg2 has an old version dependency
