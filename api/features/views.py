@@ -46,6 +46,7 @@ from .permissions import (
     FeatureStatePermissions,
     IdentityFeatureStatePermissions,
     MasterAPIKeyEnvironmentFeatureStatePermissions,
+    MasterAPIKeyFeaturePermissions,
     MasterAPIKeyFeatureStatePermissions,
 )
 from .serializers import (
@@ -77,7 +78,7 @@ flags_cache = caches[settings.FLAGS_CACHE_LOCATION]
     decorator=swagger_auto_schema(query_serializer=FeatureQuerySerializer()),
 )
 class FeatureViewSet(viewsets.ModelViewSet):
-    permission_classes = [IsAuthenticated, FeaturePermissions]
+    permission_classes = [FeaturePermissions | MasterAPIKeyFeaturePermissions]
     filterset_fields = ["is_archived"]
     pagination_class = CustomPagination
 
@@ -91,8 +92,16 @@ class FeatureViewSet(viewsets.ModelViewSet):
         }.get(self.action, ProjectFeatureSerializer)
 
     def get_queryset(self):
-        user_projects = self.request.user.get_permitted_projects(["VIEW_PROJECT"])
-        project = get_object_or_404(user_projects, pk=self.kwargs["project_pk"])
+        if self.request.user.is_anonymous:
+            accessible_projects = (
+                self.request.master_api_key.organisation.projects.all()
+            )
+        else:
+            accessible_projects = self.request.user.get_permitted_projects(
+                ["VIEW_PROJECT"]
+            )
+
+        project = get_object_or_404(accessible_projects, pk=self.kwargs["project_pk"])
         queryset = project.features.all().prefetch_related(
             "multivariate_options", "owners", "tags"
         )
@@ -211,24 +220,31 @@ class FeatureViewSet(viewsets.ModelViewSet):
 
         # TODO: optimise these creates to use bulk create again but for now, we need to
         #  ensure the post_save signals on the AuditLog model class are triggered
+
+        author = None if self.request.user.is_anonymous else self.request.user
+        master_api_key = (
+            self.request.master_api_key if self.request.user.is_anonymous else None
+        )
         AuditLog.objects.create(
-            author=self.request.user,
+            author=author,
             project=feature.project,
             related_object_type=RelatedObjectType.FEATURE.name,
             related_object_id=feature.id,
             log=message,
+            master_api_key=master_api_key,
         )
         for feature_state in feature_states:
             # for each of these, we skip sending the environments to dynamodb since
             # we have already sent all the environments for the project audit log above
             AuditLog.objects.create(
-                author=self.request.user,
+                author=author,
                 project=feature.project,
                 environment=feature_state.environment,
                 related_object_type=RelatedObjectType.FEATURE_STATE.name,
                 related_object_id=feature_state.id,
                 log=message,
                 skip_signals="send_environments_to_dynamodb",
+                master_api_key=master_api_key,
             )
 
     def _filter_queryset(self, queryset: QuerySet) -> QuerySet:

@@ -100,7 +100,8 @@ class ListCreateFeatureSerializer(WritableNestedModelSerializer):
         # NOTE: pop the user before passing the data to create
         user = validated_data.pop("user")
         instance = super(ListCreateFeatureSerializer, self).create(validated_data)
-        instance.owners.add(user)
+        if not user.is_anonymous:
+            instance.owners.add(user)
         return instance
 
     def validate_multivariate_options(self, multivariate_options):

@@ -8,7 +8,7 @@ from environments.permissions.constants import (
     UPDATE_FEATURE_STATE,
     VIEW_ENVIRONMENT,
 )
-from features.models import FeatureState
+from features.models import Feature, FeatureState
 from projects.models import Project
 
 ACTION_PERMISSIONS_MAP = {
@@ -23,8 +23,11 @@ ACTION_PERMISSIONS_MAP = {
 }
 
 
-class FeaturePermissions(BasePermission):
+class FeaturePermissions(IsAuthenticated):
     def has_permission(self, request, view):
+        if not super().has_permission(request, view):
+            return False
+
         try:
             project_id = view.kwargs.get("project_pk") or request.data.get("project")
             project = Project.objects.get(id=project_id)
@@ -41,6 +44,9 @@ class FeaturePermissions(BasePermission):
             return False
 
     def has_object_permission(self, request, view, obj):
+        if request.user.is_anonymous:
+            return False
+
         # map of actions and their required permission
         if view.action in ACTION_PERMISSIONS_MAP:
             return request.user.has_project_permission(
@@ -51,6 +57,24 @@ class FeaturePermissions(BasePermission):
             return request.user.is_project_admin(obj.project)
 
         return False
+
+
+class MasterAPIKeyFeaturePermissions(BasePermission):
+    def has_permission(self, request: HttpRequest, view: str) -> bool:
+        master_api_key = getattr(request, "master_api_key", None)
+        if not master_api_key:
+            return False
+        with suppress(Project.DoesNotExist):
+            project_id = view.kwargs.get("project_pk") or request.data.get("project")
+            project = Project.objects.get(id=project_id)
+
+            return project.organisation == master_api_key.organisation
+        return False
+
+    def has_object_permission(
+        self, request: HttpRequest, view: str, obj: Feature
+    ) -> bool:
+        return self.has_permission(request, view)
 
 
 class FeatureStatePermissions(IsAuthenticated):

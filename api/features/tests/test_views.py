@@ -83,69 +83,6 @@ class ProjectFeatureTestCase(TestCase):
             project=self.project2,
         )
 
-    def test_default_is_archived_is_false(self):
-        # Given - set up data
-        data = {
-            "name": "test feature",
-        }
-        url = reverse("api-v1:projects:project-features-list", args=[self.project.id])
-
-        # When
-        response = self.client.post(
-            url, data=json.dumps(data), content_type="application/json"
-        ).json()
-
-        # Then
-        assert response["is_archived"] is False
-
-    def test_update_is_archived_works(self):
-        # Given
-        feature = Feature.objects.create(name="test feature", project=self.project)
-        url = reverse(
-            "api-v1:projects:project-features-detail",
-            args=[self.project.id, feature.id],
-        )
-        data = {"name": "test feature", "is_archived": True}
-
-        # When
-        response = self.client.put(url, data=data).json()
-
-        # Then
-        assert response["is_archived"] is True
-
-    def test_should_create_feature_states_when_feature_created(self):
-        # Given - set up data
-        default_value = "This is a value"
-        data = {
-            "name": "test feature",
-            "initial_value": default_value,
-            "project": self.project.id,
-        }
-        url = reverse("api-v1:projects:project-features-list", args=[self.project.id])
-
-        # When
-        response = self.client.post(
-            url, data=json.dumps(data), content_type="application/json"
-        )
-
-        # Then
-        assert response.status_code == status.HTTP_201_CREATED
-        # check feature was created successfully
-        assert (
-            Feature.objects.filter(name="test feature", project=self.project.id).count()
-            == 1
-        )
-
-        # check feature was added to environment
-        assert FeatureState.objects.filter(environment=self.environment_1).count() == 1
-        assert FeatureState.objects.filter(environment=self.environment_2).count() == 1
-
-        # check that value was correctly added to feature state
-        feature_state = FeatureState.objects.filter(
-            environment=self.environment_1
-        ).first()
-        assert feature_state.get_feature_state_value() == default_value
-
     def test_owners_is_read_only_for_feature_create(self):
         # Given - set up data
         default_value = "This is a value"
@@ -175,175 +112,6 @@ class ProjectFeatureTestCase(TestCase):
         assert response.json()["owners"][0]["id"] == self.user.id
         assert response.json()["owners"][0]["email"] == self.user.email
 
-    def test_should_create_feature_states_with_integer_value_when_feature_created(self):
-        # Given - set up data
-        default_value = 12
-        url = reverse("api-v1:projects:project-features-list", args=[self.project.id])
-        data = {
-            "name": "test feature",
-            "initial_value": default_value,
-            "project": self.project.id,
-        }
-
-        # When
-        response = self.client.post(
-            url, data=json.dumps(data), content_type="application/json"
-        )
-
-        # Then
-        assert response.status_code == status.HTTP_201_CREATED
-        # check feature was created successfully
-        assert (
-            Feature.objects.filter(name="test feature", project=self.project.id).count()
-            == 1
-        )
-
-        # check feature was added to environment
-        assert FeatureState.objects.filter(environment=self.environment_1).count() == 1
-        assert FeatureState.objects.filter(environment=self.environment_2).count() == 1
-
-        # check that value was correctly added to feature state
-        feature_state = FeatureState.objects.filter(
-            environment=self.environment_1
-        ).first()
-        assert feature_state.get_feature_state_value() == default_value
-
-    def test_should_create_feature_states_with_boolean_value_when_feature_created(self):
-        # Given - set up data
-        default_value = True
-        feature_name = "Test feature"
-        data = {
-            "name": "Test feature",
-            "initial_value": default_value,
-            "project": self.project.id,
-        }
-        url = reverse("api-v1:projects:project-features-list", args=[self.project.id])
-
-        # When
-        response = self.client.post(
-            url, data=json.dumps(data), content_type="application/json"
-        )
-
-        # Then
-        assert response.status_code == status.HTTP_201_CREATED
-
-        # check feature was created successfully
-        assert (
-            Feature.objects.filter(name=feature_name, project=self.project.id).count()
-            == 1
-        )
-
-        # check feature was added to environment
-        assert FeatureState.objects.filter(environment=self.environment_1).count() == 1
-        assert FeatureState.objects.filter(environment=self.environment_2).count() == 1
-
-        # check that value was correctly added to feature state
-        feature_state = FeatureState.objects.filter(
-            environment=self.environment_1
-        ).first()
-        assert feature_state.get_feature_state_value() == default_value
-
-    def test_should_delete_feature_states_when_feature_deleted(self):
-        # Given
-        feature = Feature.objects.create(name="test feature", project=self.project)
-
-        # When
-        response = self.client.delete(
-            self.project_feature_detail_url % (self.project.id, feature.id)
-        )
-
-        # Then
-        assert response.status_code == status.HTTP_204_NO_CONTENT
-        # check feature was deleted successfully
-        assert (
-            Feature.objects.filter(name="test feature", project=self.project.id).count()
-            == 0
-        )
-
-        # check feature was removed from all environments
-        assert (
-            FeatureState.objects.filter(
-                environment=self.environment_1, feature=feature
-            ).count()
-            == 0
-        )
-        assert (
-            FeatureState.objects.filter(
-                environment=self.environment_2, feature=feature
-            ).count()
-            == 0
-        )
-
-    def test_audit_log_created_when_feature_created(self):
-        # Given
-        url = reverse("api-v1:projects:project-features-list", args=[self.project.id])
-        data = {"name": "Test feature flag", "type": "FLAG", "project": self.project.id}
-
-        # When
-        response = self.client.post(url, data=data)
-        feature_id = response.json()["id"]
-
-        # Then
-
-        # Audit log exists for the feature
-        assert (
-            AuditLog.objects.filter(
-                related_object_type=RelatedObjectType.FEATURE.name,
-                related_object_id=feature_id,
-            ).count()
-            == 1
-        )
-        # and Audit log exists for every environment
-        assert AuditLog.objects.filter(
-            related_object_type=RelatedObjectType.FEATURE_STATE.name,
-            project=self.project,
-            environment__in=self.project.environments.all(),
-        ).count() == len(self.project.environments.all())
-
-    def test_audit_log_created_when_feature_updated(self):
-        # Given
-        feature = Feature.objects.create(name="Test Feature", project=self.project)
-        url = reverse(
-            "api-v1:projects:project-features-detail",
-            args=[self.project.id, feature.id],
-        )
-        data = {
-            "name": "Test Feature updated",
-            "type": "FLAG",
-            "project": self.project.id,
-        }
-
-        # When
-        self.client.put(url, data=data)
-
-        # Then
-        assert (
-            AuditLog.objects.filter(
-                related_object_type=RelatedObjectType.FEATURE.name
-            ).count()
-            == 1
-        )
-
-    def test_audit_logs_created_when_feature_deleted(self):
-        # Given
-        feature = Feature.objects.create(name="test feature", project=self.project)
-        feature_states_ids = list(feature.feature_states.values_list("id", flat=True))
-        # When
-        self.client.delete(
-            self.project_feature_detail_url % (self.project.id, feature.id)
-        )
-        # Then
-        # Audit log exists for the feature
-        assert AuditLog.objects.get(
-            related_object_type=RelatedObjectType.FEATURE.name,
-            related_object_id=feature.id,
-        )
-        # and audit logs exists for all feature states for that feature
-        assert AuditLog.objects.filter(
-            related_object_type=RelatedObjectType.FEATURE_STATE.name,
-            related_object_id__in=feature_states_ids,
-        ).count() == len(feature_states_ids)
-
     @mock.patch("features.views.trigger_feature_state_change_webhooks")
     def test_feature_state_webhook_triggered_when_feature_deleted(
         self, mocked_trigger_fs_change_webhook
@@ -360,34 +128,6 @@ class ProjectFeatureTestCase(TestCase):
             mock.call(fs, WebhookEventType.FLAG_DELETED) for fs in feature_states
         ]
         mocked_trigger_fs_change_webhook.has_calls(mock_calls)
-
-    def test_add_owners_adds_owner(self):
-        # Given
-        feature = Feature.objects.create(name="Test Feature", project=self.project)
-        user_2 = FFAdminUser.objects.create_user(email="user2@mail.com")
-        user_3 = FFAdminUser.objects.create_user(email="user3@mail.com")
-        url = reverse(
-            "api-v1:projects:project-features-add-owners",
-            args=[self.project.id, feature.id],
-        )
-        data = {"user_ids": [user_2.id, user_3.id]}
-        # When
-        json_response = self.client.post(
-            url, data=json.dumps(data), content_type="application/json"
-        ).json()
-        assert len(json_response["owners"]) == 2
-        assert json_response["owners"][0] == {
-            "id": user_2.id,
-            "email": user_2.email,
-            "first_name": user_2.first_name,
-            "last_name": user_2.last_name,
-        }
-        assert json_response["owners"][1] == {
-            "id": user_3.id,
-            "email": user_3.email,
-            "first_name": user_3.first_name,
-            "last_name": user_3.last_name,
-        }
 
     def test_remove_owners_only_remove_specified_owners(self):
         # Given
@@ -523,36 +263,6 @@ class ProjectFeatureTestCase(TestCase):
         )
         assert audit_log.log == expected_log_message
 
-    def test_should_create_tags_when_feature_created(self):
-        # Given - set up data
-        default_value = "Test"
-        feature_name = "Test feature"
-        data = {
-            "name": feature_name,
-            "project": self.project.id,
-            "initial_value": default_value,
-            "tags": [self.tag_one.id, self.tag_two.id],
-        }
-
-        # When
-        response = self.client.post(
-            self.project_features_url % self.project.id,
-            data=json.dumps(data),
-            content_type="application/json",
-        )
-
-        # Then
-        assert response.status_code == status.HTTP_201_CREATED
-
-        # check feature was created successfully
-        feature = Feature.objects.filter(
-            name=feature_name, project=self.project.id
-        ).first()
-
-        # check tags where added
-        assert feature.tags.count() == 2
-        self.assertEqual(list(feature.tags.all()), [self.tag_one, self.tag_two])
-
     def test_when_add_tags_from_different_project_on_feature_create_then_failed(self):
         # Given - set up data
         feature_name = "test feature"
@@ -632,23 +342,6 @@ class ProjectFeatureTestCase(TestCase):
 
         # check tags not added
         assert check_feature.tags.count() == 0
-
-    def test_list_features_return_tags(self):
-        # Given
-        Feature.objects.create(name="test_feature", project=self.project)
-        url = reverse("api-v1:projects:project-features-list", args=[self.project.id])
-
-        # When
-        response = self.client.get(url)
-
-        # Then
-        assert response.status_code == status.HTTP_200_OK
-
-        response_json = response.json()
-        assert response_json["count"] == 1
-
-        feature = response_json["results"][0]
-        assert "tags" in feature
 
     def test_list_features_is_archived_filter(self):
         # Firstly, let's setup the initial data
