@@ -134,8 +134,11 @@ const HomePage = class extends React.Component {
             if (Utils.getFlagsmithHasFeature('saml')) {
                 oauths.push((
                     <a
+                        href={Utils.getFlagsmithValue("sso_idp")||undefined}
                         onClick={() => {
-                            openModal('Single Sign-On', <SamlForm/>);
+                            if(Utils.getFlagsmithValue("sso_idp")) {
+                                openModal('Single Sign-On', <SamlForm/>);
+                            }
                         }
                         } key="single-sign-on" className="btn btn__oauth btn__oauth--saml"
                     >
