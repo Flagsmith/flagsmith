@@ -2,6 +2,7 @@
 import React, { Component } from 'react';
 import FlagSelect from "./FlagSelect";
 import ProjectStore from '../../common/stores/project-store'
+import FeatureListStore from '../../common/stores/feature-list-store'
 import data from "../../common/data/base/_data";
 import FeatureRow from "./FeatureRow";
 const featureNameWidth = 300;
@@ -25,6 +26,11 @@ class CompareEnvironments extends Component {
     }
 
     componentDidUpdate(prevProps, prevState, snapshot) {
+        ES6Component(this)
+        this.listenTo(FeatureListStore, 'saved', ()=>{
+            toast('Saved')
+            this.fetch()
+        })
         if (this.state.flagId !== prevState.flagId) {
             this.fetch();
         }
