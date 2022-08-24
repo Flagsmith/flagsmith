@@ -9,7 +9,9 @@
             "entryPoint": [
                 "python",
                 "manage.py",
-                "runprocessor"
+                "runprocessor",
+                "--sleepintervalms",
+                "700"
             ],
             "essential": true,
             "environment": [
