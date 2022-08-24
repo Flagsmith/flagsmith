@@ -416,26 +416,6 @@ class ProjectFeatureTestCase(TestCase):
             aggregate_every="24h",  # this is the default but can be provided as a GET param
         )
 
-    def test_project_admin_can_create_mv_options_when_creating_feature(self):
-        # Given
-        data = {
-            "name": "test_feature",
-            "default_enabled": True,
-            "multivariate_options": [{"type": "unicode", "string_value": "test-value"}],
-        }
-        url = reverse("api-v1:projects:project-features-list", args=[self.project.id])
-
-        # When
-        response = self.client.post(
-            url, data=json.dumps(data), content_type="application/json"
-        )
-
-        # Then
-        assert response.status_code == status.HTTP_201_CREATED
-
-        response_json = response.json()
-        assert len(response_json["multivariate_options"]) == 1
-
     def test_regular_user_cannot_create_mv_options_when_creating_feature(self):
         # Given
         user = FFAdminUser.objects.create(email="regularuser@project.com")

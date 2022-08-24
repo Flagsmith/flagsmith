@@ -108,7 +108,10 @@ class ListCreateFeatureSerializer(WritableNestedModelSerializer):
         if multivariate_options:
             user = self.context["request"].user
             project = self.context.get("project")
-            if not (user and project and user.is_project_admin(project)):
+
+            if user.is_authenticated and not (
+                project and user.is_project_admin(project)
+            ):
                 raise PermissionDenied(
                     "User must be project admin to modify / create MV options."
                 )

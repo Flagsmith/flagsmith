@@ -516,3 +516,25 @@ def test_list_features_return_tags(client, project, feature):
 
     feature = response_json["results"][0]
     assert "tags" in feature
+
+
+@pytest.mark.parametrize(
+    "client", [(lazy_fixture("master_api_key_client")), (lazy_fixture("admin_client"))]
+)
+def test_project_admin_can_create_mv_options_when_creating_feature(client, project):
+    # Given
+    data = {
+        "name": "test_feature",
+        "default_enabled": True,
+        "multivariate_options": [{"type": "unicode", "string_value": "test-value"}],
+    }
+    url = reverse("api-v1:projects:project-features-list", args=[project.id])
+
+    # When
+    response = client.post(url, data=json.dumps(data), content_type="application/json")
+
+    # Then
+    assert response.status_code == status.HTTP_201_CREATED
+
+    response_json = response.json()
+    assert len(response_json["multivariate_options"]) == 1
