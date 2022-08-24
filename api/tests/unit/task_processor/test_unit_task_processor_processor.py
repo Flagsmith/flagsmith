@@ -29,6 +29,9 @@ def test_run_task_runs_task_and_creates_task_run_object_when_success(db):
     assert task_run.finished_at
     assert task_run.error_details is None
 
+    task.refresh_from_db()
+    assert task.completed
+
 
 def test_run_task_runs_task_and_creates_task_run_object_when_failure(db):
     # Given
@@ -44,6 +47,9 @@ def test_run_task_runs_task_and_creates_task_run_object_when_failure(db):
     assert task_run.started_at
     assert task_run.finished_at is None
     assert task_run.error_details is not None
+
+    task.refresh_from_db()
+    assert not task.completed
 
 
 def test_run_next_task_does_nothing_if_no_tasks(db):

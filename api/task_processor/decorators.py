@@ -21,7 +21,7 @@ def register_task_handler(task_name: str = None):
 
         register_task(task_identifier, f)
 
-        def delay(*args, **kwargs):
+        def delay(*args, **kwargs) -> typing.Optional[Task]:
             if settings.RUN_TASKS_SYNCHRONOUSLY:
                 logger.debug("Running task '%s' synchronously", task_identifier)
                 f(*args, **kwargs)
@@ -29,6 +29,7 @@ def register_task_handler(task_name: str = None):
                 logger.debug("Creating task for function '%s'...", task_identifier)
                 task = Task.create(task_identifier, *args, **kwargs)
                 task.save()
+                return task
 
         # TODO: remove this functionality and use delay in all scenarios
         def run_in_thread(*args, **kwargs):

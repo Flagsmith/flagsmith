@@ -19,12 +19,13 @@ class Task(models.Model):
     serialized_args = models.TextField(blank=True, null=True)
     serialized_kwargs = models.TextField(blank=True, null=True)
 
-    # denormalise failures so that we can use select_for_update
+    # denormalise failures and completion so that we can use select_for_update
     num_failures = models.IntegerField(default=0)
+    completed = models.BooleanField(default=False)
 
     class Meta:
         index_together = [
-            ["scheduled_for", "num_failures"],
+            ["scheduled_for", "num_failures", "completed"],
         ]
 
     @classmethod
