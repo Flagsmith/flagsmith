@@ -117,62 +117,62 @@ class ValueEditor extends Component {
             <div className={cx('value-editor', { light: this.state.language === 'txt' })}>
                 <Row className="select-language">
                     <span
-                      onMouseDown={(e) => {
-                          e.preventDefault();
-                          e.stopPropagation();
-                          this.setState({ language: 'txt' });
-                      }}
-                      className={cx('txt', { active: this.state.language === 'txt' })}
+                        onMouseDown={(e) => {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            this.setState({ language: 'txt' });
+                        }}
+                        className={cx('txt', { active: this.state.language === 'txt' })}
                     >
-                    .txt
+                        .txt
                     </span>
                     <span
-                      onMouseDown={(e) => {
-                          e.preventDefault();
-                          e.stopPropagation();
-                          this.setState({ language: 'json' });
-                      }}
-                      className={cx('json', { active: this.state.language === 'json' })}
+                        onMouseDown={(e) => {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            this.setState({ language: 'json' });
+                        }}
+                        className={cx('json', { active: this.state.language === 'json' })}
                     >
-                    .json {this.state.language === 'json' && this.renderValidation()}
+                        .json {this.state.language === 'json' && this.renderValidation()}
                     </span>
                     <span
-                      onMouseDown={(e) => {
-                          e.preventDefault();
-                          e.stopPropagation();
-                          this.setState({ language: 'xml' });
-                      }}
-                      className={cx('xml', { active: this.state.language === 'xml' })}
+                        onMouseDown={(e) => {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            this.setState({ language: 'xml' });
+                        }}
+                        className={cx('xml', { active: this.state.language === 'xml' })}
                     >
-                    .xml {this.state.language === 'xml' && this.renderValidation()}
+                        .xml {this.state.language === 'xml' && this.renderValidation()}
                     </span>
                     <span
-                      onMouseDown={(e) => {
-                          e.preventDefault();
-                          e.stopPropagation();
+                        onMouseDown={(e) => {
+                            e.preventDefault();
+                            e.stopPropagation();
 
-                          this.setState({ language: 'ini' });
-                      }}
-                      className={cx('ini', { active: this.state.language === 'ini' })}
+                            this.setState({ language: 'ini' });
+                        }}
+                        className={cx('ini', { active: this.state.language === 'ini' })}
                     >
                         .toml {this.state.language === 'ini' && this.renderValidation()}
                     </span>
                     <span
-                      onMouseDown={(e) => {
-                          e.preventDefault();
-                          e.stopPropagation();
-                          this.setState({ language: 'yaml' });
-                      }}
-                      className={cx('yaml', { active: this.state.language === 'yaml' })}
+                        onMouseDown={(e) => {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            this.setState({ language: 'yaml' });
+                        }}
+                        className={cx('yaml', { active: this.state.language === 'yaml' })}
                     >
                         .yaml {this.state.language === 'yaml' && this.renderValidation()}
                     </span>
                     <span
-                      onMouseDown={(e) => {
-                          const res = Clipboard.setString(this.props.value);
-                          toast(res ? 'Clipboard set' : 'Could not set clipboard :(');
-                      }}
-                      className={cx('txt primary')}
+                        onMouseDown={(e) => {
+                            const res = Clipboard.setString(this.props.value);
+                            toast(res ? 'Clipboard set' : 'Could not set clipboard :(');
+                        }}
+                        className={cx('txt primary')}
                     >
                         <span className="ion ion-md-clipboard mr-0 ml-2 txt primary"/> copy
 
@@ -185,7 +185,7 @@ class ValueEditor extends Component {
                     />
                 ): (
                     <Highlight data-test={rest['data-test']} onChange={rest.onChange} className={this.state.language}>
-                        {rest.value}
+                        {`${rest.value}`}
                     </Highlight>
                 )}
 
