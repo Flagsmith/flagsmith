@@ -234,7 +234,8 @@ class ChargeBeeTestCase(TestCase):
         )
 
 
-def test_get_subscription_metadata(mocker, chargebee_object_metadata):
+@pytest.mark.parametrize("addon_quantity", (None, 1))
+def test_get_subscription_metadata(mocker, chargebee_object_metadata, addon_quantity):
     # Given
     plan_id = "plan-id"
     addon_id = "addon-id"
@@ -242,7 +243,9 @@ def test_get_subscription_metadata(mocker, chargebee_object_metadata):
 
     # Let's create a (mocked) subscription object
     mocked_subscription = mocker.MagicMock(
-        id=subscription_id, plan_id=plan_id, addons=[mocker.MagicMock(id=addon_id)]
+        id=subscription_id,
+        plan_id=plan_id,
+        addons=[mocker.MagicMock(id=addon_id, quantity=addon_quantity)],
     )
     mocked_chargebee = mocker.patch("organisations.chargebee.chargebee.chargebee")
 
