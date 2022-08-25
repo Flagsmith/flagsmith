@@ -194,6 +194,27 @@ def test_write_identities_calls_internal_methods_with_correct_arguments(
     assert actual_identity_document == expected_identity_document
 
 
+def test_write_identities_skips_identity_if_identifier_is_too_large(
+    mocker, project, identity
+):
+    # Given
+    dynamo_identity_wrapper = DynamoIdentityWrapper()
+    mocked_dynamo_table = mocker.patch.object(dynamo_identity_wrapper, "_table")
+
+    # Let's make the identifier too long
+    identity.identifier = "a" * 1025
+    identity.save()
+
+    identities = Identity.objects.filter(id=identity.id)
+
+    # When
+    dynamo_identity_wrapper.write_identities(identities)
+
+    # Then
+    mocked_dynamo_table.batch_writer.assert_called_with()
+    mocked_dynamo_table.batch_writer.return_value.__enter__.return_value.put_item.assert_not_called()
+
+
 def test_is_enabled_is_false_if_dynamo_table_name_is_not_set(settings, mocker):
     # Given
     mocker.patch(
