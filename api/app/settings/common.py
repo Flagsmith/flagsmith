@@ -450,6 +450,9 @@ CHARGEBEE_CACHE_LOCATION = "chargebee-objects"
 CACHE_PROJECT_SEGMENTS_SECONDS = env.int("CACHE_PROJECT_SEGMENTS_SECONDS", 0)
 PROJECT_SEGMENTS_CACHE_LOCATION = "project-segments"
 
+CACHE_ENVIRONMENT_DOCUMENT_SECONDS = env.int("CACHE_ENVIRONMENT_DOCUMENT_SECONDS", 0)
+ENVIRONMENT_DOCUMENT_CACHE_LOCATION = "environment-documents"
+
 CACHES = {
     "default": {
         "BACKEND": "django.core.cache.backends.locmem.LocMemCache",
@@ -471,6 +474,11 @@ CACHES = {
         "BACKEND": "django.core.cache.backends.db.DatabaseCache",
         "LOCATION": CHARGEBEE_CACHE_LOCATION,
         "TIMEOUT": 12 * 60 * 60,  # 12 hours
+    },
+    ENVIRONMENT_DOCUMENT_CACHE_LOCATION: {
+        "BACKEND": "django.core.cache.backends.locmem.LocMemCache",
+        "LOCATION": ENVIRONMENT_DOCUMENT_CACHE_LOCATION,
+        "timeout": CACHE_ENVIRONMENT_DOCUMENT_SECONDS,
     },
 }
 
