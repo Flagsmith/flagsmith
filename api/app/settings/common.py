@@ -476,7 +476,7 @@ CACHES = {
         "TIMEOUT": 12 * 60 * 60,  # 12 hours
     },
     ENVIRONMENT_DOCUMENT_CACHE_LOCATION: {
-        "BACKEND": "django.core.cache.backends.locmem.LocMemCache",
+        "BACKEND": "django.core.cache.backends.db.DatabaseCache",
         "LOCATION": ENVIRONMENT_DOCUMENT_CACHE_LOCATION,
         "timeout": CACHE_ENVIRONMENT_DOCUMENT_SECONDS,
     },
