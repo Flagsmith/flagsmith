@@ -7,6 +7,7 @@ from django.conf import settings
 
 from task_processor.models import Task
 from task_processor.task_registry import register_task
+from task_processor.task_run_method import TaskRunMethod
 
 logger = logging.getLogger(__name__)
 
@@ -22,9 +23,12 @@ def register_task_handler(task_name: str = None):
         register_task(task_identifier, f)
 
         def delay(*args, **kwargs) -> typing.Optional[Task]:
-            if settings.RUN_TASKS_SYNCHRONOUSLY:
+            if settings.TASK_RUN_METHOD == TaskRunMethod.SYNCHRONOUSLY:
                 logger.debug("Running task '%s' synchronously", task_identifier)
                 f(*args, **kwargs)
+            elif settings.TASK_RUN_METHOD == TaskRunMethod.SEPARATE_THREAD:
+                logger.debug("Running task '%s' in separate thread", task_identifier)
+                run_in_thread(*args, **kwargs)
             else:
                 logger.debug("Creating task for function '%s'...", task_identifier)
                 task = Task.create(task_identifier, *args, **kwargs)
