@@ -222,7 +222,7 @@ const CreateSegment = class extends Component {
                 )}
 
                 <Row className="mb-4">
-                    <label className="mr-2 mb-0" htmlFor="id">
+                    <label className="mr-2 mb-0" htmlFor="segmentID">
                         ID
                     </label>
                     <div style={{width:200}}>
@@ -230,13 +230,9 @@ const CreateSegment = class extends Component {
                             ref={e => this.input = e}
                             data-test="segmentID"
                             name="id"
-                            inputProps={{
-                                id: "id",
-                                className: 'full-width',
-                                name: 'segmentID',
-                                readOnly: isEdit,
-                                maxLength: SEGMENT_ID_MAXLENGTH,
-                            }}
+                            id="segmentID"
+                            readOnly={isEdit}
+                            maxLength={SEGMENT_ID_MAXLENGTH}
                             value={name}
                             onChange={e => this.setState({ name: Format.enumeration.set(Utils.safeParseEventValue(e)).toLowerCase() })}
                             isValid={name && name.length}
@@ -297,7 +293,7 @@ const CreateSegment = class extends Component {
                     <div className="text-right">
                         <Row className="justify-content-end">
                             {this.props.condensed && (
-                                <ButtonLink onClick={this.props.onCancel} className="mr-4">Cancel</ButtonLink>
+                                <ButtonLink type="button" onClick={this.props.onCancel} className="mr-4">Cancel</ButtonLink>
                             )}
                             {isEdit ? (
                                 <Button
