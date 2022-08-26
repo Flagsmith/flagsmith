@@ -368,7 +368,7 @@ class TheComponent extends Component {
 
                 <div className="text-center mt-2 mb-2">
 
-                    {segments && !this.props.id && !this.props.disableCreate&& (
+                    {segments && !this.props.id && !this.props.disableCreate&& !this.props.showCreateSegment && (
                         <Flex className="text-left">
                                 <Select
                                     data-test="select-segment"
@@ -401,27 +401,30 @@ class TheComponent extends Component {
                                 />
                         </Flex>
                     )}
-                    {Utils.getFlagsmithHasFeature("flag_based_segments")&& (
+                    {Utils.getFlagsmithHasFeature("flag_based_segments")&& !this.props.showCreateSegment && (
                         <Button className="mt-2" onClick={()=>{
-                           this.setState({showCreateSegment:true, selectedSegment:null})
+                           this.setState({ selectedSegment:null})
+                            this.props.setShowCreateSegment(true)
                         }}>
                             Create Feature-Specific Segment
                         </Button>
                     )}
-                    {this.state.showCreateSegment && (
+                    {this.props.showCreateSegment && (
                         <div className="text-left panel--grey mt-2">
                         <CreateSegmentModal
                             onComplete={(segment)=>{
                                 if (this.state.selectedSegment) {
-                                    this.setState({showCreateSegment:false})
+                                    this.props.setShowCreateSegment(false)
+
                                 } else {
                                     const id = document.getElementById("segmentID").value;
                                     const selectedSegment = _.sortBy(segmentOptions, (v)=>-v.value).find((v)=>v.label === id)
-                                    this.setState({showCreateSegment:false, selectedSegment}, this.addItem)
+                                    this.props.setShowCreateSegment(false)
+                                    this.setState({selectedSegment}, this.addItem)
                                 }
                             }}
                             onCancel={()=>{
-                                this.setState({showCreateSegment:false})
+                                this.props.setShowCreateSegment(false)
                             }}
                             condensed
                             isEdit={!!this.state.selectedSegment}
@@ -432,7 +435,7 @@ class TheComponent extends Component {
                         />
                         </div>
                     )}
-                    {value && !!value.length && !this.state.showCreateSegment && (
+                    {value && !!value.length && !this.props.showCreateSegment && (
                         <div style={isLoading ? { opacity: 0.5 } : null} className="mt-4 overflow-visible">
                             {!this.props.id && (
                                 <div>
@@ -458,7 +461,9 @@ class TheComponent extends Component {
                             {value && (
                             <InnerComponent
                                 onEditClick={(selectedSegment)=>{
-                                    this.setState({selectedSegment, showCreateSegment:true })
+                                    this.setState({selectedSegment })
+                                    this.props.setShowCreateSegment(true)
+
                                 }}
                               disabled={isLoading}
                               id={this.props.id}

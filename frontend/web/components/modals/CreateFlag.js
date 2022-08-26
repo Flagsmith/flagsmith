@@ -682,7 +682,7 @@ const CreateFlag = class extends Component {
                                                                                       </Tooltip>
                                                                             )}
                                                                                   action={
-                                                                                (
+                                                                                !this.state.showCreateSegment && (
                                                                                     <Button onClick={() => this.changeSegment(this.props.segmentOverrides)} type="button" className={`btn--outline${enabledSegment ? '' : '-red'}`}>
                                                                                         {enabledSegment ? 'Enable All' : 'Disable All'}
                                                                                     </Button>
@@ -691,6 +691,8 @@ const CreateFlag = class extends Component {
                                                                                 >
                                                                                     {this.props.segmentOverrides ? (
                                                                                         <SegmentOverrides
+                                                                                          showCreateSegment={this.state.showCreateSegment}
+                                                                                          setShowCreateSegment={(showCreateSegment)=>this.setState({showCreateSegment})}
                                                                                           feature={projectFlag.id}
                                                                                           projectId={this.props.projectId}
                                                                                           multivariateOptions={multivariate_options}
@@ -709,23 +711,29 @@ const CreateFlag = class extends Component {
                                                                                         </div>
                                                                                     )}
                                                                                 </Panel>
-                                                                                <p className="text-right mt-4">
-                                                                                    {is4Eyes && is4EyesSegmentOverrides ? 'This will create a change request for the environment' : 'This will update the segment overrides for the environment'}
-                                                                                    {' '}
-                                                                                    <strong>
-                                                                                        {
-                                                                                    _.find(project.environments, { api_key: this.props.environmentId }).name
-                                                                                }
-                                                                                    </strong>
-                                                                                </p>
-                                                                                <div className="text-right">
-                                                                                    <Button
-                                                                                      onClick={saveFeatureSegments} type="button" data-test="update-feature-segments-btn"
-                                                                                      id="update-feature-segments-btn" disabled={isSaving || !name || invalid}
-                                                                                    >
-                                                                                        {isSaving ? 'Updating' : 'Update Segment Overrides'}
-                                                                                    </Button>
-                                                                                </div>
+                                                                                {!this.state.showCreateSegment && (
+                                                                                    <div>
+                                                                                        <p className="text-right mt-4">
+                                                                                            {is4Eyes && is4EyesSegmentOverrides ? 'This will create a change request for the environment' : 'This will update the segment overrides for the environment'}
+                                                                                            {' '}
+                                                                                            <strong>
+                                                                                                {
+                                                                                                    _.find(project.environments, { api_key: this.props.environmentId }).name
+                                                                                                }
+                                                                                            </strong>
+                                                                                        </p>
+                                                                                        <div className="text-right">
+                                                                                            <Button
+                                                                                                onClick={saveFeatureSegments} type="button" data-test="update-feature-segments-btn"
+                                                                                                id="update-feature-segments-btn" disabled={isSaving || !name || invalid}
+                                                                                            >
+                                                                                                {isSaving ? 'Updating' : 'Update Segment Overrides'}
+                                                                                            </Button>
+                                                                                        </div>
+                                                                                    </div>
+                                                                                )}
+
+
 
                                                                             </div>
 
