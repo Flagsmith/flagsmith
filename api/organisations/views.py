@@ -270,7 +270,8 @@ def chargebee_webhook(request):
                 existing_subscription.update_plan(subscription_data.get("plan_id"))
         elif subscription_status in ("non_renewing", "cancelled"):
             existing_subscription.cancel(
-                datetime.fromtimestamp(subscription_data.get("current_term_end"))
+                datetime.fromtimestamp(subscription_data.get("current_term_end")),
+                update_chargebee=False,
             )
 
     return Response(status=status.HTTP_200_OK)
