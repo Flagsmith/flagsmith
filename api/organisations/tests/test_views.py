@@ -599,8 +599,9 @@ class ChargeBeeWebhookTestCase(TestCase):
         assert self.subscription.max_seats == new_max_seats
         assert self.subscription.max_api_calls == new_max_api_calls
 
+    @mock.patch("organisations.models.cancel_chargebee_subscription")
     def test_when_subscription_is_set_to_non_renewing_then_cancellation_date_set_and_alert_sent(
-        self,
+        self, mocked_cancel_chargebee_subscription
     ):
         # Given
         cancellation_date = datetime.now(tz=UTC) + timedelta(days=1)
@@ -625,6 +626,7 @@ class ChargeBeeWebhookTestCase(TestCase):
 
         # and
         assert len(mail.outbox) == 1
+        mocked_cancel_chargebee_subscription.assert_not_called()
 
     def test_when_subscription_is_cancelled_then_cancellation_date_set_and_alert_sent(
         self,
