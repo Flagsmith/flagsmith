@@ -82,7 +82,7 @@ const CreateFlag = class extends Component {
                 }
             })
         } else {
-            resolve(true);
+            return Promise.resolve(true);
         }
     }
 
