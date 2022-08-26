@@ -154,6 +154,10 @@
                 {
                     "name": "RUN_TASKS_SYNCHRONOUSLY",
                     "value": "False"
+                },
+                {
+                    "name": "CACHE_ENVIRONMENT_DOCUMENT_SECONDS",
+                    "value": "60"
                 }
             ],
             "secrets": [

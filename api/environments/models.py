@@ -16,6 +16,7 @@ from django.utils.translation import ugettext_lazy as _
 from django_lifecycle import AFTER_CREATE, AFTER_SAVE, LifecycleModel, hook
 from flag_engine.api.document_builders import (
     build_environment_api_key_document,
+    build_environment_document,
 )
 from rest_framework.request import Request
 
@@ -32,7 +33,9 @@ from projects.models import Project
 from webhooks.models import AbstractBaseWebhookModel
 
 logger = logging.getLogger(__name__)
+
 environment_cache = caches[settings.ENVIRONMENT_CACHE_LOCATION]
+environment_document_cache = caches[settings.ENVIRONMENT_DOCUMENT_CACHE_LOCATION]
 
 # Intialize the dynamo environment wrapper globaly
 environment_wrapper = DynamoEnvironmentWrapper()
@@ -199,6 +202,25 @@ class Environment(LifecycleModel):
             or getattr(request, "originated_from", RequestOrigin.CLIENT)
             == RequestOrigin.SERVER
         )
+
+    @classmethod
+    def get_environment_document(cls, api_key: str) -> dict:
+        if settings.CACHE_ENVIRONMENT_DOCUMENT_SECONDS > 0:
+            return cls._get_environment_document_from_cache(api_key)
+        return cls._get_environment_document_from_db(api_key)
+
+    @classmethod
+    def _get_environment_document_from_cache(cls, api_key: str) -> dict:
+        environment_document = environment_document_cache.get(api_key)
+        if not environment_document:
+            environment_document = cls._get_environment_document_from_db(api_key)
+            environment_document_cache.set(api_key, environment_document)
+        return environment_document
+
+    @classmethod
+    def _get_environment_document_from_db(cls, api_key: str) -> dict:
+        environment = cls.objects.filter_for_document_builder(api_key=api_key).get()
+        return build_environment_document(environment)
 
 
 class Webhook(AbstractBaseWebhookModel):
