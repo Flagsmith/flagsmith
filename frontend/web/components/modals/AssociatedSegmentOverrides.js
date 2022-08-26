@@ -78,6 +78,7 @@ class TheComponent extends Component {
                 <WrappedSegmentOverrideAdd
                     onSave={this.fetch}
                     addItem={this.addItem}
+                    feature={this.props.feature}
                     selectedResults={selectedResults}
                     ignoreFlags={selectedResults && selectedResults.map((v)=>v.feature.id)}
                     id={this.props.id}
@@ -298,7 +299,6 @@ class SegmentOverridesInner extends Component {
                                     onRemove={this.props.onRemove}
                                     multivariateOptions={_.cloneDeep(projectFlag.multivariate_options)}
                                     environmentId={environmentId}
-
                                     value={ segmentOverride}
                                     controlValue={projectFlag.feature_state_value}
                                     onChange={updateSegments}
@@ -379,10 +379,9 @@ class SegmentOverridesInnerAdd extends Component {
                             this.setState({isSaving: true})
 
                         }
-
                         return (
                             <div className="mt-2">
-                               <FlagSelect placeholder="Create a Segment Override..." projectId={projectId} ignore={ignoreFlags} onChange={addValue}/>
+                               <FlagSelect onlyInclude={this.props.feature} placeholder="Create a Segment Override..." projectId={projectId} ignore={ignoreFlags} onChange={addValue}/>
                             </div>
 
                         )
