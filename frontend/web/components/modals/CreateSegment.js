@@ -221,23 +221,27 @@ const CreateSegment = class extends Component {
                     </div>
                 )}
 
-                <div className="mb-4">
-                    <InputGroup
-                        ref={e => this.input = e}
-                        data-test="segmentID"
-                        inputProps={{
-                            className: 'full-width',
-                            name: 'segmentID',
-                            readOnly: isEdit,
-                            maxLength: SEGMENT_ID_MAXLENGTH,
-                        }}
-                        value={name}
-                        onChange={e => this.setState({ name: Format.enumeration.set(Utils.safeParseEventValue(e)).toLowerCase() })}
-                        isValid={name && name.length}
-                        type="text" title={isEdit ? 'ID' : 'ID*'}
-                        placeholder="E.g. power_users"
-                    />
-                </div>
+                <Row className="mb-4">
+                    <label className="mr-2 mb-0" htmlFor="segmentID">
+                        ID
+                    </label>
+                    <div style={{width:200}}>
+                        <Input
+                            ref={e => this.input = e}
+                            data-test="segmentID"
+                            name="id"
+                            id="segmentID"
+                            readOnly={isEdit}
+                            maxLength={SEGMENT_ID_MAXLENGTH}
+                            value={name}
+                            onChange={e => this.setState({ name: Format.enumeration.set(Utils.safeParseEventValue(e)).toLowerCase() })}
+                            isValid={name && name.length}
+                            type="text" title={isEdit ? 'ID' : 'ID*'}
+                            placeholder="E.g. power_users"
+                        />
+                    </div>
+
+                </Row>
 
                 {!this.props.condensed && (
                     <FormGroup className="mb-4">
@@ -258,8 +262,8 @@ const CreateSegment = class extends Component {
 
 
                 <div className="form-group ">
-                    <label className="cols-sm-2 control-label">Include users when</label>
-                    <span>Trait names are case sensitive</span>
+                    <label className="cols-sm-2 control-label">Include users when the following rules apply:</label>
+                    <span className="text-small text-muted">Note: Trait names are case sensitive</span>
                     {
                         rulesEl
                     }
@@ -287,22 +291,28 @@ const CreateSegment = class extends Component {
                     </div>
                 ) : (
                     <div className="text-right">
-                        {isEdit ? (
-                            <Button
-                                type="submit" data-test="update-segment" id="update-feature-btn"
-                                disabled={isSaving || !name || !this.state.isValid}
-                            >
-                                {isSaving ? 'Creating' : 'Update Segment'}
-                            </Button>
-                        ) : (
-                            <Button
-                                type="submit" data-test="create-segment" disabled
-                                id="create-feature-btn"
-                                disabled={isSaving || !name || !this.state.isValid}
-                            >
-                                {isSaving ? 'Creating' : 'Create Segment'}
-                            </Button>
-                        )}
+                        <Row className="justify-content-end">
+                            {this.props.condensed && (
+                                <ButtonLink type="button" onClick={this.props.onCancel} className="mr-4">Cancel</ButtonLink>
+                            )}
+                            {isEdit ? (
+                                <Button
+                                    type="submit" data-test="update-segment" id="update-feature-btn"
+                                    disabled={isSaving || !name || !this.state.isValid}
+                                >
+                                    {isSaving ? 'Creating' : 'Update Segment'}
+                                </Button>
+                            ) : (
+                                <Button
+                                    type="submit" data-test="create-segment" disabled
+                                    id="create-feature-btn"
+                                    disabled={isSaving || !name || !this.state.isValid}
+                                >
+                                    {isSaving ? 'Creating' : 'Create Segment'}
+                                </Button>
+                            )}
+                        </Row>
+
                     </div>
                 )}
 
@@ -313,7 +323,7 @@ const CreateSegment = class extends Component {
 
         return (
             <div className="mt-2 mr-3 ml-3">
-                {isEdit ? (
+                {isEdit && !this.props.condensed ? (
                     <Tabs value={this.state.tab} onChange={tab => this.setState({ tab })}>
                         <TabItem tabLabel="Rules">
                             <div className="mt-2">
@@ -322,7 +332,7 @@ const CreateSegment = class extends Component {
                         </TabItem>
                         {this.props.hasFeature("segment_associated_features") && (
                             <TabItem tabLabel="Features">
-                                <AssociatedSegmentOverrides projectId={this.props.projectId} id={this.props.segment.id}/>
+                                <AssociatedSegmentOverrides feature={this.props.segment.feature} projectId={this.props.projectId} id={this.props.segment.id}/>
                             </TabItem>
                         )}
 

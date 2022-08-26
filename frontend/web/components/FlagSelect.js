@@ -38,6 +38,13 @@ class FlagSelect extends Component {
         }
         const options = _.sortBy(this.state.data.map((v)=>({label:v.name,value:v.id, flag:v})).filter((v)=>{
             return !((this.props.ignore||[]).includes(v.value))
+        }).filter((v)=>{
+            if (this.props.onlyInclude) {
+                if (v.value !== this.props.onlyInclude) {
+                    return false
+                }
+            }
+            return true
         }),(v)=>v.label);
         return <Select
             classNamePrefix="flag-select"
