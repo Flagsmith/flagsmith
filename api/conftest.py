@@ -2,6 +2,7 @@ import pytest
 from django.core.cache import cache
 from rest_framework.test import APIClient
 
+from api_keys.models import MasterAPIKey
 from environments.identities.models import Identity
 from environments.identities.traits.models import Trait
 from environments.models import Environment, EnvironmentAPIKey
@@ -154,3 +155,18 @@ def environment_api_key(environment):
     return EnvironmentAPIKey.objects.create(
         environment=environment, name="Test API Key"
     )
+
+
+@pytest.fixture()
+def master_api_key(organisation):
+    _, key = MasterAPIKey.objects.create_key(name="test_key", organisation=organisation)
+    return key
+
+
+@pytest.fixture()
+def master_api_key_client(master_api_key):
+    # Can not use `api_client` fixture here because:
+    # https://docs.pytest.org/en/6.2.x/fixture.html#fixtures-can-be-requested-more-than-once-per-test-return-values-are-cached
+    api_client = APIClient()
+    api_client.credentials(HTTP_AUTHORIZATION="Api-Key " + master_api_key)
+    return api_client

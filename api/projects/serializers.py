@@ -26,6 +26,7 @@ class ProjectSerializer(serializers.ModelSerializer):
         model = Project
         fields = (
             "id",
+            "uuid",
             "name",
             "organisation",
             "hide_disabled_flags",
