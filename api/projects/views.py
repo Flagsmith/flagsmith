@@ -71,11 +71,12 @@ class ProjectViewSet(viewsets.ModelViewSet):
     pagination_class = None
 
     def get_queryset(self):
-        user = self.request.user
-        if user.is_anonymous:
+        if hasattr(self.request, "master_api_key"):
             queryset = self.request.master_api_key.organisation.projects.all()
         else:
-            queryset = user.get_permitted_projects(permissions=["VIEW_PROJECT"])
+            queryset = self.request.user.get_permitted_projects(
+                permissions=["VIEW_PROJECT"]
+            )
 
         organisation_id = self.request.query_params.get("organisation")
         if organisation_id:
