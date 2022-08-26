@@ -31,7 +31,7 @@ const SegmentOverrideInner =
         }
 
         render() {
-            const { controlValue, multivariateOptions, setVariations, disabled, value: v, onSortEnd, index, confirmRemove, toggle, setValue, name } = this.props;
+            const { controlValue, multivariateOptions, setVariations, disabled, value: v, onSortEnd, index, confirmRemove, toggle, setValue, name, readOnly } = this.props;
 
             const mvOptions = multivariateOptions && multivariateOptions.map((mv) => {
                 const foundMv = v.multivariate_options && v.multivariate_options.find(v => v.multivariate_feature_option === mv.id);
@@ -57,7 +57,7 @@ const SegmentOverrideInner =
                 return null;
             }
             return (
-                <div data-test={`segment-override-${index}`} style={{ zIndex: 9999999999 }} className={"segment-overrides mb-2" + (this.props.id? "": "panel panel-without-heading panel--draggable")}>
+                <div data-test={`segment-override-${index}`} style={{ zIndex: 9999999999 }} className={"segment-overrides mb-2" + (this.props.id? "": " panel panel-without-heading panel--draggable")}>
                     <Row className="panel-content" space>
                         <div
                             className="flex flex-1 text-left"
@@ -80,8 +80,10 @@ const SegmentOverrideInner =
                                             disabled={disabled}
                                             checked={v.enabled}
                                             onChange={(v) => {
-                                                this.setState({ changed: true });
-                                                toggle(v);
+                                                if(!readOnly) {
+                                                    this.setState({ changed: true });
+                                                    toggle(v);
+                                                }
                                             }}
                                         />
                                     </div>
@@ -90,6 +92,7 @@ const SegmentOverrideInner =
                                 {/* Input to adjust order without drag for E2E */}
                                 {E2E && (
                                     <input
+                                        readOnly={readOnly}
                                         data-test={`sort-${index}`}
                                         onChange={(e) => {
                                             this.setState({ changed: true });
@@ -99,14 +102,17 @@ const SegmentOverrideInner =
                                     />
                                 )}
 
-                                <button
-                                    disabled={disabled}
-                                    id="remove-feature"
-                                    onClick={confirmRemove}
-                                    className="btn btn--with-icon"
-                                >
-                                    <RemoveIcon/>
-                                </button>
+                                {!readOnly && (
+                                    <button
+                                        disabled={disabled}
+                                        id="remove-feature"
+                                        onClick={confirmRemove}
+                                        className="btn btn--with-icon"
+                                    >
+                                        <RemoveIcon/>
+                                    </button>
+                                )}
+
                             </Row>
                         </div>
                     </Row>
@@ -119,6 +125,7 @@ const SegmentOverrideInner =
                                     Value (optional)
                                 </label>
                                 <ValueEditor
+                                    readOnly={readOnly}
                                     value={v.value}
                                     data-test={`segment-override-value-${index}`}
                                     onChange={(e) => {
@@ -207,7 +214,7 @@ const SegmentOverride = ConfigProvider(SortableElement(
 ))
 ;
 
-const SegmentOverrideListInner = ({ disabled, id, name, multivariateOptions, onSortEnd, items, controlValue, confirmRemove, toggle, setValue, setVariations }) => {
+const SegmentOverrideListInner = ({ disabled, id, name, multivariateOptions, onSortEnd, items, controlValue, confirmRemove, toggle, setValue, setVariations, readOnly }) => {
     const InnerComponent = id? SegmentOverrideInner : SegmentOverride;
     return (
         <div>
@@ -220,6 +227,7 @@ const SegmentOverrideListInner = ({ disabled, id, name, multivariateOptions, onS
                     multivariateOptions={multivariateOptions}
                     key={value.segment.name}
                     index={index}
+                    readOnly={readOnly}
                     value={value}
                     confirmRemove={() => confirmRemove(index)}
                     controlValue={controlValue}
@@ -288,6 +296,9 @@ class TheComponent extends Component {
                 ...v,
                 priority: i,
             })));
+            if(this.props.onRemove) {
+                this.props.onRemove()
+            }
             return;
         }
         this.setState({ isLoading: true });
@@ -344,7 +355,7 @@ class TheComponent extends Component {
 
                 <div className="text-center mt-2 mb-2">
 
-                    {segments && !this.props.id && (
+                    {segments && !this.props.id && !this.props.disableCreate&& (
                         <Flex className="text-left">
                             <Select
                               data-test="select-segment"
@@ -398,6 +409,7 @@ class TheComponent extends Component {
                               setVariations={this.setVariations}
                               toggle={this.toggle}
                               setValue={this.setValue}
+                              readOnly={this.props.readOnly}
                               items={value.map(v => (
                                   {
                                       ...v,

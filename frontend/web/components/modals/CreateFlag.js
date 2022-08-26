@@ -15,7 +15,7 @@ import ChangeRequestModal from './ChangeRequestModal';
 import Feature from '../Feature';
 import { ButtonOutline } from '../base/forms/Button';
 import ChangeRequestStore from '../../../common/stores/change-requests-store';
-
+import { setInterceptClose } from "../../project/modals";
 const FEATURE_ID_MAXLENGTH = Constants.forms.maxLength.FEATURE_ID;
 
 const CreateFlag = class extends Component {
@@ -72,8 +72,20 @@ const CreateFlag = class extends Component {
         }
     }
 
+    onClosing = ()=> {
+        return new Promise((resolve)=>{
+            if (this.state.valueChanged || this.state.segmentsChanged || this.state.settingsChanged) {
+                openConfirm("Are you sure", "Closing this will discard your unsaved changes.", ()=>resolve(true), ()=>resolve(false), "Ok", "Cancel")
+            } else {
+                resolve(true)
+            }
+        })
+
+    }
+
 
     componentDidMount = () => {
+        setInterceptClose(this.onClosing)
         if (!this.props.isEdit && !E2E) {
             this.focusTimeout = setTimeout(() => {
                 this.input.focus();
@@ -284,6 +296,7 @@ const CreateFlag = class extends Component {
 
     addVariation = () => {
         this.setState({
+            valueChanged: true,
             multivariate_options: this.state.multivariate_options.concat([
                 {
                     ...Utils.valueToFeatureState(''),
@@ -294,6 +307,7 @@ const CreateFlag = class extends Component {
     }
 
     removeVariation = (i) => {
+        this.state.valueChanged = true
         if (this.state.multivariate_options[i].id) {
             const idToRemove = this.state.multivariate_options[i].id;
             if (idToRemove) {
@@ -310,6 +324,7 @@ const CreateFlag = class extends Component {
     updateVariation = (i, e, environmentVariations) => {
         this.props.onEnvironmentVariationsChange(environmentVariations);
         this.state.multivariate_options[i] = e;
+        this.state.valueChanged = true;
         this.forceUpdate();
     }
 
@@ -347,7 +362,7 @@ const CreateFlag = class extends Component {
                           component={(
                               <AddEditTags
                                 readOnly={!!identity || !createFeature} projectId={this.props.projectId} value={this.state.tags}
-                                onChange={tags => this.setState({ tags })}
+                                onChange={tags => this.setState({ tags, settingsChanged:true })}
                               />
                             )}
                         />
@@ -371,7 +386,7 @@ const CreateFlag = class extends Component {
                           className: 'full-width',
                           name: 'featureDesc',
                       }}
-                      onChange={e => this.setState({ description: Utils.safeParseEventValue(e) })}
+                      onChange={e => this.setState({ description: Utils.safeParseEventValue(e), settingsChanged:true })}
                       isValid={name && name.length}
                       ds
                       type="text" title={identity ? 'Description' : 'Description (optional)'}
@@ -383,7 +398,7 @@ const CreateFlag = class extends Component {
                         <InputGroup
                           value={description}
                           component={(
-                              <Switch checked={this.state.is_archived} onChange={is_archived => this.setState({ is_archived })}/>
+                              <Switch checked={this.state.is_archived} onChange={is_archived => this.setState({ is_archived, settingsChanged:true })}/>
                           )}
                           onChange={e => this.setState({ description: Utils.safeParseEventValue(e) })}
                           isValid={name && name.length}
@@ -447,6 +462,7 @@ const CreateFlag = class extends Component {
                               className: 'full-width',
                               readOnly: !!identity,
                               name: 'featureDesc',
+                              valueChanged:true,
                           }}
                           onChange={e => this.setState({ description: Utils.safeParseEventValue(e) })}
                           isValid={name && name.length}
@@ -469,12 +485,13 @@ const CreateFlag = class extends Component {
                       value={initial_value}
                       identityVariations={this.state.identityVariations}
                       onChangeIdentityVariations={(identityVariations) => {
-                          this.setState({ identityVariations });
+                          this.setState({ identityVariations, valueChanged:true, });
                       }}
                       environmentFlag={this.props.environmentFlag}
                       projectFlag={projectFlag}
                       onValueChange={(e) => {
-                          this.setState({ initial_value: Utils.getTypedValue(Utils.safeParseEventValue(e)) });
+                          const initial_value = Utils.getTypedValue(Utils.safeParseEventValue(e))
+                          this.setState({ valueChanged:true, initial_value });
                       }}
                       onCheckedChange={default_enabled => this.setState({ default_enabled })}
                     />
@@ -497,6 +514,7 @@ const CreateFlag = class extends Component {
                     >
                         {({ isLoading, isSaving, error, influxData }, { createFlag, editFlagSettings, editFlagValue, editFlagSegments, createChangeRequest }) => {
                             const saveFeatureValue = (schedule) => {
+                                this.setState({valueChanged:false})
                                 if ((is4Eyes || schedule) && !identity) {
                                     openModal2(schedule ? 'New Scheduled Flag Update' : this.props.changeRequest ? 'Update Change Request' : 'New Change Request', <ChangeRequestModal
                                       showAssignees={is4Eyes}
@@ -537,10 +555,13 @@ const CreateFlag = class extends Component {
                             };
 
                             const saveSettings = () => {
+                                this.setState({settingsChanged:false})
                                 this.save(editFlagSettings, isSaving);
                             };
 
                             const saveFeatureSegments = () => {
+                                this.setState({segmentsChanged:false})
+
                                 this.save(editFlagSegments, isSaving);
                             };
 
@@ -559,7 +580,11 @@ const CreateFlag = class extends Component {
                                                 >
                                                     {isEdit && !identity ? (
                                                         <Tabs value={this.state.tab} onChange={tab => this.setState({ tab })}>
-                                                            <TabItem data-test="value" tabLabel="Value">
+                                                            <TabItem data-test="value" tabLabel={<Row className="justify-content-center">Value {this.state.valueChanged && (
+                                                                <div className="unread ml-2 px-1">
+                                                                    {"*"}
+                                                                </div>
+                                                            )}</Row>}>
                                                                 <FormGroup className="mr-3 ml-3">
                                                                     <Panel title={(
                                                                         <Tooltip
@@ -631,7 +656,13 @@ const CreateFlag = class extends Component {
                                                                 </FormGroup>
                                                             </TabItem>
                                                             {!existingChangeRequest && (
-                                                            <TabItem data-test="segment_overrides" tabLabel="Segment Overrides">
+                                                            <TabItem data-test="segment_overrides" tabLabel={(
+                                                                <Row className="justify-content-center">Segment Overrides {this.state.segmentsChanged && (
+                                                                    <div className="unread ml-2 px-2">
+                                                                        *
+                                                                    </div>
+                                                                )}</Row>
+                                                            )}>
                                                                 {!identity && isEdit && (
                                                                 <FormGroup className="mb-4 mr-3 ml-3">
                                                                     <Permission level="environment" permission={Utils.getManageFeaturePermission()} id={this.props.environmentId}>
@@ -664,7 +695,10 @@ const CreateFlag = class extends Component {
                                                                                           value={this.props.segmentOverrides}
                                                                                           controlValue={initial_value}
                                                                                           segments={this.props.segments}
-                                                                                          onChange={this.props.updateSegments}
+                                                                                          onChange={(v)=>{
+                                                                                              this.setState({segmentsChanged:true})
+                                                                                              this.props.updateSegments(v)
+                                                                                          }}
                                                                                         />
                                                                                     ) : (
                                                                                         <div className="text-center">
@@ -770,15 +804,15 @@ const CreateFlag = class extends Component {
                                                                 }
                                                               renderRow={({ id, feature_state_value, enabled, identity }) => (
                                                                   <Row
-                                                                    onClick={() => {
-                                                                        window.open(`${document.location.origin}/project/${this.props.projectId}/environment/${this.props.environmentId}/users/${identity.identifier}/${identity.id}?flag=${projectFlag.name}`, '_blank');
-                                                                    }} space className="list-item cursor-pointer"
+                                                                    space className="list-item cursor-pointer"
                                                                     key={id}
                                                                   >
-                                                                      <Flex>
+                                                                      <Flex onClick={() => {
+                                                                        window.open(`${document.location.origin}/project/${this.props.projectId}/environment/${this.props.environmentId}/users/${identity.identifier}/${identity.id}?flag=${projectFlag.name}`, '_blank');
+                                                                      }}>
                                                                           {identity.identifier}
                                                                       </Flex>
-                                                                      <Switch disabled checked={enabled}/>
+                                                                      <Switch checked={enabled} onChange={() => this.toggleUserFlag({ id, identity, enabled })}/>
                                                                       <div className="ml-2">
                                                                           {feature_state_value && (
                                                                           <FeatureValue
@@ -858,7 +892,13 @@ const CreateFlag = class extends Component {
                                                             </TabItem>
                                                             )}
                                                             {!existingChangeRequest && createFeature && (
-                                                            <TabItem data-test="settings" tabLabel="Settings">
+                                                            <TabItem data-test="settings" tabLabel={(
+                                                                <Row className="justify-content-center">Settings {this.state.settingsChanged && (
+                                                                    <div className="unread ml-2 px-1">
+                                                                        {"*"}
+                                                                    </div>
+                                                                )}</Row>
+                                                            )}>
                                                                 {Settings(projectAdmin, createFeature)}
                                                                 {isEdit && (
                                                                 <div className="text-right">

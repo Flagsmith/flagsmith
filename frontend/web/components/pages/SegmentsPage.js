@@ -1,7 +1,14 @@
 import React, { Component } from 'react';
 import CreateSegmentModal from '../modals/CreateSegment';
-import TryIt from '../TryIt';
 import ConfirmRemoveSegment from '../modals/ConfirmRemoveSegment';
+
+const HowToUseSegmentsMessage = () => (
+    <div className="mt-2">
+        <p className="alert alert-info">
+            In order to use segments, please set the segment_operators remote config value. <a target="_blank" href="https://docs.flagsmith.com/deployment/overview#running-flagsmith-on-flagsmith">Learn about self hosting</a>.
+        </p>
+    </div>
+);
 
 const SegmentsPage = class extends Component {
     static displayName = 'SegmentsPage';
@@ -171,13 +178,7 @@ const SegmentsPage = class extends Component {
                                                         </div>
                                                     </FormGroup>
                                                 </Row>
-                                                {hasNoOperators && (
-                                                    <div className="mt-2">
-                                                        <p className="alert alert-info">
-                                                            In order to use segments, please set the segment_operators remote config value. <a target="_blank" href="https://docs.flagsmith.com/deployment/overview#running-flagsmith-on-flagsmith">Learn about self hosting</a>.
-                                                        </p>
-                                                    </div>
-                                                )}
+                                                {hasNoOperators && <HowToUseSegmentsMessage />}
 
                                                 <FormGroup>
                                                     <PanelSearch
@@ -264,7 +265,7 @@ const SegmentsPage = class extends Component {
                                                 {this.createSegmentPermission(perm => (
                                                     <FormGroup className="text-center">
                                                         <Button
-                                                          disabled={!perm}
+                                                          disabled={!perm || hasNoOperators}
                                                           className="btn-lg btn-primary" id="show-create-segment-btn" data-test="show-create-segment-btn"
                                                           onClick={this.newSegment}
                                                         >
@@ -274,6 +275,7 @@ const SegmentsPage = class extends Component {
                                                         </Button>
                                                     </FormGroup>
                                                 ))}
+                                                {hasNoOperators && <HowToUseSegmentsMessage />}
                                             </div>
                                         )}
 

@@ -1,4 +1,5 @@
 from datetime import datetime
+from unittest import mock
 
 import pytest
 from django.test import TestCase
@@ -50,6 +51,27 @@ class OrganisationTestCase(TestCase):
 
         # Then
         assert not organisation.has_subscription()
+
+    @mock.patch("organisations.models.cancel_chargebee_subscription")
+    def test_cancel_subscription_cancels_chargebee_subscription(
+        self, mocked_cancel_chargebee_subscription
+    ):
+        # Given
+        organisation = Organisation.objects.create(name="Test org")
+        subscription = Subscription.objects.create(
+            organisation=organisation,
+            payment_method=Subscription.CHARGEBEE,
+            subscription_id="subscription-id",
+        )
+
+        # When
+        organisation.cancel_subscription()
+
+        # Then
+        mocked_cancel_chargebee_subscription.assert_called_once_with(
+            subscription.subscription_id
+        )
+        assert subscription.cancellation_date
 
 
 class SubscriptionTestCase(TestCase):
