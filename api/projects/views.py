@@ -29,7 +29,11 @@ from projects.models import (
     UserPermissionGroupProjectPermission,
     UserProjectPermission,
 )
-from projects.permissions import IsProjectAdmin, ProjectPermissions
+from projects.permissions import (
+    IsProjectAdmin,
+    MasterAPIKeyProjectPermissions,
+    ProjectPermissions,
+)
 from projects.permissions_calculator import ProjectPermissionsCalculator
 from projects.serializers import (
     CreateUpdateUserPermissionGroupProjectPermissionSerializer,
@@ -50,27 +54,45 @@ from projects.serializers import (
                 "ID of the organisation to filter by.",
                 required=False,
                 type=openapi.TYPE_INTEGER,
-            )
+            ),
+            openapi.Parameter(
+                "uuid",
+                openapi.IN_QUERY,
+                "uuid of the project to filter by.",
+                required=False,
+                type=openapi.TYPE_STRING,
+            ),
         ]
     ),
 )
 class ProjectViewSet(viewsets.ModelViewSet):
     serializer_class = ProjectSerializer
-    permission_classes = [IsAuthenticated, ProjectPermissions]
+    permission_classes = [ProjectPermissions | MasterAPIKeyProjectPermissions]
     pagination_class = None
 
     def get_queryset(self):
-        user = self.request.user
-        queryset = user.get_permitted_projects(permissions=["VIEW_PROJECT"])
+        if hasattr(self.request, "master_api_key"):
+            queryset = self.request.master_api_key.organisation.projects.all()
+        else:
+            queryset = self.request.user.get_permitted_projects(
+                permissions=["VIEW_PROJECT"]
+            )
 
         organisation_id = self.request.query_params.get("organisation")
         if organisation_id:
             queryset = queryset.filter(organisation__id=organisation_id)
 
+        project_uuid = self.request.query_params.get("uuid")
+        if project_uuid:
+            queryset = queryset.filter(uuid=project_uuid)
+
         return queryset
 
     def perform_create(self, serializer):
         project = serializer.save()
+        if self.request.user.is_anonymous:
+            return
+
         UserProjectPermission.objects.create(
             user=self.request.user, project=project, admin=True
         )
@@ -100,6 +122,13 @@ class ProjectViewSet(viewsets.ModelViewSet):
         url_name="my-permissions",
     )
     def user_permissions(self, request: Request, pk: int = None):
+        if request.user.is_anonymous:
+            return Response(
+                status=status.HTTP_400_BAD_REQUEST,
+                data={
+                    "detail": "This endpoint can only be used with a user and not Master API Key"
+                },
+            )
         project_permissions_calculator = ProjectPermissionsCalculator(project_id=pk)
         permission_data = (
             project_permissions_calculator.get_user_project_permission_data(
