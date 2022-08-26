@@ -383,7 +383,6 @@ class SegmentOverridesInnerAdd extends Component {
                         return (
                             <div className="mt-2">
                                <FlagSelect placeholder="Create a Segment Override..." projectId={projectId} ignore={ignoreFlags} onChange={addValue}/>
-
                             </div>
 
                         )
