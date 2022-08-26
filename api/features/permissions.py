@@ -68,7 +68,7 @@ class MasterAPIKeyFeaturePermissions(BasePermission):
             project_id = view.kwargs.get("project_pk") or request.data.get("project")
             project = Project.objects.get(id=project_id)
 
-            return project.organisation == master_api_key.organisation
+            return project.organisation_id == master_api_key.organisation_id
         return False
 
     def has_object_permission(

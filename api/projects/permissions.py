@@ -74,8 +74,8 @@ class MasterAPIKeyProjectPermissions(BasePermission):
             return False
 
         if view.action == "create":
-            organisation = int(request.data.get("organisation"))
-            return organisation == master_api_key.organisation_id
+            organisation_id = int(request.data.get("organisation"))
+            return organisation_id == master_api_key.organisation_id
 
         if view.action in ("list", "permissions"):
             return True
@@ -87,7 +87,7 @@ class MasterAPIKeyProjectPermissions(BasePermission):
         self, request: HttpRequest, view: str, obj: Project
     ) -> bool:
         master_api_key = request.master_api_key
-        return master_api_key.organisation_id == obj.organisation.id
+        return master_api_key.organisation_id == obj.organisation_id
 
 
 class IsProjectAdmin(BasePermission):
