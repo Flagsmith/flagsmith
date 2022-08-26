@@ -402,8 +402,9 @@ class TheComponent extends Component {
                                 if (this.state.selectedSegment) {
                                     this.setState({showCreateSegment:false})
                                 } else {
-                                    this.setState({showCreateSegment:false, selectedSegment:segmentOptions[segmentOptions.length-1]}, this.addItem)
-
+                                    const id = document.getElementById("segmentID").value;
+                                    const selectedSegment = _.sortBy(segmentOptions, (v)=>-v.value).find((v)=>v.label === id)
+                                    this.setState({showCreateSegment:false, selectedSegment}, this.addItem)
                                 }
                             }}
                             onCancel={()=>{
