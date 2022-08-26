@@ -402,12 +402,14 @@ class TheComponent extends Component {
                         </Flex>
                     )}
                     {Utils.getFlagsmithHasFeature("flag_based_segments")&& !this.props.showCreateSegment && (
+                        <div className="text-right">
                         <Button className="mt-2" onClick={()=>{
                            this.setState({ selectedSegment:null})
                             this.props.setShowCreateSegment(true)
                         }}>
                             Create Feature-Specific Segment
                         </Button>
+                        </div>
                     )}
                     {this.props.showCreateSegment && (
                         <div className="text-left panel--grey mt-2">
@@ -439,18 +441,6 @@ class TheComponent extends Component {
                         <div style={isLoading ? { opacity: 0.5 } : null} className="mt-4 overflow-visible">
                             {!this.props.id && (
                                 <div>
-                                    <Row className="mb-2">
-                                        <div
-                                            className="flex flex-1 text-left"
-                                        >
-                                            <label>Segment</label>
-                                        </div>
-                                        <Column className="text-right" style={{ width: 120 }}>
-                                            <label>
-                                                Value
-                                            </label>
-                                        </Column>
-                                    </Row>
                                     <div className="mb-4 text-left faint">
                                         Prioritise a segment override by dragging it to the top of the list.
                                     </div>
