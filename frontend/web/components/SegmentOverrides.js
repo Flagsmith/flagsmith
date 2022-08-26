@@ -361,7 +361,7 @@ class TheComponent extends Component {
                 return !value || (!foundSegment || (foundSegment && foundSegment.toRemove));
             },
         )
-            .map(({ name: label, id: value }) => ({ value, label }));
+            .map(({ name: label, id: value, feature }) => ({ value, label, feature }));
         const InnerComponent = this.props.id ? SegmentOverrideListInner : SegmentOverrideList
         return (
             <div>
@@ -372,9 +372,22 @@ class TheComponent extends Component {
                         <Flex className="text-left">
                                 <Select
                                     data-test="select-segment"
-                                    placeholder="Select a Project Segment..."
+                                    placeholder="Create a Segment Override..."
                                     value={this.state.selectedSegment}
                                     onChange={selectedSegment => this.setState({ selectedSegment }, this.addItem)}
+                                    components={{
+                                        Option: ({ innerRef, innerProps, children, data }) => {
+                                            return (
+                                                <div ref={innerRef} {...innerProps} className="react-select__option">
+                                                    {children}{!!data.feature && (
+                                                    <div className="unread ml-2 px-2">
+                                                        Feature-Specific
+                                                    </div>
+                                                )}
+                                                </div>
+                                            )
+                                        }
+                                    }}
                                     options={
                                         segmentOptions
                                     }

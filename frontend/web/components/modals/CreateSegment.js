@@ -332,7 +332,7 @@ const CreateSegment = class extends Component {
                         </TabItem>
                         {this.props.hasFeature("segment_associated_features") && (
                             <TabItem tabLabel="Features">
-                                <AssociatedSegmentOverrides projectId={this.props.projectId} id={this.props.segment.id}/>
+                                <AssociatedSegmentOverrides feature={this.props.segment.feature} projectId={this.props.projectId} id={this.props.segment.id}/>
                             </TabItem>
                         )}
 
