@@ -73,14 +73,15 @@ const CreateFlag = class extends Component {
     }
 
     onClosing = ()=> {
-        return new Promise((resolve)=>{
-            if (this.state.valueChanged || this.state.segmentsChanged || this.state.settingsChanged) {
-                openConfirm("Are you sure", "Closing this will discard your unsaved changes.", ()=>resolve(true), ()=>resolve(false), "Ok", "Cancel")
-            } else {
-                resolve(true)
-            }
-        })
-
+        if (this.props.isEdit) {
+            return new Promise((resolve)=>{
+                if (this.state.valueChanged || this.state.segmentsChanged || this.state.settingsChanged) {
+                    openConfirm("Are you sure", "Closing this will discard your unsaved changes.", ()=>resolve(true), ()=>resolve(false), "Ok", "Cancel")
+                } else {
+                    resolve(true)
+                }
+            })
+        }
     }
 
 
