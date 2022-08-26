@@ -46,7 +46,11 @@ const CreateSegment = class extends Component {
         AppActions.getIdentities(props.environmentId);
 
         this.listenTo(SegmentStore, 'saved', () => {
-            this.close();
+            if(this.props.onComplete) {
+                this.props.onComplete()
+            } else {
+                this.close();
+            }
         });
         this.listenTo(SegmentStore, 'problem', () => {
             this.setState({ error: true });
@@ -113,9 +117,9 @@ const CreateSegment = class extends Component {
         const { state: { description = '', id, name, rules } } = this;
         if (name) {
             if (this.props.segment) {
-                AppActions.editSegment(this.props.projectId, { description, name, rules, id: this.props.segment.id });
+                AppActions.editSegment(this.props.projectId, { description, name, rules, id: this.props.segment.id, feature:this.props.feature });
             } else {
-                AppActions.createSegment(this.props.projectId, { description, name, rules });
+                AppActions.createSegment(this.props.projectId, { description, name, rules, feature:this.props.feature });
             }
         }
     };
@@ -139,9 +143,9 @@ const CreateSegment = class extends Component {
         const { isEdit, identity, readOnly } = this.props;
 
         const rulesEl = (
-            <div className="panel--grey overflow-visible">
+            <div className="mt-4 overflow-visible">
                 <div>
-                    <FormGroup>
+                    <div className="mb-2">
                         {rules[0].rules.map((rule, i) => (
                             <div key={i}>
                                 {i > 0 && (
@@ -163,7 +167,7 @@ const CreateSegment = class extends Component {
                                 />
                             </div>
                         ))}
-                    </FormGroup>
+                    </div>
                     <Row className="justify-content-center">
                         {!readOnly && (
                             <div
@@ -209,13 +213,15 @@ const CreateSegment = class extends Component {
                 id="create-segment-modal"
                 onSubmit={this.save}
             >
-                <div className="mt-4">
+                {!this.props.condensed && (
+                    <div className="mt-4">
+                        <InfoMessage>
+                            Learn more about rule and trait value type conversions <a href="https://docs-git-improvement-segment-rule-value-typing-flagsmith.vercel.app/basic-features/managing-segments#rule-typing">here</a>.
+                        </InfoMessage>
+                    </div>
+                )}
 
-                    <InfoMessage>
-                        Learn more about rule and trait value type conversions <a href="https://docs-git-improvement-segment-rule-value-typing-flagsmith.vercel.app/basic-features/managing-segments#rule-typing">here</a>.
-                    </InfoMessage>
-                </div>
-                <FormGroup className="mb-4">
+                <div className="mb-4">
                     <InputGroup
                         ref={e => this.input = e}
                         data-test="segmentID"
@@ -231,26 +237,29 @@ const CreateSegment = class extends Component {
                         type="text" title={isEdit ? 'ID' : 'ID*'}
                         placeholder="E.g. power_users"
                     />
-                </FormGroup>
+                </div>
 
-                <FormGroup className="mb-4">
-                    <InputGroup
-                        value={description}
-                        inputProps={{
-                            className: 'full-width',
-                            readOnly: !!identity || readOnly,
-                            name: 'featureDesc',
-                        }}
-                        onChange={e => this.setState({ description: Utils.safeParseEventValue(e) })}
-                        isValid={name && name.length}
-                        type="text" title="Description (optional)"
-                        placeholder="e.g. 'People who have spent over $100' "
-                    />
-                </FormGroup>
+                {!this.props.condensed && (
+                    <FormGroup className="mb-4">
+                        <InputGroup
+                            value={description}
+                            inputProps={{
+                                className: 'full-width',
+                                readOnly: !!identity || readOnly,
+                                name: 'featureDesc',
+                            }}
+                            onChange={e => this.setState({ description: Utils.safeParseEventValue(e) })}
+                            isValid={name && name.length}
+                            type="text" title="Description (optional)"
+                            placeholder="e.g. 'People who have spent over $100' "
+                        />
+                    </FormGroup>
+                )}
+
 
                 <div className="form-group ">
                     <label className="cols-sm-2 control-label">Include users when</label>
-                    <p>Trait names are case sensitive</p>
+                    <span>Trait names are case sensitive</span>
                     {
                         rulesEl
                     }

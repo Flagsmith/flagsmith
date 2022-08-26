@@ -6,6 +6,7 @@ import ProjectStore from '../../common/stores/project-store';
 import ValueEditor from './ValueEditor';
 import VariationOptions from './mv/VariationOptions';
 import FeatureListStore from '../../common/stores/feature-list-store';
+import CreateSegmentModal from "./modals/CreateSegment";
 
 const arrayMoveMutate = (array, from, to) => {
     array.splice(to < 0 ? array.length + to : to, 0, array.splice(from, 1)[0]);
@@ -343,6 +344,7 @@ class TheComponent extends Component {
         const { state: { isLoading }, props: { value, segments, multivariateOptions } } = this;
         const segmentOptions = _.filter(
             segments, (segment) => {
+                if (segment.feature && segment.feature !== this.props.feature) return false
                 if(this.props.id && (this.props.id !== segment.id)) return null
                 const foundSegment = _.find(value, v => v.segment === segment.id);
                 return !value || (!foundSegment || (foundSegment && foundSegment.toRemove));
@@ -357,23 +359,43 @@ class TheComponent extends Component {
 
                     {segments && !this.props.id && !this.props.disableCreate&& (
                         <Flex className="text-left">
-                            <Select
-                              data-test="select-segment"
-                              placeholder="Create a Segment Override..."
-                              value={this.state.selectedSegment}
-                              onChange={selectedSegment => this.setState({ selectedSegment }, this.addItem)}
-                              options={
-                                    segmentOptions
-                                }
-                              styles={{
-                                  control: base => ({
-                                      ...base,
-                                      '&:hover': { borderColor: '$bt-brand-secondary' },
-                                      border: '1px solid $bt-brand-secondary',
-                                  }),
-                              }}
-                            />
+                                <Select
+                                    data-test="select-segment"
+                                    placeholder="Select a Project Segment..."
+                                    value={this.state.selectedSegment}
+                                    onChange={selectedSegment => this.setState({ selectedSegment }, this.addItem)}
+                                    options={
+                                        segmentOptions
+                                    }
+                                    styles={{
+                                        control: base => ({
+                                            ...base,
+                                            '&:hover': { borderColor: '$bt-brand-secondary' },
+                                            border: '1px solid $bt-brand-secondary',
+                                        }),
+                                    }}
+                                />
                         </Flex>
+                    )}
+                    {Utils.getFlagsmithHasFeature("flag_based_segments")&& (
+                        <Button className="mt-2" onClick={()=>{
+                           this.setState({showCreateSegment:true})
+                        }}>
+                            Create Feature-Specific Segment
+                        </Button>
+                    )}
+                    {this.state.showCreateSegment && (
+                        <div className="text-left panel--grey mt-2">
+                        <CreateSegmentModal
+                            onComplete={(segment)=>{
+                                this.setState({showCreateSegment:false, selectedSegment:segmentOptions[segmentOptions.length-1]}, this.addItem)
+                            }}
+                            condensed
+                            feature={this.props.feature}
+                            environmentId={this.props.environmentId}
+                            projectId={this.props.projectId}
+                        />
+                        </div>
                     )}
                     {value && !!value.length && (
                         <div style={isLoading ? { opacity: 0.5 } : null} className="mt-4 overflow-visible">
