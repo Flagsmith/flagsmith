@@ -54,7 +54,7 @@ const SegmentOverrideInner =
                         You have removed this segment override, click save to confirm your changes.
                     </div>
                 }
-                return null;
+                return <div/>;
             }
             return (
                 <div data-test={`segment-override-${index}`} style={{ zIndex: 9999999999 }} className={"segment-overrides mb-2" + (this.props.id? "": " panel panel-without-heading panel--draggable")}>
