@@ -59,6 +59,7 @@ class FeatureQuerySerializer(serializers.Serializer):
         required=False, help_text="Comma separated list of tag ids to filter on (AND)"
     )
     is_archived = serializers.BooleanField(required=False)
+    uuid = serializers.CharField(required=False)
 
     def validate_tags(self, tags):
         try:
@@ -87,8 +88,9 @@ class ListCreateFeatureSerializer(WritableNestedModelSerializer):
             "multivariate_options",
             "is_archived",
             "owners",
+            "uuid",
         )
-        read_only_fields = ("feature_segments", "created_date")
+        read_only_fields = ("feature_segments", "created_date", "uuid")
 
     def to_internal_value(self, data):
         if data.get("initial_value") and not isinstance(data["initial_value"], str):
