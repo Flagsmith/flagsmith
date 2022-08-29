@@ -17,6 +17,11 @@ from django_lifecycle import (
 )
 
 from environments.tasks import rebuild_environment_document
+from audit.models import (
+    FEATURE_STATE_UPDATED_MESSAGE,
+    AuditLog,
+    RelatedObjectType,
+)
 from features.models import FeatureState
 
 from .exceptions import (
@@ -71,17 +76,32 @@ class ChangeRequest(LifecycleModelMixin, AbstractBaseExportableModel):
                 "Change request has not been approved by all required approvers."
             )
 
-        feature_states = list(self.feature_states.all())
+        feature_states = list(
+            self.feature_states.all().select_related(
+                "environment", "environment__project"
+            )
+        )
 
         for feature_state in feature_states:
             if not feature_state.live_from:
                 feature_state.live_from = timezone.now()
-
             feature_state.version = FeatureState.get_next_version_number(
                 environment_id=feature_state.environment_id,
                 feature_id=feature_state.feature_id,
                 feature_segment_id=feature_state.feature_segment_id,
                 identity_id=feature_state.identity_id,
+            )
+
+            # TODO: optimise these creates to use bulk create again but for now, we need to
+            # ensure the post_save signals on the AuditLog model class are triggered
+            message = FEATURE_STATE_UPDATED_MESSAGE % feature_state.feature.name
+            AuditLog.objects.create(
+                author=committed_by,
+                project=feature_state.environment.project,
+                environment=feature_state.environment,
+                related_object_type=RelatedObjectType.FEATURE_STATE.name,
+                related_object_id=feature_state.id,
+                log=message,
             )
 
         FeatureState.objects.bulk_update(

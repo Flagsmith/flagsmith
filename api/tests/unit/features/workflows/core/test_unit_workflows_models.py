@@ -4,6 +4,7 @@ import pytest
 from django.contrib.sites.models import Site
 from django.utils import timezone
 
+from audit.models import AuditLog
 from features.workflows.core.exceptions import (
     CannotApproveOwnChangeRequest,
     ChangeRequestNotApprovedError,
@@ -117,6 +118,25 @@ def test_change_request_commit_not_scheduled(
 
     assert change_request_no_required_approvals.feature_states.first().version == 2
     assert change_request_no_required_approvals.feature_states.first().live_from == now
+
+
+def test_change_request_commit_creates_audit_log(
+    change_request_no_required_approvals, mocker, django_assert_num_queries
+):
+    # Given
+    user = FFAdminUser.objects.create(email="approver@example.com")
+
+    # When
+    change_request_no_required_approvals.commit(committed_by=user)
+
+    feature_state_ids = change_request_no_required_approvals.feature_states.values_list(
+        "id", flat=True
+    )
+
+    # Then
+    assert AuditLog.objects.filter(
+        related_object_id__in=feature_state_ids
+    ).count() == len(feature_state_ids)
 
 
 def test_change_request_commit_scheduled(
