@@ -38,7 +38,9 @@ const PanelSearch = class extends Component {
         const filter = this.props.filter;
         const { items, filterRow } = this.props;
         if (filterRow && (search || filter)) {
-            return this.sort(_.filter(items, i => filterRow(i, search.toLowerCase())));
+            return this.sort(_.filter(items, (value,index) => {
+                return filterRow(value, search.toLowerCase(), index)
+            }));
         }
         return this.sort(items);
     }
@@ -94,7 +96,7 @@ const PanelSearch = class extends Component {
 
     render() {
         const { sortBy, sortOrder } = this.state;
-        const { title, items, renderRow, renderNoResults, paging, goToPage, isLoading, sorting, action } = this.props;
+        const { title, items, renderRow, renderNoResults, paging, prevPage, nextPage, goToPage, isLoading, sorting, action } = this.props;
         const filteredItems = this.filter(items);
         const currentSort = _.find(sorting, { value: sortBy });
 
@@ -171,7 +173,7 @@ const PanelSearch = class extends Component {
                                                 this.props.onChange && this.props.onChange(!this.state.exact ? `"${this.props.search}"` : this.props.search.replace(/^"+|"+$/g, ''));
                                             }
                                         }}
-                                        value={{ label: this.state.exact ? 'Exact' : this.props.filterLabel || Utils.getIsEdge() ? 'Starts with' : 'Contains' }}
+                                        value={{ label: this.state.exact ? 'Exact' : this.props.filterLabel || (Utils.getIsEdge() ? 'Starts with' : 'Contains') }}
                                         options={[
                                             {
                                                 label: Utils.getIsEdge() ? 'Starts with' : 'Contains',
@@ -201,7 +203,6 @@ const PanelSearch = class extends Component {
                                   <span style={{ marginLeft: 10, position: 'absolute' }} className="icon ion-ios-search" />
                               </Row>
                           </Row>
-
                       )}
                   </Row>
               ) : action || null}
@@ -214,6 +215,8 @@ const PanelSearch = class extends Component {
                         <Paging
                             paging={paging}
                             isLoading={isLoading}
+                            nextPage={nextPage}
+                            prevPage={prevPage}
                             goToPage={goToPage}
                         />
                     )}

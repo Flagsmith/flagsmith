@@ -146,6 +146,10 @@
                 {
                     "name": "EDGE_RELEASE_DATETIME",
                     "value": "2022-06-07T10:00:00Z"
+                },
+                {
+                    "name": "CACHE_ENVIRONMENT_DOCUMENT_SECONDS",
+                    "value": "60"
                 }
             ],
             "secrets": [

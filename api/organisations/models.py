@@ -8,6 +8,7 @@ from django.utils import timezone
 from django_lifecycle import (
     AFTER_CREATE,
     AFTER_SAVE,
+    BEFORE_DELETE,
     LifecycleModelMixin,
     hook,
 )
@@ -19,6 +20,9 @@ from organisations.chargebee import (
     get_plan_meta_data,
     get_portal_url,
 )
+from organisations.chargebee.chargebee import (
+    cancel_subscription as cancel_chargebee_subscription,
+)
 from users.utils.mailer_lite import MailerLite
 from webhooks.models import AbstractBaseWebhookModel
 
@@ -28,7 +32,7 @@ class OrganisationRole(models.TextChoices):
     USER = ("USER", "User")
 
 
-class Organisation(AbstractBaseExportableModel):
+class Organisation(LifecycleModelMixin, AbstractBaseExportableModel):
     name = models.CharField(max_length=2000)
     has_requested_features = models.BooleanField(default=False)
     webhook_notification_email = models.EmailField(null=True, blank=True)
@@ -87,6 +91,11 @@ class Organisation(AbstractBaseExportableModel):
         self.alerted_over_plan_limit = False
         self.save()
 
+    @hook(BEFORE_DELETE)
+    def cancel_subscription(self):
+        if self.has_subscription():
+            self.subscription.cancel()
+
 
 class UserOrganisation(models.Model):
     user = models.ForeignKey("users.FFAdminUser", on_delete=models.CASCADE)
@@ -103,6 +112,13 @@ class UserOrganisation(models.Model):
 
 class Subscription(LifecycleModelMixin, AbstractBaseExportableModel):
     MAX_SEATS_IN_FREE_PLAN = 1
+    MAX_API_CALLS_IN_FREE_PLAN = 50000
+    MAX_PROJECTS_IN_FREE_PLAN = 1
+    SUBSCRIPTION_DEFAULT_LIMITS = (
+        MAX_API_CALLS_IN_FREE_PLAN,
+        MAX_SEATS_IN_FREE_PLAN,
+        MAX_PROJECTS_IN_FREE_PLAN,
+    )
 
     organisation = models.OneToOneField(
         Organisation, on_delete=models.CASCADE, related_name="subscription"
@@ -143,9 +159,11 @@ class Subscription(LifecycleModelMixin, AbstractBaseExportableModel):
             mailer_lite = MailerLite()
             mailer_lite.update_organisation_users(self.organisation.id)
 
-    def cancel(self, cancellation_date=timezone.now()):
+    def cancel(self, cancellation_date=timezone.now(), update_chargebee=True):
         self.cancellation_date = cancellation_date
         self.save()
+        if self.payment_method == self.CHARGEBEE and update_chargebee:
+            cancel_chargebee_subscription(self.subscription_id)
 
     def get_portal_url(self, redirect_url):
         if not self.subscription_id:

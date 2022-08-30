@@ -5,6 +5,7 @@ from flag_engine.api.document_builders import (
     build_environment_document,
     build_identity_document,
 )
+from flag_engine.identities.builders import build_identity_model
 from rest_framework.exceptions import NotFound
 
 from environments.dynamodb import DynamoIdentityWrapper
@@ -193,6 +194,27 @@ def test_write_identities_calls_internal_methods_with_correct_arguments(
     assert actual_identity_document == expected_identity_document
 
 
+def test_write_identities_skips_identity_if_identifier_is_too_large(
+    mocker, project, identity
+):
+    # Given
+    dynamo_identity_wrapper = DynamoIdentityWrapper()
+    mocked_dynamo_table = mocker.patch.object(dynamo_identity_wrapper, "_table")
+
+    # Let's make the identifier too long
+    identity.identifier = "a" * 1025
+    identity.save()
+
+    identities = Identity.objects.filter(id=identity.id)
+
+    # When
+    dynamo_identity_wrapper.write_identities(identities)
+
+    # Then
+    mocked_dynamo_table.batch_writer.assert_called_with()
+    mocked_dynamo_table.batch_writer.return_value.__enter__.return_value.put_item.assert_not_called()
+
+
 def test_is_enabled_is_false_if_dynamo_table_name_is_not_set(settings, mocker):
     # Given
     mocker.patch(
@@ -271,6 +293,53 @@ def test_get_segment_ids_returns_empty_list_if_identity_does_not_exists(
 
     # Then
     segment_ids = dynamo_identity_wrapper.get_segment_ids(identity_uuid)
+
+    # Then
+    assert segment_ids == []
+
+
+def test_get_segment_ids_throws_value_error_if_no_arguments():
+    # Given
+    dynamo_identity_wrapper = DynamoIdentityWrapper()
+
+    # When
+    with pytest.raises(ValueError):
+        dynamo_identity_wrapper.get_segment_ids()
+
+    # Then
+    # exception raised
+
+
+def test_get_segment_ids_throws_value_error_if_arguments_not_valid():
+    # Given
+    dynamo_identity_wrapper = DynamoIdentityWrapper()
+
+    # When
+    with pytest.raises(ValueError):
+        dynamo_identity_wrapper.get_segment_ids(None)
+
+    # Then
+    # exception raised
+
+
+def test_get_segment_ids_with_identity_model(identity, environment, mocker):
+    # Given
+    dynamo_identity_wrapper = DynamoIdentityWrapper()
+    identity_document = build_identity_document(identity)
+    identity_model = build_identity_model(identity_document)
+
+    mocker.patch.object(
+        dynamo_identity_wrapper, "get_item_from_uuid", return_value=identity_document
+    )
+
+    environment_document = build_environment_document(environment)
+    mocked_environment_wrapper = mocker.patch(
+        "environments.dynamodb.dynamodb_wrapper.DynamoEnvironmentWrapper"
+    )
+    mocked_environment_wrapper.return_value.get_item.return_value = environment_document
+
+    # When
+    segment_ids = dynamo_identity_wrapper.get_segment_ids(identity_model=identity_model)
 
     # Then
     assert segment_ids == []

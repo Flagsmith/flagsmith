@@ -14,6 +14,7 @@ const OrganisationProvider = class extends Component {
             users: OrganisationStore.getUsers(),
             invites: OrganisationStore.getInvites(),
             name: AccountStore.getOrganisation() && AccountStore.getOrganisation().name,
+            subscriptionMeta: OrganisationStore.getSubscriptionMeta(),
             usage: OrganisationStore.getUsage(),
         };
         ES6Component(this);
@@ -26,6 +27,7 @@ const OrganisationProvider = class extends Component {
                 users: OrganisationStore.getUsers(),
                 invites: OrganisationStore.getInvites(),
                 inviteLinks: OrganisationStore.getInviteLinks(),
+                subscriptionMeta: OrganisationStore.getSubscriptionMeta(),
                 usage: OrganisationStore.getUsage(),
                 influx_data: OrganisationStore.getInflux(),
             });
@@ -52,6 +54,7 @@ const OrganisationProvider = class extends Component {
                         isLoading: OrganisationStore.isLoading,
                         projects: OrganisationStore.getProjects(this.props.id),
                         project: OrganisationStore.getProject(),
+                        subscriptionMeta: OrganisationStore.getSubscriptionMeta(),
                         users: OrganisationStore.getUsers(),
                         invites: OrganisationStore.getInvites(),
                         inviteLinks: OrganisationStore.getInviteLinks(),

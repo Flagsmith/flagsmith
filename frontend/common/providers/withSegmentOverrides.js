@@ -47,7 +47,15 @@ export default (WrappedComponent) => {
                                 }
                             }
                         });
-                        this.setState({ segmentOverrides: res.results, environmentVariations: environmentOverride && environmentOverride.multivariate_feature_state_values && environmentOverride.multivariate_feature_state_values });
+                        const resResults = res.results||[]
+                        const segmentOverrides = (results).concat(
+                            (this.props.newSegmentOverrides||[]).map((v, i)=>{return {
+                                ...v,
+                                priority: resResults.length + (i)
+                            }}))
+                        const originalSegmentOverrides = _.cloneDeep(segmentOverrides)
+                        this.setState({
+                            segmentOverrides,originalSegmentOverrides, environmentVariations: environmentOverride && environmentOverride.multivariate_feature_state_values && environmentOverride.multivariate_feature_state_values });
                     });
             }
         }

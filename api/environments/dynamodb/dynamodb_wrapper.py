@@ -1,3 +1,4 @@
+import logging
 import typing
 from contextlib import suppress
 from typing import Iterable
@@ -19,6 +20,8 @@ from rest_framework.exceptions import NotFound
 if typing.TYPE_CHECKING:
     from environments.identities.models import Identity
     from environments.models import Environment
+
+logger = logging.getLogger()
 
 
 class DynamoWrapper:
@@ -47,6 +50,13 @@ class DynamoIdentityWrapper(DynamoWrapper):
         with self._table.batch_writer() as batch:
             for identity in identities:
                 identity_document = build_identity_document(identity)
+                # Since sort keys can not be greater than 1024
+                # https://docs.aws.amazon.com/amazondynamodb/latest/developerguide/ServiceQuotas.html#limits-partition-sort-keys
+                if len(identity_document["identifier"]) > 1024:
+                    logger.warning(
+                        f"Can't migrate identity {identity.id}; identifier too long"
+                    )
+                    continue
                 batch.put_item(Item=identity_document)
 
     def get_item(self, composite_key: str) -> typing.Optional[dict]:
@@ -109,7 +119,7 @@ class DynamoIdentityWrapper(DynamoWrapper):
     def get_segment_ids(
         self, identity_pk: str = None, identity_model: IdentityModel = None
     ) -> list:
-        if not identity_pk or identity_model:
+        if not (identity_pk or identity_model):
             raise ValueError("Must provide one of identity_pk or identity_model.")
 
         with suppress(ObjectDoesNotExist):

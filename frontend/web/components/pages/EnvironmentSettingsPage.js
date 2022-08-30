@@ -247,6 +247,7 @@ const EnvironmentSettingsPage = class extends Component {
                                                                     value={`${this.state.minimum_change_request_approvals}`}
                                                                     inputClassName="input input--wide"
                                                                     name="env-name"
+                                                                    min={0}
                                                                     style={{minWidth:50}}
                                                                     onChange={e => {
                                                                         if(!Utils.safeParseEventValue(e)) return

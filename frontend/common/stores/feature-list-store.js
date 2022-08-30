@@ -88,7 +88,12 @@ const controller = {
             flagsmith.setTrait('first_feature', 'true');
             API.trackEvent(Constants.events.CREATE_FIRST_FEATURE);
         }
-        data.post(`${Project.api}projects/${projectId}/features/`, Object.assign({}, flag, { multivariate_options: undefined, project: projectId, type: flag.multivariate_options && flag.multivariate_options.length ? 'MULTIVARIATE' : 'STANDARD',
+
+        data.post(`${Project.api}projects/${projectId}/features/`, Object.assign({}, flag, {
+            multivariate_options: undefined,
+            project: projectId,
+            initial_value: typeof flag.initial_value !== 'undefined' && flag.initial_value !== null ? `${flag.initial_value}`: flag.initial_value,
+            type: flag.multivariate_options && flag.multivariate_options.length ? 'MULTIVARIATE' : 'STANDARD',
         }))
             .then(res => Promise.all((flag.multivariate_options || []).map(v => data.post(`${Project.api}projects/${projectId}/features/${flag.id}/mv-options/`, {
                 ...v,
@@ -117,7 +122,7 @@ const controller = {
         };
     },
     editFlag(projectId, flag, onComplete) {
-        const originalFlag = store.model.features.find(v => v.id === flag.id);
+        const originalFlag = store.model && store.model.features? store.model.features.find(v => v.id === flag.id): flag;
 
         Promise.all((flag.multivariate_options || []).map((v, i) => {
             const originalMV = v.id ? originalFlag.multivariate_options.find(m => m.id === v.id) : null;
@@ -150,10 +155,13 @@ const controller = {
                     if (onComplete) {
                         onComplete(res);
                     }
-                    const index = _.findIndex(store.model.features, { id: flag.id });
-                    store.model.features[index] = controller.parseFlag(flag);
-                    store.model.lastSaved = new Date().valueOf();
-                    store.changed();
+                    if(store.model) {
+                        const index = _.findIndex(store.model.features, { id: flag.id });
+                        store.model.features[index] = controller.parseFlag(flag);
+                        store.model.lastSaved = new Date().valueOf();
+                        store.changed();
+                    }
+
                 })
                 .catch((e) => {
                     if (onComplete) {
@@ -220,7 +228,7 @@ const controller = {
                 store.saved();
             });
     },
-    editFeatureState: (projectId, environmentId, flag, projectFlag, environmentFlag, segmentOverrides, mode) => {
+    editFeatureState: (projectId, environmentId, flag, projectFlag, environmentFlag, segmentOverrides, mode, onComplete) => {
         let prom;
         const segmentOverridesProm = (segmentOverrides || []).map((v, i) => () => {
             if (v.toRemove) {
@@ -305,17 +313,23 @@ const controller = {
 
 
             Promise.all([prom, segmentOverridesRequest]).then(([res, segmentRes]) => {
-                store.model.keyedEnvironmentFeatures[projectFlag.id] = res;
-                if (segmentRes) {
-                    const feature = _.find(store.model.features, f => f.id === projectFlag.id);
-                    if (feature) {
-                        feature.feature_segments = _.map(segmentRes.feature_segments, segment => ({
-                            ...segment,
-                            segment: segment.segment.id,
-                        }));
+                if(store.model) {
+                    store.model.keyedEnvironmentFeatures[projectFlag.id] = res;
+                    if (segmentRes) {
+                        const feature = _.find(store.model.features, f => f.id === projectFlag.id);
+                        if (feature) {
+                            feature.feature_segments = _.map(segmentRes.feature_segments, segment => ({
+                                ...segment,
+                                segment: segment.segment.id,
+                            }));
+                        }
                     }
                 }
-                store.model.lastSaved = new Date().valueOf();
+
+                if(store.model) {
+                    store.model.lastSaved = new Date().valueOf();
+                }
+                onComplete && onComplete()
                 store.saved();
             });
         });
@@ -465,7 +479,7 @@ store.dispatcherIndex = Dispatcher.register(store, (payload) => {
             controller.createFlag(action.projectId, action.environmentId, action.flag, action.segmentOverrides);
             break;
         case Actions.EDIT_ENVIRONMENT_FLAG:
-            controller.editFeatureState(action.projectId, action.environmentId, action.flag, action.projectFlag, action.environmentFlag, action.segmentOverrides, action.mode);
+            controller.editFeatureState(action.projectId, action.environmentId, action.flag, action.projectFlag, action.environmentFlag, action.segmentOverrides, action.mode, action.onComplete);
             break;
         case Actions.EDIT_ENVIRONMENT_FLAG_CHANGE_REQUEST:
             controller.editFeatureStateChangeRequest(action.projectId, action.environmentId, action.flag, action.projectFlag, action.environmentFlag, action.segmentOverrides, action.changeRequest, action.commit);

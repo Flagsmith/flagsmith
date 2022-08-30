@@ -85,7 +85,7 @@ const CreateAuditWebhook = class extends Component {
                           <div>
                               <label>Example Payload </label>
                               <a className="link-dark ml-2" href="https://docs.flagsmith.com/advanced-use/system-administration#audit-log-webhooks" target="_blank">View docs</a>
-                              <Highlight style={{ marginBottom: 10 }} className="json">
+                              <Highlight forceExpanded style={{ marginBottom: 10 }} className="json">
                                   {exampleJSON}
                               </Highlight>
                               <div className="text-center">

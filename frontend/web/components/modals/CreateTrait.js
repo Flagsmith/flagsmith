@@ -113,7 +113,7 @@ const CreateTrait = class extends Component {
 
                                 <FormGroup className="flag-example">
                                     <strong>Example SDK response:</strong>
-                                    <Highlight className="json no-pad">
+                                    <Highlight forceExpanded className="json no-pad">
                                         {JSON.stringify({ trait_key, trait_value })}
                                     </Highlight>
                                 </FormGroup>

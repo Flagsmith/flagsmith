@@ -5,6 +5,7 @@ import { ButtonLink } from '../base/forms/Button';
 import { Google } from '../../project/auth';
 import NavIconSmall from '../svg/NavIconSmall';
 import SamlForm from '../SamlForm';
+import data from "../../../common/data/base/_data";
 
 const HomePage = class extends React.Component {
     static contextTypes = {
@@ -135,7 +136,21 @@ const HomePage = class extends React.Component {
                 oauths.push((
                     <a
                         onClick={() => {
-                            openModal('Single Sign-On', <SamlForm/>);
+                            if(!Utils.getFlagsmithValue("sso_idp")) {
+                                openModal('Single Sign-On', <SamlForm/>);
+                            } else {
+                                data.post(`${Project.api}auth/saml/${Utils.getFlagsmithValue("sso_idp")}/request/`)
+                                    .then((res) => {
+                                        if (res.headers && res.headers.Location) {
+                                            document.location.href = res.headers.Location
+                                        } else {
+                                            this.setState({error:true})
+                                        }
+                                    })
+                                    .catch(() => {
+                                        this.setState({ error: true, isLoading: false });
+                                    });
+                            }
                         }
                         } key="single-sign-on" className="btn btn__oauth btn__oauth--saml"
                     >

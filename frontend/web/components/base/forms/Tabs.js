@@ -25,6 +25,7 @@ const Tabs = class extends React.Component {
                                   e.preventDefault();
                                   this.props.onChange(i);
                               }}
+                              style={{padding:"0 5px"}}
                               className={`btn-tab btn-primary${isSelected ? ' tab-active' : ''}`}
                             >
                                 {child.props.tabLabel}

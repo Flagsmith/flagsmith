@@ -133,7 +133,7 @@ export default class Rule extends PureComponent {
         // remove append if one was added
 
 
-        const formattedValue = Utils.getTypedValue(value,true)
+        const formattedValue = `${value}`
         //split operator by append
         rules[i][prop] = prop === 'operator' ? formattedValue.split(":")[0] : formattedValue;
 
@@ -154,13 +154,13 @@ export default class Rule extends PureComponent {
     render() {
         const { props: { rule: { conditions: rules } } } = this;
         return (
-            <FormGroup>
+            <div className="mb-2">
                 <div className="panel overflow-visible">
                     <div className="panel-content">
                         {rules.map(this.renderRule)}
                     </div>
                 </div>
-            </FormGroup>
+            </div>
         );
     }
 }

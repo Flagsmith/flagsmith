@@ -181,8 +181,18 @@ a, .btn, button{
 
     &--link {
 
+        text-decoration: none !important;
         &-primary {
             color: $bt-brand-primary;
+            span {
+                color: $bt-brand-primary;
+            }
+            &:hover {
+                color: $bt-brand-primary-light;
+                span {
+                    color: $bt-brand-primary-light;
+                }
+            }
         }
         vertical-align: baseline;
         font-family: $font-family;

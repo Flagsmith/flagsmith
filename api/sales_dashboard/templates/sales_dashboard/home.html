@@ -60,13 +60,7 @@
             <tr class="{% if org.has_subscription and not org.is_paid %}table-danger{% elif org.over_plan_seats_limit %}table-warning{% endif %}">
               <td>{{org.id}}</td>
               <td><a href="/sales-dashboard/organisations/{{org.id}}">{{org.name}}</a></td>
-              <td>
-                {% if org.has_subscription %}
-                {{org.subscription.plan}} - {{org.subscription.payment_method}}
-                {% else %}
-                Free
-                {% endif %}
-              </td>
+              <td>{{ org.subscription.plan|default:"Free" }}{% if org.subscription.payment_method %} - {{ org.subscription.payment_method|capfirst }}{% endif %}</td>
               <td>{{org.num_users}}</td>
               <td>{{org.subscription.max_seats|default:1}}</td>
               <td>{{org.num_projects}}</td>

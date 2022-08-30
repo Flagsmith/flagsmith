@@ -209,3 +209,21 @@ def test_associated_features_returns_all_the_associated_features(
     assert response.json()["results"][0]["id"] == segment_featurestate.id
     assert response.json()["results"][0]["feature"] == feature.id
     assert response.json()["results"][0]["environment"] == environment.id
+
+
+def test_can_create_feature_based_segment(project, admin_client, feature):
+    # Given
+    url = reverse("api-v1:projects:project-segments-list", args=[project.id])
+    data = {
+        "name": "Test Segment",
+        "project": project.id,
+        "feature": feature.id,
+        "rules": [{"type": "ALL", "rules": [], "conditions": []}],
+    }
+
+    # When
+    res = admin_client.post(url, data=json.dumps(data), content_type="application/json")
+
+    # Then
+    assert res.status_code == status.HTTP_201_CREATED
+    assert res.json()["feature"] == feature.id

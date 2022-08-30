@@ -91,7 +91,7 @@ const ChangeRequestsPage = class extends Component {
                           this.setState({ tab });
                       }}
                     >
-                        {!!environment.minimum_change_request_approvals && (
+                        {typeof environment.minimum_change_request_approvals === 'number' && (
                             <TabItem tabLabel={`Open${data ? ` (${dataPaging.count})` : ''}`}>
                                 <PanelSearch
                                     renderSearchWithNoResults

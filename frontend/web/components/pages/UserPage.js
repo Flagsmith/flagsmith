@@ -8,6 +8,7 @@ import CreateSegmentModal from '../modals/CreateSegment';
 import FeatureListStore from "../../../common/stores/feature-list-store";
 import TagSelect from "../TagSelect";
 import { Tag } from "../AddEditTags";
+import _data from '../../../common/data/base/_data'
 
 const returnIfDefined = (value, value2) => {
     if (value === null || value === undefined) {
@@ -74,13 +75,22 @@ const UserPage = class extends Component {
 
 
     getActualFlags = () => {
-        const url = `${Utils.getSDKEndpoint()}identities/?identifier=${this.props.match.params.identity}`;
-        fetch(url, {
-            headers: { 'X-Environment-Key': this.props.match.params.environmentId },
-        }).then(res => res.json()).then((res) => {
-            this.setState({ actualFlags: _.keyBy(res.flags, v => v.feature.name) });
-        }).catch((err) => {
-        });
+        const {identity,id, environmentId} = this.props.match.params;
+        if (Utils.getFlagsmithHasFeature("use_admin_identity_featurestates")) {
+            const url = `${Project.api}environments/${environmentId}/${Utils.getIdentitiesEndpoint()}/${id}/${Utils.getFeatureStatesEndpoint()}/all/`;
+            _data.get(url,).then((res) => {
+                this.setState({ actualFlags: _.keyBy(res, v => v.feature.name) });
+            }).catch((err) => {
+            });
+        } else {
+            const url = `${Utils.getSDKEndpoint()}identities/?identifier=${this.props.match.params.identity}`;
+            fetch(url, {
+                headers: { 'X-Environment-Key': this.props.match.params.environmentId },
+            }).then(res => res.json()).then((res) => {
+                this.setState({ actualFlags: _.keyBy(res.flags, v => v.feature.name) });
+            }).catch((err) => {
+            });
+        }
     }
 
     onTraitSaved = () => {
@@ -394,7 +404,6 @@ const UserPage = class extends Component {
                                                                   <Column>
                                                                       <Button
                                                                         onClick={() => this.confirmRemove(_.find(projectFlags, { id }), () => {
-                                                                            debugger;
                                                                             removeFlag({
                                                                                 environmentId: this.props.match.params.environmentId,
                                                                                 identity: this.props.match.params.id,
