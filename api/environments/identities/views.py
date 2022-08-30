@@ -22,6 +22,7 @@ from environments.sdk.serializers import (
     IdentifyWithTraitsSerializer,
     IdentitySerializerWithTraitsAndSegments,
 )
+from environments.sdk.tasks import bulk_identify_with_traits
 from features.serializers import FeatureStateSerializerFull
 from integrations.integration import (
     IDENTITY_INTEGRATIONS,
@@ -129,6 +130,28 @@ class SDKIdentitiesDeprecated(SDKAPIView):
         )
 
         return Response(serializer.data, status=status.HTTP_200_OK)
+
+
+class SDKBulkIdentitiesView(SDKAPIView):
+    pagination_class = None  # set here to ensure documentation is correct
+
+    def get_serializer_context(self):
+        context = super().get_serializer_context()
+        if hasattr(self.request, "environment"):
+            # only set it if the request has the attribute to ensure that the
+            # documentation works correctly still
+            context["environment"] = self.request.environment
+        return context
+
+    @swagger_auto_schema(
+        request_body=IdentifyWithTraitsSerializer(many=True),
+        operation_id="bulk_identify_user_with_traits",
+    )
+    def post(self, request):
+        bulk_identify_with_traits.delay(
+            request.data, serializer_context=self.get_serializer_context()
+        )
+        return Response(status=status.HTTP_202_ACCEPTED)
 
 
 class SDKIdentities(SDKAPIView):

@@ -74,10 +74,23 @@ class IdentitySerializerWithTraitsAndSegments(serializers.Serializer):
     segments = SegmentSerializerBasic(many=True)
 
 
+class IdentifyWithTraitsListSerializer(serializers.ListSerializer):
+    def save(self, **kwargs):
+        instances = []
+        for data in self.validated_data:
+            serializer = IdentifyWithTraitsSerializer(data=data, context=self.context)
+            serializer.is_valid(raise_exception=True)
+            instances.append(serializer.save())
+        return instances
+
+
 class IdentifyWithTraitsSerializer(serializers.Serializer):
     identifier = serializers.CharField(write_only=True, required=True)
     traits = TraitSerializerBasic(required=False, many=True)
     flags = FeatureStateSerializerFull(read_only=True, many=True)
+
+    class Meta:
+        list_serializer_class = IdentifyWithTraitsListSerializer
 
     def save(self, **kwargs):
         """
