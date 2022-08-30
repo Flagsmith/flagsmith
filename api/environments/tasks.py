@@ -6,5 +6,6 @@ from task_processor.decorators import register_task_handler
 @register_task_handler()
 def rebuild_environment_document(environment_id: int):
     wrapper = DynamoEnvironmentWrapper()
-    environment = Environment.objects.get(id=environment_id)
-    wrapper.write_environment(environment)
+    if wrapper.is_enabled:
+        environment = Environment.objects.get(id=environment_id)
+        wrapper.write_environment(environment)
