@@ -78,11 +78,7 @@ class ChangeRequest(LifecycleModelMixin, AbstractBaseExportableModel):
                 "Change request has not been approved by all required approvers."
             )
 
-        feature_states = list(
-            self.feature_states.all().select_related(
-                "environment", "environment__project"
-            )
-        )
+        feature_states = list(self.feature_states.all())
 
         for feature_state in feature_states:
             if not feature_state.live_from:
