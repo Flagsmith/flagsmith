@@ -10,6 +10,7 @@ For the full list of settings and their values, see
 https://docs.djangoproject.com/en/1.9/ref/settings/
 """
 import importlib
+import json
 import logging
 import os
 import sys
@@ -409,22 +410,27 @@ CHARGEBEE_API_KEY = env("CHARGEBEE_API_KEY", default=None)
 CHARGEBEE_SITE = env("CHARGEBEE_SITE", default=None)
 
 # Logging configuration
-LOG_LEVEL = env.str("LOG_LEVEL", default="WARNING")
-LOGGING = {
-    "version": 1,
-    "disable_existing_loggers": True,
-    "formatters": {
-        "generic": {"format": "%(name)-12s %(levelname)-8s %(message)s"},
-    },
-    "handlers": {
-        "console": {
-            "level": LOG_LEVEL,
-            "class": "logging.StreamHandler",
-            "formatter": "generic",
-        }
-    },
-    "loggers": {"": {"level": LOG_LEVEL, "handlers": ["console"]}},
-}
+LOGGING_CONFIGURATION_FILE = env.str("LOGGING_CONFIGURATION_FILE", default=None)
+if LOGGING_CONFIGURATION_FILE:
+    with open(LOGGING_CONFIGURATION_FILE, "r") as f:
+        LOGGING = json.loads(f.read())
+else:
+    LOG_LEVEL = env.str("LOG_LEVEL", default="WARNING")
+    LOGGING = {
+        "version": 1,
+        "disable_existing_loggers": True,
+        "formatters": {
+            "generic": {"format": "%(name)-12s %(levelname)-8s %(message)s"},
+        },
+        "handlers": {
+            "console": {
+                "level": LOG_LEVEL,
+                "class": "logging.StreamHandler",
+                "formatter": "generic",
+            }
+        },
+        "loggers": {"": {"level": LOG_LEVEL, "handlers": ["console"]}},
+    }
 
 if APPLICATION_INSIGHTS_CONNECTION_STRING:
     LOGGING["handlers"]["azure"] = {
