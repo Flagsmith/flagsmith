@@ -32,8 +32,8 @@ SEGMENT_FEATURE_STATE_DELETED_MESSAGE = (
 )
 
 CHANGE_REQUEST_CREATED_MESSAGE = "Change Request: %s created"
-CHANGE_REQUEST_APPROVED_MESSAGE = "Change Request: %s is approved"
-CHANGE_REQUEST_COMMITED_MESSAGE = "Change Request: %s updated"
+CHANGE_REQUEST_APPROVED_MESSAGE = "Change Request: %s approved"
+CHANGE_REQUEST_COMMITED_MESSAGE = "Change Request: %s committed"
 
 
 class RelatedObjectType(enum.Enum):

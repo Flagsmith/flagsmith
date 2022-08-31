@@ -83,6 +83,7 @@ class ChangeRequest(LifecycleModelMixin, AbstractBaseExportableModel):
         for feature_state in feature_states:
             if not feature_state.live_from:
                 feature_state.live_from = timezone.now()
+
             feature_state.version = FeatureState.get_next_version_number(
                 environment_id=feature_state.environment_id,
                 feature_id=feature_state.feature_id,
