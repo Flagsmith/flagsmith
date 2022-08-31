@@ -9,6 +9,7 @@ from django.utils import timezone
 
 from task_processor.models import Task
 from task_processor.task_registry import register_task
+from task_processor.task_run_method import TaskRunMethod
 
 logger = logging.getLogger(__name__)
 
@@ -26,9 +27,12 @@ def register_task_handler(task_name: str = None):
         def delay(
             *args, delay_until: datetime = None, **kwargs
         ) -> typing.Optional[Task]:
-            if settings.RUN_TASKS_SYNCHRONOUSLY:
+            if settings.TASK_RUN_METHOD == TaskRunMethod.SYNCHRONOUSLY:
                 logger.debug("Running task '%s' synchronously", task_identifier)
                 f(*args, **kwargs)
+            elif settings.TASK_RUN_METHOD == TaskRunMethod.SEPARATE_THREAD:
+                logger.debug("Running task '%s' in separate thread", task_identifier)
+                run_in_thread(*args, **kwargs)
             else:
                 logger.debug("Creating task for function '%s'...", task_identifier)
                 task = Task.schedule_task(
@@ -40,7 +44,6 @@ def register_task_handler(task_name: str = None):
                 task.save()
                 return task
 
-        # TODO: remove this functionality and use delay in all scenarios
         def run_in_thread(*args, **kwargs):
             logger.info("Running function %s in unmanaged thread.", f.__name__)
             Thread(target=f, args=args, kwargs=kwargs, daemon=True).start()
