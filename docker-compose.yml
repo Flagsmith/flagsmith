@@ -61,6 +61,11 @@ services:
             - postgres
             # - influxdb:influxdb
 
+#    Run the asynchronous task processor as a separate container alongside the API.
+#    When enabled, the API will write tasks to a queue (in the PostgreSQL database) for
+#    the processor to consume asynchronously.
+#    Documentation on the processor can be found here:
+#    https://docs.flagsmith.com/advanced-use/task-processor
 #    flagsmith_processor:
 #        build:
 #            dockerfile: api/Dockerfile
