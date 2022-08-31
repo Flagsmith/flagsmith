@@ -152,8 +152,8 @@
                     "value": "60"
                 },
                 {
-                    "name": "RUN_TASKS_SYNCHRONOUSLY",
-                    "value": "False"
+                    "name": "TASK_RUN_METHOD",
+                    "value": "TASK_PROCESSOR"
                 },
                 {
                     "name": "CACHE_ENVIRONMENT_DOCUMENT_SECONDS",
