@@ -47,6 +47,11 @@ services:
             # ENABLE_ADMIN_ACCESS_USER_PASS: True # set to True to enable access to the /admin/ Django backend via your username and password
             # ALLOW_REGISTRATION_WITHOUT_INVITE: True
 
+            # Enable Task Processor
+            # To use task processor service, uncomment line below and additional 'flagsmith_processor'
+            # container below
+            # TASK_RUN_METHOD: TASK_PROCESSOR  # other options are: SYNCHRONOUSLY, SEPARATE_THREAD (default)
+
         ports:
             - '8000:8000'
         depends_on:
@@ -56,19 +61,21 @@ services:
             - postgres
             # - influxdb:influxdb
 
-    flagsmith_processor:
-        build:
-            dockerfile: api/Dockerfile
-            context: .
-        environment:
-            DATABASE_URL: postgresql://postgres:password@postgres:5432/flagsmith
-        command:
-            - "python"
-            - "manage.py"
-            - "runprocessor"
-        depends_on:
-            - flagsmith
-            - postgres
+#    flagsmith_processor:
+#        build:
+#            dockerfile: api/Dockerfile
+#            context: .
+#        environment:
+#            DATABASE_URL: postgresql://postgres:password@postgres:5432/flagsmith
+#        command:
+#            - "python"
+#            - "manage.py"
+#            - "runprocessor"
+#            - "--sleepintervalms"
+#            - "500"
+#        depends_on:
+#            - flagsmith
+#            - postgres
 
     # InfluxDB requires additional setup - please see https://docs.flagsmith.com/deployment-overview/#influxdb
     # Note that InfluxDB is optional, but enabling it will provide additional functionality to the Flagsmith platform
