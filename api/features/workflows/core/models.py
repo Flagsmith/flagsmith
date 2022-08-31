@@ -18,7 +18,9 @@ from django_lifecycle import (
 
 from environments.tasks import rebuild_environment_document
 from audit.models import (
-    FEATURE_STATE_UPDATED_MESSAGE,
+    CHANGE_REQUEST_APPROVED_MESSAGE,
+    CHANGE_REQUEST_COMMITED_MESSAGE,
+    CHANGE_REQUEST_CREATED_MESSAGE,
     AuditLog,
     RelatedObjectType,
 )
@@ -92,18 +94,6 @@ class ChangeRequest(LifecycleModelMixin, AbstractBaseExportableModel):
                 identity_id=feature_state.identity_id,
             )
 
-            # TODO: optimise these creates to use bulk create again but for now, we need to
-            # ensure the post_save signals on the AuditLog model class are triggered
-            message = FEATURE_STATE_UPDATED_MESSAGE % feature_state.feature.name
-            AuditLog.objects.create(
-                author=committed_by,
-                project=feature_state.environment.project,
-                environment=feature_state.environment,
-                related_object_type=RelatedObjectType.FEATURE_STATE.name,
-                related_object_id=feature_state.id,
-                log=message,
-            )
-
         FeatureState.objects.bulk_update(
             feature_states, fields=["live_from", "version"]
         )
@@ -111,6 +101,28 @@ class ChangeRequest(LifecycleModelMixin, AbstractBaseExportableModel):
         self.committed_at = timezone.now()
         self.committed_by = committed_by
         self.save()
+
+        message = CHANGE_REQUEST_COMMITED_MESSAGE % self.title
+        AuditLog.objects.create(
+            author=committed_by,
+            project=self.environment.project,
+            environment=self.environment,
+            related_object_type=RelatedObjectType.CHANGE_REQUEST.name,
+            related_object_id=self.id,
+            log=message,
+        )
+
+    @hook(AFTER_CREATE)
+    def create_audit_log(self):
+        message = CHANGE_REQUEST_CREATED_MESSAGE % self.title
+        AuditLog.objects.create(
+            author=self.user,
+            project=self.environment.project,
+            environment=self.environment,
+            related_object_type=RelatedObjectType.CHANGE_REQUEST.name,
+            related_object_id=self.id,
+            log=message,
+        )
 
     def is_approved(self):
         return self.environment.minimum_change_request_approvals is None or (
@@ -215,4 +227,13 @@ class ChangeRequestApproval(LifecycleModel):
                 "workflows_core/change_request_approved_author_notification.html",
                 context,
             ),
+        )
+        message = CHANGE_REQUEST_APPROVED_MESSAGE % self.change_request.title
+        AuditLog.objects.create(
+            author=self.user,
+            project=self.change_request.environment.project,
+            environment=self.change_request.environment,
+            related_object_type=RelatedObjectType.CHANGE_REQUEST.name,
+            related_object_id=self.id,
+            log=message,
         )
