@@ -24,6 +24,8 @@ from corsheaders.defaults import default_headers
 from django.core.management.utils import get_random_secret_key
 from environs import Env
 
+from task_processor.task_run_method import TaskRunMethod
+
 env = Env()
 logger = logging.getLogger(__name__)
 
@@ -682,4 +684,7 @@ SAML_USE_NAME_ID_AS_EMAIL = env.bool("SAML_USE_NAME_ID_AS_EMAIL", False)
 MAX_SELF_MIGRATABLE_IDENTITIES = env.int("MAX_SELF_MIGRATABLE_IDENTITIES", 100000)
 
 # Setting to allow asynchronous tasks to be run synchronously for testing purposes
-RUN_TASKS_SYNCHRONOUSLY = env.bool("RUN_TASKS_SYNCHRONOUSLY", True)
+# or in a separate thread for self-hosted users
+TASK_RUN_METHOD = env.enum(
+    "TASK_RUN_METHOD", type=TaskRunMethod, default=TaskRunMethod.SEPARATE_THREAD.value
+)
