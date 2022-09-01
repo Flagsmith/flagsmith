@@ -11,7 +11,10 @@ class TaskProcessorAppConfig(AppConfig):
     def ready(self):
         from . import tasks  # noqa
 
-        if settings.TASK_RUN_METHOD == TaskRunMethod.TASK_PROCESSOR:
+        if (
+            settings.ENABLE_TASK_PROCESSOR_HEALTH_CHECK
+            and settings.TASK_RUN_METHOD == TaskRunMethod.TASK_PROCESSOR
+        ):
             from .health import TaskProcessorHealthCheckBackend
 
             plugin_dir.register(TaskProcessorHealthCheckBackend)
