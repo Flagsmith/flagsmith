@@ -9,12 +9,14 @@ from django.template.loader import render_to_string
 from django.utils import timezone
 from django_lifecycle import (
     AFTER_CREATE,
+    AFTER_SAVE,
     AFTER_UPDATE,
     LifecycleModel,
     LifecycleModelMixin,
     hook,
 )
 
+from environments.tasks import rebuild_environment_document
 from features.models import FeatureState
 
 from .exceptions import (
@@ -115,6 +117,30 @@ class ChangeRequest(LifecycleModelMixin, AbstractBaseExportableModel):
     @property
     def email_subject(self):
         return f"Flagsmith Change Request: {self.title} (#{self.id})"
+
+    @hook(AFTER_CREATE, when="committed_at", is_not=None)
+    @hook(AFTER_SAVE, when="committed_at", was=None, is_not=None)
+    def schedule_environment_rebuild(self):
+        if not settings.EDGE_ENABLED:
+            return
+
+        now = timezone.now()
+        feature_states = list(
+            self.feature_states.filter(live_from__gt=now).order_by("live_from")
+        )
+
+        previous_live_from = None
+        for feature_state in feature_states:
+            # currently we only support a single feature state and single schedule date
+            # however this will ensure that if, in the future, we allow multiple feature
+            # states per change request (and perhaps multiple schedule dates) then this
+            # functionality will work as expected.
+            if not previous_live_from or feature_state.live_from != previous_live_from:
+                rebuild_environment_document.delay(
+                    delay_util=feature_state.live_from,
+                    environment_id=self.environment_id,
+                )
+            previous_live_from = feature_state.live_from
 
 
 class ChangeRequestApproval(LifecycleModel):
