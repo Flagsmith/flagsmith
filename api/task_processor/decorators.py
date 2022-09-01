@@ -27,6 +27,12 @@ def register_task_handler(task_name: str = None):
         def delay(
             *args, delay_until: datetime = None, **kwargs
         ) -> typing.Optional[Task]:
+            if delay_until and settings.TASK_RUN_METHOD != TaskRunMethod.TASK_PROCESSOR:
+                logger.warning(
+                    "Cannot schedule tasks to run in the future without task processor."
+                )
+                return
+
             if settings.TASK_RUN_METHOD == TaskRunMethod.SYNCHRONOUSLY:
                 logger.debug("Running task '%s' synchronously", task_identifier)
                 f(*args, **kwargs)
