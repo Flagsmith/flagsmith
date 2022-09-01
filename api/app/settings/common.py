@@ -15,14 +15,14 @@ import logging
 import os
 import sys
 import warnings
-from datetime import timedelta
+from datetime import datetime, timedelta
 from importlib import reload
 
 import dj_database_url
+import pytz
 import requests
 from corsheaders.defaults import default_headers
 from django.core.management.utils import get_random_secret_key
-from django.utils import timezone
 from environs import Env
 
 from task_processor.task_run_method import TaskRunMethod
@@ -671,10 +671,12 @@ IDENTITY_MIGRATION_EVENT_BUS_NAME = env.str("IDENTITY_MIGRATION_EVENT_BUS_NAME",
 
 # Should be a string representing a timezone aware datetime, e.g. 2022-03-31T12:35:00Z
 EDGE_RELEASE_DATETIME = env.datetime("EDGE_RELEASE_DATETIME", None)
+# Note: using django.utils.timezone.now doesn't work reliably in settings so we use
+# datetime.now
 EDGE_ENABLED = (
     ENVIRONMENTS_TABLE_NAME_DYNAMO is not None
     and EDGE_RELEASE_DATETIME is not None
-    and EDGE_RELEASE_DATETIME < timezone.now()
+    and EDGE_RELEASE_DATETIME < datetime.now(tz=pytz.UTC)
 )
 
 DISABLE_WEBHOOKS = env.bool("DISABLE_WEBHOOKS", False)
