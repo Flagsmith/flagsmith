@@ -98,7 +98,7 @@ const controller = {
             .then(res => Promise.all((flag.multivariate_options || []).map(v => data.post(`${Project.api}projects/${projectId}/features/${flag.id}/mv-options/`, {
                 ...v,
                 feature: res.id,
-            }).then(() => res))).then(() => data.get(`${Project.api}projects/${projectId}/features/${res.id}`)))
+            }).then(() => res))).then(() => data.get(`${Project.api}projects/${projectId}/features/${res.id}/`)))
             .then(res => Promise.all([
                 data.get(`${Project.api}projects/${projectId}/features/`),
                 data.get(`${Project.api}environments/${environmentId}/featurestates/`),
