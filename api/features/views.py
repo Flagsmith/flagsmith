@@ -3,6 +3,7 @@ import typing
 from functools import reduce
 
 from app_analytics.influxdb_wrapper import get_multiple_event_list_for_feature
+from core.permissions import HasMasterAPIKEY
 from django.conf import settings
 from django.core.cache import caches
 from django.db.models import Q, QuerySet
@@ -10,7 +11,7 @@ from django.utils.decorators import method_decorator
 from drf_yasg2 import openapi
 from drf_yasg2.utils import swagger_auto_schema
 from rest_framework import mixins, status, viewsets
-from rest_framework.decorators import action
+from rest_framework.decorators import action, api_view, permission_classes
 from rest_framework.exceptions import NotFound, ValidationError
 from rest_framework.generics import GenericAPIView, get_object_or_404
 from rest_framework.permissions import IsAuthenticated
@@ -71,6 +72,18 @@ logger = logging.getLogger()
 logger.setLevel(logging.INFO)
 
 flags_cache = caches[settings.FLAGS_CACHE_LOCATION]
+
+
+@api_view(["GET"])
+@permission_classes([IsAuthenticated | HasMasterAPIKEY])
+def get_feature_by_uuid(request, uuid):
+    if request.user.is_anonymous:
+        accessible_projects = request.master_api_key.organisation.projects.all()
+    else:
+        accessible_projects = request.user.get_permitted_projects(["VIEW_PROJECT"])
+    feature = Feature.objects.get(uuid=uuid, project__in=accessible_projects)
+    serializer = ListCreateFeatureSerializer(instance=feature)
+    return Response(serializer.data)
 
 
 @method_decorator(

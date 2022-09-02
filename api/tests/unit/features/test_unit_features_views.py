@@ -543,17 +543,17 @@ def test_project_admin_can_create_mv_options_when_creating_feature(client, proje
 @pytest.mark.parametrize(
     "client", [(lazy_fixture("master_api_key_client")), (lazy_fixture("admin_client"))]
 )
-def test_list_features_uuid_filter(client, project, feature):
+def test_get_feature_by_uuid(client, project, feature):
     # Given
     feature = Feature.objects.create(name="another_feature", project=project)
 
-    base_url = reverse("api-v1:projects:project-features-list", args=[project.id])
-    url = f"{base_url}?uuid={feature.uuid}"
+    url = reverse("api-v1:features:get-feature-by-uuid", args=[feature.uuid])
 
     # When
     response = client.get(url)
 
     # Then
-    assert len(response.json()["results"]) == 1
-    assert response.json()["results"][0]["id"] == feature.id
-    assert response.json()["results"][0]["uuid"] == str(feature.uuid)
+    assert response.status_code == status.HTTP_200_OK
+
+    assert response.json()["id"] == feature.id
+    assert response.json()["uuid"] == str(feature.uuid)
