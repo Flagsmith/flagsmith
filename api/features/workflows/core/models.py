@@ -152,7 +152,7 @@ class ChangeRequest(LifecycleModelMixin, AbstractBaseExportableModel):
                     feature_state.live_from.isoformat(),
                 )
                 rebuild_environment_document.delay(
-                    delay_util=feature_state.live_from,
+                    delay_until=feature_state.live_from,
                     kwargs={"environment_id": self.environment_id},
                 )
             previous_live_from = feature_state.live_from
