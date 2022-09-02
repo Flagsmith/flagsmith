@@ -29,18 +29,29 @@ class Task(models.Model):
         ]
 
     @classmethod
-    def create(cls, task_identifier: str, *args, **kwargs) -> "Task":
+    def create(
+        cls,
+        task_identifier: str,
+        *,
+        args: typing.Tuple[typing.Any] = None,
+        kwargs: typing.Dict[str, typing.Any] = None,
+    ) -> "Task":
         return Task(
             task_identifier=task_identifier,
-            serialized_args=cls._serialize_data(args),
-            serialized_kwargs=cls._serialize_data(kwargs),
+            serialized_args=cls._serialize_data(args or tuple()),
+            serialized_kwargs=cls._serialize_data(kwargs or dict()),
         )
 
     @classmethod
     def schedule_task(
-        cls, schedule_for: datetime, task_identifier: str, *args, **kwargs
+        cls,
+        schedule_for: datetime,
+        task_identifier: str,
+        *,
+        args: typing.Tuple[typing.Any] = None,
+        kwargs: typing.Dict[str, typing.Any] = None,
     ) -> "Task":
-        task = cls.create(task_identifier, *args, **kwargs)
+        task = cls.create(task_identifier=task_identifier, args=args, kwargs=kwargs)
         task.scheduled_for = schedule_for
         return task
 

@@ -412,5 +412,5 @@ def test_schedule_environment_rebuild_schedules_rebuild_environment_task(
     # Then
     mock_rebuild_environment_document.delay.assert_called_once_with(
         delay_util=tomorrow,
-        environment_id=change_request_no_required_approvals.environment_id,
+        kwargs={"environment_id": change_request_no_required_approvals.environment_id},
     )

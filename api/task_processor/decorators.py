@@ -25,8 +25,14 @@ def register_task_handler(task_name: str = None):
         register_task(task_identifier, f)
 
         def delay(
-            *args, delay_until: datetime = None, **kwargs
+            *,
+            delay_until: datetime = None,
+            args: typing.Tuple = None,
+            kwargs: typing.Dict = None,
         ) -> typing.Optional[Task]:
+            args = args or tuple()
+            kwargs = kwargs or dict()
+
             if delay_until and settings.TASK_RUN_METHOD != TaskRunMethod.TASK_PROCESSOR:
                 logger.warning(
                     "Cannot schedule tasks to run in the future without task processor."
@@ -44,8 +50,8 @@ def register_task_handler(task_name: str = None):
                 task = Task.schedule_task(
                     schedule_for=delay_until or timezone.now(),
                     task_identifier=task_identifier,
-                    *args,
-                    **kwargs,
+                    args=args,
+                    kwargs=kwargs,
                 )
                 task.save()
                 return task
