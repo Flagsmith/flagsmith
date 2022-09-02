@@ -138,7 +138,7 @@ class ChangeRequest(LifecycleModelMixin, AbstractBaseExportableModel):
             if not previous_live_from or feature_state.live_from != previous_live_from:
                 rebuild_environment_document.delay(
                     delay_util=feature_state.live_from,
-                    environment_id=self.environment_id,
+                    kwargs={"environment_id": self.environment_id},
                 )
             previous_live_from = feature_state.live_from
 
