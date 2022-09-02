@@ -28,7 +28,6 @@ from environs import Env
 from task_processor.task_run_method import TaskRunMethod
 
 env = Env()
-logger = logging.getLogger(__name__)
 
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
@@ -360,7 +359,7 @@ EMAIL_BACKEND = env("EMAIL_BACKEND", default="sgbackend.SendGridBackend")
 if EMAIL_BACKEND == "sgbackend.SendGridBackend":
     SENDGRID_API_KEY = env("SENDGRID_API_KEY", default=None)
     if not SENDGRID_API_KEY:
-        logger.info(
+        logging.info(
             "`SENDGRID_API_KEY` has not been configured. You will not receive emails."
         )
 elif EMAIL_BACKEND == "django.core.mail.backends.smtp.EmailBackend":
@@ -432,7 +431,19 @@ else:
                 "formatter": "generic",
             }
         },
-        "loggers": {"": {"level": LOG_LEVEL, "handlers": ["console"]}},
+        "loggers": {
+            "": {"level": LOG_LEVEL, "handlers": ["console"]},
+            # Not sure why this is necessary, but it doesn't seem to write log messages
+            # for e.g. features.workflows.core.models without adding features logger
+            # explicitly.
+            # TODO: move all apps to a parent 'apps' directory and configure the logger
+            #  for that dir
+            "features": {
+                "level": LOG_LEVEL,
+                "handlers": ["console"],
+                "propagate": False,
+            },
+        },
     }
 
 if APPLICATION_INSIGHTS_CONNECTION_STRING:
