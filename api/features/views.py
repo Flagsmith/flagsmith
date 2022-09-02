@@ -74,6 +74,7 @@ logger.setLevel(logging.INFO)
 flags_cache = caches[settings.FLAGS_CACHE_LOCATION]
 
 
+@swagger_auto_schema(responses={200: ListCreateFeatureSerializer()}, method="get")
 @api_view(["GET"])
 @permission_classes([IsAuthenticated | HasMasterAPIKEY])
 def get_feature_by_uuid(request, uuid):
