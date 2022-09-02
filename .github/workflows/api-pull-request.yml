@@ -72,5 +72,6 @@ jobs:
                   DATABASE_URL:
                       'postgres://postgres:postgres@localhost:${{ job.services.postgres.ports[5432] }}/postgres'
                   DJANGO_SETTINGS_MODULE: 'app.settings.test'
+                  LOG_LEVEL: 'INFO'
               run: |
                   pytest -p no:warnings

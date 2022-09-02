@@ -433,12 +433,17 @@ else:
         },
         "loggers": {
             "": {"level": LOG_LEVEL, "handlers": ["console"]},
-            # Not sure why this is necessary, but it doesn't seem to write log messages
-            # for e.g. features.workflows.core.models without adding features logger
-            # explicitly.
+            # Not sure why the following loggers are necessary, but it doesn't seem to
+            # write log messages for e.g. features.workflows.core.models without adding
+            # them explicitly.
             # TODO: move all apps to a parent 'apps' directory and configure the logger
             #  for that dir
             "features": {
+                "level": LOG_LEVEL,
+                "handlers": ["console"],
+                "propagate": False,
+            },
+            "task_processor": {
                 "level": LOG_LEVEL,
                 "handlers": ["console"],
                 "propagate": False,
