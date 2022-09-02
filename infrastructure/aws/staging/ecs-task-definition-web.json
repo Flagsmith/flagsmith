@@ -162,6 +162,10 @@
                 {
                     "name": "CACHE_ENVIRONMENT_DOCUMENT_SECONDS",
                     "value": "60"
+                },
+                {
+                  "name":  "LOG_LEVEL",
+                  "value": "DEBUG"
                 }
             ],
             "secrets": [
