@@ -30,6 +30,8 @@ def register_task_handler(task_name: str = None):
             args: typing.Tuple = None,
             kwargs: typing.Dict = None,
         ) -> typing.Optional[Task]:
+            logger.debug("Request to run task '%s' asynchronously.", task_identifier)
+
             args = args or tuple()
             kwargs = kwargs or dict()
 
