@@ -19,7 +19,7 @@ from django_lifecycle import (
 from environments.tasks import rebuild_environment_document
 from audit.models import (
     CHANGE_REQUEST_APPROVED_MESSAGE,
-    CHANGE_REQUEST_COMMITED_MESSAGE,
+    CHANGE_REQUEST_COMMITTED_MESSAGE,
     CHANGE_REQUEST_CREATED_MESSAGE,
     AuditLog,
     RelatedObjectType,
@@ -99,9 +99,11 @@ class ChangeRequest(LifecycleModelMixin, AbstractBaseExportableModel):
         self.committed_by = committed_by
         self.save()
 
-        message = CHANGE_REQUEST_COMMITED_MESSAGE % self.title
+    @hook(AFTER_CREATE)
+    def create_cr_created_audit_log(self):
+        message = CHANGE_REQUEST_CREATED_MESSAGE % self.title
         AuditLog.objects.create(
-            author=committed_by,
+            author=self.user,
             project=self.environment.project,
             environment=self.environment,
             related_object_type=RelatedObjectType.CHANGE_REQUEST.name,
@@ -109,11 +111,11 @@ class ChangeRequest(LifecycleModelMixin, AbstractBaseExportableModel):
             log=message,
         )
 
-    @hook(AFTER_CREATE)
-    def create_audit_log(self):
-        message = CHANGE_REQUEST_CREATED_MESSAGE % self.title
+    @hook(AFTER_SAVE, when="committed_at", was=None, is_not=None)
+    def create_cr_committed_audit_log(self):
+        message = CHANGE_REQUEST_COMMITTED_MESSAGE % self.title
         AuditLog.objects.create(
-            author=self.user,
+            author=self.committed_by,
             project=self.environment.project,
             environment=self.environment,
             related_object_type=RelatedObjectType.CHANGE_REQUEST.name,
@@ -225,6 +227,10 @@ class ChangeRequestApproval(LifecycleModel):
                 context,
             ),
         )
+
+    @hook(AFTER_CREATE, when="approved_at", is_not=None)
+    @hook(AFTER_UPDATE, when="approved_at", was=None, is_not=None)
+    def create_cr_approved_audit_logs(self):
         message = CHANGE_REQUEST_APPROVED_MESSAGE % self.change_request.title
         AuditLog.objects.create(
             author=self.user,

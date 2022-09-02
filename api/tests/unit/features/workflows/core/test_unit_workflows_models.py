@@ -6,7 +6,7 @@ from django.utils import timezone
 
 from audit.models import (
     CHANGE_REQUEST_APPROVED_MESSAGE,
-    CHANGE_REQUEST_COMMITED_MESSAGE,
+    CHANGE_REQUEST_COMMITTED_MESSAGE,
     CHANGE_REQUEST_CREATED_MESSAGE,
     AuditLog,
 )
@@ -177,7 +177,7 @@ def test_change_request_commit_creates_audit_log(
     change_request_no_required_approvals.commit(committed_by=user)
 
     # Then
-    log = CHANGE_REQUEST_COMMITED_MESSAGE % change_request_no_required_approvals.title
+    log = CHANGE_REQUEST_COMMITTED_MESSAGE % change_request_no_required_approvals.title
     assert (
         AuditLog.objects.filter(
             related_object_id=change_request_no_required_approvals.id,
