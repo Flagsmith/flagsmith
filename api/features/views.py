@@ -92,7 +92,7 @@ def get_feature_by_uuid(request, uuid):
 )
 class FeatureViewSet(viewsets.ModelViewSet):
     permission_classes = [FeaturePermissions | MasterAPIKeyFeaturePermissions]
-    filterset_fields = ["is_archived", "uuid"]
+    filterset_fields = ["is_archived"]
     pagination_class = CustomPagination
 
     def get_serializer_class(self):
@@ -118,6 +118,7 @@ class FeatureViewSet(viewsets.ModelViewSet):
         queryset = project.features.all().prefetch_related(
             "multivariate_options", "owners", "tags"
         )
+
         query_serializer = FeatureQuerySerializer(data=self.request.query_params)
         query_serializer.is_valid(raise_exception=True)
         query_data = query_serializer.validated_data
