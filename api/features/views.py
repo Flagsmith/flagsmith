@@ -82,7 +82,10 @@ def get_feature_by_uuid(request, uuid):
         accessible_projects = request.master_api_key.organisation.projects.all()
     else:
         accessible_projects = request.user.get_permitted_projects(["VIEW_PROJECT"])
-    feature = Feature.objects.get(uuid=uuid, project__in=accessible_projects)
+    qs = Feature.objects.filter(project__in=accessible_projects).prefetch_related(
+        "multivariate_options", "owners", "tags"
+    )
+    feature = get_object_or_404(qs, uuid=uuid)
     serializer = ListCreateFeatureSerializer(instance=feature)
     return Response(serializer.data)
 

@@ -1,4 +1,5 @@
 import json
+import uuid
 
 import pytest
 from django.urls import reverse
@@ -545,8 +546,6 @@ def test_project_admin_can_create_mv_options_when_creating_feature(client, proje
 )
 def test_get_feature_by_uuid(client, project, feature):
     # Given
-    feature = Feature.objects.create(name="another_feature", project=project)
-
     url = reverse("api-v1:features:get-feature-by-uuid", args=[feature.uuid])
 
     # When
@@ -557,3 +556,17 @@ def test_get_feature_by_uuid(client, project, feature):
 
     assert response.json()["id"] == feature.id
     assert response.json()["uuid"] == str(feature.uuid)
+
+
+@pytest.mark.parametrize(
+    "client", [(lazy_fixture("master_api_key_client")), (lazy_fixture("admin_client"))]
+)
+def test_get_feature_by_uuid_returns_404_if_feature_does_not_exists(client, project):
+    # Given
+    url = reverse("api-v1:features:get-feature-by-uuid", args=[uuid.uuid4()])
+
+    # When
+    response = client.get(url)
+
+    # Then
+    assert response.status_code == status.HTTP_404_NOT_FOUND
