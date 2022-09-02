@@ -1,8 +1,8 @@
 {
     "family": "flagsmith-task-processor",
     "networkMode": "awsvpc",
-    "executionRoleArn": "arn:aws:iam::302456015006:role/task-processor-task-execution-role-f3fad35",  // TODO
-    "taskRoleArn": "arn:aws:iam::302456015006:role/task-processor-task-role-c027314",  // TODO
+    "executionRoleArn": "arn:aws:iam::084060095745:role/task-processor-task-execution-role-cb2130a",
+    "taskRoleArn": "arn:aws:iam::084060095745:role/task-processor-task-role-da49287",
     "containerDefinitions": [
         {
             "name": "flagsmith-task-processor",
