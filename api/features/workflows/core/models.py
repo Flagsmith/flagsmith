@@ -16,7 +16,6 @@ from django_lifecycle import (
     hook,
 )
 
-from environments.tasks import rebuild_environment_document
 from audit.models import (
     CHANGE_REQUEST_APPROVED_MESSAGE,
     CHANGE_REQUEST_COMMITTED_MESSAGE,
@@ -24,6 +23,7 @@ from audit.models import (
     AuditLog,
     RelatedObjectType,
 )
+from environments.tasks import rebuild_environment_document
 from features.models import FeatureState
 
 from .exceptions import (
