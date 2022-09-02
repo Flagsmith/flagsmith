@@ -539,7 +539,7 @@ class FeatureStateTest(TestCase):
 
         # Then
         # we default to environment type
-        with self.assertLogs() as caplog:
+        with self.assertLogs("features") as caplog:
             assert feature_state.type == ENVIRONMENT
 
         # and an error is logged

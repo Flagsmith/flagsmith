@@ -1,3 +1,4 @@
+import logging
 import typing
 
 from core.helpers import get_current_site_url
@@ -26,6 +27,8 @@ from .exceptions import (
 
 if typing.TYPE_CHECKING:
     from users.models import FFAdminUser
+
+logger = logging.getLogger(__name__)
 
 
 class ChangeRequest(LifecycleModelMixin, AbstractBaseExportableModel):
@@ -70,6 +73,8 @@ class ChangeRequest(LifecycleModelMixin, AbstractBaseExportableModel):
             raise ChangeRequestNotApprovedError(
                 "Change request has not been approved by all required approvers."
             )
+
+        logger.debug("Committing change request #%d", self.id)
 
         feature_states = list(self.feature_states.all())
 
@@ -121,13 +126,18 @@ class ChangeRequest(LifecycleModelMixin, AbstractBaseExportableModel):
     @hook(AFTER_CREATE, when="committed_at", is_not=None)
     @hook(AFTER_SAVE, when="committed_at", was=None, is_not=None)
     def schedule_environment_rebuild(self):
+        logger.debug("Scheduling environment rebuild for change request #%d", self.id)
+
         if not settings.EDGE_ENABLED:
+            logger.debug("Edge is disabled. Not scheduling environment rebuild.")
             return
 
         now = timezone.now()
         feature_states = list(
             self.feature_states.filter(live_from__gt=now).order_by("live_from")
         )
+
+        logger.debug("Number of associated feature states: %d", len(feature_states))
 
         previous_live_from = None
         for feature_state in feature_states:
@@ -136,6 +146,11 @@ class ChangeRequest(LifecycleModelMixin, AbstractBaseExportableModel):
             # states per change request (and perhaps multiple schedule dates) then this
             # functionality will work as expected.
             if not previous_live_from or feature_state.live_from != previous_live_from:
+                logger.debug(
+                    "Scheduling rebuild of environment %d at %s",
+                    self.environment_id,
+                    feature_state.live_from.isoformat(),
+                )
                 rebuild_environment_document.delay(
                     delay_util=feature_state.live_from,
                     kwargs={"environment_id": self.environment_id},

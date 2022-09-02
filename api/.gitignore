@@ -3,3 +3,4 @@ static/
 
 # SaaS only modules
 saml/
+features/workflows/logic/
