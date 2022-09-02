@@ -165,7 +165,7 @@
                 },
                 {
                   "name":  "LOG_LEVEL",
-                  "value": "DEBUG"
+                  "value": "INFO"
                 }
             ],
             "secrets": [
