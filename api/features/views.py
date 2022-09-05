@@ -3,7 +3,7 @@ import typing
 from functools import reduce
 
 from app_analytics.influxdb_wrapper import get_multiple_event_list_for_feature
-from core.permissions import HasMasterAPIKEY
+from core.permissions import HasMasterAPIKey
 from django.conf import settings
 from django.core.cache import caches
 from django.db.models import Q, QuerySet
@@ -76,9 +76,9 @@ flags_cache = caches[settings.FLAGS_CACHE_LOCATION]
 
 @swagger_auto_schema(responses={200: ListCreateFeatureSerializer()}, method="get")
 @api_view(["GET"])
-@permission_classes([IsAuthenticated | HasMasterAPIKEY])
+@permission_classes([IsAuthenticated | HasMasterAPIKey])
 def get_feature_by_uuid(request, uuid):
-    if request.user.is_anonymous:
+    if getattr(request, "master_api_key", None):
         accessible_projects = request.master_api_key.organisation.projects.all()
     else:
         accessible_projects = request.user.get_permitted_projects(["VIEW_PROJECT"])
