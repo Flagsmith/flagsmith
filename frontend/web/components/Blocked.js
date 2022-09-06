@@ -17,10 +17,10 @@ const Blocked = class extends React.Component {
         <div className="fullscreen-container maintenance fullscreen-container__grey justify-content-center">
             <div className="col-md-6 mt-5" id="sign-up">
                 <h1>Please get in touch</h1>
-                Your organisation has been disabled, if you think this has been done in error please contact
+                Your organisation has been disabled. Please get in touch so we can discuss enabling your account.
                 {
                       <>
-                          {' '} <a target="_blank" href="mailto:support@bullet-train.io">support@bullet-train.io</a>.
+                          {' '} <a target="_blank" href="mailto:support@flagsmith.com">support@flagsmith.com</a>.
                       </>
                 }
 
