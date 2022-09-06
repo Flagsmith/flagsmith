@@ -64,8 +64,8 @@ className="img-responsive"/>
                       <div className="col-md-2">
                           <h6>Support</h6>
                           <ul className=" float-left nav-list">
-                              <li><a href="mailto:support@bullet-train.io">Contact Us</a></li>
-                              <li><a href="https://status.bullet-train.io/">Status</a></li>
+                              <li><a href="mailto:support@flagsmith.com">Contact Us</a></li>
+                              <li><a href="https://flagsmith.statuspage.io/">Status</a></li>
                               <li><Link to="/blog/remote-config-and-feature-flags">What are feature flags?</Link></li>
                               <li><Link to="/blog/remote-config-and-feature-flags">What is remote config?</Link></li>
                           </ul>
