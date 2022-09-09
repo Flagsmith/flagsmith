@@ -270,6 +270,23 @@ def test_get_subscription_metadata(mocker, chargebee_object_metadata, addon_quan
     assert subscription_metadata.projects == chargebee_object_metadata.projects * 2
 
 
+def test_get_trail_subscription_metadata(mocker):
+    # Given
+    subscription_id = "trail"
+
+    mocked_chargebee = mocker.patch("organisations.chargebee.chargebee.chargebee")
+
+    # When
+    subscription_metadata = get_subscription_metadata(subscription_id)
+
+    # Then
+    assert len(mocked_chargebee.mock_calls) == 0
+
+    assert subscription_metadata.seats == 0
+    assert subscription_metadata.api_calls == 0
+    assert subscription_metadata.projects == 0
+
+
 def test_cancel_subscription(mocker):
     # Given
     mocked_chargebee = mocker.patch("organisations.chargebee.chargebee.chargebee")

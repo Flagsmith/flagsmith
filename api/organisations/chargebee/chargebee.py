@@ -96,6 +96,9 @@ def get_hosted_page_url_for_subscription_upgrade(
 
 
 def get_subscription_metadata(subscription_id: str) -> ChargebeeObjMetadata:
+    if subscription_id == "trail":
+        return ChargebeeObjMetadata()
+
     subscription = chargebee.Subscription.retrieve(subscription_id).subscription
     addons = subscription.addons or []
 
