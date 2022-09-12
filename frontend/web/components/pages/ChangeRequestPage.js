@@ -33,6 +33,7 @@ const ChangeRequestsPage = class extends Component {
         this.listenTo(ChangeRequestStore, 'change', () => this.forceUpdate());
         this.listenTo(FeatureListStore, 'change', () => this.forceUpdate());
         this.listenTo(OrganisationStore, 'change', () => this.forceUpdate());
+        this.listenTo(ChangeRequestStore, 'problem', () => this.setState({error:true}));
         AppActions.getChangeRequest(this.props.match.params.id, this.props.match.params.projectId, this.props.match.params.environmentId);
         AppActions.getOrganisation(AccountStore.getOrganisation().id);
     }
@@ -131,6 +132,18 @@ const ChangeRequestsPage = class extends Component {
         const environmentFlag = flags&&flags.environmentFlag
         const projectFlag = flags&&flags.projectFlag
 
+        if(this.state.error && !changeRequest) {
+            return (
+                <div data-test="change-requests-page" id="change-requests-page" className="app-container container">
+                    <h3>
+                        Change Request not Found
+                    </h3>
+                    <p>
+                        The Change Request may have been deleted.
+                    </p>
+                </div>
+            )
+        }
         if (!changeRequest || OrganisationStore.isLoading || !projectFlag || !environmentFlag) {
             return (
                 <div data-test="change-requests-page" id="change-requests-page" className="app-container container">
