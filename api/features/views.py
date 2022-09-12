@@ -139,7 +139,7 @@ class FeatureViewSet(viewsets.ModelViewSet):
 
     def perform_create(self, serializer):
         instance = serializer.save(
-            project_id=self.kwargs.get("project_pk"), user=self.request.user
+            project_id=int(self.kwargs.get("project_pk")), user=self.request.user
         )
         feature_states = list(
             instance.feature_states.filter(identity=None, feature_segment=None)
