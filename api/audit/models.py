@@ -31,12 +31,17 @@ SEGMENT_FEATURE_STATE_DELETED_MESSAGE = (
     "Flag state / Remote config value deleted for feature '%s' and segment '%s'"
 )
 
+CHANGE_REQUEST_CREATED_MESSAGE = "Change Request: %s created"
+CHANGE_REQUEST_APPROVED_MESSAGE = "Change Request: %s approved"
+CHANGE_REQUEST_COMMITTED_MESSAGE = "Change Request: %s committed"
+
 
 class RelatedObjectType(enum.Enum):
     FEATURE = "Feature"
     FEATURE_STATE = "Feature state"
     SEGMENT = "Segment"
     ENVIRONMENT = "Environment"
+    CHANGE_REQUEST = "Change request"
 
 
 RELATED_OBJECT_TYPES = ((tag.name, tag.value) for tag in RelatedObjectType)

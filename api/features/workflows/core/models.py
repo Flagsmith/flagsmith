@@ -17,6 +17,13 @@ from django_lifecycle import (
     hook,
 )
 
+from audit.models import (
+    CHANGE_REQUEST_APPROVED_MESSAGE,
+    CHANGE_REQUEST_COMMITTED_MESSAGE,
+    CHANGE_REQUEST_CREATED_MESSAGE,
+    AuditLog,
+    RelatedObjectType,
+)
 from environments.tasks import rebuild_environment_document
 from features.models import FeatureState
 
@@ -96,6 +103,30 @@ class ChangeRequest(LifecycleModelMixin, AbstractBaseExportableModel):
         self.committed_at = timezone.now()
         self.committed_by = committed_by
         self.save()
+
+    @hook(AFTER_CREATE)
+    def create_cr_created_audit_log(self):
+        message = CHANGE_REQUEST_CREATED_MESSAGE % self.title
+        AuditLog.objects.create(
+            author=self.user,
+            project=self.environment.project,
+            environment=self.environment,
+            related_object_type=RelatedObjectType.CHANGE_REQUEST.name,
+            related_object_id=self.id,
+            log=message,
+        )
+
+    @hook(AFTER_SAVE, when="committed_at", was=None, is_not=None)
+    def create_cr_committed_audit_log(self):
+        message = CHANGE_REQUEST_COMMITTED_MESSAGE % self.title
+        AuditLog.objects.create(
+            author=self.committed_by,
+            project=self.environment.project,
+            environment=self.environment,
+            related_object_type=RelatedObjectType.CHANGE_REQUEST.name,
+            related_object_id=self.id,
+            log=message,
+        )
 
     def is_approved(self):
         return self.environment.minimum_change_request_approvals is None or (
@@ -210,4 +241,17 @@ class ChangeRequestApproval(LifecycleModel):
                 "workflows_core/change_request_approved_author_notification.html",
                 context,
             ),
+        )
+
+    @hook(AFTER_CREATE, when="approved_at", is_not=None)
+    @hook(AFTER_UPDATE, when="approved_at", was=None, is_not=None)
+    def create_cr_approved_audit_logs(self):
+        message = CHANGE_REQUEST_APPROVED_MESSAGE % self.change_request.title
+        AuditLog.objects.create(
+            author=self.user,
+            project=self.change_request.environment.project,
+            environment=self.change_request.environment,
+            related_object_type=RelatedObjectType.CHANGE_REQUEST.name,
+            related_object_id=self.id,
+            log=message,
         )
