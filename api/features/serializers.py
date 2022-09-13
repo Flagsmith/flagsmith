@@ -87,8 +87,10 @@ class ListCreateFeatureSerializer(WritableNestedModelSerializer):
             "multivariate_options",
             "is_archived",
             "owners",
+            "uuid",
+            "project",
         )
-        read_only_fields = ("feature_segments", "created_date")
+        read_only_fields = ("feature_segments", "created_date", "uuid", "project")
 
     def to_internal_value(self, data):
         if data.get("initial_value") and not isinstance(data["initial_value"], str):

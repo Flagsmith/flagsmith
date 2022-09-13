@@ -1,4 +1,5 @@
 import json
+import uuid
 
 import pytest
 from django.urls import reverse
@@ -97,7 +98,7 @@ def test_list_feature_states_nested_environment_view_set(
 
 
 @pytest.mark.parametrize(
-    "client", [(lazy_fixture("master_api_key_client")), (lazy_fixture("admin_client"))]
+    "client", [lazy_fixture("master_api_key_client"), lazy_fixture("admin_client")]
 )
 def test_environment_feature_states_filter_using_feataure_name(
     environment, project, feature, client
@@ -120,7 +121,7 @@ def test_environment_feature_states_filter_using_feataure_name(
 
 
 @pytest.mark.parametrize(
-    "client", [(lazy_fixture("master_api_key_client")), (lazy_fixture("admin_client"))]
+    "client", [lazy_fixture("master_api_key_client"), lazy_fixture("admin_client")]
 )
 def test_environment_feature_states_filter_to_show_identity_override_only(
     environment, feature, client
@@ -154,7 +155,7 @@ def test_environment_feature_states_filter_to_show_identity_override_only(
 
 
 @pytest.mark.parametrize(
-    "client", [(lazy_fixture("master_api_key_client")), (lazy_fixture("admin_client"))]
+    "client", [lazy_fixture("master_api_key_client"), lazy_fixture("admin_client")]
 )
 def test_environment_feature_states_only_returns_latest_versions(
     environment, feature, client
@@ -182,7 +183,7 @@ def test_environment_feature_states_only_returns_latest_versions(
 
 
 @pytest.mark.parametrize(
-    "client", [(lazy_fixture("master_api_key_client")), (lazy_fixture("admin_client"))]
+    "client", [lazy_fixture("master_api_key_client"), lazy_fixture("admin_client")]
 )
 def test_environment_feature_states_does_not_return_null_versions(
     environment, feature, client
@@ -211,7 +212,7 @@ def test_environment_feature_states_does_not_return_null_versions(
 
 
 @pytest.mark.parametrize(
-    "client", [(lazy_fixture("master_api_key_client")), (lazy_fixture("admin_client"))]
+    "client", [lazy_fixture("master_api_key_client"), lazy_fixture("admin_client")]
 )
 def test_create_feature_default_is_archived_is_false(client, project):
     # Given - set up data
@@ -230,7 +231,7 @@ def test_create_feature_default_is_archived_is_false(client, project):
 
 
 @pytest.mark.parametrize(
-    "client", [(lazy_fixture("master_api_key_client")), (lazy_fixture("admin_client"))]
+    "client", [lazy_fixture("master_api_key_client"), lazy_fixture("admin_client")]
 )
 def test_update_feature_is_archived(client, project, feature):
     # Given
@@ -249,7 +250,7 @@ def test_update_feature_is_archived(client, project, feature):
 
 
 @pytest.mark.parametrize(
-    "client", [(lazy_fixture("master_api_key_client")), (lazy_fixture("admin_client"))]
+    "client", [lazy_fixture("master_api_key_client"), lazy_fixture("admin_client")]
 )
 def test_should_create_feature_states_when_feature_created(
     client, project, environment
@@ -285,7 +286,7 @@ def test_should_create_feature_states_when_feature_created(
 
 @pytest.mark.parametrize("default_value", [(12), (True), ("test")])
 @pytest.mark.parametrize(
-    "client", [(lazy_fixture("master_api_key_client")), (lazy_fixture("admin_client"))]
+    "client", [lazy_fixture("master_api_key_client"), lazy_fixture("admin_client")]
 )
 def test_should_create_feature_states_with_value_when_feature_created(
     client, project, environment, default_value
@@ -315,7 +316,7 @@ def test_should_create_feature_states_with_value_when_feature_created(
 
 
 @pytest.mark.parametrize(
-    "client", [(lazy_fixture("master_api_key_client")), (lazy_fixture("admin_client"))]
+    "client", [lazy_fixture("master_api_key_client"), lazy_fixture("admin_client")]
 )
 def test_should_delete_feature_states_when_feature_deleted(
     client, project, feature, environment
@@ -346,7 +347,7 @@ def test_should_delete_feature_states_when_feature_deleted(
 
 
 @pytest.mark.parametrize(
-    "client", [(lazy_fixture("master_api_key_client")), (lazy_fixture("admin_client"))]
+    "client", [lazy_fixture("master_api_key_client"), lazy_fixture("admin_client")]
 )
 def test_audit_log_created_when_feature_created(client, project):
     # Given
@@ -376,7 +377,7 @@ def test_audit_log_created_when_feature_created(client, project):
 
 
 @pytest.mark.parametrize(
-    "client", [(lazy_fixture("master_api_key_client")), (lazy_fixture("admin_client"))]
+    "client", [lazy_fixture("master_api_key_client"), lazy_fixture("admin_client")]
 )
 def test_audit_log_created_when_feature_updated(client, project, feature):
     # Given
@@ -403,7 +404,7 @@ def test_audit_log_created_when_feature_updated(client, project, feature):
 
 
 @pytest.mark.parametrize(
-    "client", [(lazy_fixture("master_api_key_client")), (lazy_fixture("admin_client"))]
+    "client", [lazy_fixture("master_api_key_client"), lazy_fixture("admin_client")]
 )
 def test_audit_logs_created_when_feature_deleted(client, project, feature):
     # Given
@@ -430,7 +431,7 @@ def test_audit_logs_created_when_feature_deleted(client, project, feature):
 
 
 @pytest.mark.parametrize(
-    "client", [(lazy_fixture("master_api_key_client")), (lazy_fixture("admin_client"))]
+    "client", [lazy_fixture("master_api_key_client"), lazy_fixture("admin_client")]
 )
 def test_should_create_tags_when_feature_created(client, project, tag_one, tag_two):
     # Given - set up data
@@ -464,7 +465,7 @@ def test_should_create_tags_when_feature_created(client, project, tag_one, tag_t
 
 
 @pytest.mark.parametrize(
-    "client", [(lazy_fixture("master_api_key_client")), (lazy_fixture("admin_client"))]
+    "client", [lazy_fixture("master_api_key_client"), lazy_fixture("admin_client")]
 )
 def test_add_owners_adds_owner(client, project):
     # Given
@@ -499,7 +500,7 @@ def test_add_owners_adds_owner(client, project):
 
 
 @pytest.mark.parametrize(
-    "client", [(lazy_fixture("master_api_key_client")), (lazy_fixture("admin_client"))]
+    "client", [lazy_fixture("master_api_key_client"), lazy_fixture("admin_client")]
 )
 def test_list_features_return_tags(client, project, feature):
     # Given
@@ -519,7 +520,7 @@ def test_list_features_return_tags(client, project, feature):
 
 
 @pytest.mark.parametrize(
-    "client", [(lazy_fixture("master_api_key_client")), (lazy_fixture("admin_client"))]
+    "client", [lazy_fixture("master_api_key_client"), lazy_fixture("admin_client")]
 )
 def test_project_admin_can_create_mv_options_when_creating_feature(client, project):
     # Given
@@ -538,3 +539,34 @@ def test_project_admin_can_create_mv_options_when_creating_feature(client, proje
 
     response_json = response.json()
     assert len(response_json["multivariate_options"]) == 1
+
+
+@pytest.mark.parametrize(
+    "client", [lazy_fixture("master_api_key_client"), lazy_fixture("admin_client")]
+)
+def test_get_feature_by_uuid(client, project, feature):
+    # Given
+    url = reverse("api-v1:features:get-feature-by-uuid", args=[feature.uuid])
+
+    # When
+    response = client.get(url)
+
+    # Then
+    assert response.status_code == status.HTTP_200_OK
+
+    assert response.json()["id"] == feature.id
+    assert response.json()["uuid"] == str(feature.uuid)
+
+
+@pytest.mark.parametrize(
+    "client", [lazy_fixture("master_api_key_client"), lazy_fixture("admin_client")]
+)
+def test_get_feature_by_uuid_returns_404_if_feature_does_not_exists(client, project):
+    # Given
+    url = reverse("api-v1:features:get-feature-by-uuid", args=[uuid.uuid4()])
+
+    # When
+    response = client.get(url)
+
+    # Then
+    assert response.status_code == status.HTTP_404_NOT_FOUND
