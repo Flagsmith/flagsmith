@@ -14,7 +14,7 @@ chargebee.configure(settings.CHARGEBEE_API_KEY, settings.CHARGEBEE_SITE)
 
 logger = logging.getLogger(__name__)
 
-TRIAL_SUBCRIPTION_ID = "trial"
+TRIAL_SUBSCRIPTION_ID = "trial"
 
 
 def get_subscription_data_from_hosted_page(hosted_page_id):
@@ -98,7 +98,7 @@ def get_hosted_page_url_for_subscription_upgrade(
 
 
 def get_subscription_metadata(subscription_id: str) -> ChargebeeObjMetadata:
-    if subscription_id == TRIAL_SUBCRIPTION_ID:
+    if subscription_id == TRIAL_SUBSCRIPTION_ID:
         return ChargebeeObjMetadata()
 
     subscription = chargebee.Subscription.retrieve(subscription_id).subscription
