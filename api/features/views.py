@@ -3,6 +3,7 @@ import typing
 from functools import reduce
 
 from app_analytics.influxdb_wrapper import get_multiple_event_list_for_feature
+from core.permissions import HasMasterAPIKey
 from django.conf import settings
 from django.core.cache import caches
 from django.db.models import Q, QuerySet
@@ -10,7 +11,7 @@ from django.utils.decorators import method_decorator
 from drf_yasg2 import openapi
 from drf_yasg2.utils import swagger_auto_schema
 from rest_framework import mixins, status, viewsets
-from rest_framework.decorators import action
+from rest_framework.decorators import action, api_view, permission_classes
 from rest_framework.exceptions import NotFound, ValidationError
 from rest_framework.generics import GenericAPIView, get_object_or_404
 from rest_framework.permissions import IsAuthenticated
@@ -73,6 +74,22 @@ logger.setLevel(logging.INFO)
 flags_cache = caches[settings.FLAGS_CACHE_LOCATION]
 
 
+@swagger_auto_schema(responses={200: ListCreateFeatureSerializer()}, method="get")
+@api_view(["GET"])
+@permission_classes([IsAuthenticated | HasMasterAPIKey])
+def get_feature_by_uuid(request, uuid):
+    if getattr(request, "master_api_key", None):
+        accessible_projects = request.master_api_key.organisation.projects.all()
+    else:
+        accessible_projects = request.user.get_permitted_projects(["VIEW_PROJECT"])
+    qs = Feature.objects.filter(project__in=accessible_projects).prefetch_related(
+        "multivariate_options", "owners", "tags"
+    )
+    feature = get_object_or_404(qs, uuid=uuid)
+    serializer = ListCreateFeatureSerializer(instance=feature)
+    return Response(serializer.data)
+
+
 @method_decorator(
     name="list",
     decorator=swagger_auto_schema(query_serializer=FeatureQuerySerializer()),
@@ -122,7 +139,7 @@ class FeatureViewSet(viewsets.ModelViewSet):
 
     def perform_create(self, serializer):
         instance = serializer.save(
-            project_id=self.kwargs.get("project_pk"), user=self.request.user
+            project_id=int(self.kwargs.get("project_pk")), user=self.request.user
         )
         feature_states = list(
             instance.feature_states.filter(identity=None, feature_segment=None)
