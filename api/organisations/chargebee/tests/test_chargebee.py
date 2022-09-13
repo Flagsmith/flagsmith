@@ -15,7 +15,10 @@ from organisations.chargebee import (
     get_subscription_data_from_hosted_page,
     get_subscription_metadata,
 )
-from organisations.chargebee.chargebee import cancel_subscription
+from organisations.chargebee.chargebee import (
+    TRIAL_SUBSCRIPTION_ID,
+    cancel_subscription,
+)
 from organisations.subscriptions.exceptions import (
     CannotCancelChargebeeSubscription,
 )
@@ -270,9 +273,9 @@ def test_get_subscription_metadata(mocker, chargebee_object_metadata, addon_quan
     assert subscription_metadata.projects == chargebee_object_metadata.projects * 2
 
 
-def test_get_trail_subscription_metadata(mocker):
+def test_get_trial_subscription_metadata(mocker):
     # Given
-    subscription_id = "trail"
+    subscription_id = TRIAL_SUBSCRIPTION_ID
 
     mocked_chargebee = mocker.patch("organisations.chargebee.chargebee.chargebee")
 
