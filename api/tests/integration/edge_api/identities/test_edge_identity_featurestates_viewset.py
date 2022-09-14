@@ -319,6 +319,7 @@ def test_edge_identities_create_featurestate(
     dynamo_wrapper_mock,
     feature,
     feature_name,
+    webhook_mock,
 ):
     # Given
     dynamo_wrapper_mock.get_item_from_uuid_or_404.return_value = (
@@ -381,6 +382,7 @@ def test_edge_identities_create_mv_featurestate(
     mv_option_50_percent,
     mv_option_value,
     feature_name,
+    webhook_mock,
 ):
     # Given
     dynamo_wrapper_mock.get_item_from_uuid_or_404.return_value = (
@@ -454,6 +456,7 @@ def test_edge_identities_update_featurestate(
     identity_document,
     dynamo_wrapper_mock,
     feature,
+    webhook_mock,
 ):
     # Given
     dynamo_wrapper_mock.get_item_from_uuid_or_404.return_value = identity_document
@@ -537,6 +540,7 @@ def test_edge_identities_update_mv_featurestate(
     feature,
     mv_option_50_percent,
     mv_option_value,
+    webhook_mock,
 ):
     # Given
     dynamo_wrapper_mock.get_item_from_uuid_or_404.return_value = identity_document
@@ -680,6 +684,7 @@ def test_edge_identities_with_identifier_create_featurestate(
     feature,
     feature_name,
     lazy_feature,
+    webhook_mock,
 ):
     # Given
     dynamo_wrapper_mock.get_item.return_value = identity_document_without_fs
@@ -781,6 +786,7 @@ def test_edge_identities_with_identifier_update_featurestate(
     identity_document,
     dynamo_wrapper_mock,
     feature,
+    webhook_mock,
 ):
     # Given
     dynamo_wrapper_mock.get_item.return_value = identity_document
