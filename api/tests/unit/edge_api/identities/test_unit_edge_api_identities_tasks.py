@@ -1,7 +1,10 @@
+from copy import deepcopy
+
 from django.utils import timezone
 
 from edge_api.identities.tasks import (
     call_environment_webhook_for_feature_state_change,
+    sync_identity_document_features,
 )
 from environments.models import Webhook
 from webhooks.webhooks import WebhookEventType
@@ -211,3 +214,38 @@ def test_call_environment_webhook_for_feature_state_change_does_nothing_if_no_we
 
     # Then
     mock_call_environment_webhooks.assert_not_called()
+
+
+def test_sync_identity_document_features_removes_deleted_features(
+    mocker, identity_document_without_fs, environment, feature
+):
+    # Given
+    dynamo_wrapper_mock = mocker.patch(
+        "environments.identities.models.Identity.dynamo_wrapper"
+    )
+
+    identity_document = deepcopy(identity_document_without_fs)
+    identity_uuid = identity_document["identity_uuid"]
+
+    # let's add a feature to the identity that is not in the environment
+    identity_document["identity_features"].append(
+        {
+            "feature_state_value": "feature_1_value",
+            "featurestate_uuid": "4a8fbe06-d4cd-4686-a184-d924844bb422",
+            "django_id": 1,
+            "feature": {
+                "name": "feature_that_does_not_exists",
+                "type": "STANDARD",
+                "id": 99,
+            },
+            "enabled": True,
+        }
+    )
+    dynamo_wrapper_mock.get_item_from_uuid.return_value = identity_document_without_fs
+
+    # When
+    sync_identity_document_features(identity_uuid)
+
+    # Then
+    dynamo_wrapper_mock.get_item_from_uuid.assert_called_with(identity_uuid)
+    dynamo_wrapper_mock.put_item.assert_called_with(identity_document_without_fs)
