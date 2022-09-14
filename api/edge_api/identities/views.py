@@ -52,7 +52,7 @@ from projects.exceptions import DynamoNotEnabledError
 from .edge_identity_service import get_all_feature_states_for_edge_identity
 from .exceptions import TraitPersistenceError
 from .permissions import EdgeIdentityWithIdentifierViewPermissions
-from .tasks import sync_identity_document
+from .tasks import sync_identity_document_features
 
 trait_schema = APITraitSchema()
 
@@ -209,7 +209,7 @@ class EdgeIdentityFeatureStateViewSet(viewsets.ModelViewSet):
         identity_feature_names = {fs.feature.name for fs in identity.identity_features}
         if not identity_feature_names.issubset(valid_feature_names):
             identity.prune_features(valid_feature_names)
-            sync_identity_document.delay(args=(build_identity_dict(identity),))
+            sync_identity_document_features.delay(args=(str(identity.identity_uuid),))
         self.identity = identity
 
     def get_object(self):

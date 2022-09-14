@@ -3,7 +3,6 @@ import typing
 import uuid
 from datetime import datetime
 
-from django.core.serializers.json import DjangoJSONEncoder
 from django.db import models
 from django.utils import timezone
 
@@ -85,7 +84,7 @@ class Task(models.Model):
     @staticmethod
     def _serialize_data(data: typing.Any):
         # TODO: add datetime support if needed
-        return json.dumps(data, cls=DjangoJSONEncoder)
+        return json.dumps(data)
 
     @staticmethod
     def _deserialize_data(data: typing.Any):

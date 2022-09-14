@@ -11,7 +11,7 @@ from rest_framework.test import APIClient
 from tests.integration.helpers import create_mv_option_with_api
 
 
-def test_edge_identities_feature_states_list_does_not_call_sync_identity_document_if_not_needed(
+def test_edge_identities_feature_states_list_does_not_call_sync_identity_document_features_if_not_needed(
     admin_client,
     environment,
     environment_api_key,
@@ -21,8 +21,8 @@ def test_edge_identities_feature_states_list_does_not_call_sync_identity_documen
 ):
     # Given
     dynamo_wrapper_mock.get_item_from_uuid_or_404.return_value = identity_document
-    sync_identity_document = mocker.patch(
-        "edge_api.identities.views.sync_identity_document"
+    sync_identity_document_features = mocker.patch(
+        "edge_api.identities.views.sync_identity_document_features"
     )
     identity_uuid = identity_document["identity_uuid"]
     url = reverse(
@@ -35,10 +35,10 @@ def test_edge_identities_feature_states_list_does_not_call_sync_identity_documen
     dynamo_wrapper_mock.get_item_from_uuid_or_404.assert_called_with(identity_uuid)
     assert response.status_code == status.HTTP_200_OK
     assert len(response.json()) == 3
-    sync_identity_document.delay.assert_not_called()
+    sync_identity_document_features.delay.assert_not_called()
 
 
-def test_edge_identities_feature_states_list_calls_sync_identity_document_if_identity_have_deleted_feature(
+def test_edge_identities_feature_states_list_calls_sync_identity_document_features_if_identity_have_deleted_feature(
     admin_client,
     environment,
     environment_api_key,
@@ -47,8 +47,8 @@ def test_edge_identities_feature_states_list_calls_sync_identity_document_if_ide
     mocker,
 ):
     # Given
-    sync_identity_document = mocker.patch(
-        "edge_api.identities.views.sync_identity_document"
+    sync_identity_document_features = mocker.patch(
+        "edge_api.identities.views.sync_identity_document_features"
     )
     dynamo_wrapper_mock.get_item_from_uuid_or_404.return_value = identity_document
     identity_uuid = identity_document["identity_uuid"]
@@ -78,21 +78,15 @@ def test_edge_identities_feature_states_list_calls_sync_identity_document_if_ide
     dynamo_wrapper_mock.get_item_from_uuid_or_404.assert_called_with(identity_uuid)
     assert response.status_code == status.HTTP_200_OK
     assert len(response.json()) == 3
-
-    # We should have called sync_identity_document once
-    sync_identity_document.delay.assert_called_once()
-
-    args, kwargs = sync_identity_document.delay.call_args
-    assert len(args) == 0
-    assert len(kwargs) == 1
-    identity_document = kwargs["args"][0]
-    # And deleted feature is not part of the identity document
+    # And deleted feature is not part of the response
     assert not list(
         filter(
-            lambda fs: fs["feature"]["id"] == deleted_feature_id,
-            identity_document["identity_features"],
+            lambda fs: fs["feature"] == deleted_feature_id,
+            response.json(),
         )
     )
+
+    sync_identity_document_features.delay.assert_called_once_with(args=(identity_uuid,))
 
 
 def test_edge_identities_feature_states_list_can_be_filtered_using_feature_id(
@@ -176,8 +170,8 @@ def test_edge_identities_featurestate_detail_calls_sync_identity_if_deleted_feat
     # Given
     dynamo_wrapper_mock.get_item_from_uuid_or_404.return_value = identity_document
     identity_uuid = identity_document["identity_uuid"]
-    sync_identity_document = mocker.patch(
-        "edge_api.identities.views.sync_identity_document"
+    sync_identity_document_features = mocker.patch(
+        "edge_api.identities.views.sync_identity_document_features"
     )
     # let's add a feature to the identity that is not in the environment
     deleted_feature_id = 9999
@@ -206,21 +200,7 @@ def test_edge_identities_featurestate_detail_calls_sync_identity_if_deleted_feat
     dynamo_wrapper_mock.get_item_from_uuid_or_404.assert_called_with(identity_uuid)
     assert response.status_code == status.HTTP_404_NOT_FOUND
 
-    # We should have called sync_identity_document once
-    sync_identity_document.delay.assert_called_once()
-
-    args, kwargs = sync_identity_document.delay.call_args
-    assert len(args) == 0
-    assert len(kwargs) == 1
-    identity_document = kwargs["args"][0]
-
-    # And deleted feature is not part of the identity document
-    assert not list(
-        filter(
-            lambda fs: fs["feature"]["id"] == deleted_feature_id,
-            identity_document["identity_features"],
-        )
-    )
+    sync_identity_document_features.delay.assert_called_once_with(args=(identity_uuid,))
 
 
 def test_edge_identities_featurestate_delete(
