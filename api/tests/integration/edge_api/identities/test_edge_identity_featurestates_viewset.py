@@ -35,7 +35,7 @@ def test_edge_identities_feature_states_list_does_not_call_sync_identity_documen
     dynamo_wrapper_mock.get_item_from_uuid_or_404.assert_called_with(identity_uuid)
     assert response.status_code == status.HTTP_200_OK
     assert len(response.json()) == 3
-    assert len(sync_identity_document.mock_calls) == 0
+    sync_identity_document.delay.assert_not_called()
 
 
 def test_edge_identities_feature_states_list_calls_sync_identity_document_if_identity_have_deleted_feature(
@@ -81,15 +81,16 @@ def test_edge_identities_feature_states_list_calls_sync_identity_document_if_ide
 
     # We should have called sync_identity_document once
     sync_identity_document.delay.assert_called_once()
-    args, kwargs = sync_identity_document.delay.call_args
-    assert kwargs == {}
-    identity_document = args[0]
 
+    args, kwargs = sync_identity_document.delay.call_args
+    assert len(args) == 0
+    assert len(kwargs) == 1
+    identity_document = kwargs["args"][0]
     # And deleted feature is not part of the identity document
     assert not list(
         filter(
             lambda fs: fs["feature"]["id"] == deleted_feature_id,
-            args[0]["identity_features"],
+            identity_document["identity_features"],
         )
     )
 
@@ -207,15 +208,17 @@ def test_edge_identities_featurestate_detail_calls_sync_identity_if_deleted_feat
 
     # We should have called sync_identity_document once
     sync_identity_document.delay.assert_called_once()
+
     args, kwargs = sync_identity_document.delay.call_args
-    assert kwargs == {}
-    identity_document = args[0]
+    assert len(args) == 0
+    assert len(kwargs) == 1
+    identity_document = kwargs["args"][0]
 
     # And deleted feature is not part of the identity document
     assert not list(
         filter(
             lambda fs: fs["feature"]["id"] == deleted_feature_id,
-            args[0]["identity_features"],
+            identity_document["identity_features"],
         )
     )
 

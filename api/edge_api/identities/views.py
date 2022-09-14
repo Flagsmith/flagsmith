@@ -209,7 +209,7 @@ class EdgeIdentityFeatureStateViewSet(viewsets.ModelViewSet):
         identity_feature_names = {fs.feature.name for fs in identity.identity_features}
         if not identity_feature_names.issubset(valid_feature_names):
             identity.prune_features(valid_feature_names)
-            sync_identity_document.delay(build_identity_dict(identity))
+            sync_identity_document.delay(args=(build_identity_dict(identity),))
         self.identity = identity
 
     def get_object(self):
