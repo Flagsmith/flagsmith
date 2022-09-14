@@ -113,7 +113,7 @@ const ChangeRequestsPage = class extends Component {
                                                     <span className="ion text-primary mr-4 icon ion-md-git-pull-request"/>
                                                     <div>
                                                         <ButtonLink>
-                                                            {title}
+                                                            {title} <span className="ion icon mr-4 ion-md-time"/>
                                                         </ButtonLink>
                                                         <div className="list-item-footer faint">
                                                             Created at {moment(created_at).format('Do MMM YYYY HH:mma')} by {user && user.first_name} {user && user.last_name}
@@ -134,6 +134,7 @@ const ChangeRequestsPage = class extends Component {
                               title="Change Requests"
                               className="mt-4 mx-2"
                               isLoading={ChangeRequestStore.isLoading || !dataScheduled || !OrganisationStore.model}
+                              // icon="ion-md-time"
                               icon="ion-md-git-pull-request"
                               items={dataScheduled}
                               paging={dataScheduledPaging}
@@ -145,7 +146,7 @@ const ChangeRequestsPage = class extends Component {
                                   return (
                                       <Link to={`/project/${projectId}/environment/${environmentId}/change-requests/${id}`}>
                                           <Row className="list-item clickable">
-                                              <span className="ion text-primary mr-4 icon ion-md-git-pull-request"/>
+                                              {/*<span className="ion text-primary mr-4 icon ion-md-git-pull-request"/>*/}
                                               <div>
                                                   <ButtonLink>
                                                       {title}
