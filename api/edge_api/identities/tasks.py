@@ -1,6 +1,7 @@
 import logging
 import typing
 
+from environments.identities.models import Identity
 from environments.models import Environment, Webhook
 from features.models import Feature
 from task_processor.decorators import register_task_handler
@@ -67,3 +68,8 @@ def call_environment_webhook_for_feature_state_change(
     )
 
     call_environment_webhooks(environment, data, event_type=event_type)
+
+
+@register_task_handler()
+def sync_identity_document(identity_document: dict):
+    Identity.dynamo_wrapper.put_item(identity_document)

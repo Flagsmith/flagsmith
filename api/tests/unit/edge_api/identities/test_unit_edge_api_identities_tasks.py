@@ -2,6 +2,7 @@ from django.utils import timezone
 
 from edge_api.identities.tasks import (
     call_environment_webhook_for_feature_state_change,
+    sync_identity_document,
 )
 from environments.models import Webhook
 from webhooks.webhooks import WebhookEventType
@@ -211,3 +212,15 @@ def test_call_environment_webhook_for_feature_state_change_does_nothing_if_no_we
 
     # Then
     mock_call_environment_webhooks.assert_not_called()
+
+
+def test_sync_identity_document_calls_put_item_correctly(mocker):
+    # Given
+    mocked_identity = mocker.patch("edge_api.identities.tasks.Identity")
+    identity_dict = {"foo": "bar"}
+
+    # When
+    sync_identity_document(identity_dict)
+
+    # Then
+    mocked_identity.dynamo_wrapper.put_item.assert_called_once_with(identity_dict)
