@@ -53,7 +53,7 @@ def _add_new_permissions(
     user_environment_permission_through_model_class = model_class.permissions.through
 
     for user_environment_permission in model_class.objects.filter(
-        key=UPDATE_FEATURE_STATE
+        permissions__key=UPDATE_FEATURE_STATE
     ):
         new_user_environment_permission_through_models.extend(
             [
