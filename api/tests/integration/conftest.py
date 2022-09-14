@@ -132,9 +132,46 @@ def feature_name():
 
 
 @pytest.fixture()
+def feature_2_name():
+    return "feature_2"
+
+
+@pytest.fixture()
+def mv_feature_name():
+    return "mv_feature"
+
+
+@pytest.fixture()
 def feature(admin_client, project, default_feature_value, feature_name):
     data = {
         "name": feature_name,
+        "initial_value": default_feature_value,
+        "project": project,
+    }
+    url = reverse("api-v1:projects:project-features-list", args=[project])
+
+    response = admin_client.post(url, data=data)
+    return response.json()["id"]
+
+
+@pytest.fixture()
+def mv_feature(admin_client, project, default_feature_value, mv_feature_name):
+    data = {
+        "name": mv_feature_name,
+        "initial_value": default_feature_value,
+        "project": project,
+        "type": "MULTIVARIATE",
+    }
+    url = reverse("api-v1:projects:project-features-list", args=[project])
+
+    response = admin_client.post(url, data=data)
+    return response.json()["id"]
+
+
+@pytest.fixture()
+def feature_2(admin_client, project, default_feature_value, feature_2_name):
+    data = {
+        "name": feature_2_name,
         "initial_value": default_feature_value,
         "project": project,
     }
@@ -196,14 +233,23 @@ def identity_traits():
 
 
 @pytest.fixture()
-def identity_document(environment_api_key, feature, identity_traits):
+def identity_document(
+    environment_api_key,
+    feature_name,
+    feature,
+    identity_traits,
+    feature_2_name,
+    feature_2,
+    mv_feature_name,
+    mv_feature,
+):
     _environment_feature_state_1_document = {
         "featurestate_uuid": "ad71c644-71df-4e83-9cb5-cd2cd0160200",
         "multivariate_feature_state_values": [],
         "feature_state_value": "feature_1_value",
         "django_id": 1,
         "feature": {
-            "name": "feature_1",
+            "name": feature_name,
             "type": "STANDARD",
             "id": feature,
         },
@@ -216,9 +262,9 @@ def identity_document(environment_api_key, feature, identity_traits):
         "django_id": 1,
         "feature_state_value": "2.3",
         "feature": {
-            "name": "feature_2",
+            "name": feature_2_name,
             "type": "STANDARD",
-            "id": 200,
+            "id": feature_2,
         },
         "enabled": True,
         "feature_segment": None,
@@ -245,9 +291,9 @@ def identity_document(environment_api_key, feature, identity_traits):
         "feature_state_value": None,
         "django_id": 1,
         "feature": {
-            "name": "multivariate_feature",
+            "name": mv_feature_name,
             "type": "MULTIVARIATE",
-            "id": 400,
+            "id": mv_feature,
         },
         "enabled": False,
         "feature_segment": None,
@@ -269,9 +315,17 @@ def identity_document(environment_api_key, feature, identity_traits):
 
 
 @pytest.fixture()
-def identity_document_without_fs(identity_document):
-    identity_document["identity_features"].clear()
-    return identity_document
+def identity_document_without_fs(environment_api_key, identity_traits):
+    return {
+        "composite_key": f"{environment_api_key}_user_1_test",
+        "identity_traits": identity_traits,
+        "identity_features": [],
+        "identifier": "user_1_test",
+        "created_date": "2021-09-21T10:12:42.230257+00:00",
+        "environment_api_key": environment_api_key,
+        "identity_uuid": "59efa2a7-6a45-46d6-b953-a7073a90eacf",
+        "django_id": None,
+    }
 
 
 @pytest.fixture()
