@@ -9,6 +9,12 @@ ENVIRONMENT_PERMISSIONS = [
     (VIEW_ENVIRONMENT, "View permission for the given environment."),
     (UPDATE_FEATURE_STATE, "Update the state or value for a given feature state."),
     (MANAGE_IDENTITIES, "Manage identities in the given environment."),
-    (CREATE_CHANGE_REQUEST, "Permission to create change requests in the given environment."),
-    (APPROVE_CHANGE_REQUEST, "Permission to approve change requests in the given environment.")
+    (
+        CREATE_CHANGE_REQUEST,
+        "Permission to create change requests in the given environment.",
+    ),
+    (
+        APPROVE_CHANGE_REQUEST,
+        "Permission to approve change requests in the given environment.",
+    ),
 ]
