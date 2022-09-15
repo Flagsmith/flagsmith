@@ -273,7 +273,7 @@ const controller = {
                 prom = data.get(`${Project.api}environments/${environmentId}/featurestates/${environmentFlag.id}/`)
                     .then((environmentFeatureStates) => {
                         const multivariate_feature_state_values = environmentFeatureStates.multivariate_feature_state_values && environmentFeatureStates.multivariate_feature_state_values.map((v, i) => {
-                            const matching = environmentFlag.multivariate_feature_state_values[i];
+                            const matching = environmentFlag.multivariate_feature_state_values.find((m)=>m.id === v.multivariate_feature_option) || {};
                             return {
                                 ...v,
                                 percentage_allocation: matching.default_percentage_allocation,
