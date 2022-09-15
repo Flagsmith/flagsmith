@@ -1,3 +1,4 @@
+import logging
 import typing
 
 from core.helpers import get_current_site_url
@@ -9,12 +10,21 @@ from django.template.loader import render_to_string
 from django.utils import timezone
 from django_lifecycle import (
     AFTER_CREATE,
+    AFTER_SAVE,
     AFTER_UPDATE,
     LifecycleModel,
     LifecycleModelMixin,
     hook,
 )
 
+from audit.models import (
+    CHANGE_REQUEST_APPROVED_MESSAGE,
+    CHANGE_REQUEST_COMMITTED_MESSAGE,
+    CHANGE_REQUEST_CREATED_MESSAGE,
+    AuditLog,
+    RelatedObjectType,
+)
+from environments.tasks import rebuild_environment_document
 from features.models import FeatureState
 
 from .exceptions import (
@@ -24,6 +34,8 @@ from .exceptions import (
 
 if typing.TYPE_CHECKING:
     from users.models import FFAdminUser
+
+logger = logging.getLogger(__name__)
 
 
 class ChangeRequest(LifecycleModelMixin, AbstractBaseExportableModel):
@@ -69,6 +81,8 @@ class ChangeRequest(LifecycleModelMixin, AbstractBaseExportableModel):
                 "Change request has not been approved by all required approvers."
             )
 
+        logger.debug("Committing change request #%d", self.id)
+
         feature_states = list(self.feature_states.all())
 
         for feature_state in feature_states:
@@ -89,6 +103,30 @@ class ChangeRequest(LifecycleModelMixin, AbstractBaseExportableModel):
         self.committed_at = timezone.now()
         self.committed_by = committed_by
         self.save()
+
+    @hook(AFTER_CREATE)
+    def create_cr_created_audit_log(self):
+        message = CHANGE_REQUEST_CREATED_MESSAGE % self.title
+        AuditLog.objects.create(
+            author=self.user,
+            project=self.environment.project,
+            environment=self.environment,
+            related_object_type=RelatedObjectType.CHANGE_REQUEST.name,
+            related_object_id=self.id,
+            log=message,
+        )
+
+    @hook(AFTER_SAVE, when="committed_at", was=None, is_not=None)
+    def create_cr_committed_audit_log(self):
+        message = CHANGE_REQUEST_COMMITTED_MESSAGE % self.title
+        AuditLog.objects.create(
+            author=self.committed_by,
+            project=self.environment.project,
+            environment=self.environment,
+            related_object_type=RelatedObjectType.CHANGE_REQUEST.name,
+            related_object_id=self.id,
+            log=message,
+        )
 
     def is_approved(self):
         return self.environment.minimum_change_request_approvals is None or (
@@ -115,6 +153,40 @@ class ChangeRequest(LifecycleModelMixin, AbstractBaseExportableModel):
     @property
     def email_subject(self):
         return f"Flagsmith Change Request: {self.title} (#{self.id})"
+
+    @hook(AFTER_CREATE, when="committed_at", is_not=None)
+    @hook(AFTER_SAVE, when="committed_at", was=None, is_not=None)
+    def schedule_environment_rebuild(self):
+        logger.debug("Scheduling environment rebuild for change request #%d", self.id)
+
+        if not settings.EDGE_ENABLED:
+            logger.debug("Edge is disabled. Not scheduling environment rebuild.")
+            return
+
+        now = timezone.now()
+        feature_states = list(
+            self.feature_states.filter(live_from__gt=now).order_by("live_from")
+        )
+
+        logger.debug("Number of associated feature states: %d", len(feature_states))
+
+        previous_live_from = None
+        for feature_state in feature_states:
+            # currently we only support a single feature state and single schedule date
+            # however this will ensure that if, in the future, we allow multiple feature
+            # states per change request (and perhaps multiple schedule dates) then this
+            # functionality will work as expected.
+            if not previous_live_from or feature_state.live_from != previous_live_from:
+                logger.debug(
+                    "Scheduling rebuild of environment %d at %s",
+                    self.environment_id,
+                    feature_state.live_from.isoformat(),
+                )
+                rebuild_environment_document.delay(
+                    delay_until=feature_state.live_from,
+                    kwargs={"environment_id": self.environment_id},
+                )
+            previous_live_from = feature_state.live_from
 
 
 class ChangeRequestApproval(LifecycleModel):
@@ -169,4 +241,17 @@ class ChangeRequestApproval(LifecycleModel):
                 "workflows_core/change_request_approved_author_notification.html",
                 context,
             ),
+        )
+
+    @hook(AFTER_CREATE, when="approved_at", is_not=None)
+    @hook(AFTER_UPDATE, when="approved_at", was=None, is_not=None)
+    def create_cr_approved_audit_logs(self):
+        message = CHANGE_REQUEST_APPROVED_MESSAGE % self.change_request.title
+        AuditLog.objects.create(
+            author=self.user,
+            project=self.change_request.environment.project,
+            environment=self.change_request.environment,
+            related_object_type=RelatedObjectType.CHANGE_REQUEST.name,
+            related_object_id=self.id,
+            log=message,
         )

@@ -36,13 +36,22 @@ class FlagSelect extends Component {
         if(!this.state.data || this.state.isLoading) {
             return <div className="text-center"><Loader/></div>
         }
+        const options = _.sortBy(this.state.data.map((v)=>({label:v.name,value:v.id, flag:v})).filter((v)=>{
+            return !((this.props.ignore||[]).includes(v.value))
+        }).filter((v)=>{
+            if (this.props.onlyInclude) {
+                if (v.value !== this.props.onlyInclude) {
+                    return false
+                }
+            }
+            return true
+        }),(v)=>v.label);
         return <Select
-            value={null}
+            classNamePrefix="flag-select"
+            value={this.props.value? options.find((v)=>v.value === this.props.value) : null}
             onInputChange={this.search}
             placeholder={this.props.placeholder} onChange={(v)=>this.props.onChange(v.value,v.flag)}
-                       options={_.sortBy(this.state.data.map((v)=>({label:v.name,value:v.id, flag:v})).filter((v)=>{
-                            return !((this.props.ignore||[]).includes(v.value))
-                        }),(v)=>v.label)}
+                       options={options}
         />;
     }
 }

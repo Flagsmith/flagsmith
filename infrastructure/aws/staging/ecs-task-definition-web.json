@@ -150,6 +150,22 @@
                 {
                     "name": "GUNICORN_KEEP_ALIVE",
                     "value": "60"
+                },
+                {
+                    "name": "TASK_RUN_METHOD",
+                    "value": "TASK_PROCESSOR"
+                },
+                {
+                    "name": "ENABLE_TASK_PROCESSOR_HEALTH_CHECK",
+                    "value": "True"
+                },
+                {
+                    "name": "CACHE_ENVIRONMENT_DOCUMENT_SECONDS",
+                    "value": "60"
+                },
+                {
+                  "name":  "LOG_LEVEL",
+                  "value": "INFO"
                 }
             ],
             "secrets": [

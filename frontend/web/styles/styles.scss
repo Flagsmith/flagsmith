@@ -292,3 +292,7 @@ hr {
     box-shadow: rgba(75, 75, 75, 0.21) 0px 1px 6px, rgba(75, 75, 75, 0.21) 0px 1px 4px;
   }
 }
+
+.flag-select__menu {
+  z-index: 3 !important;
+}

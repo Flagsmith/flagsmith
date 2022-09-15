@@ -1,0 +1,7 @@
+from enum import Enum
+
+
+class TaskRunMethod(Enum):
+    SYNCHRONOUSLY = "SYNCHRONOUSLY"
+    SEPARATE_THREAD = "SEPARATE_THREAD"
+    TASK_PROCESSOR = "TASK_PROCESSOR"

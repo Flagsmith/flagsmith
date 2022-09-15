@@ -14,7 +14,7 @@ from task_processor.processor import run_next_task
 def test_run_task_runs_task_and_creates_task_run_object_when_success(db):
     # Given
     organisation_name = f"test-org-{uuid.uuid4()}"
-    task = Task.create(_create_organisation.task_identifier, organisation_name)
+    task = Task.create(_create_organisation.task_identifier, args=(organisation_name,))
     task.save()
 
     # When
@@ -28,6 +28,9 @@ def test_run_task_runs_task_and_creates_task_run_object_when_success(db):
     assert task_run.started_at
     assert task_run.finished_at
     assert task_run.error_details is None
+
+    task.refresh_from_db()
+    assert task.completed
 
 
 def test_run_task_runs_task_and_creates_task_run_object_when_failure(db):
@@ -45,6 +48,9 @@ def test_run_task_runs_task_and_creates_task_run_object_when_failure(db):
     assert task_run.finished_at is None
     assert task_run.error_details is not None
 
+    task.refresh_from_db()
+    assert not task.completed
+
 
 def test_run_next_task_does_nothing_if_no_tasks(db):
     # Given - no tasks
@@ -58,10 +64,14 @@ def test_run_next_task_does_nothing_if_no_tasks(db):
 def test_run_next_task_runs_tasks_in_correct_order(db):
     # Given
     # 2 tasks
-    task_1 = Task.create(_create_organisation.task_identifier, "task 1 organisation")
+    task_1 = Task.create(
+        _create_organisation.task_identifier, args=("task 1 organisation",)
+    )
     task_1.save()
 
-    task_2 = Task.create(_create_organisation.task_identifier, "task 2 organisation")
+    task_2 = Task.create(
+        _create_organisation.task_identifier, args=("task 2 organisation",)
+    )
     task_2.save()
 
     # When
@@ -83,12 +93,12 @@ class TestProcessor(TransactionTestCase):
         # 2 tasks
         # One which is configured to just sleep for 3 seconds, to simulate a task
         # being held for a short period of time
-        task_1 = Task.create(_sleep.task_identifier, 3)
+        task_1 = Task.create(_sleep.task_identifier, args=(3,))
         task_1.save()
 
         # and another which should create an organisation
         task_2 = Task.create(
-            _create_organisation.task_identifier, "task 2 organisation"
+            _create_organisation.task_identifier, args=("task 2 organisation",)
         )
         task_2.save()
 

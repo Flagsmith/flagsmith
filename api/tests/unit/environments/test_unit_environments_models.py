@@ -3,6 +3,7 @@ from unittest.mock import MagicMock
 import pytest
 from core.request_origin import RequestOrigin
 from django.db.models import Q
+from flag_engine.api.document_builders import build_environment_document
 from pytest_django.asserts import assertQuerysetEqual as assert_queryset_equal
 
 from environments.models import Environment, Webhook
@@ -172,3 +173,61 @@ def test_webhook_generate_webhook_feature_state_data_raises_error_segment_and_id
 
     # Then
     # exception raised
+
+
+def test_environment_get_environment_document(environment, django_assert_num_queries):
+    # Given
+
+    # When
+    with django_assert_num_queries(4):
+        environment_document = Environment.get_environment_document(environment.api_key)
+
+    # Then
+    assert environment_document
+    assert environment_document["api_key"] == environment.api_key
+
+
+def test_environment_get_environment_document_with_caching_when_document_in_cache(
+    environment, django_assert_num_queries, settings, mocker
+):
+    # Given
+    settings.CACHE_ENVIRONMENT_DOCUMENT_SECONDS = 60
+
+    mocked_environment_document_cache = mocker.patch(
+        "environments.models.environment_document_cache"
+    )
+    mocked_environment_document_cache.get.return_value = build_environment_document(
+        environment
+    )
+
+    # When
+    with django_assert_num_queries(0):
+        environment_document = Environment.get_environment_document(environment.api_key)
+
+    # Then
+    assert environment_document
+    assert environment_document["api_key"] == environment.api_key
+
+
+def test_environment_get_environment_document_with_caching_when_document_not_in_cache(
+    environment, django_assert_num_queries, settings, mocker
+):
+    # Given
+    settings.CACHE_ENVIRONMENT_DOCUMENT_SECONDS = 60
+
+    mocked_environment_document_cache = mocker.patch(
+        "environments.models.environment_document_cache"
+    )
+    mocked_environment_document_cache.get.return_value = None
+
+    # When
+    with django_assert_num_queries(4):
+        environment_document = Environment.get_environment_document(environment.api_key)
+
+    # Then
+    assert environment_document
+    assert environment_document["api_key"] == environment.api_key
+
+    mocked_environment_document_cache.set.assert_called_once_with(
+        environment.api_key, environment_document
+    )

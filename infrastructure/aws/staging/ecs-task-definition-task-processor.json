@@ -1,0 +1,152 @@
+{
+    "family": "flagsmith-task-processor",
+    "networkMode": "awsvpc",
+    "executionRoleArn": "arn:aws:iam::302456015006:role/task-processor-task-execution-role-f3fad35",
+    "taskRoleArn": "arn:aws:iam::302456015006:role/task-processor-task-role-c027314",
+    "containerDefinitions": [
+        {
+            "name": "flagsmith-task-processor",
+            "entryPoint": [
+                "python",
+                "manage.py",
+                "runprocessor",
+                "--sleepintervalms",
+                "700"
+            ],
+            "essential": true,
+            "environment": [
+                {
+                    "name": "AWS_REGION",
+                    "value": "eu-west-2"
+                },
+                {
+                    "name": "AWS_DEFAULT_REGION",
+                    "value": "eu-west-2"
+                },
+                {
+                    "name": "DJANGO_SETTINGS_MODULE",
+                    "value": "app.settings.production"
+                },
+                {
+                    "name": "CHARGEBEE_SITE",
+                    "value": "flagsmith-test"
+                },
+                {
+                    "name": "ENABLE_CHARGEBEE",
+                    "value": "True"
+                },
+                {
+                    "name": "ENVIRONMENT",
+                    "value": "staging"
+                },
+                {
+                    "name": "ENVIRONMENTS_TABLE_NAME_DYNAMO",
+                    "value": "flagsmith_environments"
+                },
+                {
+                    "name": "GITHUB_CLIENT_ID",
+                    "value": "cd16a9c1574074756876"
+                },
+                {
+                    "name": "IDENTITIES_TABLE_NAME_DYNAMO",
+                    "value": "flagsmith_identities"
+                },
+                {
+                    "name": "INFLUXDB_BUCKET",
+                    "value": "api_staging"
+                },
+                {
+                    "name": "INFLUXDB_ORG",
+                    "value": "ben.rometsch@bullet-train.io"
+                },
+                {
+                    "name": "INFLUXDB_URL",
+                    "value": "https://eu-central-1-1.aws.cloud2.influxdata.com"
+                },
+                {
+                    "name": "OAUTH_CLIENT_ID",
+                    "value": "232959427810-br6ltnrgouktp0ngsbs04o14ueb9rch0.apps.googleusercontent.com"
+                },
+                {
+                    "name": "PROJECT_METADATA_TABLE_NAME_DYNAMO",
+                    "value": "flagsmith_project_metadata"
+                },
+                {
+                    "name": "SENDER_EMAIL",
+                    "value": "Flagsmith <support@flagsmith.com>"
+                },
+                {
+                    "name": "SLACK_CLIENT_ID",
+                    "value": "937916178726.2904626318658"
+                },
+                {
+                    "name":"EDGE_API_URL",
+                    "value":"https://edge.bullet-train-staging.win/api/v1/"
+                },
+                {
+                    "name": "IDENTITY_MIGRATION_EVENT_BUS_NAME",
+                    "value": "identity_migration-fb41b5d"
+                },
+                {
+                    "name": "ENVIRONMENTS_API_KEY_TABLE_NAME_DYNAMO",
+                    "value": "flagsmith_environment_api_key"
+                }
+            ],
+            "secrets": [
+                {
+                    "name": "CHARGEBEE_API_KEY",
+                    "valueFrom": "arn:aws:secretsmanager:eu-west-2:302456015006:secret:ECS-API-heAdoB:CHARGEBEE_API_KEY::"
+                },
+                {
+                    "name": "DATABASE_URL",
+                    "valueFrom": "arn:aws:secretsmanager:eu-west-2:302456015006:secret:ECS-API-heAdoB:DATABASE_URL::"
+                },
+                {
+                    "name": "DJANGO_SECRET_KEY",
+                    "valueFrom": "arn:aws:secretsmanager:eu-west-2:302456015006:secret:ECS-API-heAdoB:DJANGO_SECRET_KEY::"
+                },
+                {
+                    "name": "GITHUB_CLIENT_SECRET",
+                    "valueFrom": "arn:aws:secretsmanager:eu-west-2:302456015006:secret:ECS-API-heAdoB:GITHUB_CLIENT_SECRET::"
+                },
+                {
+                    "name": "INFLUXDB_TOKEN",
+                    "valueFrom": "arn:aws:secretsmanager:eu-west-2:302456015006:secret:ECS-API-heAdoB:INFLUXDB_TOKEN::"
+                },
+                {
+                    "name": "MAILERLITE_API_KEY",
+                    "valueFrom": "arn:aws:secretsmanager:eu-west-2:302456015006:secret:ECS-API-heAdoB:MAILERLITE_API_KEY::"
+                },
+                {
+                    "name": "OAUTH_CLIENT_SECRET",
+                    "valueFrom": "arn:aws:secretsmanager:eu-west-2:302456015006:secret:ECS-API-heAdoB:OAUTH_CLIENT_SECRET::"
+                },
+                {
+                    "name": "SENDGRID_API_KEY",
+                    "valueFrom": "arn:aws:secretsmanager:eu-west-2:302456015006:secret:ECS-API-heAdoB:SENDGRID_API_KEY::"
+                },
+                {
+                    "name": "SENTRY_SDK_DSN",
+                    "valueFrom": "arn:aws:secretsmanager:eu-west-2:302456015006:secret:ECS-API-heAdoB:SENTRY_SDK_DSN::"
+                },
+                {
+                    "name": "SLACK_CLIENT_SECRET",
+                    "valueFrom": "arn:aws:secretsmanager:eu-west-2:302456015006:secret:ECS-API-heAdoB:SLACK_CLIENT_SECRET::"
+                }
+            ],
+            "logConfiguration": {
+                "logDriver": "awslogs",
+                "options": {
+                    "awslogs-group": "flagsmith-fargate-eu-west-2-8e1e329",
+                    "awslogs-region": "eu-west-2",
+                    "awslogs-stream-prefix": "awslogs-flagsmith"
+                }
+            }
+        }
+    ],
+    "requiresCompatibilities": [
+        "FARGATE"
+    ],
+    "cpu": "1024",
+    "memory": "2048"
+}

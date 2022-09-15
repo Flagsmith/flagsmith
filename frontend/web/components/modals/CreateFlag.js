@@ -15,8 +15,7 @@ import ChangeRequestModal from './ChangeRequestModal';
 import Feature from '../Feature';
 import { ButtonOutline } from '../base/forms/Button';
 import ChangeRequestStore from '../../../common/stores/change-requests-store';
-import { setInterceptClose } from '../../project/modals';
-
+import { setInterceptClose } from "../../project/modals";
 const FEATURE_ID_MAXLENGTH = Constants.forms.maxLength.FEATURE_ID;
 
 const CreateFlag = class extends Component {
@@ -73,17 +72,23 @@ const CreateFlag = class extends Component {
         }
     }
 
-    onClosing = () => new Promise((resolve) => {
-        if (this.state.valueChanged || this.state.segmentsChanged || this.state.settingsChanged) {
-            openConfirm('Are you sure', 'Closing this will discard your unsaved changes.', () => resolve(true), () => resolve(false), 'Ok', 'Cancel');
+    onClosing = ()=> {
+        if (this.props.isEdit) {
+            return new Promise((resolve)=>{
+                if (this.state.valueChanged || this.state.segmentsChanged || this.state.settingsChanged) {
+                    openConfirm("Are you sure", "Closing this will discard your unsaved changes.", ()=>resolve(true), ()=>resolve(false), "Ok", "Cancel")
+                } else {
+                    resolve(true)
+                }
+            })
         } else {
-            resolve(true);
+            return Promise.resolve(true);
         }
-    })
+    }
 
 
     componentDidMount = () => {
-        setInterceptClose(this.onClosing);
+        setInterceptClose(this.onClosing)
         if (!this.props.isEdit && !E2E) {
             this.focusTimeout = setTimeout(() => {
                 this.input.focus();
@@ -232,8 +237,8 @@ const CreateFlag = class extends Component {
                     <BarChart data={data.events_list}>
                         <CartesianGrid strokeDasharray="3 5"/>
                         <XAxis
-                          interval={0}
-                          height={100} angle={-90}
+                            interval={0}
+                            height={100} angle={-90}
                           textAnchor="end" allowDataOverflow={false} dataKey="datetime"
                         />
                         <YAxis allowDataOverflow={false}/>
@@ -305,7 +310,7 @@ const CreateFlag = class extends Component {
     }
 
     removeVariation = (i) => {
-        this.state.valueChanged = true;
+        this.state.valueChanged = true
         if (this.state.multivariate_options[i].id) {
             const idToRemove = this.state.multivariate_options[i].id;
             if (idToRemove) {
@@ -384,7 +389,7 @@ const CreateFlag = class extends Component {
                           className: 'full-width',
                           name: 'featureDesc',
                       }}
-                      onChange={e => this.setState({ description: Utils.safeParseEventValue(e), settingsChanged: true })}
+                      onChange={e => this.setState({ description: Utils.safeParseEventValue(e), settingsChanged:true })}
                       isValid={name && name.length}
                       ds
                       type="text" title={identity ? 'Description' : 'Description (optional)'}
@@ -396,7 +401,7 @@ const CreateFlag = class extends Component {
                         <InputGroup
                           value={description}
                           component={(
-                              <Switch checked={this.state.is_archived} onChange={is_archived => this.setState({ is_archived, settingsChanged: true })}/>
+                              <Switch checked={this.state.is_archived} onChange={is_archived => this.setState({ is_archived, settingsChanged:true })}/>
                           )}
                           onChange={e => this.setState({ description: Utils.safeParseEventValue(e) })}
                           isValid={name && name.length}
@@ -686,7 +691,7 @@ const CreateFlag = class extends Component {
                                                                                       </Tooltip>
                                                                             )}
                                                                                   action={
-                                                                                (
+                                                                                !this.state.showCreateSegment && (
                                                                                     <Button onClick={() => this.changeSegment(this.props.segmentOverrides)} type="button" className={`btn--outline${enabledSegment ? '' : '-red'}`}>
                                                                                         {enabledSegment ? 'Enable All' : 'Disable All'}
                                                                                     </Button>
@@ -695,6 +700,8 @@ const CreateFlag = class extends Component {
                                                                                 >
                                                                                     {this.props.segmentOverrides ? (
                                                                                         <SegmentOverrides
+                                                                                          showCreateSegment={this.state.showCreateSegment}
+                                                                                          setShowCreateSegment={(showCreateSegment)=>this.setState({showCreateSegment})}
                                                                                           feature={projectFlag.id}
                                                                                           projectId={this.props.projectId}
                                                                                           multivariateOptions={multivariate_options}
@@ -713,23 +720,29 @@ const CreateFlag = class extends Component {
                                                                                         </div>
                                                                                     )}
                                                                                 </Panel>
-                                                                                <p className="text-right mt-4">
-                                                                                    {is4Eyes && is4EyesSegmentOverrides ? 'This will create a change request for the environment' : 'This will update the segment overrides for the environment'}
-                                                                                    {' '}
-                                                                                    <strong>
-                                                                                        {
-                                                                                    _.find(project.environments, { api_key: this.props.environmentId }).name
-                                                                                }
-                                                                                    </strong>
-                                                                                </p>
-                                                                                <div className="text-right">
-                                                                                    <Button
-                                                                                      onClick={saveFeatureSegments} type="button" data-test="update-feature-segments-btn"
-                                                                                      id="update-feature-segments-btn" disabled={isSaving || !name || invalid}
-                                                                                    >
-                                                                                        {isSaving ? 'Updating' : 'Update Segment Overrides'}
-                                                                                    </Button>
-                                                                                </div>
+                                                                                {!this.state.showCreateSegment && (
+                                                                                    <div>
+                                                                                        <p className="text-right mt-4">
+                                                                                            {is4Eyes && is4EyesSegmentOverrides ? 'This will create a change request for the environment' : 'This will update the segment overrides for the environment'}
+                                                                                            {' '}
+                                                                                            <strong>
+                                                                                                {
+                                                                                                    _.find(project.environments, { api_key: this.props.environmentId }).name
+                                                                                                }
+                                                                                            </strong>
+                                                                                        </p>
+                                                                                        <div className="text-right">
+                                                                                            <Button
+                                                                                                onClick={saveFeatureSegments} type="button" data-test="update-feature-segments-btn"
+                                                                                                id="update-feature-segments-btn" disabled={isSaving || !name || invalid}
+                                                                                            >
+                                                                                                {isSaving ? 'Updating' : 'Update Segment Overrides'}
+                                                                                            </Button>
+                                                                                        </div>
+                                                                                    </div>
+                                                                                )}
+
+
 
                                                                             </div>
 
@@ -811,15 +824,15 @@ const CreateFlag = class extends Component {
                                                                 }
                                                               renderRow={({ id, feature_state_value, enabled, identity }) => (
                                                                   <Row
-                                                                    onClick={() => {
-                                                                        window.open(`${document.location.origin}/project/${this.props.projectId}/environment/${this.props.environmentId}/users/${identity.identifier}/${identity.id}?flag=${projectFlag.name}`, '_blank');
-                                                                    }} space className="list-item cursor-pointer"
+                                                                    space className="list-item cursor-pointer"
                                                                     key={id}
                                                                   >
-                                                                      <Flex>
+                                                                      <Flex onClick={() => {
+                                                                        window.open(`${document.location.origin}/project/${this.props.projectId}/environment/${this.props.environmentId}/users/${identity.identifier}/${identity.id}?flag=${projectFlag.name}`, '_blank');
+                                                                      }}>
                                                                           {identity.identifier}
                                                                       </Flex>
-                                                                      <Switch disabled checked={enabled}/>
+                                                                      <Switch checked={enabled} onChange={() => this.toggleUserFlag({ id, identity, enabled })}/>
                                                                       <div className="ml-2">
                                                                           {feature_state_value && (
                                                                           <FeatureValue

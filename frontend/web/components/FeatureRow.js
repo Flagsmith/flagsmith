@@ -74,7 +74,9 @@ class TheComponent extends Component {
         const environment = ProjectStore.getEnvironment(environmentId);
         if (this.props.condensed) {
             return Utils.renderWithPermission(permission, Constants.environmentPermissions(Utils.getManageFeaturePermissionDescription()), (
-                <Row>
+                <Row
+                    onClick={() => permission && !readOnly && this.editFlag(projectFlag, environmentFlags[id])}
+                    style={{ overflow: 'hidden', ...(this.props.style || {}) }}>
                     <div className={`mr-2 ${this.props.fadeEnabled && 'faded'}`}>
                         <Switch
                           disabled={!permission || readOnly}
@@ -109,7 +111,6 @@ class TheComponent extends Component {
               data-test={`feature-item-${this.props.index}`}
             >
                 <div
-                  style={{ overflow: 'hidden' }}
                   className="flex flex-1"
                   onClick={() => !readOnly && permission && this.editFlag(projectFlag, environmentFlags[id])}
                 >

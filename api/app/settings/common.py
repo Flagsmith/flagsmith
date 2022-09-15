@@ -10,21 +10,24 @@ For the full list of settings and their values, see
 https://docs.djangoproject.com/en/1.9/ref/settings/
 """
 import importlib
+import json
 import logging
 import os
 import sys
 import warnings
-from datetime import timedelta
+from datetime import datetime, timedelta
 from importlib import reload
 
 import dj_database_url
+import pytz
 import requests
 from corsheaders.defaults import default_headers
 from django.core.management.utils import get_random_secret_key
 from environs import Env
 
+from task_processor.task_run_method import TaskRunMethod
+
 env = Env()
-logger = logging.getLogger(__name__)
 
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
@@ -356,7 +359,7 @@ EMAIL_BACKEND = env("EMAIL_BACKEND", default="sgbackend.SendGridBackend")
 if EMAIL_BACKEND == "sgbackend.SendGridBackend":
     SENDGRID_API_KEY = env("SENDGRID_API_KEY", default=None)
     if not SENDGRID_API_KEY:
-        logger.info(
+        logging.info(
             "`SENDGRID_API_KEY` has not been configured. You will not receive emails."
         )
 elif EMAIL_BACKEND == "django.core.mail.backends.smtp.EmailBackend":
@@ -409,22 +412,44 @@ CHARGEBEE_API_KEY = env("CHARGEBEE_API_KEY", default=None)
 CHARGEBEE_SITE = env("CHARGEBEE_SITE", default=None)
 
 # Logging configuration
-LOG_LEVEL = env.str("LOG_LEVEL", default="WARNING")
-LOGGING = {
-    "version": 1,
-    "disable_existing_loggers": True,
-    "formatters": {
-        "generic": {"format": "%(name)-12s %(levelname)-8s %(message)s"},
-    },
-    "handlers": {
-        "console": {
-            "level": LOG_LEVEL,
-            "class": "logging.StreamHandler",
-            "formatter": "generic",
-        }
-    },
-    "loggers": {"": {"level": LOG_LEVEL, "handlers": ["console"]}},
-}
+LOGGING_CONFIGURATION_FILE = env.str("LOGGING_CONFIGURATION_FILE", default=None)
+if LOGGING_CONFIGURATION_FILE:
+    with open(LOGGING_CONFIGURATION_FILE, "r") as f:
+        LOGGING = json.loads(f.read())
+else:
+    LOG_LEVEL = env.str("LOG_LEVEL", default="WARNING")
+    LOGGING = {
+        "version": 1,
+        "disable_existing_loggers": True,
+        "formatters": {
+            "generic": {"format": "%(name)-12s %(levelname)-8s %(message)s"},
+        },
+        "handlers": {
+            "console": {
+                "level": LOG_LEVEL,
+                "class": "logging.StreamHandler",
+                "formatter": "generic",
+            }
+        },
+        "loggers": {
+            "": {"level": LOG_LEVEL, "handlers": ["console"]},
+            # Not sure why the following loggers are necessary, but it doesn't seem to
+            # write log messages for e.g. features.workflows.core.models without adding
+            # them explicitly.
+            # TODO: move all apps to a parent 'apps' directory and configure the logger
+            #  for that dir
+            "features": {
+                "level": LOG_LEVEL,
+                "handlers": ["console"],
+                "propagate": False,
+            },
+            "task_processor": {
+                "level": LOG_LEVEL,
+                "handlers": ["console"],
+                "propagate": False,
+            },
+        },
+    }
 
 if APPLICATION_INSIGHTS_CONNECTION_STRING:
     LOGGING["handlers"]["azure"] = {
@@ -450,6 +475,9 @@ CHARGEBEE_CACHE_LOCATION = "chargebee-objects"
 CACHE_PROJECT_SEGMENTS_SECONDS = env.int("CACHE_PROJECT_SEGMENTS_SECONDS", 0)
 PROJECT_SEGMENTS_CACHE_LOCATION = "project-segments"
 
+CACHE_ENVIRONMENT_DOCUMENT_SECONDS = env.int("CACHE_ENVIRONMENT_DOCUMENT_SECONDS", 0)
+ENVIRONMENT_DOCUMENT_CACHE_LOCATION = "environment-documents"
+
 CACHES = {
     "default": {
         "BACKEND": "django.core.cache.backends.locmem.LocMemCache",
@@ -471,6 +499,11 @@ CACHES = {
         "BACKEND": "django.core.cache.backends.db.DatabaseCache",
         "LOCATION": CHARGEBEE_CACHE_LOCATION,
         "TIMEOUT": 12 * 60 * 60,  # 12 hours
+    },
+    ENVIRONMENT_DOCUMENT_CACHE_LOCATION: {
+        "BACKEND": "django.core.cache.backends.db.DatabaseCache",
+        "LOCATION": ENVIRONMENT_DOCUMENT_CACHE_LOCATION,
+        "timeout": CACHE_ENVIRONMENT_DOCUMENT_SECONDS,
     },
 }
 
@@ -654,6 +687,13 @@ IDENTITY_MIGRATION_EVENT_BUS_NAME = env.str("IDENTITY_MIGRATION_EVENT_BUS_NAME",
 
 # Should be a string representing a timezone aware datetime, e.g. 2022-03-31T12:35:00Z
 EDGE_RELEASE_DATETIME = env.datetime("EDGE_RELEASE_DATETIME", None)
+# Note: using django.utils.timezone.now doesn't work reliably in settings so we use
+# datetime.now
+EDGE_ENABLED = (
+    ENVIRONMENTS_TABLE_NAME_DYNAMO is not None
+    and EDGE_RELEASE_DATETIME is not None
+    and EDGE_RELEASE_DATETIME < datetime.now(tz=pytz.UTC)
+)
 
 DISABLE_WEBHOOKS = env.bool("DISABLE_WEBHOOKS", False)
 
@@ -668,4 +708,10 @@ SAML_USE_NAME_ID_AS_EMAIL = env.bool("SAML_USE_NAME_ID_AS_EMAIL", False)
 MAX_SELF_MIGRATABLE_IDENTITIES = env.int("MAX_SELF_MIGRATABLE_IDENTITIES", 100000)
 
 # Setting to allow asynchronous tasks to be run synchronously for testing purposes
-RUN_TASKS_SYNCHRONOUSLY = env.bool("RUN_TASKS_SYNCHRONOUSLY", True)
+# or in a separate thread for self-hosted users
+TASK_RUN_METHOD = env.enum(
+    "TASK_RUN_METHOD", type=TaskRunMethod, default=TaskRunMethod.SEPARATE_THREAD.value
+)
+ENABLE_TASK_PROCESSOR_HEALTH_CHECK = env.bool(
+    "ENABLE_TASK_PROCESSOR_HEALTH_CHECK", default=False
+)

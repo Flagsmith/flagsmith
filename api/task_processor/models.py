@@ -7,7 +7,7 @@ from django.db import models
 from django.utils import timezone
 
 from task_processor.exceptions import TaskProcessingError
-from task_processor.tasks import registered_tasks
+from task_processor.task_registry import registered_tasks
 
 
 class Task(models.Model):
@@ -19,27 +19,39 @@ class Task(models.Model):
     serialized_args = models.TextField(blank=True, null=True)
     serialized_kwargs = models.TextField(blank=True, null=True)
 
-    # denormalise failures so that we can use select_for_update
+    # denormalise failures and completion so that we can use select_for_update
     num_failures = models.IntegerField(default=0)
+    completed = models.BooleanField(default=False)
 
     class Meta:
         index_together = [
-            ["scheduled_for", "num_failures"],
+            ["scheduled_for", "num_failures", "completed"],
         ]
 
     @classmethod
-    def create(cls, task_identifier: str, *args, **kwargs) -> "Task":
+    def create(
+        cls,
+        task_identifier: str,
+        *,
+        args: typing.Tuple[typing.Any] = None,
+        kwargs: typing.Dict[str, typing.Any] = None,
+    ) -> "Task":
         return Task(
             task_identifier=task_identifier,
-            serialized_args=cls._serialize_data(args),
-            serialized_kwargs=cls._serialize_data(kwargs),
+            serialized_args=cls._serialize_data(args or tuple()),
+            serialized_kwargs=cls._serialize_data(kwargs or dict()),
         )
 
     @classmethod
     def schedule_task(
-        cls, schedule_for: datetime, task_identifier: str, *args, **kwargs
+        cls,
+        schedule_for: datetime,
+        task_identifier: str,
+        *,
+        args: typing.Tuple[typing.Any] = None,
+        kwargs: typing.Dict[str, typing.Any] = None,
     ) -> "Task":
-        task = cls.create(task_identifier, *args, **kwargs)
+        task = cls.create(task_identifier=task_identifier, args=args, kwargs=kwargs)
         task.scheduled_for = schedule_for
         return task
 
@@ -92,3 +104,8 @@ class TaskRun(models.Model):
         max_length=50, choices=TaskResult.choices, blank=True, null=True, db_index=True
     )
     error_details = models.TextField(blank=True, null=True)
+
+
+class HealthCheckModel(models.Model):
+    created_at = models.DateTimeField(auto_now_add=True)
+    uuid = models.UUIDField(unique=True, blank=False, null=False)
