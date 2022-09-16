@@ -448,6 +448,11 @@ else:
                 "handlers": ["console"],
                 "propagate": False,
             },
+            "app_analytics": {
+                "level": LOG_LEVEL,
+                "handlers": ["console"],
+                "propagate": False,
+            },
         },
     }
 
