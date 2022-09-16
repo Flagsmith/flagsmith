@@ -5,6 +5,7 @@ from segments.models import (
     EQUAL,
     GREATER_THAN,
     GREATER_THAN_INCLUSIVE,
+    IS_SET,
     LESS_THAN,
     LESS_THAN_INCLUSIVE,
     NOT_EQUAL,
@@ -50,3 +51,23 @@ def test_does_identity_match_for_semver_values(
     ]
     # Then
     assert condition.does_identity_match(identity, traits) is result
+
+
+def test_does_identity_match_is_set_true(identity):
+    # Given
+    trait_key = "some_property"
+    condition = Condition(operator=IS_SET, property=trait_key)
+    traits = [Trait(trait_key=trait_key, identity=identity)]
+
+    # Then
+    assert condition.does_identity_match(identity, traits) is True
+
+
+def test_does_identity_match_is_set_false(identity):
+    # Given
+    trait_key = "some_property"
+    condition = Condition(operator=IS_SET, property=trait_key)
+    traits = []
+
+    # Then
+    assert condition.does_identity_match(identity, traits) is False

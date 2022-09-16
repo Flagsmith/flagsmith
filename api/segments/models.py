@@ -40,6 +40,8 @@ NOT_CONTAINS = "NOT_CONTAINS"
 NOT_EQUAL = "NOT_EQUAL"
 REGEX = "REGEX"
 PERCENTAGE_SPLIT = "PERCENTAGE_SPLIT"
+IS_SET = "IS_SET"
+IS_NOT_SET = "IS_NOT_SET"
 
 
 class Segment(AbstractBaseExportableModel):
@@ -151,11 +153,13 @@ class Condition(AbstractBaseExportableModel):
         (NOT_EQUAL, "Does not match"),
         (REGEX, "Matches regex"),
         (PERCENTAGE_SPLIT, "Percentage split"),
+        (IS_SET, "Is set"),
+        (IS_NOT_SET, "Is not set"),
     )
 
     operator = models.CharField(choices=CONDITION_TYPES, max_length=500)
     property = models.CharField(blank=True, null=True, max_length=1000)
-    value = models.CharField(max_length=1000)
+    value = models.CharField(max_length=1000, blank=True, null=True)
 
     rule = models.ForeignKey(
         SegmentRule, on_delete=models.CASCADE, related_name="conditions"
