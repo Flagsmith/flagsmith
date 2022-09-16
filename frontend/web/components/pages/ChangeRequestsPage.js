@@ -105,8 +105,9 @@ const ChangeRequestsPage = class extends Component {
                                     nextPage={() => AppActions.getChangeRequests(this.props.match.params.environmentId, {}, dataPaging.next)}
                                     prevPage={() => AppActions.getChangeRequests(this.props.match.params.environmentId, {}, dataPaging.previous)}
                                     goToPage={page => AppActions.getChangeRequests(this.props.match.params.environmentId, {}, `${Project.api}environments/${environmentId}/list-change-requests/?page=${page}`)}
-                                    renderRow={({ title, user: _user, created_at, id }, index) => {
+                                    renderRow={({ title, user: _user, created_at, id, live_from }, index) => {
                                         const user = (OrganisationStore.model && OrganisationStore.model.users && OrganisationStore.model.users.find(v => v.id === _user)) || {};
+                                        const isScheduled = new Date(live_from).valueOf() > new Date().valueOf()
                                         return (
                                             <Link to={`/project/${projectId}/environment/${environmentId}/change-requests/${id}`}>
                                                 <Row className="list-item clickable">
@@ -115,6 +116,11 @@ const ChangeRequestsPage = class extends Component {
                                                         <ButtonLink>
                                                             {title}
                                                         </ButtonLink>
+                                                        {
+                                                            isScheduled && (
+                                                                <span className="ion ion-md-time"/>
+                                                            )
+                                                        }
                                                         <div className="list-item-footer faint">
                                                             Created at {moment(created_at).format('Do MMM YYYY HH:mma')} by {user && user.first_name} {user && user.last_name}
                                                         </div>
