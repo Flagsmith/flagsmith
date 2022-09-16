@@ -86,6 +86,8 @@ class InfluxDBWrapper:
             f"{extra}"
         )
 
+        logger.debug("Running query in influx: \n\n %s", query)
+
         try:
             result = query_api.query(org=influx_org, query=query)
             return result
