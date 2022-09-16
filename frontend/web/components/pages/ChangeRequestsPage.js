@@ -105,15 +105,21 @@ const ChangeRequestsPage = class extends Component {
                                     nextPage={() => AppActions.getChangeRequests(this.props.match.params.environmentId, {}, dataPaging.next)}
                                     prevPage={() => AppActions.getChangeRequests(this.props.match.params.environmentId, {}, dataPaging.previous)}
                                     goToPage={page => AppActions.getChangeRequests(this.props.match.params.environmentId, {}, `${Project.api}environments/${environmentId}/list-change-requests/?page=${page}`)}
-                                    renderRow={({ title, user: _user, created_at, id }, index) => {
+                                    renderRow={({ title, user: _user, created_at, live_from, id }, index) => {
                                         const user = (OrganisationStore.model && OrganisationStore.model.users && OrganisationStore.model.users.find(v => v.id === _user)) || {};
+                                        const isScheduled = new Date(live_from).valueOf() > new Date().valueOf()
                                         return (
                                             <Link to={`/project/${projectId}/environment/${environmentId}/change-requests/${id}`}>
                                                 <Row className="list-item clickable">
                                                     <span className="ion text-primary mr-4 icon ion-md-git-pull-request"/>
                                                     <div>
                                                         <ButtonLink>
-                                                            {title} <span className="ion icon mr-4 ion-md-time"/>
+                                                            {title}
+                                                            {
+                                                                isScheduled && (
+                                                                    <span className="ml-1 mr-4 ion ion-md-time"/>
+                                                                )
+                                                            }
                                                         </ButtonLink>
                                                         <div className="list-item-footer faint">
                                                             Created at {moment(created_at).format('Do MMM YYYY HH:mma')} by {user && user.first_name} {user && user.last_name}
