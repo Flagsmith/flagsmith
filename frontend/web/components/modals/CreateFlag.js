@@ -365,7 +365,7 @@ const CreateFlag = class extends Component {
                           component={(
                               <AddEditTags
                                 readOnly={!!identity || !createFeature} projectId={this.props.projectId} value={this.state.tags}
-                                onChange={tags => this.setState({ tags, settingsChanged:true })}
+                                onChange={tags => this.setState({ tags, settingsChanged: true })}
                               />
                             )}
                         />
@@ -434,7 +434,7 @@ const CreateFlag = class extends Component {
                 )}
             </>
         );
-        const Value = (projectAdmin, createFeature) => (
+        const Value = (projectAdmin, createFeature, hideValue) => (
             <>
                 {!isEdit && (
                     <FormGroup className="mb-4 mr-3 ml-3">
@@ -465,7 +465,7 @@ const CreateFlag = class extends Component {
                               className: 'full-width',
                               readOnly: !!identity,
                               name: 'featureDesc',
-                              valueChanged:true,
+                              valueChanged: true,
                           }}
                           onChange={e => this.setState({ description: Utils.safeParseEventValue(e) })}
                           isValid={name && name.length}
@@ -474,32 +474,33 @@ const CreateFlag = class extends Component {
                         />
                     </FormGroup>
                 )}
-                <div className={identity && !description ? 'mt-2' : ''}>
-                    <Feature
-                      hide_from_client={hide_from_client}
-                      multivariate_options={multivariate_options}
-                      environmentVariations={environmentVariations}
-                      isEdit={isEdit}
-                      identity={identity}
-                      removeVariation={this.removeVariation}
-                      updateVariation={this.updateVariation}
-                      addVariation={this.addVariation}
-                      checked={default_enabled}
-                      value={initial_value}
-                      identityVariations={this.state.identityVariations}
-                      onChangeIdentityVariations={(identityVariations) => {
-                          this.setState({ identityVariations, valueChanged:true, });
-                      }}
-                      environmentFlag={this.props.environmentFlag}
-                      projectFlag={projectFlag}
-                      onValueChange={(e) => {
-                          const initial_value = Utils.getTypedValue(Utils.safeParseEventValue(e))
-                          this.setState({ valueChanged:true, initial_value });
-                      }}
-                      onCheckedChange={default_enabled => this.setState({ default_enabled })}
-                    />
-                </div>
-
+                {!hideValue && (
+                    <div className={identity && !description ? 'mt-2' : ''}>
+                        <Feature
+                          hide_from_client={hide_from_client}
+                          multivariate_options={multivariate_options}
+                          environmentVariations={environmentVariations}
+                          isEdit={isEdit}
+                          identity={identity}
+                          removeVariation={this.removeVariation}
+                          updateVariation={this.updateVariation}
+                          addVariation={this.addVariation}
+                          checked={default_enabled}
+                          value={initial_value}
+                          identityVariations={this.state.identityVariations}
+                          onChangeIdentityVariations={(identityVariations) => {
+                              this.setState({ identityVariations, valueChanged: true });
+                          }}
+                          environmentFlag={this.props.environmentFlag}
+                          projectFlag={projectFlag}
+                          onValueChange={(e) => {
+                              const initial_value = Utils.getTypedValue(Utils.safeParseEventValue(e));
+                              this.setState({ valueChanged: true, initial_value });
+                          }}
+                          onCheckedChange={default_enabled => this.setState({ default_enabled })}
+                        />
+                    </div>
+                )}
                 {!isEdit && !identity && Settings(projectAdmin, createFeature)}
             </>
         );
@@ -517,7 +518,7 @@ const CreateFlag = class extends Component {
                     >
                         {({ isLoading, isSaving, error, influxData }, { createFlag, editFlagSettings, editFlagValue, editFlagSegments, createChangeRequest }) => {
                             const saveFeatureValue = (schedule) => {
-                                this.setState({valueChanged:false})
+                                this.setState({ valueChanged: false });
                                 if ((is4Eyes || schedule) && !identity) {
                                     openModal2(schedule ? 'New Scheduled Flag Update' : this.props.changeRequest ? 'Update Change Request' : 'New Change Request', <ChangeRequestModal
                                       showAssignees={is4Eyes}
@@ -558,12 +559,12 @@ const CreateFlag = class extends Component {
                             };
 
                             const saveSettings = () => {
-                                this.setState({settingsChanged:false})
+                                this.setState({ settingsChanged: false });
                                 this.save(editFlagSettings, isSaving);
                             };
 
                             const saveFeatureSegments = () => {
-                                this.setState({segmentsChanged:false})
+                                this.setState({ segmentsChanged: false });
 
                                 this.save(editFlagSegments, isSaving);
                             };
@@ -583,11 +584,16 @@ const CreateFlag = class extends Component {
                                                 >
                                                     {isEdit && !identity ? (
                                                         <Tabs value={this.state.tab} onChange={tab => this.setState({ tab })}>
-                                                            <TabItem data-test="value" tabLabel={<Row className="justify-content-center">Value {this.state.valueChanged && (
-                                                                <div className="unread ml-2 px-1">
-                                                                    {"*"}
-                                                                </div>
-                                                            )}</Row>}>
+                                                            <TabItem
+                                                              data-test="value" tabLabel={(
+                                                                  <Row className="justify-content-center">Value {this.state.valueChanged && (
+                                                                  <div className="unread ml-2 px-1">
+                                                                      {'*'}
+                                                                  </div>
+                                                                  )}
+                                                                  </Row>
+)}
+                                                            >
                                                                 <FormGroup className="mr-3 ml-3">
                                                                     <Panel title={(
                                                                         <Tooltip
@@ -659,13 +665,16 @@ const CreateFlag = class extends Component {
                                                                 </FormGroup>
                                                             </TabItem>
                                                             {!existingChangeRequest && (
-                                                            <TabItem data-test="segment_overrides" tabLabel={(
-                                                                <Row className="justify-content-center">Segment Overrides {this.state.segmentsChanged && (
-                                                                    <div className="unread ml-2 px-2">
+                                                            <TabItem
+                                                              data-test="segment_overrides" tabLabel={(
+                                                                  <Row className="justify-content-center">Segment Overrides {this.state.segmentsChanged && (
+                                                                  <div className="unread ml-2 px-2">
                                                                         *
-                                                                    </div>
-                                                                )}</Row>
-                                                            )}>
+                                                                  </div>
+                                                                  )}
+                                                                  </Row>
+                                                            )}
+                                                            >
                                                                 {!identity && isEdit && (
                                                                 <FormGroup className="mb-4 mr-3 ml-3">
                                                                     <Permission level="environment" permission={Utils.getManageFeaturePermission()} id={this.props.environmentId}>
@@ -700,9 +709,9 @@ const CreateFlag = class extends Component {
                                                                                           value={this.props.segmentOverrides}
                                                                                           controlValue={initial_value}
                                                                                           segments={this.props.segments}
-                                                                                          onChange={(v)=>{
-                                                                                              this.setState({segmentsChanged:true})
-                                                                                              this.props.updateSegments(v)
+                                                                                          onChange={(v) => {
+                                                                                              this.setState({ segmentsChanged: true });
+                                                                                              this.props.updateSegments(v);
                                                                                           }}
                                                                                         />
                                                                                     ) : (
@@ -903,13 +912,16 @@ const CreateFlag = class extends Component {
                                                             </TabItem>
                                                             )}
                                                             {!existingChangeRequest && createFeature && (
-                                                            <TabItem data-test="settings" tabLabel={(
-                                                                <Row className="justify-content-center">Settings {this.state.settingsChanged && (
-                                                                    <div className="unread ml-2 px-1">
-                                                                        {"*"}
-                                                                    </div>
-                                                                )}</Row>
-                                                            )}>
+                                                            <TabItem
+                                                              data-test="settings" tabLabel={(
+                                                                  <Row className="justify-content-center">Settings {this.state.settingsChanged && (
+                                                                  <div className="unread ml-2 px-1">
+                                                                      {'*'}
+                                                                  </div>
+                                                                  )}
+                                                                  </Row>
+                                                            )}
+                                                            >
                                                                 {Settings(projectAdmin, createFeature)}
                                                                 {isEdit && (
                                                                 <div className="text-right">
@@ -939,12 +951,19 @@ const CreateFlag = class extends Component {
                                                         </Tabs>
                                                     ) : (
                                                         <div>
-                                                            {Value(projectAdmin, createFeature)}
+                                                            {Value(projectAdmin, createFeature, project.prevent_flag_defaults)}
                                                             {!identity && (
                                                             <div className="text-right">
-                                                                <p className="text-right">
-                                                        This will create the feature for <strong>all environments</strong>, you can edit this feature per environment once the feature is created.
-                                                                </p>
+                                                                {project.prevent_flag_defaults ? (
+                                                                    <p className="text-right">
+                                                                        This will create the feature for <strong>all environments</strong>, you can edit this feature per environment once the feature's enabled state and environment once the feature is created.
+                                                                    </p>
+                                                                ) : (
+                                                                    <p className="text-right">
+                                                                        This will create the feature for <strong>all environments</strong>, you can edit this feature per environment once the feature is created.
+                                                                    </p>
+                                                                )}
+
                                                                 <Button
                                                                   onClick={onCreateFeature} data-test="create-feature-btn" id="create-feature-btn"
                                                                   disabled={isSaving || !name || invalid}
