@@ -86,22 +86,15 @@ def test_user_with_update_feature_state_permission_can_update_identity_feature_s
     assert response.status_code == status.HTTP_201_CREATED
 
 
-def test_user_with_manage_identities_permission_can_retrieve_all_feature_states_for_identity(
+def test_user_with_view_environment_permission_can_retrieve_all_feature_states_for_identity(
     environment,
     identity,
-    django_user_model,
     test_user_client,
     view_environment_permission,
-    manage_identities_permission,
-    view_project_permission,
     user_environment_permission,
-    user_project_permission,
 ):
     # Given
-    user_environment_permission.permissions.add(
-        view_environment_permission, manage_identities_permission
-    )
-    user_project_permission.permissions.add(view_project_permission)
+    user_environment_permission.permissions.add(view_environment_permission)
 
     url = reverse(
         "api-v1:environments:identity-featurestates-all",
