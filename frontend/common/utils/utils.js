@@ -95,6 +95,14 @@ module.exports = Object.assign({}, require('./base/_utils'), {
                     return false;
                 }
             }
+            case 'MODULO': {
+                const valueSplit = rule.value.split('|');
+                if (valueSplit.length === 2) {
+                    const [divisor, remainder] = [parseFloat(valueSplit[0]), parseFloat(valueSplit[1])];
+                    return (!isNaN(divisor) && divisor > 0) && (!isNaN(remainder) && remainder >= 0);
+                }
+                return false;
+            }
             default:
                 return rule.value !== '' && rule.value !== undefined && rule.value !== null;
         }
