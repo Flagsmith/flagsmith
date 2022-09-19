@@ -99,7 +99,9 @@ class Feature(CustomLifecycleModelMixin, AbstractBaseExportableModel):
                 environment=env,
                 identity=None,
                 feature_segment=None,
-                enabled=self.default_enabled,
+                enabled=False
+                if self.project.prevent_flag_defaults
+                else self.default_enabled,
             )
 
     def validate_unique(self, *args, **kwargs):
@@ -415,7 +417,10 @@ class FeatureState(LifecycleModelMixin, AbstractBaseExportableModel):
         return self.get_feature_state_value_by_id(getattr(identity, "id", None))
 
     def get_feature_state_value_defaults(self) -> dict:
-        if self.feature.initial_value is None:
+        if (
+            self.feature.initial_value is None
+            or self.feature.project.prevent_flag_defaults
+        ):
             return {}
 
         value = self.feature.initial_value

@@ -33,6 +33,10 @@ class Project(LifecycleModelMixin, AbstractBaseExportableModel):
         default=False,
         help_text="If true will sync environment data with dynamodb and allow access to dynamodb identities",
     )
+    prevent_flag_defaults = models.BooleanField(
+        default=False,
+        help_text="Prevent defaults from being set in all environments when creating a feature.",
+    )
 
     objects = ProjectManager()
 
