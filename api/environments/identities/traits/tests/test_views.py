@@ -7,7 +7,6 @@ from core.constants import INTEGER, STRING
 from django.test import override_settings
 from django.urls import reverse
 from rest_framework import status
-from rest_framework.request import Request
 from rest_framework.test import APIClient, APITestCase
 
 from environments.identities.models import Identity
@@ -465,11 +464,12 @@ class SDKTraitsTest(APITestCase):
         self.client.post(url, data=data, content_type=self.JSON)
 
         # Then
-        args, kwargs = mocked_forward_trait_request.call_args_list[0]
-        assert kwargs == {}
-        assert isinstance(args[0], Request)
-        assert args[0].data == json.loads(data)
-        assert args[1] == self.environment.project.id
+        args, kwargs = mocked_forward_trait_request.delay.call_args_list[0]
+        assert args == ()
+        assert kwargs["args"][0] == "POST"
+        assert kwargs["args"][1].get("X-Environment-Key") == self.environment.api_key
+        assert kwargs["args"][2] == self.environment.project.id
+        assert kwargs["args"][3] == json.loads(data)
 
     @override_settings(EDGE_API_URL="http://localhost")
     @mock.patch("environments.identities.traits.views.forward_trait_request")
@@ -489,15 +489,16 @@ class SDKTraitsTest(APITestCase):
         self.client.post(url, data=data)
 
         # Then
-        args, kwargs = mocked_forward_trait_request.call_args_list[0]
-        assert kwargs == {}
-        assert isinstance(args[0], Request)
-        assert args[1] == self.environment.project.id
+        args, kwargs = mocked_forward_trait_request.delay.call_args_list[0]
+        assert args == ()
+        assert kwargs["args"][0] == "POST"
+        assert kwargs["args"][1].get("X-Environment-Key") == self.environment.api_key
+        assert kwargs["args"][2] == self.environment.project.id
 
         # and the structure of payload was correct
-        assert args[2]["identity"]["identifier"] == data["identifier"]
-        assert args[2]["trait_key"] == data["trait_key"]
-        assert args[2]["trait_value"]
+        assert kwargs["args"][3]["identity"]["identifier"] == data["identifier"]
+        assert kwargs["args"][3]["trait_key"] == data["trait_key"]
+        assert kwargs["args"][3]["trait_value"]
 
     @override_settings(EDGE_API_URL="http://localhost")
     @mock.patch("environments.identities.traits.views.forward_trait_requests")
@@ -525,11 +526,14 @@ class SDKTraitsTest(APITestCase):
         )
 
         # Then
-        args, kwargs = mocked_forward_trait_requests.call_args_list[0]
-        assert kwargs == {}
-        assert isinstance(args[0], Request)
-        assert args[0].data == request_data
-        assert args[1] == self.environment.project.id
+
+        # Then
+        args, kwargs = mocked_forward_trait_requests.delay.call_args_list[0]
+        assert args == ()
+        assert kwargs["args"][0] == "PUT"
+        assert kwargs["args"][1].get("X-Environment-Key") == self.environment.api_key
+        assert kwargs["args"][2] == self.environment.project.id
+        assert kwargs["args"][3] == request_data
 
     def test_create_trait_returns_403_if_client_cannot_set_traits(self):
         # Given
