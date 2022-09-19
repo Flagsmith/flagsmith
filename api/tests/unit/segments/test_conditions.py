@@ -6,6 +6,7 @@ from segments.models import (
     GREATER_THAN,
     GREATER_THAN_INCLUSIVE,
     IS_SET,
+    IS_NOT_SET,
     LESS_THAN,
     LESS_THAN_INCLUSIVE,
     NOT_EQUAL,
@@ -71,3 +72,22 @@ def test_does_identity_match_is_set_false(identity):
 
     # Then
     assert condition.does_identity_match(identity, traits) is False
+
+def test_does_identity_match_is_not_set_true(identity):
+    # Given
+    trait_key = "some_property"
+    condition = Condition(operator=IS_NOT_SET, property=trait_key)
+    traits = [Trait(trait_key=trait_key, identity=identity)]
+
+    # Then
+    assert condition.does_identity_match(identity, traits) is False
+
+
+def test_does_identity_match_is_not_set_false(identity):
+    # Given
+    trait_key = "some_property"
+    condition = Condition(operator=IS_NOT_SET, property=trait_key)
+    traits = []
+
+    # Then
+    assert condition.does_identity_match(identity, traits) is True

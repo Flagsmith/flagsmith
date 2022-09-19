@@ -187,6 +187,8 @@ class Condition(AbstractBaseExportableModel):
             if trait.trait_key == self.property:
                 if self.operator == IS_SET:
                     return True
+                if self.operator == IS_NOT_SET:
+                    return False
                 if trait.value_type == INTEGER:
                     return self.check_integer_value(trait.integer_value)
                 if trait.value_type == FLOAT:
@@ -197,7 +199,10 @@ class Condition(AbstractBaseExportableModel):
                     return self.check_semver_value(trait.string_value)
                 else:
                     return self.check_string_value(trait.string_value)
-        return self.operator != IS_SET
+        if self.operator == IS_SET:
+            return False
+        elif self.operator == IS_NOT_SET:
+            return True
 
     def _check_percentage_split_operator(self, identity):
         try:
