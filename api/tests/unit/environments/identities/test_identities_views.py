@@ -13,8 +13,6 @@ from environments.permissions.permissions import NestedEnvironmentPermissions
 def test_user_with_manage_identities_permission_can_retrieve_identity(
     environment,
     identity,
-    django_user_model,
-    api_client,
     test_user_client,
     view_environment_permission,
     manage_identities_permission,
@@ -23,7 +21,6 @@ def test_user_with_manage_identities_permission_can_retrieve_identity(
     user_project_permission,
 ):
     # Given
-    # api_client.force_authenticate(test_user)
 
     user_environment_permission.permissions.add(
         view_environment_permission, manage_identities_permission
@@ -36,7 +33,7 @@ def test_user_with_manage_identities_permission_can_retrieve_identity(
     )
 
     # When
-    response = api_client.get(url)
+    response = test_user_client.get(url)
 
     # Then
     assert response.status_code == status.HTTP_200_OK
