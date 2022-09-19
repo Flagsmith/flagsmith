@@ -40,6 +40,7 @@ NOT_CONTAINS = "NOT_CONTAINS"
 NOT_EQUAL = "NOT_EQUAL"
 REGEX = "REGEX"
 PERCENTAGE_SPLIT = "PERCENTAGE_SPLIT"
+MODULO = "MODULO"
 
 
 class Segment(AbstractBaseExportableModel):
@@ -151,6 +152,7 @@ class Condition(AbstractBaseExportableModel):
         (NOT_EQUAL, "Does not match"),
         (REGEX, "Matches regex"),
         (PERCENTAGE_SPLIT, "Percentage split"),
+        (MODULO, "Modulo Operation")
     )
 
     operator = models.CharField(choices=CONDITION_TYPES, max_length=500)
@@ -181,9 +183,12 @@ class Condition(AbstractBaseExportableModel):
 
         for trait in traits:
             if trait.trait_key == self.property:
-                if trait.value_type == INTEGER:
+                if trait.value_type in [INTEGER, FLOAT] and self.operator == MODULO:
+                    return self._check_modulo_operator(
+                        trait.integer_value if trait.value_type == INTEGER else trait.float_value)
+                elif trait.value_type == INTEGER:
                     return self.check_integer_value(trait.integer_value)
-                if trait.value_type == FLOAT:
+                elif trait.value_type == FLOAT:
                     return self.check_float_value(trait.float_value)
                 elif trait.value_type == BOOLEAN:
                     return self.check_boolean_value(trait.boolean_value)
@@ -203,6 +208,16 @@ class Condition(AbstractBaseExportableModel):
             get_hashed_percentage_for_object_ids(object_ids=[segment.id, identity.id])
             <= float_value
         )
+
+    def _check_modulo_operator(self, value: typing.Union[int, float]) -> bool:
+        try:
+            divisor, remainder = self.value.split('|')
+            divisor = float(str(divisor))
+            remainder = float(str(remainder))
+        except ValueError:
+            return False
+
+        return value % divisor == remainder
 
     def check_integer_value(self, value: int) -> bool:
         try:
