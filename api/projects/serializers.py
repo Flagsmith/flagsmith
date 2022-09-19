@@ -33,6 +33,7 @@ class ProjectSerializer(serializers.ModelSerializer):
             "enable_dynamo_db",
             "migration_status",
             "use_edge_identities",
+            "prevent_flag_defaults",
         )
 
     def get_migration_status(self, obj: Project) -> str:
