@@ -27,10 +27,21 @@ trait_value = "value1"
 
 
 @pytest.fixture()
+def test_user(django_user_model):
+    return django_user_model.objects.create(email="user@example.com")
+
+
+@pytest.fixture()
 def admin_client(admin_user):
     client = APIClient()
     client.force_authenticate(user=admin_user)
     return client
+
+
+@pytest.fixture()
+def test_user_client(api_client, test_user):
+    api_client.force_authenticate(test_user)
+    return api_client
 
 
 @pytest.fixture()
@@ -175,17 +186,6 @@ def master_api_key_client(master_api_key):
     # https://docs.pytest.org/en/6.2.x/fixture.html#fixtures-can-be-requested-more-than-once-per-test-return-values-are-cached
     api_client = APIClient()
     api_client.credentials(HTTP_AUTHORIZATION="Api-Key " + master_api_key)
-    return api_client
-
-
-@pytest.fixture()
-def test_user(django_user_model):
-    return django_user_model.objects.create(email="user@example.com")
-
-
-@pytest.fixture()
-def test_user_client(api_client, test_user):
-    api_client.force_authenticate(test_user)
     return api_client
 
 
