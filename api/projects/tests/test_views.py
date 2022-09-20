@@ -546,3 +546,18 @@ def test_list_project_with_uuid_filter_returns_correct_project(
     assert response.status_code == status.HTTP_200_OK
     assert len(response.json()) == 1
     assert response.json()[0]["uuid"] == str(project.uuid)
+
+
+@pytest.mark.parametrize(
+    "client", [(lazy_fixture("master_api_key_client")), (lazy_fixture("admin_client"))]
+)
+def test_get_project_by_uuid(client, project, mocker, settings, organisation):
+    # Given
+    url = reverse("api-v1:projects:project-get-by-uuid", args=[str(project.uuid)])
+
+    # When
+    response = client.get(url)
+
+    # Then
+    assert response.status_code == status.HTTP_200_OK
+    assert response.json()["uuid"] == str(project.uuid)
