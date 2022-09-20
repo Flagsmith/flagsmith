@@ -165,6 +165,7 @@ class EnvironmentFeatureStatePermissions(IsAuthenticated):
         action_permission_map = {
             "list": VIEW_ENVIRONMENT,
             "create": UPDATE_FEATURE_STATE,
+            "all": VIEW_ENVIRONMENT,
         }
         if not super().has_permission(request, view):
             return False
