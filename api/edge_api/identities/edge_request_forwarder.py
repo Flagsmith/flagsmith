@@ -22,16 +22,6 @@ def forward_identity_request(
     query_params: dict = None,
     request_data: dict = None,
 ):
-    forward_identity_request_sync(request_method, project_id)
-
-
-def forward_identity_request_sync(
-    request_method: str,
-    headers: dict,
-    project_id: int,
-    query_params: dict = None,
-    request_data: dict = None,
-):
     if not _should_forward(project_id):
         return
 
@@ -97,9 +87,7 @@ def forward_trait_requests(
     payload: dict,
 ):
     for trait_data in payload:
-        forward_trait_request_sync(
-            request_method, headers, project_id, payload=trait_data
-        )
+        forward_trait_request_sync(request_method, headers, project_id, trait_data)
 
 
 def _get_headers(request_method: str, headers: dict, payload: str = "") -> dict:

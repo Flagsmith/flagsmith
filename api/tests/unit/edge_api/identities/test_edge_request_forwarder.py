@@ -4,23 +4,21 @@ import pytest
 from core.constants import FLAGSMITH_SIGNATURE_HEADER
 
 from edge_api.identities.edge_request_forwarder import (
-    forward_identity_request_sync,
+    forward_identity_request,
+    forward_trait_request,
     forward_trait_request_sync,
+    forward_trait_requests,
 )
 
 
 @pytest.mark.parametrize(
-    "forwarder_function", [forward_identity_request_sync, forward_trait_request_sync]
+    "forwarder_function", [forward_identity_request, forward_trait_request_sync]
 )
-def test_forwarder_sync_function_makes_no_request_if_migration_is_not_yet_done(
-    mocker, rf, forwarder_mocked_migrator, forwarder_function
+def test_forwarder_function_makes_no_request_if_migration_is_not_yet_done(
+    mocker, forwarder_mocked_requests, forwarder_mocked_migrator, forwarder_function
 ):
     # Given
     project_id = 1
-
-    mocked_requests = mocker.patch(
-        "edge_api.identities.edge_request_forwarder.requests"
-    )
 
     mocked_migration_done = mocker.PropertyMock(return_value=False)
     type(
@@ -29,17 +27,17 @@ def test_forwarder_sync_function_makes_no_request_if_migration_is_not_yet_done(
 
     # When
     forwarder_function("GET", {}, project_id, None)
-
     # Then
-    assert mocked_requests.mock_calls == []
+    assert forwarder_mocked_requests.mock_calls == []
 
     forwarder_mocked_migrator.assert_called_with(project_id)
 
 
-def test_forward_identity_request_sync_makes_correct_get_request(
+def test_forward_identity_request_makes_correct_get_request(
     mocker,
     forward_enable_settings,
     forwarder_mocked_migrator,
+    forwarder_mocked_requests,
 ):
     # Given
     project_id = 1
@@ -48,20 +46,16 @@ def test_forward_identity_request_sync_makes_correct_get_request(
     api_key = "test_api_key"
     headers = {"X-Environment-Key": api_key}
 
-    mocked_requests = mocker.patch(
-        "edge_api.identities.edge_request_forwarder.requests"
-    )
-
     mocked_migration_done = mocker.PropertyMock(return_value=True)
     type(
         forwarder_mocked_migrator.return_value
     ).is_migration_done = mocked_migration_done
 
     # When
-    forward_identity_request_sync("GET", headers, project_id, query_params)
+    forward_identity_request("GET", headers, project_id, query_params)
 
     # Then
-    args, kwargs = mocked_requests.get.call_args
+    args, kwargs = forwarder_mocked_requests.get.call_args
     assert args[0] == forward_enable_settings.EDGE_API_URL + "identities/"
     assert kwargs["params"] == query_params
     assert kwargs["headers"]["X-Environment-Key"] == api_key
@@ -70,8 +64,11 @@ def test_forward_identity_request_sync_makes_correct_get_request(
     forwarder_mocked_migrator.assert_called_with(project_id)
 
 
-def test_forward_identity_request_sync_makes_correct_post_request(
-    mocker, forward_enable_settings, forwarder_mocked_migrator
+def test_forward_identity_request_makes_correct_post_request(
+    mocker,
+    forward_enable_settings,
+    forwarder_mocked_migrator,
+    forwarder_mocked_requests,
 ):
     # Given
     project_id = 1
@@ -80,22 +77,16 @@ def test_forward_identity_request_sync_makes_correct_post_request(
     api_key = "test_api_key"
     headers = {"X-Environment-Key": api_key}
 
-    mocked_requests = mocker.patch(
-        "edge_api.identities.edge_request_forwarder.requests"
-    )
-
     mocked_migration_done = mocker.MagicMock(return_value=True)
     type(
         forwarder_mocked_migrator.return_value
     ).is_migration_done = mocked_migration_done
 
     # When
-    forward_identity_request_sync(
-        "POST", headers, project_id, request_data=request_data
-    )
+    forward_identity_request("POST", headers, project_id, request_data=request_data)
 
     # Then
-    args, kwargs = mocked_requests.post.call_args
+    args, kwargs = forwarder_mocked_requests.post.call_args
     assert args[0] == forward_enable_settings.EDGE_API_URL + "identities/"
 
     assert kwargs["data"] == json.dumps(request_data)
@@ -106,7 +97,10 @@ def test_forward_identity_request_sync_makes_correct_post_request(
 
 
 def test_forward_trait_request_sync_makes_correct_post_request(
-    mocker, forward_enable_settings, forwarder_mocked_migrator
+    mocker,
+    forward_enable_settings,
+    forwarder_mocked_migrator,
+    forwarder_mocked_requests,
 ):
     # Given
     project_id = 1
@@ -118,10 +112,6 @@ def test_forward_trait_request_sync_makes_correct_post_request(
     api_key = "test_api_key"
     headers = {"X-Environment-Key": api_key}
 
-    mocked_requests = mocker.patch(
-        "edge_api.identities.edge_request_forwarder.requests"
-    )
-
     mocked_migration_done = mocker.MagicMock(return_value=True)
     type(
         forwarder_mocked_migrator.return_value
@@ -131,7 +121,7 @@ def test_forward_trait_request_sync_makes_correct_post_request(
     forward_trait_request_sync("POST", headers, project_id, payload=request_data)
 
     # Then
-    args, kwargs = mocked_requests.post.call_args
+    args, kwargs = forwarder_mocked_requests.post.call_args
     assert args[0] == forward_enable_settings.EDGE_API_URL + "traits/"
 
     assert kwargs["data"] == json.dumps(request_data)
@@ -139,3 +129,49 @@ def test_forward_trait_request_sync_makes_correct_post_request(
     assert kwargs["headers"][FLAGSMITH_SIGNATURE_HEADER]
 
     forwarder_mocked_migrator.assert_called_with(project_id)
+
+
+def test_forward_trait_request_calls_sync_function_correctly(mocker):
+    # Given
+    mocked_forward_trait_request = mocker.patch(
+        "edge_api.identities.edge_request_forwarder.forward_trait_request_sync",
+        autospec=True,
+    )
+    request_method = "POST"
+    headers = {"X-Environment-Key": "test_api_key"}
+    project_id = 1
+    payload = {"identity": {"identifier": "test_user_123"}}
+
+    # When
+    forward_trait_request(request_method, headers, project_id, payload)
+
+    # Then
+    mocked_forward_trait_request.assert_called_with(
+        request_method, headers, project_id, payload
+    )
+
+
+def test_forward_trait_requests_calls_sync_function_correctly(mocker):
+    # Given
+    mocked_forward_trait_request = mocker.patch(
+        "edge_api.identities.edge_request_forwarder.forward_trait_request_sync",
+        autospec=True,
+    )
+    request_method = "POST"
+    headers = {"X-Environment-Key": "test_api_key"}
+    project_id = 1
+    payload = [
+        {"identity": {"identifier": "test_user_123"}},
+        {"identity": {"identifier": "test_user_456"}},
+    ]
+
+    # When
+    forward_trait_requests(request_method, headers, project_id, payload)
+
+    # Then
+    mocked_forward_trait_request.assert_has_calls(
+        [
+            mocker.call(request_method, headers, project_id, payload[0]),
+            mocker.call(request_method, headers, project_id, payload[1]),
+        ]
+    )
