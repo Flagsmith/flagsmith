@@ -152,7 +152,7 @@ class Condition(AbstractBaseExportableModel):
         (NOT_EQUAL, "Does not match"),
         (REGEX, "Matches regex"),
         (PERCENTAGE_SPLIT, "Percentage split"),
-        (MODULO, "Modulo Operation")
+        (MODULO, "Modulo Operation"),
     )
 
     operator = models.CharField(choices=CONDITION_TYPES, max_length=500)
@@ -185,7 +185,10 @@ class Condition(AbstractBaseExportableModel):
             if trait.trait_key == self.property:
                 if trait.value_type in [INTEGER, FLOAT] and self.operator == MODULO:
                     return self._check_modulo_operator(
-                        trait.integer_value if trait.value_type == INTEGER else trait.float_value)
+                        trait.integer_value
+                        if trait.value_type == INTEGER
+                        else trait.float_value
+                    )
                 elif trait.value_type == INTEGER:
                     return self.check_integer_value(trait.integer_value)
                 elif trait.value_type == FLOAT:
@@ -211,7 +214,7 @@ class Condition(AbstractBaseExportableModel):
 
     def _check_modulo_operator(self, value: typing.Union[int, float]) -> bool:
         try:
-            divisor, remainder = self.value.split('|')
+            divisor, remainder = self.value.split("|")
             divisor = float(str(divisor))
             remainder = float(str(remainder))
         except ValueError:
