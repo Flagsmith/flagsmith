@@ -288,7 +288,7 @@ def test_get_trial_subscription_metadata(mocker):
 
     assert subscription_metadata.seats == 0
     assert subscription_metadata.api_calls == 0
-    assert subscription_metadata.projects == 0
+    assert subscription_metadata.projects is None
 
 
 def test_cancel_subscription(mocker):
@@ -315,7 +315,7 @@ def test_cancel_subscription_throws_cannot_cancel_error_if_api_error(mocker, cap
     class MockException(Exception):
         pass
 
-    mocker.patch("organisations.chargebee.chargebee.APIError", MockException)
+    mocker.patch("organisations.chargebee.chargebee.ChargebeeAPIError", MockException)
 
     mocked_chargebee.Subscription.cancel.side_effect = MockException
 

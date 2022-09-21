@@ -156,7 +156,7 @@ class Subscription(LifecycleModelMixin, AbstractBaseExportableModel):
     def cancel(self, cancellation_date=timezone.now(), update_chargebee=True):
         self.cancellation_date = cancellation_date
         self.save()
-        if self.payment_method == self.CHARGEBEE and update_chargebee:
+        if self.payment_method == CHARGEBEE and update_chargebee:
             cancel_chargebee_subscription(self.subscription_id)
 
     def get_portal_url(self, redirect_url):

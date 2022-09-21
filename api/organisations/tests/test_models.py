@@ -60,7 +60,7 @@ class OrganisationTestCase(TestCase):
         organisation = Organisation.objects.create(name="Test org")
         subscription = Subscription.objects.create(
             organisation=organisation,
-            payment_method=Subscription.CHARGEBEE,
+            payment_method=CHARGEBEE,
             subscription_id="subscription-id",
         )
 
