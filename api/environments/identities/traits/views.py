@@ -33,6 +33,7 @@ from environments.sdk.serializers import (
     SDKCreateUpdateTraitSerializer,
 )
 from environments.views import logger
+from realtime import send_identity_update_message
 from util.views import SDKAPIView
 
 
@@ -71,11 +72,17 @@ class TraitViewSet(viewsets.ModelViewSet):
         """
         return Identity.objects.get(pk=self.kwargs["identity_pk"])
 
+    def _send_identity_update_message(self):
+        identity = self.get_identity_from_request()
+        send_identity_update_message(identity.environment.api_key, identity.identifier)
+
     def perform_create(self, serializer):
         serializer.save(identity=self.get_identity_from_request())
+        self._send_identity_update_messages()
 
     def perform_update(self, serializer):
         serializer.save(identity=self.get_identity_from_request())
+        self._send_identity_update_messages()
 
     @swagger_auto_schema(
         manual_parameters=[
@@ -94,9 +101,11 @@ class TraitViewSet(viewsets.ModelViewSet):
                 trait_key=trait.trait_key,
                 identity__environment=trait.identity.environment,
             ).delete()
-            return Response(status=status.HTTP_204_NO_CONTENT)
+            result = Response(status=status.HTTP_204_NO_CONTENT)
         else:
-            return super(TraitViewSet, self).destroy(request, *args, **kwargs)
+            result = super(TraitViewSet, self).destroy(request, *args, **kwargs)
+        self._send_identity_update_messages()
+        return result
 
 
 class SDKTraitsDeprecated(SDKAPIView):
