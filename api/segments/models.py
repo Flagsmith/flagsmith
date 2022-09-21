@@ -182,25 +182,24 @@ class Condition(AbstractBaseExportableModel):
         # we allow passing in traits to handle when they aren't
         # persisted for certain organisations
         traits = identity.identity_traits.all() if traits is None else traits
+        matching_trait = next(
+            filter(lambda t: t.trait_key == self.property, traits), None
+        )
+        if matching_trait is None:
+            return self.operator == IS_NOT_SET
 
-        for trait in traits:
-            if trait.trait_key == self.property:
-                if self.operator == IS_SET:
-                    return True
-                if self.operator == IS_NOT_SET:
-                    return False
-                if trait.value_type == INTEGER:
-                    return self.check_integer_value(trait.integer_value)
-                if trait.value_type == FLOAT:
-                    return self.check_float_value(trait.float_value)
-                elif trait.value_type == BOOLEAN:
-                    return self.check_boolean_value(trait.boolean_value)
-                elif is_semver(self.value):
-                    return self.check_semver_value(trait.string_value)
-                else:
-                    return self.check_string_value(trait.string_value)
+        if self.operator in (IS_SET, IS_NOT_SET):
+            return self.operator == IS_SET
+        elif matching_trait.value_type == INTEGER:
+            return self.check_integer_value(matching_trait.integer_value)
+        elif matching_trait.value_type == FLOAT:
+            return self.check_float_value(matching_trait.float_value)
+        elif matching_trait.value_type == BOOLEAN:
+            return self.check_boolean_value(matching_trait.boolean_value)
+        elif is_semver(self.value):
+            return self.check_semver_value(matching_trait.string_value)
 
-        return self.operator == IS_NOT_SET
+        return self.check_string_value(matching_trait.string_value)
 
     def _check_percentage_split_operator(self, identity):
         try:
