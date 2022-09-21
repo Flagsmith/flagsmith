@@ -5,8 +5,8 @@ from segments.models import (
     EQUAL,
     GREATER_THAN,
     GREATER_THAN_INCLUSIVE,
-    IS_SET,
     IS_NOT_SET,
+    IS_SET,
     LESS_THAN,
     LESS_THAN_INCLUSIVE,
     NOT_EQUAL,
@@ -72,6 +72,7 @@ def test_does_identity_match_is_set_false(identity):
 
     # Then
     assert condition.does_identity_match(identity, traits) is False
+
 
 def test_does_identity_match_is_not_set_true(identity):
     # Given
