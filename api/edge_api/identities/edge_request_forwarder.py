@@ -26,31 +26,13 @@ def forward_identity_request(
         return
 
     url = settings.EDGE_API_URL + "identities/"
+    headers = _get_headers(
+        request_method, headers, json.dumps(request_data) if request_data else ""
+    )
     if request_method == "POST":
-        _forward_identity_post_request(request_method, headers, url, request_data)
+        requests.post(url, data=json.dumps(request_data), headers=headers)
         return
-    _forward_identity_get_request(request_method, headers, url, query_params)
-
-
-def _forward_identity_get_request(
-    request_method: str, headers: dict, url: str, query_params: dict
-):
-    requests.get(
-        url,
-        params=query_params,
-        headers=_get_headers(request_method, headers),
-    )
-
-
-def _forward_identity_post_request(
-    request_method: str, headers: dict, url: str, request_data: dict
-):
-    payload = json.dumps(request_data)
-    requests.post(
-        url,
-        data=payload,
-        headers=_get_headers(request_method, headers, payload),
-    )
+    return requests.get(url, params=query_params, headers=headers)
 
 
 @register_task_handler()
