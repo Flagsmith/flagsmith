@@ -82,7 +82,7 @@ module.exports = Object.assign({}, require('./base/_utils'), {
         switch (rule.operator) {
             case 'PERCENTAGE_SPLIT': {
                 const value = parseFloat(rule.value);
-                return value && value >= 0 && value <= 100;
+                return !isNaN(value) && value >= 0 && value <= 100;
             }
             case 'REGEX': {
                 try {
