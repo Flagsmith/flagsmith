@@ -37,8 +37,7 @@ class ProjectPermissions(IsAuthenticated):
             return request.user.has_organisation_permission(
                 organisation, CREATE_PROJECT
             )
-
-        if view.action in ("list", "permissions"):
+        if view.action in ("list", "permissions", "get_by_uuid"):
             return True
 
         # move on to object specific permissions
@@ -77,7 +76,7 @@ class MasterAPIKeyProjectPermissions(BasePermission):
             organisation_id = int(request.data.get("organisation"))
             return organisation_id == master_api_key.organisation_id
 
-        if view.action in ("list", "permissions"):
+        if view.action in ("list", "permissions", "get_by_uuid"):
             return True
 
         # move on to object specific permissions
