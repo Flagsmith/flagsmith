@@ -104,8 +104,8 @@ class ProjectViewSet(viewsets.ModelViewSet):
         methods=["get"],
     )
     def get_by_uuid(self, request, uuid):
-        query_set = self.get_queryset()
-        project = get_object_or_404(query_set, uuid=uuid)
+        qs = self.get_queryset()
+        project = get_object_or_404(qs, uuid=uuid)
         serializer = self.get_serializer(project)
         return Response(serializer.data)
 
