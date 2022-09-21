@@ -185,13 +185,7 @@ class Condition(AbstractBaseExportableModel):
             if trait.trait_key == self.property:
                 if self.operator == MODULO:
                     if trait.value_type in [INTEGER, FLOAT]:
-                        return self._check_modulo_operator(
-                            trait.integer_value
-                            if trait.value_type == INTEGER
-                            else trait.float_value
-                        )
-                    else:
-                        return False
+                        return self._check_modulo_operator(trait.trait_value)
                 elif trait.value_type == INTEGER:
                     return self.check_integer_value(trait.integer_value)
                 elif trait.value_type == FLOAT:
@@ -202,6 +196,8 @@ class Condition(AbstractBaseExportableModel):
                     return self.check_semver_value(trait.string_value)
                 else:
                     return self.check_string_value(trait.string_value)
+
+        return False
 
     def _check_percentage_split_operator(self, identity):
         try:
