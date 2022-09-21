@@ -199,10 +199,8 @@ class Condition(AbstractBaseExportableModel):
                     return self.check_semver_value(trait.string_value)
                 else:
                     return self.check_string_value(trait.string_value)
-        if self.operator == IS_SET:
-            return False
-        elif self.operator == IS_NOT_SET:
-            return True
+
+        return self.operator == IS_NOT_SET
 
     def _check_percentage_split_operator(self, identity):
         try:
