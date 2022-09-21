@@ -183,12 +183,15 @@ class Condition(AbstractBaseExportableModel):
 
         for trait in traits:
             if trait.trait_key == self.property:
-                if trait.value_type in [INTEGER, FLOAT] and self.operator == MODULO:
-                    return self._check_modulo_operator(
-                        trait.integer_value
-                        if trait.value_type == INTEGER
-                        else trait.float_value
-                    )
+                if self.operator == MODULO:
+                    if trait.value_type in [INTEGER, FLOAT]:
+                        return self._check_modulo_operator(
+                            trait.integer_value
+                            if trait.value_type == INTEGER
+                            else trait.float_value
+                        )
+                    else:
+                        return False
                 elif trait.value_type == INTEGER:
                     return self.check_integer_value(trait.integer_value)
                 elif trait.value_type == FLOAT:
