@@ -215,8 +215,8 @@ class Condition(AbstractBaseExportableModel):
     def _check_modulo_operator(self, value: typing.Union[int, float]) -> bool:
         try:
             divisor, remainder = self.value.split("|")
-            divisor = float(str(divisor))
-            remainder = float(str(remainder))
+            divisor = float(divisor)
+            remainder = float(remainder)
         except ValueError:
             return False
 
