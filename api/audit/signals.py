@@ -12,6 +12,7 @@ from integrations.datadog.datadog import DataDogWrapper
 from integrations.dynatrace.dynatrace import DynatraceWrapper
 from integrations.new_relic.new_relic import NewRelicWrapper
 from integrations.slack.slack import SlackWrapper
+from realtime import send_environment_update_messages
 from webhooks.webhooks import WebhookEventType, call_organisation_webhooks
 
 logger = logging.getLogger(__name__)
@@ -126,6 +127,12 @@ def send_environments_to_dynamodb(sender, instance, **kwargs):
         if instance.environment_id
         else Q(project=instance.project)
     )
+    environment_keys = (
+        [instance.environment.api_key]
+        if instance.environment_id
+        else instance.project.environments.all().values_list("api_key", flat=True)
+    )
+    send_environment_update_messages(environment_keys)
     Environment.write_environments_to_dynamodb(environments_filter)
 
 

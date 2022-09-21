@@ -1,4 +1,4 @@
 from .service import (  # noqa
-    send_environment_update_msg,
-    send_identity_update_msg,
+    send_environment_update_messages,
+    send_identity_update_message,
 )
