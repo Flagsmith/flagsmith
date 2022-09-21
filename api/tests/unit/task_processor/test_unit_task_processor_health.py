@@ -1,5 +1,6 @@
 from task_processor.health import is_processor_healthy
 from task_processor.models import HealthCheckModel
+from task_processor.task_run_method import TaskRunMethod
 
 
 def test_is_processor_healthy_returns_false_if_task_not_processed(mocker):
@@ -21,7 +22,7 @@ def test_is_processor_healthy_returns_false_if_task_not_processed(mocker):
 
 def test_is_processor_healthy_returns_true_if_task_processed(db, settings):
     # Given
-    settings.RUN_TASKS_SYNCHRONOUSLY = True
+    settings.TASK_RUN_METHOD = TaskRunMethod.SYNCHRONOUSLY
 
     # When
     result = is_processor_healthy(max_tries=3)

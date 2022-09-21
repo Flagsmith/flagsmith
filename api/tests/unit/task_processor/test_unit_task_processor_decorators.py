@@ -1,8 +1,18 @@
+import logging
+
 from task_processor.decorators import register_task_handler
 
 
 def test_register_task_handler_run_in_thread(mocker, caplog):
     # Given
+    # caplog doesn't allow you to capture logging outputs from loggers that don't
+    # propagate to root. Quick hack here to get the task_processor logger to
+    # propagate.
+    # TODO: look into using loguru.
+    task_processor_logger = logging.getLogger("task_processor")
+    task_processor_logger.propagate = True
+    caplog.set_level(logging.INFO)
+
     @register_task_handler()
     def my_function(*args, **kwargs):
         pass

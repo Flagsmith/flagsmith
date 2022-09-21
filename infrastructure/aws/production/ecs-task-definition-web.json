@@ -150,6 +150,10 @@
                 {
                     "name": "CACHE_ENVIRONMENT_DOCUMENT_SECONDS",
                     "value": "60"
+                },
+                {
+                    "name": "TASK_RUN_METHOD",
+                    "value": "TASK_PROCESSOR"
                 }
             ],
             "secrets": [

@@ -4,11 +4,17 @@ import pytest
 from django.contrib.sites.models import Site
 from django.utils import timezone
 
+from audit.models import (
+    CHANGE_REQUEST_APPROVED_MESSAGE,
+    CHANGE_REQUEST_COMMITTED_MESSAGE,
+    CHANGE_REQUEST_CREATED_MESSAGE,
+    AuditLog,
+)
 from features.workflows.core.exceptions import (
     CannotApproveOwnChangeRequest,
     ChangeRequestNotApprovedError,
 )
-from features.workflows.core.models import ChangeRequestApproval
+from features.workflows.core.models import ChangeRequest, ChangeRequestApproval
 from users.models import FFAdminUser
 
 
@@ -117,6 +123,69 @@ def test_change_request_commit_not_scheduled(
 
     assert change_request_no_required_approvals.feature_states.first().version == 2
     assert change_request_no_required_approvals.feature_states.first().live_from == now
+
+
+def test_creating_a_change_request_creates_audit_log(environment, admin_user):
+    # When
+    change_request = ChangeRequest.objects.create(
+        environment=environment, title="Change Request", user=admin_user
+    )
+    # Then
+    log = CHANGE_REQUEST_CREATED_MESSAGE % change_request.title
+    assert (
+        AuditLog.objects.filter(
+            related_object_id=change_request.id,
+            author=admin_user,
+            log=log,
+        ).count()
+        == 1
+    )
+
+
+def test_approving_a_change_request_creates_audit_logs(
+    change_request_no_required_approvals, django_user_model, mocker
+):
+    # Given
+    user = django_user_model.objects.create(email="approver@example.com")
+
+    # When
+    approval = ChangeRequestApproval.objects.create(
+        change_request=change_request_no_required_approvals,
+        user=user,
+        approved_at=timezone.now(),
+    )
+
+    # Then
+    log = CHANGE_REQUEST_APPROVED_MESSAGE % change_request_no_required_approvals.title
+    assert (
+        AuditLog.objects.filter(
+            related_object_id=approval.id,
+            author=user,
+            log=log,
+        ).count()
+        == 1
+    )
+
+
+def test_change_request_commit_creates_audit_log(
+    change_request_no_required_approvals, mocker, django_assert_num_queries
+):
+    # Given
+    user = FFAdminUser.objects.create(email="approver@example.com")
+
+    # When
+    change_request_no_required_approvals.commit(committed_by=user)
+
+    # Then
+    log = CHANGE_REQUEST_COMMITTED_MESSAGE % change_request_no_required_approvals.title
+    assert (
+        AuditLog.objects.filter(
+            related_object_id=change_request_no_required_approvals.id,
+            author=user,
+            log=log,
+        ).count()
+        == 1
+    )
 
 
 def test_change_request_commit_scheduled(
@@ -353,4 +422,64 @@ def test_change_request_email_subject(change_request_no_required_approvals):
             change_request_no_required_approvals.title,
             change_request_no_required_approvals.id,
         )
+    )
+
+
+def test_schedule_environment_rebuild_does_nothing_if_edge_not_enabled(
+    settings, change_request_no_required_approvals, mocker
+):
+    # Given
+    settings.EDGE_ENABLED = False
+    mock_rebuild_environment_document = mocker.patch(
+        "features.workflows.core.models.rebuild_environment_document"
+    )
+
+    # When
+    change_request_no_required_approvals.schedule_environment_rebuild()
+
+    # Then
+    mock_rebuild_environment_document.delay.assert_not_called()
+
+
+def test_schedule_environment_rebuild_does_nothing_if_not_scheduled_for_future(
+    settings, change_request_no_required_approvals, mocker
+):
+    # Given
+    settings.EDGE_ENABLED = True
+    mock_rebuild_environment_document = mocker.patch(
+        "features.workflows.core.models.rebuild_environment_document"
+    )
+    now = timezone.now()
+
+    assert change_request_no_required_approvals.feature_states.exists()
+    assert not change_request_no_required_approvals.feature_states.filter(
+        live_from__gt=now
+    ).exists()
+
+    # When
+    change_request_no_required_approvals.schedule_environment_rebuild()
+
+    # Then
+    mock_rebuild_environment_document.delay.assert_not_called()
+
+
+def test_schedule_environment_rebuild_schedules_rebuild_environment_task(
+    settings, change_request_no_required_approvals, mocker
+):
+    # Given
+    settings.EDGE_ENABLED = True
+    mock_rebuild_environment_document = mocker.patch(
+        "features.workflows.core.models.rebuild_environment_document"
+    )
+    now = timezone.now()
+    tomorrow = now + timedelta(days=1)
+    change_request_no_required_approvals.feature_states.all().update(live_from=tomorrow)
+
+    # When
+    change_request_no_required_approvals.schedule_environment_rebuild()
+
+    # Then
+    mock_rebuild_environment_document.delay.assert_called_once_with(
+        delay_until=tomorrow,
+        kwargs={"environment_id": change_request_no_required_approvals.environment_id},
     )

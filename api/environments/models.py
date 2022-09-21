@@ -83,7 +83,9 @@ class Environment(LifecycleModel):
                 feature=feature,
                 environment=self,
                 identity=None,
-                enabled=feature.default_enabled,
+                enabled=False
+                if self.project.prevent_flag_defaults
+                else feature.default_enabled,
             )
 
     def __str__(self):

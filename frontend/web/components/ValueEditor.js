@@ -185,7 +185,7 @@ class ValueEditor extends Component {
                     />
                 ): (
                     <Highlight data-test={rest['data-test']} onChange={rest.onChange} className={this.state.language}>
-                        {`${rest.value}`}
+                        {(typeof rest.value !== 'undefined' && rest.value!=null)?`${rest.value}`:""}
                     </Highlight>
                 )}
 
