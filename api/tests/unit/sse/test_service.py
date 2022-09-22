@@ -1,4 +1,4 @@
-from realtime.service import (
+from sse.service import (
     send_environment_update_messages,
     send_identity_update_message,
 )
@@ -8,7 +8,7 @@ def test_send_environment_update_messages_returns_without_request_if_not_configu
     mocker, settings
 ):
     # Given
-    mocked_requests = mocker.patch("realtime.service.requests")
+    mocked_requests = mocker.patch("sse.service.requests")
 
     # When
     send_environment_update_messages(["environment_key"])
@@ -21,7 +21,7 @@ def test_identity_update_message_returns_without_request_if_not_configured(
     mocker, settings
 ):
     # Given
-    mocked_requests = mocker.patch("realtime.service.requests")
+    mocked_requests = mocker.patch("sse.service.requests")
 
     # When
     send_identity_update_message("environment_key", "identity_key")
@@ -38,7 +38,7 @@ def test_send_environment_update_messages_make_correct_request(mocker, settings)
 
     settings.SSE_SERVER_BASE_URL = base_url
     settings.SSE_AUTHENTICATION_TOKEN = token
-    mocked_requests = mocker.patch("realtime.service.requests")
+    mocked_requests = mocker.patch("sse.service.requests")
 
     # When
     send_environment_update_messages(environment_keys)
@@ -65,7 +65,7 @@ def test_send_identity_update_message_make_correct_request(mocker, settings):
 
     settings.SSE_SERVER_BASE_URL = base_url
     settings.SSE_AUTHENTICATION_TOKEN = token
-    mocked_requests = mocker.patch("realtime.service.requests")
+    mocked_requests = mocker.patch("sse.service.requests")
 
     # When
     send_identity_update_message(environment_key, identifier)
