@@ -13,9 +13,9 @@ export default class Rule extends PureComponent {
         const { props: { operators, rule: { conditions: rules } } } = this;
         const isLastRule = i === (rules.length - 1);
         const hasOr = i > 0;
-        const operatorObj = Utils.findOperator(rule.operator, rule.value, operators)
-        const operator = operatorObj && operatorObj.value
-        const value = typeof rule.value === "string" ? rule.value.replace((operatorObj&&operatorObj.append)||"","") : rule.value
+        const operatorObj = Utils.findOperator(rule.operator, rule.value, operators);
+        const operator = operatorObj && operatorObj.value;
+        const value = typeof rule.value === 'string' ? rule.value.replace((operatorObj && operatorObj.append) || '', '') : rule.value;
         return (
             <div className="rule__row reveal" key={i}>
                 {hasOr && (
@@ -65,7 +65,7 @@ export default class Rule extends PureComponent {
                                   data-test={`${this.props['data-test']}-value-${i}`}
                                   className="input-container--flat full-width"
                                   value={`${value}`}
-                                  placeholder="Value *"
+                                  placeholder={operator && operator === 'MODULO' ? 'Value(<divisor>|<remainder>) *' : 'Value *'}
                                   onChange={e => {
                                       const value = Utils.getTypedValue(Utils.safeParseEventValue(e))
                                       this.setRuleProperty(i, 'value', { value: operatorObj && operatorObj.append? `${value}${operatorObj.append}`:value }, true)
