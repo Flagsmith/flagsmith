@@ -33,7 +33,7 @@ from environments.sdk.serializers import (
     SDKCreateUpdateTraitSerializer,
 )
 from environments.views import logger
-from realtime import send_identity_update_message
+from sse import send_identity_update_message
 from util.views import SDKAPIView
 
 

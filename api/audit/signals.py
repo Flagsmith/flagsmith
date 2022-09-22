@@ -12,7 +12,7 @@ from integrations.datadog.datadog import DataDogWrapper
 from integrations.dynatrace.dynatrace import DynatraceWrapper
 from integrations.new_relic.new_relic import NewRelicWrapper
 from integrations.slack.slack import SlackWrapper
-from realtime import send_environment_update_messages
+from sse import send_environment_update_messages
 from webhooks.webhooks import WebhookEventType, call_organisation_webhooks
 
 logger = logging.getLogger(__name__)

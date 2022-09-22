@@ -48,7 +48,7 @@ from environments.permissions.permissions import NestedEnvironmentPermissions
 from features.models import FeatureState
 from features.permissions import IdentityFeatureStatePermissions
 from projects.exceptions import DynamoNotEnabledError
-from realtime import send_identity_update_message
+from sse import send_identity_update_message
 
 from .edge_identity_service import get_all_feature_states_for_edge_identity
 from .exceptions import TraitPersistenceError
