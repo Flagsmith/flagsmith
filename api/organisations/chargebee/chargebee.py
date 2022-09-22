@@ -1,8 +1,10 @@
 import logging
+import typing
+from contextlib import suppress
 from datetime import datetime
 
 import chargebee
-from chargebee import APIError
+from chargebee import APIError as ChargebeeAPIError
 from django.conf import settings
 from pytz import UTC
 
@@ -97,29 +99,32 @@ def get_hosted_page_url_for_subscription_upgrade(
     return checkout_existing_response.hosted_page.url
 
 
-def get_subscription_metadata(subscription_id: str) -> ChargebeeObjMetadata:
-    if subscription_id == TRIAL_SUBSCRIPTION_ID:
-        return ChargebeeObjMetadata()
+def get_subscription_metadata(
+    subscription_id: str,
+) -> typing.Optional[ChargebeeObjMetadata]:
+    with suppress(ChargebeeAPIError):
+        if subscription_id == TRIAL_SUBSCRIPTION_ID:
+            return ChargebeeObjMetadata()
 
-    subscription = chargebee.Subscription.retrieve(subscription_id).subscription
-    addons = subscription.addons or []
+        subscription = chargebee.Subscription.retrieve(subscription_id).subscription
+        addons = subscription.addons or []
 
-    chargebee_cache = ChargebeeCache()
-    plan_metadata = chargebee_cache.plans[subscription.plan_id]
-    subscription_metadata = plan_metadata
+        chargebee_cache = ChargebeeCache()
+        plan_metadata = chargebee_cache.plans[subscription.plan_id]
+        subscription_metadata = plan_metadata
 
-    for addon in addons:
-        quantity = getattr(addon, "quantity", None) or 1
-        addon_metadata = chargebee_cache.addons[addon.id] * quantity
-        subscription_metadata = subscription_metadata + addon_metadata
+        for addon in addons:
+            quantity = getattr(addon, "quantity", None) or 1
+            addon_metadata = chargebee_cache.addons[addon.id] * quantity
+            subscription_metadata = subscription_metadata + addon_metadata
 
-    return subscription_metadata
+        return subscription_metadata
 
 
 def cancel_subscription(subscription_id: str):
     try:
         chargebee.Subscription.cancel(subscription_id, {"end_of_term": True})
-    except APIError as e:
+    except ChargebeeAPIError as e:
         msg = "Cannot cancel CB subscription for subscription id: %s" % subscription_id
         logger.error(msg)
         raise CannotCancelChargebeeSubscription(msg) from e

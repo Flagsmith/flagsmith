@@ -3,6 +3,7 @@ from unittest import TestCase, mock
 
 import pytest
 from _pytest.monkeypatch import MonkeyPatch
+from chargebee import APIError
 from pytz import UTC
 
 from organisations.chargebee import (
@@ -287,7 +288,7 @@ def test_get_trial_subscription_metadata(mocker):
 
     assert subscription_metadata.seats == 0
     assert subscription_metadata.api_calls == 0
-    assert subscription_metadata.projects == 0
+    assert subscription_metadata.projects is None
 
 
 def test_cancel_subscription(mocker):
@@ -314,7 +315,7 @@ def test_cancel_subscription_throws_cannot_cancel_error_if_api_error(mocker, cap
     class MockException(Exception):
         pass
 
-    mocker.patch("organisations.chargebee.chargebee.APIError", MockException)
+    mocker.patch("organisations.chargebee.chargebee.ChargebeeAPIError", MockException)
 
     mocked_chargebee.Subscription.cancel.side_effect = MockException
 
@@ -332,3 +333,21 @@ def test_cancel_subscription_throws_cannot_cancel_error_if_api_error(mocker, cap
         caplog.records[0].message
         == "Cannot cancel CB subscription for subscription id: %s" % subscription_id
     )
+
+
+def test_get_subscription_metadata_returns_null_if_chargebee_error(
+    mocker, chargebee_object_metadata
+):
+    # Given
+    mocked_chargebee = mocker.patch("organisations.chargebee.chargebee.chargebee")
+    mocked_chargebee.Subscription.retrieve.side_effect = APIError(
+        http_code=200, json_obj=mocker.MagicMock()
+    )
+
+    subscription_id = "foo"  # arbitrary subscription id
+
+    # When
+    subscription_metadata = get_subscription_metadata(subscription_id)
+
+    # Then
+    assert subscription_metadata is None

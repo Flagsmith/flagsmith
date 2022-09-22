@@ -19,10 +19,19 @@ from organisations.chargebee import (
     get_max_seats_for_plan,
     get_plan_meta_data,
     get_portal_url,
+    get_subscription_metadata,
 )
 from organisations.chargebee.chargebee import (
     cancel_subscription as cancel_chargebee_subscription,
 )
+from organisations.subscriptions.constants import (
+    CHARGEBEE,
+    FREE_PLAN_SUBSCRIPTION_METADATA,
+    MAX_SEATS_IN_FREE_PLAN,
+    SUBSCRIPTION_PAYMENT_METHODS,
+    XERO,
+)
+from organisations.subscriptions.dataclasses import BaseSubscriptionMetadata
 from users.utils.mailer_lite import MailerLite
 from webhooks.models import AbstractBaseWebhookModel
 
@@ -85,7 +94,7 @@ class Organisation(LifecycleModelMixin, AbstractBaseExportableModel):
         if self.has_subscription():
             return self.num_seats > self.subscription.max_seats
 
-        return self.num_seats > Subscription.MAX_SEATS_IN_FREE_PLAN
+        return self.num_seats > MAX_SEATS_IN_FREE_PLAN
 
     def reset_alert_status(self):
         self.alerted_over_plan_limit = False
@@ -111,15 +120,6 @@ class UserOrganisation(models.Model):
 
 
 class Subscription(LifecycleModelMixin, AbstractBaseExportableModel):
-    MAX_SEATS_IN_FREE_PLAN = 1
-    MAX_API_CALLS_IN_FREE_PLAN = 50000
-    MAX_PROJECTS_IN_FREE_PLAN = 1
-    SUBSCRIPTION_DEFAULT_LIMITS = (
-        MAX_API_CALLS_IN_FREE_PLAN,
-        MAX_SEATS_IN_FREE_PLAN,
-        MAX_PROJECTS_IN_FREE_PLAN,
-    )
-
     organisation = models.OneToOneField(
         Organisation, on_delete=models.CASCADE, related_name="subscription"
     )
@@ -131,15 +131,9 @@ class Subscription(LifecycleModelMixin, AbstractBaseExportableModel):
     cancellation_date = models.DateTimeField(blank=True, null=True)
     customer_id = models.CharField(max_length=100, blank=True, null=True)
 
-    CHARGEBEE = "CHARGEBEE"
-    XERO = "XERO"
-    PAYMENT_METHODS = [
-        (CHARGEBEE, "Chargebee"),
-        (XERO, "Xero"),
-    ]
     payment_method = models.CharField(
         max_length=20,
-        choices=PAYMENT_METHODS,
+        choices=SUBSCRIPTION_PAYMENT_METHODS,
         default=CHARGEBEE,
     )
     notes = models.CharField(max_length=500, blank=True, null=True)
@@ -162,7 +156,7 @@ class Subscription(LifecycleModelMixin, AbstractBaseExportableModel):
     def cancel(self, cancellation_date=timezone.now(), update_chargebee=True):
         self.cancellation_date = cancellation_date
         self.save()
-        if self.payment_method == self.CHARGEBEE and update_chargebee:
+        if self.payment_method == CHARGEBEE and update_chargebee:
             cancel_chargebee_subscription(self.subscription_id)
 
     def get_portal_url(self, redirect_url):
@@ -175,6 +169,24 @@ class Subscription(LifecycleModelMixin, AbstractBaseExportableModel):
             )
             self.save()
         return get_portal_url(self.customer_id, redirect_url)
+
+    def get_subscription_metadata(self) -> BaseSubscriptionMetadata:
+        metadata = None
+
+        if self.payment_method == CHARGEBEE and self.subscription_id:
+            metadata = get_subscription_metadata(self.subscription_id)
+        elif self.payment_method == XERO and self.subscription_id:
+            metadata = BaseSubscriptionMetadata(
+                seats=self.max_seats,
+                api_calls=self.max_api_calls,
+                projects=None,
+                payment_source=XERO,
+            )
+
+        if not metadata:
+            metadata = FREE_PLAN_SUBSCRIPTION_METADATA
+
+        return metadata
 
 
 class OrganisationWebhook(AbstractBaseWebhookModel):

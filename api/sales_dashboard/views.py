@@ -25,7 +25,11 @@ from environments.dynamodb.migrator import IdentityMigrator
 from environments.identities.models import Identity
 from import_export.export import full_export
 from organisations.chargebee import get_subscription_metadata
-from organisations.models import Organisation, Subscription
+from organisations.models import Organisation
+from organisations.subscriptions.constants import (
+    CHARGEBEE,
+    SUBSCRIPTION_DEFAULT_LIMITS,
+)
 from projects.models import Project
 from users.models import FFAdminUser
 
@@ -112,9 +116,9 @@ def organisation_info(request, organisation_id):
     )
     template = loader.get_template("sales_dashboard/organisation.html")
 
-    max_api_calls, max_seats, max_projects = Subscription.SUBSCRIPTION_DEFAULT_LIMITS
+    max_api_calls, max_seats, max_projects = SUBSCRIPTION_DEFAULT_LIMITS
     if getattr(organisation, "subscription", None) is not None:
-        if organisation.subscription.payment_method == Subscription.CHARGEBEE:
+        if organisation.subscription.payment_method == CHARGEBEE:
             subscription_metadata = get_subscription_metadata(
                 organisation.subscription.subscription_id
             )

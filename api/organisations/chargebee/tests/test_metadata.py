@@ -25,7 +25,7 @@ def test_multiply_chargebee_object_metadata():
     # Then
     assert new_metadata.seats == 30
     assert new_metadata.api_calls == 300
-    assert new_metadata.projects == 0
+    assert new_metadata.projects is None
 
 
 def test_multiply_chargebee_object_metadata_works_for_null_values():

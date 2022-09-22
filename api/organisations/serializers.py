@@ -17,6 +17,7 @@ from .models import (
     Subscription,
     UserOrganisation,
 )
+from .subscriptions.constants import CHARGEBEE
 
 logger = logging.getLogger(__name__)
 
@@ -222,5 +223,7 @@ class GetHostedPageForSubscriptionUpgradeSerializer(serializers.Serializer):
 
 class SubscriptionDetailsSerializer(serializers.Serializer):
     max_seats = serializers.IntegerField(source="seats")
-    max_projects = serializers.IntegerField(source="projects")
     max_api_calls = serializers.IntegerField(source="api_calls")
+    max_projects = serializers.IntegerField(source="projects", allow_null=True)
+
+    payment_source = serializers.ChoiceField(choices=[None, CHARGEBEE], allow_null=True)

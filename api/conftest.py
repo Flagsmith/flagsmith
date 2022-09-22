@@ -16,6 +16,7 @@ from features.models import Feature, FeatureSegment, FeatureState
 from features.multivariate.models import MultivariateFeatureOption
 from features.value_types import STRING
 from organisations.models import Organisation, OrganisationRole, Subscription
+from organisations.subscriptions.constants import CHARGEBEE
 from permissions.models import PermissionModel
 from projects.models import Project, UserProjectPermission
 from projects.tags.models import Tag
@@ -55,6 +56,15 @@ def organisation(db, admin_user):
 def subscription(organisation):
     return Subscription.objects.create(
         organisation=organisation, subscription_id="subscription_id"
+    )
+
+
+@pytest.fixture()
+def chargebee_subscription(organisation):
+    return Subscription.objects.create(
+        organisation=organisation,
+        subscription_id="cb-subscription",
+        payment_method=CHARGEBEE,
     )
 
 
