@@ -144,7 +144,7 @@ def trigger_environment_update_messages(sender, instance, **kwargs):
         if instance.environment_id
         else instance.project.environments.all().values_list("api_key", flat=True)
     )
-    send_environment_update_messages.delay(args=(environment_keys,))
+    send_environment_update_messages.delay(args=(list(environment_keys),))
 
 
 @receiver(post_save, sender=AuditLog)

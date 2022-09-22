@@ -37,7 +37,7 @@ def test_trigger_environment_update_messages_from_audit_log_with_environment(
 
     # Then
     send_environment_update_messages.delay.assert_called_once_with(
-        args=([dynamo_enabled_project_environment_one.api_key])
+        args=([dynamo_enabled_project_environment_one.api_key],)
     )
 
 
@@ -58,7 +58,10 @@ def test_send_env_to_dynamodb_from_audit_log_with_project(
 
 
 def test_trigger_environment_update_messages_from_audit_log_with_project(
-    dynamo_enabled_project, mocker
+    dynamo_enabled_project,
+    dynamo_enabled_project_environment_one,
+    dynamo_enabled_project_environment_two,
+    mocker,
 ):
     # Given
     send_environment_update_messages = mocker.patch(
@@ -70,11 +73,12 @@ def test_trigger_environment_update_messages_from_audit_log_with_project(
     trigger_environment_update_messages(sender=AuditLog, instance=audit_log)
 
     # Then
-    environment_api_keys = dynamo_enabled_project.environments.all().values_list(
-        "api_key", flat=True
-    )
+    environment_api_keys = [
+        dynamo_enabled_project_environment_one.api_key,
+        dynamo_enabled_project_environment_two.api_key,
+    ]
     send_environment_update_messages.delay.assert_called_once_with(
-        args=([environment_api_keys])
+        args=(environment_api_keys,)
     )
 
 
@@ -114,5 +118,5 @@ def test_trigger_environment_update_messages_from_audit_log_with_environment_and
 
     # Then
     send_environment_update_messages.delay.assert_called_once_with(
-        args=([dynamo_enabled_project_environment_one.api_key])
+        args=([dynamo_enabled_project_environment_one.api_key],)
     )
