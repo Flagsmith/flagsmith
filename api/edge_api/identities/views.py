@@ -168,7 +168,9 @@ class EdgeIdentityViewSet(viewsets.ModelViewSet):
         identity.update_traits([trait])
         Identity.dynamo_wrapper.put_item(build_identity_dict(identity))
         data = trait_schema.dump(trait)
-        send_identity_update_message(environment.api_key, identity.identifier)
+        send_identity_update_message.delay(
+            args=(environment.api_key, identity.identifier)
+        )
         return Response(data, status=status.HTTP_200_OK)
 
 

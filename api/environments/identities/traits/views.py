@@ -74,15 +74,20 @@ class TraitViewSet(viewsets.ModelViewSet):
 
     def _send_identity_update_message(self):
         identity = self.get_identity_from_request()
-        send_identity_update_message(identity.environment.api_key, identity.identifier)
+        send_identity_update_message.delay(
+            args=(
+                identity.environment.api_key,
+                identity.identifier,
+            )
+        )
 
     def perform_create(self, serializer):
         serializer.save(identity=self.get_identity_from_request())
-        self._send_identity_update_messages()
+        self._send_identity_update_message()
 
     def perform_update(self, serializer):
         serializer.save(identity=self.get_identity_from_request())
-        self._send_identity_update_messages()
+        self._send_identity_update_message()
 
     @swagger_auto_schema(
         manual_parameters=[
@@ -104,7 +109,7 @@ class TraitViewSet(viewsets.ModelViewSet):
             result = Response(status=status.HTTP_204_NO_CONTENT)
         else:
             result = super(TraitViewSet, self).destroy(request, *args, **kwargs)
-        self._send_identity_update_messages()
+        self._send_identity_update_message()
         return result
 
 

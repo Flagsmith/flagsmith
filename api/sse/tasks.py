@@ -3,7 +3,10 @@ from typing import List
 import requests
 from django.conf import settings
 
+from task_processor.decorators import register_task_handler
 
+
+@register_task_handler()
 def send_environment_update_messages(environment_keys: List[str]):
     if not settings.SSE_SERVER_BASE_URL:
         return
@@ -14,6 +17,7 @@ def send_environment_update_messages(environment_keys: List[str]):
         response.raise_for_status()
 
 
+@register_task_handler()
 def send_identity_update_message(environment_key: str, identifier: str):
     if not settings.SSE_SERVER_BASE_URL:
         return
