@@ -60,12 +60,16 @@ def _add_new_permissions(
                 user_environment_permission_through_model_class(
                     **{
                         f"{reverse_attribute_name}_id": user_environment_permission.id,
-                        "permissionmodel_id": permission_model.id,
+                        "permissionmodel_id": permission_model.key,
                     }
                 )
                 for permission_model in permission_models
             ]
         )
+
+    user_environment_permission_through_model_class.objects.bulk_create(
+        new_user_environment_permission_through_models
+    )
 
 
 def remove_change_request_permissions(apps, schema_editor):
