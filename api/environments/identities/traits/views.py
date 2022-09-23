@@ -34,6 +34,7 @@ from environments.sdk.serializers import (
 )
 from environments.views import logger
 from sse import send_identity_update_message
+from sse.decorators import generate_identity_update_message
 from util.views import SDKAPIView
 
 
@@ -81,8 +82,8 @@ class TraitViewSet(viewsets.ModelViewSet):
             )
         )
 
+    @generate_identity_update_message()
     def perform_create(self, serializer):
-        serializer.save(identity=self.get_identity_from_request())
         self._send_identity_update_message()
 
     def perform_update(self, serializer):
@@ -199,6 +200,7 @@ class SDKTraits(mixins.CreateModelMixin, viewsets.GenericViewSet):
         context["environment"] = self.request.environment
         return context
 
+    @generate_identity_update_message()
     @swagger_auto_schema(request_body=SDKCreateUpdateTraitSerializer)
     def create(self, request, *args, **kwargs):
         response = super(SDKTraits, self).create(request, *args, **kwargs)
@@ -207,6 +209,9 @@ class SDKTraits(mixins.CreateModelMixin, viewsets.GenericViewSet):
             forward_trait_request(request, request.environment.project.id)
         return response
 
+    @generate_identity_update_message(
+        lambda req: (req.environment.api_key, req.data["identifier"])
+    )
     @swagger_auto_schema(
         responses={200: IncrementTraitValueSerializer},
         request_body=IncrementTraitValueSerializer,
@@ -225,6 +230,12 @@ class SDKTraits(mixins.CreateModelMixin, viewsets.GenericViewSet):
 
         return Response(serializer.data, status=200)
 
+    @generate_identity_update_message(
+        lambda req: (
+            req.environment.api_key,
+            {row["identity"]["identifier"] for row in req.data},
+        )
+    )
     @swagger_auto_schema(request_body=SDKCreateUpdateTraitSerializer(many=True))
     @action(detail=False, methods=["PUT"], url_path="bulk")
     def bulk_create(self, request):

@@ -27,6 +27,7 @@ from integrations.integration import (
     IDENTITY_INTEGRATIONS,
     identify_integrations,
 )
+from sse.decorators import generate_identity_update_message
 from util.views import SDKAPIView
 
 
@@ -176,6 +177,9 @@ class SDKIdentities(SDKAPIView):
             context["environment"] = self.request.environment
         return context
 
+    @generate_identity_update_message(
+        lambda req: (req.environment.api_key, req.data["identifier"])
+    )
     @swagger_auto_schema(
         request_body=IdentifyWithTraitsSerializer(),
         responses={200: SDKIdentitiesResponseSerializer()},
