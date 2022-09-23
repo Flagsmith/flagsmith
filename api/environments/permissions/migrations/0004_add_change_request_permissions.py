@@ -49,17 +49,17 @@ def add_change_request_permissions(apps, schema_editor):
 def _add_new_permissions(
     model_class: type, reverse_attribute_name: str, permission_models: typing.List
 ):
-    new_user_environment_permission_through_models = []
-    user_environment_permission_through_model_class = model_class.permissions.through
+    new_environment_permission_through_models = []
+    environment_permission_through_model_class = model_class.permissions.through
 
-    for user_environment_permission in model_class.objects.filter(
+    for environment_permission in model_class.objects.filter(
         permissions__key=UPDATE_FEATURE_STATE
     ):
-        new_user_environment_permission_through_models.extend(
+        new_environment_permission_through_models.extend(
             [
-                user_environment_permission_through_model_class(
+                environment_permission_through_model_class(
                     **{
-                        f"{reverse_attribute_name}_id": user_environment_permission.id,
+                        f"{reverse_attribute_name}_id": environment_permission.id,
                         "permissionmodel_id": permission_model.key,
                     }
                 )
@@ -67,8 +67,8 @@ def _add_new_permissions(
             ]
         )
 
-    user_environment_permission_through_model_class.objects.bulk_create(
-        new_user_environment_permission_through_models
+    environment_permission_through_model_class.objects.bulk_create(
+        new_environment_permission_through_models
     )
 
 
