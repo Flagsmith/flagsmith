@@ -1,6 +1,7 @@
 from django.conf import settings
 from django.core.exceptions import BadRequest
 from django.db.models import Q
+from django.utils.decorators import method_decorator
 from drf_yasg2 import openapi
 from drf_yasg2.utils import swagger_auto_schema
 from rest_framework import mixins, status, viewsets
@@ -33,23 +34,49 @@ from environments.sdk.serializers import (
     SDKCreateUpdateTraitSerializer,
 )
 from environments.views import logger
-from sse import send_identity_update_message
 from sse.decorators import generate_identity_update_message
+from sse.tasks import send_identity_update_messages
 from util.views import SDKAPIView
 
+generate_identity_message_decorator = generate_identity_update_message(
+    lambda req: (req.environment, req.identity.identifier)
+)
 
+
+@method_decorator(
+    generate_identity_message_decorator,
+    name="create",
+)
+@method_decorator(
+    generate_identity_message_decorator,
+    name="destroy",
+)
+@method_decorator(
+    generate_identity_message_decorator,
+    name="update",
+)
 class TraitViewSet(viewsets.ModelViewSet):
     serializer_class = TraitSerializer
 
+    def initial(self, request, *args, **kwargs):
+        # Add environment and identity to request(to be used by generate_identity_update_message decorator)
+        environment_api_key = self.kwargs["environment_api_key"]
+        environment = Environment.objects.get(api_key=environment_api_key)
+        request.environment = environment
+
+        identity_pk = self.kwargs["identity_pk"]
+        identity = Identity.objects.get(pk=identity_pk, environment=environment)
+
+        self.identity = identity
+        request.identity = self.identity
+
+        super().initial(request, *args, **kwargs)
+
     def get_queryset(self):
         """
-        Override queryset to filter based on provided URL parameters.
+        Override queryset to filter based on the parent identity.
         """
-        environment_api_key = self.kwargs["environment_api_key"]
-        identity_pk = self.kwargs["identity_pk"]
-        environment = Environment.objects.get(api_key=environment_api_key)
-        identity = Identity.objects.get(pk=identity_pk, environment=environment)
-        return Trait.objects.filter(identity=identity)
+        return Trait.objects.filter(identity=self.identity)
 
     def get_permissions(self):
         return [
@@ -67,28 +94,11 @@ class TraitViewSet(viewsets.ModelViewSet):
             ),
         ]
 
-    def get_identity_from_request(self):
-        """
-        Get identity object from URL parameters in request.
-        """
-        return Identity.objects.get(pk=self.kwargs["identity_pk"])
-
-    def _send_identity_update_message(self):
-        identity = self.get_identity_from_request()
-        send_identity_update_message.delay(
-            args=(
-                identity.environment.api_key,
-                identity.identifier,
-            )
-        )
-
-    @generate_identity_update_message()
     def perform_create(self, serializer):
-        self._send_identity_update_message()
+        serializer.save(identity=self.identity)
 
     def perform_update(self, serializer):
-        serializer.save(identity=self.get_identity_from_request())
-        self._send_identity_update_message()
+        serializer.save(identity=self.identity)
 
     @swagger_auto_schema(
         manual_parameters=[
@@ -110,7 +120,6 @@ class TraitViewSet(viewsets.ModelViewSet):
             result = Response(status=status.HTTP_204_NO_CONTENT)
         else:
             result = super(TraitViewSet, self).destroy(request, *args, **kwargs)
-        self._send_identity_update_message()
         return result
 
 
@@ -183,6 +192,13 @@ class SDKTraitsDeprecated(SDKAPIView):
             )
 
 
+@method_decorator(generate_identity_update_message(), name="create")
+@method_decorator(
+    generate_identity_update_message(
+        lambda req: (req.environment, req.data["identifier"])
+    ),
+    name="increment_value",
+)
 class SDKTraits(mixins.CreateModelMixin, viewsets.GenericViewSet):
     permission_classes = (EnvironmentKeyPermissions, TraitPersistencePermissions)
     authentication_classes = (EnvironmentKeyAuthentication,)
@@ -200,7 +216,6 @@ class SDKTraits(mixins.CreateModelMixin, viewsets.GenericViewSet):
         context["environment"] = self.request.environment
         return context
 
-    @generate_identity_update_message()
     @swagger_auto_schema(request_body=SDKCreateUpdateTraitSerializer)
     def create(self, request, *args, **kwargs):
         response = super(SDKTraits, self).create(request, *args, **kwargs)
@@ -209,9 +224,6 @@ class SDKTraits(mixins.CreateModelMixin, viewsets.GenericViewSet):
             forward_trait_request(request, request.environment.project.id)
         return response
 
-    @generate_identity_update_message(
-        lambda req: (req.environment.api_key, req.data["identifier"])
-    )
     @swagger_auto_schema(
         responses={200: IncrementTraitValueSerializer},
         request_body=IncrementTraitValueSerializer,
@@ -230,12 +242,6 @@ class SDKTraits(mixins.CreateModelMixin, viewsets.GenericViewSet):
 
         return Response(serializer.data, status=200)
 
-    @generate_identity_update_message(
-        lambda req: (
-            req.environment.api_key,
-            {row["identity"]["identifier"] for row in req.data},
-        )
-    )
     @swagger_auto_schema(request_body=SDKCreateUpdateTraitSerializer(many=True))
     @action(detail=False, methods=["PUT"], url_path="bulk")
     def bulk_create(self, request):
@@ -260,7 +266,6 @@ class SDKTraits(mixins.CreateModelMixin, viewsets.GenericViewSet):
 
             if delete_filter_query:
                 Trait.objects.filter(delete_filter_query).delete()
-
             serializer = self.get_serializer(data=traits, many=True)
             serializer.is_valid(raise_exception=True)
             serializer.save()
@@ -268,6 +273,12 @@ class SDKTraits(mixins.CreateModelMixin, viewsets.GenericViewSet):
             if settings.EDGE_API_URL:
                 forward_trait_requests(request, request.environment.project.id)
 
+            send_identity_update_messages.delay(
+                args=(
+                    request.environment.api_key,
+                    [trait["identity"]["identifier"] for trait in traits],
+                )
+            )
             return Response(serializer.data, status=200)
 
         except (TypeError, AttributeError) as excinfo:

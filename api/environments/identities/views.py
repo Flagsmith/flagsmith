@@ -1,6 +1,7 @@
 from collections import namedtuple
 
 from django.conf import settings
+from django.utils.decorators import method_decorator
 from drf_yasg2.utils import swagger_auto_schema
 from rest_framework import status, viewsets
 from rest_framework.permissions import IsAuthenticated
@@ -177,8 +178,10 @@ class SDKIdentities(SDKAPIView):
             context["environment"] = self.request.environment
         return context
 
-    @generate_identity_update_message(
-        lambda req: (req.environment.api_key, req.data["identifier"])
+    @method_decorator(
+        generate_identity_update_message(
+            lambda req: (req.environment, req.data["identifier"])
+        )
     )
     @swagger_auto_schema(
         request_body=IdentifyWithTraitsSerializer(),

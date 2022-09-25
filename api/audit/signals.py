@@ -127,12 +127,6 @@ def send_environments_to_dynamodb(sender, instance, **kwargs):
         if instance.environment_id
         else Q(project=instance.project)
     )
-    environment_keys = (
-        [instance.environment.api_key]
-        if instance.environment_id
-        else instance.project.environments.all().values_list("api_key", flat=True)
-    )
-    send_environment_update_messages.delay(args=(environment_keys,))
     Environment.write_environments_to_dynamodb(environments_filter)
 
 
@@ -142,9 +136,9 @@ def trigger_environment_update_messages(sender, instance, **kwargs):
     environment_keys = (
         [instance.environment.api_key]
         if instance.environment_id
-        else instance.project.environments.all().values_list("api_key", flat=True)
+        else list(instance.project.environments.all().values_list("api_key", flat=True))
     )
-    send_environment_update_messages.delay(args=(list(environment_keys),))
+    send_environment_update_messages.delay(args=(environment_keys,))
 
 
 @receiver(post_save, sender=AuditLog)
