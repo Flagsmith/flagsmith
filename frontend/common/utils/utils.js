@@ -19,14 +19,30 @@ module.exports = Object.assign({}, require('./base/_utils'), {
         p.appendChild(text);
         return p.innerHTML;
     },
-
-    getManageFeaturePermission() {
+    getApproveChangeRequestPermission() {
+        if (Utils.getFlagsmithHasFeature('update_feature_state_permission')) {
+            return "APPROVE_CHANGE_REQUEST"
+        }
+        return 'VIEW_ENVIRONMENT';
+    },
+    getManageFeaturePermission(isChangeRequest) {
+        if (isChangeRequest && Utils.getFlagsmithHasFeature('update_feature_state_permission')) {
+            return "CREATE_CHANGE_REQUEST"
+        }
         if (Utils.getFlagsmithHasFeature('update_feature_state_permission')) {
             return 'UPDATE_FEATURE_STATE';
         }
         return 'ADMIN';
     },
-
+    getManageFeaturePermissionDescription(isChangeRequest) {
+        if (isChangeRequest && Utils.getFlagsmithHasFeature('update_feature_state_permission')) {
+            return "Create Change Request"
+        }
+        if (Utils.getFlagsmithHasFeature('update_feature_state_permission')) {
+            return 'Update Feature State';
+        }
+        return 'Admin';
+    },
     getTraitEndpointMethod(_project) {
         const project = _project || ProjectStore.model;
         if (Utils.getFlagsmithHasFeature('edge_identities') && ProjectStore.model && ProjectStore.model.use_edge_identities) {
@@ -162,13 +178,6 @@ module.exports = Object.assign({}, require('./base/_utils'), {
             return 'edge-featurestates';
         }
         return 'featurestates';
-    },
-
-    getManageFeaturePermissionDescription() {
-        if (Utils.getFlagsmithHasFeature('update_feature_state_permission')) {
-            return 'Update Feature State';
-        }
-        return 'Admin';
     },
 
     parseBetaFeatures() {

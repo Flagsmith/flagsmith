@@ -6,6 +6,7 @@ import TagStore from '../../../common/stores/tags-store';
 import { Tag } from '../AddEditTags';
 import FeatureRow from '../FeatureRow';
 import FeatureListStore from '../../../common/stores/feature-list-store';
+import ProjectStore from "../../../common/stores/project-store";
 
 const FeaturesPage = class extends Component {
     static displayName = 'FeaturesPage';
@@ -103,6 +104,8 @@ const FeaturesPage = class extends Component {
     render() {
         const { projectId, environmentId } = this.props.match.params;
         const readOnly = Utils.getFlagsmithHasFeature('read_only_mode');
+        const environment = ProjectStore.getEnvironment(environmentId)
+
         return (
             <div data-test="features-page" id="features-page" className="app-container container">
                 <FeatureListProvider onSave={this.onSave} onError={this.onError}>
@@ -156,7 +159,7 @@ const FeaturesPage = class extends Component {
                                                             : null}
                                                     </FormGroup>
                                                 </Row>
-                                                <Permission level="environment" permission={Utils.getManageFeaturePermission()} id={this.props.match.params.environmentId}>
+                                                <Permission level="environment" permission={Utils.getManageFeaturePermission(Utils.changeRequestsEnabled(environment && environment.minimum_change_request_approvals))} id={this.props.match.params.environmentId}>
                                                     {({ permission, isLoading }) => (
                                                         <FormGroup className="mb-4">
                                                             <PanelSearch

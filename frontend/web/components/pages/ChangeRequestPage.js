@@ -198,43 +198,44 @@ const ChangeRequestsPage = class extends Component {
             })
         }
         const isYourChangeRequest = changeRequest.user === AccountStore.getUser().id
-
         return (
-                        <div
-                            style={{ opacity: ChangeRequestStore.isLoading ? 0.25 : 1 }} data-test="change-requests-page"
-                            id="change-requests-page"
-                            className="app-container container-fluid"
-                        >
-                            <div className="row">
-                                <Flex className="mb-2 ml-3">
-                                    <Row>
-                                        <Flex>
-                                            <h3 className="ml-0">
-                                                {changeRequest.title}
-                                            </h3>
-                                        </Flex>
-
-                                    </Row>
-                                    <div className="list-item-footer faint">
-                                        Created
-                                        at {moment(changeRequest.created_at).format('Do MMM YYYY HH:mma')} by {changeRequest.user && user.first_name} {user && user.last_name}
-                                    </div>
-                                    <p className="mt-2">
-                                        {changeRequest.description}
-                                    </p>
-                                </Flex>
-                                <div className="mr-4">
-
-                                    {((!committedBy || !committedBy.id) || isScheduled) && (
+            <Permission level="environment" permission={Utils.getApproveChangeRequestPermission(true)} id={this.props.match.params.environmentId}>
+                {({ permission:approvePermission, isLoading }) => (
+                    <Permission level="environment" permission={"UPDATE_FEATURE_STATE"} id={this.props.match.params.environmentId}>
+                        {({ permission:publishPermission, isLoading }) => (
+                            <div
+                                style={{ opacity: ChangeRequestStore.isLoading ? 0.25 : 1 }} data-test="change-requests-page"
+                                id="change-requests-page"
+                                className="app-container container-fluid"
+                            >
+                                <div className="row">
+                                    <Flex className="mb-2 ml-3">
                                         <Row>
-                                            <Button onClick={this.deleteChangeRequest} className="btn btn--small btn-danger">Delete</Button>
-                                            <Button onClick={()=>this.editChangeRequest(projectFlag, environmentFlag)} className="btn btn--small ml-2">Edit</Button>
+                                            <Flex>
+                                                <h3 className="ml-0">
+                                                    {changeRequest.title}
+                                                </h3>
+                                            </Flex>
+
                                         </Row>
-                                    )}
+                                        <div className="list-item-footer faint">
+                                            Created
+                                            at {moment(changeRequest.created_at).format('Do MMM YYYY HH:mma')} by {changeRequest.user && user.first_name} {user && user.last_name}
+                                        </div>
+                                        <p className="mt-2">
+                                            {changeRequest.description}
+                                        </p>
+                                    </Flex>
+                                    <div className="mr-4">
+
+                                        {((!committedBy || !committedBy.id) || isScheduled) && (
+                                            <Row>
+                                                <Button onClick={this.deleteChangeRequest} className="btn btn--small btn-danger">Delete</Button>
+                                                <Button onClick={()=>this.editChangeRequest(projectFlag, environmentFlag)} className="btn btn--small ml-2">Edit</Button>
+                                            </Row>
+                                        )}
+                                    </div>
                                 </div>
-                            </div>
-
-
                                 <div className="row">
 
                                     <div className="col-md-12">
@@ -388,9 +389,9 @@ const ChangeRequestsPage = class extends Component {
                                                                             </span>
                                                                         </Flex>
                                                                         <Flex className="mr-4">
-                                                                                <span>
-                                                                                    Environment weight: <strong>{v.newValue}%</strong>
-                                                                                </span>
+                                                                            <span>
+                                                                                Environment weight: <strong>{v.newValue}%</strong>
+                                                                            </span>
                                                                         </Flex>
                                                                     </Row>
                                                                 </div>
@@ -430,17 +431,20 @@ const ChangeRequestsPage = class extends Component {
                                                         <Row className="text-right mr-2">
                                                             <Flex/>
                                                             {!isYourChangeRequest && (
-                                                                <Button disabled={approved} onClick={this.approveChangeRequest} className="btn">
+                                                                Utils.renderWithPermission(approvePermission,Constants.environmentPermissions('Approve Change Requests'), (
+                                                                        <Button disabled={approved||!approvePermission} onClick={this.approveChangeRequest} className="btn">
                                                                     <span className="ion icon ion-md-checkbox text-light mr-2"/>
                                                                     {approved? "Approved" :"Approve"}
                                                                 </Button>
+                                                                    ))
                                                             )}
+                                                            {Utils.renderWithPermission(publishPermission,Constants.environmentPermissions('Update Feature States'), (
+                                                                    <Button disabled={(approvedBy.length<minApprovals)|| !publishPermission} onClick={this.publishChangeRequest} className="btn ml-2">
+                                                                        <span className="ion icon ion-ios-git-merge text-light mr-2"/>
+                                                                        {isScheduled?"Schedule":"Publish"} Change
+                                                                    </Button>
+                                                            ))}
 
-                                                            <Button disabled={(approvedBy.length<minApprovals)} onClick={this.publishChangeRequest} className="btn ml-2">
-                                                                <span className="ion icon ion-ios-git-merge text-light mr-2"/>
-
-                                                                {isScheduled?"Schedule":"Publish"} Change
-                                                            </Button>
                                                         </Row>
                                                     )}
 
@@ -450,10 +454,14 @@ const ChangeRequestsPage = class extends Component {
                                         </Panel>
                                     </div>
                                 </div>
-                                    <Row>
-                                        <div style={{ minHeight: 300 }}/>
-                                    </Row>
-                        </div>
+                                <Row>
+                                    <div style={{ minHeight: 300 }}/>
+                                </Row>
+                            </div>
+                        )}
+                    </Permission>
+                )}
+            </Permission>
         );
     }
 };

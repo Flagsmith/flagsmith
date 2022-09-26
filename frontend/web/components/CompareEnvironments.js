@@ -112,73 +112,77 @@ class CompareEnvironments extends Component {
                                 editFlag,
                                 removeFlag,
                             }) => {
-                                const renderRow = (p, i, fadeEnabled, fadeValue) => (
-                                    <div className="list-item">
-                                        <Row>
-                                            <div style={{ width: featureNameWidth }}>
-                                                <Tooltip title={(
-                                                    <strong>
-                                                        {p.projectFlag.name}
-                                                    </strong>
-                                                )}
-                                                >
-                                                    {p.projectFlag.description}
-                                                </Tooltip>
-                                            </div>
-                                            <Flex className="mr-2">
-                                                <Permission
-                                                  level="environment" permission={Utils.getManageFeaturePermission()}
-                                                  id={this.props.environmentId}
-                                                >
-                                                    {({ permission, isLoading }) => (
-                                                        <FeatureRow
-                                                          condensed
-                                                          fadeEnabled={fadeEnabled}
-                                                          fadeValue={fadeValue}
-                                                          environmentFlags={this.state.environmentLeftFlags}
-                                                          projectFlags={this.state.projectFlags}
-                                                          permission={permission}
-                                                          environmentId={this.state.environmentLeft}
-                                                          projectId={this.props.projectId}
-                                                          index={i}
-                                                          canDelete={permission}
-                                                          toggleFlag={toggleFlag}
-                                                          editFlag={editFlag}
-                                                          removeFlag={removeFlag}
-                                                          projectFlag={p.projectFlag}
-                                                        />
+                                const renderRow = (p, i, fadeEnabled, fadeValue) => {
+                                    const environmentLeft = ProjectStore.getEnvironment(this.state.environmentLeft)
+                                    const environmentRight = ProjectStore.getEnvironment(this.state.environmentRight)
+                                    return (
+                                        <div className="list-item">
+                                            <Row>
+                                                <div style={{ width: featureNameWidth }}>
+                                                    <Tooltip title={(
+                                                        <strong>
+                                                            {p.projectFlag.name}
+                                                        </strong>
                                                     )}
-                                                </Permission>
-                                            </Flex>
-                                            <Flex className="ml-2">
-                                                <Permission
-                                                  level="environment" permission={Utils.getManageFeaturePermission()}
-                                                  id={this.props.environmentId}
-                                                >
-                                                    {({ permission, isLoading }) => (
-                                                        <FeatureRow
-                                                          condensed
-                                                          fadeEnabled={fadeEnabled}
-                                                          fadeValue={fadeValue}
-                                                          environmentFlags={this.state.environmentRightFlags}
-                                                          projectFlags={this.state.projectFlags}
-                                                          permission={permission}
-                                                          environmentId={this.state.environmentRight}
-                                                          projectId={this.props.projectId}
-                                                          index={i}
-                                                          canDelete={permission}
-                                                          toggleFlag={toggleFlag}
-                                                          editFlag={editFlag}
-                                                          removeFlag={removeFlag}
-                                                          projectFlag={p.projectFlag}
-                                                        />
-                                                    )}
-                                                </Permission>
-                                            </Flex>
-                                        </Row>
-                                    </div>
+                                                    >
+                                                        {p.projectFlag.description}
+                                                    </Tooltip>
+                                                </div>
+                                                <Flex className="mr-2">
+                                                    <Permission
+                                                        level="environment" permission={Utils.getManageFeaturePermission(Utils.changeRequestsEnabled(environmentLeft.minimum_change_request_approvals))}
+                                                        id={this.props.environmentId}
+                                                    >
+                                                        {({ permission, isLoading }) => (
+                                                            <FeatureRow
+                                                                condensed
+                                                                fadeEnabled={fadeEnabled}
+                                                                fadeValue={fadeValue}
+                                                                environmentFlags={this.state.environmentLeftFlags}
+                                                                projectFlags={this.state.projectFlags}
+                                                                permission={permission}
+                                                                environmentId={this.state.environmentLeft}
+                                                                projectId={this.props.projectId}
+                                                                index={i}
+                                                                canDelete={permission}
+                                                                toggleFlag={toggleFlag}
+                                                                editFlag={editFlag}
+                                                                removeFlag={removeFlag}
+                                                                projectFlag={p.projectFlag}
+                                                            />
+                                                        )}
+                                                    </Permission>
+                                                </Flex>
+                                                <Flex className="ml-2">
+                                                    <Permission
+                                                        level="environment" permission={Utils.getManageFeaturePermission(Utils.changeRequestsEnabled(environmentRight.minimum_change_request_approvals))}
+                                                        id={this.props.environmentId}
+                                                    >
+                                                        {({ permission, isLoading }) => (
+                                                            <FeatureRow
+                                                                condensed
+                                                                fadeEnabled={fadeEnabled}
+                                                                fadeValue={fadeValue}
+                                                                environmentFlags={this.state.environmentRightFlags}
+                                                                projectFlags={this.state.projectFlags}
+                                                                permission={permission}
+                                                                environmentId={this.state.environmentRight}
+                                                                projectId={this.props.projectId}
+                                                                index={i}
+                                                                canDelete={permission}
+                                                                toggleFlag={toggleFlag}
+                                                                editFlag={editFlag}
+                                                                removeFlag={removeFlag}
+                                                                projectFlag={p.projectFlag}
+                                                            />
+                                                        )}
+                                                    </Permission>
+                                                </Flex>
+                                            </Row>
+                                        </div>
 
-                                );
+                                    );
+                                }
                                 return (
                                     <div>
                                         {this.state.isLoading && (
