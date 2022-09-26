@@ -1,0 +1,2 @@
+class SSEAuthTokenNotSet(Exception):
+    pass
