@@ -535,7 +535,7 @@ class SDKTraitsTest(APITestCase):
                 "trait_value": "value",
             },
             {
-                "identity": {"identifier": "test_user_1235"},
+                "identity": {"identifier": "test_user_123"},
                 "trait_key": "key1",
                 "trait_value": "value1",
             },
