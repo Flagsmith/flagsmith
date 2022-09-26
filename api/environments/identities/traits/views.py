@@ -38,21 +38,21 @@ from sse.decorators import generate_identity_update_message
 from sse.tasks import send_identity_update_messages
 from util.views import SDKAPIView
 
-generate_identity_message_decorator = generate_identity_update_message(
+generate_identity_message_decorator_trait_view = generate_identity_update_message(
     lambda req: (req.environment, req.identity.identifier)
 )
 
 
 @method_decorator(
-    generate_identity_message_decorator,
+    generate_identity_message_decorator_trait_view,
     name="create",
 )
 @method_decorator(
-    generate_identity_message_decorator,
+    generate_identity_message_decorator_trait_view,
     name="destroy",
 )
 @method_decorator(
-    generate_identity_message_decorator,
+    generate_identity_message_decorator_trait_view,
     name="update",
 )
 class TraitViewSet(viewsets.ModelViewSet):
