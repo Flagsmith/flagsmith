@@ -86,7 +86,7 @@ class TheComponent extends Component {
                         <Tooltip
                           title={res}
                         >
-                            The add flag assignees feature is available with our startup plan
+                            The add flag assignees feature is available with our scale-up plan
                         </Tooltip>
                     );
                 }}
