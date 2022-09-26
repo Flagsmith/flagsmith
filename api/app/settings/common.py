@@ -41,6 +41,9 @@ if ENV not in ("local", "dev", "staging", "production"):
 
 DEBUG = env.bool("DEBUG", default=False)
 
+ADMINS = []
+MANAGERS = []
+
 # Enables the sending of telemetry data to the central Flagsmith API for usage tracking
 ENABLE_TELEMETRY = env.bool("ENABLE_TELEMETRY", default=True)
 
