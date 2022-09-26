@@ -432,7 +432,7 @@ const ChangeRequestsPage = class extends Component {
                                                             <Flex/>
                                                             {!isYourChangeRequest && (
                                                                 Utils.renderWithPermission(approvePermission,Constants.environmentPermissions('Approve Change Requests'), (
-                                                                        <Button disabled={approved} onClick={this.approveChangeRequest} className="btn">
+                                                                        <Button disabled={approved||!approvePermission} onClick={this.approveChangeRequest} className="btn">
                                                                     <span className="ion icon ion-md-checkbox text-light mr-2"/>
                                                                     {approved? "Approved" :"Approve"}
                                                                 </Button>
