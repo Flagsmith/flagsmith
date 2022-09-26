@@ -1,6 +1,11 @@
+import pytest
+
+from sse.exceptions import SSEAuthTokenNotSet
 from sse.tasks import (
+    get_auth_header,
     send_environment_update_messages,
     send_identity_update_message,
+    send_identity_update_messages,
 )
 
 
@@ -76,3 +81,33 @@ def test_send_identity_update_message_make_correct_request(mocker, settings):
         headers={"Authorization": f"Token {token}"},
         json={"identifier": identifier},
     )
+
+
+def test_send_identity_update_messages_calls_singular_function_correctly(
+    settings, mocker
+):
+    # Given
+    environment_key = "test_environment"
+    identifiers = ["test_identity_1", "test_identity_2"]
+
+    mocked_send_identity_update_message = mocker.patch(
+        "sse.tasks.send_identity_update_message"
+    )
+
+    # When
+    send_identity_update_messages(environment_key, identifiers)
+
+    # Then
+    mocked_send_identity_update_message.has_calls(
+        mocker.call(environment_key, identifiers[0]),
+        mocker.call(environment_key, identifiers[1]),
+    )
+
+
+def test_auth_header_raises_exception_if_token_not_set(settings):
+    # Given
+    settings.SSE_AUTHENTICATION_TOKEN = None
+
+    # When
+    with pytest.raises(SSEAuthTokenNotSet):
+        get_auth_header()

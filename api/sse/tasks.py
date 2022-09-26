@@ -5,6 +5,8 @@ from django.conf import settings
 
 from task_processor.decorators import register_task_handler
 
+from .exceptions import SSEAuthTokenNotSet
+
 
 @register_task_handler()
 def send_environment_update_messages(environment_keys: List[str]):
@@ -13,6 +15,7 @@ def send_environment_update_messages(environment_keys: List[str]):
 
     for environment_key in environment_keys:
         url = f"{settings.SSE_SERVER_BASE_URL}/sse/environments/{environment_key}/queue-change"
+
         response = requests.post(url, headers=get_auth_header())
         response.raise_for_status()
 
@@ -36,4 +39,7 @@ def send_identity_update_messages(environment_key: str, identifiers: List[str]):
 
 
 def get_auth_header():
+    if not settings.SSE_AUTHENTICATION_TOKEN:
+        raise SSEAuthTokenNotSet()
+
     return {"Authorization": f"Token {settings.SSE_AUTHENTICATION_TOKEN}"}
