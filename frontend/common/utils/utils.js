@@ -409,7 +409,7 @@ module.exports = Object.assign({}, require('./base/_utils'), {
         const isScaleupOrGreater = !plan.includes('side-project') && !plan.includes('startup');
         switch (permission) {
             case 'FLAG_OWNERS': {
-                valid = true;
+                valid = isScaleupOrGreater;
                 break;
             }
             case 'CREATE_ADDITIONAL_PROJECT': {
@@ -430,6 +430,10 @@ module.exports = Object.assign({}, require('./base/_utils'), {
             }
             case 'FORCE_2FA': {
                 valid = isScaleupOrGreater;
+                break;
+            }
+            case 'SCHEDULE_FLAGS': {
+                valid = isSideProjectOrGreater;
                 break;
             }
             case '4_EYES': {

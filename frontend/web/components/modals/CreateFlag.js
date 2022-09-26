@@ -349,7 +349,7 @@ const CreateFlag = class extends Component {
         const environmentVariations = this.props.environmentVariations;
         const environment = ProjectStore.getEnvironment(this.props.environmentId);
         const is4Eyes = !!environment && Utils.changeRequestsEnabled(environment.minimum_change_request_approvals) && Utils.getFlagsmithHasFeature('4eyes');
-        const canSchedule = Utils.getPlansPermission('4_EYES');
+        const canSchedule = Utils.getPlansPermission('SCHEDULE_FLAGS');
         const is4EyesSegmentOverrides = is4Eyes && Utils.getFlagsmithHasFeature('4eyes_segment_overrides'); //
         const controlValue = Utils.calculateControl(multivariate_options);
         const invalid = !!multivariate_options && multivariate_options.length && controlValue < 0;
@@ -624,7 +624,7 @@ const CreateFlag = class extends Component {
                                                                               data-test="create-change-request"
                                                                               id="create-change-request-btn" disabled={isSaving || !name || invalid}
                                                                             >
-                                                                                {isSaving ? existingChangeRequest ? 'Scheduling Update' : 'Schedule Update' : existingChangeRequest ? 'Update Change Request' : 'Schedule Update'}
+                                                                                {isSaving ? existingChangeRequest ? 'Updating Change Request' : 'Scheduling Update' : existingChangeRequest ? 'Update Change Request' : 'Schedule Update'}
                                                                             </ButtonOutline>
                                                                         ) : (
                                                                             <Tooltip title={(
@@ -634,11 +634,11 @@ const CreateFlag = class extends Component {
                                                                                   data-test="create-change-request"
                                                                                   id="create-change-request-btn"
                                                                                 >
-                                                                                    {isSaving ? existingChangeRequest ? 'Scheduling Update' : 'Schedule Update' : existingChangeRequest ? 'Update Change Request' : 'Schedule Update'}
+                                                                                    {isSaving ? existingChangeRequest ? 'Updating Change Request' : 'Scheduling Update' : existingChangeRequest ? 'Update Change Request' : 'Schedule Update'}
                                                                                 </ButtonOutline>
                                                                             )}
                                                                             >
-                                                                                {'This feature is available on our scale-up plan'}
+                                                                                {'This feature is available on our start-up plan'}
                                                                             </Tooltip>
                                                                         )}
                                                                     </>

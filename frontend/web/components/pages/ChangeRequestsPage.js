@@ -48,26 +48,12 @@ const ChangeRequestsPage = class extends Component {
         const dataScheduled = ChangeRequestStore.scheduled && ChangeRequestStore.scheduled[environmentId] && ChangeRequestStore.scheduled[environmentId].results;
         const dataScheduledPaging = ChangeRequestStore.scheduled && ChangeRequestStore.scheduled[environmentId] && ChangeRequestStore.scheduled[environmentId];
 
-        const hasPermission = Utils.getPlansPermission('4_EYES');
         const environment = ProjectStore.getEnvironment(environmentId);
         return (
             <div data-test="change-requests-page" id="change-requests-page" className="app-container container">
                 <Flex>
                     <h3>Change Requests</h3>
-                    {!hasPermission && (
-                        <p>
-                            View and manage your feature changes with a Change Request flow with our <a
-                              href="#" onClick={() => {
-                                  openModal('Payment plans', <PaymentModal
-                                    viewOnly={false}
-                                  />, null, { large: true });
-                              }}
-                            >Scaleup plan
-                            </a>. Find out more <a href="https://docs.flagsmith.com/advanced-use/change-requests" target="_blank">here</a>.
-                        </p>
-                    )}
-                    {hasPermission && (
-                        <p>
+                    <p>
                             {environment && !Utils.changeRequestsEnabled(environment.minimum_change_request_approvals) ? (
                                 <span>
                                     To enable this feature set a minimum number of approvals in <Link to={`/project/${projectId}/environment/${environmentId}/settings`}>Environment Settings</Link>
@@ -84,7 +70,6 @@ const ChangeRequestsPage = class extends Component {
                                 </div>
                             )}
                         </p>
-                    )}
                     <Tabs
                       value={this.state.tab}
                       onChange={(tab) => {
