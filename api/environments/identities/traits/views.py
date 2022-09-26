@@ -59,7 +59,7 @@ class TraitViewSet(viewsets.ModelViewSet):
     serializer_class = TraitSerializer
 
     def initial(self, request, *args, **kwargs):
-        # Add environment and identity to request(to be used by generate_identity_update_message decorator)
+        # Add environment and identity to request(used by generate_identity_update_message decorator)
         environment_api_key = self.kwargs["environment_api_key"]
         environment = Environment.objects.get(api_key=environment_api_key)
         request.environment = environment
@@ -117,10 +117,9 @@ class TraitViewSet(viewsets.ModelViewSet):
                 trait_key=trait.trait_key,
                 identity__environment=trait.identity.environment,
             ).delete()
-            result = Response(status=status.HTTP_204_NO_CONTENT)
+            return Response(status=status.HTTP_204_NO_CONTENT)
         else:
-            result = super(TraitViewSet, self).destroy(request, *args, **kwargs)
-        return result
+            return super(TraitViewSet, self).destroy(request, *args, **kwargs)
 
 
 class SDKTraitsDeprecated(SDKAPIView):
@@ -266,6 +265,7 @@ class SDKTraits(mixins.CreateModelMixin, viewsets.GenericViewSet):
 
             if delete_filter_query:
                 Trait.objects.filter(delete_filter_query).delete()
+
             serializer = self.get_serializer(data=traits, many=True)
             serializer.is_valid(raise_exception=True)
             serializer.save()
