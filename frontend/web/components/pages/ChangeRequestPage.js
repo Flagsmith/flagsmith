@@ -201,7 +201,7 @@ const ChangeRequestsPage = class extends Component {
         return (
             <Permission level="environment" permission={Utils.getApproveChangeRequestPermission(true)} id={this.props.match.params.environmentId}>
                 {({ permission:approvePermission, isLoading }) => (
-                    <Permission level="environment" permission={Utils.getManageFeaturePermission(true)} id={this.props.match.params.environmentId}>
+                    <Permission level="environment" permission={"UPDATE_FEATURE_STATE"} id={this.props.match.params.environmentId}>
                         {({ permission:publishPermission, isLoading }) => (
                             <div
                                 style={{ opacity: ChangeRequestStore.isLoading ? 0.25 : 1 }} data-test="change-requests-page"
@@ -438,7 +438,7 @@ const ChangeRequestsPage = class extends Component {
                                                                 </Button>
                                                                     ))
                                                             )}
-                                                            {Utils.renderWithPermission(publishPermission,Constants.environmentPermissions('Publish Change Requests'), (
+                                                            {Utils.renderWithPermission(publishPermission,Constants.environmentPermissions('Update Feature States'), (
                                                                     <Button disabled={(approvedBy.length<minApprovals)|| !publishPermission} onClick={this.publishChangeRequest} className="btn ml-2">
                                                                         <span className="ion icon ion-ios-git-merge text-light mr-2"/>
                                                                         {isScheduled?"Schedule":"Publish"} Change
