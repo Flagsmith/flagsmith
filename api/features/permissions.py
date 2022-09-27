@@ -166,6 +166,7 @@ class EnvironmentFeatureStatePermissions(IsAuthenticated):
             "list": VIEW_ENVIRONMENT,
             "create": UPDATE_FEATURE_STATE,
             "all": VIEW_ENVIRONMENT,
+            "retrieve": VIEW_ENVIRONMENT,
         }
         if not super().has_permission(request, view):
             return False
