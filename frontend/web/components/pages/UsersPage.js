@@ -15,7 +15,11 @@ const UsersPage = class extends Component {
     }
 
     componentDidMount() {
-        AppActions.getIdentities(this.props.match.params.environmentId);
+        if(this.state.search) {
+          AppActions.searchIdentities(this.props.match.params.environmentId, this.state.search);
+        } else {
+          AppActions.getIdentities(this.props.match.params.environmentId);
+        }
         API.trackPage(Constants.pages.USERS);
     }
 
