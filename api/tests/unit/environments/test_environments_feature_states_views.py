@@ -83,3 +83,33 @@ def test_permitted_user_can_update_feature_state(
 
     # Then
     assert response.status_code == status.HTTP_200_OK
+
+
+def test_user_with_view_environment_can_retrieve_feature_state(
+    organisation_one_project_one_environment_one,
+    organisation_one_project_one_feature_one,
+    organisation_one_user,
+):
+    # Given
+    environment = organisation_one_project_one_environment_one
+    feature = organisation_one_project_one_feature_one
+
+    feature_state = environment.get_feature_state(feature_id=feature.id)
+    client = get_environment_user_client(
+        user=organisation_one_user,
+        environment=environment,
+        permission_keys=[VIEW_ENVIRONMENT],
+        admin=False,
+    )
+
+    url = reverse(
+        "api-v1:environments:environment-featurestates-detail",
+        args=[environment.api_key, feature_state.id],
+    )
+
+    # When
+    response = client.get(url)
+
+    # Then
+    assert response.status_code == status.HTTP_200_OK
+    assert response.json()["id"] == feature_state.id
