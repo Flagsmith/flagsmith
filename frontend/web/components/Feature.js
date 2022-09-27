@@ -109,9 +109,10 @@ export default class Feature extends PureComponent {
                                 />
                             )}
                         </FormGroup>
-                        {!this.props.hideAddVariation && (
-                            <AddVariationButton onClick={this.props.addVariation}/>
-                        )}
+                        {!this.props.hideAddVariation && Utils.renderWithPermission(this.props.canCreateFeature, Constants.projectPermissions('Create Feature'), (
+                            <AddVariationButton disabled={!this.props.canCreateFeature} onClick={this.props.addVariation}/>
+
+                        ))}
                     </div>
 
                 )}

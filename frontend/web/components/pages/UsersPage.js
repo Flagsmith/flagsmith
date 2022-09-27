@@ -63,7 +63,7 @@ const UsersPage = class extends Component {
 
         return (
             <div className="app-container container">
-                <Permission level="environment" permission={Utils.getManageFeaturePermission()} id={environmentId}>
+                <Permission level="environment" permission={Utils.getManageFeaturePermission(false)} id={environmentId}>
                     {({ permission }) => (
                         <div>
                             <div>

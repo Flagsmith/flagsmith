@@ -5,23 +5,22 @@ const data = require('../data/base/_data');
 let createdFirstFeature = false;
 const PAGE_SIZE = 200;
 const recursivePageGet = function (url, parentRes) {
-    return data.get(url).then((res)=>{
+    return data.get(url).then((res) => {
         let response;
         if (parentRes) {
             response = {
                 ...parentRes,
-                results: parentRes.results.concat(res.results)
-            }
+                results: parentRes.results.concat(res.results),
+            };
         } else {
             response = res;
         }
         if (res.next) {
-            return recursivePageGet(res.next, response)
-        } else {
-            return Promise.resolve(response)
+            return recursivePageGet(res.next, response);
         }
-    })
-}
+        return Promise.resolve(response);
+    });
+};
 const controller = {
 
     getFeatures: (projectId, environmentId, force, page, filter) => {
@@ -48,7 +47,7 @@ const controller = {
             return Promise.all([
                 data.get(featuresEndpoint),
                 recursivePageGet(
-                    `${Project.api}environments/${environmentId}/featurestates/?page_size=${PAGE_SIZE}`
+                    `${Project.api}environments/${environmentId}/featurestates/?page_size=${PAGE_SIZE}`,
                 ),
                 feature ? data.get(`${Project.api}projects/${projectId}/features/${feature}/`) : Promise.resolve(),
             ]).then(([features, environmentFeatures, feature]) => {
@@ -92,7 +91,7 @@ const controller = {
         data.post(`${Project.api}projects/${projectId}/features/`, Object.assign({}, flag, {
             multivariate_options: undefined,
             project: projectId,
-            initial_value: typeof flag.initial_value !== 'undefined' && flag.initial_value !== null ? `${flag.initial_value}`: flag.initial_value,
+            initial_value: typeof flag.initial_value !== 'undefined' && flag.initial_value !== null ? `${flag.initial_value}` : flag.initial_value,
             type: flag.multivariate_options && flag.multivariate_options.length ? 'MULTIVARIATE' : 'STANDARD',
         }))
             .then(res => Promise.all((flag.multivariate_options || []).map(v => data.post(`${Project.api}projects/${projectId}/features/${flag.id}/mv-options/`, {
@@ -122,7 +121,14 @@ const controller = {
         };
     },
     editFlag(projectId, flag, onComplete) {
-        const originalFlag = store.model && store.model.features? store.model.features.find(v => v.id === flag.id): flag;
+        if (flag.skipSaveProjectFeature) { // users without CREATE_FEATURE permissions automatically hit this action, if that's the case we skip the following API calls
+            onComplete({
+                ...flag,
+                skipSaveProjectFeature: undefined,
+            });
+            return;
+        }
+        const originalFlag = store.model && store.model.features ? store.model.features.find(v => v.id === flag.id) : flag;
 
         Promise.all((flag.multivariate_options || []).map((v, i) => {
             const originalMV = v.id ? originalFlag.multivariate_options.find(m => m.id === v.id) : null;
@@ -155,13 +161,12 @@ const controller = {
                     if (onComplete) {
                         onComplete(res);
                     }
-                    if(store.model) {
+                    if (store.model) {
                         const index = _.findIndex(store.model.features, { id: flag.id });
                         store.model.features[index] = controller.parseFlag(flag);
                         store.model.lastSaved = new Date().valueOf();
                         store.changed();
                     }
-
                 })
                 .catch((e) => {
                     if (onComplete) {
@@ -273,7 +278,7 @@ const controller = {
                 prom = data.get(`${Project.api}environments/${environmentId}/featurestates/${environmentFlag.id}/`)
                     .then((environmentFeatureStates) => {
                         const multivariate_feature_state_values = environmentFeatureStates.multivariate_feature_state_values && environmentFeatureStates.multivariate_feature_state_values.map((v, i) => {
-                            const matching = environmentFlag.multivariate_feature_state_values.find((m)=>m.id === v.multivariate_feature_option) || {};
+                            const matching = environmentFlag.multivariate_feature_state_values.find(m => m.id === v.multivariate_feature_option) || {};
                             return {
                                 ...v,
                                 percentage_allocation: matching.default_percentage_allocation,
@@ -313,7 +318,7 @@ const controller = {
 
 
             Promise.all([prom, segmentOverridesRequest]).then(([res, segmentRes]) => {
-                if(store.model) {
+                if (store.model) {
                     store.model.keyedEnvironmentFeatures[projectFlag.id] = res;
                     if (segmentRes) {
                         const feature = _.find(store.model.features, f => f.id === projectFlag.id);
@@ -326,10 +331,10 @@ const controller = {
                     }
                 }
 
-                if(store.model) {
+                if (store.model) {
                     store.model.lastSaved = new Date().valueOf();
                 }
-                onComplete && onComplete()
+                onComplete && onComplete();
                 store.saved();
             });
         });
