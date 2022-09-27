@@ -166,7 +166,6 @@ class EnvironmentFeatureStatePermissions(IsAuthenticated):
             "list": VIEW_ENVIRONMENT,
             "create": UPDATE_FEATURE_STATE,
             "all": VIEW_ENVIRONMENT,
-            "retrieve": VIEW_ENVIRONMENT,
         }
         if not super().has_permission(request, view):
             return False
@@ -186,8 +185,12 @@ class EnvironmentFeatureStatePermissions(IsAuthenticated):
     def has_object_permission(self, request, view, obj):
         if request.user.is_anonymous:
             return False
+
+        action_permission_map = {"retrieve": VIEW_ENVIRONMENT}
+
         return request.user.has_environment_permission(
-            permission=UPDATE_FEATURE_STATE, environment=obj.environment
+            permission=action_permission_map.get(view.action, UPDATE_FEATURE_STATE),
+            environment=obj.environment,
         )
 
 
