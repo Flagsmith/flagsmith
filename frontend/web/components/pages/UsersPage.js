@@ -10,7 +10,7 @@ const UsersPage = class extends Component {
     constructor(props, context) {
         super(props, context);
         this.state = {
-            search: null
+            search: Utils.fromParam().search
         };
     }
 
