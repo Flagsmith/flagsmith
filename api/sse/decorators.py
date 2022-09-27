@@ -10,7 +10,7 @@ def generate_identity_update_message(
     )
 ):
     """
-    Warps a view method that send an identity update message if the view returns a 2XX response
+    Wraps a view method that sends an identity update message if the view returns a 2XX response
 
     Args:
         get_data_from_req_callable (Callable): A callable that takes a request object and returns a tuple of
