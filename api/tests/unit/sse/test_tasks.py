@@ -3,6 +3,7 @@ import pytest
 from sse.exceptions import SSEAuthTokenNotSet
 from sse.tasks import (
     get_auth_header,
+    send_environment_update_message,
     send_environment_update_messages,
     send_identity_update_message,
     send_identity_update_messages,
@@ -58,6 +59,26 @@ def test_send_environment_update_messages_make_correct_request(mocker, settings)
             f"{base_url}/sse/environments/{environment_keys[1]}/queue-change",
             headers={"Authorization": f"Token {token}"},
         ),
+    )
+
+
+def test_send_environment_update_message_make_correct_request(mocker, settings):
+    # Given
+    base_url = "http://localhost:8000"
+    token = "token"
+    environment_key = "test_environment"
+
+    settings.SSE_SERVER_BASE_URL = base_url
+    settings.SSE_AUTHENTICATION_TOKEN = token
+    mocked_requests = mocker.patch("sse.tasks.requests")
+
+    # When
+    send_environment_update_message(environment_key)
+
+    # Then
+    mocked_requests.post.assert_called_once_with(
+        f"{base_url}/sse/environments/{environment_key}/queue-change",
+        headers={"Authorization": f"Token {token}"},
     )
 
 

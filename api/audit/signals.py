@@ -12,7 +12,10 @@ from integrations.datadog.datadog import DataDogWrapper
 from integrations.dynatrace.dynatrace import DynatraceWrapper
 from integrations.new_relic.new_relic import NewRelicWrapper
 from integrations.slack.slack import SlackWrapper
-from sse import send_environment_update_messages
+from sse import (
+    send_environment_update_message,
+    send_environment_update_messages,
+)
 from webhooks.webhooks import WebhookEventType, call_organisation_webhooks
 
 logger = logging.getLogger(__name__)
@@ -133,10 +136,12 @@ def send_environments_to_dynamodb(sender, instance, **kwargs):
 @receiver(post_save, sender=AuditLog)
 @handle_skipped_signals
 def trigger_environment_update_messages(sender, instance, **kwargs):
-    environment_keys = (
-        [instance.environment.api_key]
-        if instance.environment_id
-        else list(instance.project.environments.all().values_list("api_key", flat=True))
+    if instance.environment_id:
+        send_environment_update_message.delay(args=(instance.environment.api_key,))
+        return
+
+    environment_keys = list(
+        instance.project.environments.all().values_list("api_key", flat=True)
     )
     send_environment_update_messages.delay(args=(environment_keys,))
 

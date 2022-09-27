@@ -1,5 +1,6 @@
 import typing
 
+from .exceptions import ViewResponseDoesNotHaveStatus
 from .tasks import send_identity_update_message
 
 
@@ -31,6 +32,9 @@ def generate_identity_update_message(
         def view_wrapper(*args, **kwargs):
             request = args[0]
             result = view_func(*args, **kwargs)
+            if not hasattr(result, "status_code"):
+                raise ViewResponseDoesNotHaveStatus()
+
             if result.status_code < 299:
                 environment, identifier = get_data_from_req_callable(request)
                 if environment.project.organisation.persist_trait_data:

@@ -27,8 +27,8 @@ def test_trigger_environment_update_messages_from_audit_log_with_environment(
     dynamo_enabled_project_environment_one, mocker
 ):
     # Given
-    send_environment_update_messages = mocker.patch(
-        "audit.signals.send_environment_update_messages"
+    send_environment_update_message = mocker.patch(
+        "audit.signals.send_environment_update_message"
     )
     audit_log = AuditLog(environment=dynamo_enabled_project_environment_one)
 
@@ -36,8 +36,8 @@ def test_trigger_environment_update_messages_from_audit_log_with_environment(
     trigger_environment_update_messages(sender=AuditLog, instance=audit_log)
 
     # Then
-    send_environment_update_messages.delay.assert_called_once_with(
-        args=([dynamo_enabled_project_environment_one.api_key],)
+    send_environment_update_message.delay.assert_called_once_with(
+        args=(dynamo_enabled_project_environment_one.api_key,)
     )
 
 
@@ -105,8 +105,8 @@ def test_trigger_environment_update_messages_from_audit_log_with_environment_and
     dynamo_enabled_project, dynamo_enabled_project_environment_one, mocker
 ):
     # Given
-    send_environment_update_messages = mocker.patch(
-        "audit.signals.send_environment_update_messages"
+    send_environment_update_message = mocker.patch(
+        "audit.signals.send_environment_update_message"
     )
     audit_log = AuditLog(
         environment=dynamo_enabled_project_environment_one,
@@ -117,6 +117,6 @@ def test_trigger_environment_update_messages_from_audit_log_with_environment_and
     trigger_environment_update_messages(sender=AuditLog, instance=audit_log)
 
     # Then
-    send_environment_update_messages.delay.assert_called_once_with(
-        args=([dynamo_enabled_project_environment_one.api_key],)
+    send_environment_update_message.delay.assert_called_once_with(
+        args=(dynamo_enabled_project_environment_one.api_key,)
     )

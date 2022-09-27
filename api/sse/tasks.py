@@ -10,14 +10,18 @@ from .exceptions import SSEAuthTokenNotSet
 
 @register_task_handler()
 def send_environment_update_messages(environment_keys: List[str]):
+    for environment_key in environment_keys:
+        send_environment_update_message(environment_key)
+
+
+@register_task_handler()
+def send_environment_update_message(environment_key: str):
     if not settings.SSE_SERVER_BASE_URL:
         return
 
-    for environment_key in environment_keys:
-        url = f"{settings.SSE_SERVER_BASE_URL}/sse/environments/{environment_key}/queue-change"
-
-        response = requests.post(url, headers=get_auth_header())
-        response.raise_for_status()
+    url = f"{settings.SSE_SERVER_BASE_URL}/sse/environments/{environment_key}/queue-change"
+    response = requests.post(url, headers=get_auth_header())
+    response.raise_for_status()
 
 
 @register_task_handler()
