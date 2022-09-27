@@ -202,7 +202,7 @@ packaging==20.4
     #   drf-yasg2
 portalocker==2.4.0
     # via msal-extensions
-protobuf==3.15.0
+protobuf==3.18.3
     # via
     #   google-api-core
     #   googleapis-common-protos
@@ -305,7 +305,6 @@ six==1.15.0
     #   influxdb-client
     #   oauth2client
     #   packaging
-    #   protobuf
     #   python-dateutil
     #   rudder-sdk-python
 slack-sdk==3.9.0
