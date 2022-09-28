@@ -63,7 +63,7 @@ class TraitViewSet(viewsets.ModelViewSet):
             pk=self.kwargs["identity_pk"]
         )
         if not identity.environment.api_key == self.kwargs["environment_api_key"]:
-            raise Identity.DoesNotExists()
+            raise Identity.DoesNotExist()
 
         request.identity = identity
         request.environment = identity.environment
