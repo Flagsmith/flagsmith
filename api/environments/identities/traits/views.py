@@ -22,7 +22,6 @@ from environments.identities.traits.serializers import (
     TraitSerializerBasic,
     TraitSerializerFull,
 )
-from environments.models import Environment
 from environments.permissions.constants import MANAGE_IDENTITIES
 from environments.permissions.permissions import (
     EnvironmentKeyPermissions,
@@ -60,15 +59,16 @@ class TraitViewSet(viewsets.ModelViewSet):
 
     def initial(self, request, *args, **kwargs):
         # Add environment and identity to request(used by generate_identity_update_message decorator)
-        environment_api_key = self.kwargs["environment_api_key"]
-        environment = Environment.objects.get(api_key=environment_api_key)
-        request.environment = environment
+        identity = Identity.objects.select_related("environment").get(
+            pk=self.kwargs["identity_pk"]
+        )
+        if not identity.environment.api_key == self.kwargs["environment_api_key"]:
+            raise Identity.DoesNotExists()
 
-        identity_pk = self.kwargs["identity_pk"]
-        identity = Identity.objects.get(pk=identity_pk, environment=environment)
+        request.identity = identity
+        request.environment = identity.environment
 
         self.identity = identity
-        request.identity = self.identity
 
         super().initial(request, *args, **kwargs)
 
