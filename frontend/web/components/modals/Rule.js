@@ -39,9 +39,9 @@ export default class Rule extends PureComponent {
                                         data-test={`${this.props['data-test']}-property-${i}`}
                                         className="input-container full-width"
                                         value={`${rule.property}`}
-                                        placeholder={operator && operator === 'PERCENTAGE_SPLIT' ? 'Trait (N/A)' : 'Trait *'}
+                                        placeholder={operator && operator === 'PERCENTAGE_SPLIT' || operator && operator === 'IS_SET'|| operator && operator === 'IS_NOT_SET' ? 'Trait (N/A)' : 'Trait *'}
                                         onChange={e => this.setRuleProperty(i, 'property', { value: Utils.safeParseEventValue(e) })}
-                                        disabled={operator && operator === 'PERCENTAGE_SPLIT'}
+                                        disabled={operator && operator === 'PERCENTAGE_SPLIT' || operator && operator === 'IS_SET'|| operator && operator === 'IS_NOT_SET'}
                                       />
                                     )}
                                   place="top"
