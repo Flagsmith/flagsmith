@@ -17,15 +17,6 @@ def generate_identity_update_message(
         get_data_from_req_callable (Callable): A callable that takes a request object and returns a tuple of
             (environment, identifier)
 
-    Usage:
-    @method_decorator(
-        generate_identity_update_message(
-            lambda req: (req.environment, req.data["identifier"])
-        )
-    )
-    def post(self, request, *args, **kwargs):
-
-
     """
 
     def decorator(view_func: typing.Callable, *args, **kwargs):
