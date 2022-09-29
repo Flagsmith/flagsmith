@@ -65,7 +65,7 @@ export default class Rule extends PureComponent {
                                   data-test={`${this.props['data-test']}-value-${i}`}
                                   className="input-container--flat full-width"
                                   value={`${value}`}
-                                  placeholder={ operator && operator === 'IS_SET'|| operator && operator === 'IS_NOT_SET' ? 'Value (N/A)' : 'Value *'}
+                                  placeholder={operator && (operator === IS_SET || operator === IS_NOT_SET) ? 'Value (N/A)' : 'Value *'}
                                   disabled={operator && operator === 'IS_SET'|| operator && operator === 'IS_NOT_SET'}
                                   onChange={e => {
                                       const value = Utils.getTypedValue(Utils.safeParseEventValue(e))
