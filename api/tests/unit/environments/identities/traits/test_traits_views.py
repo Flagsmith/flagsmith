@@ -2,6 +2,7 @@ from django.urls import reverse
 from rest_framework import status
 from rest_framework.permissions import IsAuthenticated
 
+from environments.identities.traits.models import Trait
 from environments.identities.traits.views import TraitViewSet
 from environments.permissions.constants import (
     MANAGE_IDENTITIES,
@@ -50,13 +51,61 @@ def test_user_with_manage_identities_permission_can_add_trait_for_identity(
     assert response.status_code == status.HTTP_201_CREATED
 
 
-def test_trait_view_set_update(environment, admin_client, identity, trait):
+def test_trait_view_post_calls_send_identity_update_message_correctly(
+    environment, admin_client, identity, mocker
+):
+    # Given
+    send_identity_update_message = mocker.patch(
+        "sse.decorators.send_identity_update_message"
+    )
+    url = reverse(
+        "api-v1:environments:identities-traits-list",
+        args=(environment.api_key, identity.id),
+    )
+
+    # When
+    admin_client.post(
+        url, data={"trait_key": "foo", "value_type": "unicode", "string_value": "foo"}
+    )
+    send_identity_update_message.delay.assert_called_once_with(
+        args=(environment.api_key, identity.identifier)
+    )
+
+
+def test_trait_view_delete_trait(environment, admin_client, identity, trait, mocker):
+    # Given
+    send_identity_update_message = mocker.patch(
+        "sse.decorators.send_identity_update_message"
+    )
+    url = reverse(
+        "api-v1:environments:identities-traits-detail",
+        args=(environment.api_key, identity.id, trait.id),
+    )
+
+    # When
+    res = admin_client.delete(url)
+
+    # Then
+    assert res.status_code == status.HTTP_204_NO_CONTENT
+
+    # and
+    assert not Trait.objects.filter(pk=trait.id).exists()
+
+    send_identity_update_message.delay.assert_called_once_with(
+        args=(environment.api_key, identity.identifier)
+    )
+
+
+def test_trait_view_set_update(environment, admin_client, identity, trait, mocker):
     # Given
     url = reverse(
         "api-v1:environments:identities-traits-detail",
         args=(environment.api_key, identity.id, trait.id),
     )
     new_value = "updated"
+    send_identity_update_message = mocker.patch(
+        "sse.decorators.send_identity_update_message"
+    )
 
     # When
     response = admin_client.patch(url, data={"string_value": new_value})
@@ -64,6 +113,9 @@ def test_trait_view_set_update(environment, admin_client, identity, trait):
     # Then
     assert response.status_code == status.HTTP_200_OK
     assert response.json()["string_value"] == new_value
+    send_identity_update_message.delay.assert_called_once_with(
+        args=(environment.api_key, identity.identifier)
+    )
 
 
 def test_edge_identity_view_set_get_permissions():

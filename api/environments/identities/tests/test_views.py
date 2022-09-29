@@ -641,7 +641,8 @@ class SDKIdentitiesTestCase(APITestCase):
             trait_key=trait_2.trait_key
         ).exists()
 
-    def test_post_identify_with_persistence(self):
+    @mock.patch("sse.decorators.send_identity_update_message")
+    def test_post_identify_with_persistence(self, mock_send_identity_update_message):
         # Given
         url = reverse("api-v1:sdk-identities")
 
@@ -669,8 +670,13 @@ class SDKIdentitiesTestCase(APITestCase):
 
         # and the traits ARE persisted
         assert self.identity.identity_traits.count() == 2
+        # and send_identity_update_message is called
+        mock_send_identity_update_message.delay.assert_called_once_with(
+            args=(self.environment.api_key, self.identity.identifier)
+        )
 
-    def test_post_identify_without_persistence(self):
+    @mock.patch("sse.decorators.send_identity_update_message")
+    def test_post_identify_without_persistence(self, mock_send_identity_update_message):
         # Given
         url = reverse("api-v1:sdk-identities")
 
@@ -702,6 +708,9 @@ class SDKIdentitiesTestCase(APITestCase):
 
         # and the traits ARE NOT persisted
         assert self.identity.identity_traits.count() == 0
+
+        # and send_identity_update_message was not called
+        mock_send_identity_update_message.delay.assert_not_called()
 
     @override_settings(EDGE_API_URL="http://localhost")
     @mock.patch("environments.identities.views.forward_identity_request")
