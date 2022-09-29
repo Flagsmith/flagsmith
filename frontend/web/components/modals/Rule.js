@@ -39,9 +39,9 @@ export default class Rule extends PureComponent {
                                         data-test={`${this.props['data-test']}-property-${i}`}
                                         className="input-container full-width"
                                         value={`${rule.property}`}
-                                        placeholder={operator && operator === 'PERCENTAGE_SPLIT' || operator && operator === 'IS_SET'|| operator && operator === 'IS_NOT_SET' ? 'Trait (N/A)' : 'Trait *'}
+                                        placeholder={operator && operator === 'PERCENTAGE_SPLIT' ? 'Trait (N/A)' : 'Trait *'}
                                         onChange={e => this.setRuleProperty(i, 'property', { value: Utils.safeParseEventValue(e) })}
-                                        disabled={operator && operator === 'PERCENTAGE_SPLIT' || operator && operator === 'IS_SET'|| operator && operator === 'IS_NOT_SET'}
+                                        disabled={operator && operator === 'PERCENTAGE_SPLIT'}
                                       />
                                     )}
                                   place="top"
@@ -65,7 +65,8 @@ export default class Rule extends PureComponent {
                                   data-test={`${this.props['data-test']}-value-${i}`}
                                   className="input-container--flat full-width"
                                   value={`${value}`}
-                                  placeholder="Value *"
+                                  placeholder={ operator && operator === 'IS_SET'|| operator && operator === 'IS_NOT_SET' ? 'Value (N/A)' : 'Value *'}
+                                  disabled={operator && operator === 'IS_SET'|| operator && operator === 'IS_NOT_SET'}
                                   onChange={e => {
                                       const value = Utils.getTypedValue(Utils.safeParseEventValue(e))
                                       this.setRuleProperty(i, 'value', { value: operatorObj && operatorObj.append? `${value}${operatorObj.append}`:value }, true)
