@@ -31,7 +31,7 @@ from organisations.subscriptions.constants import (
     SUBSCRIPTION_PAYMENT_METHODS,
     XERO,
 )
-from organisations.subscriptions.dataclasses import BaseSubscriptionMetadata
+from organisations.subscriptions.metadata import BaseSubscriptionMetadata
 from users.utils.mailer_lite import MailerLite
 from webhooks.models import AbstractBaseWebhookModel
 

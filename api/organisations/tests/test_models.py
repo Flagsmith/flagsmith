@@ -12,7 +12,7 @@ from organisations.subscriptions.constants import (
     FREE_PLAN_SUBSCRIPTION_METADATA,
     XERO,
 )
-from organisations.subscriptions.dataclasses import BaseSubscriptionMetadata
+from organisations.subscriptions.metadata import BaseSubscriptionMetadata
 
 
 @pytest.mark.django_db
