@@ -1,4 +1,5 @@
 from django.db.models import Count, Q
+from django.utils import timezone
 from drf_yasg2.utils import swagger_auto_schema
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAdminUser, IsAuthenticated
@@ -13,7 +14,10 @@ from task_processor.serializers import MonitoringSerializer
 @swagger_auto_schema(responses={200: MonitoringSerializer()})
 def monitoring(request, **kwargs):
     qs = Task.objects.annotate(num_task_runs=Count("task_runs")).aggregate(
-        waiting=Count("id", filter=Q(num_task_runs=0)),
+        waiting=Count(
+            "id", filter=Q(num_task_runs=0, scheduled_for__lte=timezone.now())
+        ),
+        scheduled=Count("id", filter=Q(scheduled_for__gt=timezone.now())),
         completed=Count(
             "id",
             filter=Q(task_runs__result=TaskResult.SUCCESS),
