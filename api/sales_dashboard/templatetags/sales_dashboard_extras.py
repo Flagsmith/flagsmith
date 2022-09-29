@@ -9,6 +9,12 @@ def get_item(dictionary: dict, key: typing.Any) -> typing.Any:
 
 
 @register.simple_tag
+def get_subcription_metadata(org) -> typing.Any:
+    # TODO: implement this
+    return {"max_seats": 100, "max_api_calls": 1000000}
+
+
+@register.simple_tag
 def query_transform(request, **kwargs):
     """
     Merges the existing query params with any new ones passed as kwargs.

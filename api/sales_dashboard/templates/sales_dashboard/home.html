@@ -57,12 +57,13 @@
           </thead>
           <tbody>
             {% for org in object_list %}
+              {% with subscription_metadata=get_subcription_metadata org %}
             <tr class="{% if org.has_subscription and not org.is_paid %}table-danger{% elif org.over_plan_seats_limit %}table-warning{% endif %}">
               <td>{{org.id}}</td>
               <td><a href="/sales-dashboard/organisations/{{org.id}}">{{org.name}}</a></td>
               <td>{{ org.subscription.plan|default:"Free" }}{% if org.subscription.payment_method %} - {{ org.subscription.payment_method|capfirst }}{% endif %}</td>
               <td>{{org.num_users}}</td>
-              <td>{{org.subscription.max_seats|default:1}}</td>
+              <td>{{subscription_metadata|get_item:max_seats}}</td>
               <td>{{org.num_projects}}</td>
               <td>{{org.num_features}}</td>
               <td>{{org.num_segments}}</td>
@@ -70,6 +71,7 @@
               <td>{{org.num_7d_calls|intcomma}}</td>
               <td>{{org.num_30d_calls|intcomma}}</td>
             </tr>
+            {% endwith %}
             {% endfor %}
           </tbody>
         </table>
