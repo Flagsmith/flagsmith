@@ -12,7 +12,7 @@ from organisations.subscriptions.constants import (
     FREE_PLAN_SUBSCRIPTION_METADATA,
     XERO,
 )
-from organisations.subscriptions.metadata import BaseSubscriptionMetadata
+from organisations.subscriptions.xero.metadata import XeroSubscriptionMetadata
 
 
 @pytest.mark.django_db
@@ -208,10 +208,8 @@ def test_subscription_get_subscription_metadata_returns_xero_metadata_for_xero_s
         payment_method=XERO, subscription_id="xero-subscription"
     )
 
-    expected_metadata = BaseSubscriptionMetadata(
-        seats=subscription.max_seats,
-        api_calls=subscription.max_api_calls,
-        payment_source=XERO,
+    expected_metadata = XeroSubscriptionMetadata(
+        seats=subscription.max_seats, api_calls=subscription.max_api_calls
     )
 
     # When
