@@ -1,6 +1,9 @@
 import typing
 
+from django import template
 from django.template.defaulttags import register
+
+from organisations.subscriptions.service import get_subscription_metadata
 
 
 @register.filter
@@ -8,10 +11,25 @@ def get_item(dictionary: dict, key: typing.Any) -> typing.Any:
     return isinstance(dictionary, dict) and dictionary.get(key)
 
 
-@register.simple_tag
-def get_subcription_metadata(org) -> typing.Any:
-    # TODO: implement this
-    return {"max_seats": 100, "max_api_calls": 1000000}
+class GetOrgMetadata(template.Node):
+    def __init__(self, org):
+        self.org = template.Variable(org)
+
+    def render(self, context):
+        org = self.org.resolve(context)
+        context["subscription_metadata"] = get_subscription_metadata(org)
+        return ""
+
+
+@register.tag
+def load_subcription_metadata(parser, token) -> typing.Any:
+    try:
+        _, org = token.split_contents()
+    except ValueError:
+        raise template.TemplateSyntaxError(
+            "%r tag requires a single argument" % token.contents.split()[0]
+        )
+    return GetOrgMetadata(org)
 
 
 @register.simple_tag
