@@ -11,7 +11,7 @@ def get_item(dictionary: dict, key: typing.Any) -> typing.Any:
     return isinstance(dictionary, dict) and dictionary.get(key)
 
 
-class GetOrgMetadata(template.Node):
+class LoadSubcriptionMetadataNode(template.Node):
     def __init__(self, org):
         self.org = template.Variable(org)
 
@@ -29,7 +29,7 @@ def load_subcription_metadata(parser, token) -> typing.Any:
         raise template.TemplateSyntaxError(
             "%r tag requires a single argument" % token.contents.split()[0]
         )
-    return GetOrgMetadata(org)
+    return LoadSubcriptionMetadataNode(org)
 
 
 @register.simple_tag
