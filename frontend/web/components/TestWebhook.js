@@ -23,7 +23,7 @@ export default class TheComponent extends Component {
           })
           .catch((e) => {
               if (e.text) {
-                  e.text().then(error => this.setState({ error: `The server returned an error: ${error}` }));
+                  e.text().then(error => this.setState({ error: `The server returned an error: ${error}`, loading:false }));
               } else {
                   this.setState({ error: 'There was an error posting to your webhook.', loading: false });
               }
@@ -43,6 +43,7 @@ export default class TheComponent extends Component {
               {error && <ErrorMessage error={this.state.error}/>}
               {success && <SuccessMessage message="Your API returned with a successful 200 response."/>}
               <Button
+                type="button"
                 id="try-it-btn" disabled={loading||!this.props.webhook} onClick={submit}
                 className="btn btn--with-icon primary"
               >
