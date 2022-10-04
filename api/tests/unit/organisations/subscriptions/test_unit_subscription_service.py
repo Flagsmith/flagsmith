@@ -4,7 +4,9 @@ from organisations.subscriptions.constants import (
     MAX_SEATS_IN_FREE_PLAN,
 )
 from organisations.subscriptions.dataclasses import BaseSubscriptionMetadata
-from organisations.subscriptions.service import get_subscription_metadata
+from organisations.subscriptions.subscription_service import (
+    get_subscription_metadata,
+)
 
 
 def test_get_subscription_metadata_returns_default_values_if_org_does_not_have_subscription(
@@ -27,7 +29,7 @@ def test_get_subscription_metadata_uses_chargebee_data_if_chargebee_subscription
     projects = 20
     api_calls = 30
     mocked_get_chargebee_subscription_metadata = mocker.patch(
-        "organisations.subscriptions.service.get_chargebee_subscription_metadata",
+        "organisations.subscriptions.subscription_service.get_chargebee_subscription_metadata",
         autospec=True,
         return_value=BaseSubscriptionMetadata(
             seats=seats, projects=projects, api_calls=api_calls

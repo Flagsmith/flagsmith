@@ -3,7 +3,9 @@ import typing
 from django import template
 from django.template.defaulttags import register
 
-from organisations.subscriptions.service import get_subscription_metadata
+from organisations.subscriptions.subscription_service import (
+    get_subscription_metadata,
+)
 
 
 @register.filter

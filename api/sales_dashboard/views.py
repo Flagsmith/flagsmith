@@ -25,7 +25,9 @@ from environments.dynamodb.migrator import IdentityMigrator
 from environments.identities.models import Identity
 from import_export.export import full_export
 from organisations.models import Organisation
-from organisations.subscriptions.service import get_subscription_metadata
+from organisations.subscriptions.subscription_service import (
+    get_subscription_metadata,
+)
 from projects.models import Project
 from users.models import FFAdminUser
 
