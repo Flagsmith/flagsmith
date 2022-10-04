@@ -16,12 +16,12 @@ export default class Rule extends PureComponent {
         const operatorObj = Utils.findOperator(rule.operator, rule.value, operators);
         const operator = operatorObj && operatorObj.value;
         const value = typeof rule.value === 'string' ? rule.value.replace((operatorObj && operatorObj.append) || '', '') : rule.value;
-        var valuePlaceholder = 'Value *'
+        let valuePlaceholder = 'Value *';
         if (operator) {
-          if (operator == MODULO) {
-            valuePlaceholder = 'Value(<divisor>|<remainder>) *'
-          } else if (operator == IS_SET || operator == IS_NOT_SET) {
-            valuePlaceholder = 'Value (N/A)'
+          if (operator === 'MODULO') {
+            valuePlaceholder = 'Value(<divisor>|<remainder>) *';
+          } else if (operator === 'IS_SET' || operator === 'IS_NOT_SET') {
+            valuePlaceholder = 'Value (N/A)';
           }
         }
         return (
@@ -73,7 +73,7 @@ export default class Rule extends PureComponent {
                                   data-test={`${this.props['data-test']}-value-${i}`}
                                   className="input-container--flat full-width"
                                   value={`${value}`}
-                                  placeholder=valuePlaceholder
+                                  placeholder={valuePlaceholder}
                                   disabled={operator && operator === 'IS_SET'|| operator && operator === 'IS_NOT_SET'}
                                   onChange={e => {
                                       const value = Utils.getTypedValue(Utils.safeParseEventValue(e))
