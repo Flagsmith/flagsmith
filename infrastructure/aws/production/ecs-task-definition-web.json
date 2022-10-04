@@ -154,6 +154,10 @@
                 {
                     "name": "TASK_RUN_METHOD",
                     "value": "TASK_PROCESSOR"
+                },
+                {
+                    "name": "ENABLE_TASK_PROCESSOR_HEALTH_CHECK",
+                    "value": "True"
                 }
             ],
             "secrets": [
