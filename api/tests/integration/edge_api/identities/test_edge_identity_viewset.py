@@ -412,9 +412,13 @@ def test_edge_identities_update_trait(
     identity_document,
     identity_traits,
     dynamo_wrapper_mock,
+    mocker,
 ):
     # Given
     dynamo_wrapper_mock.get_item_from_uuid_or_404.return_value = identity_document
+    send_identity_update_message_mock = mocker.patch(
+        "edge_api.identities.views.send_identity_update_message"
+    )
     identity_uuid = identity_document["identity_uuid"]
     trait_key = identity_traits[0]["trait_key"]
     url = reverse(
@@ -444,6 +448,9 @@ def test_edge_identities_update_trait(
             and trait["trait_value"] == updated_trait_value,
             args[0]["identity_traits"],
         )
+    )
+    send_identity_update_message_mock.delay.assert_called_once_with(
+        args=(environment_api_key, identity_document["identifier"])
     )
 
 

@@ -8,6 +8,7 @@ from drf_yasg2.utils import no_body, swagger_auto_schema
 from rest_framework import status, viewsets
 from rest_framework.decorators import action, api_view, permission_classes
 from rest_framework.exceptions import ValidationError
+from rest_framework.generics import get_object_or_404
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.request import Request
 from rest_framework.response import Response
@@ -96,6 +97,17 @@ class ProjectViewSet(viewsets.ModelViewSet):
         UserProjectPermission.objects.create(
             user=self.request.user, project=project, admin=True
         )
+
+    @action(
+        detail=False,
+        url_path=r"get-by-uuid/(?P<uuid>[0-9a-f-]+)",
+        methods=["get"],
+    )
+    def get_by_uuid(self, request, uuid):
+        qs = self.get_queryset()
+        project = get_object_or_404(qs, uuid=uuid)
+        serializer = self.get_serializer(project)
+        return Response(serializer.data)
 
     @action(detail=True)
     def environments(self, request, pk):

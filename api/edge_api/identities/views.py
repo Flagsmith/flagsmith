@@ -48,6 +48,7 @@ from environments.permissions.permissions import NestedEnvironmentPermissions
 from features.models import FeatureState
 from features.permissions import IdentityFeatureStatePermissions
 from projects.exceptions import DynamoNotEnabledError
+from sse import send_identity_update_message
 
 from .edge_identity_service import get_all_feature_states_for_edge_identity
 from .exceptions import TraitPersistenceError
@@ -167,6 +168,9 @@ class EdgeIdentityViewSet(viewsets.ModelViewSet):
         identity.update_traits([trait])
         Identity.dynamo_wrapper.put_item(build_identity_dict(identity))
         data = trait_schema.dump(trait)
+        send_identity_update_message.delay(
+            args=(environment.api_key, identity.identifier)
+        )
         return Response(data, status=status.HTTP_200_OK)
 
 

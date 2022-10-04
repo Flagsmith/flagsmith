@@ -40,6 +40,7 @@ NOT_CONTAINS = "NOT_CONTAINS"
 NOT_EQUAL = "NOT_EQUAL"
 REGEX = "REGEX"
 PERCENTAGE_SPLIT = "PERCENTAGE_SPLIT"
+MODULO = "MODULO"
 IS_SET = "IS_SET"
 IS_NOT_SET = "IS_NOT_SET"
 
@@ -153,6 +154,7 @@ class Condition(AbstractBaseExportableModel):
         (NOT_EQUAL, "Does not match"),
         (REGEX, "Matches regex"),
         (PERCENTAGE_SPLIT, "Percentage split"),
+        (MODULO, "Modulo Operation"),
         (IS_SET, "Is set"),
         (IS_NOT_SET, "Is not set"),
     )
@@ -190,6 +192,9 @@ class Condition(AbstractBaseExportableModel):
 
         if self.operator in (IS_SET, IS_NOT_SET):
             return self.operator == IS_SET
+        elif self.operator == MODULO:
+            if matching_trait.value_type in [INTEGER, FLOAT]:
+                return self._check_modulo_operator(matching_trait.trait_value)
         elif matching_trait.value_type == INTEGER:
             return self.check_integer_value(matching_trait.integer_value)
         elif matching_trait.value_type == FLOAT:
@@ -200,6 +205,8 @@ class Condition(AbstractBaseExportableModel):
             return self.check_semver_value(matching_trait.string_value)
 
         return self.check_string_value(matching_trait.string_value)
+
+        return False
 
     def _check_percentage_split_operator(self, identity):
         try:
@@ -212,6 +219,16 @@ class Condition(AbstractBaseExportableModel):
             get_hashed_percentage_for_object_ids(object_ids=[segment.id, identity.id])
             <= float_value
         )
+
+    def _check_modulo_operator(self, value: typing.Union[int, float]) -> bool:
+        try:
+            divisor, remainder = self.value.split("|")
+            divisor = float(divisor)
+            remainder = float(remainder)
+        except ValueError:
+            return False
+
+        return value % divisor == remainder
 
     def check_integer_value(self, value: int) -> bool:
         try:

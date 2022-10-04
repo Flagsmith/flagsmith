@@ -48,26 +48,12 @@ const ChangeRequestsPage = class extends Component {
         const dataScheduled = ChangeRequestStore.scheduled && ChangeRequestStore.scheduled[environmentId] && ChangeRequestStore.scheduled[environmentId].results;
         const dataScheduledPaging = ChangeRequestStore.scheduled && ChangeRequestStore.scheduled[environmentId] && ChangeRequestStore.scheduled[environmentId];
 
-        const hasPermission = Utils.getPlansPermission('4_EYES');
         const environment = ProjectStore.getEnvironment(environmentId);
         return (
             <div data-test="change-requests-page" id="change-requests-page" className="app-container container">
                 <Flex>
                     <h3>Change Requests</h3>
-                    {!hasPermission && (
-                        <p>
-                            View and manage your feature changes with a Change Request flow with our <a
-                              href="#" onClick={() => {
-                                  openModal('Payment plans', <PaymentModal
-                                    viewOnly={false}
-                                  />, null, { large: true });
-                              }}
-                            >Scaleup plan
-                            </a>. Find out more <a href="https://docs.flagsmith.com/advanced-use/change-requests" target="_blank">here</a>.
-                        </p>
-                    )}
-                    {hasPermission && (
-                        <p>
+                    <p>
                             {environment && !Utils.changeRequestsEnabled(environment.minimum_change_request_approvals) ? (
                                 <span>
                                     To enable this feature set a minimum number of approvals in <Link to={`/project/${projectId}/environment/${environmentId}/settings`}>Environment Settings</Link>
@@ -84,7 +70,6 @@ const ChangeRequestsPage = class extends Component {
                                 </div>
                             )}
                         </p>
-                    )}
                     <Tabs
                       value={this.state.tab}
                       onChange={(tab) => {
@@ -105,8 +90,9 @@ const ChangeRequestsPage = class extends Component {
                                     nextPage={() => AppActions.getChangeRequests(this.props.match.params.environmentId, {}, dataPaging.next)}
                                     prevPage={() => AppActions.getChangeRequests(this.props.match.params.environmentId, {}, dataPaging.previous)}
                                     goToPage={page => AppActions.getChangeRequests(this.props.match.params.environmentId, {}, `${Project.api}environments/${environmentId}/list-change-requests/?page=${page}`)}
-                                    renderRow={({ title, user: _user, created_at, id }, index) => {
+                                    renderRow={({ title, user: _user, created_at, live_from, id }, index) => {
                                         const user = (OrganisationStore.model && OrganisationStore.model.users && OrganisationStore.model.users.find(v => v.id === _user)) || {};
+                                        const isScheduled = new Date(live_from).valueOf() > new Date().valueOf()
                                         return (
                                             <Link to={`/project/${projectId}/environment/${environmentId}/change-requests/${id}`}>
                                                 <Row className="list-item clickable">
@@ -114,6 +100,11 @@ const ChangeRequestsPage = class extends Component {
                                                     <div>
                                                         <ButtonLink>
                                                             {title}
+                                                            {
+                                                                isScheduled && (
+                                                                    <span className="ml-1 mr-4 ion ion-md-time"/>
+                                                                )
+                                                            }
                                                         </ButtonLink>
                                                         <div className="list-item-footer faint">
                                                             Created at {moment(created_at).format('Do MMM YYYY HH:mma')} by {user && user.first_name} {user && user.last_name}

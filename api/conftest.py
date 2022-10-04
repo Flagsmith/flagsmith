@@ -6,12 +6,19 @@ from api_keys.models import MasterAPIKey
 from environments.identities.models import Identity
 from environments.identities.traits.models import Trait
 from environments.models import Environment, EnvironmentAPIKey
+from environments.permissions.constants import (
+    MANAGE_IDENTITIES,
+    VIEW_ENVIRONMENT,
+)
+from environments.permissions.models import UserEnvironmentPermission
 from features.feature_types import MULTIVARIATE
 from features.models import Feature, FeatureSegment, FeatureState
 from features.multivariate.models import MultivariateFeatureOption
 from features.value_types import STRING
 from organisations.models import Organisation, OrganisationRole, Subscription
-from projects.models import Project
+from organisations.subscriptions.constants import CHARGEBEE, XERO
+from permissions.models import PermissionModel
+from projects.models import Project, UserProjectPermission
 from projects.tags.models import Tag
 from segments.models import EQUAL, Condition, Segment, SegmentRule
 from users.models import FFAdminUser
@@ -21,10 +28,21 @@ trait_value = "value1"
 
 
 @pytest.fixture()
+def test_user(django_user_model):
+    return django_user_model.objects.create(email="user@example.com")
+
+
+@pytest.fixture()
 def admin_client(admin_user):
     client = APIClient()
     client.force_authenticate(user=admin_user)
     return client
+
+
+@pytest.fixture()
+def test_user_client(api_client, test_user):
+    api_client.force_authenticate(test_user)
+    return api_client
 
 
 @pytest.fixture()
@@ -38,6 +56,24 @@ def organisation(db, admin_user):
 def subscription(organisation):
     return Subscription.objects.create(
         organisation=organisation, subscription_id="subscription_id"
+    )
+
+
+@pytest.fixture()
+def xero_subscription(organisation):
+    return Subscription.objects.create(
+        organisation=organisation,
+        subscription_id="subscription_id",
+        payment_method=XERO,
+    )
+
+
+@pytest.fixture()
+def chargebee_subscription(organisation):
+    return Subscription.objects.create(
+        organisation=organisation,
+        subscription_id="cb-subscription",
+        payment_method=CHARGEBEE,
     )
 
 
@@ -170,3 +206,30 @@ def master_api_key_client(master_api_key):
     api_client = APIClient()
     api_client.credentials(HTTP_AUTHORIZATION="Api-Key " + master_api_key)
     return api_client
+
+
+@pytest.fixture()
+def view_environment_permission():
+    return PermissionModel.objects.get(key=VIEW_ENVIRONMENT)
+
+
+@pytest.fixture()
+def manage_identities_permission():
+    return PermissionModel.objects.get(key=MANAGE_IDENTITIES)
+
+
+@pytest.fixture()
+def view_project_permission():
+    return PermissionModel.objects.get(key="VIEW_PROJECT")
+
+
+@pytest.fixture()
+def user_environment_permission(test_user, environment):
+    return UserEnvironmentPermission.objects.create(
+        user=test_user, environment=environment
+    )
+
+
+@pytest.fixture()
+def user_project_permission(test_user, project):
+    return UserProjectPermission.objects.create(user=test_user, project=project)

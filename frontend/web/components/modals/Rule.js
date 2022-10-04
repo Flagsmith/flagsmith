@@ -13,9 +13,17 @@ export default class Rule extends PureComponent {
         const { props: { operators, rule: { conditions: rules } } } = this;
         const isLastRule = i === (rules.length - 1);
         const hasOr = i > 0;
-        const operatorObj = Utils.findOperator(rule.operator, rule.value, operators)
-        const operator = operatorObj && operatorObj.value
-        const value = typeof rule.value === "string" ? rule.value.replace((operatorObj&&operatorObj.append)||"","") : rule.value
+        const operatorObj = Utils.findOperator(rule.operator, rule.value, operators);
+        const operator = operatorObj && operatorObj.value;
+        const value = typeof rule.value === 'string' ? rule.value.replace((operatorObj && operatorObj.append) || '', '') : rule.value;
+        var valuePlaceholder = 'Value *'
+        if (operator) {
+          if (operator == MODULO) {
+            valuePlaceholder = 'Value(<divisor>|<remainder>) *'
+          } else if (operator == IS_SET || operator == IS_NOT_SET) {
+            valuePlaceholder = 'Value (N/A)'
+          }
+        }
         return (
             <div className="rule__row reveal" key={i}>
                 {hasOr && (
@@ -65,7 +73,7 @@ export default class Rule extends PureComponent {
                                   data-test={`${this.props['data-test']}-value-${i}`}
                                   className="input-container--flat full-width"
                                   value={`${value}`}
-                                  placeholder={operator && (operator === IS_SET || operator === IS_NOT_SET) ? 'Value (N/A)' : 'Value *'}
+                                  placeholder=valuePlaceholder
                                   disabled={operator && operator === 'IS_SET'|| operator && operator === 'IS_NOT_SET'}
                                   onChange={e => {
                                       const value = Utils.getTypedValue(Utils.safeParseEventValue(e))
