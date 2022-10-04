@@ -324,3 +324,5 @@ class Condition(AbstractBaseExportableModel):
             return str_value not in value
         elif self.operator == REGEX:
             return re.compile(str(self.value)).match(value) is not None
+
+        return False
