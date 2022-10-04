@@ -152,6 +152,9 @@ def organisation_info(request, organisation_id):
         "traits": mark_safe(json.dumps(event_list["traits"])),
         "identities": mark_safe(json.dumps(event_list["identities"])),
         "flags": mark_safe(json.dumps(event_list["flags"])),
+        "environment_documents": mark_safe(
+            json.dumps(event_list["environment-document"])
+        ),
         "labels": mark_safe(json.dumps(labels)),
         "api_calls": {
             # TODO: this could probably be reduced to a single influx request
@@ -170,6 +173,9 @@ def organisation_info(request, organisation_id):
         context["traits"] = mark_safe(json.dumps(event_list["traits"]))
         context["identities"] = mark_safe(json.dumps(event_list["identities"]))
         context["flags"] = mark_safe(json.dumps(event_list["flags"]))
+        context["environment_documents"] = mark_safe(
+            json.dumps(event_list["environment-document"])
+        )
         context["labels"] = mark_safe(json.dumps(labels))
 
     return HttpResponse(template.render(context, request))
