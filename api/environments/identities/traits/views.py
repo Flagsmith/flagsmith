@@ -220,7 +220,15 @@ class SDKTraits(mixins.CreateModelMixin, viewsets.GenericViewSet):
         response = super(SDKTraits, self).create(request, *args, **kwargs)
         response.status_code = status.HTTP_200_OK
         if settings.EDGE_API_URL:
-            forward_trait_request(request, request.environment.project.id)
+            forward_trait_request.delay(
+                args=(
+                    request.method,
+                    dict(request.headers),
+                    request.environment.project.id,
+                    request.data,
+                )
+            )
+
         return response
 
     @swagger_auto_schema(
@@ -237,7 +245,14 @@ class SDKTraits(mixins.CreateModelMixin, viewsets.GenericViewSet):
             # Convert the payload to the structure expected by /traits
             payload = serializer.data.copy()
             payload.update({"identity": {"identifier": payload.pop("identifier")}})
-            forward_trait_request(request, request.environment.project.id, payload)
+            forward_trait_request.delay(
+                args=(
+                    request.method,
+                    dict(request.headers),
+                    request.environment.project.id,
+                    payload,
+                )
+            )
 
         return Response(serializer.data, status=200)
 
@@ -271,7 +286,14 @@ class SDKTraits(mixins.CreateModelMixin, viewsets.GenericViewSet):
             serializer.save()
 
             if settings.EDGE_API_URL:
-                forward_trait_requests(request, request.environment.project.id)
+                forward_trait_requests.delay(
+                    args=(
+                        request.method,
+                        dict(request.headers),
+                        request.environment.project.id,
+                        request.data,
+                    )
+                )
 
             send_identity_update_messages.delay(
                 args=(
