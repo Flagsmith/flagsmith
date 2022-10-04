@@ -162,7 +162,14 @@ class SDKIdentities(SDKAPIView):
             .get_or_create(identifier=identifier, environment=request.environment)
         )
         if settings.EDGE_API_URL:
-            forward_identity_request(request, request.environment.project.id)
+            forward_identity_request.delay(
+                args=(
+                    request.method,
+                    dict(request.headers),
+                    request.environment.project.id,
+                ),
+                kwargs={"query_params": request.GET.dict()},
+            )
 
         feature_name = request.query_params.get("feature")
         if feature_name:
@@ -194,7 +201,14 @@ class SDKIdentities(SDKAPIView):
         instance = serializer.save()
 
         if settings.EDGE_API_URL:
-            forward_identity_request(request, request.environment.project.id)
+            forward_identity_request.delay(
+                args=(
+                    request.method,
+                    dict(request.headers),
+                    request.environment.project.id,
+                ),
+                kwargs={"request_data": request.data},
+            )
 
         # we need to serialize the response again to ensure that the
         # trait values are serialized correctly
