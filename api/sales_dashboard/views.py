@@ -24,11 +24,9 @@ from django.views.generic.edit import FormView
 from environments.dynamodb.migrator import IdentityMigrator
 from environments.identities.models import Identity
 from import_export.export import full_export
-from organisations.chargebee import get_subscription_metadata
 from organisations.models import Organisation
-from organisations.subscriptions.constants import (
-    CHARGEBEE,
-    SUBSCRIPTION_DEFAULT_LIMITS,
+from organisations.subscriptions.subscription_service import (
+    get_subscription_metadata,
 )
 from projects.models import Project
 from users.models import FFAdminUser
@@ -49,7 +47,7 @@ class OrganisationList(ListView):
             num_users=Count("users", distinct=True),
             num_features=Count("projects__features", distinct=True),
             num_segments=Count("projects__segments", distinct=True),
-        )
+        ).select_related("subscription")
 
         if self.request.GET.get("search"):
             search_term = self.request.GET["search"]
@@ -115,20 +113,7 @@ def organisation_info(request, organisation_id):
         Organisation.objects.select_related("subscription"), pk=organisation_id
     )
     template = loader.get_template("sales_dashboard/organisation.html")
-
-    max_api_calls, max_seats, max_projects = SUBSCRIPTION_DEFAULT_LIMITS
-    if getattr(organisation, "subscription", None) is not None:
-        if organisation.subscription.payment_method == CHARGEBEE:
-            subscription_metadata = get_subscription_metadata(
-                organisation.subscription.subscription_id
-            )
-            max_api_calls = getattr(subscription_metadata, "api_calls", max_api_calls)
-            max_seats = getattr(subscription_metadata, "seats", max_seats)
-            max_projects = getattr(subscription_metadata, "projects", max_projects)
-        else:
-            max_api_calls = organisation.subscription.max_api_calls
-            max_seats = organisation.subscription.max_seats
-            max_projects = None
+    subscription_metadata = get_subscription_metadata(organisation)
 
     event_list, labels = get_event_list_for_organisation(organisation_id)
 
@@ -145,9 +130,9 @@ def organisation_info(request, organisation_id):
 
     context = {
         "organisation": organisation,
-        "max_api_calls": max_api_calls,
-        "max_seats": max_seats,
-        "max_projects": max_projects,
+        "max_api_calls": subscription_metadata.api_calls,
+        "max_seats": subscription_metadata.seats,
+        "max_projects": subscription_metadata.projects,
         "event_list": event_list,
         "traits": mark_safe(json.dumps(event_list["traits"])),
         "identities": mark_safe(json.dumps(event_list["identities"])),
