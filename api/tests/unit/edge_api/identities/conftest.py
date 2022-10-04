@@ -11,6 +11,15 @@ def forwarder_mocked_migrator(mocker):
 
 
 @pytest.fixture()
+def forwarder_mocked_requests(mocker):
+    return mocker.patch(
+        "edge_api.identities.edge_request_forwarder.requests",
+        autospec=True,
+        spec_set=True,
+    )
+
+
+@pytest.fixture()
 def forward_enable_settings(settings):
     settings.EDGE_API_URL = "http//localhost"
     settings.EDGE_REQUEST_SIGNING_KEY = "test_key"
