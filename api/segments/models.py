@@ -206,8 +206,6 @@ class Condition(AbstractBaseExportableModel):
 
         return self.check_string_value(matching_trait.string_value)
 
-        return False
-
     def _check_percentage_split_operator(self, identity):
         try:
             float_value = float(self.value) / 100.0
