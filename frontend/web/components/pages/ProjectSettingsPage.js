@@ -86,14 +86,15 @@ const ProjectSettingsPage = class extends Component {
                     {({ isLoading, isSaving, editProject, deleteProject, project }) => (
                         <div>
                             {(
-                                <div className="panel--grey">
+
+                                <div>
+                                    <h3>General</h3>
                                     <FormGroup>
                                         <form onSubmit={(e) => {
                                             e.preventDefault();
                                             !isSaving && name && editProject(Object.assign({}, project, { name }));
                                         }}
                                         >
-                                            <h5>Project Name</h5>
                                             <Row>
                                                 <Column className="m-l-0">
                                                     <Input

@@ -26,13 +26,13 @@ const CreateEnv = class extends Component {
     }
 
     render() {
-        const { name } = this.state;
+        const { name, description } = this.state;
         return (
             <ProjectProvider onSave={this.close}>
                 {({ isLoading, isSaving, project, createEnv, error }) => (
                     <form onSubmit={(e) => {
                         e.preventDefault();
-                        !isSaving && name && createEnv(name);
+                        !isSaving && name && createEnv(name, description);
                     }}
                     >
                         <InputGroup
@@ -42,6 +42,15 @@ const CreateEnv = class extends Component {
                           isValid={name}
                           type="text" title="Name*"
                           placeholder="A environment name e.g. Develop"
+                        />
+                        <InputGroup
+                            textarea
+                          ref={c => this.input = c}
+                          inputProps={{ className: 'full-width', style:{minHeight:150} }}
+                          onChange={e => this.setState({ description: Utils.safeParseEventValue(e) })}
+                          isValid={description}
+                          type="text" title="Description (Optional)"
+                          placeholder="A environment description"
                         />
                         {error && <Error error={error}/>}
                         <div className="text-right">
