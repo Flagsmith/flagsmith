@@ -31,7 +31,8 @@ from organisations.subscriptions.constants import (
     SUBSCRIPTION_PAYMENT_METHODS,
     XERO,
 )
-from organisations.subscriptions.dataclasses import BaseSubscriptionMetadata
+from organisations.subscriptions.metadata import BaseSubscriptionMetadata
+from organisations.subscriptions.xero.metadata import XeroSubscriptionMetadata
 from users.utils.mailer_lite import MailerLite
 from webhooks.models import AbstractBaseWebhookModel
 
@@ -176,11 +177,8 @@ class Subscription(LifecycleModelMixin, AbstractBaseExportableModel):
         if self.payment_method == CHARGEBEE and self.subscription_id:
             metadata = get_subscription_metadata(self.subscription_id)
         elif self.payment_method == XERO and self.subscription_id:
-            metadata = BaseSubscriptionMetadata(
-                seats=self.max_seats,
-                api_calls=self.max_api_calls,
-                projects=None,
-                payment_source=XERO,
+            metadata = XeroSubscriptionMetadata(
+                seats=self.max_seats, api_calls=self.max_api_calls, projects=None
             )
 
         if not metadata:

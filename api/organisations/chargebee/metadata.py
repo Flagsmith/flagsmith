@@ -1,15 +1,11 @@
-from dataclasses import dataclass
 from enum import Enum
 
 from organisations.subscriptions.constants import CHARGEBEE
-from organisations.subscriptions.dataclasses import BaseSubscriptionMetadata
+from organisations.subscriptions.metadata import BaseSubscriptionMetadata
 
 
-@dataclass
 class ChargebeeObjMetadata(BaseSubscriptionMetadata):
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        self.payment_source = CHARGEBEE
+    payment_source = CHARGEBEE
 
     def __mul__(self, other):
         if not isinstance(other, int):
