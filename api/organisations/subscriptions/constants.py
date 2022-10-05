@@ -1,4 +1,4 @@
-from organisations.subscriptions.dataclasses import BaseSubscriptionMetadata
+from organisations.subscriptions.metadata import BaseSubscriptionMetadata
 
 MAX_SEATS_IN_FREE_PLAN = 1
 MAX_API_CALLS_IN_FREE_PLAN = 50000

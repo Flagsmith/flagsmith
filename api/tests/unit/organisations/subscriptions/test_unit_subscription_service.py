@@ -3,7 +3,7 @@ from organisations.subscriptions.constants import (
     MAX_PROJECTS_IN_FREE_PLAN,
     MAX_SEATS_IN_FREE_PLAN,
 )
-from organisations.subscriptions.dataclasses import BaseSubscriptionMetadata
+from organisations.subscriptions.metadata import BaseSubscriptionMetadata
 from organisations.subscriptions.subscription_service import (
     get_subscription_metadata,
 )

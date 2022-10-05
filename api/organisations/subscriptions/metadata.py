@@ -2,17 +2,17 @@ import typing
 
 
 class BaseSubscriptionMetadata:
+    payment_source = None
+
     def __init__(
         self,
         seats: int = 0,
         api_calls: int = 0,
         projects: typing.Optional[int] = None,
-        payment_source: str = None,
     ):
         self.seats = seats
         self.api_calls = api_calls
         self.projects = projects
-        self.payment_source = payment_source
 
     def __add__(self, other: "BaseSubscriptionMetadata"):
         if self.payment_source != other.payment_source:
@@ -29,11 +29,10 @@ class BaseSubscriptionMetadata:
         else:
             projects = None
 
-        return BaseSubscriptionMetadata(
+        return self.__class__(
             seats=self.seats + other.seats,
             api_calls=self.api_calls + other.api_calls,
             projects=projects,
-            payment_source=self.payment_source,
         )
 
     def __str__(self):
