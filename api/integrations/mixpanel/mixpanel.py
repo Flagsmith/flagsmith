@@ -23,6 +23,7 @@ class MixpanelWrapper(AbstractBaseIdentityIntegrationWrapper):
         # Pass the integration ID as per https://developer.mixpanel.com/docs/partner-integration-id
         self.headers = {
             "Accept": "text/plain",
+            "Content-Type": "application/json",
             "X-Mixpanel-Integration-ID": "flagsmith",
         }
 
