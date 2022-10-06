@@ -11,7 +11,9 @@
                 "manage.py",
                 "runprocessor",
                 "--sleepintervalms",
-                "700"
+                "700",
+                "--numthreads",
+                "25"
             ],
             "essential": true,
             "environment": [
