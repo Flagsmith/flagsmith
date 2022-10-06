@@ -26,7 +26,7 @@ class SDKTraitsTest(APITestCase):
     def setUp(self) -> None:
         self.organisation = Organisation.objects.create(name="Test organisation")
         project = Project.objects.create(
-            name="Test project", organisation=self.organisation
+            name="Test project", organisation=self.organisation, enable_dynamo_db=True
         )
         self.environment = Environment.objects.create(
             name="Test environment", project=project
