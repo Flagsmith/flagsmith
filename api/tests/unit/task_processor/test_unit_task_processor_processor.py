@@ -59,7 +59,7 @@ def test_run_next_task_does_nothing_if_no_tasks(db):
     # When
     result = run_tasks()
     # Then
-    assert result is None
+    assert result == []
     assert not TaskRun.objects.exists()
 
 
