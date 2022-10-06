@@ -12,6 +12,7 @@ from organisations.subscriptions.constants import (
     FREE_PLAN_SUBSCRIPTION_METADATA,
     XERO,
 )
+from organisations.subscriptions.metadata import BaseSubscriptionMetadata
 from organisations.subscriptions.xero.metadata import XeroSubscriptionMetadata
 
 
@@ -72,6 +73,48 @@ class OrganisationTestCase(TestCase):
             subscription.subscription_id
         )
         assert subscription.cancellation_date
+
+
+def test_organisation_over_plan_seats_limit_returns_false_if_not_over_plan_seats_limit(
+    organisation, subscription, mocker
+):
+    # Given
+    seats = 200
+    mocked_get_subscription_metadata = mocker.patch(
+        "organisations.models.Subscription.get_subscription_metadata",
+        autospec=True,
+        return_value=BaseSubscriptionMetadata(seats=seats),
+    )
+    # Then
+    assert organisation.over_plan_seats_limit() is False
+    mocked_get_subscription_metadata.assert_called_once_with(subscription)
+
+
+def test_organisation_over_plan_seats_limit_returns_true_if_over_plan_seats_limit(
+    organisation, subscription, mocker, admin_user
+):
+    # Given
+    seats = 0
+    mocked_get_subscription_metadata = mocker.patch(
+        "organisations.models.Subscription.get_subscription_metadata",
+        autospec=True,
+        return_value=BaseSubscriptionMetadata(seats=seats),
+    )
+    # Then
+    assert organisation.over_plan_seats_limit() is True
+    mocked_get_subscription_metadata.assert_called_once_with(subscription)
+
+
+def test_organisation_over_plan_seats_no_subscription(organisation, mocker, admin_user):
+    # Given
+    mocker.patch("organisations.models.MAX_SEATS_IN_FREE_PLAN", 0)
+    mocked_get_subscription_metadata = mocker.patch(
+        "organisations.models.Subscription.get_subscription_metadata",
+        autospec=True,
+    )
+    # Then
+    assert organisation.over_plan_seats_limit() is True
+    mocked_get_subscription_metadata.assert_not_called()
 
 
 class SubscriptionTestCase(TestCase):
