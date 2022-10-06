@@ -93,7 +93,8 @@ class Organisation(LifecycleModelMixin, AbstractBaseExportableModel):
 
     def over_plan_seats_limit(self):
         if self.has_subscription():
-            return self.num_seats > self.subscription.max_seats
+            susbcription_metadata = self.subscription.get_subscription_metadata()
+            return self.num_seats > susbcription_metadata.seats
 
         return self.num_seats > MAX_SEATS_IN_FREE_PLAN
 

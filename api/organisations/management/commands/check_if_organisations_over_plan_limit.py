@@ -1,6 +1,9 @@
 from django.core.management import BaseCommand
 
 from organisations.models import Organisation
+from organisations.subscriptions.subscription_service import (
+    get_subscription_metadata,
+)
 from users.models import FFAdminUser
 
 
@@ -14,6 +17,7 @@ class Command(BaseCommand):
 
 
 def send_alert(organisation):
+    subscription_metadata = get_subscription_metadata(organisation)
     FFAdminUser.send_alert_to_admin_users(
         subject="Organisation over number of seats",
         message="Organisation %s has used %d seats which is over their plan limit of %d "
@@ -21,7 +25,7 @@ def send_alert(organisation):
         % (
             str(organisation.name),
             organisation.num_seats,
-            organisation.subscription.max_seats,
+            subscription_metadata.seats,
             organisation.subscription.plan,
         ),
     )
