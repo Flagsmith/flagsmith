@@ -11,7 +11,7 @@ logger = logging.getLogger(__name__)
 
 
 @transaction.atomic
-def run_tasks(num_tasks: int = 1) -> typing.Optional[typing.List[TaskRun]]:
+def run_tasks(num_tasks: int = 1) -> typing.List[TaskRun]:
     if num_tasks < 1:
         raise ValueError("Number of tasks to process must be at least one")
 
@@ -20,25 +20,27 @@ def run_tasks(num_tasks: int = 1) -> typing.Optional[typing.List[TaskRun]]:
         .filter(num_failures__lt=3, scheduled_for__lte=timezone.now(), completed=False)
         .order_by("scheduled_for")[:num_tasks]
     )
-    if not tasks:
-        logger.debug("No tasks to process.")
-        return
+    if tasks:
+        executed_tasks = []
+        task_runs = []
 
-    executed_tasks = []
-    task_runs = []
+        for task in tasks:
+            executed_task, task_run = _run_task(task)
+            executed_tasks.append(executed_task)
+            task_runs.append(task_run)
 
-    for task in tasks:
-        executed_task, task_run = _run_task(task)
-        executed_tasks.append(executed_task)
-        task_runs.append(task_run)
+        if executed_tasks:
+            Task.objects.bulk_update(
+                executed_tasks, fields=["completed", "num_failures"]
+            )
 
-    if executed_tasks:
-        Task.objects.bulk_update(executed_tasks, fields=["completed", "num_failures"])
+        if task_runs:
+            TaskRun.objects.bulk_create(task_runs)
 
-    if task_runs:
-        TaskRun.objects.bulk_create(task_runs)
+        return task_runs
 
-    return task_runs
+    logger.debug("No tasks to process.")
+    return []
 
 
 def _run_task(task: Task) -> typing.Optional[typing.Tuple[Task, TaskRun]]:
