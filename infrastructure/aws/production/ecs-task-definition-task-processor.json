@@ -13,7 +13,7 @@
                 "--sleepintervalms",
                 "700",
                 "--numthreads",
-                "50"
+                "25"
             ],
             "essential": true,
             "environment": [
