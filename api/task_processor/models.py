@@ -24,8 +24,10 @@ class Task(models.Model):
     completed = models.BooleanField(default=False)
 
     class Meta:
+        # We have customised the migration in 0004 to only apply this change to postgres databases
+        # TODO: work out how to index the taskprocessor_task table for Oracle and MySQL
         index_together = [
-            ["scheduled_for", "num_failures", "completed"],
+            ["scheduled_for", "num_failures"],
         ]
 
     @classmethod
