@@ -161,7 +161,7 @@ class SDKIdentities(SDKAPIView):
             .prefetch_related("identity_traits")
             .get_or_create(identifier=identifier, environment=request.environment)
         )
-        if settings.EDGE_API_URL:
+        if settings.EDGE_API_URL and request.environment.project.enable_dynamo_db:
             forward_identity_request.delay(
                 args=(
                     request.method,
@@ -200,7 +200,7 @@ class SDKIdentities(SDKAPIView):
         serializer.is_valid(raise_exception=True)
         instance = serializer.save()
 
-        if settings.EDGE_API_URL:
+        if settings.EDGE_API_URL and request.environment.project.enable_dynamo_db:
             forward_identity_request.delay(
                 args=(
                     request.method,

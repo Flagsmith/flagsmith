@@ -284,7 +284,7 @@ class SDKIdentitiesTestCase(APITestCase):
     def setUp(self) -> None:
         self.organisation = Organisation.objects.create(name="Test Org")
         self.project = Project.objects.create(
-            organisation=self.organisation, name="Test Project"
+            organisation=self.organisation, name="Test Project", enable_dynamo_db=True
         )
         self.environment = Environment.objects.create(
             project=self.project, name="Test Environment"
