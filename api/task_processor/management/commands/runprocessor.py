@@ -47,15 +47,25 @@ class Command(BaseCommand):
             help="Number of millis before running task is considered 'stuck'.",
             default=3000,
         )
+        parser.add_argument(
+            "--queuepopsize",
+            type=int,
+            help="Number of tasks each worker will pop from the queue on each cycle.",
+            default=10,
+        )
 
     def handle(self, *args, **options):
         num_threads = options["numthreads"]
         sleep_interval_ms = options["sleepintervalms"]
         grace_period_ms = options["graceperiodms"]
+        queue_pop_size = options["queuepopsize"]
 
         self._threads.extend(
             [
-                TaskRunner(sleep_interval_millis=sleep_interval_ms)
+                TaskRunner(
+                    sleep_interval_millis=sleep_interval_ms,
+                    queue_pop_size=queue_pop_size,
+                )
                 for _ in range(num_threads)
             ]
         )
