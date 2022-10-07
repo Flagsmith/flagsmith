@@ -33,6 +33,10 @@ RUN if [ "${SAML_INSTALLED}" = "1" ]; then apt-get update && apt-get install -y 
 # Install python dependencies
 RUN pip install -r requirements.txt --no-cache-dir --compile
 
+# remove pip
+RUN python -m pip uninstall pip -y
+RUN rm -rf $HOME/.cache/pip
+
 # Compile static Django assets
 RUN python /app/manage.py collectstatic --no-input
 

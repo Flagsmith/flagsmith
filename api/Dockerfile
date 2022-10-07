@@ -19,6 +19,10 @@ RUN apt update && apt install -y xmlsec1
 # Install python dependencies
 RUN pip install -r requirements.txt --no-cache-dir --compile
 
+# remove pip
+RUN python -m pip uninstall pip -y
+RUN rm -rf $HOME/.cache/pip
+
 # Compile static Django assets
 RUN python manage.py collectstatic --no-input
 
