@@ -7,6 +7,8 @@ from core.migration_helpers import PostgresOnlyRunSQL
 
 class Migration(migrations.Migration):
 
+    atomic = False
+
     dependencies = [
         ("task_processor", "0004_recreate_task_indexes"),
     ]
