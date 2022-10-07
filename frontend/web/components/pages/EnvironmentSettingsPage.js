@@ -169,7 +169,6 @@ const EnvironmentSettingsPage = class extends Component {
                                             </div>
                                             <div className="row">
                                                 <div className="col-md-6">
-
                                                     <InputGroup
                                                         textarea={true}
                                                         ref={e => this.input = e}

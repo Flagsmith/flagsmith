@@ -37,23 +37,30 @@ const controller = {
         }
     },
 
-    createEnv: (name, projectId, cloneId) => {
+    createEnv: (name, projectId, cloneId, description) => {
         API.trackEvent(Constants.events.CREATE_ENVIRONMENT);
-        const req = cloneId ? data.post(`${Project.api}environments/${cloneId}/clone/`, { name }) : data.post(`${Project.api}environments/`, { name, project: projectId });
+        const req = cloneId ? data.post(`${Project.api}environments/${cloneId}/clone/`, { name, description }) : data.post(`${Project.api}environments/`, { name, project: projectId, description });
 
         req.then((res) => {
-            data.post(`${Project.api}environments/${res.api_key}/${Utils.getIdentitiesEndpoint()}/`, {
-                environment: res.api_key,
-                identifier: `${name.toLowerCase()}_user_123456`,
-            })
-                .then(() => {
-                    store.savedEnv = res;
-                    if (store.model && store.model.environments) {
-                        store.model.environments = store.model.environments.concat([res]);
-                    }
-                    store.saved();
-                    AppActions.refreshOrganisation();
-                });
+            return data.put(`${Project.api}environments/${res.api_key}`, {description, project:projectId, name})
+                .then((res)=>{
+                    debugger
+                    return   data.post(`${Project.api}environments/${res.api_key}/${Utils.getIdentitiesEndpoint()}/`, {
+                        environment: res.api_key,
+                        identifier: `${name.toLowerCase()}_user_123456`,
+                    })
+                        .then(() => {
+                            store.savedEnv = res;
+                            if (store.model && store.model.environments) {
+                                store.model.environments = store.model.environments.concat([res]);
+                            }
+                            store.saved();
+                            AppActions.refreshOrganisation();
+                        });
+                })
+
+
+
         });
     },
     editEnv: (env) => {
@@ -111,7 +118,7 @@ store.dispatcherIndex = Dispatcher.register(store, (payload) => {
             controller.getProject(action.projectId);
             break;
         case Actions.CREATE_ENV:
-            controller.createEnv(action.name, action.projectId, action.cloneId);
+            controller.createEnv(action.name, action.projectId, action.cloneId, action.description);
             break;
         case Actions.EDIT_ENVIRONMENT:
             controller.editEnv(action.env);
