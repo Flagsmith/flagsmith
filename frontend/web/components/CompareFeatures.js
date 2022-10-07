@@ -92,9 +92,10 @@ class CompareEnvironments extends Component {
                                 const flagB = compare[this.state.flagId]
                                 const fadeEnabled = flagA.enabled == flagB.enabled;
                                 const fadeValue = flagB.feature_state_value == flagA.feature_state_value;
+                                const changeRequestsEnabled = Utils.changeRequestsEnabled(data.minimum_change_request_approvals)
                                 return (
                                     <Permission
-                                        level="environment" permission={Utils.getManageFeaturePermission()}
+                                        level="environment" permission={Utils.getManageFeaturePermission(changeRequestsEnabled)}
                                         id={data.api_key}
                                     >
                                         {({ permission, isLoading }) => (

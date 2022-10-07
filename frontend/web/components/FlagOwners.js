@@ -83,11 +83,10 @@ class TheComponent extends Component {
                         </div>
                     );
                     return hasPermission ? res : (
-                        <Tooltip
-                          title={res}
-                        >
-                            The add flag assignees feature is available with our startup plan
-                        </Tooltip>
+                        <div>
+                            {res}
+                            The add flag assignees feature is available with our <strong>Scale-up</strong> plan.
+                        </div>
                     );
                 }}
             </OrganisationProvider>

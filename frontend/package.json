@@ -103,7 +103,7 @@
     "react-tooltip": "3.7.0",
     "react-virtualized-auto-sizer": "1.0.2",
     "react-window": "^1.8.6",
-    "recharts": "^1.8.5",
+    "recharts": "^2.1.14",
     "sass-loader": "^12.6.0",
     "sass-graph": "https://github.com/Ohiekkar/sass-graph#update-scss-tokenizer",
     "semver": "^7.3.7",

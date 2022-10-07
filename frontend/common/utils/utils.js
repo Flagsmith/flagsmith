@@ -19,14 +19,30 @@ module.exports = Object.assign({}, require('./base/_utils'), {
         p.appendChild(text);
         return p.innerHTML;
     },
-
-    getManageFeaturePermission() {
+    getApproveChangeRequestPermission() {
+        if (Utils.getFlagsmithHasFeature('update_feature_state_permission')) {
+            return 'APPROVE_CHANGE_REQUEST';
+        }
+        return 'VIEW_ENVIRONMENT';
+    },
+    getManageFeaturePermission(isChangeRequest) {
+        if (isChangeRequest && Utils.getFlagsmithHasFeature('update_feature_state_permission')) {
+            return 'CREATE_CHANGE_REQUEST';
+        }
         if (Utils.getFlagsmithHasFeature('update_feature_state_permission')) {
             return 'UPDATE_FEATURE_STATE';
         }
         return 'ADMIN';
     },
-
+    getManageFeaturePermissionDescription(isChangeRequest) {
+        if (isChangeRequest && Utils.getFlagsmithHasFeature('update_feature_state_permission')) {
+            return 'Create Change Request';
+        }
+        if (Utils.getFlagsmithHasFeature('update_feature_state_permission')) {
+            return 'Update Feature State';
+        }
+        return 'Admin';
+    },
     getTraitEndpointMethod(_project) {
         const project = _project || ProjectStore.model;
         if (Utils.getFlagsmithHasFeature('edge_identities') && ProjectStore.model && ProjectStore.model.use_edge_identities) {
@@ -41,7 +57,7 @@ module.exports = Object.assign({}, require('./base/_utils'), {
         return false;
     },
     isMigrating() {
-        if (Utils.getFlagsmithHasFeature('edge_migrator') && ProjectStore.model && (ProjectStore.model.migration_status === 'MIGRATION_IN_PROGRESS'|| ProjectStore.model.migration_status === 'MIGRATION_SCHEDULED')) {
+        if (Utils.getFlagsmithHasFeature('edge_migrator') && ProjectStore.model && (ProjectStore.model.migration_status === 'MIGRATION_IN_PROGRESS' || ProjectStore.model.migration_status === 'MIGRATION_SCHEDULED')) {
             return true;
         }
         return false;
@@ -164,13 +180,6 @@ module.exports = Object.assign({}, require('./base/_utils'), {
         return 'featurestates';
     },
 
-    getManageFeaturePermissionDescription() {
-        if (Utils.getFlagsmithHasFeature('update_feature_state_permission')) {
-            return 'Update Feature State';
-        }
-        return 'Admin';
-    },
-
     parseBetaFeatures() {
         if (!flagsmith.hasFeature('beta_features')) {
             return [];
@@ -245,7 +254,7 @@ module.exports = Object.assign({}, require('./base/_utils'), {
         }
 
 
-        return Utils.getTypedValue(typeof featureState.integer_value === 'number'? featureState.integer_value : featureState.string_value || featureState.boolean_value);
+        return Utils.getTypedValue(typeof featureState.integer_value === 'number' ? featureState.integer_value : featureState.string_value || featureState.boolean_value);
     },
     valueToFeatureState(value) {
         const val = Utils.getTypedValue(value);
@@ -371,7 +380,7 @@ module.exports = Object.assign({}, require('./base/_utils'), {
 
     getPlansPermission: (permission) => {
         if (!Utils.getFlagsmithHasFeature('plan_based_access')) {
-            return true
+            return true;
         }
         const isOrgPermission = permission !== '2FA';
         const plans = isOrgPermission ? AccountStore.getActiveOrgPlan() ? [AccountStore.getActiveOrgPlan()] : null
@@ -394,7 +403,7 @@ module.exports = Object.assign({}, require('./base/_utils'), {
     getPlanPermission: (plan, permission) => {
         let valid = true;
         if (!Utils.getFlagsmithHasFeature('plan_based_access')) {
-            return true
+            return true;
         }
         if (!plan) {
             return false;
@@ -409,7 +418,7 @@ module.exports = Object.assign({}, require('./base/_utils'), {
         const isScaleupOrGreater = !plan.includes('side-project') && !plan.includes('startup');
         switch (permission) {
             case 'FLAG_OWNERS': {
-                valid = true;
+                valid = isScaleupOrGreater;
                 break;
             }
             case 'CREATE_ADDITIONAL_PROJECT': {
@@ -430,6 +439,10 @@ module.exports = Object.assign({}, require('./base/_utils'), {
             }
             case 'FORCE_2FA': {
                 valid = isScaleupOrGreater;
+                break;
+            }
+            case 'SCHEDULE_FLAGS': {
+                valid = isSideProjectOrGreater;
                 break;
             }
             case '4_EYES': {

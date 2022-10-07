@@ -31,7 +31,8 @@ from organisations.subscriptions.constants import (
     SUBSCRIPTION_PAYMENT_METHODS,
     XERO,
 )
-from organisations.subscriptions.dataclasses import BaseSubscriptionMetadata
+from organisations.subscriptions.metadata import BaseSubscriptionMetadata
+from organisations.subscriptions.xero.metadata import XeroSubscriptionMetadata
 from users.utils.mailer_lite import MailerLite
 from webhooks.models import AbstractBaseWebhookModel
 
@@ -92,7 +93,8 @@ class Organisation(LifecycleModelMixin, AbstractBaseExportableModel):
 
     def over_plan_seats_limit(self):
         if self.has_subscription():
-            return self.num_seats > self.subscription.max_seats
+            susbcription_metadata = self.subscription.get_subscription_metadata()
+            return self.num_seats > susbcription_metadata.seats
 
         return self.num_seats > MAX_SEATS_IN_FREE_PLAN
 
@@ -176,11 +178,8 @@ class Subscription(LifecycleModelMixin, AbstractBaseExportableModel):
         if self.payment_method == CHARGEBEE and self.subscription_id:
             metadata = get_subscription_metadata(self.subscription_id)
         elif self.payment_method == XERO and self.subscription_id:
-            metadata = BaseSubscriptionMetadata(
-                seats=self.max_seats,
-                api_calls=self.max_api_calls,
-                projects=None,
-                payment_source=XERO,
+            metadata = XeroSubscriptionMetadata(
+                seats=self.max_seats, api_calls=self.max_api_calls, projects=None
             )
 
         if not metadata:

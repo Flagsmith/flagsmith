@@ -41,6 +41,9 @@ if ENV not in ("local", "dev", "staging", "production"):
 
 DEBUG = env.bool("DEBUG", default=False)
 
+ADMINS = []
+MANAGERS = []
+
 # Enables the sending of telemetry data to the central Flagsmith API for usage tracking
 ENABLE_TELEMETRY = env.bool("ENABLE_TELEMETRY", default=True)
 
@@ -420,7 +423,7 @@ else:
     LOG_LEVEL = env.str("LOG_LEVEL", default="WARNING")
     LOGGING = {
         "version": 1,
-        "disable_existing_loggers": True,
+        "disable_existing_loggers": False,
         "formatters": {
             "generic": {"format": "%(name)-12s %(levelname)-8s %(message)s"},
         },
@@ -720,3 +723,7 @@ TASK_RUN_METHOD = env.enum(
 ENABLE_TASK_PROCESSOR_HEALTH_CHECK = env.bool(
     "ENABLE_TASK_PROCESSOR_HEALTH_CHECK", default=False
 )
+
+# Real time(server sent events) settings
+SSE_SERVER_BASE_URL = env.str("SSE_SERVER_BASE_URL", None)
+SSE_AUTHENTICATION_TOKEN = env.str("SSE_AUTHENTICATION_TOKEN", None)

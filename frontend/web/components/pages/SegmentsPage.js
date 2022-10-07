@@ -99,7 +99,7 @@ const SegmentsPage = class extends Component {
     }
 
 
-    createSegmentPermission(el, level, id, permissionText) {
+    createSegmentPermission(el, level) {
         return (
             <Permission level="environment" permission="CREATE_SEGMENT" id={this.props.match.params.environmentId}>
                 {({ permission, isLoading }) => (permission ? (
@@ -118,7 +118,7 @@ const SegmentsPage = class extends Component {
               place="right"
               html
             >
-                {name}
+                {Constants.projectPermissions('Manage segments')}
             </Tooltip>
         );
     }
@@ -175,7 +175,7 @@ const SegmentsPage = class extends Component {
                                                                             )}
                                                                             place="right"
                                                                         >
-                                                                            {Constants.projectPermissions('Admin')}
+                                                                            {Constants.projectPermissions('Manage segments')}
                                                                         </Tooltip>
                                                                     )}
                                                                 </div>
