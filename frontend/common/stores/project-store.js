@@ -44,7 +44,6 @@ const controller = {
         req.then((res) => {
             return data.put(`${Project.api}environments/${res.api_key}`, {description, project:projectId, name})
                 .then((res)=>{
-                    debugger
                     return   data.post(`${Project.api}environments/${res.api_key}/${Utils.getIdentitiesEndpoint()}/`, {
                         environment: res.api_key,
                         identifier: `${name.toLowerCase()}_user_123456`,

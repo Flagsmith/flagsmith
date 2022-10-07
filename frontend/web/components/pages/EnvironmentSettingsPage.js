@@ -157,8 +157,7 @@ const EnvironmentSettingsPage = class extends Component {
                                                     <InputGroup
                                                         ref={e => this.input = e}
                                                         value={typeof this.state.name == "string" ? this.state.name : env.name}
-                                                        inputProps={{className:"full-width"}}
-                                                        name="env-name"
+                                                        inputProps={{className:"full-width", name:"env-name"}}
                                                         className="full-width"
                                                         onChange={e => this.setState({ name: Utils.safeParseEventValue(e) })}
                                                         isValid={name && name.length}
