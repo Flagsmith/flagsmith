@@ -26,8 +26,12 @@ class Task(models.Model):
     class Meta:
         # We have customised the migration in 0004 to only apply this change to postgres databases
         # TODO: work out how to index the taskprocessor_task table for Oracle and MySQL
-        index_together = [
-            ["scheduled_for", "num_failures"],
+        indexes = [
+            models.Index(
+                name="incomplete_tasks_idx",
+                fields=["scheduled_for"],
+                condition=models.Q(completed=False, num_failures__lt=3),
+            )
         ]
 
     @classmethod

@@ -23,8 +23,8 @@ class Migration(migrations.Migration):
                 migrations.AddIndex(
                     model_name="task",
                     index=models.Index(
-                        condition=models.Q(("completed", False)),
-                        fields=["num_failures", "scheduled_for"],
+                        condition=models.Q(('completed', False), ('num_failures__lt', 3)),
+                        fields=["scheduled_for"],
                         name="incomplete_tasks_idx",
                     ),
                 ),
@@ -35,7 +35,7 @@ class Migration(migrations.Migration):
                     reverse_sql='CREATE INDEX "task_processor_task_scheduled_for_num_failur_17d6dc77_idx" ON "task_processor_task" ("scheduled_for", "num_failures", "completed");',
                 ),
                 PostgresOnlyRunSQL(
-                    'CREATE INDEX CONCURRENTLY "incomplete_tasks_idx" ON "task_processor_task" ("num_failures", "scheduled_for") WHERE NOT "completed";',
+                    'CREATE INDEX CONCURRENTLY "incomplete_tasks_idx" ON "task_processor_task" ("scheduled_for") WHERE (NOT "completed" and "num_failures" < 3);',
                     reverse_sql='DROP INDEX CONCURRENTLY "incomplete_tasks_idx";',
                 ),
             ],
