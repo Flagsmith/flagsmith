@@ -7,9 +7,9 @@ from task_processor.models import Task
 from task_processor.serializers import MonitoringSerializer
 
 
+@swagger_auto_schema(method="GET", responses={200: MonitoringSerializer()})
 @api_view(http_method_names=["GET"])
 @permission_classes([IsAuthenticated, IsAdminUser])
-@swagger_auto_schema(responses={200: MonitoringSerializer()})
 def monitoring(request, **kwargs):
     waiting_tasks = Task.objects.filter(num_failures__lt=3, completed=False).count()
     return Response(
