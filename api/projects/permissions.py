@@ -90,7 +90,7 @@ class MasterAPIKeyProjectPermissions(BasePermission):
         return master_api_key.organisation_id == obj.organisation_id
 
 
-class IsProjectAdmin(IsAuthenticated):
+class IsProjectAdmin(BasePermission):
     def __init__(
         self,
         *args,
@@ -105,15 +105,9 @@ class IsProjectAdmin(IsAuthenticated):
         self._get_project_from_object_callable = get_project_from_object_callable
 
     def has_permission(self, request, view):
-        if not super().has_permission(request, view):
-            return False
-
         return request.user.is_project_admin(self._get_project(view)) or view.detail
 
     def has_object_permission(self, request, view, obj):
-        if request.user.is_anonymous:
-            return False
-
         return request.user.is_project_admin(
             self._get_project_from_object_callable(obj)
         )
