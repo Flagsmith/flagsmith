@@ -60,12 +60,12 @@ const CreateEnvironmentPage = class extends Component {
                                                   id="create-env-modal"
                                                   onSubmit={(e) => {
                                                       e.preventDefault();
-                                                      !isSaving && name && createEnv(name, this.props.match.params.projectId, this.state.selectedEnv && this.state.selectedEnv.api_key);
+                                                      !isSaving && name && createEnv(name, this.props.match.params.projectId, this.state.selectedEnv && this.state.selectedEnv.api_key, this.state.description);
                                                   }}
                                                 >
                                                     <div className="no-pad">
                                                         <div className="row">
-                                                            <div className="col-md-12">
+                                                            <div className="col-md-8">
                                                                 <InputGroup
                                                                   ref={(e) => {
                                                                       if (e) this.input = e;
@@ -77,9 +77,22 @@ const CreateEnvironmentPage = class extends Component {
                                                                   placeholder="An environment name e.g. Develop"
                                                                 />
                                                             </div>
+                                                            <div className="col-md-12">
+                                                                <InputGroup
+                                                                    textarea={true}
+                                                                    ref={e => this.input = e}
+                                                                    value={this.state.description }
+                                                                    inputProps={{className:"input--wide",style:{minHeight:100} }}
+                                                                    onChange={e => this.setState({ description: Utils.safeParseEventValue(e) })}
+                                                                    isValid={name && name.length}
+                                                                    type="text" title={"Description"}
+                                                                    placeholder="Environment Description"
+                                                                />
+                                                            </div>
                                                             <div className="col-md-6">
-                                                                {project && project.environments && project.environments.length && (
+                                                                {project && project.environments && !!project.environments.length && (
                                                                     <InputGroup
+                                                                        tooltip="This will copy feature enabled states and remote config values from the selected environment."
                                                                       title="Clone from environment" component={(
                                                                           <Select
                                                                             onChange={(env) => {
@@ -124,7 +137,7 @@ const CreateEnvironmentPage = class extends Component {
                                                         )}
 
                                                     </div>
-                                                    <p className="text-center faint">
+                                                    <p className="text-center faint mt-2">
                                                         Not seeing an environment? Check that your project administrator has invited you to it.
                                                     </p>
                                                 </form>

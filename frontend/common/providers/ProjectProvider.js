@@ -31,8 +31,8 @@ const ProjectProvider = class extends Component {
         });
     }
 
-    createEnv = (env, projectId, cloneId) => {
-        AppActions.createEnv(env, projectId,cloneId);
+    createEnv = (env, projectId, cloneId, description) => {
+        AppActions.createEnv(env, projectId,cloneId, description);
     }
 
     editEnv = (env) => {
