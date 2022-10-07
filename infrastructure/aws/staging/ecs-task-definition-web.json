@@ -156,10 +156,6 @@
                     "value": "TASK_PROCESSOR"
                 },
                 {
-                    "name": "ENABLE_TASK_PROCESSOR_HEALTH_CHECK",
-                    "value": "True"
-                },
-                {
                     "name": "CACHE_ENVIRONMENT_DOCUMENT_SECONDS",
                     "value": "60"
                 },
