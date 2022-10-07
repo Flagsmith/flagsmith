@@ -101,6 +101,7 @@ class IsProjectAdmin(BasePermission):
         **kwargs,
     ):
         super().__init__(*args, **kwargs)
+
         self._view_kwarg_name = project_pk_view_kwarg_attribute_name
         self._get_project_from_object_callable = get_project_from_object_callable
 
