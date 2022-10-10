@@ -193,6 +193,6 @@ class NestedProjectMasterAPIKeyPermissions(BasePermission):
         return False
 
     def has_object_permission(
-        self, request: HttpRequest, view: str, obj: Project
+        self, request: HttpRequest, view: str, obj: Model
     ) -> bool:
         return self.has_permission(request, view)
