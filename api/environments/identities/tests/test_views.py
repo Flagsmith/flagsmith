@@ -284,7 +284,7 @@ class SDKIdentitiesTestCase(APITestCase):
     def setUp(self) -> None:
         self.organisation = Organisation.objects.create(name="Test Org")
         self.project = Project.objects.create(
-            organisation=self.organisation, name="Test Project"
+            organisation=self.organisation, name="Test Project", enable_dynamo_db=True
         )
         self.environment = Environment.objects.create(
             project=self.project, name="Test Environment"
@@ -712,7 +712,7 @@ class SDKIdentitiesTestCase(APITestCase):
         mock_send_identity_update_message.delay.assert_not_called()
 
     @override_settings(EDGE_API_URL="http://localhost")
-    @mock.patch("environments.identities.views.forward_identity_request")
+    @mock.patch("environments.identities.views.forward_identity_request", autospec=True)
     def test_post_identities_calls_forward_identity_request_with_correct_arguments(
         self, mocked_forward_identity_request
     ):
@@ -731,7 +731,7 @@ class SDKIdentitiesTestCase(APITestCase):
         self.client.post(url, data=json.dumps(data), content_type="application/json")
 
         # Then
-        args, kwargs = mocked_forward_identity_request.delay.call_args_list[0]
+        args, kwargs = mocked_forward_identity_request.run_in_thread.call_args_list[0]
         assert args == ()
         assert kwargs["args"][0] == "POST"
         assert kwargs["args"][1].get("X-Environment-Key") == self.environment.api_key
@@ -740,7 +740,7 @@ class SDKIdentitiesTestCase(APITestCase):
         assert kwargs["kwargs"]["request_data"] == data
 
     @override_settings(EDGE_API_URL="http://localhost")
-    @mock.patch("environments.identities.views.forward_identity_request")
+    @mock.patch("environments.identities.views.forward_identity_request", autospec=True)
     def test_get_identities_calls_forward_identity_request_with_correct_arguments(
         self, mocked_forward_identity_request
     ):
@@ -752,7 +752,7 @@ class SDKIdentitiesTestCase(APITestCase):
         self.client.get(url)
 
         # Then
-        args, kwargs = mocked_forward_identity_request.delay.call_args_list[0]
+        args, kwargs = mocked_forward_identity_request.run_in_thread.call_args_list[0]
         assert args == ()
         assert kwargs["args"][0] == "GET"
         assert kwargs["args"][1].get("X-Environment-Key") == self.environment.api_key

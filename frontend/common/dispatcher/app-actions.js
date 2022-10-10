@@ -156,11 +156,12 @@ const AppActions = Object.assign({}, require('./base/_app-actions'), {
             ...data,
         });
     },
-    createEnv(name, projectId, cloneId) {
+    createEnv(name, projectId, cloneId, description) {
         Dispatcher.handleViewAction({
             actionType: Actions.CREATE_ENV,
             name,
             projectId,
+            description,
             cloneId,
         });
     },

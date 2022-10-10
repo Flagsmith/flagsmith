@@ -11,7 +11,9 @@
                 "manage.py",
                 "runprocessor",
                 "--sleepintervalms",
-                "700"
+                "700",
+                "--numthreads",
+                "25"
             ],
             "essential": true,
             "environment": [
@@ -159,6 +161,6 @@
     "requiresCompatibilities": [
         "FARGATE"
     ],
-    "cpu": "1024",
-    "memory": "2048"
+    "cpu": "256",
+    "memory": "512"
 }
