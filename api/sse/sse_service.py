@@ -6,7 +6,7 @@ from django.conf import settings
 from . import tasks
 
 
-def call_service_method_if(get_project_from_first_arg=lambda obj: obj.project):
+def sse_enabled(get_project_from_first_arg=lambda obj: obj.project):
     def decorator(service_func):
         @wraps(service_func)
         def wrapper(*args, **kwargs):
@@ -26,7 +26,7 @@ def call_service_method_if(get_project_from_first_arg=lambda obj: obj.project):
     return decorator
 
 
-@call_service_method_if(get_project_from_first_arg=lambda obj: obj)
+@sse_enabled(get_project_from_first_arg=lambda obj: obj)
 def send_environment_update_message_using_project(project):
     environment_keys = list(
         project.environments.all().values_list("api_key", flat=True)
@@ -34,17 +34,17 @@ def send_environment_update_message_using_project(project):
     tasks.send_environment_update_messages.delay(args=(environment_keys,))
 
 
-@call_service_method_if()
+@sse_enabled()
 def send_environment_update_message_using_environment(environment):
     tasks.send_environment_update_message.delay(args=(environment.api_key,))
 
 
-@call_service_method_if()
+@sse_enabled()
 def send_identity_update_message(environment, identifier: str):
     tasks.send_identity_update_message.delay(args=(environment.api_key, identifier))
 
 
-@call_service_method_if()
+@sse_enabled()
 def send_identity_update_messages(environment, identifiers: List[str]):
     tasks.send_identity_update_messages.delay(
         args=(
