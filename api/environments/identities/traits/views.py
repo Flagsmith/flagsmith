@@ -33,8 +33,8 @@ from environments.sdk.serializers import (
     SDKCreateUpdateTraitSerializer,
 )
 from environments.views import logger
+from sse import send_identity_update_messages
 from sse.decorators import generate_identity_update_message
-from sse.tasks import send_identity_update_messages
 from util.views import SDKAPIView
 
 generate_identity_message_decorator_trait_view = generate_identity_update_message(
@@ -297,7 +297,7 @@ class SDKTraits(mixins.CreateModelMixin, viewsets.GenericViewSet):
 
             send_identity_update_messages.delay(
                 args=(
-                    request.environment.api_key,
+                    request.environment,
                     [trait["identity"]["identifier"] for trait in traits],
                 )
             )

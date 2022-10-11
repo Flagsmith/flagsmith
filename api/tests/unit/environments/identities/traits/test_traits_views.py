@@ -56,7 +56,7 @@ def test_trait_view_post_calls_send_identity_update_message_correctly(
 ):
     # Given
     send_identity_update_message = mocker.patch(
-        "sse.decorators.send_identity_update_message"
+        "sse.decorators.send_identity_update_message", autospec=True
     )
     url = reverse(
         "api-v1:environments:identities-traits-list",
@@ -67,15 +67,15 @@ def test_trait_view_post_calls_send_identity_update_message_correctly(
     admin_client.post(
         url, data={"trait_key": "foo", "value_type": "unicode", "string_value": "foo"}
     )
-    send_identity_update_message.delay.assert_called_once_with(
-        args=(environment.api_key, identity.identifier)
+    send_identity_update_message.assert_called_once_with(
+        environment, identity.identifier
     )
 
 
 def test_trait_view_delete_trait(environment, admin_client, identity, trait, mocker):
     # Given
     send_identity_update_message = mocker.patch(
-        "sse.decorators.send_identity_update_message"
+        "sse.decorators.send_identity_update_message", autospec=True
     )
     url = reverse(
         "api-v1:environments:identities-traits-detail",
@@ -91,8 +91,8 @@ def test_trait_view_delete_trait(environment, admin_client, identity, trait, moc
     # and
     assert not Trait.objects.filter(pk=trait.id).exists()
 
-    send_identity_update_message.delay.assert_called_once_with(
-        args=(environment.api_key, identity.identifier)
+    send_identity_update_message.assert_called_once_with(
+        environment, identity.identifier
     )
 
 
@@ -104,7 +104,7 @@ def test_trait_view_set_update(environment, admin_client, identity, trait, mocke
     )
     new_value = "updated"
     send_identity_update_message = mocker.patch(
-        "sse.decorators.send_identity_update_message"
+        "sse.decorators.send_identity_update_message", autospec=True
     )
 
     # When
@@ -114,7 +114,7 @@ def test_trait_view_set_update(environment, admin_client, identity, trait, mocke
     assert response.status_code == status.HTTP_200_OK
     assert response.json()["string_value"] == new_value
     send_identity_update_message.delay.assert_called_once_with(
-        args=(environment.api_key, identity.identifier)
+        environment, identity.identifier
     )
 
 

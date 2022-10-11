@@ -364,7 +364,7 @@ class SDKTraitsTest(APITestCase):
             == num_traits
         )
         mock_send_identity_update_messages.delay.assert_called_once_with(
-            args=(self.environment.api_key, identifiers)
+            args=(self.environment, identifiers)
         )
 
     def test_bulk_create_traits_when_bad_trait_value_sent_then_trait_value_stringified(
