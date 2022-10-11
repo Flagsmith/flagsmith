@@ -295,11 +295,9 @@ class SDKTraits(mixins.CreateModelMixin, viewsets.GenericViewSet):
                     )
                 )
 
-            send_identity_update_messages.delay(
-                args=(
-                    request.environment,
-                    [trait["identity"]["identifier"] for trait in traits],
-                )
+            send_identity_update_messages(
+                request.environment,
+                [trait["identity"]["identifier"] for trait in traits],
             )
             return Response(serializer.data, status=200)
 
