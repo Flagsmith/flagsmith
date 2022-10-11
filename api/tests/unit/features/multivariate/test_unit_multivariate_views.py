@@ -18,7 +18,7 @@ def test_multivariate_feature_options_view_set_get_permissions():
 
     # Then
     # NOTE: since we are using or(|) operator in the viewset `get_permission` returns
-    # an instance of `OR` object which store the permission in attributes named `op1` and `op2`
+    # an instance of `OR` object which store the permissions in attributes named `op1` and `op2`
     # ref: https://github.com/encode/django-rest-framework/blob/3.9.x/rest_framework/permissions.py#L71
     assert len(permissions) == 1
     assert isinstance(permissions[0].op1, NestedProjectPermissions)
