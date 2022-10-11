@@ -571,7 +571,12 @@ def test_can_enable_enable_realtime_updates_for_project(
 ):
     # Given
     url = reverse("api-v1:projects:project-detail", args=[project.id])
-    data = {"enable_realtime_updates": True}
+
+    data = {
+        "name": project.name,
+        "organisation": organisation.id,
+        "enable_realtime_updates": True,
+    }
 
     # When
     response = client.put(url, data=data)
