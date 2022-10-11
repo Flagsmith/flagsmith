@@ -55,7 +55,7 @@ def test_traces_sampler_returns_1_for_dashboard_request():
     "path_info",
     (
         "/api/v1/identities",
-        "/api/v1/identities",
+        "/api/v1/identities/",
         "/api/v1/flags",
         "/api/v1/traits",
         "/api/v1/environment-document",
