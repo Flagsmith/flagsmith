@@ -26,7 +26,7 @@ def test_register_task_handler_run_in_thread(mocker, caplog):
     kwargs = {"bar": "baz"}
 
     # When
-    my_function.run_in_thread(*args, **kwargs)
+    my_function.run_in_thread(args=args, kwargs=kwargs)
 
     # Then
     mock_thread_class.assert_called_once_with(

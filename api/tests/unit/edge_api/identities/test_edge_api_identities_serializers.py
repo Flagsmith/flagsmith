@@ -82,16 +82,18 @@ def test_edge_identity_feature_state_serializer_save_calls_webhook_for_new_overr
 
     # Then
     mock_call_environment_webhook.run_in_thread.assert_called_once_with(
-        feature_id=feature.id,
-        environment_api_key=identity.environment.api_key,
-        identity_id=identity.id,
-        identity_identifier=identity.identifier,
-        changed_by_user_id=admin_user.id,
-        new_enabled_state=new_enabled_state,
-        new_value=new_value,
-        previous_enabled_state=None,
-        previous_value=None,
-        timestamp=now.strftime(WEBHOOK_DATETIME_FORMAT),
+        kwargs={
+            "feature_id": feature.id,
+            "environment_api_key": identity.environment.api_key,
+            "identity_id": identity.id,
+            "identity_identifier": identity.identifier,
+            "changed_by_user_id": admin_user.id,
+            "new_enabled_state": new_enabled_state,
+            "new_value": new_value,
+            "previous_enabled_state": None,
+            "previous_value": None,
+            "timestamp": now.strftime(WEBHOOK_DATETIME_FORMAT),
+        }
     )
 
 
@@ -139,16 +141,18 @@ def test_edge_identity_feature_state_serializer_save_calls_webhook_for_update(
 
     # Then
     mock_call_environment_webhook.run_in_thread.assert_called_once_with(
-        feature_id=feature.id,
-        environment_api_key=identity.environment.api_key,
-        identity_id=identity.id,
-        identity_identifier=identity.identifier,
-        changed_by_user_id=admin_user.id,
-        new_enabled_state=new_enabled_state,
-        new_value=new_value,
-        previous_enabled_state=previous_enabled_state,
-        previous_value=previous_value,
-        timestamp=now.strftime(WEBHOOK_DATETIME_FORMAT),
+        kwargs={
+            "feature_id": feature.id,
+            "environment_api_key": identity.environment.api_key,
+            "identity_id": identity.id,
+            "identity_identifier": identity.identifier,
+            "changed_by_user_id": admin_user.id,
+            "new_enabled_state": new_enabled_state,
+            "new_value": new_value,
+            "previous_enabled_state": previous_enabled_state,
+            "previous_value": previous_value,
+            "timestamp": now.strftime(WEBHOOK_DATETIME_FORMAT),
+        }
     )
 
 
