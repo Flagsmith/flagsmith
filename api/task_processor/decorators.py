@@ -45,7 +45,7 @@ def register_task_handler(task_name: str = None):
                 f(*args, **kwargs)
             elif settings.TASK_RUN_METHOD == TaskRunMethod.SEPARATE_THREAD:
                 logger.debug("Running task '%s' in separate thread", task_identifier)
-                run_in_thread(*args, **kwargs)
+                run_in_thread(args=args, kwargs=kwargs)
             else:
                 logger.debug("Creating task for function '%s'...", task_identifier)
                 task = Task.schedule_task(
