@@ -46,9 +46,4 @@ def send_identity_update_message(environment, identifier: str):
 
 @sse_enabled()
 def send_identity_update_messages(environment, identifiers: List[str]):
-    tasks.send_identity_update_messages.delay(
-        args=(
-            environment.api_key,
-            identifiers,
-        )
-    )
+    tasks.send_identity_update_messages.delay(args=(environment.api_key, identifiers))
