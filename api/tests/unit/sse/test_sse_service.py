@@ -44,7 +44,7 @@ def test_send_environment_update_message_using_project_schedules_task_correctly(
         ),
     ],
 )
-def test_send_environment_update_message_using_project_early_exits_without_scheduling_task(
+def test_send_environment_update_message_using_project_exits_early_without_scheduling_task(
     mocker,
     test_settings,
     test_project,
@@ -72,7 +72,7 @@ def test_send_environment_update_message_using_project_early_exits_without_sched
         ),
     ],
 )
-def test_send_environment_update_message_using_environment_early_exits_without_scheduling_task(
+def test_send_environment_update_message_using_environment_exits_early_without_scheduling_task(
     mocker, test_settings, test_environment
 ):
     # Given
@@ -115,7 +115,7 @@ def test_send_environment_update_message_using_environment_schedules_task_correc
         ),
     ],
 )
-def test_send_identity_update_message_early_exits_without_scheduling_task(
+def test_send_identity_update_message_exits_early_without_scheduling_task(
     mocker, test_settings, test_environment
 ):
     # Given
@@ -158,7 +158,7 @@ def test_send_identity_update_message_schedules_task_correctly(
         ),
     ],
 )
-def test_send_identity_update_messages_early_exits_without_scheduing_task(
+def test_send_identity_update_messages_exits_early_without_scheduling_task(
     mocker, test_settings, test_environment
 ):
     # Given
