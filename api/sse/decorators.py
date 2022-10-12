@@ -1,7 +1,7 @@
 import typing
 
 from .exceptions import ViewResponseDoesNotHaveStatus
-from .tasks import send_identity_update_message
+from .sse_service import send_identity_update_message
 
 
 def generate_identity_update_message(
@@ -29,9 +29,7 @@ def generate_identity_update_message(
             if result.status_code < 299:
                 environment, identifier = get_data_from_req_callable(request)
                 if environment.project.organisation.persist_trait_data:
-                    send_identity_update_message.delay(
-                        args=(environment.api_key, identifier)
-                    )
+                    send_identity_update_message(environment, identifier)
             return result
 
         return view_wrapper

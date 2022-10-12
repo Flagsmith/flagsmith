@@ -55,8 +55,8 @@ class SDKTraitsTest(APITestCase):
         assert Trait.objects.filter(
             identity=self.identity, trait_key=self.trait_key
         ).exists()
-        mock_send_identity_update_message.delay.assert_called_once_with(
-            args=(self.environment.api_key, self.identity.identifier)
+        mock_send_identity_update_message.assert_called_once_with(
+            self.environment, self.identity.identifier
         )
 
     @mock.patch("sse.decorators.send_identity_update_message")
@@ -87,7 +87,7 @@ class SDKTraitsTest(APITestCase):
         assert Trait.objects.count() == 0
 
         # and send_identity_update_message was not called
-        mock_send_identity_update_message.delay.assert_not_called()
+        mock_send_identity_update_message.assert_not_called()
 
     def test_can_set_trait_with_boolean_value_for_an_identity(self):
         # Given
@@ -232,8 +232,8 @@ class SDKTraitsTest(APITestCase):
         # Then
         trait.refresh_from_db()
         assert trait.get_trait_value() == initial_value + increment_by
-        mock_send_identity_update_message.delay.assert_called_once_with(
-            args=(self.environment.api_key, self.identity.identifier)
+        mock_send_identity_update_message.assert_called_once_with(
+            self.environment, self.identity.identifier
         )
 
     def test_increment_value_decrements_trait_value_if_value_negative_integer(self):
@@ -363,8 +363,8 @@ class SDKTraitsTest(APITestCase):
             Trait.objects.filter(identity__identifier__in=identifiers).count()
             == num_traits
         )
-        mock_send_identity_update_messages.delay.assert_called_once_with(
-            args=(self.environment.api_key, identifiers)
+        mock_send_identity_update_messages.assert_called_once_with(
+            self.environment, identifiers
         )
 
     def test_bulk_create_traits_when_bad_trait_value_sent_then_trait_value_stringified(

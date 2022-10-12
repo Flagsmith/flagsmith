@@ -417,7 +417,7 @@ def test_edge_identities_update_trait(
     # Given
     dynamo_wrapper_mock.get_item_from_uuid_or_404.return_value = identity_document
     send_identity_update_message_mock = mocker.patch(
-        "edge_api.identities.views.send_identity_update_message"
+        "edge_api.identities.views.send_identity_update_message", autospec=True
     )
     identity_uuid = identity_document["identity_uuid"]
     trait_key = identity_traits[0]["trait_key"]
@@ -449,9 +449,9 @@ def test_edge_identities_update_trait(
             args[0]["identity_traits"],
         )
     )
-    send_identity_update_message_mock.delay.assert_called_once_with(
-        args=(environment_api_key, identity_document["identifier"])
-    )
+    args, kwargs = send_identity_update_message_mock.call_args
+    assert args[0].id == dynamo_enabled_environment
+    assert args[1] == identity_document["identifier"]
 
 
 def test_edge_identities_update_traits_returns_400_if_persist_trait_data_is_false(

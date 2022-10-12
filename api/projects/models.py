@@ -37,6 +37,10 @@ class Project(LifecycleModelMixin, AbstractBaseExportableModel):
         default=False,
         help_text="Prevent defaults from being set in all environments when creating a feature.",
     )
+    enable_realtime_updates = models.BooleanField(
+        default=False,
+        help_text="Enable this to trigger a realtime(sse) event whenever the value of a flag changes",
+    )
 
     objects = ProjectManager()
 
