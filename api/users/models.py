@@ -388,6 +388,10 @@ class UserPermissionGroup(models.Model):
     organisation = models.ForeignKey(
         Organisation, on_delete=models.CASCADE, related_name="permission_groups"
     )
+    is_default = models.BooleanField(
+        default=False,
+        help_text="If set to true, all new users will be added to this group",
+    )
 
     class Meta:
         ordering = ("id",)  # explicit ordering to prevent pagination warnings
