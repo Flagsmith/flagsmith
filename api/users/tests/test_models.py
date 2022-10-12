@@ -285,4 +285,5 @@ def test_user_remove_organisation_removes_user_from_the_user_permission_group(
     admin_user.remove_organisation(organisation)
 
     # Then
+    # extra group did not cause any errors and the user is removed from the group
     assert user_permission_group not in admin_user.permission_groups.all()
