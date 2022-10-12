@@ -20,6 +20,6 @@ def traces_sampler(ctx):
         if path_info in NON_FUNCTIONAL_ENDPOINTS:
             return 0
         elif path_info not in SDK_ENDPOINTS:
-            return 1
+            return settings.DASHBOARD_ENDPOINTS_SENTRY_TRACE_SAMPLE_RATE
 
-    return settings.SENTRY_TRACE_SAMPLE_RATE
+    return settings.DEFAULT_SENTRY_TRACE_SAMPLE_RATE

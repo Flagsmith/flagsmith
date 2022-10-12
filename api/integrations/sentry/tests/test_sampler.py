@@ -6,7 +6,7 @@ from integrations.sentry.samplers import traces_sampler
 SAMPLE_RATE = 0.5
 
 
-@override_settings(SENTRY_TRACE_SAMPLE_RATE=SAMPLE_RATE)
+@override_settings(DEFAULT_SENTRY_TRACE_SAMPLE_RATE=SAMPLE_RATE)
 def test_traces_sampler_empty_context_returns_default_sample_rate():
     # When
     sample_rate = traces_sampler({})
@@ -15,7 +15,7 @@ def test_traces_sampler_empty_context_returns_default_sample_rate():
     assert sample_rate == SAMPLE_RATE
 
 
-@override_settings(SENTRY_TRACE_SAMPLE_RATE=SAMPLE_RATE)
+@override_settings(DEFAULT_SENTRY_TRACE_SAMPLE_RATE=SAMPLE_RATE)
 def test_traces_sampler_returns_0_for_health_check_transaction():
     # Given
     ctx = {"wsgi_environ": {"PATH_INFO": "/health"}}
@@ -27,7 +27,7 @@ def test_traces_sampler_returns_0_for_health_check_transaction():
     assert sample_rate == 0
 
 
-@override_settings(SENTRY_TRACE_SAMPLE_RATE=SAMPLE_RATE)
+@override_settings(DEFAULT_SENTRY_TRACE_SAMPLE_RATE=SAMPLE_RATE)
 def test_traces_sampler_returns_0_for_home_page_transaction():
     # Given
     ctx = {"wsgi_environ": {"PATH_INFO": "/"}}
@@ -39,8 +39,8 @@ def test_traces_sampler_returns_0_for_home_page_transaction():
     assert sample_rate == 0
 
 
-@override_settings(SENTRY_TRACE_SAMPLE_RATE=SAMPLE_RATE)
-def test_traces_sampler_returns_1_for_dashboard_request():
+@override_settings(DASHBOARD_ENDPOINTS_SENTRY_TRACE_SAMPLE_RATE=SAMPLE_RATE)
+def test_traces_sampler_returns_dashboard_sample_rate_for_dashboard_request():
     # Given
     ctx = {"wsgi_environ": {"PATH_INFO": "/api/v1/environments/"}}
 
@@ -48,7 +48,7 @@ def test_traces_sampler_returns_1_for_dashboard_request():
     sample_rate = traces_sampler(ctx)
 
     # Then
-    assert sample_rate == 1
+    assert sample_rate == SAMPLE_RATE
 
 
 @pytest.mark.parametrize(
@@ -62,7 +62,7 @@ def test_traces_sampler_returns_1_for_dashboard_request():
         "/api/v1/traits/bulk",
     ),
 )
-@override_settings(SENTRY_TRACE_SAMPLE_RATE=SAMPLE_RATE)
+@override_settings(DEFAULT_SENTRY_TRACE_SAMPLE_RATE=SAMPLE_RATE)
 def test_traces_sampler_returns_sample_rate_for_sdk_request(path_info):
     # Given
     ctx = {"wsgi_environ": {"PATH_INFO": path_info}}
