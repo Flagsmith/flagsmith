@@ -25,9 +25,7 @@ def test_generate_identity_update_message_decorator_make_correct_call(
     _ = a_view_function(request)
 
     # Then
-    mocked_send_identity_update_message.delay.assert_called_once_with(
-        args=(environment.api_key, identifier)
-    )
+    mocked_send_identity_update_message.assert_called_once_with(environment, identifier)
 
 
 def test_generate_identity_update_message_raises_exception_if_response_does_not_have_status(

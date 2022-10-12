@@ -124,6 +124,33 @@ def dynamo_enabled_project(organisation_one):
 
 
 @pytest.fixture()
+def realtime_enabled_project(organisation_one):
+    return Project.objects.create(
+        name="Realtime enabled project",
+        organisation=organisation_one,
+        enable_realtime_updates=True,
+    )
+
+
+@pytest.fixture()
+def realtime_enabled_project_environment_one(realtime_enabled_project):
+    return Environment.objects.create(
+        name="Env 1 realtime",
+        project=realtime_enabled_project,
+        api_key="env-1-realtime-key",
+    )
+
+
+@pytest.fixture()
+def realtime_enabled_project_environment_two(realtime_enabled_project):
+    return Environment.objects.create(
+        name="Env 2 realtime",
+        project=realtime_enabled_project,
+        api_key="env-2-realtime-key",
+    )
+
+
+@pytest.fixture()
 def dynamo_enabled_project_environment_one(dynamo_enabled_project):
     return Environment.objects.create(
         name="Env 1", project=dynamo_enabled_project, api_key="env-1-key"
