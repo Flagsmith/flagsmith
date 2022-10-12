@@ -7,6 +7,14 @@ from . import tasks
 
 
 def _sse_enabled(get_project_from_first_arg=lambda obj: obj.project):
+    """
+    Decorator that only call the service function if sse is enabled else return None.
+    i.e: settings are configured and the project has sse enabled.
+
+    :param get_project_from_first_arg: function that takes the first argument
+        of the decorated function and returns the project object.
+    """
+
     def decorator(service_func):
         @wraps(service_func)
         def wrapper(*args, **kwargs):
