@@ -262,3 +262,27 @@ def test_user_add_organisation_calls_mailer_lite_subscribe_for_paid_organisation
 
     # Then
     mailer_lite_mock.subscribe.assert_called_with(user)
+
+
+def test_user_add_organisation_adds_user_to_the_default_user_permission_group(
+    test_user, organisation, default_user_permission_group, user_permission_group
+):
+    # When
+    test_user.add_organisation(organisation, OrganisationRole.USER)
+
+    # Then
+    assert default_user_permission_group in test_user.permission_groups.all()
+    assert user_permission_group not in test_user.permission_groups.all()
+
+
+def test_user_remove_organisation_removes_user_from_the_user_permission_group(
+    user_permission_group, admin_user, organisation, default_user_permission_group
+):
+    # Given - two groups that belongs to the same organisation, but user
+    # is only part of one(`user_permission_group`) them
+
+    # When
+    admin_user.remove_organisation(organisation)
+
+    # Then
+    assert user_permission_group not in admin_user.permission_groups.all()
