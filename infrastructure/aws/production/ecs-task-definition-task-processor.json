@@ -96,6 +96,10 @@
                 {
                     "name": "ENVIRONMENTS_API_KEY_TABLE_NAME_DYNAMO",
                     "value": "flagsmith_environment_api_key"
+                },
+                {
+                    "name": "SSE_SERVER_BASE_URL",
+                    "value": "https://origin.realtime.flagsmith.com"
                 }
             ],
             "secrets": [
@@ -146,6 +150,10 @@
                 {
                     "name": "EDGE_REQUEST_SIGNING_KEY",
                     "valueFrom": "arn:aws:secretsmanager:eu-west-2:084060095745:secret:ECS-API-LxUiIQ:EDGE_REQUEST_SIGNING_KEY::"
+                },
+                {
+                    "name": "SSE_AUTHENTICATION_TOKEN",
+                    "valueFrom": "arn:aws:secretsmanager:eu-west-2:084060095745:secret:ECS-API-LxUiIQ:SSE_AUTHENTICATION_TOKEN::"
                 }
             ],
             "logConfiguration": {
