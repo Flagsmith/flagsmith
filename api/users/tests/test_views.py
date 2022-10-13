@@ -420,3 +420,24 @@ class UserPermissionGroupViewSetTestCase(TestCase):
         assert response.status_code == status.HTTP_200_OK
         # and admin user is still in the group
         assert self.admin in group.users.all()
+
+
+def test_user_permission_group_can_update_is_default(
+    admin_client, organisation, user_permission_group
+):
+    # Given
+    args = [organisation.id, user_permission_group.id]
+    url = reverse("api-v1:organisations:organisation-groups-detail", args=args)
+
+    data = {"is_default": True, "name": user_permission_group.name}
+
+    # When
+    response = admin_client.put(url, data=data)
+
+    # Then
+    assert response.status_code == status.HTTP_200_OK
+    assert response.json()["is_default"] is True
+
+    # and
+    user_permission_group.refresh_from_db()
+    assert user_permission_group.is_default is True

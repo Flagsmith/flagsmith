@@ -21,7 +21,7 @@ from permissions.models import PermissionModel
 from projects.models import Project, UserProjectPermission
 from projects.tags.models import Tag
 from segments.models import EQUAL, Condition, Segment, SegmentRule
-from users.models import FFAdminUser
+from users.models import FFAdminUser, UserPermissionGroup
 
 trait_key = "key1"
 trait_value = "value1"
@@ -50,6 +50,22 @@ def organisation(db, admin_user):
     org = Organisation.objects.create(name="Test Org")
     admin_user.add_organisation(org, role=OrganisationRole.ADMIN)
     return org
+
+
+@pytest.fixture()
+def default_user_permission_group(organisation):
+    return UserPermissionGroup.objects.create(
+        organisation=organisation, name="Default user permission group", is_default=True
+    )
+
+
+@pytest.fixture()
+def user_permission_group(organisation, admin_user):
+    user_permission_group = UserPermissionGroup.objects.create(
+        organisation=organisation, name="User permission group", is_default=False
+    )
+    user_permission_group.users.add(admin_user)
+    return user_permission_group
 
 
 @pytest.fixture()
