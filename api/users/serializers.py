@@ -111,7 +111,7 @@ class UserIdsSerializer(serializers.Serializer):
 class UserPermissionGroupSerializerList(serializers.ModelSerializer):
     class Meta:
         model = UserPermissionGroup
-        fields = ("id", "name", "users")
+        fields = ("id", "name", "users", "is_default")
         read_only_fields = ("id",)
 
 
