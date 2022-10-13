@@ -20,7 +20,7 @@ class AbstractBaseInviteModel(models.Model):
         max_length=50,
         default=OrganisationRole.USER,
     )
-    permission_groups = models.ManyToManyField(UserPermissionGroup)
+    permission_groups = models.ManyToManyField(UserPermissionGroup, blank=True)
 
     class Meta:
         abstract = True
