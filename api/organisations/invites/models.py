@@ -8,7 +8,7 @@ from django.utils import timezone
 
 from app.utils import create_hash
 from organisations.models import Organisation, OrganisationRole
-from users.models import FFAdminUser
+from users.models import FFAdminUser, UserPermissionGroup
 
 
 class AbstractBaseInviteModel(models.Model):
@@ -20,6 +20,7 @@ class AbstractBaseInviteModel(models.Model):
         max_length=50,
         default=OrganisationRole.USER,
     )
+    permission_groups = models.ManyToManyField(UserPermissionGroup)
 
     class Meta:
         abstract = True
