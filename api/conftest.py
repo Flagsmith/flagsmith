@@ -249,3 +249,12 @@ def user_environment_permission(test_user, environment):
 @pytest.fixture()
 def user_project_permission(test_user, project):
     return UserProjectPermission.objects.create(user=test_user, project=project)
+
+
+@pytest.fixture()
+def user_permission_group(organisation, admin_user):
+    user_permission_group = UserPermissionGroup.objects.create(
+        organisation=organisation, name="User permission group"
+    )
+    user_permission_group.users.add(admin_user)
+    return user_permission_group

@@ -17,7 +17,6 @@ from rest_framework.viewsets import GenericViewSet
 from organisations.invites.exceptions import InviteExpiredError
 from organisations.invites.models import Invite, InviteLink
 from organisations.invites.serializers import InviteLinkSerializer
-from organisations.models import OrganisationRole
 from organisations.permissions.permissions import (
     NestedOrganisationEntityPermission,
 )
@@ -32,7 +31,7 @@ def join_organisation_from_email(request, hash):
     invite = get_object_or_404(Invite, hash=hash)
 
     try:
-        request.user.join_organisation(invite)
+        request.user.join_organisation_from_invite_email(invite)
     except InvalidInviteError as e:
         error_data = {"detail": str(e)}
         return Response(data=error_data, status=status.HTTP_400_BAD_REQUEST)
@@ -58,10 +57,7 @@ def join_organisation_from_link(request, hash):
     if invite.is_expired:
         raise InviteExpiredError()
 
-    request.user.add_organisation(
-        invite.organisation, role=OrganisationRole(invite.role)
-    )
-
+    request.user.join_organisation_from_invite_link(invite)
     if invite.organisation.over_plan_seats_limit():
         Thread(
             target=FFAdminUser.send_organisation_over_limit_alert,

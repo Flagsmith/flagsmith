@@ -422,22 +422,42 @@ class UserPermissionGroupViewSetTestCase(TestCase):
         assert self.admin in group.users.all()
 
 
-def test_user_permission_group_can_update_is_default(
-    admin_client, organisation, user_permission_group
+def test_join_organisation_with_permission_groups(
+    test_user, test_user_client, organisation, user_permission_group
 ):
     # Given
-    args = [organisation.id, user_permission_group.id]
-    url = reverse("api-v1:organisations:organisation-groups-detail", args=args)
+    invite = Invite.objects.create(email=test_user.email, organisation=organisation)
+    invite.permission_groups.add(user_permission_group)
 
-    data = {"is_default": True, "name": user_permission_group.name}
+    url = reverse("api-v1:users:user-join-organisation", args=[invite.hash])
 
     # When
-    response = admin_client.put(url, data=data)
+    response = test_user_client.post(url)
+    test_user.refresh_from_db()
 
     # Then
     assert response.status_code == status.HTTP_200_OK
-    assert response.json()["is_default"] is True
+    assert organisation in test_user.organisations.all()
+    assert user_permission_group in test_user.permission_groups.all()
+    # and invite is deleted
+    with pytest.raises(Invite.DoesNotExist):
+        invite.refresh_from_db()
 
-    # and
-    user_permission_group.refresh_from_db()
-    assert user_permission_group.is_default is True
+
+def test_join_organisation_via_link_with_permission_groups(
+    test_user, organisation, test_user_client, user_permission_group
+):
+    # Given
+    invite = InviteLink.objects.create(organisation=organisation)
+    invite.permission_groups.add(user_permission_group)
+
+    url = reverse("api-v1:users:user-join-organisation-link", args=[invite.hash])
+
+    # When
+    response = test_user_client.post(url)
+    test_user.refresh_from_db()
+
+    # Then
+    assert response.status_code == status.HTTP_200_OK
+    assert organisation in test_user.organisations.all()
+    assert user_permission_group in test_user.permission_groups.all()
