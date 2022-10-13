@@ -15,12 +15,14 @@ class NestedMultivariateFeatureOptionSerializer(serializers.ModelSerializer):
 
         fields = (
             "id",
+            "uuid",
             "type",
             "integer_value",
             "string_value",
             "boolean_value",
             "default_percentage_allocation",
         )
+        read_only_fields = ("uuid",)
 
 
 class MultivariateFeatureOptionSerializer(NestedMultivariateFeatureOptionSerializer):
