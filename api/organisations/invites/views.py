@@ -14,6 +14,7 @@ from rest_framework.response import Response
 from rest_framework.throttling import ScopedRateThrottle
 from rest_framework.viewsets import GenericViewSet
 
+from organisations.alerts import send_org_over_limit_alert
 from organisations.invites.exceptions import InviteExpiredError
 from organisations.invites.models import Invite, InviteLink
 from organisations.invites.serializers import (
@@ -34,16 +35,14 @@ from users.models import FFAdminUser
 @api_view(["POST"])
 def join_organisation_from_email(request, hash):
     invite = get_object_or_404(Invite, hash=hash)
-
     try:
         request.user.join_organisation_from_invite_email(invite)
     except InvalidInviteError as e:
         error_data = {"detail": str(e)}
         return Response(data=error_data, status=status.HTTP_400_BAD_REQUEST)
-
     if invite.organisation.over_plan_seats_limit():
         Thread(
-            target=FFAdminUser.send_organisation_over_limit_alert,
+            target=send_org_over_limit_alert,
             args=[invite.organisation],
         ).start()
 
@@ -65,7 +64,7 @@ def join_organisation_from_link(request, hash):
     request.user.join_organisation_from_invite_link(invite)
     if invite.organisation.over_plan_seats_limit():
         Thread(
-            target=FFAdminUser.send_organisation_over_limit_alert,
+            target=send_org_over_limit_alert,
             args=[invite.organisation],
         ).start()
 
