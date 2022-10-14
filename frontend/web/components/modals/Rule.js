@@ -1,7 +1,8 @@
 // import propTypes from 'prop-types';
 import React, { PureComponent } from 'react';
-
-const splitIfValue = (v, append) => (append ? v.split(append) : [v]);
+const splitIfValue = (v,append) =>{
+    return append? v.split(append) : [v]
+}
 
 export default class Rule extends PureComponent {
     static displayName = 'Rule';
@@ -65,12 +66,12 @@ export default class Rule extends PureComponent {
                                   readOnly={this.props.readOnly}
                                   data-test={`${this.props['data-test']}-value-${i}`}
                                   className="input-container--flat full-width"
-                                  value={value?value:""}
+                                  value={`${value}`}
                                   placeholder={valuePlaceholder}
                                   disabled={operatorObj.hideValue}
-                                  onChange={(e) => {
-                                      const value = Utils.getTypedValue(Utils.safeParseEventValue(e));
-                                      this.setRuleProperty(i, 'value', { value: operatorObj && operatorObj.append ? `${value}${operatorObj.append}` : value }, true);
+                                  onChange={e => {
+                                      const value = Utils.getTypedValue(Utils.safeParseEventValue(e))
+                                      this.setRuleProperty(i, 'value', { value: operatorObj && operatorObj.append? `${value}${operatorObj.append}`:value }, true)
                                   }}
                                   isValid={Utils.validateRule(rule)}
                                 />
@@ -123,8 +124,10 @@ export default class Rule extends PureComponent {
     setRuleProperty = (i, prop, { value }) => {
         const { props: { rule: { conditions: rules } } } = this;
 
-        const prevOperator = Utils.findOperator(rules[i].operator, rules[i].value, this.props.operators);
-        const newOperator = prop !== 'operator' ? prevOperator : this.props.operators.find(v => v.value === value);
+        const prevOperator = Utils.findOperator(rules[i].operator, rules[i].value, this.props.operators)
+        const newOperator =  prop !== 'operator' ? prevOperator: this.props.operators.find((v)=>{
+            return v.value === value
+        })
 
         if (newOperator.hideValue) {
             rules[i].value = null;
@@ -136,9 +139,9 @@ export default class Rule extends PureComponent {
         // remove append if one was added
 
 
-        const formattedValue = value? `${value}`: null;
-        // split operator by append
-        rules[i][prop] = prop === 'operator' ? formattedValue.split(':')[0] : formattedValue;
+        const formattedValue = `${value}`
+        //split operator by append
+        rules[i][prop] = prop === 'operator' ? formattedValue.split(":")[0] : formattedValue;
 
         if (prop === 'operator' && value === 'PERCENTAGE_SPLIT') {
             rules[i].property = '';
@@ -151,6 +154,7 @@ export default class Rule extends PureComponent {
         this.props.rule.conditions = rules.concat([{ ...Constants.defaultRule }]);
         this.props.onChange(this.props.rule);
     };
+
 
 
     render() {
