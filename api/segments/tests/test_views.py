@@ -163,6 +163,29 @@ class SegmentViewSetTestCase(APITestCase):
         # Then
         assert res.status_code == status.HTTP_201_CREATED
 
+    def test_can_create_segments_with_condition_that_has_null_value(self):
+        # Given
+        url = reverse("api-v1:projects:project-segments-list", args=[self.project.id])
+        data = {
+            "name": "New segment name",
+            "project": self.project.id,
+            "rules": [
+                {
+                    "type": "ALL",
+                    "rules": [],
+                    "conditions": [{"operator": EQUAL, "property": "test-property"}],
+                }
+            ],
+        }
+
+        # When
+        res = self.client.post(
+            url, data=json.dumps(data), content_type="application/json"
+        )
+
+        # Then
+        assert res.status_code == status.HTTP_201_CREATED
+
 
 def test_can_filter_by_edge_identity_to_get_only_matching_segments(
     project, environment, identity, admin_client, identity_matching_segment, mocker
