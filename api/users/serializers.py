@@ -93,7 +93,7 @@ class InviteListSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Invite
-        fields = ("id", "email", "date_created", "invited_by")
+        fields = ("id", "email", "date_created", "invited_by", "permission_groups")
 
 
 class UserIdsSerializer(serializers.Serializer):

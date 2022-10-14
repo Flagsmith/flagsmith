@@ -868,3 +868,36 @@ def test_get_subscription_metadata_returns_defaults_if_chargebee_error(
         "max_projects": MAX_PROJECTS_IN_FREE_PLAN,
         "payment_source": None,
     }
+
+
+def test_can_invite_user_with_permission_groups(
+    settings, admin_client, organisation, user_permission_group
+):
+    # Given
+    settings.REST_FRAMEWORK["DEFAULT_THROTTLE_RATES"]["invite"] = None
+
+    url = reverse("api-v1:organisations:organisation-invite", args=[organisation.pk])
+    invited_email = "test@example.com"
+
+    data = {
+        "invites": [
+            {
+                "email": invited_email,
+                "role": OrganisationRole.ADMIN.name,
+                "permission_groups": [user_permission_group.id],
+            }
+        ]
+    }
+
+    # When
+    response = admin_client.post(
+        url, data=json.dumps(data), content_type="application/json"
+    )
+
+    # Then
+    assert response.status_code == status.HTTP_201_CREATED
+    assert response.json()[0]["permission_groups"] == [user_permission_group.id]
+
+    # and
+    invite = Invite.objects.get(email=invited_email)
+    assert user_permission_group in invite.permission_groups.all()

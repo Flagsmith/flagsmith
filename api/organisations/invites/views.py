@@ -1,13 +1,12 @@
 from threading import Thread
 
 from django.shortcuts import get_object_or_404
-from rest_framework import status, viewsets
+from rest_framework import status
 from rest_framework.decorators import action, api_view
 from rest_framework.mixins import (
     CreateModelMixin,
     DestroyModelMixin,
     ListModelMixin,
-    UpdateModelMixin,
 )
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
@@ -75,7 +74,6 @@ def join_organisation_from_link(request, hash):
 class InviteLinkViewSet(
     ListModelMixin,
     CreateModelMixin,
-    UpdateModelMixin,
     DestroyModelMixin,
     GenericViewSet,
 ):
@@ -93,11 +91,13 @@ class InviteLinkViewSet(
     def perform_create(self, serializer):
         serializer.save(organisation_id=self.kwargs.get("organisation_pk"))
 
-    def perform_update(self, serializer):
-        serializer.save(organisation_id=self.kwargs.get("organisation_pk"))
 
-
-class InviteViewSet(viewsets.ModelViewSet):
+class InviteViewSet(
+    ListModelMixin,
+    CreateModelMixin,
+    DestroyModelMixin,
+    GenericViewSet,
+):
     serializer_class = InviteListSerializer
     permission_classes = (IsAuthenticated, NestedOrganisationEntityPermission)
     throttle_scope = "invite"
@@ -115,3 +115,6 @@ class InviteViewSet(viewsets.ModelViewSet):
         invite = self.get_object()
         invite.send_invite_mail()
         return Response(status=status.HTTP_200_OK)
+
+    def perform_create(self, serializer):
+        super().perform_create(serializer)
