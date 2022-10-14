@@ -4,7 +4,7 @@ from organisations.chargebee import (
 from organisations.models import Organisation
 
 from .constants import CHARGEBEE, SUBSCRIPTION_DEFAULT_LIMITS
-from .dataclasses import BaseSubscriptionMetadata
+from .metadata import BaseSubscriptionMetadata
 
 
 def get_subscription_metadata(organisation: Organisation) -> BaseSubscriptionMetadata:

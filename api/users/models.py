@@ -149,6 +149,8 @@ class FFAdminUser(LifecycleModel, AbstractUser):
         UserOrganisation.objects.create(
             user=self, organisation=organisation, role=role.name
         )
+        default_groups = organisation.permission_groups.filter(is_default=True)
+        self.permission_groups.add(*default_groups)
 
     def remove_organisation(self, organisation):
         UserOrganisation.objects.filter(user=self, organisation=organisation).delete()
@@ -158,6 +160,7 @@ class FFAdminUser(LifecycleModel, AbstractUser):
         UserEnvironmentPermission.objects.filter(
             user=self, environment__project__organisation=organisation
         ).delete()
+        self.permission_groups.remove(*organisation.permission_groups.all())
 
     def get_organisation_role(self, organisation):
         user_organisation = self.get_user_organisation(organisation)
@@ -387,6 +390,10 @@ class UserPermissionGroup(models.Model):
     )
     organisation = models.ForeignKey(
         Organisation, on_delete=models.CASCADE, related_name="permission_groups"
+    )
+    is_default = models.BooleanField(
+        default=False,
+        help_text="If set to true, all new users will be added to this group",
     )
 
     class Meta:

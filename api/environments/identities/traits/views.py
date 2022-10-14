@@ -33,8 +33,8 @@ from environments.sdk.serializers import (
     SDKCreateUpdateTraitSerializer,
 )
 from environments.views import logger
+from sse import send_identity_update_messages
 from sse.decorators import generate_identity_update_message
-from sse.tasks import send_identity_update_messages
 from util.views import SDKAPIView
 
 generate_identity_message_decorator_trait_view = generate_identity_update_message(
@@ -219,8 +219,8 @@ class SDKTraits(mixins.CreateModelMixin, viewsets.GenericViewSet):
     def create(self, request, *args, **kwargs):
         response = super(SDKTraits, self).create(request, *args, **kwargs)
         response.status_code = status.HTTP_200_OK
-        if settings.EDGE_API_URL:
-            forward_trait_request.delay(
+        if settings.EDGE_API_URL and request.environment.project.enable_dynamo_db:
+            forward_trait_request.run_in_thread(
                 args=(
                     request.method,
                     dict(request.headers),
@@ -241,11 +241,11 @@ class SDKTraits(mixins.CreateModelMixin, viewsets.GenericViewSet):
         serializer.is_valid(raise_exception=True)
         serializer.save()
 
-        if settings.EDGE_API_URL:
+        if settings.EDGE_API_URL and request.environment.project.enable_dynamo_db:
             # Convert the payload to the structure expected by /traits
             payload = serializer.data.copy()
             payload.update({"identity": {"identifier": payload.pop("identifier")}})
-            forward_trait_request.delay(
+            forward_trait_request.run_in_thread(
                 args=(
                     request.method,
                     dict(request.headers),
@@ -285,8 +285,8 @@ class SDKTraits(mixins.CreateModelMixin, viewsets.GenericViewSet):
             serializer.is_valid(raise_exception=True)
             serializer.save()
 
-            if settings.EDGE_API_URL:
-                forward_trait_requests.delay(
+            if settings.EDGE_API_URL and request.environment.project.enable_dynamo_db:
+                forward_trait_requests.run_in_thread(
                     args=(
                         request.method,
                         dict(request.headers),
@@ -295,11 +295,9 @@ class SDKTraits(mixins.CreateModelMixin, viewsets.GenericViewSet):
                     )
                 )
 
-            send_identity_update_messages.delay(
-                args=(
-                    request.environment.api_key,
-                    [trait["identity"]["identifier"] for trait in traits],
-                )
+            send_identity_update_messages(
+                request.environment,
+                [trait["identity"]["identifier"] for trait in traits],
             )
             return Response(serializer.data, status=200)
 

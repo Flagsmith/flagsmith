@@ -26,7 +26,7 @@ class SDKTraitsTest(APITestCase):
     def setUp(self) -> None:
         self.organisation = Organisation.objects.create(name="Test organisation")
         project = Project.objects.create(
-            name="Test project", organisation=self.organisation
+            name="Test project", organisation=self.organisation, enable_dynamo_db=True
         )
         self.environment = Environment.objects.create(
             name="Test environment", project=project
@@ -55,8 +55,8 @@ class SDKTraitsTest(APITestCase):
         assert Trait.objects.filter(
             identity=self.identity, trait_key=self.trait_key
         ).exists()
-        mock_send_identity_update_message.delay.assert_called_once_with(
-            args=(self.environment.api_key, self.identity.identifier)
+        mock_send_identity_update_message.assert_called_once_with(
+            self.environment, self.identity.identifier
         )
 
     @mock.patch("sse.decorators.send_identity_update_message")
@@ -87,7 +87,7 @@ class SDKTraitsTest(APITestCase):
         assert Trait.objects.count() == 0
 
         # and send_identity_update_message was not called
-        mock_send_identity_update_message.delay.assert_not_called()
+        mock_send_identity_update_message.assert_not_called()
 
     def test_can_set_trait_with_boolean_value_for_an_identity(self):
         # Given
@@ -232,8 +232,8 @@ class SDKTraitsTest(APITestCase):
         # Then
         trait.refresh_from_db()
         assert trait.get_trait_value() == initial_value + increment_by
-        mock_send_identity_update_message.delay.assert_called_once_with(
-            args=(self.environment.api_key, self.identity.identifier)
+        mock_send_identity_update_message.assert_called_once_with(
+            self.environment, self.identity.identifier
         )
 
     def test_increment_value_decrements_trait_value_if_value_negative_integer(self):
@@ -363,8 +363,8 @@ class SDKTraitsTest(APITestCase):
             Trait.objects.filter(identity__identifier__in=identifiers).count()
             == num_traits
         )
-        mock_send_identity_update_messages.delay.assert_called_once_with(
-            args=(self.environment.api_key, identifiers)
+        mock_send_identity_update_messages.assert_called_once_with(
+            self.environment, identifiers
         )
 
     def test_bulk_create_traits_when_bad_trait_value_sent_then_trait_value_stringified(
@@ -475,7 +475,9 @@ class SDKTraitsTest(APITestCase):
         )
 
     @override_settings(EDGE_API_URL="http://localhost")
-    @mock.patch("environments.identities.traits.views.forward_trait_request")
+    @mock.patch(
+        "environments.identities.traits.views.forward_trait_request", autospec=True
+    )
     def test_post_trait_calls_forward_trait_request_with_correct_arguments(
         self, mocked_forward_trait_request
     ):
@@ -487,7 +489,7 @@ class SDKTraitsTest(APITestCase):
         self.client.post(url, data=data, content_type=self.JSON)
 
         # Then
-        args, kwargs = mocked_forward_trait_request.delay.call_args_list[0]
+        args, kwargs = mocked_forward_trait_request.run_in_thread.call_args_list[0]
         assert args == ()
         assert kwargs["args"][0] == "POST"
         assert kwargs["args"][1].get("X-Environment-Key") == self.environment.api_key
@@ -495,7 +497,9 @@ class SDKTraitsTest(APITestCase):
         assert kwargs["args"][3] == json.loads(data)
 
     @override_settings(EDGE_API_URL="http://localhost")
-    @mock.patch("environments.identities.traits.views.forward_trait_request")
+    @mock.patch(
+        "environments.identities.traits.views.forward_trait_request", autospec=True
+    )
     def test_increment_value_calls_forward_trait_request_with_correct_arguments(
         self, mocked_forward_trait_request
     ):
@@ -511,7 +515,7 @@ class SDKTraitsTest(APITestCase):
         self.client.post(url, data=data)
 
         # Then
-        args, kwargs = mocked_forward_trait_request.delay.call_args_list[0]
+        args, kwargs = mocked_forward_trait_request.run_in_thread.call_args_list[0]
         assert args == ()
         assert kwargs["args"][0] == "POST"
         assert kwargs["args"][1].get("X-Environment-Key") == self.environment.api_key
@@ -523,7 +527,9 @@ class SDKTraitsTest(APITestCase):
         assert kwargs["args"][3]["trait_value"]
 
     @override_settings(EDGE_API_URL="http://localhost")
-    @mock.patch("environments.identities.traits.views.forward_trait_requests")
+    @mock.patch(
+        "environments.identities.traits.views.forward_trait_requests", autospec=True
+    )
     def test_bulk_create_traits_calls_forward_trait_request_with_correct_arguments(
         self, mocked_forward_trait_requests
     ):
@@ -550,7 +556,7 @@ class SDKTraitsTest(APITestCase):
         # Then
 
         # Then
-        args, kwargs = mocked_forward_trait_requests.delay.call_args_list[0]
+        args, kwargs = mocked_forward_trait_requests.run_in_thread.call_args_list[0]
         assert args == ()
         assert kwargs["args"][0] == "PUT"
         assert kwargs["args"][1].get("X-Environment-Key") == self.environment.api_key

@@ -1,4 +1,5 @@
 import typing
+from contextlib import suppress
 
 from django.db.models import Model
 from django.http import HttpRequest
@@ -100,6 +101,7 @@ class IsProjectAdmin(BasePermission):
         **kwargs,
     ):
         super().__init__(*args, **kwargs)
+
         self._view_kwarg_name = project_pk_view_kwarg_attribute_name
         self._get_project_from_object_callable = get_project_from_object_callable
 
@@ -123,7 +125,7 @@ class IsProjectAdmin(BasePermission):
             raise PermissionDenied()
 
 
-class NestedProjectPermissions(BasePermission):
+class NestedProjectPermissions(IsAuthenticated):
     def __init__(
         self,
         *args,
@@ -134,13 +136,15 @@ class NestedProjectPermissions(BasePermission):
         **kwargs,
     ):
         super().__init__(*args, **kwargs)
-
         self.action_permission_map = action_permission_map or {}
         self.action_permission_map.setdefault("list", "VIEW_PROJECT")
 
         self.get_project_from_object_callable = get_project_from_object_callable
 
     def has_permission(self, request, view):
+        if not super().has_permission(request, view):
+            return False
+
         try:
             pk = view.kwargs.get("project_pk")
             project = Project.objects.get(pk=pk)
@@ -155,6 +159,9 @@ class NestedProjectPermissions(BasePermission):
         return view.detail
 
     def has_object_permission(self, request, view, obj):
+        if request.user.is_anonymous:
+            return False
+
         if view.action in self.action_permission_map:
             return request.user.has_project_permission(
                 self.action_permission_map[view.action],
@@ -162,3 +169,30 @@ class NestedProjectPermissions(BasePermission):
             )
 
         return request.user.is_project_admin(self.get_project_from_object_callable(obj))
+
+
+class NestedProjectMasterAPIKeyPermissions(BasePermission):
+    # NOTE: In order to compose different permissions using Python bitwise operators
+    # all the permissions must have same __init__ signature. The __init__ method defined below
+    # provides the same signature as the one defined in the NestedProjectPermissions class
+    # to support composition using bitwise operators.
+    def __init__(self, *args, **kwargs):
+        super().__init__()
+
+    def has_permission(self, request: HttpRequest, view: str) -> bool:
+        master_api_key = getattr(request, "master_api_key", None)
+
+        if not master_api_key:
+            return False
+
+        with suppress(Project.DoesNotExist):
+            project_id = view.kwargs.get("project_pk")
+            project = Project.objects.get(id=project_id)
+
+            return project.organisation_id == master_api_key.organisation_id
+        return False
+
+    def has_object_permission(
+        self, request: HttpRequest, view: str, obj: Model
+    ) -> bool:
+        return self.has_permission(request, view)
