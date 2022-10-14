@@ -120,7 +120,7 @@ module.exports = Object.assign({}, require('./base/_utils'), {
                 return false;
             }
             default:
-                return rule.value !== '' && rule.value !== undefined && rule.value !== null;
+                return operatorObj.hideValue ||  rule.value !== '' && rule.value !== undefined && rule.value !== null;
         }
     },
 
