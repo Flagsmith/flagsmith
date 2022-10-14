@@ -19,9 +19,8 @@ class InviteLinkSerializer(serializers.ModelSerializer):
 
 
 class InviteListSerializer(serializers.ModelSerializer):
-    invited_by = UserListSerializer(read_only=True)
+    invited_by = UserListSerializer()
 
     class Meta:
         model = Invite
         fields = ("id", "email", "date_created", "invited_by", "permission_groups")
-        read_only_fields = ("id", "date_created", "invited_by")
