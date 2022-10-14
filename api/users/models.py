@@ -34,7 +34,11 @@ from users.exceptions import InvalidInviteError
 from users.utils.mailer_lite import MailerLite
 
 if typing.TYPE_CHECKING:
-    from organisations.invites.models import AbstractBaseInviteModel
+    from organisations.invites.models import (
+        AbstractBaseInviteModel,
+        Invite,
+        InviteLink,
+    )
 
 logger = logging.getLogger(__name__)
 mailer_lite = MailerLite()
@@ -127,13 +131,13 @@ class FFAdminUser(LifecycleModel, AbstractUser):
             return None
         return " ".join([self.first_name, self.last_name]).strip()
 
-    def join_organisation_from_invite_email(self, invite_email):
+    def join_organisation_from_invite_email(self, invite_email: "Invite"):
         if invite_email.email.lower() != self.email.lower():
             raise InvalidInviteError("Registered email does not match invited email")
         self.join_organisation_from_invite(invite_email)
         invite_email.delete()
 
-    def join_organisation_from_invite_link(self, invite_link):
+    def join_organisation_from_invite_link(self, invite_link: "InviteLink"):
         self.join_organisation_from_invite(invite_link)
 
     def join_organisation_from_invite(self, invite: "AbstractBaseInviteModel"):
