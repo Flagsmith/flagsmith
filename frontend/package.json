@@ -64,7 +64,7 @@
     "fbjs": "^3.0.4",
     "fetchify": "0.0.2",
     "file-loader": "6.2.0",
-    "flagsmith": "3.0.6",
+    "flagsmith": "3.10.6",
     "flux-react-dispatcher": "1.2.5",
     "fs-extra": "2.0.0",
     "history": "4.10.1",

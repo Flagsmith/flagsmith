@@ -49,6 +49,7 @@ flagsmith.init({
     onChange: controller.loaded,
     api: Project.flagsmithClientAPI,
     cacheFlags: true,
+    realtime: true,
     AsyncStorage,
     enableAnalytics: projectOverrides.flagsmithAnalytics,
 }).catch(() => {
