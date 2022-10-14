@@ -45,11 +45,12 @@ const CreateGroup = class extends Component {
     }
 
     save = (allUsers) => {
-        const { name, users } = this.state;
+        const { name, users, is_default } = this.state;
         if (this.props.group) {
             AppActions.updateGroup(this.props.orgId, {
                 id: this.props.group.id,
                 name,
+                is_default: !!this.state.is_default,
                 users,
                 usersToRemove: this.getUsersToRemove(allUsers),
             });
@@ -98,6 +99,21 @@ const CreateGroup = class extends Component {
                                   type="text"
                                   name="Name*"
                                   placeholder="E.g. Developers"
+                                />
+                                <InputGroup
+                                  title="Add users by default"
+                                  tooltipPlace="top"
+                                  tooltip="New users that sign up to your organisation will be automatically added to this group with USER permissions"
+                                  ref={e => this.input = e}
+                                  data-test="groupName"
+                                  component={<Switch onChange={e => this.setState({ is_default: Utils.safeParseEventValue(e) })} value={!!this.state.is_default}/>}
+                                  inputProps={{
+                                      className: 'full-width',
+                                      name: 'groupName',
+                                  }}
+                                  value={name}
+                                  isValid={name && name.length}
+                                  type="text"
                                 />
                                 <div className="mb-5">
                                     <PanelSearch
