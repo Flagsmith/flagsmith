@@ -181,8 +181,10 @@ const OrganisationSettingsPage = class extends Component {
         if (data && data.events_list) { // protect against influx setup incorrectly
             let totalFlags = 0;
             let totalTraits = 0;
+            let totalEnvironmentDocument = 0;
             let totalIdentities = 0;
             data.events_list.map((v) => {
+                totalEnvironmentDocument += v["Environment-document"] || 0;
                 totalFlags += v.Flags || 0;
                 totalTraits += v.Traits || 0;
                 totalIdentities += v.Identities || 0;
@@ -209,6 +211,14 @@ const OrganisationSettingsPage = class extends Component {
                                 </th>
                             </thead>
                             <tbody>
+                                <tr style={{ borderBottom: '1px solid #ccc' }}>
+                                    <td>
+                                    Environment Document
+                                    </td>
+                                    <td>
+                                        {Utils.numberWithCommas(totalEnvironmentDocument)}
+                                    </td>
+                                </tr>
                                 <tr style={{ borderBottom: '1px solid #ccc' }}>
                                     <td>
                                     Flags
@@ -259,6 +269,7 @@ const OrganisationSettingsPage = class extends Component {
                             <Bar dataKey="Flags" stackId="a" fill="#6633ff" />
                             <Bar dataKey="Identities" stackId="a" fill="#00a696" />
                             <Bar dataKey="Traits" stackId="a" fill="#f18e7f" />
+                            <Bar name="Environment Document" dataKey="Environment-document" stackId="a" fill="#F6D46E" />
                         </BarChart>
                     </ResponsiveContainer>
                 </div>
