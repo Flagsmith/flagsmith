@@ -16,8 +16,7 @@ export default class Rule extends PureComponent {
         const operator = operatorObj && operatorObj.value;
         const value = typeof rule.value === 'string' ? rule.value.replace((operatorObj && operatorObj.append) || '', '') : rule.value;
 
-        const valuePlaceholder = operatorObj && (operatorObj.hideValue ? 'Value (N/A)' : operatorObj.valuePlaceholder);
-
+        const valuePlaceholder = rule.hideValue?  "Value (N/A)" : rule.valuePlaceholder || "Value"
         return (
             <div className="rule__row reveal" key={i}>
                 {hasOr && (
@@ -66,9 +65,9 @@ export default class Rule extends PureComponent {
                                   readOnly={this.props.readOnly}
                                   data-test={`${this.props['data-test']}-value-${i}`}
                                   className="input-container--flat full-width"
-                                  value={`${value}`}
-                                  placeholder={valuePlaceholder || 'Value'}
-                                  disabled={operator && operator === 'IS_SET' || operator && operator === 'IS_NOT_SET'}
+                                  value={value?value:""}
+                                  placeholder={valuePlaceholder}
+                                  disabled={operatorObj.hideValue}
                                   onChange={(e) => {
                                       const value = Utils.getTypedValue(Utils.safeParseEventValue(e));
                                       this.setRuleProperty(i, 'value', { value: operatorObj && operatorObj.append ? `${value}${operatorObj.append}` : value }, true);
@@ -127,6 +126,9 @@ export default class Rule extends PureComponent {
         const prevOperator = Utils.findOperator(rules[i].operator, rules[i].value, this.props.operators);
         const newOperator = prop !== 'operator' ? prevOperator : this.props.operators.find(v => v.value === value);
 
+        if (newOperator.hideValue) {
+            rules[i].value = null;
+        }
         if ((prevOperator && prevOperator.append) !== (newOperator && newOperator.append)) {
             rules[i].value = splitIfValue(rules[i].value, prevOperator && prevOperator.append)[0] + (newOperator.append || '');
         }
@@ -134,7 +136,7 @@ export default class Rule extends PureComponent {
         // remove append if one was added
 
 
-        const formattedValue = `${value}`;
+        const formattedValue = value? `${value}`: null;
         // split operator by append
         rules[i][prop] = prop === 'operator' ? formattedValue.split(':')[0] : formattedValue;
 
