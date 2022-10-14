@@ -126,7 +126,7 @@ export default class Rule extends PureComponent {
         const prevOperator = Utils.findOperator(rules[i].operator, rules[i].value, this.props.operators);
         const newOperator = prop !== 'operator' ? prevOperator : this.props.operators.find(v => v.value === value);
 
-        if (newOperator.hideValue) {
+        if (newOperator && newOperator.hideValue) {
             rules[i].value = null;
         }
         if ((prevOperator && prevOperator.append) !== (newOperator && newOperator.append)) {
