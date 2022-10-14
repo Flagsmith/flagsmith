@@ -1,3 +1,4 @@
+import json
 from datetime import timedelta
 
 import pytest
@@ -75,6 +76,24 @@ class InviteLinkViewSetTestCase(APITestCase):
         assert response.status_code == status.HTTP_204_NO_CONTENT
 
 
+def test_update_invite_link_returns_405(invite_link, admin_client, organisation):
+    # Given
+    url = reverse(
+        "api-v1:organisations:organisation-invite-links-detail",
+        args=[organisation.pk, invite_link.pk],
+    )
+    tomorrow = timezone.now() + timedelta(days=1)
+    data = {"expires_at": tomorrow.isoformat()}
+
+    # When
+    response = admin_client.patch(
+        url, data=json.dumps(data), content_type="application/json"
+    )
+
+    # Then
+    assert response.status_code == status.HTTP_405_METHOD_NOT_ALLOWED
+
+
 def test_create_invite_link_with_permission_group(
     admin_client, organisation, test_user_client, user_permission_group
 ):
@@ -138,3 +157,67 @@ def test_join_organisation_via_link_with_permission_groups(
     assert response.status_code == status.HTTP_200_OK
     assert organisation in test_user.organisations.all()
     assert user_permission_group in test_user.permission_groups.all()
+
+
+def test_create_invite_with_permission_groups(
+    admin_client, organisation, user_permission_group, admin_user
+):
+    # Given
+    url = reverse(
+        "api-v1:organisations:organisation-invites-list",
+        args=[organisation.pk],
+    )
+    email = "test@example.com"
+    data = {"email": email, "permission_groups": [user_permission_group.id]}
+
+    # When
+    response = admin_client.post(
+        url, data=json.dumps(data), content_type="application/json"
+    )
+    # Then
+    assert response.status_code == status.HTTP_201_CREATED
+    # and
+    invite = Invite.objects.get(email=email)
+    assert invite.permission_groups.first() == user_permission_group
+    assert invite.invited_by == admin_user
+
+
+def test_retrieve_invite(admin_client, organisation, user_permission_group, invite):
+    # Given
+    url = reverse(
+        "api-v1:organisations:organisation-invites-detail",
+        args=[organisation.id, invite.id],
+    )
+    # When
+    response = admin_client.get(url)
+    # Then
+    assert response.status_code == status.HTTP_200_OK
+
+
+def test_delete_invite(admin_client, organisation, user_permission_group, invite):
+    # Given
+    url = reverse(
+        "api-v1:organisations:organisation-invites-detail",
+        args=[organisation.id, invite.id],
+    )
+    # When
+    response = admin_client.delete(url)
+    # Then
+    assert response.status_code == status.HTTP_204_NO_CONTENT
+
+
+def test_update_invite_returns_405(
+    admin_client, organisation, user_permission_group, invite
+):
+    # Given
+    url = reverse(
+        "api-v1:organisations:organisation-invites-detail",
+        args=[organisation.id, invite.id],
+    )
+    data = {"email": "new_email@example.com"}
+
+    # When
+    response = admin_client.put(url, data=data)
+
+    # Then
+    assert response.status_code == status.HTTP_405_METHOD_NOT_ALLOWED
