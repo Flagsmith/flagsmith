@@ -7,6 +7,7 @@ from rest_framework.mixins import (
     CreateModelMixin,
     DestroyModelMixin,
     ListModelMixin,
+    RetrieveModelMixin,
 )
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
@@ -15,14 +16,19 @@ from rest_framework.viewsets import GenericViewSet
 
 from organisations.invites.exceptions import InviteExpiredError
 from organisations.invites.models import Invite, InviteLink
-from organisations.invites.serializers import InviteLinkSerializer
+from organisations.invites.serializers import (
+    InviteLinkSerializer,
+    InviteListSerializer,
+)
 from organisations.permissions.permissions import (
     NestedOrganisationEntityPermission,
 )
-from organisations.serializers import OrganisationSerializerFull
+from organisations.serializers import (
+    InviteSerializer,
+    OrganisationSerializerFull,
+)
 from users.exceptions import InvalidInviteError
 from users.models import FFAdminUser
-from users.serializers import InviteListSerializer
 
 
 @api_view(["POST"])
@@ -97,10 +103,17 @@ class InviteViewSet(
     CreateModelMixin,
     DestroyModelMixin,
     GenericViewSet,
+    RetrieveModelMixin,
 ):
-    serializer_class = InviteListSerializer
     permission_classes = (IsAuthenticated, NestedOrganisationEntityPermission)
     throttle_scope = "invite"
+
+    def get_serializer_class(self):
+        return {
+            "list": InviteListSerializer,
+            "retrieve": InviteListSerializer,
+            "create": InviteSerializer,
+        }.get(self.action, InviteListSerializer)
 
     def get_queryset(self):
         organisation_pk = self.kwargs.get("organisation_pk")
@@ -117,4 +130,7 @@ class InviteViewSet(
         return Response(status=status.HTTP_200_OK)
 
     def perform_create(self, serializer):
-        super().perform_create(serializer)
+        serializer.save(
+            organisation_id=self.kwargs.get("organisation_pk"),
+            invited_by=self.request.user,
+        )
