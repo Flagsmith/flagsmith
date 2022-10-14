@@ -67,7 +67,7 @@ export default class Rule extends PureComponent {
                                   className="input-container--flat full-width"
                                   value={value?value:""}
                                   placeholder={valuePlaceholder}
-                                  disabled={operatorObj.hideValue}
+                                  disabled={operatorObj && operatorObj.hideValue}
                                   onChange={(e) => {
                                       const value = Utils.getTypedValue(Utils.safeParseEventValue(e));
                                       this.setRuleProperty(i, 'value', { value: operatorObj && operatorObj.append ? `${value}${operatorObj.append}` : value }, true);
