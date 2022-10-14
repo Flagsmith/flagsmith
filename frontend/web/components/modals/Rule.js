@@ -1,7 +1,7 @@
 // import propTypes from 'prop-types';
 import React, { PureComponent } from 'react';
 
-const splitIfValue = (v, append) => (append ? v.split(append) : [v]);
+const splitIfValue = (v, append) => (append ? v.split(append) : [v===null?"":v]);
 
 export default class Rule extends PureComponent {
     static displayName = 'Rule';
@@ -136,9 +136,9 @@ export default class Rule extends PureComponent {
         // remove append if one was added
 
 
-        const formattedValue = value? `${value}`: null;
-        // split operator by append
-        rules[i][prop] = prop === 'operator' ? formattedValue.split(':')[0] : formattedValue;
+        const formattedValue = prop === 'value' && value === null? null:`${value}`
+        //split operator by append
+        rules[i][prop] = prop === 'operator' ? formattedValue.split(":")[0] : formattedValue;
 
         if (prop === 'operator' && value === 'PERCENTAGE_SPLIT') {
             rules[i].property = '';
