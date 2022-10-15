@@ -136,7 +136,7 @@ export default class Rule extends PureComponent {
         // remove append if one was added
 
 
-        const formattedValue = prop === 'value' && value === null? null:`${value}`
+        const formattedValue = value === null? null:`${value}`
         //split operator by append
         rules[i][prop] = prop === 'operator' ? formattedValue.split(":")[0] : formattedValue;
 
