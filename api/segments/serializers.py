@@ -29,7 +29,7 @@ class ConditionSerializer(serializers.ModelSerializer):
 
     def to_internal_value(self, data):
         # convert value to a string - conversion to correct value type is handled elsewhere
-        data["value"] = str(data["value"])
+        data["value"] = str(data["value"]) if "value" in data else None
         return super(ConditionSerializer, self).to_internal_value(data)
 
 
