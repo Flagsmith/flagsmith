@@ -102,6 +102,10 @@ def get_hosted_page_url_for_subscription_upgrade(
 def get_subscription_metadata(
     subscription_id: str,
 ) -> typing.Optional[ChargebeeObjMetadata]:
+    if not (subscription_id and subscription_id.strip() != ""):
+        logger.warning("Subscription id is empty or None")
+        return None
+
     with suppress(ChargebeeAPIError):
         if subscription_id == TRIAL_SUBSCRIPTION_ID:
             return ChargebeeObjMetadata()
