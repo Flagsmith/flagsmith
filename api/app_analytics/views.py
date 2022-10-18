@@ -28,10 +28,6 @@ class SDKAnalyticsFlags(GenericAPIView):
         """
         is_valid = self._is_data_valid()
         if not is_valid:
-            logger.error(
-                "Analytics data not valid. User agent: %s",
-                request.headers.get("User-Agent", "Not found"),
-            )
             # for now, return 200 to avoid breaking client integrations
             return Response(
                 {"detail": "Invalid data. Not logged."},
@@ -44,7 +40,7 @@ class SDKAnalyticsFlags(GenericAPIView):
 
         return Response(status=status.HTTP_200_OK)
 
-    def _is_data_valid(self):
+    def _is_data_valid(self) -> bool:
         environment_feature_names = set(
             FeatureState.objects.filter(
                 environment=self.request.environment,
@@ -58,8 +54,15 @@ class SDKAnalyticsFlags(GenericAPIView):
             if not (
                 isinstance(feature_name, str)
                 and feature_name in environment_feature_names
-                and isinstance(request_count, int)
             ):
+                logger.warning("Feature %s does not belong to project", feature_name)
+                is_valid = False
+
+            if not (isinstance(request_count, int)):
+                logger.error(
+                    "Analytics data contains non integer request count. User agent: %s",
+                    self.request.headers.get("User-Agent", "Not found"),
+                )
                 is_valid = False
 
         return is_valid
