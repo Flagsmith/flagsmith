@@ -351,3 +351,21 @@ def test_get_subscription_metadata_returns_null_if_chargebee_error(
 
     # Then
     assert subscription_metadata is None
+
+
+@pytest.mark.parametrize(
+    "subscription_id",
+    [None, "", " "],
+)
+def test_get_subscription_metadata_returns_none_for_invalid_subscription_id(
+    mocker, chargebee_object_metadata, subscription_id
+):
+    # Given
+    mocked_chargebee = mocker.patch("organisations.chargebee.chargebee.chargebee")
+
+    # When
+    subscription_metadata = get_subscription_metadata(subscription_id)
+
+    # Then
+    mocked_chargebee.Subscription.retrieve.assert_not_called()
+    assert subscription_metadata is None
