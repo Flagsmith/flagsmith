@@ -138,7 +138,6 @@ class Subscription(LifecycleModelMixin, AbstractBaseExportableModel):
     payment_method = models.CharField(
         max_length=20,
         choices=SUBSCRIPTION_PAYMENT_METHODS,
-        default=CHARGEBEE,
         blank=True,
         null=True,
     )
