@@ -36,6 +36,8 @@ from organisations.subscriptions.xero.metadata import XeroSubscriptionMetadata
 from users.utils.mailer_lite import MailerLite
 from webhooks.models import AbstractBaseWebhookModel
 
+TRIAL_SUBSCRIPTION_ID = "trial"
+
 
 class OrganisationRole(models.TextChoices):
     ADMIN = ("ADMIN", "Admin")
@@ -174,6 +176,11 @@ class Subscription(LifecycleModelMixin, AbstractBaseExportableModel):
 
     def get_subscription_metadata(self) -> BaseSubscriptionMetadata:
         metadata = None
+
+        if self.subscription_id == TRIAL_SUBSCRIPTION_ID:
+            metadata = BaseSubscriptionMetadata(
+                seats=self.max_seats, api_calls=self.max_api_calls
+            )
 
         if self.payment_method == CHARGEBEE and self.subscription_id:
             metadata = get_subscription_metadata(self.subscription_id)
