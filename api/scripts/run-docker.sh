@@ -5,6 +5,8 @@ function migrate () {
     python manage.py migrate && python manage.py createcachetable
 }
 function serve() {
+    # configuration parameters for statsd. Docs can be found here:
+    # https://docs.gunicorn.org/en/stable/instrumentation.html
     export STATSD_PORT=${STATSD_PORT:-8125}
     export STATSD_PREFIX=${STATSD_PREFIX:-flagsmith.api}
 
