@@ -43,5 +43,14 @@ runs:
               FE_E2E_TEST_USER_EMAIL: nightwatch@solidstategroup.com
               SENTRY_SDK_DSN: ${{ inputs.sentry_sdk_dsn }}
           run: |
-              docker run -p 8000:8000  -e DATABASE_URL=$DATABASE_URL -e DJANGO_ALLOWED_HOSTS="*" flagsmith/flagsmith-api:e2e
+              docker run \
+              -p 8000:8000 \
+              -e DATABASE_URL=$DATABASE_URL \
+              -e DJANGO_ALLOWED_HOSTS="*" \
+              -e E2E_TEST_AUTH_TOKEN=$E2E_TEST_AUTH_TOKEN \
+              -e SENDGRID_API_KEY=$SENDGRID_API_KEY \
+              -e DJANGO_SETTINGS_MODULE=app.settings.test \
+              -e FE_E2E_TEST_USER_EMAIL=nightwatch@solidstategroup.com \
+              -e SENTRY_SDK_DSN=$SENTRY_SDK_DSN \
+              flagsmith/flagsmith-api:e2e
           shell: bash
