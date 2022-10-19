@@ -27,8 +27,9 @@ runs:
           uses: docker/setup-buildx-action@v1
 
         - name: Build amd64 image
+          working-directory: api
           run: |
-            docker build -t flagsmith/flagsmith:e2e .
+            docker build -t flagsmith/flagsmith-api:e2e .
           shell: bash
 
         - name: Run API
@@ -42,5 +43,5 @@ runs:
               FE_E2E_TEST_USER_EMAIL: nightwatch@solidstategroup.com
               SENTRY_SDK_DSN: ${{ inputs.sentry_sdk_dsn }}
           run: |
-              docker run -P 8000:8000  -e DATABASE_URL='$DATABASE_URL' -e DJANGO_ALLOWED_HOSTS='"*"' flagsmith/flagsmith:e2e
+              docker run -p 8000:8000  -e DATABASE_URL='$DATABASE_URL' -e DJANGO_ALLOWED_HOSTS='"*"' flagsmith/flagsmith-api:e2e
           shell: bash
