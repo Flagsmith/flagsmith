@@ -52,5 +52,5 @@ runs:
               -e DJANGO_SETTINGS_MODULE=app.settings.test \
               -e FE_E2E_TEST_USER_EMAIL=nightwatch@solidstategroup.com \
               -e SENTRY_SDK_DSN=$SENTRY_SDK_DSN \
-              flagsmith/flagsmith-api:e2e
+              -d flagsmith/flagsmith-api:e2e
           shell: bash
