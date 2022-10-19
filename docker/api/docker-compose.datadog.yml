@@ -1,3 +1,6 @@
+# An example docker-compose file for integrating the Flagsmith API with DataDog via statsd.
+# Further documentation can be found here: https://docs.flagsmith.com/deployment/locally-api#statsd-integration
+
 version: '3'
 services:
   postgres:
@@ -8,7 +11,7 @@ services:
     container_name: flagsmith_postgres
   api:
     build:
-      dockerfile: ../../api/Dockerfile
+      dockerfile: Dockerfile
       context: ../../api
     environment:
       DATABASE_URL: postgres://postgres:password@postgres:5432/flagsmith
