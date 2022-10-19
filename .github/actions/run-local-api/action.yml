@@ -20,19 +20,13 @@ runs:
     using: composite
 
     steps:
-        - name: Set up QEMU
-          uses: docker/setup-qemu-action@v1
-
-        - name: Set up Docker Buildx
-          uses: docker/setup-buildx-action@v1
-
-        - name: Build amd64 image
+        - name: Build temporary Docker image for running the API
           working-directory: api
           run: |
               docker build -t flagsmith/flagsmith-api:e2e .
           shell: bash
 
-        - name: Run API
+        - name: Run the API
           working-directory: api
           env:
               E2E_TEST_AUTH_TOKEN: ${{ inputs.e2e_test_token }}
