@@ -1,0 +1,34 @@
+version: '3'
+services:
+  postgres:
+    image: postgres:11.12-alpine
+    environment:
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: flagsmith
+    container_name: flagsmith_postgres
+  api:
+    build:
+      dockerfile: ../../api/Dockerfile
+      context: ../../api
+    environment:
+      DATABASE_URL: postgres://postgres:password@postgres:5432/flagsmith
+      DJANGO_SETTINGS_MODULE: app.settings.local
+      STATSD_HOST: datadog
+    ports:
+      - "8000:8000"
+    depends_on:
+      - postgres
+    links:
+      - postgres
+      - datadog
+  datadog:
+    image: gcr.io/datadoghq/agent:7
+    environment:
+      - DD_API_KEY=<API KEY>
+      - DD_SITE=datadoghq.eu
+      - DD_DOGSTATSD_NON_LOCAL_TRAFFIC=true
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - /proc/:/host/proc/:ro
+      - /sys/fs/cgroup:/host/sys/fs/cgroup:ro
+      - /var/lib/docker/containers:/var/lib/docker/containers:ro

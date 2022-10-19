@@ -5,6 +5,9 @@ function migrate () {
     python manage.py migrate && python manage.py createcachetable
 }
 function serve() {
+    export STATSD_PORT=${STATSD_PORT:-8125}
+    export STATSD_PREFIX=${STATSD_PREFIX:-flagsmith.api}
+
     gunicorn --bind 0.0.0.0:8000 \
              --worker-tmp-dir /dev/shm \
              --timeout ${GUNICORN_TIMEOUT:-30} \
@@ -12,6 +15,8 @@ function serve() {
              --threads ${GUNICORN_THREADS:-2} \
              --access-logfile $ACCESS_LOG_LOCATION \
              --keep-alive ${GUNICORN_KEEP_ALIVE:-2} \
+             ${STATSD_HOST:+--statsd-host $STATSD_HOST:$STATSD_PORT} \
+             ${STATSD_HOST:+--statsd-prefix $STATSD_PREFIX} \
              app.wsgi
 }
 function migrate_identities(){
