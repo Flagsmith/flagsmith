@@ -11,10 +11,6 @@ inputs:
     sentry_sdk_dsn:
         description: "The sentry SDK DSN"
         required: true
-    python_version:
-        description: "The authentication token used for E2E test endpoints."
-        required: false
-        default: "3.8"
     e2e_test_token:
         description: "The token to use for authenticating the E2E test process"
         required: false
@@ -24,41 +20,27 @@ runs:
     using: composite
 
     steps:
-        -   name: Set up Python ${{ inputs.python_version }}
-            uses: actions/setup-python@v2
-            with:
-                python-version: ${{ inputs.python_version }}
+        - name: Set up QEMU
+          uses: docker/setup-qemu-action@v1
 
-        -   name: Copy pip requirements
-            run: cp api/requirements.txt .
-            shell: bash
+        - name: Set up Docker Buildx
+          uses: docker/setup-buildx-action@v1
 
-        -   name: Restore VirtualEnv from cache
-            uses: syphar/restore-virtualenv@v1.2
-            id: cache-e2e-api
+        - name: Build amd64 image
+          run: |
+            docker build -t flagsmith/flagsmith:e2e .
+          shell: bash
 
-        -   name: Restore Pip from cache
-            uses: syphar/restore-pip-download-cache@v1
-            if: steps.cache-e2e-api.outputs.cache-hit != 'true'
-
-        -   name: Install Dependencies
-            if: steps.cache-e2e-api.outputs.cache-hit != 'true'
-            run: |
-                python -m pip install --upgrade pip
-                pip install -r requirements.txt
-            shell: bash
-
-        -   name: Run API
-            working-directory: api
-            env:
-                E2E_TEST_AUTH_TOKEN: ${{ inputs.e2e_test_token }}
-                DJANGO_ALLOWED_HOSTS: '*'
-                DATABASE_URL: ${{ inputs.database_url }}
-                SENDGRID_API_KEY: ${{ inputs.sendgrid_api_key }}
-                DJANGO_SETTINGS_MODULE: app.settings.test
-                FE_E2E_TEST_USER_EMAIL: nightwatch@solidstategroup.com
-                SENTRY_SDK_DSN: ${{ inputs.sentry_sdk_dsn }}
-            run: |
-                python manage.py migrate
-                python manage.py runserver &
-            shell: bash
+        - name: Run API
+          working-directory: api
+          env:
+              E2E_TEST_AUTH_TOKEN: ${{ inputs.e2e_test_token }}
+              DJANGO_ALLOWED_HOSTS: "*"
+              DATABASE_URL: ${{ inputs.database_url }}
+              SENDGRID_API_KEY: ${{ inputs.sendgrid_api_key }}
+              DJANGO_SETTINGS_MODULE: app.settings.test
+              FE_E2E_TEST_USER_EMAIL: nightwatch@solidstategroup.com
+              SENTRY_SDK_DSN: ${{ inputs.sentry_sdk_dsn }}
+          run: |
+              docker run -P 8000:8000  -e DATABASE_URL='$DATABASE_URL' -e DJANGO_ALLOWED_HOSTS='"*"' flagsmith/flagsmith:e2e
+          shell: bash
