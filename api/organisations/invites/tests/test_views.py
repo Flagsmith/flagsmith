@@ -4,7 +4,6 @@ from datetime import timedelta
 import pytest
 from django.urls import reverse
 from django.utils import timezone
-from pytest_lazyfixture import lazy_fixture
 from rest_framework import status
 from rest_framework.test import APITestCase
 

@@ -7,14 +7,7 @@ from users.serializers import UserListSerializer
 class InviteLinkSerializer(serializers.ModelSerializer):
     class Meta:
         model = InviteLink
-        fields = (
-            "id",
-            "hash",
-            "date_created",
-            "role",
-            "expires_at",
-            "permission_groups",
-        )
+        fields = ("id", "hash", "date_created", "role", "expires_at")
         read_only_fields = ("id", "hash", "date_created")
 
 
