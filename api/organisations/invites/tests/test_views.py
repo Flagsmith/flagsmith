@@ -199,9 +199,10 @@ def test_join_organisation_alerts_admin_users_if_exceeds_plan_limit(
     url = reverse(url, args=[invite_object.hash])
 
     # When
-    test_user_client.post(url)
+    response = test_user_client.post(url)
 
     # Then
+    assert response.status_code == status.HTTP_200_OK
     mocked_thread.assert_called_with(
         target=send_org_over_limit_alert,
         args=[organisation],
