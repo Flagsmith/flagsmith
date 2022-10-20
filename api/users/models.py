@@ -135,6 +135,7 @@ class FFAdminUser(LifecycleModel, AbstractUser):
         if invite_email.email.lower() != self.email.lower():
             raise InvalidInviteError("Registered email does not match invited email")
         self.join_organisation_from_invite(invite_email)
+        self.permission_groups.add(*invite_email.permission_groups.all())
         invite_email.delete()
 
     def join_organisation_from_invite_link(self, invite_link: "InviteLink"):
@@ -143,7 +144,6 @@ class FFAdminUser(LifecycleModel, AbstractUser):
     def join_organisation_from_invite(self, invite: "AbstractBaseInviteModel"):
         organisation = invite.organisation
         self.add_organisation(organisation, role=OrganisationRole(invite.role))
-        self.permission_groups.add(*invite.permission_groups.all())
 
     def is_organisation_admin(self, organisation):
         return self.get_organisation_role(organisation) == OrganisationRole.ADMIN.name

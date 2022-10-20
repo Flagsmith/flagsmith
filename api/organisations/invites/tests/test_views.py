@@ -94,30 +94,6 @@ def test_update_invite_link_returns_405(invite_link, admin_client, organisation)
     assert response.status_code == status.HTTP_405_METHOD_NOT_ALLOWED
 
 
-def test_create_invite_link_with_permission_group(
-    admin_client, organisation, test_user_client, user_permission_group
-):
-    # Given
-    url = reverse(
-        "api-v1:organisations:organisation-invite-links-list",
-        args=[organisation.pk],
-    )
-    tomorrow = timezone.now() + timedelta(days=1)
-    data = {
-        "expires_at": tomorrow.strftime("%Y-%m-%d %H:%M:%S"),
-        "permission_groups": [user_permission_group.id],
-    }
-
-    # When
-    response = admin_client.post(url, data=data)
-
-    # Then
-    assert response.status_code == status.HTTP_201_CREATED
-
-    response_json = response.json()
-    assert response_json["permission_groups"] == [user_permission_group.id]
-
-
 def test_join_organisation_with_permission_groups(
     test_user, test_user_client, organisation, user_permission_group
 ):
@@ -138,25 +114,6 @@ def test_join_organisation_with_permission_groups(
     # and invite is deleted
     with pytest.raises(Invite.DoesNotExist):
         invite.refresh_from_db()
-
-
-def test_join_organisation_via_link_with_permission_groups(
-    test_user, organisation, test_user_client, user_permission_group
-):
-    # Given
-    invite = InviteLink.objects.create(organisation=organisation)
-    invite.permission_groups.add(user_permission_group)
-
-    url = reverse("api-v1:users:user-join-organisation-link", args=[invite.hash])
-
-    # When
-    response = test_user_client.post(url)
-    test_user.refresh_from_db()
-
-    # Then
-    assert response.status_code == status.HTTP_200_OK
-    assert organisation in test_user.organisations.all()
-    assert user_permission_group in test_user.permission_groups.all()
 
 
 def test_create_invite_with_permission_groups(
