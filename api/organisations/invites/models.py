@@ -20,7 +20,6 @@ class AbstractBaseInviteModel(models.Model):
         max_length=50,
         default=OrganisationRole.USER,
     )
-    permission_groups = models.ManyToManyField(UserPermissionGroup, blank=True)
 
     class Meta:
         abstract = True
@@ -44,6 +43,7 @@ class Invite(AbstractBaseInviteModel):
     invited_by = models.ForeignKey(
         FFAdminUser, related_name="sent_invites", null=True, on_delete=models.CASCADE
     )
+    permission_groups = models.ManyToManyField(UserPermissionGroup, blank=True)
 
     class Meta:
         unique_together = ("email", "organisation")
