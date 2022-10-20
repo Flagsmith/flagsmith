@@ -29,17 +29,18 @@ from organisations.serializers import (
     OrganisationSerializerFull,
 )
 from users.exceptions import InvalidInviteError
-from users.models import FFAdminUser
 
 
 @api_view(["POST"])
 def join_organisation_from_email(request, hash):
     invite = get_object_or_404(Invite, hash=hash)
+
     try:
         request.user.join_organisation_from_invite_email(invite)
     except InvalidInviteError as e:
         error_data = {"detail": str(e)}
         return Response(data=error_data, status=status.HTTP_400_BAD_REQUEST)
+
     if invite.organisation.over_plan_seats_limit():
         Thread(
             target=send_org_over_limit_alert,
