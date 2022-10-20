@@ -1,13 +1,13 @@
 from threading import Thread
 
 from django.shortcuts import get_object_or_404
-from rest_framework import status, viewsets
+from rest_framework import status
 from rest_framework.decorators import action, api_view
 from rest_framework.mixins import (
     CreateModelMixin,
     DestroyModelMixin,
     ListModelMixin,
-    UpdateModelMixin,
+    RetrieveModelMixin,
 )
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
@@ -16,15 +16,19 @@ from rest_framework.viewsets import GenericViewSet
 
 from organisations.invites.exceptions import InviteExpiredError
 from organisations.invites.models import Invite, InviteLink
-from organisations.invites.serializers import InviteLinkSerializer
-from organisations.models import OrganisationRole
+from organisations.invites.serializers import (
+    InviteLinkSerializer,
+    InviteListSerializer,
+)
 from organisations.permissions.permissions import (
     NestedOrganisationEntityPermission,
 )
-from organisations.serializers import OrganisationSerializerFull
+from organisations.serializers import (
+    InviteSerializer,
+    OrganisationSerializerFull,
+)
 from users.exceptions import InvalidInviteError
 from users.models import FFAdminUser
-from users.serializers import InviteListSerializer
 
 
 @api_view(["POST"])
@@ -32,7 +36,7 @@ def join_organisation_from_email(request, hash):
     invite = get_object_or_404(Invite, hash=hash)
 
     try:
-        request.user.join_organisation(invite)
+        request.user.join_organisation_from_invite_email(invite)
     except InvalidInviteError as e:
         error_data = {"detail": str(e)}
         return Response(data=error_data, status=status.HTTP_400_BAD_REQUEST)
@@ -58,10 +62,7 @@ def join_organisation_from_link(request, hash):
     if invite.is_expired:
         raise InviteExpiredError()
 
-    request.user.add_organisation(
-        invite.organisation, role=OrganisationRole(invite.role)
-    )
-
+    request.user.join_organisation_from_invite_link(invite)
     if invite.organisation.over_plan_seats_limit():
         Thread(
             target=FFAdminUser.send_organisation_over_limit_alert,
@@ -79,7 +80,6 @@ def join_organisation_from_link(request, hash):
 class InviteLinkViewSet(
     ListModelMixin,
     CreateModelMixin,
-    UpdateModelMixin,
     DestroyModelMixin,
     GenericViewSet,
 ):
@@ -97,14 +97,23 @@ class InviteLinkViewSet(
     def perform_create(self, serializer):
         serializer.save(organisation_id=self.kwargs.get("organisation_pk"))
 
-    def perform_update(self, serializer):
-        serializer.save(organisation_id=self.kwargs.get("organisation_pk"))
 
-
-class InviteViewSet(viewsets.ModelViewSet):
-    serializer_class = InviteListSerializer
+class InviteViewSet(
+    ListModelMixin,
+    CreateModelMixin,
+    DestroyModelMixin,
+    GenericViewSet,
+    RetrieveModelMixin,
+):
     permission_classes = (IsAuthenticated, NestedOrganisationEntityPermission)
     throttle_scope = "invite"
+
+    def get_serializer_class(self):
+        return {
+            "list": InviteListSerializer,
+            "retrieve": InviteListSerializer,
+            "create": InviteSerializer,
+        }.get(self.action, InviteListSerializer)
 
     def get_queryset(self):
         organisation_pk = self.kwargs.get("organisation_pk")
@@ -119,3 +128,9 @@ class InviteViewSet(viewsets.ModelViewSet):
         invite = self.get_object()
         invite.send_invite_mail()
         return Response(status=status.HTTP_200_OK)
+
+    def perform_create(self, serializer):
+        serializer.save(
+            organisation_id=self.kwargs.get("organisation_pk"),
+            invited_by=self.request.user,
+        )

@@ -2,7 +2,6 @@ from djoser.serializers import UserSerializer as DjoserUserSerializer
 from rest_framework import serializers
 from rest_framework.exceptions import ValidationError
 
-from organisations.invites.models import Invite
 from organisations.models import Organisation
 from organisations.serializers import UserOrganisationSerializer
 
@@ -75,25 +74,6 @@ class UserListSerializer(serializers.ModelSerializer):
 
     def get_join_date(self, instance):
         return instance.get_organisation_join_date(self.context.get("organisation"))
-
-
-class InviteSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Invite
-        fields = (
-            "email",
-            "organisation",
-            "invited_by",
-            "date_created",
-        )
-
-
-class InviteListSerializer(serializers.ModelSerializer):
-    invited_by = UserListSerializer()
-
-    class Meta:
-        model = Invite
-        fields = ("id", "email", "date_created", "invited_by")
 
 
 class UserIdsSerializer(serializers.Serializer):
