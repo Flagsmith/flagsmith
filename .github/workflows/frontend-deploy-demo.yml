@@ -20,17 +20,17 @@ jobs:
 
         steps:
             - name: Cloning repo
-              uses: actions/checkout@v2
+              uses: actions/checkout@v3
               with:
                   fetch-depth: 0
 
             - name: Setup Node.js 16.x
-              uses: actions/setup-node@v1
+              uses: actions/setup-node@v3
               with:
                   node-version: 16.x
 
             - name: Cache dependencies
-              uses: actions/cache@v2
+              uses: actions/cache@v3
               with:
                   path: ~/.npm
                   key: npm-${{ hashFiles('package-lock.json') }}

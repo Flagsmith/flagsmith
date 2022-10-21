@@ -22,12 +22,12 @@ jobs:
 
         steps:
             - name: Cloning repo
-              uses: actions/checkout@v2
+              uses: actions/checkout@v3
               with:
                   fetch-depth: 0
 
             - name: Cache npm
-              uses: actions/cache@v2
+              uses: actions/cache@v3
               with:
                   path: frontend/node_modules
                   key: ${{ runner.os }}-node-${{ hashFiles('frontend/package-lock.json') }}
@@ -57,17 +57,17 @@ jobs:
 
         steps:
             - name: Checkout PR branch
-              uses: actions/checkout@v2
+              uses: actions/checkout@v3
 
             - name: Set up QEMU
-              uses: docker/setup-qemu-action@v1
+              uses: docker/setup-qemu-action@v2
 
             - name: Set up Docker Buildx
-              uses: docker/setup-buildx-action@v1
+              uses: docker/setup-buildx-action@v2
 
             - name: Build
               id: docker_build
-              uses: docker/build-push-action@v2
+              uses: docker/build-push-action@v3
               with:
                   push: false
                   tags: flagsmith/flagsmith:testing
@@ -79,17 +79,17 @@ jobs:
 
         steps:
             - name: Checkout PR branch
-              uses: actions/checkout@v2
+              uses: actions/checkout@v3
 
             - name: Set up QEMU
-              uses: docker/setup-qemu-action@v1
+              uses: docker/setup-qemu-action@v2
 
             - name: Set up Docker Buildx
-              uses: docker/setup-buildx-action@v1
+              uses: docker/setup-buildx-action@v2
 
             - name: Build
               id: docker_build
-              uses: docker/build-push-action@v2
+              uses: docker/build-push-action@v3
               with:
                   file: api/Dockerfile
                   context: api/
@@ -103,17 +103,17 @@ jobs:
 
         steps:
             - name: Checkout PR branch
-              uses: actions/checkout@v2
+              uses: actions/checkout@v3
 
             - name: Set up QEMU
-              uses: docker/setup-qemu-action@v1
+              uses: docker/setup-qemu-action@v2
 
             - name: Set up Docker Buildx
-              uses: docker/setup-buildx-action@v1
+              uses: docker/setup-buildx-action@v2
 
             - name: Build
               id: docker_build
-              uses: docker/build-push-action@v2
+              uses: docker/build-push-action@v3
               with:
                   file: frontend/Dockerfile
                   context: frontend/
