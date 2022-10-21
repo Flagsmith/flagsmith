@@ -32,6 +32,7 @@ services:
         build:
             dockerfile: ./Dockerfile.e2e
             context: .
+        platform: linux/amd64
         environment:
             E2E_TEST_TOKEN_DEV: some-token
             ENABLE_INFLUXDB_FEATURES: 'false'

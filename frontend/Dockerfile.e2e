@@ -13,6 +13,8 @@ COPY --chown=node:node . .
 
 USER node
 
+RUN npm cache clean --force
+
 RUN npm i
 
 ENV ENV=e2e
