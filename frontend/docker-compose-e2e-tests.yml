@@ -29,19 +29,16 @@ services:
             - db:db
 
     frontend:
-        build: 
+        build:
+            dockerfile: ./Dockerfile.e2e
             context: .
-            dockerfile: Dockerfile.e2e
         environment:
             E2E_TEST_TOKEN_DEV: some-token
             ENABLE_INFLUXDB_FEATURES: 'false'
+            FLAGSMITH_API: flagsmith-api:8000/api/v1/
         ports:
             - '8080:8080'
-        volumes:
-            - .:/frontend
         depends_on:
             - flagsmith-api
         links:
             - flagsmith-api:flagsmith-api
-        command: ["npm", "run", "test"]
-
