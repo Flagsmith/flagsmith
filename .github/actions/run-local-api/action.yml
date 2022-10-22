@@ -24,28 +24,30 @@ runs:
     using: composite
 
     steps:
-        -   name: Copy pip requirements
-            run: cp api/requirements.txt .
-            shell: bash
+        - name: Set up Python ${{ inputs.python_version }}
+          uses: actions/setup-python@v4
+          with:
+              python-version: ${{ inputs.python_version }}
+              cache: "pip"
 
-        -   name: Set up Python ${{ inputs.python_version }}
-            uses: actions/setup-python@v4
-            with:
-                python-version: ${{ inputs.python_version }}
-                cache: 'pip'
-            run: pip install --upgrade pip && pip install -r requirements.txt
+        - name: Install python dependencies
+          run: |
+              cp api/requirements.txt .
+              pip install --upgrade pip
+              pip install -r requirements.txt
+          shell: bash
 
-        -   name: Run API
-            working-directory: api
-            env:
-                E2E_TEST_AUTH_TOKEN: ${{ inputs.e2e_test_token }}
-                DJANGO_ALLOWED_HOSTS: '*'
-                DATABASE_URL: ${{ inputs.database_url }}
-                SENDGRID_API_KEY: ${{ inputs.sendgrid_api_key }}
-                DJANGO_SETTINGS_MODULE: app.settings.test
-                FE_E2E_TEST_USER_EMAIL: nightwatch@solidstategroup.com
-                SENTRY_SDK_DSN: ${{ inputs.sentry_sdk_dsn }}
-            run: |
-                python manage.py migrate
-                python manage.py runserver &
-            shell: bash
+        - name: Run API
+          working-directory: api
+          env:
+              E2E_TEST_AUTH_TOKEN: ${{ inputs.e2e_test_token }}
+              DJANGO_ALLOWED_HOSTS: "*"
+              DATABASE_URL: ${{ inputs.database_url }}
+              SENDGRID_API_KEY: ${{ inputs.sendgrid_api_key }}
+              DJANGO_SETTINGS_MODULE: app.settings.test
+              FE_E2E_TEST_USER_EMAIL: nightwatch@solidstategroup.com
+              SENTRY_SDK_DSN: ${{ inputs.sentry_sdk_dsn }}
+          run: |
+              python manage.py migrate
+              python manage.py runserver &
+          shell: bash
