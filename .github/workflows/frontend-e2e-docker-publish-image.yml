@@ -11,9 +11,9 @@ on:
             - ".github/**"
 
 jobs:
-    build-frontend-dockerhub:
+    build-frontend-e2e-dockerhub:
         runs-on: ubuntu-latest
-        name: Frontend Publish Docker Image
+        name: Frontend E2E Publish Docker Image
 
         steps:
             - name: Cloning repo
