@@ -1,0 +1,70 @@
+name: Frontend E2E Publish Docker Images
+
+on:
+    push:
+        branches:
+            - main
+            - end-to-end-testing-image-build
+        tags:
+            - "*"
+        paths:
+            - "frontend/**"
+            - ".github/**"
+
+jobs:
+    build-frontend-dockerhub:
+        runs-on: ubuntu-latest
+        name: Frontend Publish Docker Image
+
+        steps:
+            - name: Cloning repo
+              uses: actions/checkout@v2
+              with:
+                  fetch-depth: 0
+
+            - name: Set up QEMU
+              uses: docker/setup-qemu-action@v1
+
+            - name: Set up Docker Buildx
+              uses: docker/setup-buildx-action@v1
+
+            - name: Login to DockerHub
+              uses: docker/login-action@v1
+              with:
+                  username: ${{ secrets.DOCKERHUB_USERNAME }}
+                  password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+            - name: Inject slug/short variables
+              uses: rlespinasse/github-slug-action@v3.x
+
+            - name: Docker metadata
+              id: meta-build
+              uses: docker/metadata-action@v3
+              with:
+                  images: |
+                      flagsmith/flagsmith-e2e-test-image
+                  tags: |
+                      type=ref,event=branch
+
+            - name: Docker metadata
+              id: meta
+              uses: crazy-max/ghaction-docker-meta@v2
+              with:
+                  images: |
+                      flagsmith/flagsmith-e2e-test-image
+                  tags: |
+                      type=ref,event=branch
+                      type=semver,pattern={{version}}
+                      type=semver,pattern={{major}}.{{minor}}
+
+            - name: Build and push E2E testing docker image
+              id: docker_build
+              uses: docker/build-push-action@v2
+              with:
+                  file: frontend/Dockerfile.e2e
+                  context: frontend/
+                  push: true
+                  tags: ${{ steps.meta.outputs.tags }}
+
+            - name: Image digest
+              run: echo ${{ steps.docker_build.outputs.digest }}
