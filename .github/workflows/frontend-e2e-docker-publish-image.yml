@@ -4,7 +4,6 @@ on:
     push:
         branches:
             - main
-            - end-to-end-testing-image-build
         tags:
             - "*"
         paths:
