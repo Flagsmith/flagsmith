@@ -41,7 +41,7 @@ jobs:
               uses: docker/metadata-action@v3
               with:
                   images: |
-                      flagsmith/flagsmith-e2e-test-image
+                      flagsmith/flagsmith-e2e-tests
                   tags: |
                       type=ref,event=branch
 
@@ -50,7 +50,7 @@ jobs:
               uses: crazy-max/ghaction-docker-meta@v2
               with:
                   images: |
-                      flagsmith/flagsmith-e2e-test-image
+                      flagsmith/flagsmith-e2e-tests
                   tags: |
                       type=ref,event=branch
                       type=semver,pattern={{version}}
