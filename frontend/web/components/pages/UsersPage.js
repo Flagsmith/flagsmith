@@ -182,47 +182,6 @@ const UsersPage = class extends Component {
                                                             isLoading={isLoading}
                                                         />
                                                     </FormGroup>
-
-
-                                                {permission && !preventAddTrait && Utils.getShouldShowProjectTraits() && (
-                                                    <EnvironmentTraitsProvider environmentId={environmentId}>
-                                                        {({ isLoading, error, traits, deleteTrait, isDeleting }) => (
-                                                            <div>
-                                                                <p className="mt-4">
-                                                                    View and delete common traits you've created for users in this environment.
-                                                                </p>
-                                                                <PanelSearch
-                                                                  renderSearchWithNoResults
-                                                                  id="users-list"
-                                                                  title="User Traits"
-                                                                  className="no-pad"
-                                                                  filterRow={(item, search) => item.toLowerCase().includes(search.toLowerCase())}
-                                                                  icon="ion-ios-person"
-                                                                  items={traits}
-                                                                  isLoading={isLoading}
-                                                                  renderRow={(trait, index) => (
-                                                                      <Row
-                                                                        space className="list-item" key={trait}
-                                                                        data-test={`user-item-${index}`}
-                                                                      >
-                                                                          <ButtonLink>
-                                                                              {trait}
-                                                                          </ButtonLink>
-                                                                          <button
-                                                                            id="remove-trait"
-                                                                            className="btn btn--with-icon"
-                                                                            type="button"
-                                                                            onClick={() => this.deleteTrait(trait, () => deleteTrait(trait))}
-                                                                          >
-                                                                              <RemoveIcon/>
-                                                                          </button>
-                                                                      </Row>
-                                                                  )}
-                                                                />
-                                                            </div>
-                                                        )}
-                                                    </EnvironmentTraitsProvider>
-                                                )}
                                                 <FormGroup>
                                                     <p className="faint mt-4">
                                                         Users are created for your environment automatically when calling
