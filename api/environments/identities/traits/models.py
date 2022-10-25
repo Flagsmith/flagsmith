@@ -15,6 +15,15 @@ class Trait(models.Model):
         (FLOAT, "Float"),
     )
 
+    # list of fields that should be updated when using bulk update (e.g. in Identity.update_traits())
+    BULK_UPDATE_FIELDS = [
+        "value_type",
+        "string_value",
+        "integer_value",
+        "float_value",
+        "boolean_value",
+    ]
+
     identity = models.ForeignKey(
         "identities.Identity", related_name="identity_traits", on_delete=models.CASCADE
     )
