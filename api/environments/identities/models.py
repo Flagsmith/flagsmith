@@ -29,6 +29,10 @@ class Identity(models.Model):
         # hard code the table name after moving from the environments app to prevent
         # issues with production deployment due to multi server configuration.
         db_table = "environments_identity"
+        # Note that the environment / created_date index is added only to postgres, so we can add it concurrently to
+        # avoid any downtime. If people using MySQL / Oracle have issues with poor performance on the identities table,
+        # we can provide them the SQL to add it manually in a small window of downtime.
+        index_together = (("environment", "created_date"),)
 
     def natural_key(self):
         return self.identifier, self.environment.api_key
@@ -166,9 +170,11 @@ class Identity(models.Model):
         :param trait_data_items: list of dictionaries validated by TraitSerializerFull
         :return: queryset of updated trait models
         """
-        current_traits = self.get_all_user_traits()
+        current_traits = {t.trait_key: t for t in self.identity_traits.all()}
 
         keys_to_delete = []
+        new_traits = []
+        updated_traits = []
 
         for trait_data_item in trait_data_items:
             trait_key = trait_data_item["trait_key"]
@@ -182,20 +188,28 @@ class Identity(models.Model):
 
             trait_value_data = Trait.generate_trait_value_data(trait_value)
 
-            if current_traits.filter(trait_key=trait_key).exists():
-                current_trait = current_traits.get(trait_key=trait_key)
+            if trait_key in current_traits:
+                current_trait = current_traits[trait_key]
                 for attr, value in trait_value_data.items():
                     setattr(current_trait, attr, value)
-                current_trait.save()
+                updated_traits.append(current_trait)
             else:
-                # use update_or_create to avoid race condition
-                kwargs = {"trait_key": trait_key, "identity": self}
-                Trait.objects.update_or_create(defaults=trait_value_data, **kwargs)
+                new_traits.append(
+                    Trait(**trait_value_data, trait_key=trait_key, identity=self)
+                )
 
         # delete the traits that had their keys set to None
         if keys_to_delete:
-            current_traits.filter(trait_key__in=keys_to_delete).delete()
+            self.identity_traits.filter(trait_key__in=keys_to_delete).delete()
+
+        Trait.objects.bulk_update(updated_traits, fields=Trait.BULK_UPDATE_FIELDS)
+
+        # use ignore_conflicts to handle race conditions which result in IntegrityError if another request
+        # has added a particular trait_key for the identity while this method has been determining what to
+        # update or create.
+        # See: https://github.com/Flagsmith/flagsmith/issues/370
+        Trait.objects.bulk_create(new_traits, ignore_conflicts=True)
 
         # return the full list of traits for this identity by refreshing from the db
         # TODO: handle this in the above logic to avoid a second hit to the DB
-        return self.get_all_user_traits()
+        return self.identity_traits.all()

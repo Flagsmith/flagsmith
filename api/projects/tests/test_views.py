@@ -561,3 +561,27 @@ def test_get_project_by_uuid(client, project, mocker, settings, organisation):
     # Then
     assert response.status_code == status.HTTP_200_OK
     assert response.json()["uuid"] == str(project.uuid)
+
+
+@pytest.mark.parametrize(
+    "client", [(lazy_fixture("master_api_key_client")), (lazy_fixture("admin_client"))]
+)
+def test_can_enable_enable_realtime_updates_for_project(
+    client, project, mocker, settings, organisation
+):
+    # Given
+    url = reverse("api-v1:projects:project-detail", args=[project.id])
+
+    data = {
+        "name": project.name,
+        "organisation": organisation.id,
+        "enable_realtime_updates": True,
+    }
+
+    # When
+    response = client.put(url, data=data)
+
+    # Then
+    assert response.status_code == status.HTTP_200_OK
+    assert response.json()["uuid"] == str(project.uuid)
+    assert response.json()["enable_realtime_updates"] is True

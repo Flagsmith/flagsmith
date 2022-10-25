@@ -10,12 +10,16 @@ const UsersPage = class extends Component {
     constructor(props, context) {
         super(props, context);
         this.state = {
-            search: null
+            search: Utils.fromParam().search
         };
     }
 
     componentDidMount() {
-        AppActions.getIdentities(this.props.match.params.environmentId);
+        if(this.state.search) {
+          AppActions.searchIdentities(this.props.match.params.environmentId, this.state.search);
+        } else {
+          AppActions.getIdentities(this.props.match.params.environmentId);
+        }
         API.trackPage(Constants.pages.USERS);
     }
 
@@ -63,7 +67,7 @@ const UsersPage = class extends Component {
 
         return (
             <div className="app-container container">
-                <Permission level="environment" permission={Utils.getManageFeaturePermission()} id={environmentId}>
+                <Permission level="environment" permission={Utils.getManageFeaturePermission(false)} id={environmentId}>
                     {({ permission }) => (
                         <div>
                             <div>

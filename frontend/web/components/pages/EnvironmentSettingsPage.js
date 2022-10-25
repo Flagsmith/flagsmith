@@ -60,7 +60,7 @@ const EnvironmentSettingsPage = class extends Component {
 
     saveEnv = (e) => {
         e && e.preventDefault();
-        const { name, allow_client_traits } = this.state;
+        const { name, allow_client_traits, description } = this.state;
         if (ProjectStore.isSaving || (!name)) {
             return;
         }
@@ -69,6 +69,7 @@ const EnvironmentSettingsPage = class extends Component {
         const env = _.find(ProjectStore.getEnvs(), { api_key: this.props.match.params.environmentId });
         AppActions.editEnv(Object.assign({}, env, {
             name: name || env.name,
+            description: description || env.description,
             allow_client_traits: !!this.state.allow_client_traits,
             minimum_change_request_approvals: has4EyesPermission ? this.state.minimum_change_request_approvals : null,
         }));
@@ -136,6 +137,7 @@ const EnvironmentSettingsPage = class extends Component {
                             setTimeout(()=>{
                                 this.setState({
                                     name:env.name,
+                                    description:env.description,
                                     allow_client_traits: !!env.allow_client_traits,
                                     minimum_change_request_approvals:Utils.changeRequestsEnabled(env.minimum_change_request_approvals)? env.minimum_change_request_approvals : null,
                                 })
@@ -146,46 +148,78 @@ const EnvironmentSettingsPage = class extends Component {
                                 {isLoading && <div className="centered-container"><Loader/></div>}
                                 {!isLoading && (
                                     <div>
-                                        <div className="panel--grey">
-                                            <FormGroup>
-                                                <h3>Environment Name</h3>
-                                                <form onSubmit={this.saveEnv}>
-                                                    <Row>
-                                                        <Column className="m-l-0">
-                                                            <Input
-                                                                ref={e => this.input = e}
-                                                                value={typeof this.state.name == "string" ? this.state.name : env.name}
-                                                                inputClassName="input input--wide"
-                                                                name="env-name"
+                                        <h3>General</h3>
+                                        <div>
+                                            <form onSubmit={this.saveEnv}>
 
-                                                                onChange={e => this.setState({ name: Utils.safeParseEventValue(e) })}
-                                                                isValid={name && name.length}
-                                                                type="text" title={<h3>Environment Name</h3>}
-                                                                placeholder="Environment Name"
-                                                            />
-                                                        </Column>
+                                            <div className="row">
+                                                <div className="col-md-6">
+                                                    <InputGroup
+                                                        ref={e => this.input = e}
+                                                        value={typeof this.state.name == "string" ? this.state.name : env.name}
+                                                        inputProps={{className:"full-width", name:"env-name"}}
+                                                        className="full-width"
+                                                        onChange={e => this.setState({ name: Utils.safeParseEventValue(e) })}
+                                                        isValid={name && name.length}
+                                                        type="text" title="Name"
+                                                        placeholder="Environment Name"
+                                                    />
+                                                </div>
+                                            </div>
+                                            <div className="row">
+                                                <div className="col-md-6">
+                                                    <InputGroup
+                                                        textarea={true}
+                                                        ref={e => this.input = e}
+                                                        value={typeof this.state.description == "string" ? this.state.description : env.description}
+                                                        inputProps={{className:"input--wide",style:{minHeight:100} }}
+                                                        onChange={e => this.setState({ description: Utils.safeParseEventValue(e) })}
+                                                        isValid={name && name.length}
+                                                        type="text" title={"Description"}
+                                                        placeholder="Environment Description"
+                                                    />
+                                                </div>
+                                            </div>
+
+
+                                                <div className="row">
+                                                    <div className="col-md-6 text-right">
                                                         <Button
-                                                            id="save-env-btn" className="float-right"
+                                                            id="save-env-btn" className="float-right mb-4"
                                                             disabled={this.saveDisabled()}
                                                         >
-                                                            {isSaving ? 'Updating' : 'Update Name'}
+                                                            {isSaving ? 'Updating' : 'Update'}
+                                                        </Button>
+                                                    </div>
+                                                </div>
+
+                                            </form>
+                                        </div>
+                                        <FormGroup className="m-t-1">
+                                            <h3>Client Side Environment Key</h3>
+                                            <div className="row">
+                                                <div className="col-md-6">
+                                                    <Row>
+                                                        <Flex>
+                                                            <Input
+                                                                value={this.props.match.params.environmentId}
+                                                                inputClassName="input input--wide"
+                                                                type="text" title={<h3>Client Side Environment Key</h3>}
+                                                                placeholder="Client Side Environment Key"
+                                                            />
+                                                        </Flex>
+                                                        <Button onClick={()=>{
+                                                            navigator.clipboard.writeText(this.props.match.params.environmentId);
+                                                            toast('Copied');
+
+                                                        }} className="ml-2">
+                                                            Copy
                                                         </Button>
                                                     </Row>
-                                                </form>
-                                            </FormGroup>
-                                            <FormGroup className="m-t-1">
-                                                <label className="m-b-0">Client Side Environment Key</label>
-                                                <Row>
-                                                    <Input
-                                                        value={this.props.match.params.environmentId}
-                                                        inputClassName="input input--wide"
-                                                        type="text" title={<h3>Client Side Environment Key</h3>}
-                                                        placeholder="Client Side Environment Key"
-                                                    />
-                                                </Row>
-                                            </FormGroup>
-                                        </div>
+                                                </div>
 
+                                            </div>
+                                        </FormGroup>
                                         <ServerSideSDKKeys environmentId={this.props.match.params.environmentId}/>
 
                                         <FormGroup className="mt-1">

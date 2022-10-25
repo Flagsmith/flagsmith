@@ -1,21 +1,24 @@
 import pytest
 
-from organisations.subscriptions.constants import CHARGEBEE, XERO
-from organisations.subscriptions.dataclasses import BaseSubscriptionMetadata
+from organisations.subscriptions.metadata import BaseSubscriptionMetadata
+
+
+class SourceASubscriptionMetadata(BaseSubscriptionMetadata):
+    payment_source = "SOURCE_A"
+
+
+class SourceBSubscriptionMetadata(BaseSubscriptionMetadata):
+    payment_source = "SOURCE_B"
 
 
 def test_base_subscription_metadata_add_raises_error_if_not_matching_payment_source():
     # Given
-    cb_metadata = BaseSubscriptionMetadata(
-        seats=1, api_calls=50000, payment_source=CHARGEBEE
-    )
-    xero_metadata = BaseSubscriptionMetadata(
-        seats=1, api_calls=50000, payment_source=XERO
-    )
+    source_a_metadata = SourceASubscriptionMetadata(seats=1, api_calls=50000)
+    source_b_metadata = SourceBSubscriptionMetadata(seats=1, api_calls=50000)
 
     # When
     with pytest.raises(TypeError):
-        cb_metadata + xero_metadata
+        source_a_metadata + source_b_metadata
 
     # Then
     # exception was raised
@@ -25,48 +28,24 @@ def test_base_subscription_metadata_add_raises_error_if_not_matching_payment_sou
     "add_to, add, expected_result",
     (
         (
-            BaseSubscriptionMetadata(
-                seats=1, api_calls=50000, payment_source=CHARGEBEE
-            ),
-            BaseSubscriptionMetadata(
-                seats=1, api_calls=50000, payment_source=CHARGEBEE
-            ),
-            BaseSubscriptionMetadata(
-                seats=2, api_calls=100000, projects=None, payment_source=CHARGEBEE
-            ),
+            SourceASubscriptionMetadata(seats=1, api_calls=50000),
+            SourceASubscriptionMetadata(seats=1, api_calls=50000),
+            SourceASubscriptionMetadata(seats=2, api_calls=100000, projects=None),
         ),
         (
-            BaseSubscriptionMetadata(
-                seats=1, api_calls=50000, projects=1, payment_source=CHARGEBEE
-            ),
-            BaseSubscriptionMetadata(
-                seats=1, api_calls=50000, projects=1, payment_source=CHARGEBEE
-            ),
-            BaseSubscriptionMetadata(
-                seats=2, api_calls=100000, projects=2, payment_source=CHARGEBEE
-            ),
+            SourceASubscriptionMetadata(seats=1, api_calls=50000, projects=1),
+            SourceASubscriptionMetadata(seats=1, api_calls=50000, projects=1),
+            SourceASubscriptionMetadata(seats=2, api_calls=100000, projects=2),
         ),
         (
-            BaseSubscriptionMetadata(
-                seats=1, api_calls=50000, projects=1, payment_source=CHARGEBEE
-            ),
-            BaseSubscriptionMetadata(
-                seats=1, api_calls=50000, payment_source=CHARGEBEE
-            ),
-            BaseSubscriptionMetadata(
-                seats=2, api_calls=100000, projects=1, payment_source=CHARGEBEE
-            ),
+            SourceASubscriptionMetadata(seats=1, api_calls=50000, projects=1),
+            SourceASubscriptionMetadata(seats=1, api_calls=50000),
+            SourceASubscriptionMetadata(seats=2, api_calls=100000, projects=1),
         ),
         (
-            BaseSubscriptionMetadata(
-                seats=1, api_calls=50000, payment_source=CHARGEBEE
-            ),
-            BaseSubscriptionMetadata(
-                seats=1, api_calls=50000, projects=1, payment_source=CHARGEBEE
-            ),
-            BaseSubscriptionMetadata(
-                seats=2, api_calls=100000, projects=1, payment_source=CHARGEBEE
-            ),
+            SourceASubscriptionMetadata(seats=1, api_calls=50000),
+            SourceASubscriptionMetadata(seats=1, api_calls=50000, projects=1),
+            SourceASubscriptionMetadata(seats=2, api_calls=100000, projects=1),
         ),
     ),
 )

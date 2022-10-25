@@ -55,7 +55,8 @@ module.exports = {
         return this._request('delete', url, data, headers);
     },
 
-    _request(method, url, data, headers = {}) {
+    _request(method, _url, data, headers = {}) {
+
         const options = {
             timeout: 60000,
             method,
@@ -75,6 +76,13 @@ module.exports = {
 
         if (this.token) { // add auth tokens to headers of all requests
             options.headers.AUTHORIZATION = `Token ${this.token}`;
+        }
+
+        let url = _url;
+        const parts = _url.split(/(https?:\/\/)?(.*?:.*?)@/)
+        if (parts.length === 4) {
+            url = (parts[1]||"http://")+parts[parts.length-1]
+            options.headers.AUTHORIZATION = `Basic ${btoa(parts[parts.length-2])}`;
         }
 
         if (data) {

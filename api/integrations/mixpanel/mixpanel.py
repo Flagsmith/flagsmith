@@ -1,4 +1,3 @@
-import json
 import logging
 import typing
 
@@ -24,18 +23,17 @@ class MixpanelWrapper(AbstractBaseIdentityIntegrationWrapper):
         # Pass the integration ID as per https://developer.mixpanel.com/docs/partner-integration-id
         self.headers = {
             "Accept": "text/plain",
-            "Content-Type": "application/x-www-form-urlencoded",
             "X-Mixpanel-Integration-ID": "flagsmith",
         }
 
     def _identify_user(self, user_data: dict) -> None:
-        data = {"data": json.dumps(user_data)}
-        response = requests.post(self.url, headers=self.headers, data=data)
-
+        response = requests.post(self.url, headers=self.headers, json=user_data)
         logger.debug(
             "Sent event to Mixpanel. Response code was: %s" % response.status_code
         )
-        logger.debug("Sent event to Mixpanel. Body code was: %s" % response.content)
+        logger.debug(
+            "Sent event to Mixpanel. Response content was: %s" % response.content
+        )
 
     def generate_user_data(
         self,
@@ -51,9 +49,11 @@ class MixpanelWrapper(AbstractBaseIdentityIntegrationWrapper):
                 value if (feature_state.enabled and value) else feature_state.enabled
             )
 
-        return {
-            "$token": self.api_key,
-            "$distinct_id": identity.identifier,
-            "$set": feature_properties,
-            "$ip": "0",
-        }
+        return [
+            {
+                "$token": self.api_key,
+                "$distinct_id": identity.identifier,
+                "$set": feature_properties,
+                "$ip": "0",
+            }
+        ]

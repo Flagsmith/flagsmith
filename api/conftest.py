@@ -16,12 +16,12 @@ from features.models import Feature, FeatureSegment, FeatureState
 from features.multivariate.models import MultivariateFeatureOption
 from features.value_types import STRING
 from organisations.models import Organisation, OrganisationRole, Subscription
-from organisations.subscriptions.constants import CHARGEBEE
+from organisations.subscriptions.constants import CHARGEBEE, XERO
 from permissions.models import PermissionModel
 from projects.models import Project, UserProjectPermission
 from projects.tags.models import Tag
 from segments.models import EQUAL, Condition, Segment, SegmentRule
-from users.models import FFAdminUser
+from users.models import FFAdminUser, UserPermissionGroup
 
 trait_key = "key1"
 trait_value = "value1"
@@ -53,9 +53,34 @@ def organisation(db, admin_user):
 
 
 @pytest.fixture()
+def default_user_permission_group(organisation):
+    return UserPermissionGroup.objects.create(
+        organisation=organisation, name="Default user permission group", is_default=True
+    )
+
+
+@pytest.fixture()
+def user_permission_group(organisation, admin_user):
+    user_permission_group = UserPermissionGroup.objects.create(
+        organisation=organisation, name="User permission group", is_default=False
+    )
+    user_permission_group.users.add(admin_user)
+    return user_permission_group
+
+
+@pytest.fixture()
 def subscription(organisation):
     return Subscription.objects.create(
         organisation=organisation, subscription_id="subscription_id"
+    )
+
+
+@pytest.fixture()
+def xero_subscription(organisation):
+    return Subscription.objects.create(
+        organisation=organisation,
+        subscription_id="subscription_id",
+        payment_method=XERO,
     )
 
 

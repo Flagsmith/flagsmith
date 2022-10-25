@@ -595,7 +595,10 @@ if ENABLE_AXES:
 
 # Sentry tracking
 SENTRY_SDK_DSN = env("SENTRY_SDK_DSN", default=None)
-SENTRY_TRACE_SAMPLE_RATE = env.float("SENTRY_TRACE_SAMPLE_RATE", default=1.0)
+DEFAULT_SENTRY_TRACE_SAMPLE_RATE = env.float("SENTRY_TRACE_SAMPLE_RATE", default=1.0)
+DASHBOARD_ENDPOINTS_SENTRY_TRACE_SAMPLE_RATE = env.float(
+    "DASHBOARD_ENDPOINTS_SENTRY_TRACE_SAMPLE_RATE", default=1.0
+)
 FORCE_SENTRY_TRACE_KEY = env("FORCE_SENTRY_TRACE_KEY", default=None)
 if FORCE_SENTRY_TRACE_KEY:
     MIDDLEWARE.append("integrations.sentry.middleware.ForceSentryTraceMiddleware")
@@ -723,3 +726,7 @@ TASK_RUN_METHOD = env.enum(
 ENABLE_TASK_PROCESSOR_HEALTH_CHECK = env.bool(
     "ENABLE_TASK_PROCESSOR_HEALTH_CHECK", default=False
 )
+
+# Real time(server sent events) settings
+SSE_SERVER_BASE_URL = env.str("SSE_SERVER_BASE_URL", None)
+SSE_AUTHENTICATION_TOKEN = env.str("SSE_AUTHENTICATION_TOKEN", None)

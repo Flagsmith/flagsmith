@@ -64,7 +64,7 @@
     "fbjs": "^3.0.4",
     "fetchify": "0.0.2",
     "file-loader": "6.2.0",
-    "flagsmith": "3.0.6",
+    "flagsmith": "3.10.6",
     "flux-react-dispatcher": "1.2.5",
     "fs-extra": "2.0.0",
     "history": "4.10.1",
@@ -103,7 +103,7 @@
     "react-tooltip": "3.7.0",
     "react-virtualized-auto-sizer": "1.0.2",
     "react-window": "^1.8.6",
-    "recharts": "^1.8.5",
+    "recharts": "^2.1.14",
     "sass-loader": "^12.6.0",
     "sass-graph": "https://github.com/Ohiekkar/sass-graph#update-scss-tokenizer",
     "semver": "^7.3.7",
@@ -127,3 +127,4 @@
     "testcafe": "^1.17.1"
   }
 }
+

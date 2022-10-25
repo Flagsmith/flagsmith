@@ -59,7 +59,7 @@ cryptography==37.0.2
     #   pyjwt
 dj-database-url==0.5.0
     # via -r requirements.in
-django==3.2.15
+django==3.2.16
     # via
     #   -r requirements.in
     #   django-admin-sso
@@ -126,7 +126,7 @@ drf-yasg2==1.19.3
     # via -r requirements.in
 environs==9.2.0
     # via -r requirements.in
-flagsmith-flag-engine==2.2.0
+flagsmith-flag-engine==2.3.0
     # via -r requirements.in
 future==0.18.2
     # via django-ses
@@ -145,7 +145,7 @@ google-auth-httplib2==0.0.4
     # via google-api-python-client
 googleapis-common-protos==1.52.0
     # via google-api-core
-gunicorn==20.0.4
+gunicorn==20.1.0
     # via -r requirements.in
 httplib2==0.19.0
     # via
@@ -202,7 +202,7 @@ packaging==20.4
     #   drf-yasg2
 portalocker==2.4.0
     # via msal-extensions
-protobuf==3.15.0
+protobuf==3.18.3
     # via
     #   google-api-core
     #   googleapis-common-protos
@@ -305,7 +305,6 @@ six==1.15.0
     #   influxdb-client
     #   oauth2client
     #   packaging
-    #   protobuf
     #   python-dateutil
     #   rudder-sdk-python
 slack-sdk==3.9.0
