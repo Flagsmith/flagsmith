@@ -7,7 +7,6 @@ import pytest
 from django.test import override_settings
 from django.urls import reverse
 from rest_framework import status
-from rest_framework.request import Request
 from rest_framework.test import APIClient, APITestCase
 
 from environments.identities.helpers import (
@@ -285,7 +284,7 @@ class SDKIdentitiesTestCase(APITestCase):
     def setUp(self) -> None:
         self.organisation = Organisation.objects.create(name="Test Org")
         self.project = Project.objects.create(
-            organisation=self.organisation, name="Test Project"
+            organisation=self.organisation, name="Test Project", enable_dynamo_db=True
         )
         self.environment = Environment.objects.create(
             project=self.project, name="Test Environment"
@@ -641,7 +640,8 @@ class SDKIdentitiesTestCase(APITestCase):
             trait_key=trait_2.trait_key
         ).exists()
 
-    def test_post_identify_with_persistence(self):
+    @mock.patch("sse.decorators.send_identity_update_message", autospec=True)
+    def test_post_identify_with_persistence(self, mock_send_identity_update_message):
         # Given
         url = reverse("api-v1:sdk-identities")
 
@@ -669,8 +669,13 @@ class SDKIdentitiesTestCase(APITestCase):
 
         # and the traits ARE persisted
         assert self.identity.identity_traits.count() == 2
+        # and send_identity_update_message is called
+        mock_send_identity_update_message.assert_called_once_with(
+            self.environment, self.identity.identifier
+        )
 
-    def test_post_identify_without_persistence(self):
+    @mock.patch("sse.decorators.send_identity_update_message", autospec=True)
+    def test_post_identify_without_persistence(self, mock_send_identity_update_message):
         # Given
         url = reverse("api-v1:sdk-identities")
 
@@ -703,8 +708,11 @@ class SDKIdentitiesTestCase(APITestCase):
         # and the traits ARE NOT persisted
         assert self.identity.identity_traits.count() == 0
 
+        # and send_identity_update_message was not called
+        mock_send_identity_update_message.assert_not_called()
+
     @override_settings(EDGE_API_URL="http://localhost")
-    @mock.patch("environments.identities.views.forward_identity_request")
+    @mock.patch("environments.identities.views.forward_identity_request", autospec=True)
     def test_post_identities_calls_forward_identity_request_with_correct_arguments(
         self, mocked_forward_identity_request
     ):
@@ -723,14 +731,16 @@ class SDKIdentitiesTestCase(APITestCase):
         self.client.post(url, data=json.dumps(data), content_type="application/json")
 
         # Then
-        args, kwargs = mocked_forward_identity_request.call_args_list[0]
-        assert kwargs == {}
-        assert isinstance(args[0], Request)
-        assert args[0].data == data
-        assert args[1] == self.environment.project.id
+        args, kwargs = mocked_forward_identity_request.run_in_thread.call_args_list[0]
+        assert args == ()
+        assert kwargs["args"][0] == "POST"
+        assert kwargs["args"][1].get("X-Environment-Key") == self.environment.api_key
+        assert kwargs["args"][2] == self.environment.project.id
+
+        assert kwargs["kwargs"]["request_data"] == data
 
     @override_settings(EDGE_API_URL="http://localhost")
-    @mock.patch("environments.identities.views.forward_identity_request")
+    @mock.patch("environments.identities.views.forward_identity_request", autospec=True)
     def test_get_identities_calls_forward_identity_request_with_correct_arguments(
         self, mocked_forward_identity_request
     ):
@@ -742,10 +752,15 @@ class SDKIdentitiesTestCase(APITestCase):
         self.client.get(url)
 
         # Then
-        args, kwargs = mocked_forward_identity_request.call_args_list[0]
-        assert kwargs == {}
-        assert isinstance(args[0], Request)
-        assert args[1] == self.environment.project.id
+        args, kwargs = mocked_forward_identity_request.run_in_thread.call_args_list[0]
+        assert args == ()
+        assert kwargs["args"][0] == "GET"
+        assert kwargs["args"][1].get("X-Environment-Key") == self.environment.api_key
+        assert kwargs["args"][2] == self.environment.project.id
+
+        assert kwargs["kwargs"]["query_params"] == {
+            "identifier": self.identity.identifier
+        }
 
     def test_post_identities_with_traits_fails_if_client_cannot_set_traits(self):
         # Given

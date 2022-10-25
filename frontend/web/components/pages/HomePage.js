@@ -5,6 +5,7 @@ import { ButtonLink } from '../base/forms/Button';
 import { Google } from '../../project/auth';
 import NavIconSmall from '../svg/NavIconSmall';
 import SamlForm from '../SamlForm';
+import data from "../../../common/data/base/_data";
 
 const HomePage = class extends React.Component {
     static contextTypes = {
@@ -93,8 +94,8 @@ const HomePage = class extends React.Component {
         const { email, password, organisation_name, first_name, last_name } = this.state;
         const redirect = Utils.fromParam().redirect ? `?redirect=${Utils.fromParam().redirect}` : '';
         const isInvite = document.location.href.indexOf('invite') != -1;
-        const isSignup = (!projectOverrides.preventSignup || isInvite) && ((isInvite && document.location.href.indexOf('login') === -1) || document.location.href.indexOf('signup') != -1);
-        const disableSignup = Project.preventSignup && !isInvite && isSignup;
+        const isSignup = (!projectOverrides.preventSignup) && ((isInvite && document.location.href.indexOf('login') === -1) || document.location.href.indexOf('signup') != -1);
+        const disableSignup = Project.preventSignup && isSignup;
         const disableForgotPassword = Project.preventForgotPassword;
         const oauths = [];
         const disableOauthRegister = Utils.getFlagsmithHasFeature('disable_oauth_registration');
@@ -135,7 +136,21 @@ const HomePage = class extends React.Component {
                 oauths.push((
                     <a
                         onClick={() => {
-                            openModal('Single Sign-On', <SamlForm/>);
+                            if(!Utils.getFlagsmithValue("sso_idp")) {
+                                openModal('Single Sign-On', <SamlForm/>);
+                            } else {
+                                data.post(`${Project.api}auth/saml/${Utils.getFlagsmithValue("sso_idp")}/request/`)
+                                    .then((res) => {
+                                        if (res.headers && res.headers.Location) {
+                                            document.location.href = res.headers.Location
+                                        } else {
+                                            this.setState({error:true})
+                                        }
+                                    })
+                                    .catch(() => {
+                                        this.setState({ error: true, isLoading: false });
+                                    });
+                            }
                         }
                         } key="single-sign-on" className="btn btn__oauth btn__oauth--saml"
                     >
@@ -308,7 +323,7 @@ const HomePage = class extends React.Component {
                                                 </AccountProvider>
                                             </Card>
 
-                                            {(!projectOverrides.preventSignup || isInvite) && (
+                                            {(!projectOverrides.preventSignup) && (
 
                                                 <div>
                                                     <Row className="justify-content-center mt-2">

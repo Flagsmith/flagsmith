@@ -1,6 +1,7 @@
 from collections import namedtuple
 
 from django.conf import settings
+from django.utils.decorators import method_decorator
 from drf_yasg2.utils import swagger_auto_schema
 from rest_framework import status, viewsets
 from rest_framework.permissions import IsAuthenticated
@@ -27,6 +28,7 @@ from integrations.integration import (
     IDENTITY_INTEGRATIONS,
     identify_integrations,
 )
+from sse.decorators import generate_identity_update_message
 from util.views import SDKAPIView
 
 
@@ -159,8 +161,15 @@ class SDKIdentities(SDKAPIView):
             .prefetch_related("identity_traits")
             .get_or_create(identifier=identifier, environment=request.environment)
         )
-        if settings.EDGE_API_URL:
-            forward_identity_request(request, request.environment.project.id)
+        if settings.EDGE_API_URL and request.environment.project.enable_dynamo_db:
+            forward_identity_request.run_in_thread(
+                args=(
+                    request.method,
+                    dict(request.headers),
+                    request.environment.project.id,
+                ),
+                kwargs={"query_params": request.GET.dict()},
+            )
 
         feature_name = request.query_params.get("feature")
         if feature_name:
@@ -176,6 +185,11 @@ class SDKIdentities(SDKAPIView):
             context["environment"] = self.request.environment
         return context
 
+    @method_decorator(
+        generate_identity_update_message(
+            lambda req: (req.environment, req.data["identifier"])
+        )
+    )
     @swagger_auto_schema(
         request_body=IdentifyWithTraitsSerializer(),
         responses={200: SDKIdentitiesResponseSerializer()},
@@ -186,8 +200,15 @@ class SDKIdentities(SDKAPIView):
         serializer.is_valid(raise_exception=True)
         instance = serializer.save()
 
-        if settings.EDGE_API_URL:
-            forward_identity_request(request, request.environment.project.id)
+        if settings.EDGE_API_URL and request.environment.project.enable_dynamo_db:
+            forward_identity_request.run_in_thread(
+                args=(
+                    request.method,
+                    dict(request.headers),
+                    request.environment.project.id,
+                ),
+                kwargs={"request_data": request.data},
+            )
 
         # we need to serialize the response again to ensure that the
         # trait values are serialized correctly

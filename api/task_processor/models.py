@@ -19,27 +19,45 @@ class Task(models.Model):
     serialized_args = models.TextField(blank=True, null=True)
     serialized_kwargs = models.TextField(blank=True, null=True)
 
-    # denormalise failures so that we can use select_for_update
+    # denormalise failures and completion so that we can use select_for_update
     num_failures = models.IntegerField(default=0)
+    completed = models.BooleanField(default=False)
 
     class Meta:
-        index_together = [
-            ["scheduled_for", "num_failures"],
+        # We have customised the migration in 0004 to only apply this change to postgres databases
+        # TODO: work out how to index the taskprocessor_task table for Oracle and MySQL
+        indexes = [
+            models.Index(
+                name="incomplete_tasks_idx",
+                fields=["scheduled_for"],
+                condition=models.Q(completed=False, num_failures__lt=3),
+            )
         ]
 
     @classmethod
-    def create(cls, task_identifier: str, *args, **kwargs) -> "Task":
+    def create(
+        cls,
+        task_identifier: str,
+        *,
+        args: typing.Tuple[typing.Any] = None,
+        kwargs: typing.Dict[str, typing.Any] = None,
+    ) -> "Task":
         return Task(
             task_identifier=task_identifier,
-            serialized_args=cls._serialize_data(args),
-            serialized_kwargs=cls._serialize_data(kwargs),
+            serialized_args=cls._serialize_data(args or tuple()),
+            serialized_kwargs=cls._serialize_data(kwargs or dict()),
         )
 
     @classmethod
     def schedule_task(
-        cls, schedule_for: datetime, task_identifier: str, *args, **kwargs
+        cls,
+        schedule_for: datetime,
+        task_identifier: str,
+        *,
+        args: typing.Tuple[typing.Any] = None,
+        kwargs: typing.Dict[str, typing.Any] = None,
     ) -> "Task":
-        task = cls.create(task_identifier, *args, **kwargs)
+        task = cls.create(task_identifier=task_identifier, args=args, kwargs=kwargs)
         task.scheduled_for = schedule_for
         return task
 

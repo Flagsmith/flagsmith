@@ -99,3 +99,29 @@ def test_feature_state_is_live(version, live_from, expected_is_live):
     assert (
         FeatureState(version=version, live_from=live_from).is_live == expected_is_live
     )
+
+
+def test_creating_a_feature_with_defaults_does_not_set_defaults_if_disabled(
+    project, environment
+):
+    # Given
+    project.prevent_flag_defaults = True
+    project.save()
+
+    default_state = True
+    default_value = "default"
+
+    feature = Feature(
+        project=project,
+        name="test_flag_defaults",
+        initial_value=default_value,
+        default_enabled=default_state,
+    )
+
+    # When
+    feature.save()
+
+    # Then
+    feature_state = FeatureState.objects.get(feature=feature, environment=environment)
+    assert feature_state.enabled is False
+    assert feature_state.get_feature_state_value() is None

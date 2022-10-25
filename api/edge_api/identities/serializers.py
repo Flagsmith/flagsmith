@@ -172,16 +172,18 @@ class EdgeIdentityFeatureStateSerializer(serializers.Serializer):
 
         # TODO: use async processor instead of `run_in_thread`
         call_environment_webhook_for_feature_state_change.run_in_thread(
-            feature_id=self.instance.feature.id,
-            environment_api_key=identity.environment_api_key,
-            identity_id=identity_id,
-            identity_identifier=identity.identifier,
-            changed_by_user_id=self.context["request"].user.id,
-            new_enabled_state=self.instance.enabled,
-            new_value=new_value,
-            previous_enabled_state=getattr(previous_state, "enabled", None),
-            previous_value=previous_value,
-            timestamp=timezone.now().strftime(WEBHOOK_DATETIME_FORMAT),
+            kwargs={
+                "feature_id": self.instance.feature.id,
+                "environment_api_key": identity.environment_api_key,
+                "identity_id": identity_id,
+                "identity_identifier": identity.identifier,
+                "changed_by_user_id": self.context["request"].user.id,
+                "new_enabled_state": self.instance.enabled,
+                "new_value": new_value,
+                "previous_enabled_state": getattr(previous_state, "enabled", None),
+                "previous_value": previous_value,
+                "timestamp": timezone.now().strftime(WEBHOOK_DATETIME_FORMAT),
+            },
         )
 
         return self.instance

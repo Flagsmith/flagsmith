@@ -84,3 +84,25 @@ def test_user_with_update_feature_state_permission_can_update_identity_feature_s
 
     # Then
     assert response.status_code == status.HTTP_201_CREATED
+
+
+def test_user_with_view_environment_permission_can_retrieve_all_feature_states_for_identity(
+    environment,
+    identity,
+    test_user_client,
+    view_environment_permission,
+    user_environment_permission,
+):
+    # Given
+    user_environment_permission.permissions.add(view_environment_permission)
+
+    url = reverse(
+        "api-v1:environments:identity-featurestates-all",
+        args=(environment.api_key, identity.id),
+    )
+
+    # When
+    response = test_user_client.get(url)
+
+    # Then
+    assert response.status_code == status.HTTP_200_OK

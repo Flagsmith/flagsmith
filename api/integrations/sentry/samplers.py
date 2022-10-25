@@ -1,11 +1,25 @@
+from contextlib import suppress
+
 from django.conf import settings
 
+NON_FUNCTIONAL_ENDPOINTS = ("/health", "")
+SDK_ENDPOINTS = (
+    "/api/v1/flags",
+    "/api/v1/identities",
+    "/api/v1/traits",
+    "/api/v1/traits/bulk",
+    "/api/v1/environment-document",
+)
 
-def block_non_functional_endpoints_sampler(ctx):
-    non_functional_endpoints = ["/health", "/"]
 
-    sample_rate = settings.SENTRY_TRACE_SAMPLE_RATE
-    wsgi_env = ctx.get("wsgi_environ")
-    if wsgi_env and wsgi_env.get("PATH_INFO") in non_functional_endpoints:
-        sample_rate = 0
-    return sample_rate
+def traces_sampler(ctx):
+    with suppress(KeyError):
+        path_info = ctx["wsgi_environ"]["PATH_INFO"]
+        path_info = path_info[:-1] if path_info.endswith("/") else path_info
+
+        if path_info in NON_FUNCTIONAL_ENDPOINTS:
+            return 0
+        elif path_info not in SDK_ENDPOINTS:
+            return settings.DASHBOARD_ENDPOINTS_SENTRY_TRACE_SAMPLE_RATE
+
+    return settings.DEFAULT_SENTRY_TRACE_SAMPLE_RATE

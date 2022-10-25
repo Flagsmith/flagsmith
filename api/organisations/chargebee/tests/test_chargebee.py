@@ -3,6 +3,7 @@ from unittest import TestCase, mock
 
 import pytest
 from _pytest.monkeypatch import MonkeyPatch
+from chargebee import APIError
 from pytz import UTC
 
 from organisations.chargebee import (
@@ -15,7 +16,10 @@ from organisations.chargebee import (
     get_subscription_data_from_hosted_page,
     get_subscription_metadata,
 )
-from organisations.chargebee.chargebee import cancel_subscription
+from organisations.chargebee.chargebee import (
+    TRIAL_SUBSCRIPTION_ID,
+    cancel_subscription,
+)
 from organisations.subscriptions.exceptions import (
     CannotCancelChargebeeSubscription,
 )
@@ -234,7 +238,8 @@ class ChargeBeeTestCase(TestCase):
         )
 
 
-def test_get_subscription_metadata(mocker, chargebee_object_metadata):
+@pytest.mark.parametrize("addon_quantity", (None, 1))
+def test_get_subscription_metadata(mocker, chargebee_object_metadata, addon_quantity):
     # Given
     plan_id = "plan-id"
     addon_id = "addon-id"
@@ -242,7 +247,9 @@ def test_get_subscription_metadata(mocker, chargebee_object_metadata):
 
     # Let's create a (mocked) subscription object
     mocked_subscription = mocker.MagicMock(
-        id=subscription_id, plan_id=plan_id, addons=[mocker.MagicMock(id=addon_id)]
+        id=subscription_id,
+        plan_id=plan_id,
+        addons=[mocker.MagicMock(id=addon_id, quantity=addon_quantity)],
     )
     mocked_chargebee = mocker.patch("organisations.chargebee.chargebee.chargebee")
 
@@ -265,6 +272,23 @@ def test_get_subscription_metadata(mocker, chargebee_object_metadata):
     assert subscription_metadata.seats == chargebee_object_metadata.seats * 2
     assert subscription_metadata.api_calls == chargebee_object_metadata.api_calls * 2
     assert subscription_metadata.projects == chargebee_object_metadata.projects * 2
+
+
+def test_get_trial_subscription_metadata(mocker):
+    # Given
+    subscription_id = TRIAL_SUBSCRIPTION_ID
+
+    mocked_chargebee = mocker.patch("organisations.chargebee.chargebee.chargebee")
+
+    # When
+    subscription_metadata = get_subscription_metadata(subscription_id)
+
+    # Then
+    assert len(mocked_chargebee.mock_calls) == 0
+
+    assert subscription_metadata.seats == 0
+    assert subscription_metadata.api_calls == 0
+    assert subscription_metadata.projects is None
 
 
 def test_cancel_subscription(mocker):
@@ -291,7 +315,7 @@ def test_cancel_subscription_throws_cannot_cancel_error_if_api_error(mocker, cap
     class MockException(Exception):
         pass
 
-    mocker.patch("organisations.chargebee.chargebee.APIError", MockException)
+    mocker.patch("organisations.chargebee.chargebee.ChargebeeAPIError", MockException)
 
     mocked_chargebee.Subscription.cancel.side_effect = MockException
 
@@ -309,3 +333,39 @@ def test_cancel_subscription_throws_cannot_cancel_error_if_api_error(mocker, cap
         caplog.records[0].message
         == "Cannot cancel CB subscription for subscription id: %s" % subscription_id
     )
+
+
+def test_get_subscription_metadata_returns_null_if_chargebee_error(
+    mocker, chargebee_object_metadata
+):
+    # Given
+    mocked_chargebee = mocker.patch("organisations.chargebee.chargebee.chargebee")
+    mocked_chargebee.Subscription.retrieve.side_effect = APIError(
+        http_code=200, json_obj=mocker.MagicMock()
+    )
+
+    subscription_id = "foo"  # arbitrary subscription id
+
+    # When
+    subscription_metadata = get_subscription_metadata(subscription_id)
+
+    # Then
+    assert subscription_metadata is None
+
+
+@pytest.mark.parametrize(
+    "subscription_id",
+    [None, "", " "],
+)
+def test_get_subscription_metadata_returns_none_for_invalid_subscription_id(
+    mocker, chargebee_object_metadata, subscription_id
+):
+    # Given
+    mocked_chargebee = mocker.patch("organisations.chargebee.chargebee.chargebee")
+
+    # When
+    subscription_metadata = get_subscription_metadata(subscription_id)
+
+    # Then
+    mocked_chargebee.Subscription.retrieve.assert_not_called()
+    assert subscription_metadata is None

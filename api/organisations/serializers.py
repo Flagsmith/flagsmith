@@ -17,6 +17,7 @@ from .models import (
     Subscription,
     UserOrganisation,
 )
+from .subscriptions.constants import CHARGEBEE
 
 logger = logging.getLogger(__name__)
 
@@ -84,13 +85,20 @@ class InviteSerializerFull(serializers.ModelSerializer):
 
     class Meta:
         model = Invite
-        fields = ("id", "email", "role", "date_created", "invited_by")
+        fields = (
+            "id",
+            "email",
+            "role",
+            "date_created",
+            "invited_by",
+            "permission_groups",
+        )
 
 
 class InviteSerializer(serializers.ModelSerializer):
     class Meta:
         model = Invite
-        fields = ("id", "email", "role", "date_created")
+        fields = ("id", "email", "role", "date_created", "permission_groups")
         read_only_fields = ("id", "date_created")
 
     def validate(self, attrs):
@@ -124,7 +132,11 @@ class MultiInvitesSerializer(serializers.Serializer):
                 "invited_by": user,
                 "organisation": organisation,
             }
-            created_invites.append(Invite.objects.create(**data))
+            permission_groups = data.pop("permission_groups", [])
+            created_invite = Invite.objects.create(**data)
+            created_invite.permission_groups.set(permission_groups)
+
+            created_invites.append(created_invite)
 
         # return the created_invites to serialize the data back to the front end
         return created_invites
@@ -222,5 +234,7 @@ class GetHostedPageForSubscriptionUpgradeSerializer(serializers.Serializer):
 
 class SubscriptionDetailsSerializer(serializers.Serializer):
     max_seats = serializers.IntegerField(source="seats")
-    max_projects = serializers.IntegerField(source="projects")
     max_api_calls = serializers.IntegerField(source="api_calls")
+    max_projects = serializers.IntegerField(source="projects", allow_null=True)
+
+    payment_source = serializers.ChoiceField(choices=[None, CHARGEBEE], allow_null=True)

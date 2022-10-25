@@ -1,7 +1,6 @@
 import React, { Component } from 'react';
 import Switch from '../Switch';
 import UserGroupsProvider from '../../../common/providers/UserGroupsProvider';
-import data from '../../../common/data/base/_data';
 
 const CreateGroup = class extends Component {
     static displayName = 'CreateGroup'
@@ -15,6 +14,7 @@ const CreateGroup = class extends Component {
         this.state = {
             name: props.group ? props.group.name : '',
             users: props.group ? props.group.users : [],
+            is_default: props.group ? props.group.is_default : false,
         };
     }
 
@@ -45,11 +45,12 @@ const CreateGroup = class extends Component {
     }
 
     save = (allUsers) => {
-        const { name, users } = this.state;
+        const { name, users, is_default } = this.state;
         if (this.props.group) {
             AppActions.updateGroup(this.props.orgId, {
                 id: this.props.group.id,
                 name,
+                is_default: !!this.state.is_default,
                 users,
                 usersToRemove: this.getUsersToRemove(allUsers),
             });
@@ -57,6 +58,7 @@ const CreateGroup = class extends Component {
             AppActions.createGroup(this.props.orgId, {
                 name,
                 users,
+                is_default,
                 usersToRemove: this.getUsersToRemove(allUsers),
             });
         }
@@ -99,6 +101,23 @@ const CreateGroup = class extends Component {
                                   name="Name*"
                                   placeholder="E.g. Developers"
                                 />
+                                {Utils.getFlagsmithHasFeature("default_user_groups")&&(
+                                    <InputGroup
+                                        title="Add users by default"
+                                        tooltipPlace="top"
+                                        tooltip="New users that sign up to your organisation will be automatically added to this group with USER permissions"
+                                        ref={e => this.input = e}
+                                        data-test="groupName"
+                                        component={<Switch onChange={e => this.setState({ is_default: Utils.safeParseEventValue(e) })} checked={!!this.state.is_default}/>}
+                                        inputProps={{
+                                            className: 'full-width',
+                                            name: 'groupName',
+                                        }}
+                                        value={name}
+                                        isValid={name && name.length}
+                                        type="text"
+                                    />
+                                )}
                                 <div className="mb-5">
                                     <PanelSearch
                                       id="org-members-list"

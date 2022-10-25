@@ -86,6 +86,8 @@ class InfluxDBWrapper:
             f"{extra}"
         )
 
+        logger.debug("Running query in influx: \n\n %s", query)
+
         try:
             result = query_api.query(org=influx_org, query=query)
             return result
@@ -153,7 +155,7 @@ def get_multiple_event_list_for_organisation(organisation_id: int):
 
     :param organisation_id: an id of the organisation to get usage for
 
-    :return: a number of requests for flags, traits, identities
+    :return: a number of requests for flags, traits, identities, environment-document
     """
     results = InfluxDBWrapper.influx_query_manager(
         filters=f'|> filter(fn:(r) => r._measurement == "api_call") \

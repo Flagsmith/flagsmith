@@ -26,12 +26,15 @@ class ProjectSerializer(serializers.ModelSerializer):
         model = Project
         fields = (
             "id",
+            "uuid",
             "name",
             "organisation",
             "hide_disabled_flags",
             "enable_dynamo_db",
             "migration_status",
             "use_edge_identities",
+            "prevent_flag_defaults",
+            "enable_realtime_updates",
         )
 
     def get_migration_status(self, obj: Project) -> str:

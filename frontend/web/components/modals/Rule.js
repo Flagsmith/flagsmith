@@ -1,8 +1,7 @@
 // import propTypes from 'prop-types';
 import React, { PureComponent } from 'react';
-const splitIfValue = (v,append) =>{
-    return append? v.split(append) : [v]
-}
+
+const splitIfValue = (v, append) => (append ? v.split(append) : [v===null?"":v]);
 
 export default class Rule extends PureComponent {
     static displayName = 'Rule';
@@ -13,9 +12,11 @@ export default class Rule extends PureComponent {
         const { props: { operators, rule: { conditions: rules } } } = this;
         const isLastRule = i === (rules.length - 1);
         const hasOr = i > 0;
-        const operatorObj = Utils.findOperator(rule.operator, rule.value, operators)
-        const operator = operatorObj && operatorObj.value
-        const value = typeof rule.value === "string" ? rule.value.replace((operatorObj&&operatorObj.append)||"","") : rule.value
+        const operatorObj = Utils.findOperator(rule.operator, rule.value, operators);
+        const operator = operatorObj && operatorObj.value;
+        const value = typeof rule.value === 'string' ? rule.value.replace((operatorObj && operatorObj.append) || '', '') : rule.value;
+
+        const valuePlaceholder = rule.hideValue?  "Value (N/A)" : rule.valuePlaceholder || "Value"
         return (
             <div className="rule__row reveal" key={i}>
                 {hasOr && (
@@ -64,11 +65,12 @@ export default class Rule extends PureComponent {
                                   readOnly={this.props.readOnly}
                                   data-test={`${this.props['data-test']}-value-${i}`}
                                   className="input-container--flat full-width"
-                                  value={`${value}`}
-                                  placeholder="Value *"
-                                  onChange={e => {
-                                      const value = Utils.getTypedValue(Utils.safeParseEventValue(e))
-                                      this.setRuleProperty(i, 'value', { value: operatorObj && operatorObj.append? `${value}${operatorObj.append}`:value }, true)
+                                  value={value?value:""}
+                                  placeholder={valuePlaceholder}
+                                  disabled={operatorObj && operatorObj.hideValue}
+                                  onChange={(e) => {
+                                      const value = Utils.getTypedValue(Utils.safeParseEventValue(e));
+                                      this.setRuleProperty(i, 'value', { value: operatorObj && operatorObj.append ? `${value}${operatorObj.append}` : value }, true);
                                   }}
                                   isValid={Utils.validateRule(rule)}
                                 />
@@ -121,19 +123,20 @@ export default class Rule extends PureComponent {
     setRuleProperty = (i, prop, { value }) => {
         const { props: { rule: { conditions: rules } } } = this;
 
-        const prevOperator = Utils.findOperator(rules[i].operator, rules[i].value, this.props.operators)
-        const newOperator =  prop !== 'operator' ? prevOperator: this.props.operators.find((v)=>{
-            return v.value === value
-        })
+        const prevOperator = Utils.findOperator(rules[i].operator, rules[i].value, this.props.operators);
+        const newOperator = prop !== 'operator' ? prevOperator : this.props.operators.find(v => v.value === value);
 
-        if ((prevOperator && prevOperator.append)  !== (newOperator && newOperator.append)) {
-            rules[i].value = splitIfValue(rules[i].value, prevOperator && prevOperator.append)[0] + (newOperator.append||"")
+        if (newOperator && newOperator.hideValue) {
+            rules[i].value = null;
+        }
+        if ((prevOperator && prevOperator.append) !== (newOperator && newOperator.append)) {
+            rules[i].value = splitIfValue(rules[i].value, prevOperator && prevOperator.append)[0] + (newOperator.append || '');
         }
 
         // remove append if one was added
 
 
-        const formattedValue = `${value}`
+        const formattedValue = value === null? null:`${value}`
         //split operator by append
         rules[i][prop] = prop === 'operator' ? formattedValue.split(":")[0] : formattedValue;
 
@@ -150,17 +153,16 @@ export default class Rule extends PureComponent {
     };
 
 
-
     render() {
         const { props: { rule: { conditions: rules } } } = this;
         return (
-            <FormGroup>
+            <div className="mb-2">
                 <div className="panel overflow-visible">
                     <div className="panel-content">
                         {rules.map(this.renderRule)}
                     </div>
                 </div>
-            </FormGroup>
+            </div>
         );
     }
 }

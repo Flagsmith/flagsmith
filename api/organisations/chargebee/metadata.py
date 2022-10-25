@@ -1,18 +1,18 @@
-from dataclasses import dataclass
 from enum import Enum
 
+from organisations.subscriptions.constants import CHARGEBEE
+from organisations.subscriptions.metadata import BaseSubscriptionMetadata
 
-@dataclass
-class ChargebeeObjMetadata:
-    seats: int = 0
-    api_calls: int = 0
-    projects: int = 0
 
-    def __add__(self, other):
+class ChargebeeObjMetadata(BaseSubscriptionMetadata):
+    payment_source = CHARGEBEE
+
+    def __mul__(self, other):
+        if not isinstance(other, int):
+            raise TypeError("Unable to multiply by anything other than an integer.")
+
         return ChargebeeObjMetadata(
-            seats=self.seats + other.seats,
-            api_calls=self.api_calls + other.api_calls,
-            projects=self.projects + other.projects,
+            **{k: v * other if v else v for k, v in self.__dict__.items()}
         )
 
 

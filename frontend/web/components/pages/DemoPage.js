@@ -36,7 +36,7 @@ const DemoPage = class extends Component {
                                             We could not login to the demo account please contact
                                             {' '}
                                             <a
-                                              href="support@bullet-train.io"
+                                              href="support@flagsmith.com"
                                             >
                                                 Support
                                             </a>

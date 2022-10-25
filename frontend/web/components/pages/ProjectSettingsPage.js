@@ -66,7 +66,14 @@ const ProjectSettingsPage = class extends Component {
         />);
     };
 
-    migrate = ()=> {
+    togglePreventDefaults = (project, editProject) => {
+        editProject({
+            ...project,
+            prevent_flag_defaults: !project.prevent_flag_defaults,
+        });
+    };
+
+    migrate = () => {
         AppActions.migrateProject(this.props.match.params.projectId);
     }
 
@@ -79,14 +86,15 @@ const ProjectSettingsPage = class extends Component {
                     {({ isLoading, isSaving, editProject, deleteProject, project }) => (
                         <div>
                             {(
-                                <div className="panel--grey">
+
+                                <div>
+                                    <h3>General</h3>
                                     <FormGroup>
                                         <form onSubmit={(e) => {
                                             e.preventDefault();
                                             !isSaving && name && editProject(Object.assign({}, project, { name }));
                                         }}
                                         >
-                                            <h5>Project Name</h5>
                                             <Row>
                                                 <Column className="m-l-0">
                                                     <Input
@@ -125,11 +133,32 @@ const ProjectSettingsPage = class extends Component {
                                         </p>
                                     </div>
                                     <div className="col-md-2 text-right">
-                                        <Switch data-test="js-hide-disabled-flags" disabled={isSaving} onChange={() => this.toggleHideDisabledFlags(project, editProject)} checked={project.hide_disabled_flags}/>
+                                        <Switch
+                                          data-test="js-hide-disabled-flags" disabled={isSaving} onChange={() => this.toggleHideDisabledFlags(project, editProject)}
+                                          checked={project.hide_disabled_flags}
+                                        />
                                     </div>
                                 </div>
                             </FormGroup>
-                            {!Utils.getIsEdge() && this.props.hasFeature("edge_migrator") && (
+                            {Utils.getFlagsmithHasFeature('prevent_flag_defaults') && (
+                                <FormGroup className="mt-4">
+                                    <h3>Prevent flag defaults</h3>
+                                    <div className="row">
+                                        <div className="col-md-10">
+                                            <p>
+                                                By default, when you create a feature with a value and enabled state it acts as a default for your other environments. Enabling this setting forces the user to create a feature before setting its values per environment.
+                                            </p>
+                                        </div>
+                                        <div className="col-md-2 text-right">
+                                            <Switch
+                                                data-test="js-hide-disabled-flags" disabled={isSaving} onChange={() => this.togglePreventDefaults(project, editProject)}
+                                                checked={project.prevent_flag_defaults}
+                                            />
+                                        </div>
+                                    </div>
+                                </FormGroup>
+                            )}
+                            {!Utils.getIsEdge() && this.props.hasFeature('edge_migrator') && (
                                 <FormGroup className="mt-4">
                                     <h3>Global Edge API Opt in</h3>
                                     <div className="row">
@@ -140,12 +169,12 @@ const ProjectSettingsPage = class extends Component {
                                         </div>
                                         <div className="col-md-2 text-right">
                                             <Button
-                                                disabled={isSaving||Utils.isMigrating()}
-                                                onClick={() => openConfirm("Are you sure?", "This will migrate your project to the Global Edge API.", ()=>{
-                                                    this.migrate(project)
-                                                })}
+                                              disabled={isSaving || Utils.isMigrating()}
+                                              onClick={() => openConfirm('Are you sure?', 'This will migrate your project to the Global Edge API.', () => {
+                                                  this.migrate(project);
+                                              })}
                                             >
-                                                {this.state.migrating || Utils.isMigrating()?"Migrating to Edge":"Start Migration"}
+                                                {this.state.migrating || Utils.isMigrating() ? 'Migrating to Edge' : 'Start Migration'}
                                             </Button>
                                         </div>
                                     </div>

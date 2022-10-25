@@ -1,9 +1,11 @@
 import json
 
+import pytest
 from core.constants import STRING
 from django.contrib.auth import get_user_model
 from django.urls import reverse
 from flag_engine.api.document_builders import build_identity_document
+from pytest_lazyfixture import lazy_fixture
 from rest_framework import status
 from rest_framework.test import APITestCase
 
@@ -161,6 +163,29 @@ class SegmentViewSetTestCase(APITestCase):
         # Then
         assert res.status_code == status.HTTP_201_CREATED
 
+    def test_can_create_segments_with_condition_that_has_null_value(self):
+        # Given
+        url = reverse("api-v1:projects:project-segments-list", args=[self.project.id])
+        data = {
+            "name": "New segment name",
+            "project": self.project.id,
+            "rules": [
+                {
+                    "type": "ALL",
+                    "rules": [],
+                    "conditions": [{"operator": EQUAL, "property": "test-property"}],
+                }
+            ],
+        }
+
+        # When
+        res = self.client.post(
+            url, data=json.dumps(data), content_type="application/json"
+        )
+
+        # Then
+        assert res.status_code == status.HTTP_201_CREATED
+
 
 def test_can_filter_by_edge_identity_to_get_only_matching_segments(
     project, environment, identity, admin_client, identity_matching_segment, mocker
@@ -227,3 +252,20 @@ def test_can_create_feature_based_segment(project, admin_client, feature):
     # Then
     assert res.status_code == status.HTTP_201_CREATED
     assert res.json()["feature"] == feature.id
+
+
+@pytest.mark.parametrize(
+    "client", [lazy_fixture("master_api_key_client"), lazy_fixture("admin_client")]
+)
+def test_get_segment_by_uuid(client, project, segment):
+    # Given
+    url = reverse("api-v1:segments:get-segment-by-uuid", args=[segment.uuid])
+
+    # When
+    response = client.get(url)
+
+    # Then
+    assert response.status_code == status.HTTP_200_OK
+
+    assert response.json()["id"] == segment.id
+    assert response.json()["uuid"] == str(segment.uuid)

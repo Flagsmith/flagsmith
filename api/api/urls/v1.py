@@ -34,6 +34,8 @@ urlpatterns = [
     url(r"^projects/", include("projects.urls"), name="projects"),
     url(r"^environments/", include("environments.urls"), name="environments"),
     url(r"^features/", include("features.urls"), name="features"),
+    url(r"^multivariate/", include("features.multivariate.urls"), name="multivariate"),
+    url(r"^segments/", include("segments.urls"), name="segments"),
     url(r"^users/", include("users.urls")),
     url(r"^e2etests/", include("e2etests.urls")),
     url(r"^audit/", include("audit.urls")),

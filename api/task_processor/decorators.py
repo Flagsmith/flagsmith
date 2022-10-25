@@ -1,12 +1,15 @@
 import logging
 import typing
+from datetime import datetime
 from inspect import getmodule
 from threading import Thread
 
 from django.conf import settings
+from django.utils import timezone
 
 from task_processor.models import Task
 from task_processor.task_registry import register_task
+from task_processor.task_run_method import TaskRunMethod
 
 logger = logging.getLogger(__name__)
 
@@ -21,17 +24,40 @@ def register_task_handler(task_name: str = None):
 
         register_task(task_identifier, f)
 
-        def delay(*args, **kwargs):
-            if settings.RUN_TASKS_SYNCHRONOUSLY:
+        def delay(
+            *,
+            delay_until: datetime = None,
+            args: typing.Tuple = (),
+            kwargs: typing.Dict = None,
+        ) -> typing.Optional[Task]:
+            logger.debug("Request to run task '%s' asynchronously.", task_identifier)
+
+            kwargs = kwargs or dict()
+
+            if delay_until and settings.TASK_RUN_METHOD != TaskRunMethod.TASK_PROCESSOR:
+                logger.warning(
+                    "Cannot schedule tasks to run in the future without task processor."
+                )
+                return
+
+            if settings.TASK_RUN_METHOD == TaskRunMethod.SYNCHRONOUSLY:
                 logger.debug("Running task '%s' synchronously", task_identifier)
                 f(*args, **kwargs)
+            elif settings.TASK_RUN_METHOD == TaskRunMethod.SEPARATE_THREAD:
+                logger.debug("Running task '%s' in separate thread", task_identifier)
+                run_in_thread(args=args, kwargs=kwargs)
             else:
                 logger.debug("Creating task for function '%s'...", task_identifier)
-                task = Task.create(task_identifier, *args, **kwargs)
+                task = Task.schedule_task(
+                    schedule_for=delay_until or timezone.now(),
+                    task_identifier=task_identifier,
+                    args=args,
+                    kwargs=kwargs,
+                )
                 task.save()
+                return task
 
-        # TODO: remove this functionality and use delay in all scenarios
-        def run_in_thread(*args, **kwargs):
+        def run_in_thread(*, args: typing.Tuple = (), kwargs: typing.Dict = None):
             logger.info("Running function %s in unmanaged thread.", f.__name__)
             Thread(target=f, args=args, kwargs=kwargs, daemon=True).start()
 

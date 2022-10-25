@@ -34,12 +34,12 @@ jobs:
 
         steps:
             - name: Cloning repo
-              uses: actions/checkout@v2
+              uses: actions/checkout@v3
               with:
                   fetch-depth: 0
 
             - name: Set up Python ${{ matrix.python-version }}
-              uses: actions/setup-python@v2
+              uses: actions/setup-python@v4
               with:
                   python-version: ${{ matrix.python-version }}
 
@@ -72,5 +72,6 @@ jobs:
                   DATABASE_URL:
                       'postgres://postgres:postgres@localhost:${{ job.services.postgres.ports[5432] }}/postgres'
                   DJANGO_SETTINGS_MODULE: 'app.settings.test'
+                  LOG_LEVEL: 'INFO'
               run: |
                   pytest -p no:warnings

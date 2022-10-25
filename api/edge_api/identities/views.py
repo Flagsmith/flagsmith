@@ -45,12 +45,15 @@ from environments.identities.serializers import (
 from environments.models import Environment
 from environments.permissions.constants import MANAGE_IDENTITIES
 from environments.permissions.permissions import NestedEnvironmentPermissions
+from features.models import FeatureState
 from features.permissions import IdentityFeatureStatePermissions
 from projects.exceptions import DynamoNotEnabledError
+from sse import send_identity_update_message
 
 from .edge_identity_service import get_all_feature_states_for_edge_identity
 from .exceptions import TraitPersistenceError
 from .permissions import EdgeIdentityWithIdentifierViewPermissions
+from .tasks import sync_identity_document_features
 
 trait_schema = APITraitSchema()
 
@@ -165,6 +168,7 @@ class EdgeIdentityViewSet(viewsets.ModelViewSet):
         identity.update_traits([trait])
         Identity.dynamo_wrapper.put_item(build_identity_dict(identity))
         data = trait_schema.dump(trait)
+        send_identity_update_message(environment, identity.identifier)
         return Response(data, status=status.HTTP_200_OK)
 
 
@@ -197,8 +201,18 @@ class EdgeIdentityFeatureStateViewSet(viewsets.ModelViewSet):
             != self.kwargs["environment_api_key"]
         ):
             raise PermissionDenied("Identity does not belong to this environment.")
+        identity = build_identity_model(identity_document)
 
-        self.identity = build_identity_model(identity_document)
+        valid_feature_names = set(
+            FeatureState.objects.filter(
+                environment__api_key=identity.environment_api_key
+            ).values_list("feature__name", flat=True)
+        )
+        identity_feature_names = {fs.feature.name for fs in identity.identity_features}
+        if not identity_feature_names.issubset(valid_feature_names):
+            identity.prune_features(valid_feature_names)
+            sync_identity_document_features.delay(args=(str(identity.identity_uuid),))
+        self.identity = identity
 
     def get_object(self):
         featurestate_uuid = self.kwargs["featurestate_uuid"]

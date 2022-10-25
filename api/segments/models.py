@@ -40,6 +40,9 @@ NOT_CONTAINS = "NOT_CONTAINS"
 NOT_EQUAL = "NOT_EQUAL"
 REGEX = "REGEX"
 PERCENTAGE_SPLIT = "PERCENTAGE_SPLIT"
+MODULO = "MODULO"
+IS_SET = "IS_SET"
+IS_NOT_SET = "IS_NOT_SET"
 
 
 class Segment(AbstractBaseExportableModel):
@@ -151,11 +154,14 @@ class Condition(AbstractBaseExportableModel):
         (NOT_EQUAL, "Does not match"),
         (REGEX, "Matches regex"),
         (PERCENTAGE_SPLIT, "Percentage split"),
+        (MODULO, "Modulo Operation"),
+        (IS_SET, "Is set"),
+        (IS_NOT_SET, "Is not set"),
     )
 
     operator = models.CharField(choices=CONDITION_TYPES, max_length=500)
     property = models.CharField(blank=True, null=True, max_length=1000)
-    value = models.CharField(max_length=1000)
+    value = models.CharField(max_length=1000, blank=True, null=True)
 
     rule = models.ForeignKey(
         SegmentRule, on_delete=models.CASCADE, related_name="conditions"
@@ -178,19 +184,27 @@ class Condition(AbstractBaseExportableModel):
         # we allow passing in traits to handle when they aren't
         # persisted for certain organisations
         traits = identity.identity_traits.all() if traits is None else traits
+        matching_trait = next(
+            filter(lambda t: t.trait_key == self.property, traits), None
+        )
+        if matching_trait is None:
+            return self.operator == IS_NOT_SET
 
-        for trait in traits:
-            if trait.trait_key == self.property:
-                if trait.value_type == INTEGER:
-                    return self.check_integer_value(trait.integer_value)
-                if trait.value_type == FLOAT:
-                    return self.check_float_value(trait.float_value)
-                elif trait.value_type == BOOLEAN:
-                    return self.check_boolean_value(trait.boolean_value)
-                elif is_semver(self.value):
-                    return self.check_semver_value(trait.string_value)
-                else:
-                    return self.check_string_value(trait.string_value)
+        if self.operator in (IS_SET, IS_NOT_SET):
+            return self.operator == IS_SET
+        elif self.operator == MODULO:
+            if matching_trait.value_type in [INTEGER, FLOAT]:
+                return self._check_modulo_operator(matching_trait.trait_value)
+        elif matching_trait.value_type == INTEGER:
+            return self.check_integer_value(matching_trait.integer_value)
+        elif matching_trait.value_type == FLOAT:
+            return self.check_float_value(matching_trait.float_value)
+        elif matching_trait.value_type == BOOLEAN:
+            return self.check_boolean_value(matching_trait.boolean_value)
+        elif is_semver(self.value):
+            return self.check_semver_value(matching_trait.string_value)
+
+        return self.check_string_value(matching_trait.string_value)
 
     def _check_percentage_split_operator(self, identity):
         try:
@@ -203,6 +217,16 @@ class Condition(AbstractBaseExportableModel):
             get_hashed_percentage_for_object_ids(object_ids=[segment.id, identity.id])
             <= float_value
         )
+
+    def _check_modulo_operator(self, value: typing.Union[int, float]) -> bool:
+        try:
+            divisor, remainder = self.value.split("|")
+            divisor = float(divisor)
+            remainder = float(remainder)
+        except ValueError:
+            return False
+
+        return value % divisor == remainder
 
     def check_integer_value(self, value: int) -> bool:
         try:
@@ -300,3 +324,5 @@ class Condition(AbstractBaseExportableModel):
             return str_value not in value
         elif self.operator == REGEX:
             return re.compile(str(self.value)).match(value) is not None
+
+        return False

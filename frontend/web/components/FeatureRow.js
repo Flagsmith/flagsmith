@@ -72,8 +72,10 @@ class TheComponent extends Component {
         const readOnly = Utils.getFlagsmithHasFeature('read_only_mode');
         const isProtected = TagStore.hasProtectedTag(projectFlag, parseInt(projectId));
         const environment = ProjectStore.getEnvironment(environmentId);
+        const changeRequestsEnabled = Utils.changeRequestsEnabled(environment && environment.minimum_change_request_approvals)
+
         if (this.props.condensed) {
-            return Utils.renderWithPermission(permission, Constants.environmentPermissions(Utils.getManageFeaturePermissionDescription()), (
+            return Utils.renderWithPermission(permission, Constants.environmentPermissions(Utils.getManageFeaturePermissionDescription(changeRequestsEnabled)), (
                 <Row
                     onClick={() => permission && !readOnly && this.editFlag(projectFlag, environmentFlags[id])}
                     style={{ overflow: 'hidden', ...(this.props.style || {}) }}>
@@ -83,7 +85,7 @@ class TheComponent extends Component {
                           data-test={`feature-switch-${this.props.index}${environmentFlags[id] && environmentFlags[id].enabled ? '-on' : '-off'}`}
                           checked={environmentFlags[id] && environmentFlags[id].enabled}
                           onChange={() => {
-                              if (Utils.changeRequestsEnabled(environment.minimum_change_request_approvals)) {
+                              if (changeRequestsEnabled) {
                                   this.editFlag(projectFlag, environmentFlags[id]);
                                   return;
                               }
@@ -104,7 +106,7 @@ class TheComponent extends Component {
             ));
         }
 
-        return (
+        return                    Utils.renderWithPermission(permission, Constants.environmentPermissions(Utils.getManageFeaturePermissionDescription(changeRequestsEnabled)), (
             <Row
               style={{ flexWrap: 'nowrap' }}
               className={this.props.canDelete ? 'list-item clickable py-2' : 'list-item py-1'} key={id} space
@@ -147,9 +149,7 @@ class TheComponent extends Component {
                     </div>
                 </div>
                 <Row>
-                    {
-                    Utils.renderWithPermission(permission, Constants.environmentPermissions(Utils.getManageFeaturePermissionDescription()), (
-                        <Row style={{
+                      <Row style={{
                             marginTop: 5,
                             marginBottom: 5,
                             marginRight: 15,
@@ -179,8 +179,6 @@ class TheComponent extends Component {
                                 />
                             </Column>
                         </Row>
-                    ))
-                }
 
                     {AccountStore.getOrganisationRole() === 'ADMIN' && (
                     <Tooltip
@@ -225,7 +223,7 @@ class TheComponent extends Component {
                     </Permission>
                 </Row>
             </Row>
-        );
+        ));
     }
 }
 

@@ -3,9 +3,11 @@ from unittest.mock import MagicMock
 import pytest
 from core.request_origin import RequestOrigin
 from django.db.models import Q
+from flag_engine.api.document_builders import build_environment_document
 from pytest_django.asserts import assertQuerysetEqual as assert_queryset_equal
 
 from environments.models import Environment, Webhook
+from features.models import Feature, FeatureState
 
 
 @pytest.mark.parametrize(
@@ -172,3 +174,86 @@ def test_webhook_generate_webhook_feature_state_data_raises_error_segment_and_id
 
     # Then
     # exception raised
+
+
+def test_environment_get_environment_document(environment, django_assert_num_queries):
+    # Given
+
+    # When
+    with django_assert_num_queries(4):
+        environment_document = Environment.get_environment_document(environment.api_key)
+
+    # Then
+    assert environment_document
+    assert environment_document["api_key"] == environment.api_key
+
+
+def test_environment_get_environment_document_with_caching_when_document_in_cache(
+    environment, django_assert_num_queries, settings, mocker
+):
+    # Given
+    settings.CACHE_ENVIRONMENT_DOCUMENT_SECONDS = 60
+
+    mocked_environment_document_cache = mocker.patch(
+        "environments.models.environment_document_cache"
+    )
+    mocked_environment_document_cache.get.return_value = build_environment_document(
+        environment
+    )
+
+    # When
+    with django_assert_num_queries(0):
+        environment_document = Environment.get_environment_document(environment.api_key)
+
+    # Then
+    assert environment_document
+    assert environment_document["api_key"] == environment.api_key
+
+
+def test_environment_get_environment_document_with_caching_when_document_not_in_cache(
+    environment, django_assert_num_queries, settings, mocker
+):
+    # Given
+    settings.CACHE_ENVIRONMENT_DOCUMENT_SECONDS = 60
+
+    mocked_environment_document_cache = mocker.patch(
+        "environments.models.environment_document_cache"
+    )
+    mocked_environment_document_cache.get.return_value = None
+
+    # When
+    with django_assert_num_queries(4):
+        environment_document = Environment.get_environment_document(environment.api_key)
+
+    # Then
+    assert environment_document
+    assert environment_document["api_key"] == environment.api_key
+
+    mocked_environment_document_cache.set.assert_called_once_with(
+        environment.api_key, environment_document
+    )
+
+
+def test_creating_a_feature_with_defaults_does_not_set_defaults_if_disabled(project):
+    # Given
+    project.prevent_flag_defaults = True
+    project.save()
+
+    default_enabled = True
+    initial_value = "default"
+    feature = Feature.objects.create(
+        project=project,
+        name="test_feature",
+        default_enabled=default_enabled,
+        initial_value=initial_value,
+    )
+
+    environment = Environment(project=project, name="test environment")
+
+    # When
+    environment.save()
+
+    # Then
+    feature_state = FeatureState.objects.get(feature=feature, environment=environment)
+    assert feature_state.enabled is False
+    assert feature_state.get_feature_state_value() is None
