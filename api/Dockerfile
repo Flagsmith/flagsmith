@@ -1,4 +1,4 @@
-FROM python:3.11-rc-slim as application
+FROM python:3.11-slim as application
 
 # arm architecture platform builds need postgres drivers installing via apt
 # by default we want to build amd64 arch images

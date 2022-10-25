@@ -12,7 +12,7 @@ RUN cd frontend && npm run bundledjango
 
 
 # Step 2 - Build Django Application
-FROM python:3.11-rc-slim as application
+FROM python:3.11-slim as application
 
 WORKDIR /app
 COPY api /app/
