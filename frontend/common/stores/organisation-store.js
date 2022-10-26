@@ -4,6 +4,19 @@ const data = require('../data/base/_data');
 
 const controller = {
 
+    invalidateInviteLink: (link) => {
+        const id = AccountStore.getOrganisation().id;
+        data.delete(`${Project.api}organisations/${id}/invite-links/${link.id}`).then((links) => {
+            return data.post(`${Project.api}organisations/${id}/invite-links/`, {
+                role: 'ADMIN',
+            })
+        }).then(()=>{
+            return data.get(`${Project.api}organisations/${id}/invite-links/`).then((links) => {
+                store.model.inviteLinks = links;
+                store.loaded();
+            })
+        })
+    },
     getOrganisation: (id, force) => {
         if (id != store.id || force) {
             store.id = id;
@@ -73,6 +86,7 @@ const controller = {
             });
         }
     },
+
     createProject: (name) => {
         store.saving();
         const createSampleUser = (res, envName, project) => {
@@ -271,6 +285,9 @@ store.dispatcherIndex = Dispatcher.register(store, (payload) => {
             break;
         case Actions.GET_INFLUX_DATA:
             controller.getInfluxData(action.id);
+            break;
+        case Actions.INVALIDATE_INVITE_LINK:
+            controller.invalidateInviteLink(action.link);
             break;
         case Actions.LOGOUT:
             store.id = null;

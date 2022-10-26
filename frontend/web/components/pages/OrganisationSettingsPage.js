@@ -13,6 +13,7 @@ import ConfirmRemoveAuditWebhook from '../modals/ConfirmRemoveAuditWebhook';
 import Button from '../base/forms/Button';
 import { EditPermissionsModal } from '../EditPermissions';
 import AdminAPIKeys from '../AdminAPIKeys';
+import ButtonDropdown from "../ButtonDropdown";
 
 
 const OrganisationSettingsPage = class extends Component {
@@ -323,7 +324,7 @@ const OrganisationSettingsPage = class extends Component {
                         organisation,
                     }, { createOrganisation, selectOrganisation, deleteOrganisation }) => !!organisation && (
                         <OrganisationProvider>
-                            {({ isLoading, name, error, projects, usage, users, invites, influx_data, inviteLinks, subscriptionMeta }) => {
+                            {({ isLoading, name, error, projects, usage, users, invites, influx_data, inviteLinks, subscriptionMeta ,invalidateInviteLink}) => {
                                 const {max_seats} = subscriptionMeta || organisation.subscription || {max_seats:1};
                                 return (
                                     <div>
@@ -480,17 +481,29 @@ const OrganisationSettingsPage = class extends Component {
                                                                                     />
                                                                                 </Flex>
 
-                                                                                <div>
+                                                                                <Row>
                                                                                     <Button
+                                                                                        className="btn-secondary"
                                                                                         style={{ width: 180 }}
                                                                                         onClick={() => {
                                                                                             navigator.clipboard.writeText(`${document.location.origin}/invite/${inviteLinks.find(f => f.role === this.state.role).hash}`);
                                                                                             toast('Link copied');
                                                                                         }}
                                                                                     >
-                                                                                        Copy invite link
+                                                                                        Copy Invite Link
                                                                                     </Button>
-                                                                                </div>
+                                                                                    <Button
+                                                                                        className="ml-4"
+                                                                                        type="button"
+                                                                                        onClick={() => {
+                                                                                            openConfirm("Regenerate Invite Link", "This will generate a new invite link for the selected role, users will no longer be able to use the existing one. Are you sure?", ()=>{
+                                                                                                invalidateInviteLink(inviteLinks.find(f => f.role === this.state.role))
+                                                                                            } )
+                                                                                        }}
+                                                                                    >
+                                                                                        Regenerate
+                                                                                    </Button>
+                                                                                </Row>
                                                                             </>
                                                                         )}
 

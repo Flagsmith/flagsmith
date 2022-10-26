@@ -5,7 +5,6 @@
     .popover {
         background-color: $dark-bg-2;
         &-bt {
-            border-top: 8px solid $dark-bg-2;
             &:before {
                 border-left: 15px solid transparent;
                 border-right: 15px solid transparent;
@@ -38,8 +37,14 @@
     }
 }
 
+.popover-bottom {
+    .popover-inner {
+        margin-top:10px;
+        left:0;
+    }
+}
+
 .popover {
-    @include transition(all 300ms ease);
     border: none;
     background-color: $body-bg;
     z-index: 2000;
@@ -64,21 +69,8 @@
     }
 
     &-bt {
-        border-top: 8px solid white;
         border-radius: $border-radius-default;
         overflow: visible;
-
-        &:before {
-            content: "";
-            position: absolute;
-            top: -18px;
-            right: 20px;
-            width: 0;
-            height: 0;
-            border-left: 15px solid transparent;
-            border-right: 15px solid transparent;
-            border-bottom: 16px solid white;
-        }
 
         &.aside-select {
             padding-bottom: 0;
@@ -92,6 +84,7 @@
             text-align: center;
             font-weight: 500;
             color: $header-color;
+            margin: 0 10px 10px 10px;
             border-bottom: 1px solid $input-border-color;
         }
 
@@ -136,7 +129,6 @@
                     left: 200px
                 }
             }
-            border-bottom: 1px solid $input-border-color;
             padding-right: 50px;
         }
     }
