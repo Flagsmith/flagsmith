@@ -111,6 +111,7 @@ const HomePage = class extends React.Component {
                     </a>
                 ));
             }
+
             if (Utils.getFlagsmithValue('oauth_google')) {
                 oauths.push((
                     <GoogleOAuthProvider clientId={JSON.parse(Utils.getFlagsmithValue('oauth_google')).clientId}>
@@ -120,7 +121,6 @@ const HomePage = class extends React.Component {
                             }}
                         />
                     </GoogleOAuthProvider>
-
                 ));
             }
 
