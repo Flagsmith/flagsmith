@@ -10,6 +10,7 @@ from rest_framework.generics import get_object_or_404
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 
+from app.pagination import CustomPagination
 from environments.identities.models import Identity
 from features.models import FeatureState
 from features.serializers import SegmentAssociatedFeatureStateSerializer
@@ -38,6 +39,7 @@ logger = logging.getLogger()
 class SegmentViewSet(viewsets.ModelViewSet):
     serializer_class = SegmentSerializer
     permission_classes = [IsAuthenticated, SegmentPermissions]
+    pagination_class = CustomPagination
 
     def get_queryset(self):
         project = get_object_or_404(
