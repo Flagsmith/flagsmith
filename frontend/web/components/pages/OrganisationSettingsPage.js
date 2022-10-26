@@ -482,7 +482,6 @@ const OrganisationSettingsPage = class extends Component {
                                                                                 </Flex>
 
                                                                                 <Row>
-
                                                                                     <Button
                                                                                         className="btn-secondary"
                                                                                         style={{ width: 180 }}
@@ -491,19 +490,19 @@ const OrganisationSettingsPage = class extends Component {
                                                                                             toast('Link copied');
                                                                                         }}
                                                                                     >
-                                                                                        Copy invite link
+                                                                                        Copy Invite Link
                                                                                     </Button>
-                                                                                    <button
-                                                                                        className="ml-4 btn btn--with-icon"
+                                                                                    <Button
+                                                                                        className="ml-4"
                                                                                         type="button"
                                                                                         onClick={() => {
-                                                                                            openConfirm("Remove Link", "This will generate a new invite link for the selected role, users will no longer be able to use the existing one. Are you sure?", ()=>{
+                                                                                            openConfirm("Regenerate Invite Link", "This will generate a new invite link for the selected role, users will no longer be able to use the existing one. Are you sure?", ()=>{
                                                                                                 invalidateInviteLink(inviteLinks.find(f => f.role === this.state.role))
                                                                                             } )
                                                                                         }}
                                                                                     >
-                                                                                        <RemoveIcon />
-                                                                                    </button>
+                                                                                        Regenerate
+                                                                                    </Button>
                                                                                 </Row>
                                                                             </>
                                                                         )}
