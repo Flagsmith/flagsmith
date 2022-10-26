@@ -2,7 +2,6 @@ import React from 'react';
 import ForgotPasswordModal from '../ForgotPasswordModal';
 import Card from '../Card';
 import { ButtonLink } from '../base/forms/Button';
-import { Google } from '../../project/auth';
 import NavIconSmall from '../svg/NavIconSmall';
 import SamlForm from '../SamlForm';
 import data from "../../../common/data/base/_data";
