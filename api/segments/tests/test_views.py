@@ -274,8 +274,9 @@ def test_get_segment_by_uuid(client, project, segment):
 
 def test_list_segments(django_assert_num_queries, project, admin_client):
     # Given
+    num_segments = 5
     segments = []
-    for i in range(5):
+    for i in range(num_segments):
         segment = Segment.objects.create(project=project, name=f"segment {i}")
         all_rule = SegmentRule.objects.create(
             segment=segment, type=SegmentRule.ALL_RULE
@@ -298,3 +299,6 @@ def test_list_segments(django_assert_num_queries, project, admin_client):
 
     # Then
     assert response.status_code == status.HTTP_200_OK
+
+    response_json = response.json()
+    assert response_json["count"] == num_segments

@@ -50,6 +50,8 @@ class SegmentViewSet(viewsets.ModelViewSet):
         queryset = project.segments.all()
 
         if self.action == "list":
+            # TODO: at the moment, the UI only shows the name and description of the segment in the list view.
+            #  we shouldn't return all of the rules and conditions in the list view.
             queryset = queryset.prefetch_related(
                 "rules",
                 "rules__conditions",
