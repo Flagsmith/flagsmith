@@ -46,7 +46,17 @@ class SegmentViewSet(viewsets.ModelViewSet):
             self.request.user.get_permitted_projects(["VIEW_PROJECT"]),
             pk=self.kwargs["project_pk"],
         )
+
         queryset = project.segments.all()
+
+        if self.action == "list":
+            queryset = queryset.prefetch_related(
+                "rules",
+                "rules__conditions",
+                "rules__rules",
+                "rules__rules__conditions",
+                "rules__rules__rules",
+            )
 
         identity_pk = self.request.query_params.get("identity")
         if identity_pk:

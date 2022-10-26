@@ -1,4 +1,5 @@
 import json
+import random
 
 import pytest
 from core.constants import STRING
@@ -269,3 +270,31 @@ def test_get_segment_by_uuid(client, project, segment):
 
     assert response.json()["id"] == segment.id
     assert response.json()["uuid"] == str(segment.uuid)
+
+
+def test_list_segments(django_assert_num_queries, project, admin_client):
+    # Given
+    segments = []
+    for i in range(5):
+        segment = Segment.objects.create(project=project, name=f"segment {i}")
+        all_rule = SegmentRule.objects.create(
+            segment=segment, type=SegmentRule.ALL_RULE
+        )
+        any_rule = SegmentRule.objects.create(rule=all_rule, type=SegmentRule.ANY_RULE)
+        Condition.objects.create(
+            property="foo", value=str(random.randint(0, 10)), rule=any_rule
+        )
+        segments.append(segment)
+
+    # When
+    with django_assert_num_queries(10):
+        # TODO: improve this
+        #  I've removed the N+1 issue using prefetch related but there is still an overlap on permission checks
+        #  and we can probably use varying serializers for the segments since we only allow certain structures via
+        #  the UI (but the serializers allow for infinite nesting)
+        response = admin_client.get(
+            reverse("api-v1:projects:project-segments-list", args=[project.id])
+        )
+
+    # Then
+    assert response.status_code == status.HTTP_200_OK
