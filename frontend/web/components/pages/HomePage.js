@@ -118,7 +118,9 @@ const HomePage = class extends React.Component {
                             if (res) {
                                 document.location = `${document.location.origin}/oauth/google?code=${res}`;
                             }
-                        });
+                        }).catch((e)=>{
+                            console.error(e);
+                        })
                     }}
                     >
                         <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
