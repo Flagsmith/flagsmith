@@ -302,3 +302,35 @@ def test_list_segments(django_assert_num_queries, project, admin_client):
 
     response_json = response.json()
     assert response_json["count"] == num_segments
+
+
+def test_search_segments(django_assert_num_queries, project, admin_client):
+    # Given
+    segments = []
+    segment_names = ["segment one", "segment two"]
+
+    for segment_name in segment_names:
+        segment = Segment.objects.create(project=project, name=segment_name)
+        all_rule = SegmentRule.objects.create(
+            segment=segment, type=SegmentRule.ALL_RULE
+        )
+        any_rule = SegmentRule.objects.create(rule=all_rule, type=SegmentRule.ANY_RULE)
+        Condition.objects.create(
+            property="foo", value=str(random.randint(0, 10)), rule=any_rule
+        )
+        segments.append(segment)
+
+    url = "%s?q=%s" % (
+        reverse("api-v1:projects:project-segments-list", args=[project.id]),
+        segment_names[0].split()[1],
+    )
+
+    # When
+    response = admin_client.get(url)
+
+    # Then
+    assert response.status_code == status.HTTP_200_OK
+
+    response_json = response.json()
+    assert response_json["count"] == 1
+    assert response_json["results"][0]["name"] == segment_names[0]

@@ -32,7 +32,14 @@ logger = logging.getLogger()
                 "Optionally provide the id of an identity to get only the segments they match",
                 required=False,
                 type=openapi.TYPE_INTEGER,
-            )
+            ),
+            openapi.Parameter(
+                "q",
+                openapi.IN_QUERY,
+                "Search term to find segment with given term in their name",
+                required=False,
+                type=openapi.TYPE_STRING,
+            ),
         ]
     ),
 )
@@ -68,6 +75,10 @@ class SegmentViewSet(viewsets.ModelViewSet):
             else:
                 segment_ids = Identity.dynamo_wrapper.get_segment_ids(identity_pk)
             queryset = queryset.filter(id__in=segment_ids)
+
+        search_term = self.request.query_params.get("q")
+        if search_term:
+            queryset = queryset.filter(name__icontains=search_term)
 
         return queryset
 
