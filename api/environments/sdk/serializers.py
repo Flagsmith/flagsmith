@@ -1,4 +1,5 @@
 import typing
+from collections import defaultdict
 
 from core.constants import BOOLEAN, FLOAT, INTEGER, STRING
 from rest_framework import serializers
@@ -58,8 +59,34 @@ class SDKCreateUpdateTraitSerializer(serializers.ModelSerializer):
         )[0]
 
 
+class BulkTraitListSerializer(serializers.ListSerializer):
+    def update(self, instance, validated_data):
+        return self.save()
+
+    def save(self, **kwargs):
+        environment = self.context["request"].environment
+
+        # build a dictionary of identifier: trait_data_item
+        identity_trait_items = defaultdict(list)
+        for trait_data_item in self.validated_data:
+            identity_data = trait_data_item.pop("identity")
+            identity_trait_items[identity_data["identifier"]].append(trait_data_item)
+
+        modified_traits = []
+        for identifier, trait_data_items in identity_trait_items.items():
+            identity = Identity.objects.get(
+                identifier=identifier, environment=environment
+            )
+            modified_traits.extend(identity.update_traits(trait_data_items))
+
+        return modified_traits
+
+
 class SDKBulkCreateUpdateTraitSerializer(SDKCreateUpdateTraitSerializer):
     trait_value = TraitValueField(allow_null=True)
+
+    class Meta(SDKCreateUpdateTraitSerializer.Meta):
+        list_serializer_class = BulkTraitListSerializer
 
 
 class IdentitySerializerWithTraitsAndSegments(serializers.Serializer):
