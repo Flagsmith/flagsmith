@@ -76,7 +76,7 @@ class SDKBulkCreateUpdateTraitSerializer(SDKCreateUpdateTraitSerializer):
                 identity_trait_items = self._build_identifier_trait_items_dictionary()
                 modified_traits = []
                 for identifier, trait_data_items in identity_trait_items.items():
-                    identity = Identity.objects.get(
+                    identity, _ = Identity.objects.get_or_create(
                         identifier=identifier,
                         environment=self.context["request"].environment,
                     )
