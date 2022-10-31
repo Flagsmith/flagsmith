@@ -25,24 +25,16 @@ runs:
 
     steps:
         -   name: Set up Python ${{ inputs.python_version }}
-            uses: actions/setup-python@v2
+            uses: actions/setup-python@v4
             with:
                 python-version: ${{ inputs.python_version }}
+                cache: "pip"
 
         -   name: Copy pip requirements
             run: cp api/requirements.txt .
             shell: bash
 
-        -   name: Restore VirtualEnv from cache
-            uses: syphar/restore-virtualenv@v1.2
-            id: cache-e2e-api
-
-        -   name: Restore Pip from cache
-            uses: syphar/restore-pip-download-cache@v1
-            if: steps.cache-e2e-api.outputs.cache-hit != 'true'
-
         -   name: Install Dependencies
-            if: steps.cache-e2e-api.outputs.cache-hit != 'true'
             run: |
                 python -m pip install --upgrade pip
                 pip install -r requirements.txt
