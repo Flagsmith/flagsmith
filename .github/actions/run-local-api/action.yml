@@ -22,7 +22,7 @@ runs:
     steps:
         - name: Build temporary Docker image for running the API
           working-directory: api
-          run: docker build -t flagsmith/flagsmith-api:e2e .
+          run: docker build -t flagsmith/flagsmith-api:e2e-${{ github.sha }} .
           shell: bash
 
         - name: Run the API
@@ -42,5 +42,5 @@ runs:
               -e DJANGO_ALLOWED_HOSTS="*" \
               -e DJANGO_SETTINGS_MODULE=app.settings.test \
               -e FE_E2E_TEST_USER_EMAIL=nightwatch@solidstategroup.com \
-              -d flagsmith/flagsmith-api:e2e
+              -d flagsmith/flagsmith-api:e2e-${{ github.sha }}
           shell: bash
