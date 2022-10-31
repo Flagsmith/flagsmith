@@ -26,14 +26,6 @@ jobs:
               with:
                   fetch-depth: 0
 
-            - name: Cache npm
-              uses: actions/cache@v3
-              with:
-                  path: frontend/node_modules
-                  key: ${{ runner.os }}-node-${{ hashFiles('frontend/package-lock.json') }}
-                  restore-keys: |
-                      ${{ runner.os }}-node-
-
             - name: Run Local API
               uses: ./.github/actions/run-local-api
               with:

@@ -20,10 +20,18 @@ runs:
     using: composite
 
     steps:
-      - name: Cloning repo
-        uses: actions/checkout@v2
+      - uses: actions/checkout@v3
+      - uses: actions/setup-node@v3
         with:
-          fetch-depth: 0
+          cache: 'npm'
+          node-version-file: 'frontend/.nvmrc'
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: NPM Install
+        working-directory: frontend
+        run: |
+          npm i
+        shell: bash
 
       - name: Test with Chromedriver
         working-directory: frontend
@@ -33,12 +41,10 @@ runs:
           STATIC_ASSET_CDN_URL: /
           ENV: ${{ inputs.environment }}
           ENABLE_INFLUXDB_FEATURES: ${{ inputs.enable_influxdb_features }}
+
         run: |
-          wget -q https://dl.google.com/linux/chrome/deb/pool/main/g/google-chrome-stable/google-chrome-stable_96.0.4664.110-1_amd64.deb
-          sudo apt install --allow-downgrades -y ./google-chrome*.deb -f
           google-chrome --version
           node -v
-          npm i
           npm run env
           npm run test
         shell: bash
