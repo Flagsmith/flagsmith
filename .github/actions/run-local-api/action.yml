@@ -22,8 +22,7 @@ runs:
     steps:
         - name: Build temporary Docker image for running the API
           working-directory: api
-          run: |
-              docker build -t flagsmith/flagsmith-api:e2e .
+          run: docker build -t flagsmith/flagsmith-api:e2e .
           shell: bash
 
         - name: Run the API
