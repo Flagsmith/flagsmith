@@ -59,7 +59,7 @@ cryptography==37.0.2
     #   pyjwt
 dj-database-url==0.5.0
     # via -r requirements.in
-django==3.2.15
+django==3.2.16
     # via
     #   -r requirements.in
     #   django-admin-sso
@@ -126,7 +126,7 @@ drf-yasg2==1.19.3
     # via -r requirements.in
 environs==9.2.0
     # via -r requirements.in
-flagsmith-flag-engine==2.2.0
+flagsmith-flag-engine==2.3.0
     # via -r requirements.in
 future==0.18.2
     # via django-ses

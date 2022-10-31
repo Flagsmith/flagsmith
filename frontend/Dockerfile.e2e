@@ -11,9 +11,14 @@ WORKDIR /srv/flagsmith
 
 COPY --chown=node:node . .
 
-RUN npm install --quiet
+USER node
+
+RUN npm cache clean --force
+
+RUN npm i
+
 ENV ENV=e2e
-RUN npm i && npm run env
+RUN npm run env
 
 EXPOSE 8080
 CMD ["npm",  "run", "test"]
