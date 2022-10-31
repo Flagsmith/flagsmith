@@ -6,7 +6,11 @@ from django.test import TestCase
 from rest_framework.test import override_settings
 
 from organisations.chargebee.metadata import ChargebeeObjMetadata
-from organisations.models import Organisation, Subscription
+from organisations.models import (
+    TRIAL_SUBSCRIPTION_ID,
+    Organisation,
+    Subscription,
+)
 from organisations.subscriptions.constants import (
     CHARGEBEE,
     FREE_PLAN_SUBSCRIPTION_METADATA,
@@ -271,3 +275,23 @@ def test_subscription_get_subscription_metadata_returns_free_plan_metadata_for_n
 
     # Then
     assert subscription_metadata == FREE_PLAN_SUBSCRIPTION_METADATA
+
+
+def test_subscription_get_subscription_metadata_for_trial():
+    # Given
+    max_seats = 10
+    max_api_calls = 1000000
+    subscription = Subscription(
+        subscription_id=TRIAL_SUBSCRIPTION_ID,
+        max_seats=max_seats,
+        max_api_calls=max_api_calls,
+        payment_method=None,
+    )
+
+    # When
+    subscription_metadata = subscription.get_subscription_metadata()
+
+    # Then
+    assert subscription_metadata.seats == max_seats
+    assert subscription_metadata.api_calls == max_api_calls
+    assert subscription_metadata.projects is None
