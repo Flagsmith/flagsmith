@@ -8,6 +8,7 @@ from chargebee import APIError as ChargebeeAPIError
 from django.conf import settings
 from pytz import UTC
 
+from ..subscriptions.constants import CHARGEBEE
 from ..subscriptions.exceptions import CannotCancelChargebeeSubscription
 from .cache import ChargebeeCache
 from .metadata import ChargebeeObjMetadata
@@ -15,8 +16,6 @@ from .metadata import ChargebeeObjMetadata
 chargebee.configure(settings.CHARGEBEE_API_KEY, settings.CHARGEBEE_SITE)
 
 logger = logging.getLogger(__name__)
-
-TRIAL_SUBSCRIPTION_ID = "trial"
 
 
 def get_subscription_data_from_hosted_page(hosted_page_id):
@@ -33,6 +32,7 @@ def get_subscription_data_from_hosted_page(hosted_page_id):
             "max_seats": get_max_seats_for_plan(plan_metadata),
             "max_api_calls": get_max_api_calls_for_plan(plan_metadata),
             "customer_id": get_customer_id_from_hosted_page(hosted_page),
+            "payment_method": CHARGEBEE,
         }
     else:
         return {}
@@ -107,9 +107,6 @@ def get_subscription_metadata(
         return None
 
     with suppress(ChargebeeAPIError):
-        if subscription_id == TRIAL_SUBSCRIPTION_ID:
-            return ChargebeeObjMetadata()
-
         subscription = chargebee.Subscription.retrieve(subscription_id).subscription
         addons = subscription.addons or []
 
