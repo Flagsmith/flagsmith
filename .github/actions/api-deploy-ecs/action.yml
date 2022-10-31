@@ -68,7 +68,7 @@ runs:
 
     steps:
       - name: Checkout SAML package
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
         with:
             repository: flagsmith/flagsmith-saml
             token: ${{ inputs.github_access_token }}
@@ -83,7 +83,7 @@ runs:
         shell: bash
 
       - name: Checkout Workflows Logic package
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
         with:
           repository: flagsmith/flagsmith-workflows
           token: ${{ inputs.github_access_token }}
@@ -95,7 +95,7 @@ runs:
         shell: bash
 
       - name: Checkout Auth Controller package
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
         with:
           repository: flagsmith/flagsmith-auth-controller
           token: ${{ inputs.github_access_token }}
@@ -115,7 +115,7 @@ runs:
         shell: bash
 
       - name: Configure AWS Credentials
-        uses: aws-actions/configure-aws-credentials@v1
+        uses: aws-actions/configure-aws-credentials@v1-node16
         with:
           aws-access-key-id: ${{ inputs.aws_access_key_id }}
           aws-secret-access-key: ${{ inputs.aws_secret_access_key }}
