@@ -71,7 +71,7 @@ def user_permission_group(organisation, admin_user):
 @pytest.fixture()
 def subscription(organisation):
     return Subscription.objects.create(
-        organisation=organisation, subscription_id="subscription_id"
+        organisation=organisation, subscription_id="subscription_id", plan="test-plan"
     )
 
 

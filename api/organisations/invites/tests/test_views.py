@@ -4,11 +4,12 @@ from datetime import timedelta
 import pytest
 from django.urls import reverse
 from django.utils import timezone
+from pytest_lazyfixture import lazy_fixture
 from rest_framework import status
 from rest_framework.test import APITestCase
 
 from organisations.invites.models import Invite, InviteLink
-from organisations.models import Organisation, OrganisationRole
+from organisations.models import Organisation, OrganisationRole, Subscription
 from users.models import FFAdminUser
 
 
@@ -178,3 +179,31 @@ def test_update_invite_returns_405(
 
     # Then
     assert response.status_code == status.HTTP_405_METHOD_NOT_ALLOWED
+
+
+@pytest.mark.parametrize(
+    "invite_object, url",
+    [
+        (lazy_fixture("invite"), "api-v1:users:user-join-organisation"),
+        (lazy_fixture("invite_link"), "api-v1:users:user-join-organisation-link"),
+    ],
+)
+def test_join_organisation_alerts_admin_users_if_exceeds_plan_limit(
+    test_user_client, organisation, admin_user, mocker, invite_object, url
+):
+    # Given
+    mocked_send_org_over_limit_alert = mocker.patch(
+        "organisations.invites.views.send_org_over_limit_alert"
+    )
+    Subscription.objects.create(organisation=organisation, max_seats=1)
+
+    url = reverse(url, args=[invite_object.hash])
+
+    # When
+    response = test_user_client.post(url)
+
+    # Then
+    assert response.status_code == status.HTTP_200_OK
+    mocked_send_org_over_limit_alert.delay.assert_called_once_with(
+        args=(organisation.id,)
+    )

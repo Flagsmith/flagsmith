@@ -9,7 +9,7 @@ def invite_link(organisation):
 
 
 @pytest.fixture()
-def invite(organisation, admin_user):
+def invite(organisation, admin_user, test_user):
     return Invite.objects.create(
-        organisation=organisation, email="test@user.com", invited_by=admin_user
+        organisation=organisation, email=test_user.email, invited_by=admin_user
     )
