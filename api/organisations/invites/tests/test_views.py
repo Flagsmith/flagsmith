@@ -188,7 +188,7 @@ def test_update_invite_returns_405(
         (lazy_fixture("invite_link"), "api-v1:users:user-join-organisation-link"),
     ],
 )
-def test_join_organisation_tasks_admin_users_if_exceeds_plan_limit(
+def test_join_organisation_alerts_admin_users_if_exceeds_plan_limit(
     test_user_client, organisation, admin_user, mocker, invite_object, url
 ):
     # Given
