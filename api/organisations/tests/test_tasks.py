@@ -1,23 +1,23 @@
 import pytest
 
-from organisations.alerts import (
+from organisations.chargebee.metadata import ChargebeeObjMetadata
+from organisations.subscriptions.constants import MAX_SEATS_IN_FREE_PLAN
+from organisations.subscriptions.xero.metadata import XeroSubscriptionMetadata
+from organisations.tasks import (
     ALERT_EMAIL_MESSAGE,
     ALERT_EMAIL_SUBJECT,
     send_org_over_limit_alert,
 )
-from organisations.chargebee.metadata import ChargebeeObjMetadata
-from organisations.subscriptions.constants import MAX_SEATS_IN_FREE_PLAN
-from organisations.subscriptions.xero.metadata import XeroSubscriptionMetadata
 
 
 def test_send_org_over_limit_alert_for_organisation_without_subscription(
     organisation, mocker
 ):
     # Given
-    mocked_ffadmin_user = mocker.patch("organisations.alerts.FFAdminUser")
+    mocked_ffadmin_user = mocker.patch("organisations.tasks.FFAdminUser")
 
     # When
-    send_org_over_limit_alert(organisation)
+    send_org_over_limit_alert(organisation.id)
 
     # Then
     args, kwargs = mocked_ffadmin_user.send_alert_to_admin_users.call_args
@@ -39,15 +39,15 @@ def test_send_org_over_limit_alert_for_organisation_with_subscription(
     organisation, subscription, mocker, SubscriptionMetadata
 ):
     # Given
-    mocked_ffadmin_user = mocker.patch("organisations.alerts.FFAdminUser")
+    mocked_ffadmin_user = mocker.patch("organisations.tasks.FFAdminUser")
     max_seats = 10
     mocker.patch(
-        "organisations.alerts.get_subscription_metadata",
+        "organisations.tasks.get_subscription_metadata",
         return_value=SubscriptionMetadata(seats=max_seats),
     )
 
     # When
-    send_org_over_limit_alert(organisation)
+    send_org_over_limit_alert(organisation.id)
 
     # Then
     args, kwargs = mocked_ffadmin_user.send_alert_to_admin_users.call_args

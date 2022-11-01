@@ -1,6 +1,8 @@
+from organisations.models import Organisation
 from organisations.subscriptions.subscription_service import (
     get_subscription_metadata,
 )
+from task_processor.decorators import register_task_handler
 from users.models import FFAdminUser
 
 ALERT_EMAIL_MESSAGE = (
@@ -9,7 +11,10 @@ ALERT_EMAIL_MESSAGE = (
 ALERT_EMAIL_SUBJECT = "Organisation over number of seats"
 
 
-def send_org_over_limit_alert(organisation):
+@register_task_handler()
+def send_org_over_limit_alert(organisation_id):
+    organisation = Organisation.objects.get(id=organisation_id)
+
     subscription_metadata = get_subscription_metadata(organisation)
     FFAdminUser.send_alert_to_admin_users(
         subject=ALERT_EMAIL_SUBJECT,
