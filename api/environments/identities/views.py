@@ -2,6 +2,7 @@ from collections import namedtuple
 
 from django.conf import settings
 from django.utils.decorators import method_decorator
+from django.views.decorators.cache import cache_page
 from drf_yasg2.utils import swagger_auto_schema
 from rest_framework import status, viewsets
 from rest_framework.permissions import IsAuthenticated
@@ -142,6 +143,12 @@ class SDKIdentities(SDKAPIView):
         query_serializer=SDKIdentitiesQuerySerializer(),
         operation_id="identify_user",
     )
+    @method_decorator(
+        cache_page(
+            timeout=settings.GET_IDENTITIES_ENDPOINT_CACHE_SECONDS,
+            cache=settings.GET_IDENTITIES_ENDPOINT_CACHE_NAME,
+        )
+    )
     def get(self, request):
         identifier = request.query_params.get("identifier")
         if not identifier:
@@ -162,7 +169,7 @@ class SDKIdentities(SDKAPIView):
             .get_or_create(identifier=identifier, environment=request.environment)
         )
         if settings.EDGE_API_URL and request.environment.project.enable_dynamo_db:
-            forward_identity_request.run_in_thread(
+            forward_identity_request.delay(
                 args=(
                     request.method,
                     dict(request.headers),
@@ -201,7 +208,7 @@ class SDKIdentities(SDKAPIView):
         instance = serializer.save()
 
         if settings.EDGE_API_URL and request.environment.project.enable_dynamo_db:
-            forward_identity_request.run_in_thread(
+            forward_identity_request.delay(
                 args=(
                     request.method,
                     dict(request.headers),

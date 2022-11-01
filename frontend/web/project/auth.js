@@ -1,4 +1,3 @@
-import _gapi from './lib/gapi';
 // import './lib/fb';
 
 export const Facebook = {
@@ -33,23 +32,5 @@ export const Facebook = {
         } else {
             return false;
         }
-    }),
-};
-
-export const Google = {
-    login: () => new Promise((resolve) => {
-        const json = JSON.parse(Utils.getFlagsmithValue('oauth_google'));
-        _gapi(json.clientId, (GoogleAuth) => {
-            gapi.auth2.authorize({
-                client_id: json.clientId,
-                scope: 'email profile',
-                prompt: 'select_account',
-                response_type: 'id_token permission',
-            }, (r) => {
-                if (r.access_token) {
-                    resolve(r.access_token);
-                }
-            });
-        });
     }),
 };

@@ -1,5 +1,3 @@
-from threading import Thread
-
 from django.shortcuts import get_object_or_404
 from rest_framework import status
 from rest_framework.decorators import action, api_view
@@ -27,8 +25,8 @@ from organisations.serializers import (
     InviteSerializer,
     OrganisationSerializerFull,
 )
+from organisations.tasks import send_org_over_limit_alert
 from users.exceptions import InvalidInviteError
-from users.models import FFAdminUser
 
 
 @api_view(["POST"])
@@ -42,10 +40,7 @@ def join_organisation_from_email(request, hash):
         return Response(data=error_data, status=status.HTTP_400_BAD_REQUEST)
 
     if invite.organisation.over_plan_seats_limit():
-        Thread(
-            target=FFAdminUser.send_organisation_over_limit_alert,
-            args=[invite.organisation],
-        ).start()
+        send_org_over_limit_alert.delay(args=(invite.organisation.id,))
 
     return Response(
         OrganisationSerializerFull(
@@ -64,10 +59,7 @@ def join_organisation_from_link(request, hash):
 
     request.user.join_organisation_from_invite_link(invite)
     if invite.organisation.over_plan_seats_limit():
-        Thread(
-            target=FFAdminUser.send_organisation_over_limit_alert,
-            args=[invite.organisation],
-        ).start()
+        send_org_over_limit_alert.delay(args=(invite.organisation.id,))
 
     return Response(
         OrganisationSerializerFull(
