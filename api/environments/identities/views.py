@@ -2,6 +2,7 @@ from collections import namedtuple
 
 from django.conf import settings
 from django.utils.decorators import method_decorator
+from django.views.decorators.cache import cache_page
 from drf_yasg2.utils import swagger_auto_schema
 from rest_framework import status, viewsets
 from rest_framework.permissions import IsAuthenticated
@@ -141,6 +142,12 @@ class SDKIdentities(SDKAPIView):
         responses={200: SDKIdentitiesResponseSerializer()},
         query_serializer=SDKIdentitiesQuerySerializer(),
         operation_id="identify_user",
+    )
+    @method_decorator(
+        cache_page(
+            timeout=settings.GET_IDENTITIES_ENDPOINT_CACHE_SECONDS,
+            cache=settings.GET_IDENTITIES_ENDPOINT_CACHE_NAME,
+        )
     )
     def get(self, request):
         identifier = request.query_params.get("identifier")
