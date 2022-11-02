@@ -14,7 +14,7 @@ class WebhookInline(admin.TabularInline):
 
 @admin.register(Environment)
 class EnvironmentAdmin(admin.ModelAdmin):
-    actions = ['make_published']
+    actions = ["make_published"]
     date_hierarchy = "created_date"
     list_display = (
         "name",
@@ -32,7 +32,7 @@ class EnvironmentAdmin(admin.ModelAdmin):
     )
     inlines = (WebhookInline,)
 
-    @admin.action(description='Rebuild selected environment documents')
+    @admin.action(description="Rebuild selected environment documents")
     def rebuild_environments(self, request, queryset):
         for environment in queryset:
             rebuild_environment_document.delay(args=(environment.id,))
