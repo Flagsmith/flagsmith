@@ -11,7 +11,6 @@ import routes from './routes';
 import AccountStore from '../common/stores/account-store';
 import data from '../common/data/base/_data';
 
-
 window.Utils = require('../common/utils/utils');
 window.Constants = require('../common/constants');
 
