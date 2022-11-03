@@ -52,7 +52,7 @@ coreschema==0.0.4
     # via
     #   coreapi
     #   drf-yasg2
-cryptography==37.0.2
+cryptography==38.0.3
     # via
     #   azure-identity
     #   msal
