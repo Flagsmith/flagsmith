@@ -10,7 +10,7 @@ import {
     deleteFeature, deleteSegment, deleteTrait, getText, gotoSegments, gotoTraits, log,
     setText,
     toggleFeature,
-    waitForElementVisible, gotoFeatures, gotoFeature, addSegmentOverride, waitAndRefresh,
+    waitForElementVisible, gotoFeatures, gotoFeature, addSegmentOverride, waitAndRefresh, logRequests
 } from './helpers.cafe';
 
 require('dotenv').config();
@@ -241,8 +241,10 @@ test('[Initialise]', async () => {
     await deleteFeature(0, 'mv_flag');
 
 }).after(async (t) => {
-    console.log('Start of Initialise Requests');
-    console.log(JSON.stringify(logger.requests, null, 2));
-    console.error(JSON.stringify((await t.getBrowserConsoleMessages()).error));
-    console.log('Start of Initialise Requests');
+    if ((logRequests())) {
+        console.log('Start of Initialise Requests');
+        console.log(JSON.stringify(logger.requests, null, 2));
+        console.error(JSON.stringify((await t.getBrowserConsoleMessages()).error));
+        console.log('Start of Initialise Requests');
+    }
 });

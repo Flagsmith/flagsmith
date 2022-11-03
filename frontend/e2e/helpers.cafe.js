@@ -231,4 +231,6 @@ export const waitAndRefresh = async (waitFor = 3000) => {
     await t.eval(() => location.reload());
 };
 
+export const logRequests = () => !['false', '0'].includes(process.env.PRINT_E2E_REQUESTS);
+
 export default {};
