@@ -14,7 +14,7 @@ class WebhookInline(admin.TabularInline):
 
 @admin.register(Environment)
 class EnvironmentAdmin(admin.ModelAdmin):
-    actions = ["make_published"]
+    actions = ["rebuild_environment_document"]
     date_hierarchy = "created_date"
     list_display = (
         "name",
