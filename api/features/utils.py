@@ -1,30 +1,38 @@
 # Feature State Value Types
+import typing
+
 from features.value_types import BOOLEAN, INTEGER, STRING
 
+MAX_INTEGER_SIZE = 2147483647
+MIN_INTEGER_SIZE = -MAX_INTEGER_SIZE
 
-def get_value_type(value: str) -> str:
+
+def get_value_type(
+    value: str,
+    max_integer_size: int = MAX_INTEGER_SIZE,
+    min_integer_size: int = MIN_INTEGER_SIZE,
+) -> str:
     """
     Given a string, determine what type of value is contained in the string.
 
     e.g. "12" -> "int", "12.34" -> "float", etc.
     """
-    if is_integer(value):
+    if _is_integer(value, max_size=max_integer_size, min_size=min_integer_size):
         return INTEGER
-    elif is_boolean(value):
+    elif _is_boolean(value):
         return BOOLEAN
-    else:
-        return STRING
+
+    return STRING
 
 
-def is_integer(value):
+def _is_integer(value: typing.Any, max_size: int, min_size: int):
     try:
-        int(value)
-        return True
+        return min_size <= int(value) <= max_size
     except ValueError:
         return False
 
 
-def is_boolean(value):
+def _is_boolean(value):
     return value in ("true", "True", "false", "False")
 
 
@@ -36,7 +44,4 @@ def get_integer_from_string(value):
 
 
 def get_boolean_from_string(value):
-    if value in ("false", "False"):
-        return False
-    else:
-        return True
+    return value not in ("false", "False")
