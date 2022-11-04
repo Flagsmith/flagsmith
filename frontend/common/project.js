@@ -11,6 +11,5 @@ module.exports = global.Project = {
     },
     chargebee: {
         site: 'flagsmith-test',
-    },
-    zendesk: "427919a8-1cb2-40d6-9a9f-4214bf577ddd"
+    }
 };
