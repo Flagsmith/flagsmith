@@ -192,8 +192,8 @@ class Condition(AbstractBaseExportableModel):
         if matching_trait is None:
             return self.operator == IS_NOT_SET
 
-        if self.operator in (IS_SET, IS_NOT_SET, IN):
-            return self.operator == IS_SET or self.operator == IN
+        if self.operator in (IS_SET, IS_NOT_SET):
+            return self.operator == IS_SET
         elif self.operator == MODULO:
             if matching_trait.value_type in [INTEGER, FLOAT]:
                 return self._check_modulo_operator(matching_trait.trait_value)
