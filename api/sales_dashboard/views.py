@@ -3,12 +3,11 @@ import json
 from app_analytics.influxdb_wrapper import (
     get_event_list_for_organisation,
     get_events_for_organisation,
-    get_top_organisations,
 )
 from django.conf import settings
 from django.contrib.admin.views.decorators import staff_member_required
 from django.core.serializers.json import DjangoJSONEncoder
-from django.db.models import Case, Count, IntegerField, Q, Value, When
+from django.db.models import Count, Q
 from django.http import (
     HttpResponse,
     HttpResponseBadRequest,
@@ -27,6 +26,9 @@ from import_export.export import full_export
 from organisations.models import Organisation
 from organisations.subscriptions.subscription_service import (
     get_subscription_metadata,
+)
+from organisations.tasks import (
+    update_organisation_subscription_information_caches,
 )
 from projects.models import Project
 from users.models import FFAdminUser
@@ -47,7 +49,7 @@ class OrganisationList(ListView):
             num_users=Count("users", distinct=True),
             num_features=Count("projects__features", distinct=True),
             num_segments=Count("projects__segments", distinct=True),
-        ).select_related("subscription")
+        ).select_related("subscription", "subscription_information_cache")
 
         if self.request.GET.get("search"):
             search_term = self.request.GET["search"]
@@ -63,19 +65,6 @@ class OrganisationList(ListView):
                 queryset = queryset.filter(subscription__isnull=True)
             else:
                 queryset = queryset.filter(subscription__plan__icontains=filter_plan)
-
-        # Annotate the queryset with the organisations usage for the given time periods
-        # and order the queryset with it. Note: this is done as late as possible to
-        # reduce the impact of the query.
-        if settings.INFLUXDB_TOKEN:
-            for date_range, limit in (("30d", ""), ("7d", ""), ("24h", "100")):
-                key = f"num_{date_range}_calls"
-                org_calls = get_top_organisations(date_range, limit)
-                if org_calls:
-                    whens = [When(id=k, then=Value(v)) for k, v in org_calls.items()]
-                    queryset = queryset.annotate(
-                        **{key: Case(*whens, default=0, output_field=IntegerField())}
-                    ).order_by(f"-{key}")
 
         if self.request.GET.get("sort_field"):
             sort_field = self.request.GET["sort_field"]
@@ -221,3 +210,9 @@ def download_org_data(request, organisation_id):
         "attachment; filename=org-%d.json" % organisation_id
     )
     return response
+
+
+@staff_member_required()
+def trigger_update_organisation_subscription_information_caches(request):
+    update_organisation_subscription_information_caches.delay()
+    return HttpResponseRedirect(reverse("sales_dashboard:index"))

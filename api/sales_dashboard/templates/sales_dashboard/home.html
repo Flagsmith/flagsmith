@@ -10,6 +10,12 @@
       <div
         class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
         <h1 class="h2">Organisations</h1>
+        <div class="float-right">
+          <form method="POST" action="{% url 'sales_dashboard:update-organisation-subscription-information-caches' %}">
+            {% csrf_token %}
+            <input type="submit" value="Update subscription information caches" class="btn btn-primary m-1">
+          </form>
+        </div>
       </div>
 
       <div class="sort-form">
@@ -58,20 +64,19 @@
           </thead>
           <tbody>
             {% for org in object_list %}
-              {% load_subcription_metadata org %}
             <tr class="{% if org.has_subscription and not org.is_paid %}table-danger{% elif org.num_seats > subscription_metadata.seats %}table-warning{% endif %}">
               <td>{{org.id}}</td>
               <td><a href="/sales-dashboard/organisations/{{org.id}}">{{org.name}}</a></td>
               <td>{{ org.subscription.plan|default:"Free" }}{% if org.subscription.payment_method %} - {{ org.subscription.payment_method|capfirst }}{% endif %}</td>
               <td>{{org.num_users}}</td>
-              <td>{{subscription_metadata.seats}}</td>
-              <td>{{subscription_metadata.api_calls}}</td>
+              <td>{{org.subscription_information_cache.allowed_seats|default:1}}</td>
+              <td>{{org.subscription_information_cache.allowed_30d_api_calls|default:50000}}</td>
               <td>{{org.num_projects}}</td>
               <td>{{org.num_features}}</td>
               <td>{{org.num_segments}}</td>
-              <td>{{org.num_24h_calls|intcomma}}</td>
-              <td>{{org.num_7d_calls|intcomma}}</td>
-              <td>{{org.num_30d_calls|intcomma}}</td>
+              <td>{{org.subscription_information_cache.api_calls_24h|intcomma|default:0}}</td>
+              <td>{{org.subscription_information_cache.api_calls_7d|intcomma|default:0}}</td>
+              <td>{{org.subscription_information_cache.api_calls_30d|intcomma|default:0}}</td>
             </tr>
             {% endfor %}
           </tbody>
