@@ -1,4 +1,5 @@
 import pytest
+from core.constants import INTEGER, STRING
 
 from environments.identities.traits.models import Trait
 from segments.models import (
@@ -120,11 +121,35 @@ def test_does_identity_match_is_not_set_false(identity):
     assert condition.does_identity_match(identity, traits) is True
 
 
-def test_does_identity_match_in(identity):
+@pytest.mark.parametrize(
+    "condition_value, trait_value_type, trait_string_value, trait_integer_value, expected_result",
+    (
+        ("", STRING, "foo", None, False),
+        ("foo,bar", STRING, "foo", None, True),
+        ("foo", STRING, "foo", None, True),
+        ("1,2,3,4", INTEGER, None, 1, True),
+    ),
+)
+def test_does_identity_match_in(
+    identity,
+    condition_value,
+    trait_value_type,
+    trait_string_value,
+    trait_integer_value,
+    expected_result,
+):
     # Given
     trait_key = "some_property"
-    condition = Condition(operator=IN, property=trait_key)
-    traits = [Trait(trait_key=trait_key, identity=identity)]
+    condition = Condition(operator=IN, property=trait_key, value=condition_value)
+    traits = [
+        Trait(
+            trait_key=trait_key,
+            identity=identity,
+            value_type=trait_value_type,
+            string_value=trait_string_value,
+            integer_value=trait_integer_value,
+        )
+    ]
 
     # Then
-    assert condition.does_identity_match(identity, traits) is True
+    assert condition.does_identity_match(identity, traits) is expected_result
