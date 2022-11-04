@@ -43,6 +43,7 @@ PERCENTAGE_SPLIT = "PERCENTAGE_SPLIT"
 MODULO = "MODULO"
 IS_SET = "IS_SET"
 IS_NOT_SET = "IS_NOT_SET"
+IN = "IN"
 
 
 class Segment(AbstractBaseExportableModel):
@@ -157,6 +158,7 @@ class Condition(AbstractBaseExportableModel):
         (MODULO, "Modulo Operation"),
         (IS_SET, "Is set"),
         (IS_NOT_SET, "Is not set"),
+        (IN, "In"),
     )
 
     operator = models.CharField(choices=CONDITION_TYPES, max_length=500)
@@ -190,8 +192,8 @@ class Condition(AbstractBaseExportableModel):
         if matching_trait is None:
             return self.operator == IS_NOT_SET
 
-        if self.operator in (IS_SET, IS_NOT_SET):
-            return self.operator == IS_SET
+        if self.operator in (IS_SET, IS_NOT_SET, IN):
+            return self.operator == IS_SET or self.operator == IN
         elif self.operator == MODULO:
             if matching_trait.value_type in [INTEGER, FLOAT]:
                 return self._check_modulo_operator(matching_trait.trait_value)
