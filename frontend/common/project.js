@@ -11,5 +11,5 @@ module.exports = global.Project = {
     },
     chargebee: {
         site: 'flagsmith-test',
-    },
+    }
 };

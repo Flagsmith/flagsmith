@@ -222,13 +222,6 @@ global.API = {
             flagsmith.identify(id);
             flagsmith.setTrait('organisations', user.organisations ? user.organisations.map(o => `"${o.id}"`).join(',') : '');
             flagsmith.setTrait('email', id);
-            if (window.$crisp) {
-                $crisp.push(['set', 'user:email', id]);
-                $crisp.push(['set', 'user:nickname', `${user.first_name} ${user.last_name}`]);
-                if (orgs) {
-                    $crisp.push(['set', 'user:company', orgs]);
-                }
-            }
         } catch (e) {
             console.error('Error identifying', e);
         }

@@ -124,7 +124,7 @@ Team Members
                                           onClick={() => {
                                               if(window.$crisp){
                                                   closeModal()
-                                                  $crisp.push(['do', 'chat:open'])
+                                                  Utils.openChat()
                                               }
                                           }} className="pricing-cta blue"
                                         >Contact Us
