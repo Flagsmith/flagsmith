@@ -15,6 +15,7 @@
             {% csrf_token %}
             <input type="submit" value="Update subscription information caches" class="btn btn-primary m-1">
           </form>
+          <small class="p-1">Last updated at: {{ subscription_information_caches_updated_at|default:"never" }}</small>
         </div>
       </div>
 

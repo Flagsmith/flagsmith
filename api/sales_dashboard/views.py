@@ -23,7 +23,10 @@ from django.views.generic.edit import FormView
 from environments.dynamodb.migrator import IdentityMigrator
 from environments.identities.models import Identity
 from import_export.export import full_export
-from organisations.models import Organisation
+from organisations.models import (
+    Organisation,
+    OrganisationSubscriptionInformationCache,
+)
 from organisations.subscriptions.subscription_service import (
     get_subscription_metadata,
 )
@@ -92,6 +95,21 @@ class OrganisationList(ListView):
         data["filter_plan"] = self.request.GET.get("filter_plan")
         data["sort_field"] = self.request.GET.get("sort_field")
         data["sort_direction"] = self.request.GET.get("sort_direction")
+
+        # Use the most recent OrganisationSubscriptionInformationCache object to determine when the caches
+        # were last updated.
+        try:
+            subscription_information_caches_updated_at = (
+                OrganisationSubscriptionInformationCache.objects.order_by("-updated_at")
+                .first()
+                .updated_at.strftime("%H:%M:%S %d/%m/%Y")
+            )
+        except AttributeError:
+            subscription_information_caches_updated_at = None
+
+        data[
+            "subscription_information_caches_updated_at"
+        ] = subscription_information_caches_updated_at
 
         return data
 
