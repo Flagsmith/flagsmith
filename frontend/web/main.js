@@ -11,6 +11,7 @@ import routes from './routes';
 import AccountStore from '../common/stores/account-store';
 import data from '../common/data/base/_data';
 
+
 window.Utils = require('../common/utils/utils');
 window.Constants = require('../common/constants');
 
@@ -101,4 +102,14 @@ if (!E2E && Project.crispChat) {
         s.async = 1;
         d.getElementsByTagName('head')[0].appendChild(s);
     }());
+}
+
+if (!E2E && Project.zendesk) {
+    var script = document.createElement('script');
+    script.type = 'text/javascript';
+    script.id = 'ze-snippet';
+    script.async = true;
+    script.src = 'https://static.zdassets.com/ekr/snippet.js?key='+Project.zendesk;
+    document.getElementsByTagName('head')[0].appendChild(script);
+
 }
