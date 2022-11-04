@@ -111,5 +111,4 @@ if (!E2E && Project.zendesk) {
     script.async = true;
     script.src = 'https://static.zdassets.com/ekr/snippet.js?key='+Project.zendesk;
     document.getElementsByTagName('head')[0].appendChild(script);
-
 }
