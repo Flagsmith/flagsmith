@@ -435,3 +435,10 @@ App.propTypes = {
 };
 
 export default withRouter(ConfigProvider(App));
+
+if (E2E) {
+    const e2e = document.getElementsByClassName("e2e")
+    if (e2e && e2e[0]) {
+        e2e[0].classList.toggle("display-none")
+    }
+}
