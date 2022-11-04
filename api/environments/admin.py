@@ -4,6 +4,7 @@ from __future__ import unicode_literals
 from django.contrib import admin
 
 from .models import Environment, Webhook
+from .tasks import rebuild_environment_document
 
 
 class WebhookInline(admin.TabularInline):
@@ -13,6 +14,7 @@ class WebhookInline(admin.TabularInline):
 
 @admin.register(Environment)
 class EnvironmentAdmin(admin.ModelAdmin):
+    actions = ["rebuild_environments"]
     date_hierarchy = "created_date"
     list_display = (
         "name",
@@ -29,3 +31,8 @@ class EnvironmentAdmin(admin.ModelAdmin):
         "api_key",
     )
     inlines = (WebhookInline,)
+
+    @admin.action(description="Rebuild selected environment documents")
+    def rebuild_environments(self, request, queryset):
+        for environment in queryset:
+            rebuild_environment_document.delay(args=(environment.id,))
