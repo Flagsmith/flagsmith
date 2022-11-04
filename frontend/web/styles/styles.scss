@@ -12,7 +12,9 @@
   margin-top: -10px;
 
 }
-
+.display-none {
+  display: none !important;
+}
 .dark .butter-bar {
   background-color: $butter-bar-bg-dark;
   color: $header-color-dark;
