@@ -177,7 +177,7 @@ class Condition(AbstractBaseExportableModel):
             self.value,
         )
 
-    def does_identity_match(
+    def does_identity_match(  # noqa: C901
         self, identity: "Identity", traits: typing.List["Trait"] = None
     ) -> bool:
         if self.operator == PERCENTAGE_SPLIT:
@@ -197,6 +197,8 @@ class Condition(AbstractBaseExportableModel):
         elif self.operator == MODULO:
             if matching_trait.value_type in [INTEGER, FLOAT]:
                 return self._check_modulo_operator(matching_trait.trait_value)
+        elif self.operator == IN:
+            return False  # TODO
         elif matching_trait.value_type == INTEGER:
             return self.check_integer_value(matching_trait.integer_value)
         elif matching_trait.value_type == FLOAT:
