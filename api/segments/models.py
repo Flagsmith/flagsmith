@@ -198,7 +198,10 @@ class Condition(AbstractBaseExportableModel):
             if matching_trait.value_type in [INTEGER, FLOAT]:
                 return self._check_modulo_operator(matching_trait.trait_value)
         elif self.operator == IN:
-            return False  # TODO
+            if matching_trait.value_type == INTEGER:
+                return str(matching_trait.integer_value) in self.value.split(",")
+            if matching_trait.value_type != INTEGER:
+                return matching_trait.string_value in self.value.split(",")
         elif matching_trait.value_type == INTEGER:
             return self.check_integer_value(matching_trait.integer_value)
         elif matching_trait.value_type == FLOAT:

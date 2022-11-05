@@ -128,6 +128,8 @@ def test_does_identity_match_is_not_set_false(identity):
         ("foo,bar", STRING, "foo", None, True),
         ("foo", STRING, "foo", None, True),
         ("1,2,3,4", INTEGER, None, 1, True),
+        ("", INTEGER, None, 1, False),
+        ("1", INTEGER, None, 1, True),
     ),
 )
 def test_does_identity_match_in(
