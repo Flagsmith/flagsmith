@@ -141,6 +141,7 @@ const controller = {
                 feature: flag.id,
                 default_percentage_allocation: 0,
             })).then((res) => {
+                //It's important to preserve the original order of multivariate_options, so that editing feature states can use the updated ID
                 flag.multivariate_options[i] = res;
                 return {
                     ...v,
@@ -158,8 +159,13 @@ const controller = {
                 project: projectId,
             })
                 .then((res) => {
+                    //onComplete calls back preserving the order of multivariate_options with their updated ids
                     if (onComplete) {
-                        onComplete(res);
+                        onComplete({
+                            ...res,
+                            // return multivariate_options in the same order they were originally in the action
+                            multivariate_options: flag.multivariate_options
+                        });
                     }
                     if (store.model) {
                         const index = _.findIndex(store.model.features, { id: flag.id });
@@ -169,6 +175,7 @@ const controller = {
                     }
                 })
                 .catch((e) => {
+                    //onComplete calls back preserving the order of multivariate_options with their updated ids
                     if (onComplete) {
                         onComplete({
                             ...flag,
