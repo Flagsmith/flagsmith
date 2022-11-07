@@ -3,7 +3,6 @@ from __future__ import unicode_literals
 
 import typing
 
-from app_analytics.influxdb_wrapper import get_top_organisations
 from core.models import AbstractBaseExportableModel
 from django.conf import settings
 from django.db import models
@@ -26,6 +25,10 @@ from organisations.chargebee import (
 )
 from organisations.chargebee.chargebee import (
     cancel_subscription as cancel_chargebee_subscription,
+)
+from organisations.subscription_info_cache import (
+    update_caches_with_chargebee_data,
+    update_caches_with_influx_data,
 )
 from organisations.subscriptions.constants import (
     CHARGEBEE,
@@ -247,25 +250,8 @@ class OrganisationSubscriptionInformationCache(models.Model):
             for org in organisations
         }
 
-        if settings.INFLUXDB_TOKEN:
-            for date_range, limit in (("30d", ""), ("7d", ""), ("24h", "100")):
-                key = f"api_calls_{date_range}"
-                org_calls = get_top_organisations(date_range, limit)
-                for org_id, calls in org_calls.items():
-                    subscription_info_cache = organisation_info_cache_dict.get(org_id)
-                    if not subscription_info_cache:
-                        # TODO: I don't think this is a valid case but worth checking / handling
-                        continue
-                    setattr(subscription_info_cache, key, calls)
-
-        if settings.CHARGEBEE_API_KEY:
-            for organisation in organisations:
-                if not hasattr(organisation, "subscription"):
-                    continue
-                metadata = get_subscription_metadata(organisation)
-                subscription_info_cache = organisation_info_cache_dict[organisation.id]
-                subscription_info_cache.allowed_seats = metadata.seats
-                subscription_info_cache.allowed_30d_api_calls = metadata.api_calls
+        update_caches_with_influx_data(organisation_info_cache_dict)
+        update_caches_with_chargebee_data(organisations, organisation_info_cache_dict)
 
         to_update = []
         to_create = []
