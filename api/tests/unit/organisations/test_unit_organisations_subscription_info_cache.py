@@ -54,7 +54,7 @@ def test_update_caches(mocker, organisation, chargebee_subscription, settings):
     )
 
     assert mocked_get_top_organisations.call_count == 3
-    assert [call.args for call in mocked_get_top_organisations.call_args_list] == [
+    assert [call[0] for call in mocked_get_top_organisations.call_args_list] == [
         ("30d", ""),
         ("7d", ""),
         ("24h", "100"),
