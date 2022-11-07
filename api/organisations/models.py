@@ -1,8 +1,6 @@
 # -*- coding: utf-8 -*-
 from __future__ import unicode_literals
 
-import typing
-
 from core.models import AbstractBaseExportableModel
 from django.conf import settings
 from django.db import models
@@ -25,10 +23,6 @@ from organisations.chargebee import (
 )
 from organisations.chargebee.chargebee import (
     cancel_subscription as cancel_chargebee_subscription,
-)
-from organisations.subscription_info_cache import (
-    update_caches_with_chargebee_data,
-    update_caches_with_influx_data,
 )
 from organisations.subscriptions.constants import (
     CHARGEBEE,
@@ -231,47 +225,3 @@ class OrganisationSubscriptionInformationCache(models.Model):
 
     allowed_seats = models.IntegerField(default=1)
     allowed_30d_api_calls = models.IntegerField(default=50000)
-
-    @classmethod
-    def update_caches(cls):
-        """
-        Update the cache objects for all active organisations in the database.
-        """
-
-        organisations = Organisation.objects.select_related(
-            "subscription_information_cache", "subscription"
-        ).all()
-
-        organisation_info_cache_dict: typing.Dict[
-            int, OrganisationSubscriptionInformationCache
-        ] = {
-            org.id: getattr(org, "subscription_information_cache", None)
-            or cls(organisation=org)
-            for org in organisations
-        }
-
-        update_caches_with_influx_data(organisation_info_cache_dict)
-        update_caches_with_chargebee_data(organisations, organisation_info_cache_dict)
-
-        to_update = []
-        to_create = []
-
-        for subscription_info_cache in organisation_info_cache_dict.values():
-            subscription_info_cache.updated_at = timezone.now()
-            if subscription_info_cache.id:
-                to_update.append(subscription_info_cache)
-            else:
-                to_create.append(subscription_info_cache)
-
-        cls.objects.bulk_create(to_create)
-        cls.objects.bulk_update(
-            to_update,
-            fields=[
-                "api_calls_24h",
-                "api_calls_7d",
-                "api_calls_30d",
-                "allowed_seats",
-                "allowed_30d_api_calls",
-                "updated_at",
-            ],
-        )

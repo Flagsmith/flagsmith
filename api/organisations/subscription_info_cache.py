@@ -2,19 +2,62 @@ import typing
 
 from app_analytics.influxdb_wrapper import get_top_organisations
 from django.conf import settings
+from django.utils import timezone
 
 from .chargebee import get_subscription_metadata
+from .models import Organisation, OrganisationSubscriptionInformationCache
 from .subscriptions.constants import CHARGEBEE
 
-if typing.TYPE_CHECKING:
-    from .models import Organisation, OrganisationSubscriptionInformationCache
+OrganisationSubscriptionInformationCacheDict = typing.Dict[
+    int, OrganisationSubscriptionInformationCache
+]
 
-    OrganisationSubscriptionInformationCacheDict = typing.Dict[
+
+def update_caches():
+    """
+    Update the cache objects for all active organisations in the database.
+    """
+
+    organisations = Organisation.objects.select_related(
+        "subscription_information_cache", "subscription"
+    ).all()
+
+    organisation_info_cache_dict: typing.Dict[
         int, OrganisationSubscriptionInformationCache
-    ]
+    ] = {
+        org.id: getattr(org, "subscription_information_cache", None)
+        or OrganisationSubscriptionInformationCache(organisation=org)
+        for org in organisations
+    }
+
+    _update_caches_with_influx_data(organisation_info_cache_dict)
+    _update_caches_with_chargebee_data(organisations, organisation_info_cache_dict)
+
+    to_update = []
+    to_create = []
+
+    for subscription_info_cache in organisation_info_cache_dict.values():
+        subscription_info_cache.updated_at = timezone.now()
+        if subscription_info_cache.id:
+            to_update.append(subscription_info_cache)
+        else:
+            to_create.append(subscription_info_cache)
+
+    OrganisationSubscriptionInformationCache.objects.bulk_create(to_create)
+    OrganisationSubscriptionInformationCache.objects.bulk_update(
+        to_update,
+        fields=[
+            "api_calls_24h",
+            "api_calls_7d",
+            "api_calls_30d",
+            "allowed_seats",
+            "allowed_30d_api_calls",
+            "updated_at",
+        ],
+    )
 
 
-def update_caches_with_influx_data(
+def _update_caches_with_influx_data(
     organisation_info_cache_dict: "OrganisationSubscriptionInformationCacheDict",
 ) -> None:
     """
@@ -35,7 +78,7 @@ def update_caches_with_influx_data(
             setattr(subscription_info_cache, key, calls)
 
 
-def update_caches_with_chargebee_data(
+def _update_caches_with_chargebee_data(
     organisations: typing.Iterable["Organisation"],
     organisation_info_cache_dict: "OrganisationSubscriptionInformationCacheDict",
 ):

@@ -1,11 +1,9 @@
 from organisations.chargebee.metadata import ChargebeeObjMetadata
-from organisations.models import OrganisationSubscriptionInformationCache
+from organisations.subscription_info_cache import update_caches
 from task_processor.task_run_method import TaskRunMethod
 
 
-def test_organisation_subscription_information_cache_update_caches(
-    mocker, organisation, chargebee_subscription, settings
-):
+def test_update_caches(mocker, organisation, chargebee_subscription, settings):
     # Given
     settings.CHARGEBEE_API_KEY = "api-key"
     settings.INFLUXDB_TOKEN = "token"
@@ -26,7 +24,7 @@ def test_organisation_subscription_information_cache_update_caches(
     mocked_get_subscription_metadata.return_value = chargebee_metadata
 
     # When
-    OrganisationSubscriptionInformationCache.update_caches()
+    update_caches()
 
     # Then
     assert organisation.subscription_information_cache.updated_at
