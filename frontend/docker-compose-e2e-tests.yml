@@ -13,7 +13,9 @@ services:
         container_name: flagsmith_postgres
 
     flagsmith-api:
-        image: flagsmith/flagsmith:latest
+        build:
+            context: ../
+            dockerfile: Dockerfile
         environment:
             E2E_TEST_AUTH_TOKEN: some-token
             FE_E2E_TEST_USER_EMAIL: nightwatch@solidstategroup.com
