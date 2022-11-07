@@ -58,7 +58,7 @@ def update_caches():
 
 
 def _update_caches_with_influx_data(
-    organisation_info_cache_dict: "OrganisationSubscriptionInformationCacheDict",
+    organisation_info_cache_dict: OrganisationSubscriptionInformationCacheDict,
 ) -> None:
     """
     Mutates the provided organisation_info_cache_dict in place to add information about the organisation's
@@ -73,18 +73,18 @@ def _update_caches_with_influx_data(
         for org_id, calls in org_calls.items():
             subscription_info_cache = organisation_info_cache_dict.get(org_id)
             if not subscription_info_cache:
-                # TODO: I don't think this is a valid case but worth checking / handling
+                # I don't think this is a valid case but worth checking / handling
                 continue
             setattr(subscription_info_cache, key, calls)
 
 
 def _update_caches_with_chargebee_data(
-    organisations: typing.Iterable["Organisation"],
-    organisation_info_cache_dict: "OrganisationSubscriptionInformationCacheDict",
+    organisations: typing.Iterable[Organisation],
+    organisation_info_cache_dict: OrganisationSubscriptionInformationCacheDict,
 ):
     """
     Mutates the provided organisation_info_cache_dict in place to add information about the organisation's
-    chargebee plan information.
+    chargebee plan.
     """
     if not settings.CHARGEBEE_API_KEY:
         return
