@@ -1,6 +1,9 @@
 # -*- coding: utf-8 -*-
 from __future__ import unicode_literals
 
+import typing
+
+from app_analytics.influxdb_wrapper import get_top_organisations
 from core.models import AbstractBaseExportableModel
 from django.conf import settings
 from django.db import models
@@ -205,3 +208,84 @@ class OrganisationWebhook(AbstractBaseWebhookModel):
 
     class Meta:
         ordering = ("id",)  # explicit ordering to prevent pagination warnings
+
+
+class OrganisationSubscriptionInformationCache(models.Model):
+    """
+    Model to hold a cache of an organisation's API usage and their Chargebee plan limits.
+    """
+
+    organisation = models.OneToOneField(
+        Organisation,
+        related_name="subscription_information_cache",
+        on_delete=models.CASCADE,
+    )
+    updated_at = models.DateTimeField(auto_now=True)
+
+    api_calls_24h = models.IntegerField(default=0)
+    api_calls_7d = models.IntegerField(default=0)
+    api_calls_30d = models.IntegerField(default=0)
+
+    allowed_seats = models.IntegerField(default=1)
+    allowed_30d_api_calls = models.IntegerField(default=50000)
+
+    @classmethod
+    def update_caches(cls):
+        """
+        Update the cache objects for all active organisations in the database.
+        """
+
+        organisations = Organisation.objects.select_related(
+            "subscription_information_cache", "subscription"
+        ).all()
+
+        organisation_info_cache_dict: typing.Dict[
+            int, OrganisationSubscriptionInformationCache
+        ] = {
+            org.id: getattr(org, "subscription_information_cache", None)
+            or cls(organisation=org)
+            for org in organisations
+        }
+
+        if settings.INFLUXDB_TOKEN:
+            for date_range, limit in (("30d", ""), ("7d", ""), ("24h", "100")):
+                key = f"api_calls_{date_range}"
+                org_calls = get_top_organisations(date_range, limit)
+                for org_id, calls in org_calls.items():
+                    subscription_info_cache = organisation_info_cache_dict.get(org_id)
+                    if not subscription_info_cache:
+                        # TODO: I don't think this is a valid case but worth checking / handling
+                        continue
+                    setattr(subscription_info_cache, key, calls)
+
+        if settings.CHARGEBEE_API_KEY:
+            for organisation in organisations:
+                if not hasattr(organisation, "subscription"):
+                    continue
+                metadata = get_subscription_metadata(organisation)
+                subscription_info_cache = organisation_info_cache_dict[organisation.id]
+                subscription_info_cache.allowed_seats = metadata.seats
+                subscription_info_cache.allowed_30d_api_calls = metadata.api_calls
+
+        to_update = []
+        to_create = []
+
+        for subscription_info_cache in organisation_info_cache_dict.values():
+            subscription_info_cache.updated_at = timezone.now()
+            if subscription_info_cache.id:
+                to_update.append(subscription_info_cache)
+            else:
+                to_create.append(subscription_info_cache)
+
+        cls.objects.bulk_create(to_create)
+        cls.objects.bulk_update(
+            to_update,
+            fields=[
+                "api_calls_24h",
+                "api_calls_7d",
+                "api_calls_30d",
+                "allowed_seats",
+                "allowed_30d_api_calls",
+                "updated_at",
+            ],
+        )

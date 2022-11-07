@@ -38,4 +38,9 @@ urlpatterns = [
         views.download_org_data,
         name="download-org-data",
     ),
+    path(
+        "update-organisation-subscription-information-caches",
+        views.trigger_update_organisation_subscription_information_caches,
+        name="update-organisation-subscription-information-caches",
+    ),
 ]
