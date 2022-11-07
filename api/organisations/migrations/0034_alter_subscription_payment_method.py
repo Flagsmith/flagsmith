@@ -6,18 +6,14 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ("organisations", "0033_allow_blank_payment_method"),
+        ('organisations', '0033_allow_blank_payment_method'),
     ]
 
     operations = [
         migrations.AlterField(
-            model_name="subscription",
-            name="payment_method",
-            field=models.CharField(
-                blank=True,
-                choices=[("CHARGEBEE", "Chargebee"), ("XERO", "Xero")],
-                max_length=20,
-                null=True,
-            ),
+            model_name='subscription',
+            name='payment_method',
+            field=models.CharField(blank=True, choices=[('CHARGEBEE', 'Chargebee'), ('XERO', 'Xero')], max_length=20, null=True),
         ),
     ]
+
