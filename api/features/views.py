@@ -8,6 +8,7 @@ from django.conf import settings
 from django.core.cache import caches
 from django.db.models import Q, QuerySet
 from django.utils.decorators import method_decorator
+from django.views.decorators.cache import cache_page
 from drf_yasg2 import openapi
 from drf_yasg2.utils import swagger_auto_schema
 from rest_framework import mixins, status, viewsets
@@ -596,6 +597,12 @@ class SDKFeatureStates(GenericAPIView):
     @swagger_auto_schema(
         query_serializer=SDKFeatureStatesQuerySerializer(),
         responses={200: FeatureStateSerializerFull(many=True)},
+    )
+    @method_decorator(
+        cache_page(
+            timeout=settings.GET_FLAGS_ENDPOINT_CACHE_SECONDS,
+            cache=settings.GET_FLAGS_ENDPOINT_CACHE_NAME,
+        )
     )
     def get(self, request, identifier=None, *args, **kwargs):
         """
