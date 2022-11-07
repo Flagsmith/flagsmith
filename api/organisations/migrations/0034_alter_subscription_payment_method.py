@@ -16,4 +16,3 @@ class Migration(migrations.Migration):
             field=models.CharField(blank=True, choices=[('CHARGEBEE', 'Chargebee'), ('XERO', 'Xero')], max_length=20, null=True),
         ),
     ]
-
