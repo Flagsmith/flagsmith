@@ -14,7 +14,7 @@ const controller = {
     },
 
     getProject: (id, cb, force) => {
-        if (force || (!store.model || !store.model.environments || store.id != id)) {
+        if (force) {
             store.loading();
 
             Promise.all([
@@ -28,7 +28,27 @@ const controller = {
                 }
                 store.id = id;
                 store.loaded();
-                if(cb) {
+                if (cb) {
+                    cb()
+                }
+            }).catch(() => {
+                document.location.href = '/404?entity=project';
+            });
+        } else if (!store.model || !store.model.environments || store.id != id) {
+            store.loading();
+
+            Promise.all([
+                data.get(`${Project.api}projects/${id}/`),
+                data.get(`${Project.api}environments/?project=${id}`).catch(() => []),
+            ]).then(([project, environments]) => {
+                store.model = Object.assign(project, { environments: _.sortBy(environments.results, 'name') });
+                if (project.organisation !== OrganisationStore.id) {
+                    AppActions.selectOrganisation(project.organisation);
+                    AppActions.getOrganisation(project.organisation);
+                }
+                store.id = id;
+                store.loaded();
+                if (cb) {
                     cb()
                 }
             }).catch(() => {
@@ -42,7 +62,7 @@ const controller = {
         const req = cloneId ? data.post(`${Project.api}environments/${cloneId}/clone/`, { name, description }) : data.post(`${Project.api}environments/`, { name, project: projectId, description });
 
         req.then((res) => {
-            return data.put(`${Project.api}environments/${res.api_key}`, {description, project:projectId, name})
+            return data.put(`${Project.api}environments/${res.api_key}/`, {description, project:projectId, name})
                 .then((res)=>{
                     return   data.post(`${Project.api}environments/${res.api_key}/${Utils.getIdentitiesEndpoint()}/`, {
                         environment: res.api_key,
