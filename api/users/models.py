@@ -392,8 +392,16 @@ class UserPermissionGroup(models.Model):
         help_text="If set to true, all new users will be added to this group",
     )
 
+    external_id = models.CharField(
+        blank=True,
+        null=True,
+        max_length=255,
+        help_text="Unique ID of the group in an external system",
+    )
+
     class Meta:
         ordering = ("id",)  # explicit ordering to prevent pagination warnings
+        unique_together = ("organisation", "external_id")
 
     def add_users_by_id(self, user_ids: list):
         users_to_add = []
