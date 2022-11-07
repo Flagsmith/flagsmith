@@ -83,7 +83,9 @@ const FeatureListProvider = class extends Component {
         }), (newProjectFlag) => {
             AppActions.editEnvironmentFlag(projectId, environmentId, flag, newProjectFlag, {
                 ...environmentFlag,
-                multivariate_feature_state_values: flag.multivariate_options,
+                multivariate_feature_state_values: newProjectFlag.multivariate_options.map((v,i)=> {
+                    return {...flag.multivariate_options[i],id:v.id}
+                }),
             }, null, "VALUE");
         });
     };
