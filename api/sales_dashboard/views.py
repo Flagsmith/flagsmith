@@ -33,12 +33,11 @@ from organisations.subscriptions.subscription_service import (
 from organisations.tasks import (
     update_organisation_subscription_information_caches,
 )
-from projects.models import Project
-from users.models import FFAdminUser
 
 from .forms import EmailUsageForm, MaxAPICallsForm, MaxSeatsForm
 
 OBJECTS_PER_PAGE = 50
+DEFAULT_ORGANISATION_SORT = "-num_users"
 
 
 class OrganisationList(ListView):
@@ -69,29 +68,20 @@ class OrganisationList(ListView):
             else:
                 queryset = queryset.filter(subscription__plan__icontains=filter_plan)
 
+        order_by = DEFAULT_ORGANISATION_SORT
         if self.request.GET.get("sort_field"):
             sort_field = self.request.GET["sort_field"]
             sort_direction = (
                 "-" if self.request.GET.get("sort_direction", "ASC") == "DESC" else ""
             )
-            queryset = queryset.order_by(f"{sort_direction}{sort_field}")
+            order_by = f"{sort_direction}{sort_field}"
 
-        return queryset
+        return queryset.order_by(order_by)
 
     def get_context_data(self, **kwargs):
         data = super().get_context_data(**kwargs)
 
-        if "search" in self.request.GET:
-            search_term = self.request.GET["search"]
-            projects = Project.objects.all().filter(name__icontains=search_term)[:20]
-            data["projects"] = projects
-
-            users = FFAdminUser.objects.all().filter(
-                Q(last_name__icontains=search_term) | Q(email__icontains=search_term)
-            )[:20]
-            data["users"] = users
-            data["search"] = search_term
-
+        data["search"] = self.request.GET.get("search")
         data["filter_plan"] = self.request.GET.get("filter_plan")
         data["sort_field"] = self.request.GET.get("sort_field")
         data["sort_direction"] = self.request.GET.get("sort_direction")
@@ -122,8 +112,6 @@ def organisation_info(request, organisation_id):
     template = loader.get_template("sales_dashboard/organisation.html")
     subscription_metadata = get_subscription_metadata(organisation)
 
-    event_list, labels = get_event_list_for_organisation(organisation_id)
-
     identity_count_dict = {}
     identity_migration_status_dict = {}
     for project in organisation.projects.all():
@@ -140,25 +128,11 @@ def organisation_info(request, organisation_id):
         "max_api_calls": subscription_metadata.api_calls,
         "max_seats": subscription_metadata.seats,
         "max_projects": subscription_metadata.projects,
-        "event_list": event_list,
-        "traits": mark_safe(json.dumps(event_list["traits"])),
-        "identities": mark_safe(json.dumps(event_list["identities"])),
-        "flags": mark_safe(json.dumps(event_list["flags"])),
-        "environment_documents": mark_safe(
-            json.dumps(event_list["environment-document"])
-        ),
-        "labels": mark_safe(json.dumps(labels)),
-        "api_calls": {
-            # TODO: this could probably be reduced to a single influx request
-            #  rather than 3
-            range_: get_events_for_organisation(organisation_id, date_range=range_)
-            for range_ in ("24h", "7d", "30d")
-        },
         "identity_count_dict": identity_count_dict,
         "identity_migration_status_dict": identity_migration_status_dict,
     }
 
-    # If self hosted and running without an Influx DB data store, we dont want to/cant show usage
+    # If self-hosted and running without an Influx DB data store, we don't want to/cant show usage
     if settings.INFLUXDB_TOKEN:
         event_list, labels = get_event_list_for_organisation(organisation_id)
         context["event_list"] = event_list
@@ -169,6 +143,12 @@ def organisation_info(request, organisation_id):
             json.dumps(event_list["environment-document"])
         )
         context["labels"] = mark_safe(json.dumps(labels))
+        context["api_calls"] = {
+            # TODO: this could probably be reduced to a single influx request
+            #  rather than 3
+            range_: get_events_for_organisation(organisation_id, date_range=range_)
+            for range_ in ("24h", "7d", "30d")
+        }
 
     return HttpResponse(template.render(context, request))
 
