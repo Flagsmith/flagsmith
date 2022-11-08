@@ -38,8 +38,8 @@
             <option value="subscription_information_cache__api_calls_30d" {% if sort_field == "subscription_information_cache__api_calls_30d" %}selected{% endif %}>30d API calls</option>
           </select>
           <select name="sort_direction" id="sort-direction" class="custom-select m-1">
-            <option value="ASC" {% if not sort_direction or sort_direction == "ASC" %}selected{% endif %}>Ascending</option>
-            <option value="DESC" {% if sort_direction == "DESC" %}selected{% endif %}>Descending</option>
+            <option value="DESC" {% if not sort_direction or sort_direction == "DESC" %}selected{% endif %}>Descending</option>
+            <option value="ASC" {% if sort_direction == "ASC" %}selected{% endif %}>Ascending</option>
           </select>
           <button type="submit" class="btn btn-primary m-1">Apply</button>
         </form>
