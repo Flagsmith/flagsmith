@@ -191,8 +191,8 @@ const controller = {
         data.get(`${Project.api}projects/${projectId}/features/${flag}/influx-data/?period=${period}&environment_id=${environmentId}`)
             .then((result) => {
                 const firstResult = result.events_list[0];
-                const lastResult = result.events_list[result.events_list.length - 1];
-                const diff = moment(lastResult.datetime, 'YYYY-MM-DD').diff(moment(firstResult.datetime, 'YYYY-MM-DD'), 'days');
+                const lastResult = firstResult && result.events_list[result.events_list.length - 1];
+                const diff = firstResult ? moment(lastResult.datetime, 'YYYY-MM-DD').diff(moment(firstResult.datetime, 'YYYY-MM-DD'), 'days') : 0;
                 if (firstResult && diff) {
                     const key = Object.keys(firstResult).find(v => v !== 'datetime');
                     _.range(0, diff).map((v) => {
@@ -212,7 +212,7 @@ const controller = {
                 result.timespan = diff;
                 store.model.influxData = result;
                 store.changed();
-            }).catch(e => API.ajaxHandler(store, e));
+            });
     },
     toggleFlag: (index, environments, comment, environmentFlags, projectFlags) => {
         const flag = (projectFlags || store.model.features)[index];
