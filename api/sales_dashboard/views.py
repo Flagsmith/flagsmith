@@ -75,7 +75,7 @@ class OrganisationList(ListView):
         queryset = (
             queryset.order_by(sort_field)
             if sort_direction == "ASC"
-            else queryset.order_by(F("sort_field").desc(nulls_last=True))
+            else queryset.order_by(F(sort_field).desc(nulls_last=True))
         )
 
         return queryset
