@@ -36,7 +36,7 @@ const Constants = {
         '#5B2C6F',
         '#D35400',
         '#F08080',
-        '#DFFF00',
+        '#AAC200',
         '#DE3163',
     ],
     forms: {

@@ -61,7 +61,7 @@ export default class TheComponent extends PureComponent {
                                     if (this.props.onClick) {
                                         this.props.onClick(group);
                                     } else {
-                                        openModal('Edit Group', <CreateGroup orgId={this.props.orgId} group={{ id, users, name }} />);
+                                        openModal('Edit Group', <CreateGroup orgId={this.props.orgId} group={group} />);
                                     }
                                 };
                                 return (
