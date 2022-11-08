@@ -2,6 +2,8 @@
 import os
 import sys
 
+# dummy change to see if E2E tests are broken in workflows
+
 if __name__ == "__main__":
     os.environ.setdefault("DJANGO_SETTINGS_MODULE", "app.settings.local")
 
