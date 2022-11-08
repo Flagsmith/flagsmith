@@ -36,7 +36,7 @@ from organisations.tasks import (
 
 from .forms import EmailUsageForm, MaxAPICallsForm, MaxSeatsForm
 
-OBJECTS_PER_PAGE = 10
+OBJECTS_PER_PAGE = 50
 DEFAULT_ORGANISATION_SORT = "-subscription_information_cache__api_calls_30d"
 
 
