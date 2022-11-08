@@ -1,4 +1,5 @@
 import typing
+from collections import defaultdict
 
 from core.constants import BOOLEAN, FLOAT, INTEGER, STRING
 from rest_framework import serializers
@@ -60,6 +61,45 @@ class SDKCreateUpdateTraitSerializer(serializers.ModelSerializer):
 
 class SDKBulkCreateUpdateTraitSerializer(SDKCreateUpdateTraitSerializer):
     trait_value = TraitValueField(allow_null=True)
+
+    class Meta(SDKCreateUpdateTraitSerializer.Meta):
+        class BulkTraitListSerializer(serializers.ListSerializer):
+            """
+            Create a custom ListSerializer that is only used by this serializer to
+            optimise the way in which we create, update and delete traits in the db
+            """
+
+            def update(self, instance, validated_data):
+                return self.save()
+
+            def save(self, **kwargs):
+                identity_trait_items = self._build_identifier_trait_items_dictionary()
+                modified_traits = []
+                for identifier, trait_data_items in identity_trait_items.items():
+                    identity, _ = Identity.objects.get_or_create(
+                        identifier=identifier,
+                        environment=self.context["request"].environment,
+                    )
+                    modified_traits.extend(identity.update_traits(trait_data_items))
+                return modified_traits
+
+            def _build_identifier_trait_items_dictionary(
+                self,
+            ) -> typing.Dict[str, typing.List[typing.Dict]]:
+                """
+                build a dictionary of the form
+                {"identifier": [{"trait_key": "key", "trait_value": "value"}, ...]}
+                """
+                identity_trait_items = defaultdict(list)
+                for item in self.validated_data:
+                    # item will be in the format:
+                    # {"identity": {"identifier": "foo"}, "trait_key": "foo", "trait_value": "bar"}
+                    identity_trait_items[item["identity"]["identifier"]].append(
+                        dict((k, v) for k, v in item.items() if k != "identity")
+                    )
+                return identity_trait_items
+
+        list_serializer_class = BulkTraitListSerializer
 
 
 class IdentitySerializerWithTraitsAndSegments(serializers.Serializer):

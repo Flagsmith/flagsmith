@@ -8,20 +8,6 @@ a, .btn, button{
         outline:none;
     }
 }
-
-.btn-primary {
-    &:hover {
-        background-color: $bt-brand-secondary-hover;
-    }
-    &:active {
-        background-color: $bt-brand-secondary-active;
-    }
-    a {
-        &:hover {
-            text-decoration: none !important;
-        }
-    }
-}
 .dark {
     .btn {
         &.btn-link {
@@ -447,3 +433,29 @@ $add-btn-size: 34px;
 }
 
 
+.btn-secondary {
+    background: $bt-brand-faint !important;
+    color: $body-text !important;
+    &:hover {
+        box-shadow: none !important;
+        background: $bt-brand-faint-hover !important;
+    }
+    &:active {
+        background: $bt-brand-faint-hover !important;
+    }
+    a {
+        &:hover {
+            text-decoration: none !important;
+        }
+    }
+}
+
+.dark {
+    .btn-secondary {
+        color: $header-color-dark !important;
+        background-color: $button-bg-dark !important;
+        &:hover {
+            background-color: $button-bg-dark-hover !important;
+        }
+    }
+}

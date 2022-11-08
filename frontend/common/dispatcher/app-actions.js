@@ -399,11 +399,16 @@ const AppActions = Object.assign({}, require('./base/_app-actions'), {
             actionType: Actions.DELETE_ORGANISATION,
         });
     },
-    // Invites todo: organise actions
     inviteUsers(invites) {
         Dispatcher.handleViewAction({
             actionType: Actions.INVITE_USERS,
             invites,
+        });
+    },
+    invalidateInviteLink(link) {
+        Dispatcher.handleViewAction({
+            actionType: Actions.INVALIDATE_INVITE_LINK,
+            link,
         });
     },
     deleteInvite(id) {

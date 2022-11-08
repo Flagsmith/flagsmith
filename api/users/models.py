@@ -302,22 +302,6 @@ class FFAdminUser(LifecycleModel, AbstractUser):
             fail_silently=True,
         )
 
-    @classmethod
-    def send_organisation_over_limit_alert(cls, organisation):
-        subscription = getattr(organisation, "subscription", None)
-
-        cls.send_alert_to_admin_users(
-            subject="Organisation over number of seats",
-            message="Organisation %s has used %d seats which is over their plan limit of %d "
-            "(plan: %s)"
-            % (
-                str(organisation.name),
-                organisation.num_seats,
-                organisation.subscription.max_seats if subscription else 0,
-                organisation.subscription.plan if subscription else "Free",
-            ),
-        )
-
     @staticmethod
     def _get_admin_user_emails():
         return [
@@ -408,8 +392,16 @@ class UserPermissionGroup(models.Model):
         help_text="If set to true, all new users will be added to this group",
     )
 
+    external_id = models.CharField(
+        blank=True,
+        null=True,
+        max_length=255,
+        help_text="Unique ID of the group in an external system",
+    )
+
     class Meta:
         ordering = ("id",)  # explicit ordering to prevent pagination warnings
+        unique_together = ("organisation", "external_id")
 
     def add_users_by_id(self, user_ids: list):
         users_to_add = []

@@ -1,5 +1,4 @@
 import json
-from unittest import mock
 from unittest.case import TestCase
 
 import pytest
@@ -10,7 +9,7 @@ from rest_framework import status
 from rest_framework.test import APIClient
 
 from organisations.invites.models import Invite, InviteLink
-from organisations.models import Organisation, OrganisationRole, Subscription
+from organisations.models import Organisation, OrganisationRole
 from users.models import FFAdminUser, UserPermissionGroup
 from util.tests import Helper
 
@@ -132,31 +131,6 @@ class UserTestCase(TestCase):
 
         # Then
         assert self.user.is_organisation_admin(self.organisation)
-
-    @mock.patch("organisations.invites.views.Thread")
-    def test_join_organisation_alerts_admin_users_if_exceeds_plan_limit(
-        self, MockThread
-    ):
-        # Given
-        Subscription.objects.create(organisation=self.organisation, max_seats=1)
-        invite = Invite.objects.create(
-            email=self.user.email, organisation=self.organisation
-        )
-        url = reverse("api-v1:users:user-join-organisation", args=[invite.hash])
-
-        existing_org_user = FFAdminUser.objects.create(
-            email="existing_org_user@example.com"
-        )
-        existing_org_user.add_organisation(self.organisation, OrganisationRole.USER)
-
-        # When
-        self.client.post(url)
-
-        # Then
-        MockThread.assert_called_with(
-            target=FFAdminUser.send_organisation_over_limit_alert,
-            args=[self.organisation],
-        )
 
     def test_admin_can_update_role_for_a_user_in_organisation(self):
         # Given
@@ -441,3 +415,21 @@ def test_user_permission_group_can_update_is_default(
     # and
     user_permission_group.refresh_from_db()
     assert user_permission_group.is_default is True
+
+
+def test_user_permission_group_can_update_external_id(
+    admin_client, organisation, user_permission_group
+):
+    # Given
+    args = [organisation.id, user_permission_group.id]
+    url = reverse("api-v1:organisations:organisation-groups-detail", args=args)
+    external_id = "some_external_id"
+
+    data = {"external_id": external_id, "name": user_permission_group.name}
+
+    # When
+    response = admin_client.put(url, data=data)
+
+    # Then
+    assert response.status_code == status.HTTP_200_OK
+    assert response.json()["external_id"] == external_id

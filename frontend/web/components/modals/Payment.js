@@ -217,7 +217,7 @@ const PaymentModal = class extends Component {
                                                               onClick={() => {
                                                                   if(window.$crisp){
                                                                       closeModal()
-                                                                      $crisp.push(['do', 'chat:open'])
+                                                                      Utils.openChat()
                                                                   }
                                                               }}
                                                               href="#"

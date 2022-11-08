@@ -36,6 +36,8 @@ from organisations.subscriptions.xero.metadata import XeroSubscriptionMetadata
 from users.utils.mailer_lite import MailerLite
 from webhooks.models import AbstractBaseWebhookModel
 
+TRIAL_SUBSCRIPTION_ID = "trial"
+
 
 class OrganisationRole(models.TextChoices):
     ADMIN = ("ADMIN", "Admin")
@@ -136,7 +138,8 @@ class Subscription(LifecycleModelMixin, AbstractBaseExportableModel):
     payment_method = models.CharField(
         max_length=20,
         choices=SUBSCRIPTION_PAYMENT_METHODS,
-        default=CHARGEBEE,
+        blank=True,
+        null=True,
     )
     notes = models.CharField(max_length=500, blank=True, null=True)
 
@@ -175,6 +178,11 @@ class Subscription(LifecycleModelMixin, AbstractBaseExportableModel):
     def get_subscription_metadata(self) -> BaseSubscriptionMetadata:
         metadata = None
 
+        if self.subscription_id == TRIAL_SUBSCRIPTION_ID:
+            metadata = BaseSubscriptionMetadata(
+                seats=self.max_seats, api_calls=self.max_api_calls
+            )
+
         if self.payment_method == CHARGEBEE and self.subscription_id:
             metadata = get_subscription_metadata(self.subscription_id)
         elif self.payment_method == XERO and self.subscription_id:
@@ -197,3 +205,23 @@ class OrganisationWebhook(AbstractBaseWebhookModel):
 
     class Meta:
         ordering = ("id",)  # explicit ordering to prevent pagination warnings
+
+
+class OrganisationSubscriptionInformationCache(models.Model):
+    """
+    Model to hold a cache of an organisation's API usage and their Chargebee plan limits.
+    """
+
+    organisation = models.OneToOneField(
+        Organisation,
+        related_name="subscription_information_cache",
+        on_delete=models.CASCADE,
+    )
+    updated_at = models.DateTimeField(auto_now=True)
+
+    api_calls_24h = models.IntegerField(default=0)
+    api_calls_7d = models.IntegerField(default=0)
+    api_calls_30d = models.IntegerField(default=0)
+
+    allowed_seats = models.IntegerField(default=1)
+    allowed_30d_api_calls = models.IntegerField(default=50000)

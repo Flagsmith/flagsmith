@@ -61,6 +61,7 @@ const OrganisationProvider = class extends Component {
                         usage: OrganisationStore.getUsage(),
                         influx_data: OrganisationStore.getInflux(),
                     },
+                    invalidateInviteLink: AppActions.invalidateInviteLink,
                     createProject: this.createProject,
                     selectProject: this.selectProject,
                 },
