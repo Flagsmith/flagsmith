@@ -4,6 +4,7 @@ from __future__ import unicode_literals
 import logging
 import typing
 from copy import deepcopy
+from datetime import datetime
 
 import boto3
 from core.request_origin import RequestOrigin
@@ -90,7 +91,8 @@ class Environment(LifecycleModel):
             )
 
     @property
-    def last_updated_at(self):
+    def last_updated_at(self) -> datetime:
+        # NOTE: `last_updated_at` is a proxy for updates that affect a value of a given flag in the environment
         last_audit_log = (
             AuditLog.objects.filter(Q(environment=self) | Q(project=self.project))
             .order_by("created_date")
