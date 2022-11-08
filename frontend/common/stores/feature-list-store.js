@@ -212,7 +212,7 @@ const controller = {
                 result.timespan = diff;
                 store.model.influxData = result;
                 store.changed();
-            }).catch(e => API.ajaxHandler(store, e));
+            });
     },
     toggleFlag: (index, environments, comment, environmentFlags, projectFlags) => {
         const flag = (projectFlags || store.model.features)[index];
