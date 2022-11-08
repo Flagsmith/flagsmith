@@ -7,7 +7,7 @@ from app_analytics.influxdb_wrapper import (
 from django.conf import settings
 from django.contrib.admin.views.decorators import staff_member_required
 from django.core.serializers.json import DjangoJSONEncoder
-from django.db.models import Count, Q
+from django.db.models import Count, F, Q
 from django.http import (
     HttpResponse,
     HttpResponseBadRequest,
@@ -50,7 +50,6 @@ class OrganisationList(ListView):
             num_projects=Count("projects", distinct=True),
             num_users=Count("users", distinct=True),
             num_features=Count("projects__features", distinct=True),
-            num_segments=Count("projects__segments", distinct=True),
         ).select_related("subscription", "subscription_information_cache")
 
         if self.request.GET.get("search"):
@@ -69,12 +68,11 @@ class OrganisationList(ListView):
                 queryset = queryset.filter(subscription__plan__icontains=filter_plan)
 
         sort_field = self.request.GET.get("sort_field", DEFAULT_ORGANISATION_SORT)
-        queryset = queryset.order_by(f"{sort_field}")
         sort_direction = self.request.GET.get("sort_direction", "ASC")
         queryset = (
-            queryset.asc()
+            queryset.order_by(sort_field)
             if sort_direction == "ASC"
-            else queryset.desc(nulls_last=True)
+            else queryset.order_by(F("sort_field").desc(nulls_last=True))
         )
 
         return queryset
