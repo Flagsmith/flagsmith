@@ -2,9 +2,12 @@ from django.urls import reverse
 from rest_framework import status
 
 from environments.dynamodb.migrator import IdentityMigrator
+from organisations.models import Organisation
 
 
-def test_sales_dashboard_index(superuser_authenticated_client):
+def test_sales_dashboard_index(
+    superuser_authenticated_client, django_assert_num_queries
+):
     """
     VERY basic test to check that the index page loads.
     """
@@ -12,8 +15,13 @@ def test_sales_dashboard_index(superuser_authenticated_client):
     # Given
     url = reverse("sales_dashboard:index")
 
+    # create some organisations so we can ensure there aren't any N+1 issues
+    for i in range(10):
+        Organisation.objects.create(name=f"Test organisation {i}")
+
     # When
-    response = superuser_authenticated_client.get(url)
+    with django_assert_num_queries(5):
+        response = superuser_authenticated_client.get(url)
 
     # Then
     assert response.status_code == 200

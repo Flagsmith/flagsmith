@@ -36,8 +36,8 @@ from organisations.tasks import (
 
 from .forms import EmailUsageForm, MaxAPICallsForm, MaxSeatsForm
 
-OBJECTS_PER_PAGE = 50
-DEFAULT_ORGANISATION_SORT = "-num_users"
+OBJECTS_PER_PAGE = 10
+DEFAULT_ORGANISATION_SORT = "-subscription_information_cache__api_calls_30d"
 
 
 class OrganisationList(ListView):
