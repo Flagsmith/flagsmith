@@ -33,8 +33,6 @@ from organisations.subscriptions.subscription_service import (
 from organisations.tasks import (
     update_organisation_subscription_information_caches,
 )
-from projects.models import Project
-from users.models import FFAdminUser
 
 from .forms import EmailUsageForm, MaxAPICallsForm, MaxSeatsForm
 
@@ -83,17 +81,7 @@ class OrganisationList(ListView):
     def get_context_data(self, **kwargs):
         data = super().get_context_data(**kwargs)
 
-        if "search" in self.request.GET:
-            search_term = self.request.GET["search"]
-            projects = Project.objects.all().filter(name__icontains=search_term)[:20]
-            data["projects"] = projects
-
-            users = FFAdminUser.objects.all().filter(
-                Q(last_name__icontains=search_term) | Q(email__icontains=search_term)
-            )[:20]
-            data["users"] = users
-            data["search"] = search_term
-
+        data["search"] = self.request.GET.get("search")
         data["filter_plan"] = self.request.GET.get("filter_plan")
         data["sort_field"] = self.request.GET.get("sort_field")
         data["sort_direction"] = self.request.GET.get("sort_direction")
