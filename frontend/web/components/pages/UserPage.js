@@ -5,10 +5,10 @@ import CreateFlagModal from '../modals/CreateFlag';
 import CreateTraitModal from '../modals/CreateTrait';
 import TryIt from '../TryIt';
 import CreateSegmentModal from '../modals/CreateSegment';
-import FeatureListStore from "../../../common/stores/feature-list-store";
-import TagSelect from "../TagSelect";
-import { Tag } from "../AddEditTags";
-import _data from '../../../common/data/base/_data'
+import FeatureListStore from '../../../common/stores/feature-list-store';
+import TagSelect from '../TagSelect';
+import { Tag } from '../AddEditTags';
+import _data from '../../../common/data/base/_data';
 
 const returnIfDefined = (value, value2) => {
     if (value === null || value === undefined) {
@@ -75,10 +75,10 @@ const UserPage = class extends Component {
 
 
     getActualFlags = () => {
-        const {identity,id, environmentId} = this.props.match.params;
-        if (Utils.getFlagsmithHasFeature("use_admin_identity_featurestates")) {
+        const { identity, id, environmentId } = this.props.match.params;
+        if (Utils.getFlagsmithHasFeature('use_admin_identity_featurestates')) {
             const url = `${Project.api}environments/${environmentId}/${Utils.getIdentitiesEndpoint()}/${id}/${Utils.getFeatureStatesEndpoint()}/all/`;
-            _data.get(url,).then((res) => {
+            _data.get(url).then((res) => {
                 this.setState({ actualFlags: _.keyBy(res, v => v.feature.name) });
             }).catch((err) => {
             });
@@ -184,9 +184,11 @@ const UserPage = class extends Component {
             () => AppActions.deleteIdentityTrait(this.props.match.params.environmentId, this.props.match.params.id, id || trait_key),
         );
     }
-    filter = ()=> {
+
+    filter = () => {
         AppActions.searchFeatures(this.props.match.params.projectId, this.props.match.params.environmentId, true, this.state.search, this.state.sort, 0, this.getFilter());
     }
+
     render() {
         const { actualFlags } = this.state;
         const { projectId, environmentId } = this.props.match.params;
@@ -195,8 +197,7 @@ const UserPage = class extends Component {
         return (
             <div className="app-container">
                 <IdentityProvider onSave={this.onSave}>
-                    {({ isSaving, isLoading, error, environmentFlags, projectFlags, traits, identityFlags, identity }, { toggleFlag, removeFlag, editFlag }) =>
-                        (isLoading && !this.state.tags.length &&  !this.state.tags.length && !this.state.showArchived && typeof this.state.search !== 'string' && (!identityFlags || !actualFlags || !projectFlags)
+                    {({ isSaving, isLoading, error, environmentFlags, projectFlags, traits, identityFlags, identity }, { toggleFlag, removeFlag }) => (isLoading && !this.state.tags.length && !this.state.tags.length && !this.state.showArchived && typeof this.state.search !== 'string' && (!identityFlags || !actualFlags || !projectFlags)
                         ? <div className="text-center"><Loader/></div> : (
                             <div className="container">
                                 <div className="row">
@@ -222,37 +223,37 @@ const UserPage = class extends Component {
 
                                                   header={(
                                                       <Row className="px-0 pt-0 pb-2">
-                                                          <TagSelect
-                                                              showUntagged
-                                                              showClearAll={(this.state.tags && !!this.state.tags.length) || this.state.showArchived}
-                                                              onClearAll={() => this.setState({ showArchived: false, tags: [] }, this.filter)}
-                                                              projectId={projectId} value={this.state.tags} onChange={(tags) => {
-                                                              FeatureListStore.isLoading = true
-                                                              if (tags.includes('') && tags.length>1) {
-                                                                  if (!this.state.tags.includes('')) {
-                                                                      this.setState({ tags: [''] }, this.filter);
-                                                                  } else {
-                                                                      this.setState({ tags: tags.filter(v => !!v) }, this.filter);
-                                                                  }
-                                                              } else {
-                                                                  this.setState({ tags }, this.filter);
-                                                              }
-                                                              AsyncStorage.setItem(`${projectId}tags`, JSON.stringify(tags));
-                                                          }}
+                                                              <TagSelect
+                                                            showUntagged
+                                                            showClearAll={(this.state.tags && !!this.state.tags.length) || this.state.showArchived}
+                                                            onClearAll={() => this.setState({ showArchived: false, tags: [] }, this.filter)}
+                                                            projectId={projectId} value={this.state.tags} onChange={(tags) => {
+                                                                FeatureListStore.isLoading = true;
+                                                                if (tags.includes('') && tags.length>1) {
+                                                                    if (!this.state.tags.includes('')) {
+                                                                        this.setState({ tags: [''] }, this.filter);
+                                                                    } else {
+                                                                        this.setState({ tags: tags.filter(v => !!v) }, this.filter);
+                                                                    }
+                                                                } else {
+                                                                    this.setState({ tags }, this.filter);
+                                                                }
+                                                                AsyncStorage.setItem(`${projectId}tags`, JSON.stringify(tags));
+                                                            }}
                                                           >
                                                               <div className="mr-2 mb-2">
                                                                   <Tag
-                                                                      selected={this.state.showArchived}
-                                                                      onClick={() => {
-                                                                          FeatureListStore.isLoading = true
-                                                                          this.setState({ showArchived: !this.state.showArchived }, this.filter)
-                                                                      }}
-                                                                      className="px-2 py-2 ml-2 mr-2"
-                                                                      tag={{ label: 'Archived' }}
+                                                                    selected={this.state.showArchived}
+                                                                    onClick={() => {
+                                                                        FeatureListStore.isLoading = true;
+                                                                        this.setState({ showArchived: !this.state.showArchived }, this.filter);
+                                                                    }}
+                                                                    className="px-2 py-2 ml-2 mr-2"
+                                                                    tag={{ label: 'Archived' }}
                                                                   />
                                                               </div>
                                                           </TagSelect>
-                                                      </Row>
+                                                          </Row>
                                                   )}
                                                   isLoading={FeatureListStore.isLoading}
                                                   onSortChange={(sort) => {
@@ -293,7 +294,7 @@ const UserPage = class extends Component {
                                                           onClick();
                                                       }
                                                       return (
-                                                          <Row
+                                                              <Row
                                                             className={`list-item clickable ${flagDifferent && 'flag-different'}`} key={id} space
                                                             data-test={`user-feature-${i}`}
                                                           >
@@ -422,10 +423,10 @@ const UserPage = class extends Component {
                                                     }
                                                   renderNoResults={(
                                                       <Panel
-                                                        icon="ion-ios-rocket"
-                                                        title="Features"
-                                                      >
-                                                          <div className="text-center">
+                                                            icon="ion-ios-rocket"
+                                                            title="Features"
+                                                          >
+                                                              <div className="text-center">
                                                                 This user has no features yet.
                                                               {' '}
                                                               <br/>
@@ -441,7 +442,7 @@ const UserPage = class extends Component {
                                                                 for your project you will set them per user here.
                                                           </div>
 
-                                                      </Panel>
+                                                          </Panel>
                                                     )}
                                                   paging={FeatureListStore.paging}
                                                   search={this.state.search}
@@ -529,10 +530,10 @@ const UserPage = class extends Component {
                                                     />
                                                 </FormGroup>
                                             )}
-                                                <IdentitySegmentsProvider id={this.props.match.params.id}>
-                                                    {({ isLoading: segmentsLoading, segments }) => (segmentsLoading ? <div className="text-center"><Loader/></div> : (
-                                                        <FormGroup>
-                                                            <PanelSearch
+                                            <IdentitySegmentsProvider id={this.props.match.params.id}>
+                                                {({ isLoading: segmentsLoading, segments }) => (segmentsLoading ? <div className="text-center"><Loader/></div> : (
+                                                    <FormGroup>
+                                                        <PanelSearch
                                                               id="user-segments-list"
                                                               className="no-pad"
                                                               icon="ion-ios-globe"
@@ -540,49 +541,49 @@ const UserPage = class extends Component {
                                                               itemHeight={70}
                                                               items={segments || []}
                                                               renderRow={({ name, id, enabled, created_date, type, description }, i) => (
-                                                                  <Row
-                                                                    onClick={() => this.editSegment(segments[i])}
-                                                                    className="list-item clickable"
-                                                                    space
-                                                                    key={i}
+                                                              <Row
+                                                                onClick={() => this.editSegment(segments[i])}
+                                                                className="list-item clickable"
+                                                                space
+                                                                key={i}
+                                                              >
+                                                                  <div
+                                                                    className="flex flex-1"
                                                                   >
-                                                                      <div
-                                                                        className="flex flex-1"
-                                                                      >
-                                                                          <Row>
-                                                                              <ButtonLink
-                                                                                onClick={() => this.editSegment(segments[i])}
-                                                                              >
-                                                                                  <span data-test={`segment-${i}-name`} className="bold-link">
+                                                                      <Row>
+                                                                          <ButtonLink
+                                                                            onClick={() => this.editSegment(segments[i])}
+                                                                          >
+                                                                              <span data-test={`segment-${i}-name`} className="bold-link">
                                                                                       {name}
                                                                                   </span>
-                                                                              </ButtonLink>
-                                                                          </Row>
-                                                                          <div className="list-item-footer faint mt-2">
-                                                                              {description ? <div>{description}<br/></div> : ''}
+                                                                          </ButtonLink>
+                                                                      </Row>
+                                                                      <div className="list-item-footer faint mt-2">
+                                                                          {description ? <div>{description}<br/></div> : ''}
                                                                                 Created
-                                                                              {' '}
-                                                                              {moment(created_date).format('DD/MMM/YYYY')}
-                                                                          </div>
+                                                                          {' '}
+                                                                          {moment(created_date).format('DD/MMM/YYYY')}
                                                                       </div>
-                                                                  </Row>
-                                                              )
+                                                                  </div>
+                                                              </Row>
+                                                          )
                                                                 }
                                                               renderNoResults={(
-                                                                  <Panel
-                                                                    icon="ion-ios-globe"
-                                                                    title="Segments"
-                                                                  >
-                                                                      <div>
+                                                              <Panel
+                                                                icon="ion-ios-globe"
+                                                                title="Segments"
+                                                              >
+                                                                  <div>
                                                                             This user is not a member of any segments.
-                                                                      </div>
-                                                                  </Panel>
+                                                                  </div>
+                                                              </Panel>
                                                                 )}
                                                               filterRow={({ name }, search) => name.toLowerCase().indexOf(search) > -1}
                                                             />
-                                                        </FormGroup>
-                                                    ))}
-                                                </IdentitySegmentsProvider>
+                                                    </FormGroup>
+                                                ))}
+                                            </IdentitySegmentsProvider>
                                         </FormGroup>
                                     </div>
                                     <div className="col-md-12 mt-2">

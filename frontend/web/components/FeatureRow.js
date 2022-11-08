@@ -25,10 +25,10 @@ class TheComponent extends Component {
 
     componentDidMount() {
         const { projectFlag, environmentFlags } = this.props;
-        const {feature, tab} = Utils.fromParam()
-        const {  id } = projectFlag;
+        const { feature, tab } = Utils.fromParam();
+        const { id } = projectFlag;
         if (`${id}` === feature) {
-            this.editFlag(projectFlag, environmentFlags[id],tab);
+            this.editFlag(projectFlag, environmentFlags[id], tab);
         }
     }
 
@@ -40,13 +40,13 @@ class TheComponent extends Component {
         />);
     }
 
-    editFlag = (projectFlag, environmentFlag,tab) => {
+    editFlag = (projectFlag, environmentFlag, tab) => {
         API.trackEvent(Constants.events.VIEW_FEATURE);
 
         history.replaceState(
             {},
             null,
-            `${document.location.pathname}?feature=${projectFlag.id}${tab?`&tab=${tab}`:""}`
+            `${document.location.pathname}?feature=${projectFlag.id}${tab ? `&tab=${tab}` : ''}`,
         );
         openModal(`Edit Feature: ${projectFlag.name}`, <CreateFlagModal
           isEdit
@@ -54,13 +54,15 @@ class TheComponent extends Component {
           environmentId={this.props.environmentId}
           projectId={this.props.projectId}
           projectFlag={projectFlag}
+          noPermissions={!this.props.permission}
           environmentFlag={environmentFlag}
           flagId={environmentFlag.id}
-        />, null, { className: 'side-modal fade', onClose: ()=>{
+        />, null, { className: 'side-modal fade',
+            onClose: () => {
                 history.replaceState(
                     {},
                     null,
-                    `${document.location.pathname}`
+                    `${document.location.pathname}`,
                 );
             } });
     };
@@ -72,13 +74,14 @@ class TheComponent extends Component {
         const readOnly = Utils.getFlagsmithHasFeature('read_only_mode');
         const isProtected = TagStore.hasProtectedTag(projectFlag, parseInt(projectId));
         const environment = ProjectStore.getEnvironment(environmentId);
-        const changeRequestsEnabled = Utils.changeRequestsEnabled(environment && environment.minimum_change_request_approvals)
+        const changeRequestsEnabled = Utils.changeRequestsEnabled(environment && environment.minimum_change_request_approvals);
 
         if (this.props.condensed) {
-            return Utils.renderWithPermission(permission, Constants.environmentPermissions(Utils.getManageFeaturePermissionDescription(changeRequestsEnabled)), (
+            return (
                 <Row
-                    onClick={() => permission && !readOnly && this.editFlag(projectFlag, environmentFlags[id])}
-                    style={{ overflow: 'hidden', ...(this.props.style || {}) }}>
+                  onClick={() => !readOnly && this.editFlag(projectFlag, environmentFlags[id])}
+                  style={{ overflow: 'hidden', ...(this.props.style || {}) }}
+                >
                     <div className={`mr-2 ${this.props.fadeEnabled && 'faded'}`}>
                         <Switch
                           disabled={!permission || readOnly}
@@ -103,10 +106,10 @@ class TheComponent extends Component {
                         />
                     </div>
                 </Row>
-            ));
+            );
         }
 
-        return                    Utils.renderWithPermission(permission, Constants.environmentPermissions(Utils.getManageFeaturePermissionDescription(changeRequestsEnabled)), (
+        return (
             <Row
               style={{ flexWrap: 'nowrap' }}
               className={this.props.canDelete ? 'list-item clickable py-2' : 'list-item py-1'} key={id} space
@@ -114,7 +117,7 @@ class TheComponent extends Component {
             >
                 <div
                   className="flex flex-1"
-                  onClick={() => !readOnly && permission && this.editFlag(projectFlag, environmentFlags[id])}
+                  onClick={() => !readOnly && this.editFlag(projectFlag, environmentFlags[id])}
                 >
                     <div>
                         <ButtonLink>
@@ -149,36 +152,36 @@ class TheComponent extends Component {
                     </div>
                 </div>
                 <Row>
-                      <Row style={{
-                            marginTop: 5,
-                            marginBottom: 5,
-                            marginRight: 15,
-                        }}
-                        >
-                            <Column>
-                                <FeatureValue
-                                  onClick={() => permission && !readOnly && this.editFlag(projectFlag, environmentFlags[id])}
-                                  value={environmentFlags[id] && environmentFlags[id].feature_state_value}
-                                  data-test={`feature-value-${this.props.index}`}
-                                />
-                            </Column>
-                            <Column>
-                                <Switch
-                                  disabled={!permission || readOnly}
-                                  data-test={`feature-switch-${this.props.index}${environmentFlags[id] && environmentFlags[id].enabled ? '-on' : '-off'}`}
-                                  checked={environmentFlags[id] && environmentFlags[id].enabled}
-                                  onChange={() => {
-                                      if (Utils.changeRequestsEnabled(environment.minimum_change_request_approvals)) {
-                                          this.editFlag(projectFlag, environmentFlags[id]);
-                                          return;
-                                      }
-                                      this.confirmToggle(projectFlag, environmentFlags[id], (environments) => {
-                                          toggleFlag(_.findIndex(projectFlags, { id }), environments);
-                                      });
-                                  }}
-                                />
-                            </Column>
-                        </Row>
+                    <Row style={{
+                        marginTop: 5,
+                        marginBottom: 5,
+                        marginRight: 15,
+                    }}
+                    >
+                        <Column>
+                            <FeatureValue
+                              onClick={() => !readOnly && this.editFlag(projectFlag, environmentFlags[id])}
+                              value={environmentFlags[id] && environmentFlags[id].feature_state_value}
+                              data-test={`feature-value-${this.props.index}`}
+                            />
+                        </Column>
+                        <Column>
+                            <Switch
+                              disabled={!permission || readOnly}
+                              data-test={`feature-switch-${this.props.index}${environmentFlags[id] && environmentFlags[id].enabled ? '-on' : '-off'}`}
+                              checked={environmentFlags[id] && environmentFlags[id].enabled}
+                              onChange={() => {
+                                  if (Utils.changeRequestsEnabled(environment.minimum_change_request_approvals)) {
+                                      this.editFlag(projectFlag, environmentFlags[id]);
+                                      return;
+                                  }
+                                  this.confirmToggle(projectFlag, environmentFlags[id], (environments) => {
+                                      toggleFlag(_.findIndex(projectFlags, { id }), environments);
+                                  });
+                              }}
+                            />
+                        </Column>
+                    </Row>
 
                     {AccountStore.getOrganisationRole() === 'ADMIN' && (
                     <Tooltip
@@ -205,15 +208,15 @@ class TheComponent extends Component {
                                   html
                                   title={(
                                       <button
-                                        disabled={!removeFeaturePermission || readOnly || isProtected}
-                                        onClick={() => this.confirmRemove(projectFlag, () => {
-                                            removeFlag(projectId, projectFlag);
-                                        })}
-                                        className="btn btn--with-icon"
-                                        data-test={`remove-feature-btn-${this.props.index}`}
-                                      >
-                                          <RemoveIcon/>
-                                      </button>
+                            disabled={!removeFeaturePermission || readOnly || isProtected}
+                            onClick={() => this.confirmRemove(projectFlag, () => {
+                                        removeFlag(projectId, projectFlag);
+                                    })}
+                            className="btn btn--with-icon"
+                            data-test={`remove-feature-btn-${this.props.index}`}
+                          >
+                              <RemoveIcon/>
+                          </button>
                                 )}
                                 >
                                     {isProtected ? '<span>This feature has tagged as <bold>protected</bold>, <bold>permanent</bold>, <bold>do not delete</bold>, or <bold>read only</bold>. Please remove the tag before attempting to delete this flag.</span>' : 'Remove feature'}
@@ -223,7 +226,7 @@ class TheComponent extends Component {
                     </Permission>
                 </Row>
             </Row>
-        ));
+        );
     }
 }
 
