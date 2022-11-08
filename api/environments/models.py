@@ -21,6 +21,7 @@ from flag_engine.api.document_builders import (
 from rest_framework.request import Request
 
 from app.utils import create_hash
+from audit.models import AuditLog
 from environments.api_keys import (
     generate_client_api_key,
     generate_server_api_key,
@@ -87,6 +88,16 @@ class Environment(LifecycleModel):
                 if self.project.prevent_flag_defaults
                 else feature.default_enabled,
             )
+
+    @property
+    def last_updated_at(self):
+        last_audit_log = (
+            AuditLog.objects.filter(Q(environment=self) | Q(project=self.project))
+            .order_by("created_date")
+            .first()
+        )
+        # NOTE: last_audit_log will never be None
+        return last_audit_log.created_date
 
     def __str__(self):
         return "Project %s - Environment %s" % (self.project.name, self.name)
