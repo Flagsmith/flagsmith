@@ -68,15 +68,16 @@ class OrganisationList(ListView):
             else:
                 queryset = queryset.filter(subscription__plan__icontains=filter_plan)
 
-        order_by = DEFAULT_ORGANISATION_SORT
-        if self.request.GET.get("sort_field"):
-            sort_field = self.request.GET["sort_field"]
-            sort_direction = (
-                "-" if self.request.GET.get("sort_direction", "ASC") == "DESC" else ""
-            )
-            order_by = f"{sort_direction}{sort_field}"
+        sort_field = self.request.GET.get("sort_field", DEFAULT_ORGANISATION_SORT)
+        queryset = queryset.order_by(f"{sort_field}")
+        sort_direction = self.request.GET.get("sort_direction", "ASC")
+        queryset = (
+            queryset.asc()
+            if sort_direction == "ASC"
+            else queryset.desc(nulls_last=True)
+        )
 
-        return queryset.order_by(order_by)
+        return queryset
 
     def get_context_data(self, **kwargs):
         data = super().get_context_data(**kwargs)
