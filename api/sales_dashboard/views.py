@@ -39,6 +39,7 @@ from users.models import FFAdminUser
 from .forms import EmailUsageForm, MaxAPICallsForm, MaxSeatsForm
 
 OBJECTS_PER_PAGE = 50
+DEFAULT_ORGANISATION_SORT = "-num_users"
 
 
 class OrganisationList(ListView):
@@ -69,14 +70,15 @@ class OrganisationList(ListView):
             else:
                 queryset = queryset.filter(subscription__plan__icontains=filter_plan)
 
+        order_by = DEFAULT_ORGANISATION_SORT
         if self.request.GET.get("sort_field"):
             sort_field = self.request.GET["sort_field"]
             sort_direction = (
                 "-" if self.request.GET.get("sort_direction", "ASC") == "DESC" else ""
             )
-            queryset = queryset.order_by(f"{sort_direction}{sort_field}")
+            order_by = f"{sort_direction}{sort_field}"
 
-        return queryset
+        return queryset.order_by(order_by)
 
     def get_context_data(self, **kwargs):
         data = super().get_context_data(**kwargs)
