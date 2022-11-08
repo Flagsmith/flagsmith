@@ -29,7 +29,8 @@
           </select>
           <select name="sort_field" id="sort-field" class="custom-select m-1" value="{{ sort_field }}">
             <option value="" {% if not sort_field %}selected{% endif %}>Sort by...</option>
-            <option value="num_users" {% if sort_field == "num_users" %}selected{% endif %}>Seats</option>
+            <option value="num_users" {% if sort_field == "num_users" %}selected{% endif %}>Users</option>
+            <option value="subscription_information_cache__allowed_seats" {% if sort_field == "subscription_information_cache__allowed_seats" %}selected{% endif %}>Seats</option>
             <option value="num_projects" {% if sort_field == "num_projects" %}selected{% endif %}>Projects</option>
             <option value="num_features" {% if sort_field == "num_features" %}selected{% endif %}>Flags</option>
             <option value="num_segments" {% if sort_field == "num_segments" %}selected{% endif %}>Segments</option>
