@@ -1,7 +1,5 @@
-from organisations.models import (
-    Organisation,
-    OrganisationSubscriptionInformationCache,
-)
+from organisations import subscription_info_cache
+from organisations.models import Organisation
 from organisations.subscriptions.subscription_service import (
     get_subscription_metadata,
 )
@@ -35,4 +33,4 @@ def send_org_over_limit_alert(organisation_id):
 
 @register_task_handler()
 def update_organisation_subscription_information_caches():
-    OrganisationSubscriptionInformationCache.update_caches()
+    subscription_info_cache.update_caches()
