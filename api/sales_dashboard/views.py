@@ -7,7 +7,7 @@ from app_analytics.influxdb_wrapper import (
 from django.conf import settings
 from django.contrib.admin.views.decorators import staff_member_required
 from django.core.serializers.json import DjangoJSONEncoder
-from django.db.models import Count, Q
+from django.db.models import Count, F, Q
 from django.http import (
     HttpResponse,
     HttpResponseBadRequest,
@@ -37,7 +37,8 @@ from organisations.tasks import (
 from .forms import EmailUsageForm, MaxAPICallsForm, MaxSeatsForm
 
 OBJECTS_PER_PAGE = 50
-DEFAULT_ORGANISATION_SORT = "-subscription_information_cache__api_calls_30d"
+DEFAULT_ORGANISATION_SORT = "subscription_information_cache__api_calls_30d"
+DEFAULT_ORGANISATION_SORT_DIRECTION = "DESC"
 
 
 class OrganisationList(ListView):
@@ -50,7 +51,6 @@ class OrganisationList(ListView):
             num_projects=Count("projects", distinct=True),
             num_users=Count("users", distinct=True),
             num_features=Count("projects__features", distinct=True),
-            num_segments=Count("projects__segments", distinct=True),
         ).select_related("subscription", "subscription_information_cache")
 
         if self.request.GET.get("search"):
@@ -68,15 +68,17 @@ class OrganisationList(ListView):
             else:
                 queryset = queryset.filter(subscription__plan__icontains=filter_plan)
 
-        order_by = DEFAULT_ORGANISATION_SORT
-        if self.request.GET.get("sort_field"):
-            sort_field = self.request.GET["sort_field"]
-            sort_direction = (
-                "-" if self.request.GET.get("sort_direction", "ASC") == "DESC" else ""
-            )
-            order_by = f"{sort_direction}{sort_field}"
+        sort_field = self.request.GET.get("sort_field", DEFAULT_ORGANISATION_SORT)
+        sort_direction = self.request.GET.get(
+            "sort_direction", DEFAULT_ORGANISATION_SORT_DIRECTION
+        )
+        queryset = (
+            queryset.order_by(sort_field)
+            if sort_direction == "ASC"
+            else queryset.order_by(F(sort_field).desc(nulls_last=True))
+        )
 
-        return queryset.order_by(order_by)
+        return queryset
 
     def get_context_data(self, **kwargs):
         data = super().get_context_data(**kwargs)
