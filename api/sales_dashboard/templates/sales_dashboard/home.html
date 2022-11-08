@@ -33,9 +33,9 @@
             <option value="num_projects" {% if sort_field == "num_projects" %}selected{% endif %}>Projects</option>
             <option value="num_features" {% if sort_field == "num_features" %}selected{% endif %}>Flags</option>
             <option value="num_segments" {% if sort_field == "num_segments" %}selected{% endif %}>Segments</option>
-            <option value="num_24h_calls" {% if sort_field == "subscription_information_cache__api_calls_24h" %}selected{% endif %}>24h API calls</option>
-            <option value="num_7d_calls" {% if sort_field == "subscription_information_cache__api_calls_7d" %}selected{% endif %}>7d API calls</option>
-            <option value="num_30d_calls" {% if sort_field == "subscription_information_cache__api_calls_30d" %}selected{% endif %}>30d API calls</option>
+            <option value="subscription_information_cache__api_calls_24h" {% if sort_field == "subscription_information_cache__api_calls_24h" %}selected{% endif %}>24h API calls</option>
+            <option value="subscription_information_cache__api_calls_7d" {% if sort_field == "subscription_information_cache__api_calls_7d" %}selected{% endif %}>7d API calls</option>
+            <option value="subscription_information_cache__api_calls_30d" {% if sort_field == "subscription_information_cache__api_calls_30d" %}selected{% endif %}>30d API calls</option>
           </select>
           <select name="sort_direction" id="sort-direction" class="custom-select m-1">
             <option value="ASC" {% if not sort_direction or sort_direction == "ASC" %}selected{% endif %}>Ascending</option>
