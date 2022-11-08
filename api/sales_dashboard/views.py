@@ -37,7 +37,8 @@ from organisations.tasks import (
 from .forms import EmailUsageForm, MaxAPICallsForm, MaxSeatsForm
 
 OBJECTS_PER_PAGE = 10
-DEFAULT_ORGANISATION_SORT = "-subscription_information_cache__api_calls_30d"
+DEFAULT_ORGANISATION_SORT = "subscription_information_cache__api_calls_30d"
+DEFAULT_ORGANISATION_SORT_DIRECTION = "DESC"
 
 
 class OrganisationList(ListView):
@@ -68,7 +69,9 @@ class OrganisationList(ListView):
                 queryset = queryset.filter(subscription__plan__icontains=filter_plan)
 
         sort_field = self.request.GET.get("sort_field", DEFAULT_ORGANISATION_SORT)
-        sort_direction = self.request.GET.get("sort_direction", "ASC")
+        sort_direction = self.request.GET.get(
+            "sort_direction", DEFAULT_ORGANISATION_SORT_DIRECTION
+        )
         queryset = (
             queryset.order_by(sort_field)
             if sort_direction == "ASC"
