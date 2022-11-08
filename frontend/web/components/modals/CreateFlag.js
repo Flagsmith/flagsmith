@@ -920,6 +920,7 @@ const CreateFlag = class extends Component {
                                                                             <Panel
                                                                               title={!!influxData && <h6 className="mb-0">Flag events for last {influxData.timespan} days</h6>}
                                                                             >
+                                                                                {!influxData && <div className="text-center"><Loader/></div> }
                                                                                 {this.drawChart(influxData)}
                                                                             </Panel>
                                                                         </FormGroup>
