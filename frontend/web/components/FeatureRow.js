@@ -48,7 +48,7 @@ class TheComponent extends Component {
             null,
             `${document.location.pathname}?feature=${projectFlag.id}${tab ? `&tab=${tab}` : ''}`,
         );
-        openModal(`Edit Feature: ${projectFlag.name}`, <CreateFlagModal
+        openModal(`${this.props.permission?"Edit Feature": "Feature"}: ${projectFlag.name}`, <CreateFlagModal
           isEdit
           router={this.context.router}
           environmentId={this.props.environmentId}

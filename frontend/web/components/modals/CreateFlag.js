@@ -706,7 +706,7 @@ const CreateFlag = class extends Component {
                                                                                                   </Tooltip>
                                                                                                 )}
                                                                                               action={
-                                                                                                    !this.state.showCreateSegment && (
+                                                                                                    !this.state.showCreateSegment && !noPermissions && (
                                                                                                         <Button onClick={() => this.changeSegment(this.props.segmentOverrides)} type="button" className={`btn--outline${enabledSegment ? '' : '-red'}`}>
                                                                                                             {enabledSegment ? 'Enable All' : 'Disable All'}
                                                                                                         </Button>

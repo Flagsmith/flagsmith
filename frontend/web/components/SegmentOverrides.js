@@ -371,7 +371,7 @@ class TheComponent extends Component {
 
                 <div className="text-center mt-2 mb-2">
 
-                    {segments && !this.props.id && !this.props.disableCreate && !this.props.showCreateSegment && (
+                    {segments && !this.props.id && !this.props.disableCreate && !this.props.showCreateSegment && !this.props.readOnly && (
                         <Flex className="text-left">
                             <Select
                               data-test="select-segment"
@@ -402,7 +402,7 @@ class TheComponent extends Component {
                             />
                         </Flex>
                     )}
-                    {Utils.getFlagsmithHasFeature('flag_based_segments') && !this.props.showCreateSegment && (
+                    {Utils.getFlagsmithHasFeature('flag_based_segments') && !this.props.showCreateSegment && !this.props.readOnly && (
                         <div className="text-right">
                             <Button
                               className="mt-2" onClick={() => {
