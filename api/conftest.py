@@ -169,6 +169,11 @@ def feature(project, environment):
 
 
 @pytest.fixture()
+def feature_state(feature, environment):
+    return FeatureState.objects.filter(environment=environment, feature=feature).first()
+
+
+@pytest.fixture()
 def feature_based_segment(project, feature):
     return Segment.objects.create(name="segment", project=project, feature=feature)
 
