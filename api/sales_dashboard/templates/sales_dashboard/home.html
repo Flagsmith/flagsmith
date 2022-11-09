@@ -70,7 +70,7 @@
               <td>{{ org.subscription.plan|default:"Free" }}{% if org.subscription.payment_method %} - {{ org.subscription.payment_method|capfirst }}{% endif %}</td>
               <td>{{org.num_users}}</td>
               <td>{{org.subscription_information_cache.allowed_seats|default:1}}</td>
-              <td>{{org.subscription_information_cache.allowed_30d_api_calls|default:50000}}</td>
+              <td>{{org.subscription_information_cache.allowed_30d_api_calls|default:50000|intcomma}}</td>
               <td>{{org.num_projects}}</td>
               <td>{{org.num_features}}</td>
               <td>{{org.subscription_information_cache.api_calls_24h|intcomma|default:0}}</td>
