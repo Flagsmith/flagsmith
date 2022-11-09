@@ -164,15 +164,32 @@ db_conn_max_age = env.int("DJANGO_DB_CONN_MAX_AGE", 60)
 DJANGO_DB_CONN_MAX_AGE = None if db_conn_max_age == -1 else db_conn_max_age
 
 # Allows collectstatic to run without a database, mainly for Docker builds to collectstatic at build time
-DATABASES = {
-    "default": dj_database_url.parse(
-        env("DATABASE_URL"), conn_max_age=DJANGO_DB_CONN_MAX_AGE
-    ),
-    "replica": dj_database_url.parse(
-        env("REPLICA_DATABASE_URL"), conn_max_age=DJANGO_DB_CONN_MAX_AGE
-    ),
-}
-DATABASE_ROUTERS = ("app.routers.PrimaryReplicaRouter",)
+if "DATABASE_URL" in os.environ:
+    DATABASES = {
+        "default": dj_database_url.parse(
+            env("DATABASE_URL"), conn_max_age=DJANGO_DB_CONN_MAX_AGE
+        ),
+    }
+    REPLICA_DATABASE_URLS = env.list("REPLICA_DATABASE_URLS", default=[])
+    NUM_DB_REPLICAS = len(REPLICA_DATABASE_URLS)
+    for i, db_url in enumerate(REPLICA_DATABASE_URLS, start=1):
+        DATABASES[f"replica_{i}"] = dj_database_url.parse(
+            db_url, conn_max_age=DJANGO_DB_CONN_MAX_AGE
+        )
+    DATABASE_ROUTERS = ("app.routers.PrimaryReplicaRouter",)
+elif "DJANGO_DB_NAME" in os.environ:
+    # If there is no DATABASE_URL configured, check for old style DB config parameters
+    DATABASES = {
+        "default": {
+            "ENGINE": "django.db.backends.postgresql",
+            "NAME": os.environ["DJANGO_DB_NAME"],
+            "USER": os.environ["DJANGO_DB_USER"],
+            "PASSWORD": os.environ["DJANGO_DB_PASSWORD"],
+            "HOST": os.environ["DJANGO_DB_HOST"],
+            "PORT": os.environ["DJANGO_DB_PORT"],
+            "CONN_MAX_AGE": DJANGO_DB_CONN_MAX_AGE,
+        },
+    }
 
 REST_FRAMEWORK = {
     "DEFAULT_PERMISSION_CLASSES": ["rest_framework.permissions.IsAuthenticated"],
