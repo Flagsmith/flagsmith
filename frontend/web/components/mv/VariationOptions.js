@@ -35,7 +35,6 @@ export default function VariationOptions({ multivariateOptions, disabled, select
                             <div
                               onMouseDown={(e) => {
                                   e.stopPropagation();
-                                  if (disabled) return;
                                   setVariations([]);
                                   setValue(controlValue);
                               }}
@@ -60,7 +59,6 @@ export default function VariationOptions({ multivariateOptions, disabled, select
                                     <div
                                       data-test={`select-variation-${Utils.featureStateToValue(theValue)}`}
                                       onMouseDown={(e) => {
-                                          if (disabled) return;
                                           e.stopPropagation();
                                           e.preventDefault();
                                           setVariations([{
