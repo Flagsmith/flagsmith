@@ -64,7 +64,12 @@
           </thead>
           <tbody>
             {% for org in object_list %}
-            <tr class="{% if org.has_subscription and not org.is_paid %}table-danger{% elif org.num_users > org.subscription_information_cache.allowed_seats %}table-warning{% endif %}">
+            <tr class="
+              {% if org.has_subscription and not org.is_paid %}table-danger
+              {% elif org.num_users > org.subscription_information_cache.allowed_seats %}table-warning
+              {% elif org.subscription_information_cache.allowed_30d_api_calls > org.subscription_information_cache.api_calls_30d %}table-warning
+              {% endif %}"
+              >
               <td>{{org.id}}</td>
               <td><a href="/sales-dashboard/organisations/{{org.id}}">{{org.name}}</a></td>
               <td>{{ org.subscription.plan|default:"Free" }}{% if org.subscription.payment_method %} - {{ org.subscription.payment_method|capfirst }}{% endif %}</td>
