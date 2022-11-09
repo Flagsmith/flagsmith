@@ -425,23 +425,7 @@ def test_change_request_email_subject(change_request_no_required_approvals):
     )
 
 
-def test_schedule_feature_state_going_live_tasks_does_not_trigger_environment_rebuild_if_edge_not_enabled(
-    settings, change_request_no_required_approvals, mocker
-):
-    # Given
-    settings.EDGE_ENABLED = False
-    mock_rebuild_environment_document = mocker.patch(
-        "features.workflows.core.models.rebuild_environment_document"
-    )
-
-    # When
-    change_request_no_required_approvals.schedule_feature_state_going_live_tasks()
-
-    # Then
-    mock_rebuild_environment_document.delay.assert_not_called()
-
-
-def test_schedule_feature_state_going_live_tasks_does_nothing_if_not_scheduled_for_future(
+def test_schedule_audit_log_creation_task_for_feature_state_going_live_does_nothing_if_not_scheduled_for_future(
     settings, change_request_no_required_approvals, mocker
 ):
     # Given
@@ -450,9 +434,6 @@ def test_schedule_feature_state_going_live_tasks_does_nothing_if_not_scheduled_f
         "features.workflows.core.models.create_feature_state_went_live_audit_log"
     )
 
-    mock_rebuild_environment_document = mocker.patch(
-        "features.workflows.core.models.rebuild_environment_document"
-    )
     now = timezone.now()
 
     assert change_request_no_required_approvals.feature_states.exists()
@@ -461,21 +442,16 @@ def test_schedule_feature_state_going_live_tasks_does_nothing_if_not_scheduled_f
     ).exists()
 
     # When
-    change_request_no_required_approvals.schedule_feature_state_going_live_tasks()
+    change_request_no_required_approvals.schedule_audit_log_creation_task_for_feature_state_going_live()
 
     # Then
-    mock_rebuild_environment_document.delay.assert_not_called()
     mock_create_feature_state_went_live_audit_log.delay.assert_not_called()
 
 
-def test_schedule_feature_state_going_live_tasks_schedules_tasks_correctly(
+def test_schedule_audit_log_creation_task_for_feature_state_going_live_schedules_tasks_correctly(
     settings, change_request_no_required_approvals, mocker
 ):
     # Given
-    settings.EDGE_ENABLED = True
-    mock_rebuild_environment_document = mocker.patch(
-        "features.workflows.core.models.rebuild_environment_document"
-    )
     mock_create_feature_state_went_live_audit_log = mocker.patch(
         "features.workflows.core.models.create_feature_state_went_live_audit_log"
     )
@@ -485,13 +461,9 @@ def test_schedule_feature_state_going_live_tasks_schedules_tasks_correctly(
     change_request_no_required_approvals.feature_states.all().update(live_from=tomorrow)
 
     # When
-    change_request_no_required_approvals.schedule_feature_state_going_live_tasks()
+    change_request_no_required_approvals.schedule_audit_log_creation_task_for_feature_state_going_live()
 
     # Then
-    mock_rebuild_environment_document.delay.assert_called_once_with(
-        delay_until=tomorrow,
-        kwargs={"environment_id": change_request_no_required_approvals.environment_id},
-    )
     mock_create_feature_state_went_live_audit_log.delay.assert_called_once_with(
         delay_until=tomorrow,
         args=(change_request_no_required_approvals.feature_states.all().first().id,),
