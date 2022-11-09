@@ -196,7 +196,7 @@ const EnvironmentSettingsPage = class extends Component {
                                             </form>
                                         </div>
                                         <FormGroup className="m-t-1">
-                                            <h3>Client Side Environment Key</h3>
+                                            <h3>Client-side Environment Key</h3>
                                             <div className="row">
                                                 <div className="col-md-6">
                                                     <Row>
@@ -204,8 +204,8 @@ const EnvironmentSettingsPage = class extends Component {
                                                             <Input
                                                                 value={this.props.match.params.environmentId}
                                                                 inputClassName="input input--wide"
-                                                                type="text" title={<h3>Client Side Environment Key</h3>}
-                                                                placeholder="Client Side Environment Key"
+                                                                type="text" title={<h3>Client-side Environment Key</h3>}
+                                                                placeholder="Client-side Environment Key"
                                                             />
                                                         </Flex>
                                                         <Button onClick={()=>{
