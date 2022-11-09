@@ -456,7 +456,7 @@ class TheComponent extends Component {
                                   this.setState({ selectedSegment });
                                   this.props.setShowCreateSegment(true);
                               }}
-                              disabled={isLoading}
+                              disabled={isLoading||this.props.readOnly}
                               id={this.props.id}
                               name={this.props.name}
                               controlValue={this.props.controlValue}
