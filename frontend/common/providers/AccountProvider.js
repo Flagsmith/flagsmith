@@ -123,7 +123,9 @@ const AccountProvider = class extends Component {
 AccountProvider.propTypes = {
     onRemove: OptionalFunc,
     onNoUser: OptionalFunc,
-    children: OptionalNode
+    onSave: OptionalFunc,
+    onLogin: OptionalFunc,
+    children: OptionalNode,
 };
 
 module.exports = AccountProvider;
