@@ -22,7 +22,7 @@ from flag_engine.api.document_builders import (
 from rest_framework.request import Request
 
 from app.utils import create_hash
-from audit.models import AuditLog
+from audit.models import AuditLog, RelatedObjectType
 from environments.api_keys import (
     generate_client_api_key,
     generate_server_api_key,
@@ -91,15 +91,19 @@ class Environment(LifecycleModel):
             )
 
     @property
-    def last_updated_at(self) -> datetime:
-        # NOTE: `last_updated_at` is a proxy for updates that affect a value of a given flag in the environment
+    def last_updated_at(self) -> typing.Optional[datetime]:
+        # NOTE: `last_updated_at` is a proxy for changes that affect a value of a given flag in the environment
         last_audit_log = (
-            AuditLog.objects.filter(Q(environment=self) | Q(project=self.project))
+            AuditLog.objects.exclude(
+                related_object_type=RelatedObjectType.CHANGE_REQUEST.name
+            )
+            .filter(Q(environment=self) | Q(project=self.project))
             .order_by("created_date")
             .first()
         )
-        # NOTE: last_audit_log will never be None
-        return last_audit_log.created_date
+        # last_audit_log should never be None unless the environment was created manually
+        # and no audit logs were created for it
+        return last_audit_log.created_date if last_audit_log else None
 
     def __str__(self):
         return "Project %s - Environment %s" % (self.project.name, self.name)

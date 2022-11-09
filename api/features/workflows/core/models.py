@@ -24,6 +24,7 @@ from audit.models import (
     AuditLog,
     RelatedObjectType,
 )
+from audit.tasks import create_feature_state_went_live_audit_log
 from environments.tasks import rebuild_environment_document
 from features.models import FeatureState
 
@@ -156,12 +157,10 @@ class ChangeRequest(LifecycleModelMixin, AbstractBaseExportableModel):
 
     @hook(AFTER_CREATE, when="committed_at", is_not=None)
     @hook(AFTER_SAVE, when="committed_at", was=None, is_not=None)
-    def schedule_environment_rebuild(self):
-        logger.debug("Scheduling environment rebuild for change request #%d", self.id)
-
-        if not settings.EDGE_ENABLED:
-            logger.debug("Edge is disabled. Not scheduling environment rebuild.")
-            return
+    def schedule_feature_state_going_live_tasks(self):
+        logger.debug(
+            "Scheduling feature state going live tasks for change request #%d", self.id
+        )
 
         now = timezone.now()
         feature_states = list(
@@ -177,15 +176,21 @@ class ChangeRequest(LifecycleModelMixin, AbstractBaseExportableModel):
             # states per change request (and perhaps multiple schedule dates) then this
             # functionality will work as expected.
             if not previous_live_from or feature_state.live_from != previous_live_from:
-                logger.debug(
-                    "Scheduling rebuild of environment %d at %s",
-                    self.environment_id,
-                    feature_state.live_from.isoformat(),
+                # Schedule task to create audit log
+                create_feature_state_went_live_audit_log.delay(
+                    delay_until=feature_state.live_from, args=(feature_state.id,)
                 )
-                rebuild_environment_document.delay(
-                    delay_until=feature_state.live_from,
-                    kwargs={"environment_id": self.environment_id},
-                )
+
+                if settings.EDGE_ENABLED:
+                    logger.debug(
+                        "Scheduling rebuild of environment %d at %s",
+                        self.environment_id,
+                        feature_state.live_from.isoformat(),
+                    )
+                    rebuild_environment_document.delay(
+                        delay_until=feature_state.live_from,
+                        kwargs={"environment_id": self.environment_id},
+                    )
             previous_live_from = feature_state.live_from
 
 

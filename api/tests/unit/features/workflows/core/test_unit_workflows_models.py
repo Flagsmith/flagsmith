@@ -425,7 +425,7 @@ def test_change_request_email_subject(change_request_no_required_approvals):
     )
 
 
-def test_schedule_environment_rebuild_does_nothing_if_edge_not_enabled(
+def test_schedule_feature_state_going_live_tasks_does_not_trigger_environment_rebuild_if_edge_not_enabled(
     settings, change_request_no_required_approvals, mocker
 ):
     # Given
@@ -435,17 +435,21 @@ def test_schedule_environment_rebuild_does_nothing_if_edge_not_enabled(
     )
 
     # When
-    change_request_no_required_approvals.schedule_environment_rebuild()
+    change_request_no_required_approvals.schedule_feature_state_going_live_tasks()
 
     # Then
     mock_rebuild_environment_document.delay.assert_not_called()
 
 
-def test_schedule_environment_rebuild_does_nothing_if_not_scheduled_for_future(
+def test_schedule_feature_state_going_live_tasks_does_nothing_if_not_scheduled_for_future(
     settings, change_request_no_required_approvals, mocker
 ):
     # Given
     settings.EDGE_ENABLED = True
+    mock_create_feature_state_went_live_audit_log = mocker.patch(
+        "features.workflows.core.models.create_feature_state_went_live_audit_log"
+    )
+
     mock_rebuild_environment_document = mocker.patch(
         "features.workflows.core.models.rebuild_environment_document"
     )
@@ -457,13 +461,14 @@ def test_schedule_environment_rebuild_does_nothing_if_not_scheduled_for_future(
     ).exists()
 
     # When
-    change_request_no_required_approvals.schedule_environment_rebuild()
+    change_request_no_required_approvals.schedule_feature_state_going_live_tasks()
 
     # Then
     mock_rebuild_environment_document.delay.assert_not_called()
+    mock_create_feature_state_went_live_audit_log.delay.assert_not_called()
 
 
-def test_schedule_environment_rebuild_schedules_rebuild_environment_task(
+def test_schedule_feature_state_going_live_tasks_schedules_tasks_correctly(
     settings, change_request_no_required_approvals, mocker
 ):
     # Given
@@ -471,15 +476,23 @@ def test_schedule_environment_rebuild_schedules_rebuild_environment_task(
     mock_rebuild_environment_document = mocker.patch(
         "features.workflows.core.models.rebuild_environment_document"
     )
+    mock_create_feature_state_went_live_audit_log = mocker.patch(
+        "features.workflows.core.models.create_feature_state_went_live_audit_log"
+    )
+
     now = timezone.now()
     tomorrow = now + timedelta(days=1)
     change_request_no_required_approvals.feature_states.all().update(live_from=tomorrow)
 
     # When
-    change_request_no_required_approvals.schedule_environment_rebuild()
+    change_request_no_required_approvals.schedule_feature_state_going_live_tasks()
 
     # Then
     mock_rebuild_environment_document.delay.assert_called_once_with(
         delay_until=tomorrow,
         kwargs={"environment_id": change_request_no_required_approvals.environment_id},
+    )
+    mock_create_feature_state_went_live_audit_log.delay.assert_called_once_with(
+        delay_until=tomorrow,
+        args=(change_request_no_required_approvals.feature_states.all().first().id,),
     )
