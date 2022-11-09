@@ -1,7 +1,7 @@
-import React, { Component } from 'react';
+import React from 'react';
 import AuditLogStore from '../stores/audit-log-store';
 
-const AuditLogProvider = class extends Component {
+const AuditLogProvider = class extends React.Component {
     static displayName = 'AuditLogProvider'
 
     constructor(props, context) {
@@ -32,6 +32,8 @@ const AuditLogProvider = class extends Component {
     }
 };
 
-AuditLogProvider.propTypes = {};
+AuditLogProvider.propTypes = {
+    children: OptionalNode,
+};
 
 module.exports = AuditLogProvider;

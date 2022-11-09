@@ -48,7 +48,7 @@ class TheComponent extends Component {
             null,
             `${document.location.pathname}?feature=${projectFlag.id}${tab ? `&tab=${tab}` : ''}`,
         );
-        openModal(`${this.props.permission?"Edit Feature": "Feature"}: ${projectFlag.name}`, <CreateFlagModal
+        openModal(`${this.props.permission ? 'Edit Feature' : 'Feature'}: ${projectFlag.name}`, <CreateFlagModal
           isEdit
           router={this.context.router}
           environmentId={this.props.environmentId}
@@ -208,15 +208,15 @@ class TheComponent extends Component {
                                   html
                                   title={(
                                       <button
-                            disabled={!removeFeaturePermission || readOnly || isProtected}
-                            onClick={() => this.confirmRemove(projectFlag, () => {
-                                        removeFlag(projectId, projectFlag);
-                                    })}
-                            className="btn btn--with-icon"
-                            data-test={`remove-feature-btn-${this.props.index}`}
-                          >
-                              <RemoveIcon/>
-                          </button>
+                                        disabled={!removeFeaturePermission || readOnly || isProtected}
+                                        onClick={() => this.confirmRemove(projectFlag, () => {
+                                            removeFlag(projectId, projectFlag);
+                                        })}
+                                        className="btn btn--with-icon"
+                                        data-test={`remove-feature-btn-${this.props.index}`}
+                                      >
+                                          <RemoveIcon/>
+                                      </button>
                                 )}
                                 >
                                     {isProtected ? '<span>This feature has tagged as <bold>protected</bold>, <bold>permanent</bold>, <bold>do not delete</bold>, or <bold>read only</bold>. Please remove the tag before attempting to delete this flag.</span>' : 'Remove feature'}

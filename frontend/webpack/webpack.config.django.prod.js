@@ -1,7 +1,6 @@
 // webpack.config.prod.js
 // Watches + deploys files minified + cachebusted
 
-const url = require('url');
 const path = require('path');
 const webpack = require('webpack');
 const HtmlWebpackPlugin = require('html-webpack-plugin');
@@ -10,8 +9,6 @@ const CopyWebpackPlugin = require('copy-webpack-plugin');
 const TerserPlugin = require('terser-webpack-plugin');
 const moment = require('moment');
 const MiniCssExtractPlugin = require('mini-css-extract-plugin');
-
-const Project = require('../common/project');
 
 module.exports = {
     devtool: 'source-map',
@@ -51,17 +48,18 @@ module.exports = {
 
             // pull inline styles into cachebusted file
             new MiniCssExtractPlugin({
-                filename:  "[name].[fullhash].css",
-                chunkFilename:  "[id].[fullhash].css",
+                filename: '[name].[fullhash].css',
+                chunkFilename: '[id].[fullhash].css',
             }),
 
             // Copy static content
             new CopyWebpackPlugin(
                 {
-                    patterns:[
+                    patterns: [
                         { from: path.join(__dirname, '../web/static'), to: path.join(__dirname, '../../api/static') },
-                    ]
-                }),
+                    ],
+                },
+            ),
 
         ]).concat(require('./pages').map(page => new HtmlWebpackPlugin({
             filename: `${page}.html`, // output template
@@ -76,7 +74,7 @@ module.exports = {
         rules: require('./loaders').concat([
             {
                 test: /\.scss$/,
-                use: [MiniCssExtractPlugin.loader, 'css-loader','sass-loader'],
+                use: [MiniCssExtractPlugin.loader, 'css-loader', 'sass-loader'],
             },
         ]),
     },

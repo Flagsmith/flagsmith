@@ -11,7 +11,6 @@ module.exports = function (path) {
     }
 
     const parts = path.split('/');
-    const filename = parts[parts.length - 1]; // Required
     const title = 'Test Run'; // Optional
     const channelId = 'C0102JZRG3G'; // infra_tests channel ID
 

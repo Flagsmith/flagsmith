@@ -56,6 +56,8 @@ const Actions = Object.assign({}, require('./base/_action-constants'), {
     'OAUTH': 'OAUTH',
     'GET_PROJECT': 'GET_PROJECT',
     'GET_SEGMENTS': 'GET_SEGMENTS',
+    'GET_SEGMENTS_PAGE': 'GET_SEGMENTS_PAGE',
+    'SEARCH_SEGMENTS': 'SEARCH_SEGMENTS',
     'INVITE_USERS': 'INVITE_USERS',
     'INVALIDATE_INVITE_LINK': 'INVALIDATE_INVITE_LINK',
     'REMOVE_FLAG': 'REMOVE_FLAG',

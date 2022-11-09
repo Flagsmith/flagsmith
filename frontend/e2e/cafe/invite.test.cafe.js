@@ -15,11 +15,11 @@ const invitePrefix = `flagsmith${new Date().valueOf()}`;
 const inviteEmail = `${invitePrefix}@restmail.net`;
 const email = 'nightwatch@solidstategroup.com';
 const password = 'str0ngp4ssw0rd!';
-const logger = getLogger()
+const logger = getLogger();
 
 fixture`Invite Tests`
     .page`http://localhost:3000/`
-    .requestHooks(logger)
+    .requestHooks(logger);
 
 test('Invite Test', async () => {
     log('Login', 'Invite Test');
@@ -38,13 +38,11 @@ test('Invite Test', async () => {
     await waitForElementVisible(byId('signup-btn'));
     await click(byId('signup-btn'));
     await assertTextContent('.nav-link-featured', organisationName);
-}).after(async (t)=>{
-    console.log("Start of Invite Requests")
-    console.log(JSON.stringify(logger.requests, null,2))
-    console.log("End of Invite Requests")
-    console.log("Start of Invite Errors")
+}).after(async (t) => {
+    console.log('Start of Invite Requests');
+    console.log(JSON.stringify(logger.requests, null, 2));
+    console.log('End of Invite Requests');
+    console.log('Start of Invite Errors');
     console.error(JSON.stringify((await t.getBrowserConsoleMessages()).error));
-    console.log("End of Invite Errors")
-
-})
-
+    console.log('End of Invite Errors');
+});

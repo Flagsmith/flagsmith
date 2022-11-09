@@ -56,7 +56,6 @@ module.exports = {
     },
 
     _request(method, _url, data, headers = {}) {
-
         const options = {
             timeout: 60000,
             method,
@@ -79,10 +78,10 @@ module.exports = {
         }
 
         let url = _url;
-        const parts = _url.split(/(https?:\/\/)?(.*?:.*?)@/)
+        const parts = _url.split(/(https?:\/\/)?(.*?:.*?)@/);
         if (parts.length === 4) {
-            url = (parts[1]||"http://")+parts[parts.length-1]
-            options.headers.AUTHORIZATION = `Basic ${btoa(parts[parts.length-2])}`;
+            url = (parts[1] || 'http://') + parts[parts.length - 1];
+            options.headers.AUTHORIZATION = `Basic ${btoa(parts[parts.length - 2])}`;
         }
 
         if (data) {

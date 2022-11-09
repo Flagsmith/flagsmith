@@ -10,8 +10,10 @@ export default class ExampleOne extends Component {
 
     constructor(props, context) {
         super(props, context);
-        this.state = { name: '', tab: '', text: '',
-            value: [], };
+        this.state = { name: '',
+            tab: '',
+            text: '',
+            value: [] };
     }
 
 
@@ -111,25 +113,25 @@ export default class ExampleOne extends Component {
 
                         <FormGroup>
                             <ChipInput
-                                placeholder="User1, User2, User3"
-                                inputStyle={{ border: '1px solid green', color: 'red' }}
-                                textFieldStyle={{ border: '1px solid red' }}
+                              placeholder="User1, User2, User3"
+                              inputStyle={{ border: '1px solid green', color: 'red' }}
+                              textFieldStyle={{ border: '1px solid red' }}
                             />
                             <ChipInput
-                                defaultValue={['foo', 'bar']}
-                                fullWidth
-                                chipRenderer={({ value, isFocused, isDisabled, handleClick, handleRequestDelete }, key) => (
-                                    <Chip
-                                        key={key}
-                                        style={{ margin: '8px 8px 0 0', float: 'left', pointerEvents: isDisabled ? 'none' : undefined }}
-                                        backgroundColor={isFocused ? 'red' : 'blue'}
-                                        onTouchTap={handleClick}
-                                        onRequestDelete={handleRequestDelete}
-                                    >
-                                        <Avatar size={32}>{value[0].toUpperCase()}</Avatar>
-                                        {value}
-                                    </Chip>
-                                )}
+                              defaultValue={['foo', 'bar']}
+                              fullWidth
+                              chipRenderer={({ value, isFocused, isDisabled, handleClick, handleRequestDelete }, key) => (
+                                  <Chip
+                                    key={key}
+                                    style={{ margin: '8px 8px 0 0', float: 'left', pointerEvents: isDisabled ? 'none' : undefined }}
+                                    backgroundColor={isFocused ? 'red' : 'blue'}
+                                    onTouchTap={handleClick}
+                                    onRequestDelete={handleRequestDelete}
+                                  >
+                                      <Avatar size={32}>{value[0].toUpperCase()}</Avatar>
+                                      {value}
+                                  </Chip>
+                              )}
                             />
                         </FormGroup>
 

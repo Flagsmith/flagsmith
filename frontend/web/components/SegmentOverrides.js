@@ -86,11 +86,11 @@ const SegmentOverrideInner = class Override extends React.Component {
                                       disabled={disabled}
                                       checked={v.enabled}
                                       onChange={(v) => {
-                                              if (!readOnly) {
-                                                  this.setState({ changed: true });
-                                                  toggle(v);
-                                              }
-                                          }}
+                                          if (!readOnly) {
+                                              this.setState({ changed: true });
+                                              toggle(v);
+                                          }
+                                      }}
                                     />
                                 </div>
                             </Column>
@@ -157,7 +157,7 @@ const SegmentOverrideInner = class Override extends React.Component {
                                   value={v.value}
                                   data-test={`segment-override-value-${index}`}
                                   disabled={readOnly}
-                                  onChange={readOnly?null:(e) => {
+                                  onChange={readOnly ? null : (e) => {
                                       this.setState({ changed: true });
                                       setValue(Utils.getTypedValue(Utils.safeParseEventValue(e)));
                                   }}
@@ -228,7 +228,7 @@ const SegmentOverride = ConfigProvider(SortableElement(
     SegmentOverrideInner,
 ));
 const SegmentOverrideListInner = ({ disabled, id, onEditClick, name, multivariateOptions, onSortEnd, items, controlValue, confirmRemove, toggle, setValue, setVariations, readOnly }) => {
-    const InnerComponent = id  || disabled ? SegmentOverrideInner : SegmentOverride;
+    const InnerComponent = id || disabled ? SegmentOverrideInner : SegmentOverride;
     return (
         <div>
             {items.map((value, index) => (
@@ -456,7 +456,7 @@ class TheComponent extends Component {
                                   this.setState({ selectedSegment });
                                   this.props.setShowCreateSegment(true);
                               }}
-                              disabled={isLoading||this.props.readOnly}
+                              disabled={isLoading || this.props.readOnly}
                               id={this.props.id}
                               name={this.props.name}
                               controlValue={this.props.controlValue}

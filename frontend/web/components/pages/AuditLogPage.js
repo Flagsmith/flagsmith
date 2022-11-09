@@ -35,7 +35,7 @@ const AuditLogPage = class extends Component {
                 </div>
                 {!!author && (
                     <div
-                        className="audit__author"
+                      className="audit__author"
                     >
                         {`${author.first_name} ${author.last_name}`}
                     </div>

@@ -3,6 +3,7 @@ require('dotenv').config();
 const exphbs = require('express-handlebars');
 const express = require('express');
 const bodyParser = require('body-parser');
+const xFrameOptions = require('x-frame-options');
 const spm = require('./middleware/single-page-middleware');
 
 const app = express();
@@ -14,7 +15,6 @@ const postToSlack = process.env.VERCEL_ENV === 'production';
 
 const isDev = process.env.NODE_ENV !== 'production';
 const port = process.env.PORT || 8080;
-const xFrameOptions = require('x-frame-options');
 
 app.use(xFrameOptions());
 
@@ -132,7 +132,7 @@ app.post('/api/event', (req, res) => {
         const body = req.body;
         const channel = body.tag ? `infra_${body.tag.replace(/ /g, '').toLowerCase()}` : process.env.EVENTS_SLACK_CHANNEL;
         if (process.env.SLACK_TOKEN && channel && postToSlack && !body.event.includes('Bullet Train')) {
-            const match = body.event.match(/([a-zA-Z0-9_\-\.]+)@([a-zA-Z0-9_\-\.]+)\.([a-zA-Z]{2,5})/);
+            const match = body.event.match(/([a-zA-Z0-9_\-.]+)@([a-zA-Z0-9_\-.]+)\.([a-zA-Z]{2,5})/);
             let url = '';
             if (match && match[0]) {
                 const urlMatch = match[0].split('@')[1];

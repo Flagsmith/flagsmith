@@ -6,11 +6,10 @@ const data = require('../data/base/_data');
 const controller = {
 
     migrateProject: (id) => {
-        store.loading()
-        data.post(`${Project.api}projects/${id}/migrate-to-edge/`).then(()=>{
-            controller.getProject(id,()=>store.saved(), true)
-        })
-
+        store.loading();
+        data.post(`${Project.api}projects/${id}/migrate-to-edge/`).then(() => {
+            controller.getProject(id, () => store.saved(), true);
+        });
     },
 
     getProject: (id, cb, force) => {
@@ -29,12 +28,12 @@ const controller = {
                 store.id = id;
                 store.loaded();
                 if (cb) {
-                    cb()
+                    cb();
                 }
             }).catch(() => {
                 document.location.href = '/404?entity=project';
             });
-        } else if (!store.model || !store.model.environments || store.id != id) {
+        } else if (!store.model || !store.model.environments || store.id !== id) {
             store.loading();
 
             Promise.all([
@@ -49,7 +48,7 @@ const controller = {
                 store.id = id;
                 store.loaded();
                 if (cb) {
-                    cb()
+                    cb();
                 }
             }).catch(() => {
                 document.location.href = '/404?entity=project';
@@ -61,26 +60,19 @@ const controller = {
         API.trackEvent(Constants.events.CREATE_ENVIRONMENT);
         const req = cloneId ? data.post(`${Project.api}environments/${cloneId}/clone/`, { name, description }) : data.post(`${Project.api}environments/`, { name, project: projectId, description });
 
-        req.then((res) => {
-            return data.put(`${Project.api}environments/${res.api_key}/`, {description, project:projectId, name})
-                .then((res)=>{
-                    return   data.post(`${Project.api}environments/${res.api_key}/${Utils.getIdentitiesEndpoint()}/`, {
-                        environment: res.api_key,
-                        identifier: `${name.toLowerCase()}_user_123456`,
-                    })
-                        .then(() => {
-                            store.savedEnv = res;
-                            if (store.model && store.model.environments) {
-                                store.model.environments = store.model.environments.concat([res]);
-                            }
-                            store.saved();
-                            AppActions.refreshOrganisation();
-                        });
-                })
-
-
-
-        });
+        req.then(res => data.put(`${Project.api}environments/${res.api_key}/`, { description, project: projectId, name })
+            .then(res => data.post(`${Project.api}environments/${res.api_key}/${Utils.getIdentitiesEndpoint()}/`, {
+                environment: res.api_key,
+                identifier: `${name.toLowerCase()}_user_123456`,
+            })
+                .then(() => {
+                    store.savedEnv = res;
+                    if (store.model && store.model.environments) {
+                        store.model.environments = store.model.environments.concat([res]);
+                    }
+                    store.saved();
+                    AppActions.refreshOrganisation();
+                })));
     },
     editEnv: (env) => {
         API.trackEvent(Constants.events.EDIT_ENVIRONMENT);
@@ -95,8 +87,8 @@ const controller = {
     deleteEnv: (env) => {
         API.trackEvent(Constants.events.REMOVE_ENVIRONMENT);
         data.delete(`${Project.api}environments/${env.api_key}/`)
-            .then((res) => {
-                store.model.environments = _.filter(store.model.environments, e => e.id != env.id);
+            .then(() => {
+                store.model.environments = _.filter(store.model.environments, e => e.id !== env.id);
                 store.trigger('removed');
                 store.saved();
                 AppActions.refreshOrganisation();
@@ -113,7 +105,7 @@ const controller = {
 };
 
 
-var store = Object.assign({}, BaseStore, {
+const store = Object.assign({}, BaseStore, {
     id: 'project',
     getId: () => store.model && store.model.id,
     getEnvs: () => store.model && store.model.environments,
