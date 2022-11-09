@@ -122,9 +122,8 @@
   "devDependencies": {
     "@ffmpeg-installer/ffmpeg": "^1.1.0",
     "chromedriver": "96.0.0",
-    "nightwatch": "^1.7.13",
     "nodemon": "^2.0.16",
     "raw-loader": "0.5.1",
-    "testcafe": "^2.0.1"
+    "testcafe": "^1.17.1"
   }
 }
