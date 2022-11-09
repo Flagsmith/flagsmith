@@ -67,7 +67,7 @@
             <tr class="
               {% if org.has_subscription and not org.is_paid %}table-danger
               {% elif org.num_users > org.subscription_information_cache.allowed_seats %}table-warning
-              {% elif org.subscription_information_cache.allowed_30d_api_calls > org.subscription_information_cache.api_calls_30d %}table-warning
+              {% elif org.subscription_information_cache.api_calls_30d > org.subscription_information_cache.allowed_30d_api_calls %}table-warning
               {% endif %}"
               >
               <td>{{org.id}}</td>
