@@ -18,6 +18,10 @@ ENVIRONMENT_UPDATED_MESSAGE = "Environment updated: %s"
 FEATURE_STATE_UPDATED_MESSAGE = (
     "Flag state / Remote Config value updated for feature: %s"
 )
+FEATURE_STATE_WENT_LIVE_MESSAGE = (
+    "Flag state / Remote Config value went live for feature: %s"
+)
+
 IDENTITY_FEATURE_STATE_UPDATED_MESSAGE = (
     "Flag state / Remote config value updated for feature '%s' and identity '%s'"
 )
@@ -82,6 +86,7 @@ class AuditLog(models.Model):
         help_text="comma separated list of signal functions to skip",
         max_length=500,
     )
+    is_system_event = models.BooleanField(default=False)
 
     class Meta:
         verbose_name_plural = "Audit Logs"
