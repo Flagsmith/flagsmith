@@ -1,3 +1,5 @@
+import typing
+
 import requests
 
 from integrations.lead_tracking.pipedrive.exceptions import PipedriveAPIError
@@ -37,11 +39,25 @@ class PipedriveAPIClient:
         )
         return PipedriveLead.from_response_data(api_response_data)
 
+    def search_organizations(
+        self, search_term: str
+    ) -> typing.List[PipedriveOrganization]:
+        api_response_data = self._make_request(
+            resource="organizations/search",
+            http_method="get",
+            query_params={"term": search_term},
+        )
+        return [
+            PipedriveOrganization.from_response_data(org["item"])
+            for org in api_response_data["items"]
+        ]
+
     def _make_request(
         self,
         resource: str,
         http_method: str,
-        data: dict,
+        data: dict = None,
+        query_params: dict = None,
         expected_status_code: int = 200,
     ) -> dict:
         http_method = http_method.lower()
@@ -50,7 +66,7 @@ class PipedriveAPIClient:
         ), f"HTTP method must be one of {ALLOWED_METHODS}"
         request_method = getattr(self.session, http_method)
         url = f"{self.base_url}/{resource}?api_token={self.api_token}"
-        response = request_method(url, json=data)
+        response = request_method(url, json=data, params=query_params)
         if response.status_code != expected_status_code:
             raise PipedriveAPIError()
         return response.json()["data"]

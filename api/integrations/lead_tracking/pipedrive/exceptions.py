@@ -4,3 +4,11 @@ class PipedriveError(Exception):
 
 class PipedriveAPIError(PipedriveError):
     pass
+
+
+class MultipleMatchingOrganizationsError(PipedriveError):
+    pass
+
+
+class OrganizationNotFoundError(PipedriveError):
+    pass
