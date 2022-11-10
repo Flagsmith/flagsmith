@@ -71,7 +71,7 @@ class Environment(LifecycleModel):
     )
     updated_at = models.DateTimeField(
         default=timezone.now,
-        help_text="It is a proxy for changes that affect a value of a given flag in the environment",
+        help_text="Tracks changes to self and related entities, e.g. FeatureStates.",
     )
 
     objects = EnvironmentManager()
