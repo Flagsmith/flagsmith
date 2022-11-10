@@ -5,8 +5,10 @@ from django.core.mail import EmailMultiAlternatives
 from django.db import models
 from django.template.loader import get_template
 from django.utils import timezone
+from django_lifecycle import BEFORE_CREATE, LifecycleModelMixin, hook
 
 from app.utils import create_hash
+from organisations.invites.exceptions import InviteLinksDisabledError
 from organisations.models import Organisation, OrganisationRole
 from users.models import FFAdminUser, UserPermissionGroup
 
@@ -25,7 +27,9 @@ class AbstractBaseInviteModel(models.Model):
         abstract = True
 
 
-class InviteLink(AbstractBaseInviteModel, AbstractBaseExportableModel):
+class InviteLink(
+    LifecycleModelMixin, AbstractBaseInviteModel, AbstractBaseExportableModel
+):
     expires_at = models.DateTimeField(
         blank=True,
         null=True,
@@ -36,6 +40,11 @@ class InviteLink(AbstractBaseInviteModel, AbstractBaseExportableModel):
     @property
     def is_expired(self):
         return self.expires_at is not None and timezone.now() > self.expires_at
+
+    @hook(BEFORE_CREATE)
+    def validate_invite_links_are_enabled(self):
+        if settings.DISABLE_INVITE_LINKS:
+            raise InviteLinksDisabledError()
 
 
 class Invite(AbstractBaseInviteModel):
