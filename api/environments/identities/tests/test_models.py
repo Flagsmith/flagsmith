@@ -864,3 +864,20 @@ class IdentityTestCase(TransactionTestCase):
         # Then
         assert len(identity_feature_states) == 1
         assert identity_feature_states[0].id == version_1_feature_state.id
+
+
+def test_update_traits_does_not_make_extra_queries_if_traits_value_do_not_change(
+    identity, django_assert_num_queries, trait
+):
+    # Given
+    trait_data_items = [
+        generate_trait_data_item(
+            trait_key=trait.trait_key, trait_value=trait.trait_value
+        ),
+    ]
+
+    # When
+    with django_assert_num_queries(1):
+        identity.update_traits(trait_data_items)
+
+    # Then - We only expect 1 query(for reading all the traits) should have been made
