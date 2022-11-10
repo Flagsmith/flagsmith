@@ -73,22 +73,14 @@
               <td>{{org.id}}</td>
               <td><a href="/sales-dashboard/organisations/{{org.id}}">{{org.name}}</a></td>
               <td>{{ org.subscription.plan|default:"Free" }}{% if org.subscription.payment_method %} - {{ org.subscription.payment_method|capfirst }}{% endif %}</td>
-              <td>
-                {% if org.num_users > org.subscription_information_cache.allowed_seats %}<span class="badge badge-danger">{% endif %}
-                    {{org.num_users}}
-                {% if org.num_users > org.subscription_information_cache.allowed_seats %}</span>{% endif %}
-              </td>
+              <td><span class="{% if org.num_users > org.subscription_information_cache.allowed_seats %}badge badge-danger{% endif %}">{{org.num_users}}</span></td>
               <td>{{org.subscription_information_cache.allowed_seats|default:1}}</td>
               <td>{{org.subscription_information_cache.allowed_30d_api_calls|default:50000|intcomma}}</td>
               <td>{{org.num_projects}}</td>
               <td>{{org.num_features}}</td>
               <td>{{org.subscription_information_cache.api_calls_24h|intcomma|default:0}}</td>
               <td>{{org.subscription_information_cache.api_calls_7d|intcomma|default:0}}</td>
-              <td>
-                {% if org.subscription_information_cache.api_calls_30d > org.subscription_information_cache.allowed_30d_api_calls %}<span class="badge badge-danger">{% endif %}
-                    {{org.subscription_information_cache.api_calls_30d|intcomma|default:0}}
-                {% if org.subscription_information_cache.api_calls_30d > org.subscription_information_cache.allowed_30d_api_calls %}</span>{% endif %}
-              </td>
+              <td><span class="{% if org.subscription_information_cache.api_calls_30d > org.subscription_information_cache.allowed_30d_api_calls %}badge badge-danger{% endif %}">{{org.subscription_information_cache.api_calls_30d|intcomma|default:0}}</span></td>
             </tr>
             {% endfor %}
           </tbody>
