@@ -1,6 +1,7 @@
 import enum
 
 from django.db import models
+from django_lifecycle import AFTER_SAVE, LifecycleModel, hook
 
 from api_keys.models import MasterAPIKey
 from projects.models import Project
@@ -19,7 +20,8 @@ FEATURE_STATE_UPDATED_MESSAGE = (
     "Flag state / Remote Config value updated for feature: %s"
 )
 FEATURE_STATE_WENT_LIVE_MESSAGE = (
-    "Flag state / Remote Config value went live for feature: %s"
+    "Scheduled change to Flag state / Remote config value went live for feature: %s by"
+    " Change Request: %s"
 )
 
 IDENTITY_FEATURE_STATE_UPDATED_MESSAGE = (
@@ -51,7 +53,7 @@ class RelatedObjectType(enum.Enum):
 RELATED_OBJECT_TYPES = ((tag.name, tag.value) for tag in RelatedObjectType)
 
 
-class AuditLog(models.Model):
+class AuditLog(LifecycleModel):
     created_date = models.DateTimeField("DateCreated", auto_now_add=True)
     project = models.ForeignKey(
         Project, related_name="audit_logs", null=True, on_delete=models.SET_NULL
@@ -94,6 +96,17 @@ class AuditLog(models.Model):
 
     def __str__(self):
         return "Audit Log %s" % self.id
+
+    @hook(AFTER_SAVE)
+    def update_environments_updated_at(self):
+        if self.related_object_type == RelatedObjectType.CHANGE_REQUEST.name:
+            return
+
+        if self.environment:
+            self.environment.updated_at = self.created_date
+            self.environment.save()
+        else:
+            self.project.environments.update(updated_at=self.created_date)
 
     @classmethod
     def create_record(

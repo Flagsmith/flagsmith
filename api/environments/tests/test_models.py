@@ -329,17 +329,29 @@ def test_get_from_cache_sets_the_cache_correctly_with_environment_api_key(
     assert environment == environment_cache.get(environment_api_key.key)
 
 
-def test_last_updated_at_gets_updated_when_audit_log_created(environment):
+def test_updated_at_gets_updated_when_environment_audit_log_created(environment):
     # When
-    audit_log = AuditLog.objects.create(environment=environment, log="random_audit_log")
+    audit_log = AuditLog.objects.create(
+        environment=environment, project=environment.project, log="random_audit_log"
+    )
 
     # Then
-    assert environment.last_updated_at == audit_log.created_date
+    assert environment.updated_at == audit_log.created_date
 
 
-def test_change_request_audit_logs_does_not_update_last_updated_at(environment):
+def test_updated_at_gets_updated_when_project_audit_log_created(environment):
+    # When
+    audit_log = AuditLog.objects.create(
+        project=environment.project, log="random_audit_log"
+    )
+    environment.refresh_from_db()
+    # Then
+    assert environment.updated_at == audit_log.created_date
+
+
+def test_change_request_audit_logs_does_not_update_updated_at(environment):
     # Given
-    last_updated_at_before_audit_log = environment.last_updated_at
+    updated_at_before_audit_log = environment.updated_at
 
     # When
     audit_log = AuditLog.objects.create(
@@ -349,5 +361,5 @@ def test_change_request_audit_logs_does_not_update_last_updated_at(environment):
     )
 
     # Then
-    assert environment.last_updated_at == last_updated_at_before_audit_log
-    assert environment.last_updated_at != audit_log.created_date
+    assert environment.updated_at == updated_at_before_audit_log
+    assert environment.updated_at != audit_log.created_date

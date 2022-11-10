@@ -15,6 +15,7 @@ from features.feature_types import MULTIVARIATE
 from features.models import Feature, FeatureSegment, FeatureState
 from features.multivariate.models import MultivariateFeatureOption
 from features.value_types import STRING
+from features.workflows.core.models import ChangeRequest
 from organisations.models import Organisation, OrganisationRole, Subscription
 from organisations.subscriptions.constants import CHARGEBEE, XERO
 from permissions.models import PermissionModel
@@ -169,8 +170,18 @@ def feature(project, environment):
 
 
 @pytest.fixture()
-def feature_state(feature, environment):
-    return FeatureState.objects.filter(environment=environment, feature=feature).first()
+def change_request(environment, admin_user):
+    return ChangeRequest.objects.create(
+        environment=environment, title="Test CR", user_id=admin_user.id
+    )
+
+
+@pytest.fixture()
+def feature_state(feature, environment, change_request):
+    fs = FeatureState.objects.filter(environment=environment, feature=feature).first()
+    fs.change_request = change_request
+    fs.save()
+    return fs
 
 
 @pytest.fixture()

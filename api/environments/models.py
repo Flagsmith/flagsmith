@@ -4,7 +4,6 @@ from __future__ import unicode_literals
 import logging
 import typing
 from copy import deepcopy
-from datetime import datetime
 
 import boto3
 from core.request_origin import RequestOrigin
@@ -22,7 +21,6 @@ from flag_engine.api.document_builders import (
 from rest_framework.request import Request
 
 from app.utils import create_hash
-from audit.models import AuditLog, RelatedObjectType
 from environments.api_keys import (
     generate_client_api_key,
     generate_server_api_key,
@@ -71,6 +69,10 @@ class Environment(LifecycleModel):
     allow_client_traits = models.BooleanField(
         default=True, help_text="Allows clients using the client API key to set traits."
     )
+    updated_at = models.DateTimeField(
+        default=timezone.now,
+        help_text="It is a proxy for changes that affect a value of a given flag in the environment",
+    )
 
     objects = EnvironmentManager()
 
@@ -89,21 +91,6 @@ class Environment(LifecycleModel):
                 if self.project.prevent_flag_defaults
                 else feature.default_enabled,
             )
-
-    @property
-    def last_updated_at(self) -> typing.Optional[datetime]:
-        # NOTE: `last_updated_at` is a proxy for changes that affect a value of a given flag in the environment
-        last_audit_log = (
-            AuditLog.objects.exclude(
-                related_object_type=RelatedObjectType.CHANGE_REQUEST.name
-            )
-            .filter(Q(environment=self) | Q(project=self.project))
-            .order_by("created_date")
-            .first()
-        )
-        # last_audit_log should never be None unless the environment was created manually
-        # and no audit logs were created for it
-        return last_audit_log.created_date if last_audit_log else None
 
     def __str__(self):
         return "Project %s - Environment %s" % (self.project.name, self.name)
