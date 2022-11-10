@@ -879,3 +879,5 @@ def test_update_traits_does_not_make_extra_queries_if_traits_value_do_not_change
     # When
     with django_assert_num_queries(1):
         identity.update_traits(trait_data_items)
+
+    # Then - We only expect 1 query(for reading all the traits) should have been made
