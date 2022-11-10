@@ -99,6 +99,9 @@ class AuditLog(LifecycleModel):
 
     @hook(AFTER_SAVE)
     def update_environments_updated_at(self):
+        # Don't update the environments updated_at if the audit log
+        # is of CHANGE_REQUEST type since they(directly) don't impact
+        # value of a given feature in an environment
         if self.related_object_type == RelatedObjectType.CHANGE_REQUEST.name:
             return
 
