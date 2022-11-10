@@ -187,9 +187,12 @@ class Identity(models.Model):
                 continue
 
             trait_value_data = Trait.generate_trait_value_data(trait_value)
-
             if trait_key in current_traits:
                 current_trait = current_traits[trait_key]
+                # Don't update the trait if the value hasn't changed
+                if current_trait.trait_value == trait_value:
+                    continue
+
                 for attr, value in trait_value_data.items():
                     setattr(current_trait, attr, value)
                 updated_traits.append(current_trait)
@@ -201,7 +204,6 @@ class Identity(models.Model):
         # delete the traits that had their keys set to None
         if keys_to_delete:
             self.identity_traits.filter(trait_key__in=keys_to_delete).delete()
-
         Trait.objects.bulk_update(updated_traits, fields=Trait.BULK_UPDATE_FIELDS)
 
         # use ignore_conflicts to handle race conditions which result in IntegrityError if another request
