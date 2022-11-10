@@ -10,6 +10,10 @@ from task_processor.decorators import register_task_handler
 @register_task_handler()
 def create_feature_state_went_live_audit_log(feature_state_id: int):
     feature_state = FeatureState.objects.get(id=feature_state_id)
+
+    if not feature_state.change_request:
+        raise RuntimeError("Feature state must have a change request")
+
     message = FEATURE_STATE_WENT_LIVE_MESSAGE % (
         feature_state.feature.name,
         feature_state.change_request.title,
