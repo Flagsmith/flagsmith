@@ -1,7 +1,5 @@
 import datetime
 import typing
-from abc import ABC
-from dataclasses import dataclass, field
 
 from marshmallow.schema import Schema
 
@@ -14,51 +12,70 @@ from integrations.lead_tracking.pipedrive.schemas import (
 )
 
 
-class BasePipedriveModel(ABC):
+class BasePipedriveModel:
     request_schema: Schema = None
     response_schema: Schema = None
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
-    def to_request_data(self) -> dict:
-        return self.request_schema.dump(self.__dict__)
+    def to_request_data(self, schema: Schema = None) -> dict:
+        schema = schema or self.request_schema
+        return schema.dump(self.__dict__)
 
     @classmethod
-    def from_response_data(cls, data: dict) -> "BasePipedriveModel":
-        return cls(**cls.response_schema.load(data))
+    def from_response_data(
+        cls, data: dict, schema: Schema = None
+    ) -> "BasePipedriveModel":
+        schema = schema or cls.response_schema
+        return cls(**schema.load(data))
 
 
-@dataclass
 class PipedriveValue(BasePipedriveModel):
     request_schema = PipedriveValueSchema()
     response_schema = PipedriveValueSchema()
 
-    amount: int
-    currency: str
+    def __init__(self, amount: int, currency: str):
+        super().__init__()
+        self.amount = amount
+        self.currency = currency
 
 
-@dataclass
 class PipedriveLead(BasePipedriveModel):
     request_schema = PipedriveLeadRequestSchema()
     response_schema = PipedriveLeadResponseSchema()
 
-    title: str
-    id: str = None
-    owner_id: int = None
-    label_ids: typing.List[int] = field(default_factory=list)
-    person_id: int = None
-    organization_id: int = None
-    value: PipedriveValue = None
-    expected_close_date: datetime.date = None
-    visible_to: int = None
-    was_seen: bool = None
+    def __init__(
+        self,
+        title: str,
+        id: str = None,
+        owner_id: int = None,
+        label_ids: typing.List[int] = None,
+        person_id: int = None,
+        organization_id: int = None,
+        value: PipedriveValue = None,
+        expected_close_date: datetime.date = None,
+        visible_to: int = None,
+        was_seen: bool = None,
+    ):
+        super().__init__()
+        self.title = title
+        self.id = id
+        self.owner_id = owner_id
+        self.label_ids = label_ids or []
+        self.person_id = person_id
+        self.organization_id = organization_id
+        self.value = value
+        self.expected_close_date = expected_close_date
+        self.visible_to = visible_to
+        self.was_seen = was_seen
 
 
-@dataclass
 class PipedriveOrganization(BasePipedriveModel):
     request_schema = PipedriveOrganizationRequestSchema()
     response_schema = PipedriveOrganizationResponseSchema()
 
-    name: str
-    id: int = None
+    def __init__(self, name: str, id: int = None):
+        super().__init__()
+        self.name = name
+        self.id = id
