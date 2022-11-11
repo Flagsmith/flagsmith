@@ -2,7 +2,7 @@ const BaseStore = require('./base/_store');
 const OrganisationStore = require('./organisation-store');
 const data = require('../data/base/_data');
 
-const PAGE_SIZE = 2;
+const PAGE_SIZE = 999;
 
 const controller = {
 
