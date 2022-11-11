@@ -614,7 +614,8 @@ class EnvironmentAPIKeyViewSetTestCase(TestCase):
 
     def test_create_api_key(self):
         # Given
-        data = {"name": "Some key"}
+        some_key = "some.key"
+        data = {"name": "Some key", "key": some_key}
 
         # When
         response = self.client.post(
@@ -626,6 +627,7 @@ class EnvironmentAPIKeyViewSetTestCase(TestCase):
 
         response_json = response.json()
         assert response_json["key"] and response_json["key"].startswith("ser.")
+        assert response_json["key"] != some_key
         assert response_json["active"]
 
     def test_update_api_key(self):
@@ -641,8 +643,9 @@ class EnvironmentAPIKeyViewSetTestCase(TestCase):
 
         # When
         new_name = "new name"
+        new_key = "new_key"
         response = self.client.patch(
-            update_url, data={"active": False, "name": new_name}
+            update_url, data={"active": False, "name": new_name, "key": new_key}
         )
 
         # Then
@@ -651,6 +654,7 @@ class EnvironmentAPIKeyViewSetTestCase(TestCase):
         api_key.refresh_from_db()
         assert api_key.name == new_name
         assert not api_key.active
+        assert api_key.key != new_key
 
     def test_delete_api_key(self):
         # Given

@@ -133,7 +133,7 @@
     "raw-loader": "0.5.1",
     "suppress-exit-code": "^1.0.0",
     "terser-webpack-plugin": "^5.3.6",
-    "testcafe": "^2.0.1"
+    "testcafe": "^1.17.1"
   },
   "lint-staged": {
     "*.{js,tsx,ts}": "suppress-exit-code eslint --fix"
