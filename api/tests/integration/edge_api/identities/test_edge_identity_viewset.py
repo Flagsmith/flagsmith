@@ -470,7 +470,7 @@ def test_edge_identities_update_trait_with_same_value(
     )
     identity_uuid = identity_document["identity_uuid"]
     trait_key = identity_traits[0]["trait_key"]
-    trait_value = identity_traits[0]["trait_key"]
+    trait_value = identity_traits[0]["trait_value"]
     url = reverse(
         "api-v1:environments:environment-edge-identities-update-traits",
         args=[environment_api_key, identity_uuid],
