@@ -71,6 +71,7 @@ app.get('/config/project-overrides', (req, res) => {
         { name: 'amplitude', value: process.env.AMPLITUDE_API_KEY },
         { name: 'delighted', value: process.env.DELIGHTED_API_KEY },
         { name: 'capterraKey', value: process.env.CAPTERRA_API_KEY },
+        { name: 'hideInviteLinks', value: process.env.DISABLE_INVITE_LINKS },
     ];
     const output = values.map(getVariable).join('');
 
