@@ -76,9 +76,11 @@
     "html-loader": "0.5.5",
     "html-webpack-plugin": "5.5.0",
     "http-proxy-middleware": "^1.0.6",
+    "husky": "^8.0.2",
     "ionicons": "4.0.0",
     "js-cookie": "2.2.1",
     "json-loader": "0.5.4",
+    "lint-staged": "^12.3.4",
     "lodash": "4.17.21",
     "material-ui-chip-input": "^1.1.0",
     "mini-css-extract-plugin": "^2.6.0",
@@ -113,6 +115,8 @@
     "sass-loader": "^12.6.0",
     "semver": "^7.3.7",
     "style-loader": "0.23.1",
+    "suppress-exit-code": "^1.0.0",
+    "terser-webpack-plugin": "^5.3.6",
     "toml": "^3.0.0",
     "webpack": "5.52.1",
     "webpack-bundle-analyzer": "^4.5.0",
@@ -126,12 +130,8 @@
   "devDependencies": {
     "@ffmpeg-installer/ffmpeg": "^1.1.0",
     "chromedriver": "96.0.0",
-    "husky": "^8.0.2",
-    "lint-staged": "^12.3.4",
     "nodemon": "^2.0.16",
     "raw-loader": "0.5.1",
-    "suppress-exit-code": "^1.0.0",
-    "terser-webpack-plugin": "^5.3.6",
     "testcafe": "^1.17.1"
   },
   "lint-staged": {
