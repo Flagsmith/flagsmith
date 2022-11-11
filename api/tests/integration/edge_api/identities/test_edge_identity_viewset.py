@@ -454,6 +454,41 @@ def test_edge_identities_update_trait(
     assert args[1] == identity_document["identifier"]
 
 
+def test_edge_identities_update_trait_with_same_value(
+    admin_client,
+    dynamo_enabled_environment,
+    environment_api_key,
+    identity_document,
+    identity_traits,
+    dynamo_wrapper_mock,
+    mocker,
+):
+    # Given
+    dynamo_wrapper_mock.get_item_from_uuid_or_404.return_value = identity_document
+    send_identity_update_message_mock = mocker.patch(
+        "edge_api.identities.views.send_identity_update_message", autospec=True
+    )
+    identity_uuid = identity_document["identity_uuid"]
+    trait_key = identity_traits[0]["trait_key"]
+    trait_value = identity_traits[0]["trait_key"]
+    url = reverse(
+        "api-v1:environments:environment-edge-identities-update-traits",
+        args=[environment_api_key, identity_uuid],
+    )
+    data = {"trait_key": trait_key, "trait_value": trait_value}
+
+    # When
+    response = admin_client.put(
+        url, data=json.dumps(data), content_type="application/json"
+    )
+    # Then
+    assert response.status_code == status.HTTP_200_OK
+
+    dynamo_wrapper_mock.get_item_from_uuid_or_404.assert_called_with(identity_uuid)
+    dynamo_wrapper_mock.put_item.assert_not_called()
+    send_identity_update_message_mock.assert_not_called()
+
+
 def test_edge_identities_update_traits_returns_400_if_persist_trait_data_is_false(
     admin_client,
     dynamo_enabled_environment,
