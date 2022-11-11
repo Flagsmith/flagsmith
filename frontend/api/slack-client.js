@@ -6,7 +6,8 @@ if (!process.env.SLACK_TOKEN) {
 
 const web = new WebClient(process.env.SLACK_TOKEN);
 
-const toChannel = async function (message, channel) {
+async function toChannel(message, channel) {
+    // eslint-disable-next-line
     console.log(`sending to channel: ${channel} message: ${message}`);
     try {
         await web.chat.postMessage({
@@ -14,8 +15,9 @@ const toChannel = async function (message, channel) {
             text: message,
         });
     } catch (error) {
+        // eslint-disable-next-line
         console.log(`Error posting to Slack:${error}`);
     }
-};
+}
 
 module.exports = toChannel;

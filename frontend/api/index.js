@@ -91,6 +91,7 @@ if (process.env.FLAGSMITH_PROXY_API_URL) {
 }
 
 if (isDev) { // Serve files from src directory and use webpack-dev-server
+    // eslint-disable-next-line
     console.log('Enabled Webpack Hot Reloading');
     const webpackMiddleware = require('./middleware/webpack-middleware');
     webpackMiddleware(app);
@@ -114,6 +115,7 @@ app.get('/robots.txt', (req, res) => {
 });
 
 app.get('/health', (req, res) => {
+    // eslint-disable-next-line
     console.log('Healthcheck complete');
     res.send('OK');
 });
@@ -147,6 +149,7 @@ app.post('/api/event', (req, res) => {
             res.json({});
         }
     } catch (e) {
+        // eslint-disable-next-line
         console.log(`Error posting to from /api/event:${e}`);
     }
 });
@@ -161,6 +164,7 @@ app.get('/', (req, res) => {
 });
 
 app.listen(port, () => {
+    // eslint-disable-next-line
     console.log(`Server listening on: ${port}`);
     if (!isDev && process.send) {
         process.send({ done: true });

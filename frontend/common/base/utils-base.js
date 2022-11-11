@@ -1,13 +1,12 @@
 export default {
     safeParseEventValue(e) { // safe attempt to parse form value
-        let target;
         if (!e) {
             return e;
         }
         if (typeof e === 'string') {
             return e;
         }
-        target = e || e.target;
+        const target = e || e.target;
 
         if (target.getAttribute) {
             return target.type === 'checkbox' || target.type === 'radio' ? target.getAttribute('checked')

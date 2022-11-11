@@ -125,6 +125,7 @@ AccountProvider.propTypes = {
     onNoUser: OptionalFunc,
     onSave: OptionalFunc,
     onLogin: OptionalFunc,
+    onLogout: OptionalFunc,
     children: OptionalNode,
 };
 
