@@ -165,10 +165,12 @@ class EdgeIdentityViewSet(viewsets.ModelViewSet):
             trait = trait_schema.load(request.data)
         except marshmallow.ValidationError as validation_error:
             raise ValidationError(validation_error) from validation_error
-        identity.update_traits([trait])
-        Identity.dynamo_wrapper.put_item(build_identity_dict(identity))
+        _, traits_updated = identity.update_traits([trait])
+        if traits_updated:
+            Identity.dynamo_wrapper.put_item(build_identity_dict(identity))
+            send_identity_update_message(environment, identity.identifier)
+
         data = trait_schema.dump(trait)
-        send_identity_update_message(environment, identity.identifier)
         return Response(data, status=status.HTTP_200_OK)
 
 
