@@ -40,3 +40,14 @@ class PipedriveOrganizationRequestSchema(BaseSchema):
 
 class PipedriveOrganizationResponseSchema(PipedriveOrganizationRequestSchema):
     id = fields.Int()
+
+
+class PipedriveOrganizationFieldRequestSchema(BaseSchema):
+    name = fields.Str()
+    field_type = fields.Str()
+    add_visible_flag = fields.Bool()
+
+
+class PipedriveOrganizationFieldResponseSchema(PipedriveOrganizationFieldRequestSchema):
+    id = fields.Int()
+    key = fields.Str()

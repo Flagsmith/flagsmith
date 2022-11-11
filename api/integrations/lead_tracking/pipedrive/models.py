@@ -6,6 +6,8 @@ from marshmallow.schema import Schema
 from integrations.lead_tracking.pipedrive.schemas import (
     PipedriveLeadRequestSchema,
     PipedriveLeadResponseSchema,
+    PipedriveOrganizationFieldRequestSchema,
+    PipedriveOrganizationFieldResponseSchema,
     PipedriveOrganizationRequestSchema,
     PipedriveOrganizationResponseSchema,
     PipedriveValueSchema,
@@ -78,4 +80,24 @@ class PipedriveOrganization(BasePipedriveModel):
     def __init__(self, name: str, id: int = None):
         super().__init__()
         self.name = name
+        self.id = id
+
+
+class PipedriveOrganizationField(BasePipedriveModel):
+    request_schema = PipedriveOrganizationFieldRequestSchema()
+    response_schema = PipedriveOrganizationFieldResponseSchema()
+
+    def __init__(
+        self,
+        name: str,
+        field_type: str = "varchar",
+        key: str = None,
+        add_visible_flag: bool = True,
+        id: int = None,
+    ):
+        super().__init__()
+        self.name = name
+        self.field_type = field_type
+        self.key = key
+        self.add_visible_flag = add_visible_flag
         self.id = id

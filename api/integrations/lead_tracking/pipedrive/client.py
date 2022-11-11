@@ -6,6 +6,7 @@ from integrations.lead_tracking.pipedrive.exceptions import PipedriveAPIError
 from integrations.lead_tracking.pipedrive.models import (
     PipedriveLead,
     PipedriveOrganization,
+    PipedriveOrganizationField,
 )
 
 PIPEDRIVE_BASE_URL = "https://flagsmith.pipedrive.com/api/v1"
@@ -29,16 +30,6 @@ class PipedriveAPIClient:
         )
         return PipedriveOrganization.from_response_data(api_response_data)
 
-    def create_lead(self, lead: PipedriveLead) -> PipedriveLead:
-        data = lead.to_request_data()
-        api_response_data = self._make_request(
-            resource="leads",
-            http_method="post",
-            data=data,
-            expected_status_code=201,
-        )
-        return PipedriveLead.from_response_data(api_response_data)
-
     def search_organizations(
         self, search_term: str
     ) -> typing.List[PipedriveOrganization]:
@@ -51,6 +42,28 @@ class PipedriveAPIClient:
             PipedriveOrganization.from_response_data(org["item"])
             for org in api_response_data["items"]
         ]
+
+    def create_organization_field(
+        self, organization_field: PipedriveOrganizationField
+    ) -> PipedriveOrganizationField:
+        data = organization_field.to_request_data()
+        api_response_data = self._make_request(
+            resource="organizationFields",
+            http_method="post",
+            data=data,
+            expected_status_code=201,
+        )
+        return PipedriveOrganizationField.from_response_data(api_response_data)
+
+    def create_lead(self, lead: PipedriveLead) -> PipedriveLead:
+        data = lead.to_request_data()
+        api_response_data = self._make_request(
+            resource="leads",
+            http_method="post",
+            data=data,
+            expected_status_code=201,
+        )
+        return PipedriveLead.from_response_data(api_response_data)
 
     def _make_request(
         self,
