@@ -32,6 +32,7 @@ environment_query_param = openapi.Parameter(
 class AuditLogViewSet(mixins.ListModelMixin, viewsets.GenericViewSet):
     serializer_class = AuditLogSerializer
     pagination_class = CustomPagination
+    filterset_fields = ["is_system_event"]
 
     def get_queryset(self):
         q = Q(project__organisation__in=self.request.user.organisations.all())

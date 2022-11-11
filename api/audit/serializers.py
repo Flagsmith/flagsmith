@@ -22,6 +22,7 @@ class AuditLogSerializer(serializers.ModelSerializer):
             "project",
             "related_object_id",
             "related_object_type",
+            "is_system_event",
         )
 
 
@@ -30,4 +31,5 @@ class AuditLogsQueryParamSerializer(serializers.Serializer):
     environments = serializers.ListField(
         child=serializers.IntegerField(min_value=0), required=False
     )
+    is_system_event = serializers.BooleanField(required=False)
     search = serializers.CharField(max_length=256, required=False)
