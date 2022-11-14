@@ -35,16 +35,15 @@ def _sse_enabled(get_project_from_first_arg=lambda obj: obj.project):
 
 
 @_sse_enabled(get_project_from_first_arg=lambda obj: obj)
-def send_environment_update_message_using_project(project):
-    environment_keys = list(
-        project.environments.all().values_list("api_key", flat=True)
-    )
-    tasks.send_environment_update_messages.delay(args=(environment_keys,))
+def send_environment_update_message_for_project(project):
+    tasks.send_environment_update_message_for_project.delay(args=(project.id,))
 
 
 @_sse_enabled()
-def send_environment_update_message_using_environment(environment):
-    tasks.send_environment_update_message.delay(args=(environment.api_key,))
+def send_environment_update_message_for_environment(environment):
+    tasks.send_environment_update_message.delay(
+        args=(environment.api_key, environment.updated_at.isoformat())
+    )
 
 
 @_sse_enabled()

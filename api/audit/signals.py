@@ -13,8 +13,8 @@ from integrations.dynatrace.dynatrace import DynatraceWrapper
 from integrations.new_relic.new_relic import NewRelicWrapper
 from integrations.slack.slack import SlackWrapper
 from sse import (
-    send_environment_update_message_using_environment,
-    send_environment_update_message_using_project,
+    send_environment_update_message_for_environment,
+    send_environment_update_message_for_project,
 )
 from webhooks.webhooks import WebhookEventType, call_organisation_webhooks
 
@@ -137,9 +137,9 @@ def send_environments_to_dynamodb(sender, instance, **kwargs):
 @handle_skipped_signals
 def trigger_environment_update_messages(sender, instance, **kwargs):
     if instance.environment_id:
-        send_environment_update_message_using_environment(instance.environment)
+        send_environment_update_message_for_environment(instance.environment)
     elif instance.project_id:
-        send_environment_update_message_using_project(instance.project)
+        send_environment_update_message_for_project(instance.project)
 
 
 @receiver(post_save, sender=AuditLog)
