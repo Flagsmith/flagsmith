@@ -1,3 +1,4 @@
+from core.constants import FLAGSMITH_UPDATED_AT_HEADER
 from django.urls import reverse
 from rest_framework import status
 from rest_framework.test import APIClient
@@ -52,6 +53,9 @@ def test_get_environment_document(
     # Then
     assert response.status_code == status.HTTP_200_OK
     assert response.json()
+    assert response.headers[FLAGSMITH_UPDATED_AT_HEADER] == str(
+        environment.updated_at.timestamp()
+    )
 
 
 def test_get_environment_document_fails_with_invalid_key(
