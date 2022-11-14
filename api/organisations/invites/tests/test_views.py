@@ -207,3 +207,17 @@ def test_join_organisation_alerts_admin_users_if_exceeds_plan_limit(
     mocked_send_org_over_limit_alert.delay.assert_called_once_with(
         args=(organisation.id,)
     )
+
+
+def test_join_organisation_from_link_returns_403_if_invite_links_disabled(
+    test_user_client, organisation, invite_link, settings
+):
+    # Given
+    settings.DISABLE_INVITE_LINKS = True
+    url = reverse("api-v1:users:user-join-organisation-link", args=[invite_link.hash])
+
+    # When
+    response = test_user_client.post(url)
+
+    # Then
+    assert response.status_code == status.HTTP_403_FORBIDDEN
