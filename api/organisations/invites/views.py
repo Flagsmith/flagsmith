@@ -1,6 +1,8 @@
+from django.conf import settings
 from django.shortcuts import get_object_or_404
 from rest_framework import status
 from rest_framework.decorators import action, api_view
+from rest_framework.exceptions import PermissionDenied
 from rest_framework.mixins import (
     CreateModelMixin,
     DestroyModelMixin,
@@ -52,6 +54,9 @@ def join_organisation_from_email(request, hash):
 
 @api_view(["POST"])
 def join_organisation_from_link(request, hash):
+    if settings.DISABLE_INVITE_LINKS:
+        raise PermissionDenied("Invite links are disabled.")
+
     invite = get_object_or_404(InviteLink, hash=hash)
 
     if invite.is_expired:
