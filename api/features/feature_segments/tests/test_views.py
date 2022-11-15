@@ -1,7 +1,7 @@
 import json
-from unittest.case import TestCase
 
 import pytest
+from django.test import TransactionTestCase
 from django.urls import reverse
 from rest_framework import status
 from rest_framework.test import APIClient
@@ -20,7 +20,7 @@ from util.tests import Helper
 
 
 @pytest.mark.django_db
-class FeatureSegmentViewSetTestCase(TestCase):
+class FeatureSegmentViewSetTestCase(TransactionTestCase):
     def setUp(self) -> None:
         self.client = APIClient()
         user = Helper.create_ffadminuser()
@@ -65,7 +65,8 @@ class FeatureSegmentViewSetTestCase(TestCase):
         )
 
         # When
-        response = self.client.get(url)
+        with self.assertNumQueries(2):  # 1 for paging, 1 for results
+            response = self.client.get(url)
 
         # Then
         assert response.status_code == status.HTTP_200_OK
@@ -73,6 +74,7 @@ class FeatureSegmentViewSetTestCase(TestCase):
         assert response_json["count"] == 3
         for result in response_json["results"]:
             assert result["environment"] == self.environment_1.id
+            assert "segment_name" in result
 
     def test_create_feature_segment(self):
         # Given
