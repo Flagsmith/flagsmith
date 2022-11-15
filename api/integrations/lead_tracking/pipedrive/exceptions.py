@@ -10,5 +10,5 @@ class MultipleMatchingOrganizationsError(PipedriveError):
     pass
 
 
-class OrganizationNotFoundError(PipedriveError):
+class EntityNotFoundError(PipedriveError):
     pass

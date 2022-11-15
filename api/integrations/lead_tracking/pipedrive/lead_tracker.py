@@ -6,10 +6,7 @@ from integrations.lead_tracking.lead_tracking import LeadTracker
 from users.models import FFAdminUser
 
 from .client import PipedriveAPIClient
-from .exceptions import (
-    MultipleMatchingOrganizationsError,
-    OrganizationNotFoundError,
-)
+from .exceptions import EntityNotFoundError, MultipleMatchingOrganizationsError
 from .models import PipedriveLead, PipedriveOrganization
 
 logger = logging.getLogger(__name__)
@@ -20,8 +17,8 @@ class PipedriveLeadTracker(LeadTracker):
         email_domain = user.email.split("@")[-1]
 
         try:
-            organization = self.get_org_by_domain(email_domain)
-        except OrganizationNotFoundError:
+            organization = self._get_org_by_domain(email_domain)
+        except EntityNotFoundError:
             # grab the org name from the email domain, e.g. google.com -> google
             org_name = email_domain.split(".")[-2]
             organization = self.client.create_organization(org_name)
@@ -35,10 +32,10 @@ class PipedriveLeadTracker(LeadTracker):
             PipedriveLead(title=user.full_name, organization_id=organization.id)
         )
 
-    def get_org_by_domain(self, domain: str) -> PipedriveOrganization:
+    def _get_org_by_domain(self, domain: str) -> PipedriveOrganization:
         matching_organizations = self.client.search_organizations(domain)
         if not matching_organizations:
-            raise OrganizationNotFoundError()
+            raise EntityNotFoundError()
         elif len(matching_organizations) > 1:
             raise MultipleMatchingOrganizationsError()
         return matching_organizations[0]

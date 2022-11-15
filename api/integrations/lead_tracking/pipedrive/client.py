@@ -55,6 +55,9 @@ class PipedriveAPIClient:
         )
         return PipedriveOrganizationField.from_response_data(api_response_data)
 
+    def get_organization_field(self, name: str) -> PipedriveOrganizationField:
+        pass
+
     def create_lead(self, lead: PipedriveLead) -> PipedriveLead:
         data = lead.to_request_data()
         api_response_data = self._make_request(
