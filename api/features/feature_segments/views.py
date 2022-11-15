@@ -50,7 +50,7 @@ class FeatureSegmentViewSet(
                 data=self.request.query_params
             )
             filter_serializer.is_valid(raise_exception=True)
-            return queryset.filter(**filter_serializer.data)
+            return queryset.select_related("segment").filter(**filter_serializer.data)
 
         return queryset
 
