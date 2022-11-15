@@ -19,9 +19,7 @@ class PipedriveLeadTracker(LeadTracker):
         try:
             organization = self._get_org_by_domain(email_domain)
         except EntityNotFoundError:
-            # grab the org name from the email domain, e.g. google.com -> google
-            org_name = email_domain.split(".")[-2]
-            organization = self.client.create_organization(org_name)
+            organization = self.create_organization(email_domain)
         except MultipleMatchingOrganizationsError as e:
             logger.error(
                 "Multiple organizations found in Pipedrive for domain %s", email_domain
@@ -29,8 +27,19 @@ class PipedriveLeadTracker(LeadTracker):
             raise e
 
         return self.client.create_lead(
-            PipedriveLead(title=user.full_name, organization_id=organization.id)
+            title=user.full_name, organization_id=organization.id
         )
+
+    def create_organization(self, organization_domain: str) -> PipedriveOrganization:
+        # grab the org name from the email domain, e.g. google.com -> google
+        org_name = organization_domain.split(".")[-2]
+        organization = self.client.create_organization(
+            name=org_name,
+            organization_fields={
+                settings.PIPEDRIVE_DOMAIN_ORGANIZATION_FIELD_KEY: organization_domain
+            },
+        )
+        return organization
 
     def _get_org_by_domain(self, domain: str) -> PipedriveOrganization:
         matching_organizations = self.client.search_organizations(domain)

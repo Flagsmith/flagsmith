@@ -4,38 +4,26 @@ import typing
 from marshmallow.schema import Schema
 
 from integrations.lead_tracking.pipedrive.schemas import (
-    PipedriveLeadRequestSchema,
-    PipedriveLeadResponseSchema,
-    PipedriveOrganizationFieldRequestSchema,
-    PipedriveOrganizationFieldResponseSchema,
-    PipedriveOrganizationRequestSchema,
-    PipedriveOrganizationResponseSchema,
+    PipedriveLeadSchema,
+    PipedriveOrganizationFieldSchema,
+    PipedriveOrganizationSchema,
     PipedriveValueSchema,
 )
 
 
 class BasePipedriveModel:
-    request_schema: Schema = None
-    response_schema: Schema = None
-
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-
-    def to_request_data(self, schema: Schema = None) -> dict:
-        schema = schema or self.request_schema
-        return schema.dump(self.__dict__)
+    schema: Schema = None
 
     @classmethod
     def from_response_data(
         cls, data: dict, schema: Schema = None
     ) -> "BasePipedriveModel":
-        schema = schema or cls.response_schema
+        schema = schema or cls.schema
         return cls(**schema.load(data))
 
 
 class PipedriveValue(BasePipedriveModel):
-    request_schema = PipedriveValueSchema()
-    response_schema = PipedriveValueSchema()
+    schema = PipedriveValueSchema()
 
     def __init__(self, amount: int, currency: str):
         super().__init__()
@@ -44,8 +32,7 @@ class PipedriveValue(BasePipedriveModel):
 
 
 class PipedriveLead(BasePipedriveModel):
-    request_schema = PipedriveLeadRequestSchema()
-    response_schema = PipedriveLeadResponseSchema()
+    schema = PipedriveLeadSchema()
 
     def __init__(
         self,
@@ -74,18 +61,22 @@ class PipedriveLead(BasePipedriveModel):
 
 
 class PipedriveOrganization(BasePipedriveModel):
-    request_schema = PipedriveOrganizationRequestSchema()
-    response_schema = PipedriveOrganizationResponseSchema()
+    schema = PipedriveOrganizationSchema()
 
-    def __init__(self, name: str, id: int = None):
+    def __init__(
+        self,
+        name: str,
+        id: int = None,
+        organization_fields: typing.Dict[str, typing.Any] = None,
+    ):
         super().__init__()
         self.name = name
         self.id = id
+        self.organization_fields = organization_fields
 
 
 class PipedriveOrganizationField(BasePipedriveModel):
-    request_schema = PipedriveOrganizationFieldRequestSchema()
-    response_schema = PipedriveOrganizationFieldResponseSchema()
+    schema = PipedriveOrganizationFieldSchema()
 
     def __init__(
         self,
