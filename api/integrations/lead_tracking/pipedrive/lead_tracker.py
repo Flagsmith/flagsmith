@@ -27,7 +27,7 @@ class PipedriveLeadTracker(LeadTracker):
             raise e
 
         return self.client.create_lead(
-            title=user.full_name, organization_id=organization.id
+            title=user.email, organization_id=organization.id
         )
 
     def create_organization(self, organization_domain: str) -> PipedriveOrganization:
