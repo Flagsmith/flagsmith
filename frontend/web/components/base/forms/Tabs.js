@@ -5,14 +5,14 @@ const Tabs = class extends React.Component {
     static displayName = 'Tabs'
 
     render() {
-        const children = this.props.children.filter((c)=>!!c);
+        const children = this.props.children.filter(c => !!c);
         return (
             <div className={`tabs ${this.props.className || ''}`}>
                 <div className="tabs-nav" style={isMobile ? { flexWrap: 'wrap' } : {}}>
                     {children.map((child, i) => {
                         const isSelected = this.props.value == i;
                         if (!child) {
-                            return  null
+                            return null;
                         }
                         return (
                             <Button
@@ -25,7 +25,7 @@ const Tabs = class extends React.Component {
                                   e.preventDefault();
                                   this.props.onChange(i);
                               }}
-                              style={{padding:"0 5px"}}
+                              style={{ padding: '0 5px' }}
                               className={`btn-tab btn-primary${isSelected ? ' tab-active' : ''}`}
                             >
                                 {child.props.tabLabel}

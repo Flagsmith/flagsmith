@@ -89,9 +89,11 @@ const ChangeRequestModal = class extends Component {
                                                   />
                                               </Flex>
 
-                                              <ButtonLink className="ml-2" onClick={() => {
-                                                  this.setState({ live_from: null })
-                                              }}>
+                                              <ButtonLink
+                                                className="ml-2" onClick={() => {
+                                                    this.setState({ live_from: null });
+                                                }}
+                                              >
                                                     Clear
                                               </ButtonLink>
                                           </Row>

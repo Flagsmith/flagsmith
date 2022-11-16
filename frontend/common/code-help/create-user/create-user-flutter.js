@@ -1,4 +1,4 @@
-module.exports = (envId, { LIB_NAME, USER_ID, LIB_NAME_JAVA, FEATURE_NAME, FEATURE_FUNCTION, FEATURE_NAME_ALT, FEATURE_NAME_ALT_VALUE, NPM_CLIENT }, userId) => `final flagsmithClient = FlagsmithClient(
+module.exports = (envId, { USER_ID, FEATURE_NAME, FEATURE_NAME_ALT }) => `final flagsmithClient = FlagsmithClient(
         apiKey: '${envId}' 
         config: config, 
         seeds: <Flag>[

@@ -23,7 +23,7 @@ module.exports = (WrappedComponent) => {
         }
 
         render() {
-            const { isLoading,error } = this.state;
+            const { isLoading, error } = this.state;
             const { getValue, hasFeature } = flagsmith;
 
 

@@ -13,7 +13,7 @@ module.exports = {
     },
 
     money(value, defaultValue) {
-        if (value == 0) {
+        if (value === 0) {
             return defaultValue == null ? 'FREE' : defaultValue;
         }
 
@@ -104,17 +104,14 @@ module.exports = {
     initialAndLastName(person) { // {firstName:'Kyle', lastName:'Johnson'} > K. Johnson
         const value = Format.fullName(person);
 
-
-        let words;
-
         if (!value) {
             return value;
         }
 
-        words = value.split(' ');
+        const words = value.split(' ');
 
         if (words.length > 1) {
-            return `${words[0].charAt(0).toUpperCase()}.` + ` ${words[words.length - 1]}`;
+            return `${words[0].charAt(0).toUpperCase()}. ${words[words.length - 1]}`;
         }
 
         return value;

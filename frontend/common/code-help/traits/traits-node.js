@@ -1,4 +1,4 @@
-module.exports = (envId, { TRAIT_NAME, USER_ID }, userId) => `const Flagsmith = require('flagsmith-nodejs');
+module.exports = (envId, { TRAIT_NAME, USER_ID }) => `const Flagsmith = require('flagsmith-nodejs');
 
 const flagsmith = new Flagsmith(
     environmentKey: '${envId}'

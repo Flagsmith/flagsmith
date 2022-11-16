@@ -35,7 +35,7 @@ const controller = {
 };
 
 
-var store = Object.assign({}, BaseStore, {
+const store = Object.assign({}, BaseStore, {
     id: 'account',
     getFlagsForEditing() {
         return store.model && store.model.featurestates && store.model.featurestates.concat([]).map(e => Object.assign({}, e));// immutable flags

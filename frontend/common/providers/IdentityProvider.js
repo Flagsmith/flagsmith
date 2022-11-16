@@ -1,8 +1,8 @@
-import React, { Component } from 'react';
+import React from 'react';
 import FeatureListStore from '../stores/feature-list-store';
 import IdentityStore from '../stores/identity-store';
 
-const IdentityProvider = class extends Component {
+const IdentityProvider = class extends React.Component {
     static displayName = 'IdentityProvider'
 
     constructor(props, context) {
@@ -60,8 +60,8 @@ const IdentityProvider = class extends Component {
         AppActions.removeUserFlag({ environmentId, identity, identityFlag });
     };
 
-    changeUserFlag = ({identity, identityFlag, environmentId, payload}) => {
-        AppActions.changeUserFlag({identity, identityFlag, environmentId, payload});
+    changeUserFlag = ({ identity, identityFlag, environmentId, payload }) => {
+        AppActions.changeUserFlag({ identity, identityFlag, environmentId, payload });
     };
 
     render() {
@@ -72,6 +72,9 @@ const IdentityProvider = class extends Component {
     }
 };
 
-IdentityProvider.propTypes = {};
+IdentityProvider.propTypes = {
+    onSave: OptionalFunc,
+    children: OptionalNode,
+};
 
 module.exports = IdentityProvider;

@@ -228,10 +228,10 @@ test('[Initialise]', async () => {
 
 
     log('Set user MV override');
-    await click(byId("user-feature-0"));
-    await click(byId("select-variation-medium"));
-    await click(byId("update-feature-btn"));
-    await waitAndRefresh()
+    await click(byId('user-feature-0'));
+    await click(byId('select-variation-medium'));
+    await click(byId('update-feature-btn'));
+    await waitAndRefresh();
     await assertTextContent(byId('user-feature-value-0'), '"medium"');
 
     log('Delete segment');
@@ -239,7 +239,6 @@ test('[Initialise]', async () => {
     await deleteSegment(0, '18_or_19');
     await gotoFeatures();
     await deleteFeature(0, 'mv_flag');
-
 }).after(async (t) => {
     console.log('Start of Initialise Requests');
     console.log(JSON.stringify(logger.requests, null, 2));

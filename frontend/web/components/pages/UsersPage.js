@@ -10,15 +10,15 @@ const UsersPage = class extends Component {
     constructor(props, context) {
         super(props, context);
         this.state = {
-            search: Utils.fromParam().search
+            search: Utils.fromParam().search,
         };
     }
 
     componentDidMount() {
-        if(this.state.search) {
-          AppActions.searchIdentities(this.props.match.params.environmentId, this.state.search);
+        if (this.state.search) {
+            AppActions.searchIdentities(this.props.match.params.environmentId, this.state.search);
         } else {
-          AppActions.getIdentities(this.props.match.params.environmentId);
+            AppActions.getIdentities(this.props.match.params.environmentId);
         }
         API.trackPage(Constants.pages.USERS);
     }
@@ -113,102 +113,100 @@ const UsersPage = class extends Component {
 
                             <FormGroup>
                                 <IdentityListProvider>
-                                    {({ isLoading, identities, identitiesPaging }) => {
-                                        return (
-                                            <div>
-                                                    <FormGroup>
-                                                        <PanelSearch
-                                                            renderSearchWithNoResults
-                                                            id="users-list"
-                                                            title="Users"
-                                                            className="no-pad"
-                                                            isLoading={isLoading}
-                                                            filterLabel={Utils.getIsEdge()?"Starts with":"Contains"}
-                                                            icon="ion-md-person"
-                                                            items={identities}
-                                                            paging={identitiesPaging}
-                                                            showExactFilter
-                                                            nextPage={() => AppActions.getIdentitiesPage(environmentId, identitiesPaging.next, "NEXT")}
-                                                            prevPage={() => AppActions.getIdentitiesPage(environmentId, identitiesPaging.previous, "PREVIOUS")}
-                                                            goToPage={page => AppActions.getIdentitiesPage(environmentId, `${Project.api}environments/${environmentId}/${Utils.getIdentitiesEndpoint()}/?page=${page}`)}
-                                                            renderRow={({ id, identifier }, index) => (permission ? (
-                                                                <Row
-                                                                    space className="list-item clickable" key={id}
-                                                                    data-test={`user-item-${index}`}
-                                                                >
-                                                                    <Flex>
-                                                                        <Link
-                                                                            to={`/project/${this.props.match.params.projectId}/environment/${this.props.match.params.environmentId}/users/${encodeURIComponent(identifier)}/${id}`}
-                                                                        >
-                                                                            <ButtonLink>
-                                                                                {identifier}
+                                    {({ isLoading, identities, identitiesPaging }) => (
+                                        <div>
+                                            <FormGroup>
+                                                <PanelSearch
+                                                  renderSearchWithNoResults
+                                                  id="users-list"
+                                                  title="Users"
+                                                  className="no-pad"
+                                                  isLoading={isLoading}
+                                                  filterLabel={Utils.getIsEdge() ? 'Starts with' : 'Contains'}
+                                                  icon="ion-md-person"
+                                                  items={identities}
+                                                  paging={identitiesPaging}
+                                                  showExactFilter
+                                                  nextPage={() => AppActions.getIdentitiesPage(environmentId, identitiesPaging.next, 'NEXT')}
+                                                  prevPage={() => AppActions.getIdentitiesPage(environmentId, identitiesPaging.previous, 'PREVIOUS')}
+                                                  goToPage={page => AppActions.getIdentitiesPage(environmentId, `${Project.api}environments/${environmentId}/${Utils.getIdentitiesEndpoint()}/?page=${page}`)}
+                                                  renderRow={({ id, identifier }, index) => (permission ? (
+                                                      <Row
+                                                        space className="list-item clickable" key={id}
+                                                        data-test={`user-item-${index}`}
+                                                      >
+                                                          <Flex>
+                                                              <Link
+                                                                to={`/project/${this.props.match.params.projectId}/environment/${this.props.match.params.environmentId}/users/${encodeURIComponent(identifier)}/${id}`}
+                                                              >
+                                                                  <ButtonLink>
+                                                                      {identifier}
 
-                                                                                <span className="ion-ios-arrow-forward ml-3"/>
-                                                                            </ButtonLink>
+                                                                      <span className="ion-ios-arrow-forward ml-3"/>
+                                                                  </ButtonLink>
 
-                                                                        </Link>
-                                                                    </Flex>
+                                                              </Link>
+                                                          </Flex>
 
-                                                                    <Column>
-                                                                        <button
-                                                                            id="remove-feature"
-                                                                            className="btn btn--with-icon"
-                                                                            type="button"
-                                                                            onClick={() => this.removeIdentity(id, identifier)}
-                                                                        >
-                                                                            <RemoveIcon/>
-                                                                        </button>
-                                                                    </Column>
-                                                                </Row>
-                                                            ) : (
-                                                                <Row
-                                                                    space className="list-item" key={id}
-                                                                    data-test={`user-item-${index}`}
-                                                                >
-                                                                    {identifier}
-                                                                </Row>
-                                                            ))}
-                                                            renderNoResults={(
-                                                                <div>
+                                                          <Column>
+                                                              <button
+                                                                id="remove-feature"
+                                                                className="btn btn--with-icon"
+                                                                type="button"
+                                                                onClick={() => this.removeIdentity(id, identifier)}
+                                                              >
+                                                                  <RemoveIcon/>
+                                                              </button>
+                                                          </Column>
+                                                      </Row>
+                                                  ) : (
+                                                      <Row
+                                                        space className="list-item" key={id}
+                                                        data-test={`user-item-${index}`}
+                                                      >
+                                                          {identifier}
+                                                      </Row>
+                                                  ))}
+                                                  renderNoResults={(
+                                                      <div>
                                                                     You have no users in your project{this.state.search ? <span> for <strong>"{this.state.search}"</strong></span> : ''}.
-                                                                </div>
+                                                      </div>
                                                             )}
-                                                            filterRow={(flag, search) => true}
-                                                            search={this.state.search}
-                                                            onChange={(e) => {
-                                                                this.setState({ search: Utils.safeParseEventValue(e) });
-                                                                AppActions.searchIdentities(this.props.match.params.environmentId, Utils.safeParseEventValue(e));
-                                                            }}
-                                                            isLoading={isLoading}
-                                                        />
-                                                    </FormGroup>
-                                                <FormGroup>
-                                                    <p className="faint mt-4">
+                                                  filterRow={(flag, search) => true}
+                                                  search={this.state.search}
+                                                  onChange={(e) => {
+                                                      this.setState({ search: Utils.safeParseEventValue(e) });
+                                                      AppActions.searchIdentities(this.props.match.params.environmentId, Utils.safeParseEventValue(e));
+                                                  }}
+                                                  isLoading={isLoading}
+                                                />
+                                            </FormGroup>
+                                            <FormGroup>
+                                                <p className="faint mt-4">
                                                         Users are created for your environment automatically when calling
                                                         identify/get flags
                                                         from any of the SDKs.
-                                                        <br/>
+                                                    <br/>
                                                         We've created
-                                                        {' '}
-                                                        <strong>user_123456</strong>
-                                                        {' '}
+                                                    {' '}
+                                                    <strong>user_123456</strong>
+                                                    {' '}
                                                         for you so you always have an example user to
                                                         test with on your environments.
-                                                    </p>
-                                                    <div className="row">
-                                                        <div className="col-md-12">
-                                                            <CodeHelp
-                                                              showInitially
-                                                              title="Creating users and getting their feature settings"
-                                                              snippets={Constants.codeHelp.CREATE_USER(this.props.match.params.environmentId, identities && identities[0] && identities[0].identifier)}
-                                                            />
-                                                        </div>
+                                                </p>
+                                                <div className="row">
+                                                    <div className="col-md-12">
+                                                        <CodeHelp
+                                                          showInitially
+                                                          title="Creating users and getting their feature settings"
+                                                          snippets={Constants.codeHelp.CREATE_USER(this.props.match.params.environmentId, identities && identities[0] && identities[0].identifier)}
+                                                        />
                                                     </div>
+                                                </div>
 
-                                                </FormGroup>
-                                            </div>
-                                        );
-                                    }}
+                                            </FormGroup>
+                                        </div>
+                                    )}
 
                                 </IdentityListProvider>
                             </FormGroup>

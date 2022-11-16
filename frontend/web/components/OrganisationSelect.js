@@ -38,10 +38,10 @@ const OrganisationSelect = class extends Component {
 															    this.props.onChange && this.props.onChange(organisation);
                               }}
                               className="btn btn-link btn-sm edit"
-                              to={ '/organisation-settings'}
+                              to="/organisation-settings"
                             >
-															<ion style={{ fontSize: 16, marginRight:4 }} className="icon--primary ion ion-md-settings"/>
-															{"Manage"}
+                                <ion style={{ fontSize: 16, marginRight: 4 }} className="icon--primary ion ion-md-settings"/>
+                                {'Manage'}
                             </NavLink>
                             )}
                         </Row>

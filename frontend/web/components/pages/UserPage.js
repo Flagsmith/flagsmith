@@ -223,7 +223,7 @@ const UserPage = class extends Component {
 
                                                   header={(
                                                       <Row className="px-0 pt-0 pb-2">
-                                                              <TagSelect
+                                                          <TagSelect
                                                             showUntagged
                                                             showClearAll={(this.state.tags && !!this.state.tags.length) || this.state.showArchived}
                                                             onClearAll={() => this.setState({ showArchived: false, tags: [] }, this.filter)}
@@ -253,7 +253,7 @@ const UserPage = class extends Component {
                                                                   />
                                                               </div>
                                                           </TagSelect>
-                                                          </Row>
+                                                      </Row>
                                                   )}
                                                   isLoading={FeatureListStore.isLoading}
                                                   onSortChange={(sort) => {
@@ -294,7 +294,7 @@ const UserPage = class extends Component {
                                                           onClick();
                                                       }
                                                       return (
-                                                              <Row
+                                                          <Row
                                                             className={`list-item clickable ${flagDifferent && 'flag-different'}`} key={id} space
                                                             data-test={`user-feature-${i}`}
                                                           >
@@ -329,7 +329,7 @@ const UserPage = class extends Component {
                                                                                       ) : (
                                                                                           <span>
                                                                                                 This flag is being overridden by segments and would normally be <strong>{flagEnabled ? 'on' : 'off'}</strong> for this user
-                                                                                          </span>
+                                                                                              </span>
                                                                                       )}
 
                                                                                   </Flex>
@@ -402,19 +402,19 @@ const UserPage = class extends Component {
                                                                       </div>
                                                                   </Column>
                                                                   {hasUserOverride && (
-                                                                  <Column>
-                                                                      <Button
-                                                                        onClick={() => this.confirmRemove(_.find(projectFlags, { id }), () => {
-                                                                            removeFlag({
-                                                                                environmentId: this.props.match.params.environmentId,
-                                                                                identity: this.props.match.params.id,
-                                                                                identityFlag,
-                                                                            });
-                                                                        }, identity.identity.identifier)}
-                                                                      >
+                                                                      <Column>
+                                                                          <Button
+                                                                            onClick={() => this.confirmRemove(_.find(projectFlags, { id }), () => {
+                                                                                removeFlag({
+                                                                                    environmentId: this.props.match.params.environmentId,
+                                                                                    identity: this.props.match.params.id,
+                                                                                    identityFlag,
+                                                                                });
+                                                                            }, identity.identity.identifier)}
+                                                                          >
                                                                                 Reset
-                                                                      </Button>
-                                                                  </Column>
+                                                                          </Button>
+                                                                      </Column>
                                                                   )}
                                                               </Row>
                                                           </Row>
@@ -423,10 +423,10 @@ const UserPage = class extends Component {
                                                     }
                                                   renderNoResults={(
                                                       <Panel
-                                                            icon="ion-ios-rocket"
-                                                            title="Features"
-                                                          >
-                                                              <div className="text-center">
+                                                        icon="ion-ios-rocket"
+                                                        title="Features"
+                                                      >
+                                                          <div className="text-center">
                                                                 This user has no features yet.
                                                               {' '}
                                                               <br/>
@@ -442,7 +442,7 @@ const UserPage = class extends Component {
                                                                 for your project you will set them per user here.
                                                           </div>
 
-                                                          </Panel>
+                                                      </Panel>
                                                     )}
                                                   paging={FeatureListStore.paging}
                                                   search={this.state.search}
@@ -534,13 +534,13 @@ const UserPage = class extends Component {
                                                 {({ isLoading: segmentsLoading, segments }) => (segmentsLoading ? <div className="text-center"><Loader/></div> : (
                                                     <FormGroup>
                                                         <PanelSearch
-                                                              id="user-segments-list"
-                                                              className="no-pad"
-                                                              icon="ion-ios-globe"
-                                                              title="Segments"
-                                                              itemHeight={70}
-                                                              items={segments || []}
-                                                              renderRow={({ name, id, enabled, created_date, type, description }, i) => (
+                                                          id="user-segments-list"
+                                                          className="no-pad"
+                                                          icon="ion-ios-globe"
+                                                          title="Segments"
+                                                          itemHeight={70}
+                                                          items={segments || []}
+                                                          renderRow={({ name, id, enabled, created_date, type, description }, i) => (
                                                               <Row
                                                                 onClick={() => this.editSegment(segments[i])}
                                                                 className="list-item clickable"
@@ -555,8 +555,8 @@ const UserPage = class extends Component {
                                                                             onClick={() => this.editSegment(segments[i])}
                                                                           >
                                                                               <span data-test={`segment-${i}-name`} className="bold-link">
-                                                                                      {name}
-                                                                                  </span>
+                                                                                  {name}
+                                                                              </span>
                                                                           </ButtonLink>
                                                                       </Row>
                                                                       <div className="list-item-footer faint mt-2">
@@ -569,7 +569,7 @@ const UserPage = class extends Component {
                                                               </Row>
                                                           )
                                                                 }
-                                                              renderNoResults={(
+                                                          renderNoResults={(
                                                               <Panel
                                                                 icon="ion-ios-globe"
                                                                 title="Segments"
@@ -579,8 +579,8 @@ const UserPage = class extends Component {
                                                                   </div>
                                                               </Panel>
                                                                 )}
-                                                              filterRow={({ name }, search) => name.toLowerCase().indexOf(search) > -1}
-                                                            />
+                                                          filterRow={({ name }, search) => name.toLowerCase().indexOf(search) > -1}
+                                                        />
                                                     </FormGroup>
                                                 ))}
                                             </IdentitySegmentsProvider>
