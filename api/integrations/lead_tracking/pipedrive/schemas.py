@@ -13,10 +13,10 @@ class PipedriveValueSchema(BaseSchema):
 
 
 class PipedriveLeadSchema(BaseSchema):
-    id = fields.UUID()
+    id = fields.Str()
     title = fields.Str()
     owner_id = fields.Int()
-    label_ids = fields.List(fields.Int)
+    label_ids = fields.List(fields.Str)
     person_id = fields.Int(allow_none=True)
     organization_id = fields.Int()
     value = fields.Nested(PipedriveValueSchema, allow_none=True)

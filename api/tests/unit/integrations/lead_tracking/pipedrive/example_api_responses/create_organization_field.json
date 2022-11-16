@@ -1,0 +1,25 @@
+{
+  "success": true,
+  "data": {
+    "id": 4031,
+    "key": "1ebc98029a711f60a51b7169b5784fa85d83f4cc",
+    "name": "new-field",
+    "order_nr": 30,
+    "field_type": "varchar",
+    "json_column_flag": true,
+    "add_time": "2022-11-16 10:59:39",
+    "update_time": "2022-11-16 10:59:39",
+    "last_updated_by_user_id": 13603501,
+    "active_flag": true,
+    "edit_flag": true,
+    "index_visible_flag": true,
+    "details_visible_flag": true,
+    "add_visible_flag": true,
+    "important_flag": false,
+    "bulk_edit_allowed": true,
+    "searchable_flag": true,
+    "filtering_allowed": true,
+    "sortable_flag": true,
+    "mandatory_flag": false
+  }
+}

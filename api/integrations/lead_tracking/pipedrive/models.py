@@ -39,7 +39,7 @@ class PipedriveLead(BasePipedriveModel):
         title: str,
         id: str = None,
         owner_id: int = None,
-        label_ids: typing.List[int] = None,
+        label_ids: typing.List[str] = None,
         person_id: int = None,
         organization_id: int = None,
         value: PipedriveValue = None,

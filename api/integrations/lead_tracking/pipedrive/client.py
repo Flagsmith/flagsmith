@@ -9,24 +9,28 @@ from integrations.lead_tracking.pipedrive.models import (
     PipedriveOrganizationField,
 )
 
-PIPEDRIVE_BASE_URL = "https://flagsmith.pipedrive.com/api/v1"
 ALLOWED_METHODS = ("get", "post", "put", "patch", "delete")
 
 
 class PipedriveAPIClient:
-    def __init__(self, api_token: str, base_url: str = PIPEDRIVE_BASE_URL):
+    def __init__(
+        self,
+        api_token: str,
+        base_url: str,
+        session: typing.Optional[requests.Session] = None,
+    ):
         self.api_token = api_token
         self.base_url = base_url
-        self.session = requests.Session()
+        self.session = session or requests.Session()
         self.session.headers.update({"Content-Type": "application/json"})
 
     def create_organization(
-        self, name: str, organization_fields: typing.Dict[str, typing.Any]
+        self, name: str, organization_fields: typing.Dict[str, typing.Any] = None
     ):
         api_response_data = self._make_request(
             resource="organizations",
             http_method="post",
-            data={"name": name, **organization_fields},
+            data={"name": name, **(organization_fields or {})},
             expected_status_code=201,
         )
         return PipedriveOrganization.from_response_data(api_response_data)
@@ -45,7 +49,7 @@ class PipedriveAPIClient:
         ]
 
     def create_organization_field(
-        self, name: str, field_type: str
+        self, name: str, field_type: str = "varchar"
     ) -> PipedriveOrganizationField:
         api_response_data = self._make_request(
             resource="organizationFields",
