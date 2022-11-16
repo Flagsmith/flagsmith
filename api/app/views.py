@@ -50,6 +50,7 @@ def project_overrides(request):
         "mixpanel": "MIXPANEL_API_KEY",
         "sentry": "SENTRY_API_KEY",
         "amplitude": "AMPLITUDE_API_KEY",
+        "hideInviteLinks": "DISABLE_INVITE_LINKS",
     }
 
     override_data = {

@@ -127,4 +127,4 @@ class EnvironmentAPIKeySerializer(serializers.ModelSerializer):
     class Meta:
         model = EnvironmentAPIKey
         fields = ("id", "key", "active", "created_at", "name", "expires_at")
-        read_only_fields = ("id", "created_at")
+        read_only_fields = ("id", "created_at", "key")

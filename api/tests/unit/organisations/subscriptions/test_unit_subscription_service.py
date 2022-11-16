@@ -1,9 +1,11 @@
+from organisations.chargebee.metadata import ChargebeeObjMetadata
 from organisations.subscriptions.constants import (
+    CHARGEBEE,
     MAX_API_CALLS_IN_FREE_PLAN,
     MAX_PROJECTS_IN_FREE_PLAN,
     MAX_SEATS_IN_FREE_PLAN,
+    XERO,
 )
-from organisations.subscriptions.metadata import BaseSubscriptionMetadata
 from organisations.subscriptions.subscription_service import (
     get_subscription_metadata,
 )
@@ -19,6 +21,7 @@ def test_get_subscription_metadata_returns_default_values_if_org_does_not_have_s
     assert subscription_metadata.api_calls == MAX_API_CALLS_IN_FREE_PLAN
     assert subscription_metadata.seats == MAX_SEATS_IN_FREE_PLAN
     assert subscription_metadata.projects == MAX_PROJECTS_IN_FREE_PLAN
+    assert subscription_metadata.payment_source is None
 
 
 def test_get_subscription_metadata_uses_chargebee_data_if_chargebee_subscription_exists(
@@ -31,7 +34,7 @@ def test_get_subscription_metadata_uses_chargebee_data_if_chargebee_subscription
     mocked_get_chargebee_subscription_metadata = mocker.patch(
         "organisations.subscriptions.subscription_service.get_chargebee_subscription_metadata",
         autospec=True,
-        return_value=BaseSubscriptionMetadata(
+        return_value=ChargebeeObjMetadata(
             seats=seats, projects=projects, api_calls=api_calls
         ),
     )
@@ -45,6 +48,7 @@ def test_get_subscription_metadata_uses_chargebee_data_if_chargebee_subscription
     mocked_get_chargebee_subscription_metadata.assert_called_once_with(
         chargebee_subscription.subscription_id
     )
+    assert subscription_metadata.payment_source == CHARGEBEE
 
 
 def test_get_subscription_metadata_uses_metadata_from_subscription_for_non_chargebee_subscription(
@@ -57,3 +61,4 @@ def test_get_subscription_metadata_uses_metadata_from_subscription_for_non_charg
     assert subscription_metadata.api_calls == xero_subscription.max_api_calls
     assert subscription_metadata.seats == xero_subscription.max_seats
     assert subscription_metadata.projects is None
+    assert subscription_metadata.payment_source == XERO

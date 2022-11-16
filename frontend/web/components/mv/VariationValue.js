@@ -8,6 +8,7 @@ const VariationValue = ({
     weightTitle,
     onRemove,
     index,
+    disabled,
 }) => (
     <div className="panel panel--flat panel-without-heading mb-2">
         <div className="panel-content">
@@ -19,7 +20,7 @@ const VariationValue = ({
                             data-test={`featureVariationValue${index}`}
                             name="featureValue" className="full-width"
                             value={Utils.getTypedValue(Utils.featureStateToValue(value))}
-                            readOnly={!onRemove}
+                            disabled={disabled}
                             onChange={(e) => {
                                 onChange({
                                     ...value,
@@ -44,7 +45,7 @@ const VariationValue = ({
                           });
                       }}
                       value={value.default_percentage_allocation}
-                      inputProps={{ style: { marginTop: 2 }, maxLength: 3 }}
+                      inputProps={{ style: { marginTop: 2 }, maxLength: 3, readOnly: disabled }}
                       title={weightTitle}
                     />
                 </div>

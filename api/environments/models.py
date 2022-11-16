@@ -69,6 +69,10 @@ class Environment(LifecycleModel):
     allow_client_traits = models.BooleanField(
         default=True, help_text="Allows clients using the client API key to set traits."
     )
+    updated_at = models.DateTimeField(
+        default=timezone.now,
+        help_text="Tracks changes to self and related entities, e.g. FeatureStates.",
+    )
 
     objects = EnvironmentManager()
 

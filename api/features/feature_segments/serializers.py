@@ -29,13 +29,18 @@ class FeatureSegmentQuerySerializer(serializers.Serializer):
 
 
 class FeatureSegmentListSerializer(serializers.ModelSerializer):
+    segment_name = serializers.SerializerMethodField()
+
     class Meta:
         model = FeatureSegment
-        fields = ("id", "segment", "priority", "environment")
-        read_only_fields = ("id", "segment", "priority", "environment")
+        fields = ("id", "segment", "priority", "environment", "segment_name")
+        read_only_fields = ("id", "segment", "priority", "environment", "segment_name")
 
     def get_value(self, instance):
         return instance.get_value()
+
+    def get_segment_name(self, instance: FeatureSegment) -> str:
+        return instance.segment.name
 
 
 class FeatureSegmentChangePrioritiesSerializer(serializers.Serializer):

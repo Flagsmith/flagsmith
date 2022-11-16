@@ -4,9 +4,8 @@ import VariationValue from './VariationValue';
 import ValueEditor from '../ValueEditor';
 import InfoMessage from '../InfoMessage';
 
-export default function VariationOptions({ multivariateOptions, select, controlValue, weightTitle, variationOverrides, removeVariation, updateVariation, setVariations, setValue, preventRemove }) {
+export default function VariationOptions({ multivariateOptions, disabled, select, controlValue, weightTitle, variationOverrides, removeVariation, updateVariation, setVariations, setValue, preventRemove }) {
     const invalid = multivariateOptions.length && controlValue < 0;
-
     if (!multivariateOptions || !multivariateOptions.length) {
         return null;
     }
@@ -31,7 +30,7 @@ export default function VariationOptions({ multivariateOptions, select, controlV
                     <div className="panel-content">
                         <Row>
                             <Flex>
-                                <ValueEditor value={Utils.getTypedValue(controlValue)}/>
+                                <ValueEditor disabled={disabled} value={Utils.getTypedValue(controlValue)}/>
                             </Flex>
                             <div
                               onMouseDown={(e) => {
@@ -58,8 +57,8 @@ export default function VariationOptions({ multivariateOptions, select, controlV
                                         <ValueEditor value={Utils.getTypedValue(Utils.featureStateToValue(theValue))}/>
                                     </Flex>
                                     <div
-                                        data-test={`select-variation-${Utils.featureStateToValue(theValue)}`}
-                                        onMouseDown={(e) => {
+                                      data-test={`select-variation-${Utils.featureStateToValue(theValue)}`}
+                                      onMouseDown={(e) => {
                                           e.stopPropagation();
                                           e.preventDefault();
                                           setVariations([{
@@ -78,13 +77,14 @@ export default function VariationOptions({ multivariateOptions, select, controlV
                         <VariationValue
                           key={i}
                           index={i}
-                          preventRemove={preventRemove}
+                          preventRemove={preventRemove || disabled}
                           value={theValue}
                           onChange={(e) => {
                               updateVariation(i, e, variationOverrides);
                           }}
                           weightTitle={weightTitle}
-                          onRemove={preventRemove ? null : () => removeVariation(i)}
+                          disabled={disabled}
+                          onRemove={preventRemove || disabled ? null : () => removeVariation(i)}
                         />
                     );
                 })
