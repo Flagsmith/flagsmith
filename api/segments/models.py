@@ -164,6 +164,7 @@ class Condition(AbstractBaseExportableModel):
     operator = models.CharField(choices=CONDITION_TYPES, max_length=500)
     property = models.CharField(blank=True, null=True, max_length=1000)
     value = models.CharField(max_length=1000, blank=True, null=True)
+    description = models.TextField(blank=True, null=True, max_length=2000)
 
     rule = models.ForeignKey(
         SegmentRule, on_delete=models.CASCADE, related_name="conditions"
