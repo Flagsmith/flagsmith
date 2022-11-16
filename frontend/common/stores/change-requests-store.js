@@ -1,16 +1,13 @@
 const BaseStore = require('./base/_store');
-const OrganisationStore = require('./organisation-store');
 const data = require('../data/base/_data');
-const { env } = require('../../.eslintrc');
 
 const PAGE_SIZE = 20;
-const createdFirstFeature = false;
 const controller = {
 
     actionChangeRequest: (id, action, cb) => {
         store.loading();
         data.post(`${Project.api}features/workflows/change-requests/${id}/${action}/`)
-            .then((res) => {
+            .then(() => {
                 data.get(`${Project.api}features/workflows/change-requests/${id}/`)
                     .then((res) => {
                         store.model[id] = res;
@@ -49,7 +46,7 @@ const controller = {
     deleteChangeRequest: (id, cb) => {
         store.loading();
         data.delete(`${Project.api}features/workflows/change-requests/${id}/`)
-            .then((res) => {
+            .then(() => {
                 store.loaded();
                 cb();
             }).catch(e => API.ajaxHandler(store, e));
@@ -65,21 +62,19 @@ const controller = {
     getChangeRequest: (id, projectId, environmentId) => {
         store.loading();
         data.get(`${Project.api}features/workflows/change-requests/${id}/`)
-            .then((res) => {
-                return Promise.all(
-                    [
-                        data.get(`${Project.api}environments/${environmentId}/featurestates/?feature=${res.feature_states[0].feature}`),
-                        data.get(`${Project.api}projects/${projectId}/features/${res.feature_states[0].feature}/`)
-                    ]
-                ).then(([environmentFlag, projectFlag])=>{
-                    store.model[id] = res;
-                    store.flags[id] = {
-                        environmentFlag: environmentFlag.results[0],
-                        projectFlag: projectFlag
-                    }
-                    store.loaded();
-                })
-            }).catch(e => API.ajaxHandler(store, e));
+            .then(res => Promise.all(
+                [
+                    data.get(`${Project.api}environments/${environmentId}/featurestates/?feature=${res.feature_states[0].feature}`),
+                    data.get(`${Project.api}projects/${projectId}/features/${res.feature_states[0].feature}/`),
+                ],
+            ).then(([environmentFlag, projectFlag]) => {
+                store.model[id] = res;
+                store.flags[id] = {
+                    environmentFlag: environmentFlag.results[0],
+                    projectFlag,
+                };
+                store.loaded();
+            })).catch(e => API.ajaxHandler(store, e));
     },
 };
 
@@ -110,6 +105,8 @@ store.dispatcherIndex = Dispatcher.register(store, (payload) => {
             break;
         case Actions.ACTION_CHANGE_REQUEST:
             controller.actionChangeRequest(action.id, action.action, action.cb);
+            break;
+        default:
             break;
     }
 });

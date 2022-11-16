@@ -1,7 +1,7 @@
-import React, { Component } from 'react';
+import React from 'react';
 import _data from '../data/base/_data';
 
-const IdentityListProvider = class extends Component {
+const IdentityListProvider = class extends React.Component {
   static displayName = 'IdentityListProvider'
 
   constructor(props, context) {
@@ -25,7 +25,7 @@ const IdentityListProvider = class extends Component {
                   traits: res.keys,
               });
           })
-          .catch((e) => {
+          .catch((error) => {
               this.setState({ error, isLoading: false });
           });
   }
@@ -45,6 +45,10 @@ const IdentityListProvider = class extends Component {
   }
 };
 
-IdentityListProvider.propTypes = {};
+IdentityListProvider.propTypes = {
+    children: OptionalNode,
+    environmentId: RequiredString,
+
+};
 
 module.exports = IdentityListProvider;

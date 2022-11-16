@@ -26,11 +26,11 @@ export default class Paging extends PureComponent {
         const lastPage = Math.ceil(paging.count / paging.pageSize);
         const spaceBetween = 2;
         // const numberOfPages = Math.ceil(paging.count / paging.pageSize);
-        const from = Math.max(0, (currentIndex+1) - spaceBetween);
-        const to = Math.min(lastPage, (currentIndex? currentIndex: currentIndex+1) + spaceBetween);
+        const from = Math.max(0, (currentIndex + 1) - spaceBetween);
+        const to = Math.min(lastPage, (currentIndex || currentIndex + 1) + spaceBetween);
         const range = _.range(from, to);
         const noPages = range.length < 2;
-        if (noPages  && !(paging.next||paging.previous) ) {
+        if (noPages && !(paging.next || paging.previous)) {
             return <div/>;
         }
         return (
@@ -40,7 +40,7 @@ export default class Paging extends PureComponent {
                   onClick={() => prevPage()}
                 />
                 <Row className="list-item">
-                    {!range.includes(0) && !noPages&& (
+                    {!range.includes(0) && !noPages && (
                       <>
                           <div
                             role="button"
@@ -55,12 +55,13 @@ export default class Paging extends PureComponent {
                           <div
                             className={cn({
                                 page: true,
-                            })}>
+                            })}
+                          >
                               ...
                           </div>
                       </>
                     )}
-                    {!noPages&&_.map(range, index => (
+                    {!noPages && _.map(range, index => (
                         <div
                           key={index} role="button"
                           className={cn({
@@ -72,7 +73,7 @@ export default class Paging extends PureComponent {
                             {index + 1}
                         </div>
                     ))}
-                    {!noPages&&!range.includes(lastPage-1) && (
+                    {!noPages && !range.includes(lastPage - 1) && (
                       <>
 
                           <div

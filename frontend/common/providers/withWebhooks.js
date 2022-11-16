@@ -4,20 +4,18 @@ export default (WrappedComponent) => {
     class HOC extends React.Component {
         static displayName = 'withWebhooks';
 
-        getWebhooks = () => {
-            return data.get(`${Project.api}environments/${this.props.match.params.environmentId}/webhooks/`)
-                .then((webhooks) => {
-                    this.setState({
-                        webhooks,
-                        webhooksLoading: false,
-                    });
+        getWebhooks = () => data.get(`${Project.api}environments/${this.props.match.params.environmentId}/webhooks/`)
+            .then((webhooks) => {
+                this.setState({
+                    webhooks,
+                    webhooksLoading: false,
                 });
-        }
+            })
 
         deleteWebhook = (webhook) => {
             this.setState({ webhooksLoading: true });
             return data.delete(`${Project.api}environments/${this.props.match.params.environmentId}/webhooks/${webhook.id}/`)
-                .then((webhooks) => {
+                .then(() => {
                     this.getWebhooks();
                 });
         }
@@ -26,7 +24,7 @@ export default (WrappedComponent) => {
         saveWebhook = (webhook) => {
             this.setState({ webhooksLoading: true });
             return data.put(`${Project.api}environments/${this.props.match.params.environmentId}/webhooks/${webhook.id}/`, webhook)
-                .then((webhooks) => {
+                .then(() => {
                     this.getWebhooks();
                 });
         }
@@ -35,7 +33,7 @@ export default (WrappedComponent) => {
         createWebhook = (webhook) => {
             this.setState({ webhooksLoading: true });
             return data.post(`${Project.api}environments/${this.props.match.params.environmentId}/webhooks/`, webhook)
-                .then((webhooks) => {
+                .then(() => {
                     this.getWebhooks();
                 });
         }

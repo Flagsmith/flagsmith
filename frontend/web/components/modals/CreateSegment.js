@@ -229,17 +229,17 @@ const CreateSegment = class extends Component {
                         </label>
                         <Flex>
                             <Input
-                                ref={e => this.input = e}
-                                data-test="segmentID"
-                                name="id"
-                                id="segmentID"
-                                readOnly={isEdit}
-                                maxLength={SEGMENT_ID_MAXLENGTH}
-                                value={name}
-                                onChange={e => this.setState({ name: Format.enumeration.set(Utils.safeParseEventValue(e)).toLowerCase() })}
-                                isValid={name && name.length}
-                                type="text" title={isEdit ? 'ID' : 'ID*'}
-                                placeholder="E.g. power_users"
+                              ref={e => this.input = e}
+                              data-test="segmentID"
+                              name="id"
+                              id="segmentID"
+                              readOnly={isEdit}
+                              maxLength={SEGMENT_ID_MAXLENGTH}
+                              value={name}
+                              onChange={e => this.setState({ name: Format.enumeration.set(Utils.safeParseEventValue(e)).toLowerCase() })}
+                              isValid={name && name.length}
+                              type="text" title={isEdit ? 'ID' : 'ID*'}
+                              placeholder="E.g. power_users"
                             />
                         </Flex>
 

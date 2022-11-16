@@ -10,7 +10,7 @@ const theDispatcher = Object.assign(Dispatcher, {
             source: 'VIEW_ACTION',
             action,
         };
-        
+
         that.dispatch(payload);
     },
 

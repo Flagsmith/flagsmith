@@ -45,6 +45,7 @@ module.exports = {
             jquery: 'jquery',
         }),
     ]).concat(require('./pages').map((page) => {
+        // eslint-disable-next-line no-console
         console.log(page);
         return new HtmlWebpackPlugin({
             filename: `${page}.html`, // output
@@ -63,18 +64,18 @@ module.exports = {
                             convertToAbsoluteUrls: false,
                         },
                     },
-                        {
-                            loader: 'css-loader',
-                            options: {
-                                importLoaders: 1,
-                                sourceMap: true,
-                            },
-                        }, {
-                            loader: 'sass-loader',
-                            options: {
-                                sourceMap: true,
-                            },
-                        }],
+                    {
+                        loader: 'css-loader',
+                        options: {
+                            importLoaders: 1,
+                            sourceMap: true,
+                        },
+                    }, {
+                        loader: 'sass-loader',
+                        options: {
+                            sourceMap: true,
+                        },
+                    }],
                 },
             ]),
     },

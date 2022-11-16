@@ -1,7 +1,7 @@
-import React, { Component } from 'react';
+import React from 'react';
 import OrganisationStore from '../stores/organisation-store';
 
-const SelectedProjectProvider = class extends Component {
+const SelectedProjectProvider = class extends React.Component {
     static displayName = 'SelectedProjectProvider';
 
     constructor(props, context) {
@@ -30,6 +30,9 @@ const SelectedProjectProvider = class extends Component {
     }
 };
 
-SelectedProjectProvider.propTypes = {};
+SelectedProjectProvider.propTypes = {
+    id: RequiredString,
+    children: OptionalNode,
+};
 
 module.exports = SelectedProjectProvider;

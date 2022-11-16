@@ -122,9 +122,9 @@ Team Members
                                         <p className="text-small text-center">for enterprise pricing</p>
                                         <a
                                           onClick={() => {
-                                              if(window.$crisp){
-                                                  closeModal()
-                                                  Utils.openChat()
+                                              if (window.$crisp) {
+                                                  closeModal();
+                                                  Utils.openChat();
                                               }
                                           }} className="pricing-cta blue"
                                         >Contact Us

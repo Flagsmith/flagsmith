@@ -1,4 +1,4 @@
-import React, { Component } from 'react';
+import React from 'react';
 import ProjectStore from '../stores/project-store';
 import EnvironmentStore from '../stores/environment-store';
 import OrganisationStore from '../stores/organisation-store';

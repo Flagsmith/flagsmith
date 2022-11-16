@@ -13,7 +13,7 @@ import ConfirmRemoveAuditWebhook from '../modals/ConfirmRemoveAuditWebhook';
 import Button from '../base/forms/Button';
 import { EditPermissionsModal } from '../EditPermissions';
 import AdminAPIKeys from '../AdminAPIKeys';
-import ButtonDropdown from "../ButtonDropdown";
+import ButtonDropdown from '../ButtonDropdown';
 
 
 const OrganisationSettingsPage = class extends Component {
@@ -185,7 +185,7 @@ const OrganisationSettingsPage = class extends Component {
             let totalEnvironmentDocument = 0;
             let totalIdentities = 0;
             data.events_list.map((v) => {
-                totalEnvironmentDocument += v["Environment-document"] || 0;
+                totalEnvironmentDocument += v['Environment-document'] || 0;
                 totalFlags += v.Flags || 0;
                 totalTraits += v.Traits || 0;
                 totalIdentities += v.Identities || 0;
@@ -270,7 +270,10 @@ const OrganisationSettingsPage = class extends Component {
                             <Bar dataKey="Flags" stackId="a" fill="#6633ff" />
                             <Bar dataKey="Identities" stackId="a" fill="#00a696" />
                             <Bar dataKey="Traits" stackId="a" fill="#f18e7f" />
-                            <Bar name="Environment Document" dataKey="Environment-document" stackId="a" fill="#F6D46E" />
+                            <Bar
+                              name="Environment Document" dataKey="Environment-document" stackId="a"
+                              fill="#F6D46E"
+                            />
                         </BarChart>
                     </ResponsiveContainer>
                 </div>
@@ -309,7 +312,7 @@ const OrganisationSettingsPage = class extends Component {
     render() {
         const { name, webhook_notification_email } = this.state;
         const { props: { webhooks, webhooksLoading } } = this;
-        const hasRbacPermission =  Utils.getPlansPermission('RBAC');
+        const hasRbacPermission = Utils.getPlansPermission('RBAC');
         const paymentsEnabled = Utils.getFlagsmithHasFeature('payments_enabled');
         const force2faPermission = Utils.getPlansPermission('FORCE_2FA');
 
@@ -324,8 +327,8 @@ const OrganisationSettingsPage = class extends Component {
                         organisation,
                     }, { createOrganisation, selectOrganisation, deleteOrganisation }) => !!organisation && (
                         <OrganisationProvider>
-                            {({ isLoading, name, error, projects, usage, users, invites, influx_data, inviteLinks, subscriptionMeta ,invalidateInviteLink}) => {
-                                const {max_seats} = subscriptionMeta || organisation.subscription || {max_seats:1};
+                            {({ isLoading, name, error, projects, usage, users, invites, influx_data, inviteLinks, subscriptionMeta, invalidateInviteLink }) => {
+                                const { max_seats } = subscriptionMeta || organisation.subscription || { max_seats: 1 };
                                 return (
                                     <div>
                                         <FormGroup>
@@ -336,14 +339,14 @@ const OrganisationSettingsPage = class extends Component {
                                                         <Row>
                                                             <Column className="m-l-0">
                                                                 <Input
-                                                                    ref={e => this.input = e}
-                                                                    data-test="organisation-name"
-                                                                    value={this.state.name || organisation.name}
-                                                                    onChange={e => this.setState({ name: Utils.safeParseEventValue(e) })}
-                                                                    isValid={name && name.length}
-                                                                    type="text"
-                                                                    inputClassName="input--wide"
-                                                                    placeholder="My Organisation"
+                                                                  ref={e => this.input = e}
+                                                                  data-test="organisation-name"
+                                                                  value={this.state.name || organisation.name}
+                                                                  onChange={e => this.setState({ name: Utils.safeParseEventValue(e) })}
+                                                                  isValid={name && name.length}
+                                                                  type="text"
+                                                                  inputClassName="input--wide"
+                                                                  placeholder="My Organisation"
                                                                 />
                                                             </Column>
                                                             <Button disabled={this.saveDisabled()} className="float-right">
@@ -355,8 +358,8 @@ const OrganisationSettingsPage = class extends Component {
                                                         <div className="plan plan--current flex-row m-t-2">
                                                             <div className="plan__prefix">
                                                                 <img
-                                                                    src="/static/images/nav-logo.svg" className="plan__prefix__image"
-                                                                    alt="BT"
+                                                                  src="/static/images/nav-logo.svg" className="plan__prefix__image"
+                                                                  alt="BT"
                                                                 />
                                                             </div>
                                                             <div className="plan__details flex flex-1">
@@ -371,26 +374,26 @@ const OrganisationSettingsPage = class extends Component {
                                                                 )}
                                                                 { organisation.subscription ? (
                                                                     <button
-                                                                        disabled={!this.state.manageSubscriptionLoaded}
-                                                                        type="button" className="btn btn-primary text-center ml-auto mt-2 mb-2"
-                                                                        onClick={() => {
-                                                                            if (this.state.chargebeeURL) {
-                                                                                window.location = this.state.chargebeeURL;
-                                                                            } else {
-                                                                                openModal('Payment plans', <PaymentModal
-                                                                                    viewOnly={false}
-                                                                                />, null, { large: true });
-                                                                            }
-                                                                        }}
+                                                                      disabled={!this.state.manageSubscriptionLoaded}
+                                                                      type="button" className="btn btn-primary text-center ml-auto mt-2 mb-2"
+                                                                      onClick={() => {
+                                                                          if (this.state.chargebeeURL) {
+                                                                              window.location = this.state.chargebeeURL;
+                                                                          } else {
+                                                                              openModal('Payment plans', <PaymentModal
+                                                                                viewOnly={false}
+                                                                              />, null, { large: true });
+                                                                          }
+                                                                      }}
                                                                     >
                                                                         Manage payment plan
                                                                     </button>
                                                                 ) : (
                                                                     <button
-                                                                        type="button" className="btn btn-primary text-center ml-auto mt-2 mb-2"
-                                                                        onClick={() => openModal('Payment Plans', <PaymentModal
-                                                                            viewOnly={false}
-                                                                        />, null, { large: true })}
+                                                                      type="button" className="btn btn-primary text-center ml-auto mt-2 mb-2"
+                                                                      onClick={() => openModal('Payment Plans', <PaymentModal
+                                                                        viewOnly={false}
+                                                                      />, null, { large: true })}
                                                                     >
                                                                         View plans
                                                                     </button>
@@ -410,10 +413,10 @@ const OrganisationSettingsPage = class extends Component {
                                                     <Row space className="mt-5">
                                                         <h3 className="m-b-0">Team Members</h3>
                                                         <Button
-                                                            style={{ width: 180 }}
-                                                            id="btn-invite" onClick={() => openModal('Invite Users',
-                                                            <InviteUsersModal/>)}
-                                                            type="button"
+                                                          style={{ width: 180 }}
+                                                          id="btn-invite" onClick={() => openModal('Invite Users',
+                                                              <InviteUsersModal/>)}
+                                                          type="button"
                                                         >
                                                             Invite members
                                                         </Button>
@@ -431,9 +434,9 @@ const OrganisationSettingsPage = class extends Component {
                                                             {organisation.num_seats > max_seats
                                                                 && (
                                                                     <a
-                                                                        href="#" onClick={() => openModal('Payment Plans', <PaymentModal
+                                                                      href="#" onClick={() => openModal('Payment Plans', <PaymentModal
                                                                         viewOnly={false}
-                                                                    />, null, { large: true })}
+                                                                      />, null, { large: true })}
                                                                     >
                                                                         Upgrade
                                                                     </a>
@@ -451,55 +454,55 @@ const OrganisationSettingsPage = class extends Component {
                                                                     <Row>
                                                                         <div className="mr-2" style={{ width: 280 }}>
                                                                             <Select
-                                                                                value={{
-                                                                                    value: this.state.role,
-                                                                                    label: this.state.role === 'ADMIN' ? 'Organisation Administrator' : 'User',
-                                                                                }}
-                                                                                onChange={v => this.setState({ role: v.value })}
-                                                                                options={[
-                                                                                    { label: 'Organisation Administrator', value: 'ADMIN' },
-                                                                                    { label: hasRbacPermission ? 'User' : 'User - Please upgrade for role based access',
-                                                                                        value: 'USER',
-                                                                                        isDisabled: !hasRbacPermission,
-                                                                                    },
-                                                                                ]}
+                                                                              value={{
+                                                                                  value: this.state.role,
+                                                                                  label: this.state.role === 'ADMIN' ? 'Organisation Administrator' : 'User',
+                                                                              }}
+                                                                              onChange={v => this.setState({ role: v.value })}
+                                                                              options={[
+                                                                                  { label: 'Organisation Administrator', value: 'ADMIN' },
+                                                                                  { label: hasRbacPermission ? 'User' : 'User - Please upgrade for role based access',
+                                                                                      value: 'USER',
+                                                                                      isDisabled: !hasRbacPermission,
+                                                                                  },
+                                                                              ]}
                                                                             />
                                                                         </div>
                                                                         {inviteLinks.find(f => f.role === this.state.role) && (
                                                                             <>
                                                                                 <Flex className="mr-4">
                                                                                     <Input
-                                                                                        style={{ width: '100%' }}
-                                                                                        value={`${document.location.origin}/invite/${inviteLinks.find(f => f.role === this.state.role).hash}`}
-                                                                                        data-test="invite-link"
-                                                                                        inputClassName="input input--wide"
-                                                                                        className="full-width"
-                                                                                        type="text"
-                                                                                        readonly="readonly"
-                                                                                        title={<h3>Link</h3>}
-                                                                                        placeholder="Link"
+                                                                                      style={{ width: '100%' }}
+                                                                                      value={`${document.location.origin}/invite/${inviteLinks.find(f => f.role === this.state.role).hash}`}
+                                                                                      data-test="invite-link"
+                                                                                      inputClassName="input input--wide"
+                                                                                      className="full-width"
+                                                                                      type="text"
+                                                                                      readonly="readonly"
+                                                                                      title={<h3>Link</h3>}
+                                                                                      placeholder="Link"
                                                                                     />
                                                                                 </Flex>
 
                                                                                 <Row>
                                                                                     <Button
-                                                                                        className="btn-secondary"
-                                                                                        style={{ width: 180 }}
-                                                                                        onClick={() => {
-                                                                                            navigator.clipboard.writeText(`${document.location.origin}/invite/${inviteLinks.find(f => f.role === this.state.role).hash}`);
-                                                                                            toast('Link copied');
-                                                                                        }}
+                                                                                      className="btn-secondary"
+                                                                                      style={{ width: 180 }}
+                                                                                      onClick={() => {
+                                                                                          navigator.clipboard.writeText(`${document.location.origin}/invite/${inviteLinks.find(f => f.role === this.state.role).hash}`);
+                                                                                          toast('Link copied');
+                                                                                      }}
                                                                                     >
                                                                                         Copy Invite Link
                                                                                     </Button>
                                                                                     <Button
-                                                                                        className="ml-4"
-                                                                                        type="button"
-                                                                                        onClick={() => {
-                                                                                            openConfirm("Regenerate Invite Link", "This will generate a new invite link for the selected role, users will no longer be able to use the existing one. Are you sure?", ()=>{
-                                                                                                invalidateInviteLink(inviteLinks.find(f => f.role === this.state.role))
-                                                                                            } )
-                                                                                        }}
+                                                                                      className="ml-4"
+                                                                                      type="button"
+                                                                                      onClick={() => {
+                                                                                          openConfirm('Regenerate Invite Link', 'This will generate a new invite link for the selected role, users will no longer be able to use the existing one. Are you sure?', () => {
+                                                                                              invalidateInviteLink(inviteLinks.find(f => f.role === this.state.role));
+                                                                                          });
+                                                                                      }}
                                                                                     >
                                                                                         Regenerate
                                                                                     </Button>
@@ -528,92 +531,92 @@ const OrganisationSettingsPage = class extends Component {
                                                             <div>
                                                                 <FormGroup>
                                                                     <PanelSearch
-                                                                        id="org-members-list"
-                                                                        title="Members"
-                                                                        className="no-pad"
-                                                                        items={users}
-                                                                        itemHeight={65}
-                                                                        renderRow={(user, i) => {
-                                                                            const { id, first_name, last_name, email, role } = user;
-                                                                            const onEditClick = () => {
-                                                                                if (role !== 'ADMIN') {
-                                                                                    this.editUserPermissions(user);
-                                                                                }
-                                                                            };
-                                                                            return (
-                                                                                <Row
-                                                                                    data-test={`user-${i}`}
+                                                                      id="org-members-list"
+                                                                      title="Members"
+                                                                      className="no-pad"
+                                                                      items={users}
+                                                                      itemHeight={65}
+                                                                      renderRow={(user, i) => {
+                                                                          const { id, first_name, last_name, email, role } = user;
+                                                                          const onEditClick = () => {
+                                                                              if (role !== 'ADMIN') {
+                                                                                  this.editUserPermissions(user);
+                                                                              }
+                                                                          };
+                                                                          return (
+                                                                              <Row
+                                                                                data-test={`user-${i}`}
 
-                                                                                    space className="list-item clickable" key={id}
-                                                                                >
-                                                                                    <Flex onClick={onEditClick}>
+                                                                                space className="list-item clickable" key={id}
+                                                                              >
+                                                                                  <Flex onClick={onEditClick}>
 
-                                                                                        {`${first_name} ${last_name}`}
+                                                                                      {`${first_name} ${last_name}`}
 
 
-                                                                                        {' '}
-                                                                                        {id == AccountStore.getUserId() && '(You)'}
-                                                                                        <div className="list-item-footer faint">
-                                                                                            {email}
-                                                                                        </div>
-                                                                                    </Flex>
-                                                                                    <Row>
-                                                                                        <Column>
-                                                                                            {organisation.role === 'ADMIN' && id !== AccountStore.getUserId() ? (
-                                                                                                <div style={{ width: 250 }}>
-                                                                                                    <Select
-                                                                                                        data-test="select-role"
-                                                                                                        placeholder="Select a role"
-                                                                                                        styles={{ menuPortal: base => ({ ...base, zIndex: 9999 }) }}
-                                                                                                        value={role && { value: role, label: Constants.roles[role] }}
-                                                                                                        onChange={e => this.roleChanged(id, Utils.safeParseEventValue(e))}
-                                                                                                        className="pl-2"
-                                                                                                        options={_.map(Constants.roles, (label, value) => (
-                                                                                                            {
-                                                                                                                value,
-                                                                                                                label:
+                                                                                      {' '}
+                                                                                      {id == AccountStore.getUserId() && '(You)'}
+                                                                                      <div className="list-item-footer faint">
+                                                                                          {email}
+                                                                                      </div>
+                                                                                  </Flex>
+                                                                                  <Row>
+                                                                                      <Column>
+                                                                                          {organisation.role === 'ADMIN' && id !== AccountStore.getUserId() ? (
+                                                                                              <div style={{ width: 250 }}>
+                                                                                                  <Select
+                                                                                                    data-test="select-role"
+                                                                                                    placeholder="Select a role"
+                                                                                                    styles={{ menuPortal: base => ({ ...base, zIndex: 9999 }) }}
+                                                                                                    value={role && { value: role, label: Constants.roles[role] }}
+                                                                                                    onChange={e => this.roleChanged(id, Utils.safeParseEventValue(e))}
+                                                                                                    className="pl-2"
+                                                                                                    options={_.map(Constants.roles, (label, value) => (
+                                                                                                        {
+                                                                                                            value,
+                                                                                                            label:
                                                                                                                     value !== 'ADMIN' && !hasRbacPermission ? `${label} - Please upgrade for role based access` : label,
-                                                                                                                isDisabled: value !== 'ADMIN' && !hasRbacPermission,
-                                                                                                            }
-                                                                                                        ))}
-                                                                                                        menuPortalTarget={document.body}
-                                                                                                        menuPosition="absolute"
-                                                                                                        menuPlacement="auto"
-                                                                                                    />
-                                                                                                </div>
-                                                                                            ) : (
-                                                                                                <div className="pl-3 mr-2">{Constants.roles[role] || ''}</div>
-                                                                                            )}
-                                                                                        </Column>
+                                                                                                            isDisabled: value !== 'ADMIN' && !hasRbacPermission,
+                                                                                                        }
+                                                                                                    ))}
+                                                                                                    menuPortalTarget={document.body}
+                                                                                                    menuPosition="absolute"
+                                                                                                    menuPlacement="auto"
+                                                                                                  />
+                                                                                              </div>
+                                                                                          ) : (
+                                                                                              <div className="pl-3 mr-2">{Constants.roles[role] || ''}</div>
+                                                                                          )}
+                                                                                      </Column>
 
-                                                                                        {role !== 'ADMIN' && (
-                                                                                            <Column onClick={onEditClick}>
-                                                                                                <Button className="btn--link">Edit Permissions</Button>
-                                                                                            </Column>
-                                                                                        )}
-                                                                                        <Column>
-                                                                                            <button
-                                                                                                id="delete-invite"
-                                                                                                type="button"
-                                                                                                onClick={() => this.deleteUser(id)}
-                                                                                                className="btn btn--with-icon ml-auto btn--remove"
-                                                                                            >
-                                                                                                <RemoveIcon/>
-                                                                                            </button>
-                                                                                        </Column>
-                                                                                    </Row>
-                                                                                </Row>
-                                                                            );
-                                                                        }}
-                                                                        renderNoResults={(
-                                                                            <div>
+                                                                                      {role !== 'ADMIN' && (
+                                                                                      <Column onClick={onEditClick}>
+                                                                                          <Button className="btn--link">Edit Permissions</Button>
+                                                                                      </Column>
+                                                                                      )}
+                                                                                      <Column>
+                                                                                          <button
+                                                                                            id="delete-invite"
+                                                                                            type="button"
+                                                                                            onClick={() => this.deleteUser(id)}
+                                                                                            className="btn btn--with-icon ml-auto btn--remove"
+                                                                                          >
+                                                                                              <RemoveIcon/>
+                                                                                          </button>
+                                                                                      </Column>
+                                                                                  </Row>
+                                                                              </Row>
+                                                                          );
+                                                                      }}
+                                                                      renderNoResults={(
+                                                                          <div>
                                                                                 You have no users in this organisation.
-                                                                            </div>
+                                                                          </div>
                                                                         )}
-                                                                        filterRow={(item, search) => {
-                                                                            const strToSearch = `${item.first_name} ${item.last_name} ${item.email}`;
-                                                                            return strToSearch.toLowerCase().indexOf(search.toLowerCase()) !== -1;
-                                                                        }}
+                                                                      filterRow={(item, search) => {
+                                                                          const strToSearch = `${item.first_name} ${item.last_name} ${item.email}`;
+                                                                          return strToSearch.toLowerCase().indexOf(search.toLowerCase()) !== -1;
+                                                                      }}
                                                                     />
                                                                     <div id="select-portal" />
                                                                 </FormGroup>
@@ -621,62 +624,62 @@ const OrganisationSettingsPage = class extends Component {
                                                                 {invites && invites.length ? (
                                                                     <FormGroup className="margin-top">
                                                                         <PanelSearch
-                                                                            itemHeight={70}
-                                                                            id="org-invites-list"
-                                                                            title="Invites Pending"
-                                                                            className="no-pad"
-                                                                            items={invites}
-                                                                            renderRow={({ id, email, date_created, invited_by, link }, i) => (
-                                                                                <Row
-                                                                                    data-test={`pending-invite-${i}`}
-                                                                                    className="list-item" key={id}
-                                                                                >
-                                                                                    <div className="flex flex-1">
-                                                                                        {email || link}
-                                                                                        <div className="list-item-footer faint">
+                                                                          itemHeight={70}
+                                                                          id="org-invites-list"
+                                                                          title="Invites Pending"
+                                                                          className="no-pad"
+                                                                          items={invites}
+                                                                          renderRow={({ id, email, date_created, invited_by, link }, i) => (
+                                                                              <Row
+                                                                                data-test={`pending-invite-${i}`}
+                                                                                className="list-item" key={id}
+                                                                              >
+                                                                                  <div className="flex flex-1">
+                                                                                      {email || link}
+                                                                                      <div className="list-item-footer faint">
                                                                                             Created
-                                                                                            {' '}
-                                                                                            {moment(date_created).format('DD/MMM/YYYY')}
-                                                                                        </div>
-                                                                                        {invited_by ? (
-                                                                                            <div
-                                                                                                className="list-item-footer faint"
-                                                                                            >
+                                                                                          {' '}
+                                                                                          {moment(date_created).format('DD/MMM/YYYY')}
+                                                                                      </div>
+                                                                                      {invited_by ? (
+                                                                                          <div
+                                                                                            className="list-item-footer faint"
+                                                                                          >
                                                                                                 Invited by
-                                                                                                {' '}
-                                                                                                {invited_by.first_name ? `${invited_by.first_name} ${invited_by.last_name}` : invited_by.email}
-                                                                                            </div>
-                                                                                        ) : null}
-                                                                                    </div>
-                                                                                    <Row>
-                                                                                        <Column>
-                                                                                            {link ? ' '
-                                                                                                : (
-                                                                                                    <button
-                                                                                                        id="resend-invite"
-                                                                                                        type="button"
-                                                                                                        onClick={() => AppActions.resendInvite(id)}
-                                                                                                        className="btn btn--anchor"
-                                                                                                    >
+                                                                                              {' '}
+                                                                                              {invited_by.first_name ? `${invited_by.first_name} ${invited_by.last_name}` : invited_by.email}
+                                                                                          </div>
+                                                                                      ) : null}
+                                                                                  </div>
+                                                                                  <Row>
+                                                                                      <Column>
+                                                                                          {link ? ' '
+                                                                                              : (
+                                                                                                  <button
+                                                                                                    id="resend-invite"
+                                                                                                    type="button"
+                                                                                                    onClick={() => AppActions.resendInvite(id)}
+                                                                                                    className="btn btn--anchor"
+                                                                                                  >
                                                                                                         Resend
-                                                                                                    </button>
-                                                                                                )
+                                                                                                  </button>
+                                                                                              )
                                                                                             }
-                                                                                        </Column>
-                                                                                        <Column>
-                                                                                            <button
-                                                                                                id="delete-invite"
-                                                                                                type="button"
-                                                                                                onClick={() => this.deleteInvite(id)}
-                                                                                                className="btn btn--with-icon ml-auto btn--remove"
-                                                                                            >
-                                                                                                <RemoveIcon/>
-                                                                                            </button>
-                                                                                        </Column>
-                                                                                    </Row>
-                                                                                </Row>
-                                                                            )}
-                                                                            filterRow={(item, search) => item.email.toLowerCase().indexOf(search.toLowerCase()) !== -1}
+                                                                                      </Column>
+                                                                                      <Column>
+                                                                                          <button
+                                                                                            id="delete-invite"
+                                                                                            type="button"
+                                                                                            onClick={() => this.deleteInvite(id)}
+                                                                                            className="btn btn--with-icon ml-auto btn--remove"
+                                                                                          >
+                                                                                              <RemoveIcon/>
+                                                                                          </button>
+                                                                                      </Column>
+                                                                                  </Row>
+                                                                              </Row>
+                                                                          )}
+                                                                          filterRow={(item, search) => item.email.toLowerCase().indexOf(search.toLowerCase()) !== -1}
                                                                         />
                                                                     </FormGroup>
                                                                 ) : null}
@@ -685,17 +688,17 @@ const OrganisationSettingsPage = class extends Component {
                                                                     <Row space className="mt-5">
                                                                         <h3 className="m-b-0">User Groups</h3>
                                                                         <Button
-                                                                            className="mr-2"
-                                                                            id="btn-invite" onClick={() => openModal('Create Group',
-                                                                            <CreateGroupModal orgId={organisation.id}/>)}
-                                                                            type="button"
+                                                                          className="mr-2"
+                                                                          id="btn-invite" onClick={() => openModal('Create Group',
+                                                                              <CreateGroupModal orgId={organisation.id}/>)}
+                                                                          type="button"
                                                                         >
                                                                             Create Group
                                                                         </Button>
                                                                     </Row>
                                                                     <p>Groups allow you to manage permissions for viewing and editing projects, features and environments.</p>
                                                                     <UserGroupList
-                                                                        onEditPermissions={
+                                                                      onEditPermissions={
                                                                             this.editGroupPermissions
                                                                         } showRemove orgId={organisation && organisation.id}
                                                                     />
@@ -739,69 +742,69 @@ const OrganisationSettingsPage = class extends Component {
                                                 <Loader/>
                                             ) : (
                                                 <PanelSearch
-                                                    id="webhook-list"
-                                                    title={(
-                                                        <Tooltip
-                                                            title={<h6 className="mb-0">Webhooks <span className="icon ion-ios-information-circle"/></h6>}
-                                                            place="right"
-                                                        >
-                                                            {Constants.strings.WEBHOOKS_DESCRIPTION}
-                                                        </Tooltip>
+                                                  id="webhook-list"
+                                                  title={(
+                                                      <Tooltip
+                                                        title={<h6 className="mb-0">Webhooks <span className="icon ion-ios-information-circle"/></h6>}
+                                                        place="right"
+                                                      >
+                                                          {Constants.strings.WEBHOOKS_DESCRIPTION}
+                                                      </Tooltip>
                                                     )}
-                                                    className="no-pad"
-                                                    icon="ion-md-cloud"
-                                                    items={webhooks}
-                                                    renderRow={webhook => (
-                                                        <Row
-                                                            onClick={() => {
-                                                                this.editWebhook(webhook);
-                                                            }} space className="list-item clickable cursor-pointer"
-                                                            key={webhook.id}
-                                                        >
-                                                            <div>
-                                                                <ButtonLink>
-                                                                    {webhook.url}
-                                                                </ButtonLink>
-                                                                <div className="list-item-footer faint">
+                                                  className="no-pad"
+                                                  icon="ion-md-cloud"
+                                                  items={webhooks}
+                                                  renderRow={webhook => (
+                                                      <Row
+                                                        onClick={() => {
+                                                            this.editWebhook(webhook);
+                                                        }} space className="list-item clickable cursor-pointer"
+                                                        key={webhook.id}
+                                                      >
+                                                          <div>
+                                                              <ButtonLink>
+                                                                  {webhook.url}
+                                                              </ButtonLink>
+                                                              <div className="list-item-footer faint">
                                                                     Created
-                                                                    {' '}
-                                                                    {moment(webhook.created_date).format('DD/MMM/YYYY')}
-                                                                </div>
-                                                            </div>
-                                                            <Row>
-                                                                <Switch checked={webhook.enabled}/>
-                                                                <button
-                                                                    id="delete-invite"
-                                                                    type="button"
-                                                                    onClick={(e) => {
-                                                                        e.stopPropagation();
-                                                                        e.preventDefault();
-                                                                        this.deleteWebhook(webhook);
-                                                                    }}
-                                                                    className="btn btn--with-icon ml-auto btn--remove"
-                                                                >
-                                                                    <RemoveIcon/>
-                                                                </button>
-                                                            </Row>
-                                                        </Row>
-                                                    )}
-                                                    renderNoResults={(
-                                                        <Panel
-                                                            id="users-list"
-                                                            icon="ion-md-cloud"
-                                                            title={(
-                                                                <Tooltip
-                                                                    title={<h6 className="mb-0">Webhooks <span className="icon ion-ios-information-circle"/></h6>}
-                                                                    place="right"
-                                                                >
-                                                                    {Constants.strings.AUDIT_WEBHOOKS_DESCRIPTION}
-                                                                </Tooltip>
+                                                                  {' '}
+                                                                  {moment(webhook.created_date).format('DD/MMM/YYYY')}
+                                                              </div>
+                                                          </div>
+                                                          <Row>
+                                                              <Switch checked={webhook.enabled}/>
+                                                              <button
+                                                                id="delete-invite"
+                                                                type="button"
+                                                                onClick={(e) => {
+                                                                    e.stopPropagation();
+                                                                    e.preventDefault();
+                                                                    this.deleteWebhook(webhook);
+                                                                }}
+                                                                className="btn btn--with-icon ml-auto btn--remove"
+                                                              >
+                                                                  <RemoveIcon/>
+                                                              </button>
+                                                          </Row>
+                                                      </Row>
+                                                  )}
+                                                  renderNoResults={(
+                                                      <Panel
+                                                        id="users-list"
+                                                        icon="ion-md-cloud"
+                                                        title={(
+                                                            <Tooltip
+                                                              title={<h6 className="mb-0">Webhooks <span className="icon ion-ios-information-circle"/></h6>}
+                                                              place="right"
+                                                            >
+                                                                {Constants.strings.AUDIT_WEBHOOKS_DESCRIPTION}
+                                                            </Tooltip>
                                                             )}
-                                                        >
+                                                      >
                                                             You currently have no webhooks configured for this organisation.
-                                                        </Panel>
+                                                      </Panel>
                                                     )}
-                                                    isLoading={this.props.webhookLoading}
+                                                  isLoading={this.props.webhookLoading}
                                                 />
                                             )}
                                         </FormGroup>
@@ -813,7 +816,7 @@ const OrganisationSettingsPage = class extends Component {
                                                         <Row>
                                                             Only allow organisation admins to create projects
                                                             <Switch
-                                                                checked={organisation.restrict_project_create_to_admin} onChange={() => this.setAdminCanCreateProject(!organisation.restrict_project_create_to_admin)}
+                                                              checked={organisation.restrict_project_create_to_admin} onChange={() => this.setAdminCanCreateProject(!organisation.restrict_project_create_to_admin)}
                                                             />
                                                         </Row>
                                                     </Column>
@@ -850,18 +853,18 @@ const OrganisationSettingsPage = class extends Component {
                                                     </p>
                                                 </Column>
                                                 <Button
-                                                    id="delete-org-btn"
-                                                    onClick={() => this.confirmRemove(organisation, () => {
-                                                        deleteOrganisation();
-                                                    })}
-                                                    className="btn btn--with-icon ml-auto btn--remove"
+                                                  id="delete-org-btn"
+                                                  onClick={() => this.confirmRemove(organisation, () => {
+                                                      deleteOrganisation();
+                                                  })}
+                                                  className="btn btn--with-icon ml-auto btn--remove"
                                                 >
                                                     <RemoveIcon/>
                                                 </Button>
                                             </Row>
                                         </FormGroup>
                                     </div>
-                                )
+                                );
                             }}
                         </OrganisationProvider>
                     )}

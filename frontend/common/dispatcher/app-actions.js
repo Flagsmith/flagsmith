@@ -86,7 +86,7 @@ const AppActions = Object.assign({}, require('./base/_app-actions'), {
     migrateProject(projectId) {
         Dispatcher.handleViewAction({
             actionType: Actions.MIGRATE_PROJECT,
-            projectId
+            projectId,
         });
     },
 
@@ -201,7 +201,7 @@ const AppActions = Object.assign({}, require('./base/_app-actions'), {
             segmentOverrides,
         });
     },
-    editEnvironmentFlag(projectId, environmentId, flag, projectFlag, environmentFlag, segmentOverrides, mode,onComplete) {
+    editEnvironmentFlag(projectId, environmentId, flag, projectFlag, environmentFlag, segmentOverrides, mode, onComplete) {
         Dispatcher.handleViewAction({
             actionType: Actions.EDIT_ENVIRONMENT_FLAG,
             projectId,
@@ -211,7 +211,7 @@ const AppActions = Object.assign({}, require('./base/_app-actions'), {
             environmentFlag,
             segmentOverrides,
             mode,
-            onComplete
+            onComplete,
         });
     },
     editEnvironmentFlagChangeRequest(projectId, environmentId, flag, projectFlag, environmentFlag, segmentOverrides, changeRequest, commit) {
@@ -340,12 +340,12 @@ const AppActions = Object.assign({}, require('./base/_app-actions'), {
             pageSize,
         });
     },
-    getIdentitiesPage(envId, page,pageType) {
+    getIdentitiesPage(envId, page, pageType) {
         Dispatcher.handleViewAction({
             actionType: Actions.GET_IDENTITIES_PAGE,
             envId,
             page,
-            pageType
+            pageType,
         });
     },
     getIdentity(envId, id) {
@@ -441,6 +441,22 @@ const AppActions = Object.assign({}, require('./base/_app-actions'), {
             actionType: Actions.GET_SEGMENTS,
             projectId,
             environmentId,
+        });
+    },
+    getSegmentsPage(projectId, environmentId, page) {
+        Dispatcher.handleViewAction({
+            actionType: Actions.GET_SEGMENTS_PAGE,
+            projectId,
+            environmentId,
+            page,
+        });
+    },
+    searchSegments(projectId, environmentId, search) {
+        Dispatcher.handleViewAction({
+            actionType: Actions.SEARCH_SEGMENTS,
+            projectId,
+            environmentId,
+            search,
         });
     },
     createSegment(projectId, segment) {

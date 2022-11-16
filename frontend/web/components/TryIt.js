@@ -77,9 +77,9 @@ const TryIt = class extends Component {
                         </div>
                     </div>
                     {this.state.data && (
-                        <div id={!this.state.isLoading && "try-it-results"}>
+                        <div id={!this.state.isLoading && 'try-it-results'}>
                             <FormGroup/>
-                            <div style={{opacity: this.state.isLoading?0.5:1}} className={"fade "}>
+                            <div style={{ opacity: this.state.isLoading ? 0.5 : 1 }} className="fade ">
                                 <Highlight forceExpanded className="json">
                                     {this.state.data}
                                 </Highlight>

@@ -79,20 +79,20 @@ const CreateEnvironmentPage = class extends Component {
                                                             </div>
                                                             <div className="col-md-12">
                                                                 <InputGroup
-                                                                    textarea={true}
-                                                                    ref={e => this.input = e}
-                                                                    value={this.state.description }
-                                                                    inputProps={{className:"input--wide",style:{minHeight:100} }}
-                                                                    onChange={e => this.setState({ description: Utils.safeParseEventValue(e) })}
-                                                                    isValid={name && name.length}
-                                                                    type="text" title={"Description"}
-                                                                    placeholder="Environment Description"
+                                                                  textarea
+                                                                  ref={e => this.input = e}
+                                                                  value={this.state.description}
+                                                                  inputProps={{ className: 'input--wide', style: { minHeight: 100 } }}
+                                                                  onChange={e => this.setState({ description: Utils.safeParseEventValue(e) })}
+                                                                  isValid={name && name.length}
+                                                                  type="text" title="Description"
+                                                                  placeholder="Environment Description"
                                                                 />
                                                             </div>
                                                             <div className="col-md-6">
                                                                 {project && project.environments && !!project.environments.length && (
                                                                     <InputGroup
-                                                                        tooltip="This will copy feature enabled states and remote config values from the selected environment."
+                                                                      tooltip="This will copy feature enabled states and remote config values from the selected environment."
                                                                       title="Clone from environment" component={(
                                                                           <Select
                                                                             onChange={(env) => {

@@ -9,8 +9,8 @@ const Permission = class extends Component {
   static propTypes = {
       id: propTypes.string.isRequired,
       level: propTypes.string.isRequired,
+      children: OptionalNode,
       permission: propTypes.string.isRequired,
-      loadingView: propTypes.any,
   }
 
   constructor(props, context) {

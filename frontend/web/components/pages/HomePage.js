@@ -1,12 +1,12 @@
 import React from 'react';
+import { GoogleLogin, GoogleOAuthProvider, useGoogleLogin } from '@react-oauth/google';
 import ForgotPasswordModal from '../ForgotPasswordModal';
 import Card from '../Card';
 import { ButtonLink } from '../base/forms/Button';
 import NavIconSmall from '../svg/NavIconSmall';
 import SamlForm from '../SamlForm';
-import data from "../../../common/data/base/_data";
-import { GoogleLogin, GoogleOAuthProvider, useGoogleLogin } from '@react-oauth/google';
-import GoogleButton from "../GoogleButton";
+import data from '../../../common/data/base/_data';
+import GoogleButton from '../GoogleButton';
 
 const HomePage = class extends React.Component {
     static contextTypes = {
@@ -18,7 +18,7 @@ const HomePage = class extends React.Component {
     constructor(props, context) {
         super(props, context);
         this.state = {
-            marketing_consent_given: API.getCookie("marketing_consent_given") !== "false"
+            marketing_consent_given: API.getCookie('marketing_consent_given') !== 'false',
         };
     }
 
@@ -40,13 +40,13 @@ const HomePage = class extends React.Component {
                 const access_token = Utils.fromParam().code;
                 AppActions.oauthLogin('google', {
                     access_token,
-                    marketing_consent_given: this.state.marketing_consent_given
+                    marketing_consent_given: this.state.marketing_consent_given,
                 });
             } else if (params && params.includes('github')) {
                 const access_token = Utils.fromParam().code;
                 AppActions.oauthLogin('github', {
                     access_token,
-                    marketing_consent_given: this.state.marketing_consent_given
+                    marketing_consent_given: this.state.marketing_consent_given,
                 });
             }
         }
@@ -64,7 +64,7 @@ const HomePage = class extends React.Component {
             if (access_token) {
                 AppActions.oauthLogin('saml', {
                     access_token,
-                    marketing_consent_given:this.state.marketing_consent_given
+                    marketing_consent_given: this.state.marketing_consent_given,
                 });
                 this.context.router.history.replace('/');
             }
@@ -85,9 +85,9 @@ const HomePage = class extends React.Component {
     showForgotPassword = (e) => {
         e.preventDefault();
         openModal('Forgot password', <ForgotPasswordModal
-            initialValue={this.state.email} onComplete={() => {
-            toast('Please check your email to reset your password.');
-        }}
+          initialValue={this.state.email} onComplete={() => {
+              toast('Please check your email to reset your password.');
+          }}
         />, null, { className: 'alert fade expand' });
     }
 
@@ -116,9 +116,9 @@ const HomePage = class extends React.Component {
                 oauths.push((
                     <GoogleOAuthProvider clientId={JSON.parse(Utils.getFlagsmithValue('oauth_google')).clientId}>
                         <GoogleButton
-                            onSuccess={(e)=>{
-                                document.location = `${document.location.origin}/oauth/google?code=${e.access_token}`;
-                            }}
+                          onSuccess={(e) => {
+                              document.location = `${document.location.origin}/oauth/google?code=${e.access_token}`;
+                          }}
                         />
                     </GoogleOAuthProvider>
                 ));
@@ -127,23 +127,23 @@ const HomePage = class extends React.Component {
             if (Utils.getFlagsmithHasFeature('saml')) {
                 oauths.push((
                     <a
-                        onClick={() => {
-                            if(!Utils.getFlagsmithValue("sso_idp")) {
-                                openModal('Single Sign-On', <SamlForm/>);
-                            } else {
-                                data.post(`${Project.api}auth/saml/${Utils.getFlagsmithValue("sso_idp")}/request/`)
-                                    .then((res) => {
-                                        if (res.headers && res.headers.Location) {
-                                            document.location.href = res.headers.Location
-                                        } else {
-                                            this.setState({error:true})
-                                        }
-                                    })
-                                    .catch(() => {
-                                        this.setState({ error: true, isLoading: false });
-                                    });
-                            }
-                        }
+                      onClick={() => {
+                          if (!Utils.getFlagsmithValue('sso_idp')) {
+                              openModal('Single Sign-On', <SamlForm/>);
+                          } else {
+                              data.post(`${Project.api}auth/saml/${Utils.getFlagsmithValue('sso_idp')}/request/`)
+                                  .then((res) => {
+                                      if (res.headers && res.headers.Location) {
+                                          document.location.href = res.headers.Location;
+                                      } else {
+                                          this.setState({ error: true });
+                                      }
+                                  })
+                                  .catch(() => {
+                                      this.setState({ error: true, isLoading: false });
+                                  });
+                          }
+                      }
                         } key="single-sign-on" className="btn btn__oauth btn__oauth--saml"
                     >
                         Single Sign-On
@@ -168,10 +168,10 @@ const HomePage = class extends React.Component {
                                             <>
                                                 <p className="mb-0">We have a 100% free for life plan for smaller projects.</p>
                                                 <ButtonLink
-                                                    className="pt-3 pb-3"
-                                                    buttonText="Check out our Pricing"
-                                                    href="https://flagsmith.com/pricing"
-                                                    target="_blank"
+                                                  className="pt-3 pb-3"
+                                                  buttonText="Check out our Pricing"
+                                                  href="https://flagsmith.com/pricing"
+                                                  target="_blank"
                                                 />
                                             </>
                                         )}
@@ -197,8 +197,8 @@ const HomePage = class extends React.Component {
                                         <div>
                                             <Link id="existing-member-btn" to={`/login${redirect}`}>
                                                 <ButtonLink
-                                                    className="mt-2 pb-3 pt-2"
-                                                    buttonText="Already a member?"
+                                                  className="mt-2 pb-3 pt-2"
+                                                  buttonText="Already a member?"
                                                 />
                                             </Link>
                                         </div>
@@ -214,10 +214,10 @@ const HomePage = class extends React.Component {
                                                 <AccountProvider>
                                                     {({ isLoading, isSaving, error }, { login }) => (
                                                         <form
-                                                            id="form" name="form" onSubmit={(e) => {
-                                                            Utils.preventDefault(e);
-                                                            login({ email, password });
-                                                        }}
+                                                          id="form" name="form" onSubmit={(e) => {
+                                                              Utils.preventDefault(e);
+                                                              login({ email, password });
+                                                          }}
                                                         >
                                                             {!!oauths.length && (
                                                                 <Row style={{ justifyContent: 'center' }}>
@@ -229,7 +229,7 @@ const HomePage = class extends React.Component {
                                                             && (
                                                                 <div className="notification flex-row">
                                                                     <span
-                                                                        className="notification__icon ion-md-information-circle-outline mb-2"
+                                                                      className="notification__icon ion-md-information-circle-outline mb-2"
                                                                     />
                                                                     <p className="notification__text pl-3">Login to accept your invite</p>
                                                                 </div>
@@ -238,68 +238,68 @@ const HomePage = class extends React.Component {
                                                             <fieldset id="details">
                                                                 {error && error.email ? (
                                                                     <span
-                                                                        id="email-error"
-                                                                        className="text-danger"
+                                                                      id="email-error"
+                                                                      className="text-danger"
                                                                     >
                                                                         {error.email}
                                                                     </span>
                                                                 ) : null}
                                                                 <InputGroup
-                                                                    title="Email Address / Username"
-                                                                    data-test="email"
-                                                                    inputProps={{
-                                                                        name: 'email',
-                                                                        className: 'full-width',
-                                                                        error: error && error.email,
-                                                                    }}
-                                                                    onChange={(e) => {
-                                                                        this.setState({ email: Utils.safeParseEventValue(e) });
-                                                                    }}
-                                                                    className="input-default full-width mb-2 "
-                                                                    type="text"
-                                                                    name="email" id="email"
+                                                                  title="Email Address / Username"
+                                                                  data-test="email"
+                                                                  inputProps={{
+                                                                      name: 'email',
+                                                                      className: 'full-width',
+                                                                      error: error && error.email,
+                                                                  }}
+                                                                  onChange={(e) => {
+                                                                      this.setState({ email: Utils.safeParseEventValue(e) });
+                                                                  }}
+                                                                  className="input-default full-width mb-2 "
+                                                                  type="text"
+                                                                  name="email" id="email"
                                                                 />
                                                                 {error && error.password ? (
                                                                     <span
-                                                                        id="password-error"
-                                                                        className="text-danger"
+                                                                      id="password-error"
+                                                                      className="text-danger"
                                                                     >
                                                                         {error.password}
                                                                     </span>
                                                                 ) : null}
                                                                 <InputGroup
-                                                                    title="Password"
-                                                                    inputProps={{
-                                                                        name: 'password',
-                                                                        className: 'full-width',
-                                                                        error: error && error.password,
-                                                                    }}
-                                                                    onChange={(e) => {
-                                                                        this.setState({ password: Utils.safeParseEventValue(e) });
-                                                                    }}
-                                                                    rightComponent={!disableForgotPassword && (
-                                                                        <Link
-                                                                            tabIndex={-1}
-                                                                            className="float-right"
-                                                                            to={`/password-recovery${redirect}`}
-                                                                            onClick={this.showForgotPassword}
-                                                                        >
-                                                                            <ButtonLink tabIndex={-1} type="button" buttonText="Forgot password?" />
-                                                                        </Link>
-                                                                    )}
-                                                                    className="input-default full-width mb-2"
-                                                                    type="password"
-                                                                    name="password"
-                                                                    data-test="password"
-                                                                    id="password"
+                                                                  title="Password"
+                                                                  inputProps={{
+                                                                      name: 'password',
+                                                                      className: 'full-width',
+                                                                      error: error && error.password,
+                                                                  }}
+                                                                  onChange={(e) => {
+                                                                      this.setState({ password: Utils.safeParseEventValue(e) });
+                                                                  }}
+                                                                  rightComponent={!disableForgotPassword && (
+                                                                  <Link
+                                                                    tabIndex={-1}
+                                                                    className="float-right"
+                                                                    to={`/password-recovery${redirect}`}
+                                                                    onClick={this.showForgotPassword}
+                                                                  >
+                                                                      <ButtonLink tabIndex={-1} type="button" buttonText="Forgot password?" />
+                                                                  </Link>
+                                                                  )}
+                                                                  className="input-default full-width mb-2"
+                                                                  type="password"
+                                                                  name="password"
+                                                                  data-test="password"
+                                                                  id="password"
                                                                 />
                                                                 <div className="form-cta">
 
                                                                     <Button
-                                                                        id="login-btn"
-                                                                        disabled={isLoading || isSaving}
-                                                                        type="submit"
-                                                                        className="mt-3 px-4 full-width"
+                                                                      id="login-btn"
+                                                                      disabled={isLoading || isSaving}
+                                                                      type="submit"
+                                                                      className="mt-3 px-4 full-width"
                                                                     >Login
                                                                     </Button>
                                                                 </div>
@@ -326,14 +326,14 @@ const HomePage = class extends React.Component {
                                                     </Row>
                                                     <div className="mt-5 text-center text-small text-muted">
                                                         By signing up you agree to our <a
-                                                        style={{ opacity: 0.8 }} target="_blank" className="text-small"
-                                                        href="https://flagsmith.com/terms-of-service/"
-                                                    >Terms of Service
-                                                    </a> and <a
-                                                        style={{ opacity: 0.8 }} target="_blank" className="text-small"
-                                                        href="https://flagsmith.com/privacy-policy/"
-                                                    >Privacy Policy
-                                                    </a>
+                                                          style={{ opacity: 0.8 }} target="_blank" className="text-small"
+                                                          href="https://flagsmith.com/terms-of-service/"
+                                                        >Terms of Service
+                                                        </a> and <a
+                                                                                         style={{ opacity: 0.8 }} target="_blank" className="text-small"
+                                                                                         href="https://flagsmith.com/privacy-policy/"
+                                                                                       >Privacy Policy
+                                                                                                </a>
                                                     </div>
                                                 </div>
 
@@ -344,18 +344,18 @@ const HomePage = class extends React.Component {
 
                                             <Card>
                                                 <form
-                                                    id="form" name="form" onSubmit={(e) => {
-                                                    Utils.preventDefault(e);
-                                                    const isInvite = document.location.href.indexOf('invite') != -1;
-                                                    register({
-                                                            email,
-                                                            password,
-                                                            first_name,
-                                                            last_name,
-                                                            marketing_consent_given:this.state.marketing_consent_given
-                                                        },
-                                                        isInvite);
-                                                }}
+                                                  id="form" name="form" onSubmit={(e) => {
+                                                      Utils.preventDefault(e);
+                                                      const isInvite = document.location.href.indexOf('invite') != -1;
+                                                      register({
+                                                          email,
+                                                          password,
+                                                          first_name,
+                                                          last_name,
+                                                          marketing_consent_given: this.state.marketing_consent_given,
+                                                      },
+                                                      isInvite);
+                                                  }}
                                                 >
 
                                                     {!!oauths.length && (
@@ -377,7 +377,7 @@ const HomePage = class extends React.Component {
                                                     && (
                                                         <div className="notification flex-row">
                                                             <span
-                                                                className="notification__icon ion-md-information-circle-outline mb-2"
+                                                              className="notification__icon ion-md-information-circle-outline mb-2"
                                                             />
                                                             <p className="notification__text pl-3">Create an account to accept your
                                                                 invite
@@ -387,102 +387,105 @@ const HomePage = class extends React.Component {
                                                     }
                                                     <fieldset id="details" className="">
                                                         <InputGroup
-                                                            title="First Name"
-                                                            data-test="firstName"
-                                                            inputProps={{
-                                                                name: 'firstName',
-                                                                className: 'full-width mb-2',
-                                                                error: error && error.first_name,
-                                                            }}
-                                                            onChange={(e) => {
-                                                                this.setState({ first_name: Utils.safeParseEventValue(e) });
-                                                            }}
-                                                            className="input-default full-width"
-                                                            type="text"
-                                                            name="firstName" id="firstName"
+                                                          title="First Name"
+                                                          data-test="firstName"
+                                                          inputProps={{
+                                                              name: 'firstName',
+                                                              className: 'full-width mb-2',
+                                                              error: error && error.first_name,
+                                                          }}
+                                                          onChange={(e) => {
+                                                              this.setState({ first_name: Utils.safeParseEventValue(e) });
+                                                          }}
+                                                          className="input-default full-width"
+                                                          type="text"
+                                                          name="firstName" id="firstName"
                                                         />
                                                         <InputGroup
-                                                            title="Last Name"
-                                                            data-test="lastName"
-                                                            inputProps={{
-                                                                name: 'lastName',
-                                                                className: 'full-width mb-2',
-                                                                error: error && error.last_name,
-                                                            }}
-                                                            onChange={(e) => {
-                                                                this.setState({ last_name: Utils.safeParseEventValue(e) });
-                                                            }}
-                                                            className="input-default full-width"
-                                                            type="text"
-                                                            name="lastName" id="lastName"
+                                                          title="Last Name"
+                                                          data-test="lastName"
+                                                          inputProps={{
+                                                              name: 'lastName',
+                                                              className: 'full-width mb-2',
+                                                              error: error && error.last_name,
+                                                          }}
+                                                          onChange={(e) => {
+                                                              this.setState({ last_name: Utils.safeParseEventValue(e) });
+                                                          }}
+                                                          className="input-default full-width"
+                                                          type="text"
+                                                          name="lastName" id="lastName"
                                                         />
 
                                                         {error && error.email ? (
                                                             <span
-                                                                id="email-error"
-                                                                className="text-danger"
+                                                              id="email-error"
+                                                              className="text-danger"
                                                             >
                                                                 {error.email}
                                                             </span>
                                                         ) : null}
                                                         <InputGroup
-                                                            title="Email Address"
-                                                            data-test="email"
-                                                            inputProps={{
-                                                                name: 'email',
-                                                                className: 'full-width mb-2',
-                                                                error: error && error.email,
-                                                            }}
-                                                            onChange={(e) => {
-                                                                this.setState({ email: Utils.safeParseEventValue(e) });
-                                                            }}
-                                                            className="input-default full-width"
-                                                            type="email"
-                                                            name="email"
-                                                            id="email"
+                                                          title="Email Address"
+                                                          data-test="email"
+                                                          inputProps={{
+                                                              name: 'email',
+                                                              className: 'full-width mb-2',
+                                                              error: error && error.email,
+                                                          }}
+                                                          onChange={(e) => {
+                                                              this.setState({ email: Utils.safeParseEventValue(e) });
+                                                          }}
+                                                          className="input-default full-width"
+                                                          type="email"
+                                                          name="email"
+                                                          id="email"
                                                         />
 
                                                         {error && error.password ? (
                                                             <span
-                                                                id="password-error"
-                                                                className="text-danger"
+                                                              id="password-error"
+                                                              className="text-danger"
                                                             >
                                                                 {error.password}
                                                             </span>
                                                         ) : null}
                                                         <InputGroup
-                                                            title="Password"
-                                                            data-test="password"
-                                                            inputProps={{
-                                                                name: 'password',
-                                                                className: 'full-width mb-2',
-                                                                error: error && error.password,
-                                                            }}
-                                                            onChange={(e) => {
-                                                                this.setState({ password: Utils.safeParseEventValue(e) });
-                                                            }}
-                                                            className="input-default full-width"
-                                                            type="password"
-                                                            name="password"
-                                                            id="password"
+                                                          title="Password"
+                                                          data-test="password"
+                                                          inputProps={{
+                                                              name: 'password',
+                                                              className: 'full-width mb-2',
+                                                              error: error && error.password,
+                                                          }}
+                                                          onChange={(e) => {
+                                                              this.setState({ password: Utils.safeParseEventValue(e) });
+                                                          }}
+                                                          className="input-default full-width"
+                                                          type="password"
+                                                          name="password"
+                                                          id="password"
                                                         />
-                                                        {Utils.getFlagsmithHasFeature("mailing_list") && (
+                                                        {Utils.getFlagsmithHasFeature('mailing_list') && (
                                                             <Row className="text-right">
                                                                 <Flex/>
-                                                                <input onChange={(e)=>{
-                                                                    API.setCookie("marketing_consent_given", `${e.target.checked}`)
-                                                                    this.setState({marketing_consent_given:e.target.checked})
-                                                                }} id="mailinglist" className="mr-2" type="checkbox" checked={this.state.marketing_consent_given}/>
+                                                                <input
+                                                                  onChange={(e) => {
+                                                                      API.setCookie('marketing_consent_given', `${e.target.checked}`);
+                                                                      this.setState({ marketing_consent_given: e.target.checked });
+                                                                  }} id="mailinglist" className="mr-2"
+                                                                  type="checkbox" checked={this.state.marketing_consent_given}
+                                                                />
                                                                 <label className="mb-0" htmlFor="mailinglist">Join our mailing list!</label>
                                                             </Row>
                                                         )}
                                                         <div classNam e="form-cta">
                                                             <Button
-                                                                data-test="signup-btn"
-                                                                name="signup-btn"
-                                                                disabled={isLoading || isSaving}
-                                                                className="px-4 mt-3 full-width"
-                                                                type="submit"
+                                                              data-test="signup-btn"
+                                                              name="signup-btn"
+                                                              disabled={isLoading || isSaving}
+                                                              className="px-4 mt-3 full-width"
+                                                              type="submit"
                                                             >
                                                                 Create Account
                                                             </Button>
@@ -494,8 +497,8 @@ const HomePage = class extends React.Component {
                                                 Have an account?{' '}
                                                 <Link id="existing-member-btn" to={`/login${redirect}`}>
                                                     <ButtonLink
-                                                        className="ml-1"
-                                                        buttonText="Log in"
+                                                      className="ml-1"
+                                                      buttonText="Log in"
                                                     />
                                                 </Link>
                                             </Row>

@@ -1,7 +1,7 @@
-import React, { Component } from 'react';
+import React from 'react';
 import UserGroupsStore from '../stores/user-group-store';
 
-const UserGroupProvider = class extends Component {
+const UserGroupProvider = class extends React.Component {
     static displayName = 'UserGroupProvider'
 
     constructor(props, context) {
@@ -36,6 +36,9 @@ const UserGroupProvider = class extends Component {
     }
 };
 
-UserGroupProvider.propTypes = {};
+UserGroupProvider.propTypes = {
+    onSave: OptionalFunc,
+    children: OptionalNode,
+};
 
 module.exports = UserGroupProvider;

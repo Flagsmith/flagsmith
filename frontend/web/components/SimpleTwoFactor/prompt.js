@@ -29,19 +29,19 @@ export default class TheComponent extends PureComponent {
               <strong>
               Two-factor authentication code
               </strong>
-              <form onSubmit={(e)=>{
+              <form onSubmit={(e) => {
                   Utils.preventDefault(e);
                   onSubmit();
-
-              }}>
+              }}
+              >
                   <InputGroup
-                    inputProps={{ className: 'full-width', style:{textIndent:0, paddingLeft:10} }}
+                    inputProps={{ className: 'full-width', style: { textIndent: 0, paddingLeft: 10 } }}
                     onChange={onChange}
                     value={pin}
                     type="text"
                   />
                   {error && (
-                    <ErrorMessage error="Invalid pin code"/>
+                  <ErrorMessage error="Invalid pin code"/>
                   )}
                   <div className="text-right">
                       <Button disabled={isLoading}>

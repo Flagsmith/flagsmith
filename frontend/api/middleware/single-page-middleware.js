@@ -1,5 +1,5 @@
 // Redirect routes to index.html for the single page app
-module.exports = function (req, res, next) {
+module.exports = function singlePageMiddleware(req, res, next) {
     const headers = req.headers;
     let rewriteTarget = '/index.html';
 

@@ -5,7 +5,7 @@ module.exports = [
         exclude: /node_modules/,
         use: ['babel-loader'],
     },
-    { test: /.json$/, loader: "json-loader", exclude: /node_modules/},
+    { test: /.json$/, loader: 'json-loader', exclude: /node_modules/ },
 
     {
         test: /\.css$/,
@@ -13,7 +13,7 @@ module.exports = [
     },
     {
         test: /\.(md|txt)$/,
-        use: 'raw-loader'
+        use: 'raw-loader',
     },
     {
         test: /\.html$/,

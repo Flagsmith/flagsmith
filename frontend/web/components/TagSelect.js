@@ -30,11 +30,11 @@ class TagSelect extends PureComponent {
                                 {showUntagged && (
                                     <div className="mr-1 mb-2">
                                         <Tag
-                                            key={showUntagged.id}
-                                            selected={this.isSelected(showUntagged)}
-                                            onClick={this.onSelect}
-                                            className="px-2 py-2 mr-2"
-                                            tag={showUntagged}
+                                          key={showUntagged.id}
+                                          selected={this.isSelected(showUntagged)}
+                                          onClick={this.onSelect}
+                                          className="px-2 py-2 mr-2"
+                                          tag={showUntagged}
                                         />
                                     </div>
                                 )}
@@ -42,11 +42,11 @@ class TagSelect extends PureComponent {
                                 {projectTags.map(tag => (
                                     <div className="mr-1 mb-2">
                                         <Tag
-                                            key={tag.id}
-                                            selected={this.isSelected(tag)}
-                                            onClick={this.onSelect}
-                                            className="px-2 py-2 mr-2"
-                                            tag={tag}
+                                          key={tag.id}
+                                          selected={this.isSelected(tag)}
+                                          onClick={this.onSelect}
+                                          className="px-2 py-2 mr-2"
+                                          tag={tag}
                                         />
 
                                     </div>
@@ -58,14 +58,14 @@ class TagSelect extends PureComponent {
 
                         {showClearAll && (
                             <Button
-                                onClick={() => {
-                                    if (this.props.value && this.props.value.length >= projectTags.length) {
-                                        this.props.onChange([]);
-                                    } else {
-                                        this.props.onChange((showUntagged ? [''] : []).concat(projectTags.map(v => v.id)));
-                                    }
-                                    this.props.onClearAll && this.props.onClearAll()
-                                }} style={{ marginBottom: 10 }} className="btn--link mr-2"
+                              onClick={() => {
+                                  if (this.props.value && this.props.value.length >= projectTags.length) {
+                                      this.props.onChange([]);
+                                  } else {
+                                      this.props.onChange((showUntagged ? [''] : []).concat(projectTags.map(v => v.id)));
+                                  }
+                                  this.props.onClearAll && this.props.onClearAll();
+                              }} style={{ marginBottom: 10 }} className="btn--link mr-2"
                             >
                                 Clear Filters
                             </Button>

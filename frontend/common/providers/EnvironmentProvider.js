@@ -1,8 +1,7 @@
-import React, { Component } from 'react';
-import AccountStore from '../stores/account-store';
+import React from 'react';
 import EnvironmentStore from '../stores/environment-store';
 
-const EnvironmentProvider = class extends Component {
+const EnvironmentProvider = class extends React.Component {
     static displayName = 'EnvironmentProvider'
 
     constructor(props, context) {
@@ -19,7 +18,7 @@ const EnvironmentProvider = class extends Component {
                 isSaving: EnvironmentStore.isSaving,
                 isLoading: EnvironmentStore.isLoading,
                 env: EnvironmentStore.model,
-                name: this.state.name || EnvironmentStore.model && EnvironmentStore.model.name,
+                name: this.state.name || (EnvironmentStore.model && EnvironmentStore.model.name),
                 flags: this.state.flags || (EnvironmentStore.getFlagsForEditing()),
             });
         });
@@ -76,6 +75,9 @@ const EnvironmentProvider = class extends Component {
     }
 };
 
-EnvironmentProvider.propTypes = {};
+EnvironmentProvider.propTypes = {
+    onSave: OptionalFunc,
+    children: OptionalNode,
+};
 
 module.exports = EnvironmentProvider;

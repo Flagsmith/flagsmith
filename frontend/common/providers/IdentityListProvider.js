@@ -1,7 +1,7 @@
-import React, { Component } from 'react';
+import React from 'react';
 import IdentityStore from '../stores/identity-list-store';
 
-const IdentityListProvider = class extends Component {
+const IdentityListProvider = class extends React.Component {
     static displayName = 'IdentityListProvider'
 
     constructor(props, context) {
@@ -36,6 +36,9 @@ const IdentityListProvider = class extends Component {
     }
 };
 
-IdentityListProvider.propTypes = {};
+IdentityListProvider.propTypes = {
+    onSave: OptionalFunc,
+    children: OptionalNode,
+};
 
 module.exports = IdentityListProvider;

@@ -42,20 +42,21 @@ export default (WrappedComponent) => {
                                     results[index].enabled = f.enabled;
                                     results[index].feature_segment_value = f;
                                     const multiVariates = res2 && res2.results.find(mv => mv.feature_segment = f.feature_segment);
-                                    results[index].multivariate_feature_state_values = multiVariates && multiVariates.multivariate_feature_state_values || [];
+                                    results[index].multivariate_feature_state_values = (multiVariates && multiVariates.multivariate_feature_state_values) || [];
                                     results[index].multivariate_options = f.multivariate_feature_state_values;
                                 }
                             }
                         });
-                        const resResults = res.results||[]
+                        const resResults = res.results || [];
                         const segmentOverrides = (results).concat(
-                            (this.props.newSegmentOverrides||[]).map((v, i)=>{return {
+                            (this.props.newSegmentOverrides || []).map((v, i) => ({
                                 ...v,
-                                priority: resResults.length + (i)
-                            }}))
-                        const originalSegmentOverrides = _.cloneDeep(segmentOverrides)
+                                priority: resResults.length + (i),
+                            })),
+                        );
+                        const originalSegmentOverrides = _.cloneDeep(segmentOverrides);
                         this.setState({
-                            segmentOverrides,originalSegmentOverrides, environmentVariations: environmentOverride && environmentOverride.multivariate_feature_state_values && environmentOverride.multivariate_feature_state_values });
+                            segmentOverrides, originalSegmentOverrides, environmentVariations: environmentOverride && environmentOverride.multivariate_feature_state_values && environmentOverride.multivariate_feature_state_values });
                     });
             }
         }

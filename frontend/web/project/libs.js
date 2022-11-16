@@ -1,10 +1,4 @@
-import flagsmith from 'flagsmith'; // Add this line if you're using flagsmith via npm
-const _Project = require('../../common/project');
-
-window.Project = {
-    ..._Project,
-    ...window.projectOverrides, // environment.js (also app.yaml if using app engine)
-};
+import flagsmith from 'flagsmith';
 import 'ionicons/dist/css/ionicons.min.css';
 
 // Optimise lodash
@@ -26,6 +20,13 @@ import get from 'lodash/get';
 import { isMobile } from 'react-device-detect';
 import propTypes from 'prop-types';
 import Bootstrap from '../../node_modules/bootstrap/dist/js/bootstrap';
+// Add this line if you're using flagsmith via npm
+const _Project = require('../../common/project');
+
+window.Project = {
+    ..._Project,
+    ...window.projectOverrides, // environment.js (also app.yaml if using app engine)
+};
 
 
 window.isMobile = isMobile || $(window).width() <= 576;
@@ -33,7 +34,7 @@ window.isMobile = isMobile || $(window).width() <= 576;
 window.flagsmith = flagsmith;
 window.moment = require('moment/min/moment.min');
 
-window._ = { each,intersection, sortBy, orderBy, filter, find, partial, findIndex, range, map, cloneDeep, keyBy, throttle, every, get };
+window._ = { each, intersection, sortBy, orderBy, filter, find, partial, findIndex, range, map, cloneDeep, keyBy, throttle, every, get };
 
 window.React = require('react');
 window.ReactDOM = require('react-dom');
@@ -64,8 +65,8 @@ window.Link = require('react-router-dom').Link;
 window.NavLink = require('react-router-dom').NavLink;
 
 if (Project.heap) {
-    window.heap=window.heap||[],heap.load=function(e,t){window.heap.appid=e,window.heap.config=t=t||{};var r=document.createElement("script");r.type="text/javascript",r.async=!0,r.src="https://cdn.heapanalytics.com/js/heap-"+e+".js";var a=document.getElementsByTagName("script")[0];a.parentNode.insertBefore(r,a);for(var n=function(e){return function(){heap.push([e].concat(Array.prototype.slice.call(arguments,0)))}},p=["addEventProperties","addUserProperties","clearEventProperties","identify","resetIdentity","removeEventProperty","setEventProperties","track","unsetEventProperty"],o=0;o<p.length;o++)heap[p[o]]=n(p[o])};
-    heap.load(Project.heap)
+    window.heap = window.heap || [], heap.load = function (e, t) { window.heap.appid = e, window.heap.config = t = t || {}; const r = document.createElement('script'); r.type = 'text/javascript', r.async = !0, r.src = `https://cdn.heapanalytics.com/js/heap-${e}.js`; const a = document.getElementsByTagName('script')[0]; a.parentNode.insertBefore(r, a); for (let n = function (e) { return function () { heap.push([e].concat(Array.prototype.slice.call(arguments, 0))); }; }, p = ['addEventProperties', 'addUserProperties', 'clearEventProperties', 'identify', 'resetIdentity', 'removeEventProperty', 'setEventProperties', 'track', 'unsetEventProperty'], o = 0; o<p.length; o++)heap[p[o]] = n(p[o]); };
+    heap.load(Project.heap);
 }
 // Analytics
 if (Project.ga) {

@@ -1,4 +1,4 @@
-module.exports = (envId, { LIB_NAME, NPM_CLIENT, TRAIT_NAME, USER_ID, USER_FEATURE_FUNCTION, FEATURE_NAME, FEATURE_NAME_ALT }, userId) => `
+module.exports = (envId, { LIB_NAME, TRAIT_NAME, USER_ID, FEATURE_NAME, FEATURE_NAME_ALT }) => `
 // Home Page
 import flagsmith from '${LIB_NAME}';
 import { useFlags, useFlagsmith } from 'flagsmith/react';

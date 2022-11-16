@@ -14,13 +14,11 @@ const controller = {
             ]))
             .then(([res, identity, flags]) => {
                 const features = (flags && flags.results) || flags;
-                const traits = Utils.getIsEdge()? res : res && res.results && res.results.map((v)=> {
-                    return {
-                        id: v.id,
-                        trait_value: Utils.featureStateToValue(v),
-                        trait_key: v.trait_key
-                    }
-                });
+                const traits = Utils.getIsEdge() ? res : res && res.results && res.results.map(v => ({
+                    id: v.id,
+                    trait_value: Utils.featureStateToValue(v),
+                    trait_key: v.trait_key,
+                }));
                 store.model = store.model || {};
                 store.model.features = features && _.keyBy(features, f => f.feature);
                 store.model.traits = traits;
@@ -37,7 +35,7 @@ const controller = {
                 id: identityFlag.id || identityFlag.featurestate_uuid,
                 enabled: !identityFlag.enabled,
                 feature: projectFlag.id,
-                feature_state_value: identityFlag? identityFlag.feature_state_value : environmentFlag && environmentFlag.feature_state_value,
+                feature_state_value: identityFlag ? identityFlag.feature_state_value : environmentFlag && environmentFlag.feature_state_value,
             }))
             : data.post(`${Project.api}environments/${environmentId}/${Utils.getIdentitiesEndpoint()}/${identity}/${Utils.getFeatureStatesEndpoint()}/`, {
                 feature: projectFlag.id,
@@ -55,7 +53,7 @@ const controller = {
         API.trackEvent(Constants.events.TOGGLE_USER_FEATURE);
 
         const prom = data.put(`${Project.api}environments/${environmentId}/${Utils.getIdentitiesEndpoint()}/${identity}/${Utils.getFeatureStatesEndpoint()}/${identityFlag}/`, Object.assign({}, payload));
-        prom.then((res) => {
+        prom.then(() => {
             if (onSuccess) onSuccess();
             store.saved();
         });
@@ -72,7 +70,7 @@ const controller = {
                 .then(() => store.saved()))
             .catch(e => API.ajaxHandler(store, e));
     },
-    editUserFlag({ identity, projectFlag, environmentFlag, identityFlag, environmentId }) {
+    editUserFlag({ identity, projectFlag, identityFlag, environmentId }) {
         store.saving();
         API.trackEvent(Constants.events.EDIT_USER_FEATURE);
         const prom = identityFlag.identity || identityFlag.identity_uuid
@@ -90,7 +88,7 @@ const controller = {
                 feature_state_value: identityFlag.feature_state_value,
             });
 
-        prom.then(res => controller.getIdentity(environmentId, identity)
+        prom.then(() => controller.getIdentity(environmentId, identity)
             .then(() => store.saved()));
     },
     removeUserFlag(identity, identityFlag, environmentId) {
@@ -126,9 +124,9 @@ const controller = {
 };
 
 
-var store = Object.assign({}, BaseStore, {
+const store = Object.assign({}, BaseStore, {
     id: 'identity',
-    getIdentityForEditing(id) {
+    getIdentityForEditing() {
         return store.model && _.cloneDeep(store.model); // immutable
     },
     getIdentityFlags() {
@@ -141,7 +139,7 @@ var store = Object.assign({}, BaseStore, {
 
 
 store.dispatcherIndex = Dispatcher.register(store, (payload) => {
-    const action = payload.action; // this is our action from	handleViewAction
+    const action = payload.action; // this is our action from handleViewAction
     const {
         identity, projectFlag, environmentFlag, identityFlag, environmentId, trait,
     } = action;

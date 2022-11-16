@@ -54,8 +54,8 @@ const Toast = class extends React.Component {
 
 
       const id = Utils.GUID();
-          messages.unshift({ content, expiry: E2E? 1000 : expiry, id });
-          this.setState({ messages });
+      messages.unshift({ content, expiry: E2E ? 1000 : expiry, id });
+      this.setState({ messages });
   }
 
   remove = (id) => {

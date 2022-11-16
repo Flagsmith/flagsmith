@@ -125,7 +125,7 @@ class _EditPermissionsModal extends Component {
                       : (
                           <div>
                               <div className="list-item">
-                                  {this.props.level !== "organisation" && (
+                                  {this.props.level !== 'organisation' && (
                                       <Row>
                                           <Flex>
                                               <bold>
@@ -154,7 +154,7 @@ class _EditPermissionsModal extends Component {
                                     items={permissions}
                                     renderRow={(p) => {
                                         const levelUpperCase = this.props.level.toUpperCase();
-                                        const disabled = this.props.level!=="organisation" && p.key !== `VIEW_${levelUpperCase}` && !this.hasPermission(`VIEW_${levelUpperCase}`);
+                                        const disabled = this.props.level !== 'organisation' && p.key !== `VIEW_${levelUpperCase}` && !this.hasPermission(`VIEW_${levelUpperCase}`);
                                         return (
                                             <div key={p.key} style={this.admin() ? { opacity: 0.5 } : null} className="list-item">
                                                 <Row>
@@ -185,8 +185,8 @@ class _EditPermissionsModal extends Component {
                                           this.props.push(this.props.parentSettingsLink);
                                           closeModal();
                                       }}
-                                      ><strong>{this.props.parentLevel} settings</strong>
-                                      </a>.
+                                          ><strong>{this.props.parentLevel} settings</strong>
+                                          </a>.
                                       </InfoMessage>
                                   )
                               }

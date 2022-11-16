@@ -1,4 +1,4 @@
-module.exports = (envId, { FEATURE_NAME, FEATURE_NAME_ALT, }, userId) => `from flagsmith import Flagsmith;
+module.exports = (envId, { FEATURE_NAME, FEATURE_NAME_ALT }, userId) => `from flagsmith import Flagsmith;
 
 flagsmith = Flagsmith(environment_key="${envId}")
 

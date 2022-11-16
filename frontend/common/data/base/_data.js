@@ -13,7 +13,7 @@ module.exports = {
         if (response.status >= 200 && response.status < 300) {
             return Promise.resolve(response);
         }
-        if (response.status == 401) {
+        if (response.status === 401) {
             AppActions.setUser(null);
         }
         response.clone().text() // cloned so response body can be used downstream
@@ -35,14 +35,6 @@ module.exports = {
         return this._request('get', url, data || null, headers);
     },
 
-    dummy(data) {
-        return function () {
-            return new Promise(((resolve) => {
-                resolve(data);
-            }));
-        };
-    },
-
     put(url, data, headers) {
         return this._request('put', url, data, headers);
     },
@@ -56,7 +48,6 @@ module.exports = {
     },
 
     _request(method, _url, data, headers = {}) {
-
         const options = {
             timeout: 60000,
             method,
@@ -66,33 +57,27 @@ module.exports = {
             },
         };
 
-
-        let req;
-
-
-        var qs = '';
-
-        if (method != 'get') options.headers['Content-Type'] = 'application/json; charset=utf-8';
+        if (method !== 'get') options.headers['Content-Type'] = 'application/json; charset=utf-8';
 
         if (this.token) { // add auth tokens to headers of all requests
             options.headers.AUTHORIZATION = `Token ${this.token}`;
         }
 
         let url = _url;
-        const parts = _url.split(/(https?:\/\/)?(.*?:.*?)@/)
+        const parts = _url.split(/(https?:\/\/)?(.*?:.*?)@/);
         if (parts.length === 4) {
-            url = (parts[1]||"http://")+parts[parts.length-1]
-            options.headers.AUTHORIZATION = `Basic ${btoa(parts[parts.length-2])}`;
+            url = (parts[1] || 'http://') + parts[parts.length - 1];
+            options.headers.AUTHORIZATION = `Basic ${btoa(parts[parts.length - 2])}`;
         }
 
         if (data) {
-            if (method == 'get') {
-                var qs = getQueryString(data);
+            if (method === 'get') {
+                const qs = getQueryString(data);
                 url += url.indexOf('?') !== -1 ? `&${qs}` : `?${qs}`;
             } else {
                 options.body = JSON.stringify(data);
             }
-        } else if (method == 'post' || method == 'put') {
+        } else if (method === 'post' || method === 'put') {
             options.body = '{}';
         }
 
@@ -104,8 +89,7 @@ module.exports = {
             document.getElementById('e2e-request').innerText = JSON.stringify(payload);
         }
 
-        req = fetch(url, options);
-        return req
+        return fetch(url, options)
             .then(this.status)
             .then((response) => { // always return json
                 let contentType = response.headers.get('content-type');

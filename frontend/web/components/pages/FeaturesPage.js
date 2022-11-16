@@ -6,7 +6,7 @@ import TagStore from '../../../common/stores/tags-store';
 import { Tag } from '../AddEditTags';
 import FeatureRow from '../FeatureRow';
 import FeatureListStore from '../../../common/stores/feature-list-store';
-import ProjectStore from "../../../common/stores/project-store";
+import ProjectStore from '../../../common/stores/project-store';
 
 const FeaturesPage = class extends Component {
     static displayName = 'FeaturesPage';
@@ -65,7 +65,7 @@ const FeaturesPage = class extends Component {
 
     componentWillReceiveProps(newProps) {
         if (newProps.match.params.environmentId != this.props.match.params.environmentId) {
-            AppActions.getFeatures(newProps.match.params.projectId, newProps.match.params.environmentId, false, this.state.search, null,0 ,this.getFilter());
+            AppActions.getFeatures(newProps.match.params.projectId, newProps.match.params.environmentId, false, this.state.search, null, 0, this.getFilter());
         }
     }
 
@@ -87,7 +87,7 @@ const FeaturesPage = class extends Component {
         }
     }
 
-    filter = ()=> {
+    filter = () => {
         AppActions.searchFeatures(this.props.match.params.projectId, this.props.match.params.environmentId, true, this.state.search, this.state.sort, 0, this.getFilter());
     }
 
@@ -104,7 +104,7 @@ const FeaturesPage = class extends Component {
     render() {
         const { projectId, environmentId } = this.props.match.params;
         const readOnly = Utils.getFlagsmithHasFeature('read_only_mode');
-        const environment = ProjectStore.getEnvironment(environmentId)
+        const environment = ProjectStore.getEnvironment(environmentId);
 
         return (
             <div data-test="features-page" id="features-page" className="app-container container">
@@ -125,8 +125,8 @@ const FeaturesPage = class extends Component {
                                                             View and manage
                                                             {' '}
                                                             <Tooltip
-                                                                title={<ButtonLink buttonText="feature flags" />}
-                                                                place="right"
+                                                              title={<ButtonLink buttonText="feature flags" />}
+                                                              place="right"
                                                             >
                                                                 {Constants.strings.FEATURE_FLAG_DESCRIPTION}
                                                             </Tooltip>
@@ -135,8 +135,8 @@ const FeaturesPage = class extends Component {
                                                             {' '}
                                                             {' '}
                                                             <Tooltip
-                                                                title={<ButtonLink buttonText="remote config" />}
-                                                                place="right"
+                                                              title={<ButtonLink buttonText="remote config" />}
+                                                              place="right"
                                                             >
                                                                 {Constants.strings.REMOTE_CONFIG_DESCRIPTION}
                                                             </Tooltip>
@@ -147,15 +147,15 @@ const FeaturesPage = class extends Component {
                                                     </Flex>
                                                     <FormGroup className="float-right">
                                                         {projectFlags && projectFlags.length ? this.createFeaturePermission(perm => (
-                                                                <div className="text-right">
-                                                                    <Button
-                                                                        disabled={!perm || readOnly} data-test="show-create-feature-btn" id="show-create-feature-btn"
-                                                                        onClick={this.newFlag}
-                                                                    >
+                                                            <div className="text-right">
+                                                                <Button
+                                                                  disabled={!perm || readOnly} data-test="show-create-feature-btn" id="show-create-feature-btn"
+                                                                  onClick={this.newFlag}
+                                                                >
                                                                         Create Feature
-                                                                    </Button>
-                                                                </div>
-                                                            ))
+                                                                </Button>
+                                                            </div>
+                                                        ))
                                                             : null}
                                                     </FormGroup>
                                                 </Row>
@@ -163,41 +163,41 @@ const FeaturesPage = class extends Component {
                                                     {({ permission, isLoading }) => (
                                                         <FormGroup className="mb-4">
                                                             <PanelSearch
-                                                                className="no-pad"
-                                                                id="features-list"
-                                                                icon="ion-ios-rocket"
-                                                                title="Features"
-                                                                renderSearchWithNoResults
-                                                                itemHeight={65}
-                                                                isLoading={FeatureListStore.isLoading}
-                                                                paging={FeatureListStore.paging}
-                                                                search={this.state.search}
-                                                                onChange={(e) => {
-                                                                    this.setState({ search: Utils.safeParseEventValue(e) }, () => {
-                                                                        AppActions.searchFeatures(this.props.match.params.projectId, this.props.match.params.environmentId, true, this.state.search, this.state.sort, 0, this.getFilter());
-                                                                    });
-                                                                }}
-                                                                nextPage={() => AppActions.getFeatures(this.props.match.params.projectId, this.props.match.params.environmentId, true, this.state.search, this.state.sort, FeatureListStore.paging.next, this.getFilter())}
-                                                                prevPage={() => AppActions.getFeatures(this.props.match.params.projectId, this.props.match.params.environmentId, true, this.state.search, this.state.sort, FeatureListStore.paging.previous, this.getFilter())}
-                                                                goToPage={page => AppActions.getFeatures(this.props.match.params.projectId, this.props.match.params.environmentId, true, this.state.search, this.state.sort, page, this.getFilter())}
-                                                                onSortChange={(sort) => {
-                                                                    this.setState({ sort }, () => {
-                                                                        AppActions.getFeatures(this.props.match.params.projectId, this.props.match.params.environmentId, true, this.state.search, this.state.sort, 0, this.getFilter());
-                                                                    });
-                                                                }}
-                                                                sorting={[
-                                                                    { label: 'Name', value: 'name', order: 'asc', default: true },
-                                                                    { label: 'Created Date', value: 'created_date', order: 'asc' },
-                                                                ]}
-                                                                items={projectFlags}
-                                                                header={(
-                                                                    <Row className="px-0 pt-0 pb-2">
-                                                                        <TagSelect
-                                                                            showUntagged
-                                                                            showClearAll={(this.state.tags && !!this.state.tags.length) || this.state.showArchived}
-                                                                            onClearAll={() => this.setState({ showArchived: false, tags: [] }, this.filter)}
-                                                                            projectId={projectId} value={this.state.tags} onChange={(tags) => {
-                                                                            FeatureListStore.isLoading = true
+                                                              className="no-pad"
+                                                              id="features-list"
+                                                              icon="ion-ios-rocket"
+                                                              title="Features"
+                                                              renderSearchWithNoResults
+                                                              itemHeight={65}
+                                                              isLoading={FeatureListStore.isLoading}
+                                                              paging={FeatureListStore.paging}
+                                                              search={this.state.search}
+                                                              onChange={(e) => {
+                                                                  this.setState({ search: Utils.safeParseEventValue(e) }, () => {
+                                                                      AppActions.searchFeatures(this.props.match.params.projectId, this.props.match.params.environmentId, true, this.state.search, this.state.sort, 0, this.getFilter());
+                                                                  });
+                                                              }}
+                                                              nextPage={() => AppActions.getFeatures(this.props.match.params.projectId, this.props.match.params.environmentId, true, this.state.search, this.state.sort, FeatureListStore.paging.next, this.getFilter())}
+                                                              prevPage={() => AppActions.getFeatures(this.props.match.params.projectId, this.props.match.params.environmentId, true, this.state.search, this.state.sort, FeatureListStore.paging.previous, this.getFilter())}
+                                                              goToPage={page => AppActions.getFeatures(this.props.match.params.projectId, this.props.match.params.environmentId, true, this.state.search, this.state.sort, page, this.getFilter())}
+                                                              onSortChange={(sort) => {
+                                                                  this.setState({ sort }, () => {
+                                                                      AppActions.getFeatures(this.props.match.params.projectId, this.props.match.params.environmentId, true, this.state.search, this.state.sort, 0, this.getFilter());
+                                                                  });
+                                                              }}
+                                                              sorting={[
+                                                                  { label: 'Name', value: 'name', order: 'asc', default: true },
+                                                                  { label: 'Created Date', value: 'created_date', order: 'asc' },
+                                                              ]}
+                                                              items={projectFlags}
+                                                              header={(
+                                                                  <Row className="px-0 pt-0 pb-2">
+                                                                      <TagSelect
+                                                                        showUntagged
+                                                                        showClearAll={(this.state.tags && !!this.state.tags.length) || this.state.showArchived}
+                                                                        onClearAll={() => this.setState({ showArchived: false, tags: [] }, this.filter)}
+                                                                        projectId={projectId} value={this.state.tags} onChange={(tags) => {
+                                                                            FeatureListStore.isLoading = true;
                                                                             if (tags.includes('') && tags.length>1) {
                                                                                 if (!this.state.tags.includes('')) {
                                                                                     this.setState({ tags: [''] }, this.filter);
@@ -209,36 +209,36 @@ const FeaturesPage = class extends Component {
                                                                             }
                                                                             AsyncStorage.setItem(`${projectId}tags`, JSON.stringify(tags));
                                                                         }}
-                                                                        >
-                                                                            <div className="mr-2 mb-2">
-                                                                                <Tag
-                                                                                    selected={this.state.showArchived}
-                                                                                    onClick={() => {
-                                                                                        FeatureListStore.isLoading = true
-                                                                                        this.setState({ showArchived: !this.state.showArchived }, this.filter)
-                                                                                    }}
-                                                                                    className="px-2 py-2 ml-2 mr-2"
-                                                                                    tag={{ label: 'Archived' }}
-                                                                                />
-                                                                            </div>
-                                                                        </TagSelect>
-                                                                    </Row>
+                                                                      >
+                                                                          <div className="mr-2 mb-2">
+                                                                              <Tag
+                                                                                selected={this.state.showArchived}
+                                                                                onClick={() => {
+                                                                                    FeatureListStore.isLoading = true;
+                                                                                    this.setState({ showArchived: !this.state.showArchived }, this.filter);
+                                                                                }}
+                                                                                className="px-2 py-2 ml-2 mr-2"
+                                                                                tag={{ label: 'Archived' }}
+                                                                              />
+                                                                          </div>
+                                                                      </TagSelect>
+                                                                  </Row>
                                                                 )}
-                                                                renderRow={(projectFlag, i) => (
-                                                                    <FeatureRow
-                                                                        environmentFlags={environmentFlags}
-                                                                        projectFlags={projectFlags}
-                                                                        permission={permission}
-                                                                        environmentId={environmentId}
-                                                                        projectId={projectId}
-                                                                        index={i} canDelete={permission}
-                                                                        toggleFlag={toggleFlag}
-                                                                        editFlag={editFlag}
-                                                                        removeFlag={removeFlag}
-                                                                        projectFlag={projectFlag}
-                                                                    />
-                                                                )}
-                                                                filterRow={({ name }, search) => true}
+                                                              renderRow={(projectFlag, i) => (
+                                                                  <FeatureRow
+                                                                    environmentFlags={environmentFlags}
+                                                                    projectFlags={projectFlags}
+                                                                    permission={permission}
+                                                                    environmentId={environmentId}
+                                                                    projectId={projectId}
+                                                                    index={i} canDelete={permission}
+                                                                    toggleFlag={toggleFlag}
+                                                                    editFlag={editFlag}
+                                                                    removeFlag={removeFlag}
+                                                                    projectFlag={projectFlag}
+                                                                  />
+                                                              )}
+                                                              filterRow={({ name }, search) => true}
                                                             />
                                                         </FormGroup>
                                                     )}
@@ -246,18 +246,18 @@ const FeaturesPage = class extends Component {
                                                 </Permission>
                                                 <FormGroup className="mt-5">
                                                     <CodeHelp
-                                                        title="1: Installing the SDK"
-                                                        snippets={Constants.codeHelp.INSTALL}
+                                                      title="1: Installing the SDK"
+                                                      snippets={Constants.codeHelp.INSTALL}
                                                     />
                                                     <CodeHelp
-                                                        title="2: Initialising your project"
-                                                        snippets={Constants.codeHelp.INIT(this.props.match.params.environmentId, projectFlags && projectFlags[0] && projectFlags[0].name)}
+                                                      title="2: Initialising your project"
+                                                      snippets={Constants.codeHelp.INIT(this.props.match.params.environmentId, projectFlags && projectFlags[0] && projectFlags[0].name)}
                                                     />
                                                 </FormGroup>
                                                 <FormGroup className="pb-4">
                                                     <TryIt
-                                                        title="Test what values are being returned from the API on this environment"
-                                                        environmentId={this.props.match.params.environmentId}
+                                                      title="Test what values are being returned from the API on this environment"
+                                                      environmentId={this.props.match.params.environmentId}
                                                     />
                                                 </FormGroup>
                                             </div>
@@ -299,8 +299,8 @@ const FeaturesPage = class extends Component {
                                                 </FormGroup>
                                                 <FormGroup>
                                                     <Panel
-                                                        icon="ion-ios-settings"
-                                                        title="2. configuring features per environment"
+                                                      icon="ion-ios-settings"
+                                                      title="2. configuring features per environment"
                                                     >
                                                         <p>
                                                             We've created 2 environments for
@@ -323,8 +323,8 @@ const FeaturesPage = class extends Component {
 
                                                 <FormGroup>
                                                     <Panel
-                                                        icon="ion-ios-person"
-                                                        title="3. configuring features per user"
+                                                      icon="ion-ios-person"
+                                                      title="3. configuring features per user"
                                                     >
                                                         <p>
                                                             When users login to your application, you
@@ -339,8 +339,8 @@ const FeaturesPage = class extends Component {
                                                             example user for you which you can see in the
                                                             {' '}
                                                             <Link
-                                                                className="btn--link"
-                                                                to={`/project/${projectId}/environment/${environmentId}/users`}
+                                                              className="btn--link"
+                                                              to={`/project/${projectId}/environment/${environmentId}/users`}
                                                             >
                                                                 Users
                                                                 page
@@ -356,9 +356,9 @@ const FeaturesPage = class extends Component {
                                                 {this.createFeaturePermission(perm => (
                                                     <FormGroup className="text-center">
                                                         <Button
-                                                            disabled={!perm}
-                                                            className="btn-lg btn-primary" id="show-create-feature-btn" data-test="show-create-feature-btn"
-                                                            onClick={this.newFlag}
+                                                          disabled={!perm}
+                                                          className="btn-lg btn-primary" id="show-create-feature-btn" data-test="show-create-feature-btn"
+                                                          onClick={this.newFlag}
                                                         >
                                                             <span className="icon ion-ios-rocket"/>
                                                             {' '}
@@ -371,7 +371,7 @@ const FeaturesPage = class extends Component {
                                     </div>
                                 )}
                             </div>
-                        )
+                        );
                     }}
                 </FeatureListProvider>
             </div>

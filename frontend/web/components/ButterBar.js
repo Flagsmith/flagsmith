@@ -8,20 +8,20 @@ class ButterBar extends Component {
 
     render() {
         return <>
-            {Utils.getFlagsmithValue('butter_bar') && !Utils.getFlagsmithHasFeature('read_only_mode')&&(
+            {Utils.getFlagsmithValue('butter_bar') && !Utils.getFlagsmithHasFeature('read_only_mode') && (
                 <div
-                    dangerouslySetInnerHTML={{ __html: Utils.getFlagsmithValue('butter_bar') }}
-                    className="butter-bar"
+                  dangerouslySetInnerHTML={{ __html: Utils.getFlagsmithValue('butter_bar') }}
+                  className="butter-bar"
                 />
             )}
             {Utils.getFlagsmithHasFeature('read_only_mode') && (
                 <div
-                    className="butter-bar"
+                  className="butter-bar"
                 >
                     Your organisation is over its usage limit, please <Link to="/organisation-settings">upgrade your plan</Link>.
                 </div>
             )}
-        </>
+        </>;
     }
 }
 

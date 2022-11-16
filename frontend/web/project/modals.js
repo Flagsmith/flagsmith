@@ -1,9 +1,10 @@
 import { render } from 'react-dom';
 import React from 'react';
+
 let interceptClose;
-export const setInterceptClose = (fn)=>{
+export const setInterceptClose = (fn) => {
     interceptClose = fn;
-}
+};
 const Provider = class extends React.Component {
     componentDidMount() {
         if (this.props.type !== 'confirm') {
@@ -16,22 +17,21 @@ const Provider = class extends React.Component {
         $(ReactDOM.findDOMNode(this)).on('hidden.bs.modal', this._closed);
         $(ReactDOM.findDOMNode(this)).on('shown.bs.modal', this._shown);
         $(ReactDOM.findDOMNode(this)).modal({ background: true, show: true });
-        if(this.props.addCloseInterception) {
+        if (this.props.addCloseInterception) {
             $(ReactDOM.findDOMNode(this)).on('hide.bs.modal', function (e) {
-                if (!!interceptClose) {
+                if (interceptClose) {
                     e.preventDefault();
                     e.stopPropagation();
-                    interceptClose().then((res)=>{
+                    interceptClose().then((res) => {
                         if (res) {
                             interceptClose = null;
-                            $(ReactDOM.findDOMNode(this)).modal("hide")
+                            $(ReactDOM.findDOMNode(this)).modal('hide');
                         }
-                    })
+                    });
                     return false;
                 }
             });
         }
-
     }
 
     show() {
@@ -41,9 +41,9 @@ const Provider = class extends React.Component {
     }
 
   close = () => { // use when you wish to trigger closing manually
-        if(this.props.onClose) {
-            this.props.onClose()
-        }
+      if (this.props.onClose) {
+          this.props.onClose();
+      }
       $(ReactDOM.findDOMNode(this)).off('hidden.bs.modal', this._closed);
       $(ReactDOM.findDOMNode(this)).off('shown.bs.modal', this._shown);
       if (!E2E) {
@@ -103,7 +103,10 @@ const Modal = class extends React.Component {
 
   render() {
       return (
-          <Provider addCloseInterception onClose={this.props.onClose} isModal2={this.props.isModal2} ref="modal">
+          <Provider
+            addCloseInterception onClose={this.props.onClose} isModal2={this.props.isModal2}
+            ref="modal"
+          >
               <div
                 tabIndex="-1" className={`modal ${E2E ? 'transition-none ' : ''}${this.props.className ? this.props.className : 'alert fade expand'}`} role="dialog"
                 aria-hidden="true"

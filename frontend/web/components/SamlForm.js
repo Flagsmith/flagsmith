@@ -13,7 +13,7 @@ const SamlForm = class extends React.Component {
 
     submit = (e) => {
         if (this.state.isLoading || !this.state.saml) {
-            return
+            return;
         }
         Utils.preventDefault(e);
         this.setState({ error: false, isLoading: true });
@@ -21,9 +21,9 @@ const SamlForm = class extends React.Component {
         data.post(`${Project.api}auth/saml/${this.state.saml}/request/`)
             .then((res) => {
                 if (res.headers && res.headers.Location) {
-                    document.location.href = res.headers.Location
+                    document.location.href = res.headers.Location;
                 } else {
-                    this.setState({error:true})
+                    this.setState({ error: true });
                 }
             })
             .catch(() => {

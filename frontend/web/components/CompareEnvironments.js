@@ -106,15 +106,15 @@ class CompareEnvironments extends Component {
                 {
                     this.state.environmentLeft && this.state.environmentRight ? (
                         <FeatureListProvider onSave={this.onSave} onError={this.onError}>
-                            {({  }, {
+                            {({ }, {
                                 environmentHasFlag,
                                 toggleFlag,
                                 editFlag,
                                 removeFlag,
                             }) => {
                                 const renderRow = (p, i, fadeEnabled, fadeValue) => {
-                                    const environmentLeft = ProjectStore.getEnvironment(this.state.environmentLeft)
-                                    const environmentRight = ProjectStore.getEnvironment(this.state.environmentRight)
+                                    const environmentLeft = ProjectStore.getEnvironment(this.state.environmentLeft);
+                                    const environmentRight = ProjectStore.getEnvironment(this.state.environmentRight);
                                     return (
                                         <div className="list-item">
                                             <Row>
@@ -130,50 +130,50 @@ class CompareEnvironments extends Component {
                                                 </div>
                                                 <Flex className="mr-2">
                                                     <Permission
-                                                        level="environment" permission={Utils.getManageFeaturePermission(Utils.changeRequestsEnabled(environmentLeft.minimum_change_request_approvals))}
-                                                        id={this.props.environmentId}
+                                                      level="environment" permission={Utils.getManageFeaturePermission(Utils.changeRequestsEnabled(environmentLeft.minimum_change_request_approvals))}
+                                                      id={this.props.environmentId}
                                                     >
                                                         {({ permission, isLoading }) => (
                                                             <FeatureRow
-                                                                condensed
-                                                                fadeEnabled={fadeEnabled}
-                                                                fadeValue={fadeValue}
-                                                                environmentFlags={this.state.environmentLeftFlags}
-                                                                projectFlags={this.state.projectFlags}
-                                                                permission={permission}
-                                                                environmentId={this.state.environmentLeft}
-                                                                projectId={this.props.projectId}
-                                                                index={i}
-                                                                canDelete={permission}
-                                                                toggleFlag={toggleFlag}
-                                                                editFlag={editFlag}
-                                                                removeFlag={removeFlag}
-                                                                projectFlag={p.projectFlag}
+                                                              condensed
+                                                              fadeEnabled={fadeEnabled}
+                                                              fadeValue={fadeValue}
+                                                              environmentFlags={this.state.environmentLeftFlags}
+                                                              projectFlags={this.state.projectFlags}
+                                                              permission={permission}
+                                                              environmentId={this.state.environmentLeft}
+                                                              projectId={this.props.projectId}
+                                                              index={i}
+                                                              canDelete={permission}
+                                                              toggleFlag={toggleFlag}
+                                                              editFlag={editFlag}
+                                                              removeFlag={removeFlag}
+                                                              projectFlag={p.projectFlag}
                                                             />
                                                         )}
                                                     </Permission>
                                                 </Flex>
                                                 <Flex className="ml-2">
                                                     <Permission
-                                                        level="environment" permission={Utils.getManageFeaturePermission(Utils.changeRequestsEnabled(environmentRight.minimum_change_request_approvals))}
-                                                        id={this.props.environmentId}
+                                                      level="environment" permission={Utils.getManageFeaturePermission(Utils.changeRequestsEnabled(environmentRight.minimum_change_request_approvals))}
+                                                      id={this.props.environmentId}
                                                     >
                                                         {({ permission, isLoading }) => (
                                                             <FeatureRow
-                                                                condensed
-                                                                fadeEnabled={fadeEnabled}
-                                                                fadeValue={fadeValue}
-                                                                environmentFlags={this.state.environmentRightFlags}
-                                                                projectFlags={this.state.projectFlags}
-                                                                permission={permission}
-                                                                environmentId={this.state.environmentRight}
-                                                                projectId={this.props.projectId}
-                                                                index={i}
-                                                                canDelete={permission}
-                                                                toggleFlag={toggleFlag}
-                                                                editFlag={editFlag}
-                                                                removeFlag={removeFlag}
-                                                                projectFlag={p.projectFlag}
+                                                              condensed
+                                                              fadeEnabled={fadeEnabled}
+                                                              fadeValue={fadeValue}
+                                                              environmentFlags={this.state.environmentRightFlags}
+                                                              projectFlags={this.state.projectFlags}
+                                                              permission={permission}
+                                                              environmentId={this.state.environmentRight}
+                                                              projectId={this.props.projectId}
+                                                              index={i}
+                                                              canDelete={permission}
+                                                              toggleFlag={toggleFlag}
+                                                              editFlag={editFlag}
+                                                              removeFlag={removeFlag}
+                                                              projectFlag={p.projectFlag}
                                                             />
                                                         )}
                                                     </Permission>
@@ -182,7 +182,7 @@ class CompareEnvironments extends Component {
                                         </div>
 
                                     );
-                                }
+                                };
                                 return (
                                     <div>
                                         {this.state.isLoading && (
