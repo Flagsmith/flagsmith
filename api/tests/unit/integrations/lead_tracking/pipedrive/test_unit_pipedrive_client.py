@@ -45,7 +45,7 @@ def test_pipedrive_api_client_create_organization(
     pipedrive_api_client, pipedrive_base_url, pipedrive_api_token
 ):
     # Given
-    example_response_file_name = "example_api_responses/create_organization.json"
+    example_response_file_name = "./example_api_responses/create_organization.json"
 
     # obtained from file above, duplicated here to simplify test
     name = "Test org"
@@ -87,7 +87,7 @@ def test_pipedrive_api_client_search_organizations(
     pipedrive_api_client, pipedrive_base_url, pipedrive_api_token
 ):
     # Given
-    example_response_file_name = "example_api_responses/search_organizations.json"
+    example_response_file_name = "./example_api_responses/search_organizations.json"
 
     # obtained from file above, duplicated here to simplify test
     search_term = "Test org"
@@ -121,7 +121,9 @@ def test_pipedrive_api_client_create_organization_field(
     pipedrive_api_client, pipedrive_base_url, pipedrive_api_token
 ):
     # Given
-    example_response_file_name = "example_api_responses/create_organization_field.json"
+    example_response_file_name = (
+        "./example_api_responses/create_organization_field.json"
+    )
 
     # obtained from file above, duplicated here to simplify test
     organization_field_name = "new-field"
