@@ -1,4 +1,5 @@
 import json
+from os.path import abspath, dirname, join
 
 import responses
 
@@ -8,14 +9,16 @@ def test_pipedrive_api_client_create_lead(
     pipedrive_api_client, pipedrive_base_url, pipedrive_api_token
 ):
     # Given
-    example_response_file_name = "example_api_responses/create_lead.json"
+    example_response_file_path = join(
+        dirname(abspath(__file__)), "example_api_responses/create_lead.json"
+    )
 
     # obtained from file above, duplicated here to simplify test
     title = "Johnny Bravo"
     organization_id = 1
     lead_id = "11c18740-659d-11ed-b6e9-ab3d83dc63a5"
 
-    with open(example_response_file_name) as f:
+    with open(example_response_file_path) as f:
         responses.add(
             method=responses.POST,
             url=f"{pipedrive_base_url}/leads",
@@ -45,7 +48,9 @@ def test_pipedrive_api_client_create_organization(
     pipedrive_api_client, pipedrive_base_url, pipedrive_api_token
 ):
     # Given
-    example_response_file_name = "./example_api_responses/create_organization.json"
+    example_response_file_name = join(
+        dirname(abspath(__file__)), "example_api_responses/create_organization.json"
+    )
 
     # obtained from file above, duplicated here to simplify test
     name = "Test org"
@@ -87,7 +92,9 @@ def test_pipedrive_api_client_search_organizations(
     pipedrive_api_client, pipedrive_base_url, pipedrive_api_token
 ):
     # Given
-    example_response_file_name = "./example_api_responses/search_organizations.json"
+    example_response_file_name = join(
+        dirname(abspath(__file__)), "example_api_responses/search_organizations.json"
+    )
 
     # obtained from file above, duplicated here to simplify test
     search_term = "Test org"
@@ -121,8 +128,9 @@ def test_pipedrive_api_client_create_organization_field(
     pipedrive_api_client, pipedrive_base_url, pipedrive_api_token
 ):
     # Given
-    example_response_file_name = (
-        "./example_api_responses/create_organization_field.json"
+    example_response_file_name = join(
+        dirname(abspath(__file__)),
+        "example_api_responses/create_organization_field.json",
     )
 
     # obtained from file above, duplicated here to simplify test
