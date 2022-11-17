@@ -5,8 +5,8 @@
     "company_id": 1,
     "owner_id": {
       "id": 1,
-      "name": "Billy Grigger",
-      "email": "billy.grigger@testing.com",
+      "name": "Johnny Bravo",
+      "email": "johnny.bravo@testing.com",
       "has_pic": 0,
       "pic_hash": null,
       "active_flag": true,
@@ -66,15 +66,15 @@
     "c0b3cfd501d96c8c149c19c4fc346155937b1843": null,
     "be2483534023b00bac153247d89304714c64bc33": null,
     "1ebc98029a711f60a51b7169b5784fa85d83f4cc": "some-value",
-    "owner_name": "Billy Grigger",
+    "owner_name": "Johnny Bravo",
     "edit_name": true
   },
   "related_objects": {
     "user": {
       "13603501": {
         "id": 13603501,
-        "name": "Billy Grigger",
-        "email": "billy.grigger@testing.com",
+        "name": "Johnny Bravo",
+        "email": "johnny.bravo@testing.com",
         "has_pic": 0,
         "pic_hash": null,
         "active_flag": true
