@@ -30,7 +30,7 @@ class PipedriveOrganizationSchema(BaseSchema):
     name = fields.Str()
 
 
-class PipedriveOrganizationFieldSchema(BaseSchema):
+class BasePipedriveCustomFieldSchema(BaseSchema):
     id = fields.Int(allow_none=True)
     key = fields.Str()
     name = fields.Str()

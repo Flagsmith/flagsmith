@@ -26,9 +26,13 @@ class PipedriveLeadTracker(LeadTracker):
             )
             raise e
 
-        return self.client.create_lead(
-            title=user.email, organization_id=organization.id
-        )
+        create_lead_kwargs = {"title": user.email, "organization_id": organization.id}
+        if user.sign_up_type:
+            create_lead_kwargs[
+                settings.PIPEDRIVE_SIGN_UP_TYPE_DEAL_FIELD_KEY
+            ] = user.sign_up_type
+
+        return self.client.create_lead(**create_lead_kwargs)
 
     def create_organization(self, organization_domain: str) -> PipedriveOrganization:
         # grab the org name from the email domain, e.g. google.com -> google

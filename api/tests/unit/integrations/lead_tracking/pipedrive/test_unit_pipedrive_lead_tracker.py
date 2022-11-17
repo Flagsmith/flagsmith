@@ -7,12 +7,15 @@ from integrations.lead_tracking.pipedrive.lead_tracker import (
     PipedriveLeadTracker,
 )
 from integrations.lead_tracking.pipedrive.models import PipedriveOrganization
-from users.models import FFAdminUser
+from users.models import FFAdminUser, SignUpType
 
 
-def test_create_lead_adds_to_existing_organization_if_exists(db, mocker):
+def test_create_lead_adds_to_existing_organization_if_exists(db, mocker, settings):
     # Given
-    user = FFAdminUser(email="elmerfudd@looneytunes.com")
+    user = FFAdminUser(
+        email="elmerfudd@looneytunes.com", sign_up_type=SignUpType.NO_INVITE.value
+    )
+    settings.PIPEDRIVE_SIGN_UP_TYPE_DEAL_FIELD_KEY = "key"
 
     organization = PipedriveOrganization(name="some-org", id=1)
     mock_pipedrive_client = mocker.MagicMock()
@@ -24,8 +27,13 @@ def test_create_lead_adds_to_existing_organization_if_exists(db, mocker):
     lead_tracker.create_lead(user)
 
     # Then
+    expected_create_lead_kwargs = {
+        "title": user.email,
+        "organization_id": organization.id,
+        settings.PIPEDRIVE_SIGN_UP_TYPE_DEAL_FIELD_KEY: SignUpType.NO_INVITE.value,
+    }
     mock_pipedrive_client.create_lead.assert_called_once_with(
-        title=user.email, organization_id=organization.id
+        **expected_create_lead_kwargs
     )
 
 
@@ -33,8 +41,11 @@ def test_create_lead_creates_new_organization_if_not_exists(db, settings, mocker
     # Given
     domain_organization_field_key = "domain-organization-field-key"
     settings.PIPEDRIVE_DOMAIN_ORGANIZATION_FIELD_KEY = domain_organization_field_key
+    settings.PIPEDRIVE_SIGN_UP_TYPE_DEAL_FIELD_KEY = "key"
 
-    user = FFAdminUser(email="elmerfudd@looneytunes.com")
+    user = FFAdminUser(
+        email="elmerfudd@looneytunes.com", sign_up_type=SignUpType.NO_INVITE.value
+    )
 
     organization = PipedriveOrganization(name="some-org", id=1)
     mock_pipedrive_client = mocker.MagicMock()
@@ -47,8 +58,13 @@ def test_create_lead_creates_new_organization_if_not_exists(db, settings, mocker
     lead_tracker.create_lead(user)
 
     # Then
+    expected_create_lead_kwargs = {
+        "title": user.email,
+        "organization_id": organization.id,
+        settings.PIPEDRIVE_SIGN_UP_TYPE_DEAL_FIELD_KEY: SignUpType.NO_INVITE.value,
+    }
     mock_pipedrive_client.create_lead.assert_called_once_with(
-        title=user.email, organization_id=organization.id
+        **expected_create_lead_kwargs
     )
     mock_pipedrive_client.create_organization.assert_called_once_with(
         name="looneytunes",

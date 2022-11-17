@@ -157,3 +157,37 @@ def test_pipedrive_api_client_create_organization_field(
 
     assert organization_field.key == organization_field_key
     assert organization_field.name == organization_field_name
+
+
+@responses.activate
+def test_pipedrive_api_client_create_deal_field(
+    pipedrive_api_client, pipedrive_base_url, pipedrive_api_token
+):
+    # Given
+    example_response_file_name = join(
+        dirname(abspath(__file__)),
+        "example_api_responses/create_deal_field.json",
+    )
+
+    # obtained from file above, duplicated here to simplify test
+    deal_field_name = "new-field"
+    deal_field_key = "8a66c8cbf4295894315aef845661469fd98f0842"
+
+    with open(example_response_file_name) as f:
+        responses.add(
+            method=responses.POST,
+            url=f"{pipedrive_base_url}/dealFields",
+            json=json.load(f),
+            status=201,
+        )
+
+    # When
+    organization_field = pipedrive_api_client.create_deal_field(name=deal_field_name)
+
+    # Then
+    assert len(responses.calls) == 1
+    call = responses.calls[0]
+    assert call.request.params["api_token"] == pipedrive_api_token
+
+    assert organization_field.key == deal_field_key
+    assert organization_field.name == deal_field_name

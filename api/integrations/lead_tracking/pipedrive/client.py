@@ -4,6 +4,7 @@ import requests
 
 from integrations.lead_tracking.pipedrive.exceptions import PipedriveAPIError
 from integrations.lead_tracking.pipedrive.models import (
+    PipedriveDealField,
     PipedriveLead,
     PipedriveOrganization,
     PipedriveOrganizationField,
@@ -59,25 +60,31 @@ class PipedriveAPIClient:
         )
         return PipedriveOrganizationField.from_response_data(api_response_data)
 
-    def get_organization_fields(
-        self, start: int = 0, limit: int = 100
-    ) -> typing.List[PipedriveOrganizationField]:
+    def create_deal_field(
+        self, name: str, field_type: str = "varchar"
+    ) -> PipedriveDealField:
         api_response_data = self._make_request(
-            resource="organizationFields",
-            http_method="get",
-            expected_status_code=200,
-            query_params={"start": start, "limit": limit},
+            resource="dealFields",
+            http_method="post",
+            data={"name": name, "field_type": field_type},
+            expected_status_code=201,
         )
-        return [
-            PipedriveOrganizationField.from_response_data(org_field)
-            for org_field in api_response_data
-        ]
+        return PipedriveDealField.from_response_data(api_response_data)
 
-    def create_lead(self, title: str, organization_id: int) -> PipedriveLead:
+    def create_lead(
+        self,
+        title: str,
+        organization_id: int,
+        custom_fields: typing.Dict[str, typing.Any] = None,
+    ) -> PipedriveLead:
         api_response_data = self._make_request(
             resource="leads",
             http_method="post",
-            data={"title": title, "organization_id": organization_id},
+            data={
+                "title": title,
+                "organization_id": organization_id,
+                **(custom_fields or {}),
+            },
             expected_status_code=201,
         )
         return PipedriveLead.from_response_data(api_response_data)

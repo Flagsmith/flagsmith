@@ -4,8 +4,8 @@ import typing
 from marshmallow.schema import Schema
 
 from integrations.lead_tracking.pipedrive.schemas import (
+    BasePipedriveCustomFieldSchema,
     PipedriveLeadSchema,
-    PipedriveOrganizationFieldSchema,
     PipedriveOrganizationSchema,
     PipedriveValueSchema,
 )
@@ -75,8 +75,8 @@ class PipedriveOrganization(BasePipedriveModel):
         self.organization_fields = organization_fields
 
 
-class PipedriveOrganizationField(BasePipedriveModel):
-    schema = PipedriveOrganizationFieldSchema()
+class BasePipedriveCustomField(BasePipedriveModel):
+    schema = BasePipedriveCustomFieldSchema()
 
     def __init__(
         self,
@@ -92,3 +92,11 @@ class PipedriveOrganizationField(BasePipedriveModel):
         self.key = key
         self.add_visible_flag = add_visible_flag
         self.id = id
+
+
+class PipedriveOrganizationField(BasePipedriveCustomField):
+    pass
+
+
+class PipedriveDealField(BasePipedriveCustomField):
+    pass
