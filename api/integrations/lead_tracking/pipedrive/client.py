@@ -91,12 +91,21 @@ class PipedriveAPIClient:
         expected_status_code: int = 200,
     ) -> dict:
         http_method = http_method.lower()
-        assert (
-            http_method in ALLOWED_METHODS
-        ), f"HTTP method must be one of {ALLOWED_METHODS}"
+        if not hasattr(self.session, http_method):
+            raise ValueError("`http_method` argument must be valid HTTP verb")
         request_method = getattr(self.session, http_method)
         url = f"{self.base_url}/{resource}?api_token={self.api_token}"
-        response = request_method(url, json=data, params=query_params)
+
+        try:
+            response = request_method(url, json=data, params=query_params)
+        except requests.exceptions.RequestException:
+            raise PipedriveAPIError(
+                "Unexpected error communicating with Pipedrive API."
+            )
+
         if response.status_code != expected_status_code:
-            raise PipedriveAPIError()
+            raise PipedriveAPIError(
+                f"Response code was {response.status_code}. Expected {expected_status_code}"
+            )
+
         return response.json()["data"]
