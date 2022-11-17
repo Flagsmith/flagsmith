@@ -108,7 +108,7 @@ class FFAdminUser(LifecycleModel, AbstractUser):
     )
 
     USERNAME_FIELD = "email"
-    REQUIRED_FIELDS = ["first_name", "last_name"]
+    REQUIRED_FIELDS = ["first_name", "last_name", "sign_up_type"]
 
     class Meta:
         ordering = ["id"]
