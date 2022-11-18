@@ -2,32 +2,27 @@ import pytest
 from pytest_lazyfixture import lazy_fixture
 
 from sse.sse_service import (
-    send_environment_update_message_using_environment,
-    send_environment_update_message_using_project,
+    send_environment_update_message_for_environment,
+    send_environment_update_message_for_project,
     send_identity_update_message,
     send_identity_update_messages,
 )
 
 
-def test_send_environment_update_message_using_project_schedules_task_correctly(
+def test_send_environment_update_message_for_project_schedules_task_correctly(
     mocker,
     sse_enabled_settings,
     realtime_enabled_project,
-    realtime_enabled_project_environment_one,
-    realtime_enabled_project_environment_two,
 ):
     # Given
     mocked_tasks = mocker.patch("sse.sse_service.tasks", autospec=True)
 
     # When
-    send_environment_update_message_using_project(realtime_enabled_project)
+    send_environment_update_message_for_project(realtime_enabled_project)
 
     # Then
-    environment_keys = list(
-        realtime_enabled_project.environments.all().values_list("api_key", flat=True)
-    )
-    mocked_tasks.send_environment_update_messages.delay.assert_called_once_with(
-        args=(environment_keys,)
+    mocked_tasks.send_environment_update_message_for_project.delay.assert_called_once_with(
+        args=(realtime_enabled_project.id,)
     )
 
 
@@ -44,7 +39,7 @@ def test_send_environment_update_message_using_project_schedules_task_correctly(
         ),
     ],
 )
-def test_send_environment_update_message_using_project_exits_early_without_scheduling_task(
+def test_send_environment_update_message_for_project_exits_early_without_scheduling_task(
     mocker,
     test_settings,
     test_project,
@@ -53,10 +48,10 @@ def test_send_environment_update_message_using_project_exits_early_without_sched
     mocked_tasks = mocker.patch("sse.sse_service.tasks", autospec=True)
 
     # When
-    send_environment_update_message_using_project(test_project)
+    send_environment_update_message_for_project(test_project)
 
     # Then
-    mocked_tasks.send_environment_update_messages.delay.assert_not_called()
+    mocked_tasks.send_environment_update_message_for_project.delay.assert_not_called()
 
 
 @pytest.mark.parametrize(
@@ -72,33 +67,36 @@ def test_send_environment_update_message_using_project_exits_early_without_sched
         ),
     ],
 )
-def test_send_environment_update_message_using_environment_exits_early_without_scheduling_task(
+def test_send_environment_update_message_for_environment_exits_early_without_scheduling_task(
     mocker, test_settings, test_environment
 ):
     # Given
     mocked_tasks = mocker.patch("sse.sse_service.tasks", autospec=True)
 
     # When
-    send_environment_update_message_using_environment(test_environment)
+    send_environment_update_message_for_environment(test_environment)
 
     # Then
     mocked_tasks.send_environment_update_message.delay.assert_not_called()
 
 
-def test_send_environment_update_message_using_environment_schedules_task_correctly(
+def test_send_environment_update_message_for_environment_schedules_task_correctly(
     mocker, sse_enabled_settings, realtime_enabled_project_environment_one
 ):
     # Given
     mocked_tasks = mocker.patch("sse.sse_service.tasks", autospec=True)
 
     # When
-    send_environment_update_message_using_environment(
+    send_environment_update_message_for_environment(
         realtime_enabled_project_environment_one
     )
 
     # Then
     mocked_tasks.send_environment_update_message.delay.assert_called_once_with(
-        args=(realtime_enabled_project_environment_one.api_key,)
+        args=(
+            realtime_enabled_project_environment_one.api_key,
+            realtime_enabled_project_environment_one.updated_at.isoformat(),
+        )
     )
 
 
