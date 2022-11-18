@@ -332,7 +332,7 @@ def test_get_user_is_not_throttled(admin_client, settings, reset_cache):
         assert response.status_code == status.HTTP_200_OK
 
 
-def test_register_with_sign_up_type(client, db):
+def test_register_with_sign_up_type(client, db, settings):
     # Given
     password = FFAdminUser.objects.make_random_password()
     sign_up_type = "NO_INVITE"

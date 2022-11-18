@@ -183,6 +183,9 @@ elif "DJANGO_DB_NAME" in os.environ:
             "CONN_MAX_AGE": DJANGO_DB_CONN_MAX_AGE,
         },
     }
+
+LOGIN_THROTTLE_RATE = env("LOGIN_THROTTLE_RATE", "20/min")
+SIGNUP_THROTTLE_RATE = env("SIGNUP_THROTTLE_RATE", "10000/min")
 REST_FRAMEWORK = {
     "DEFAULT_PERMISSION_CLASSES": ["rest_framework.permissions.IsAuthenticated"],
     "DEFAULT_AUTHENTICATION_CLASSES": (
@@ -192,8 +195,8 @@ REST_FRAMEWORK = {
     "UNICODE_JSON": False,
     "DEFAULT_PAGINATION_CLASS": "rest_framework.pagination.PageNumberPagination",
     "DEFAULT_THROTTLE_RATES": {
-        "login": "20/min",
-        "signup": "10/min",
+        "login": LOGIN_THROTTLE_RATE,
+        "signup": SIGNUP_THROTTLE_RATE,
         "mfa_code": "5/min",
         "invite": "10/min",
     },
