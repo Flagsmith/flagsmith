@@ -10,8 +10,6 @@ from integrations.lead_tracking.pipedrive.models import (
     PipedriveOrganizationField,
 )
 
-ALLOWED_METHODS = ("get", "post", "put", "patch", "delete")
-
 
 class PipedriveAPIClient:
     def __init__(
