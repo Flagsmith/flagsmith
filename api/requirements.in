@@ -49,3 +49,7 @@ opencensus-ext-django
 djangorestframework-api-key
 backoff
 pymemcache
+opentelemetry-instrumentation
+opentelemetry-instrumentation-django
+opentelemetry-sdk
+opentelemetry-exporter-otlp-proto-http
