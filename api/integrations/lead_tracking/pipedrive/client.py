@@ -21,7 +21,6 @@ class PipedriveAPIClient:
         self.api_token = api_token
         self.base_url = base_url
         self.session = session or requests.Session()
-        self.session.headers.update({"Content-Type": "application/json"})
 
     def create_organization(
         self, name: str, organization_fields: typing.Dict[str, typing.Any] = None
