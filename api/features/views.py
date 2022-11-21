@@ -3,6 +3,7 @@ import typing
 from functools import reduce
 
 from app_analytics.influxdb_wrapper import get_multiple_event_list_for_feature
+from core.constants import FLAGSMITH_UPDATED_AT_HEADER
 from core.permissions import HasMasterAPIKey
 from django.conf import settings
 from django.core.cache import caches
@@ -643,7 +644,11 @@ class SDKFeatureStates(GenericAPIView):
                 many=True,
             ).data
 
-        return Response(data)
+        updated_at = self.request.environment.updated_at
+        return Response(
+            data,
+            headers={FLAGSMITH_UPDATED_AT_HEADER: updated_at.timestamp()},
+        )
 
     @property
     def _additional_filters(self) -> Q:
