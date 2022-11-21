@@ -35,6 +35,7 @@ def test_create_lead_adds_to_existing_organization_if_exists(db, mocker, setting
     mock_pipedrive_client.create_lead.assert_called_once_with(
         **expected_create_lead_kwargs
     )
+    mock_pipedrive_client.create_organization.assert_not_called()
 
 
 def test_create_lead_creates_new_organization_if_not_exists(db, settings, mocker):
