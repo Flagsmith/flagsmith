@@ -1,7 +1,11 @@
+import pytest
 from marshmallow import fields
 from marshmallow.schema import Schema
 
-from integrations.lead_tracking.pipedrive.models import BasePipedriveModel
+from integrations.lead_tracking.pipedrive.models import (
+    BasePipedriveModel,
+    PipedriveOrganization,
+)
 
 
 def test_base_pipedrive_model_from_api_response():
@@ -20,3 +24,16 @@ def test_base_pipedrive_model_from_api_response():
 
     # Then
     assert o.foo == "bar"
+
+
+@pytest.mark.parametrize(
+    "domain, expected_org_name",
+    (("example.com", "example"), ("foo.example.com", "example")),
+)
+def test_pipedrive_organisation_get_org_name_from_domain(domain, expected_org_name):
+    assert PipedriveOrganization.get_org_name_from_domain(domain) == expected_org_name
+
+
+def test_pipedrive_organisation_get_org_name_from_domain_raises_value_error_if_domain_invalid():
+    with pytest.raises(ValueError):
+        PipedriveOrganization.get_org_name_from_domain("not_a_domain")

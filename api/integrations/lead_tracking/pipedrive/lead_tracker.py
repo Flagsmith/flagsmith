@@ -35,8 +35,7 @@ class PipedriveLeadTracker(LeadTracker):
         return self.client.create_lead(**create_lead_kwargs)
 
     def create_organization(self, organization_domain: str) -> PipedriveOrganization:
-        # grab the org name from the email domain, e.g. google.com -> google
-        org_name = organization_domain.split(".")[-2]
+        org_name = PipedriveOrganization.get_org_name_from_domain(organization_domain)
         organization = self.client.create_organization(
             name=org_name,
             organization_fields={

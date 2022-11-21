@@ -74,6 +74,17 @@ class PipedriveOrganization(BasePipedriveModel):
         self.id = id
         self.organization_fields = organization_fields
 
+    @staticmethod
+    def get_org_name_from_domain(domain: str) -> str:
+        """
+        Generate an organisation name from the provided domain.
+            e.g. google.com -> google
+        """
+        parts = domain.split(".")
+        if len(parts) < 2:
+            raise ValueError(f"Invalid domain: {domain}")
+        return parts[-2]
+
 
 class BasePipedriveCustomField(BasePipedriveModel):
     schema = BasePipedriveCustomFieldSchema()
