@@ -38,7 +38,7 @@ jobs:
               uses: docker/metadata-action@v3
               with:
                   images: |
-                      flagsmith/flagsmith-frontend
+                      flagsmith/flagsmith-e2e-tests
                   flavor: |
                       latest=${{ startsWith(github.ref, 'refs/heads/main') }}
                   tags: |
