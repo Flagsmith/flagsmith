@@ -28,7 +28,7 @@
             <option value="scale" {% if filter_plan == "scale" %}selected{% endif %}>Scale Up</option>
           </select>
           <select name="sort_field" id="sort-field" class="custom-select m-1" value="{{ sort_field }}">
-            <option value="" {% if not sort_field %}selected{% endif %}>Sort by...</option>
+            <option value="subscription_information_cache__api_calls_30d" {% if not sort_field %}selected{% endif %}>Sort by...</option>
             <option value="num_users" {% if sort_field == "num_users" %}selected{% endif %}>Users</option>
             <option value="subscription_information_cache__allowed_seats" {% if sort_field == "subscription_information_cache__allowed_seats" %}selected{% endif %}>Seats</option>
             <option value="num_projects" {% if sort_field == "num_projects" %}selected{% endif %}>Projects</option>
