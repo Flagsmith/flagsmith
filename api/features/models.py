@@ -6,7 +6,7 @@ import typing
 import uuid
 from copy import deepcopy
 
-from core.models import AbstractBaseExportableModel
+from core.models import AbstractBaseAuditableModel, AbstractBaseExportableModel
 from django.core.exceptions import (
     NON_FIELD_ERRORS,
     ObjectDoesNotExist,
@@ -25,6 +25,7 @@ from django_lifecycle import (
 from ordered_model.models import OrderedModelBase
 from simple_history.models import HistoricalRecords
 
+from audit.models import RelatedObjectType
 from environments.identities.helpers import (
     get_hashed_percentage_for_object_ids,
 )
@@ -56,7 +57,9 @@ if typing.TYPE_CHECKING:
     from environments.models import Environment
 
 
-class Feature(CustomLifecycleModelMixin, AbstractBaseExportableModel):
+class Feature(
+    CustomLifecycleModelMixin, AbstractBaseExportableModel, AbstractBaseAuditableModel
+):
     name = models.CharField(max_length=2000)
     created_date = models.DateTimeField("DateCreated", auto_now_add=True)
     project = models.ForeignKey(
@@ -82,6 +85,9 @@ class Feature(CustomLifecycleModelMixin, AbstractBaseExportableModel):
     owners = models.ManyToManyField(
         "users.FFAdminUser", related_name="owned_features", blank=True
     )
+
+    history_record_class_path = "features.models.HistoricalFeature"
+    related_object_type = RelatedObjectType.FEATURE
 
     class Meta:
         # Note: uniqueness is changed to reference lowercase name in explicit SQL in the migrations
@@ -128,6 +134,18 @@ class Feature(CustomLifecycleModelMixin, AbstractBaseExportableModel):
 
     def __str__(self):
         return "Project %s - Feature %s" % (self.project.name, self.name)
+
+    def get_create_log_message(self) -> str:
+        return f"New Flag / Remote Config created: {self.name}"
+
+    def get_delete_log_message(self) -> str:
+        return f"Flag / Remote Config Deleted: {self.name}"
+
+    def get_update_log_message(self) -> str:
+        return f"Flag / Remote Config Updated: {self.name}"
+
+    def _get_project(self) -> typing.Optional["Project"]:
+        return self.project
 
 
 def get_next_segment_priority(feature):

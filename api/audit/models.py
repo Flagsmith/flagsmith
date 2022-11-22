@@ -1,4 +1,5 @@
 import enum
+from importlib import import_module
 
 from django.db import models
 from django_lifecycle import AFTER_SAVE, LifecycleModel, hook
@@ -90,12 +91,19 @@ class AuditLog(LifecycleModel):
     )
     is_system_event = models.BooleanField(default=False)
 
+    history_record_id = models.IntegerField(null=True)
+    history_record_class_path = models.CharField(max_length=200, null=True)
+
     class Meta:
         verbose_name_plural = "Audit Logs"
         ordering = ("-created_date",)
 
-    def __str__(self):
-        return "Audit Log %s" % self.id
+    @property
+    def history_record(self):
+        module_path, class_name = self.history_record_class_path.rsplit(".", maxsplit=1)
+        module = import_module(module_path)
+        klass = getattr(module, class_name)
+        return klass.objects.get(id=self.history_record_id)
 
     @hook(AFTER_SAVE)
     def update_environments_updated_at(self):
