@@ -76,6 +76,19 @@ export default class Rule extends PureComponent {
                                 />
                             </Flex>
                         </Row>
+                        <Row>
+                            <div className="mb-2"/>
+                        </Row>
+                        <Row noWrap className="rule">
+                            <Input
+                                readOnly={this.props.readOnly}
+                                data-test={`${this.props['data-test']}-description-${i}`}
+                                className="input-container full-width"
+                                value={`${rule.description||""}`}
+                                placeholder= "Segment condition description"
+                                onChange={e => this.setRuleProperty(i, 'description', { value: Utils.safeParseEventValue(e) })}
+                            />
+                        </Row>
                     </Flex>
                     <div>
                         <Row noWrap>
