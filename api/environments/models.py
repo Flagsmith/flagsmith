@@ -10,7 +10,7 @@ from core.request_origin import RequestOrigin
 from django.conf import settings
 from django.core.cache import caches
 from django.db import models
-from django.db.models import Q
+from django.db.models import Q, QuerySet
 from django.utils import timezone
 from django.utils.translation import ugettext_lazy as _
 from django_lifecycle import AFTER_CREATE, AFTER_SAVE, LifecycleModel, hook
@@ -30,6 +30,7 @@ from environments.exceptions import EnvironmentHeaderNotPresentError
 from environments.managers import EnvironmentManager
 from features.models import Feature, FeatureSegment, FeatureState
 from projects.models import Project
+from segments.models import Segment
 from webhooks.models import AbstractBaseWebhookModel
 
 logger = logging.getLogger(__name__)
@@ -207,6 +208,17 @@ class Environment(LifecycleModel):
             self.allow_client_traits
             or getattr(request, "originated_from", RequestOrigin.CLIENT)
             == RequestOrigin.SERVER
+        )
+
+    def get_segments(self) -> QuerySet[Segment]:
+        return Segment.objects.filter(
+            feature_segments__feature_states__environment=self
+        ).prefetch_related(
+            "rules",
+            "rules__conditions",
+            "rules__rules",
+            "rules__rules__conditions",
+            "rules__rules__rules",
         )
 
     @classmethod

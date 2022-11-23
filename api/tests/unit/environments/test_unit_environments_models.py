@@ -8,6 +8,7 @@ from pytest_django.asserts import assertQuerysetEqual as assert_queryset_equal
 
 from environments.models import Environment, Webhook
 from features.models import Feature, FeatureState
+from segments.models import Segment
 
 
 @pytest.mark.parametrize(
@@ -257,3 +258,20 @@ def test_creating_a_feature_with_defaults_does_not_set_defaults_if_disabled(proj
     feature_state = FeatureState.objects.get(feature=feature, environment=environment)
     assert feature_state.enabled is False
     assert feature_state.get_feature_state_value() is None
+
+
+def test_get_segments_returns_no_segments_if_no_overrides(environment, segment):
+    assert list(environment.get_segments()) == []
+
+
+def test_get_segments_returns_only_segments_that_have_an_override(
+    environment, segment_featurestate
+):
+    # Given
+    Segment.objects.create(project=environment.project, name="another segment")
+
+    # When
+    segments = environment.get_segments()
+
+    # Then
+    assert list(segments) == [segment_featurestate.feature_segment.segment]
