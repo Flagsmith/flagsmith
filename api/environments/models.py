@@ -211,6 +211,7 @@ class Environment(LifecycleModel):
         )
 
     def get_segments(self) -> QuerySet[Segment]:
+        # TODO: add caching (similar to Project.get_segments_from_cache)
         return Segment.objects.filter(
             feature_segments__feature_states__environment=self
         ).prefetch_related(
