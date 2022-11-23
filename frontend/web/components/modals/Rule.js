@@ -86,7 +86,10 @@ export default class Rule extends PureComponent {
                                 className="input-container full-width"
                                 value={`${rule.description||""}`}
                                 placeholder= "Segment condition description"
-                                onChange={e => this.setRuleProperty(i, 'description', { value: Utils.safeParseEventValue(e) })}
+                                onChange={(e) => {
+                                    const value = Utils.safeParseEventValue(e);
+                                    this.setRuleProperty(i, 'description', {value}, true);
+                                }}
                             />
                         </Row>
                     </Flex>
