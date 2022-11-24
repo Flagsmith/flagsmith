@@ -68,9 +68,10 @@ class OrganisationList(ListView):
             else:
                 queryset = queryset.filter(subscription__plan__icontains=filter_plan)
 
-        sort_field = self.request.GET.get("sort_field", DEFAULT_ORGANISATION_SORT)
-        sort_direction = self.request.GET.get(
-            "sort_direction", DEFAULT_ORGANISATION_SORT_DIRECTION
+        sort_field = self.request.GET.get("sort_field") or DEFAULT_ORGANISATION_SORT
+        sort_direction = (
+            self.request.GET.get("sort_direction")
+            or DEFAULT_ORGANISATION_SORT_DIRECTION
         )
         queryset = (
             queryset.order_by(sort_field)
