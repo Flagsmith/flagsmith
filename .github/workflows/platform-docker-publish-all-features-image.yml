@@ -49,8 +49,8 @@ jobs:
             - name: Write git info to Docker image
               run: |
                   cd api
-                  echo ${GITHUB_SHA} > CI_COMMIT_SHA
-                  echo ${{ steps.meta-build.outputs.tags }} > IMAGE_TAG
+                  echo ${{ github.sha }} > CI_COMMIT_SHA
+                  echo '${{ steps.meta.outputs.tags }}' > IMAGE_TAG
 
             - name: Docker metadata
               id: meta
