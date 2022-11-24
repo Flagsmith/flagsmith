@@ -37,6 +37,7 @@ logger = logging.getLogger(__name__)
 
 environment_cache = caches[settings.ENVIRONMENT_CACHE_LOCATION]
 environment_document_cache = caches[settings.ENVIRONMENT_DOCUMENT_CACHE_LOCATION]
+environment_segments_cache = caches[settings.ENVIRONMENT_SEGMENTS_CACHE_NAME]
 
 # Intialize the dynamo environment wrapper globaly
 environment_wrapper = DynamoEnvironmentWrapper()
@@ -210,17 +211,23 @@ class Environment(LifecycleModel):
             == RequestOrigin.SERVER
         )
 
-    def get_segments(self) -> QuerySet[Segment]:
-        # TODO: add caching (similar to Project.get_segments_from_cache)
-        return Segment.objects.filter(
-            feature_segments__feature_states__environment=self
-        ).prefetch_related(
-            "rules",
-            "rules__conditions",
-            "rules__rules",
-            "rules__rules__conditions",
-            "rules__rules__rules",
-        )
+    def get_segments_from_cache(self) -> QuerySet[Segment]:
+        """
+        Get any segments that have been overridden in this environment.
+        """
+        segments = environment_segments_cache.get(self.id)
+        if not segments:
+            segments = Segment.objects.filter(
+                feature_segments__feature_states__environment=self
+            ).prefetch_related(
+                "rules",
+                "rules__conditions",
+                "rules__rules",
+                "rules__rules__conditions",
+                "rules__rules__rules",
+            )
+            environment_segments_cache.set(self.id, segments)
+        return segments
 
     @classmethod
     def get_environment_document(cls, api_key: str) -> dict:

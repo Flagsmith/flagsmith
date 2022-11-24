@@ -261,7 +261,7 @@ def test_creating_a_feature_with_defaults_does_not_set_defaults_if_disabled(proj
 
 
 def test_get_segments_returns_no_segments_if_no_overrides(environment, segment):
-    assert list(environment.get_segments()) == []
+    assert list(environment.get_segments_from_cache()) == []
 
 
 def test_get_segments_returns_only_segments_that_have_an_override(
@@ -271,7 +271,7 @@ def test_get_segments_returns_only_segments_that_have_an_override(
     Segment.objects.create(project=environment.project, name="another segment")
 
     # When
-    segments = environment.get_segments()
+    segments = environment.get_segments_from_cache()
 
     # Then
     assert list(segments) == [segment_featurestate.feature_segment.segment]
