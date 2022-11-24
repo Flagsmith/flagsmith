@@ -129,7 +129,7 @@ class Identity(models.Model):
         traits = self.identity_traits.all() if traits is None else traits
 
         if overrides_only:
-            all_segments = self.environment.get_segments()
+            all_segments = self.environment.get_segments_from_cache()
         else:
             all_segments = self.environment.project.get_segments_from_cache()
 
