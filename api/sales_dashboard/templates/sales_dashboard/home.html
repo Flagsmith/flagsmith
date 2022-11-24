@@ -21,21 +21,22 @@
 
       <div class="sort-form">
         <form action="{% url 'sales_dashboard:index' %}" method="get" class="form-inline float-right">
+        <label for="filter-plan">Filter: </label>
           <select name="filter_plan" id="filter-plan" class="custom-select m-1">
             <option value="" {% if not filter_plan %}selected{% endif %}>Filter Plan</option>
             <option value="free" {% if filter_plan == "free" %}selected{% endif %}>Free</option>
             <option value="start" {% if filter_plan == "start" %}selected{% endif %}>Start Up</option>
             <option value="scale" {% if filter_plan == "scale" %}selected{% endif %}>Scale Up</option>
           </select>
+          <label for="sort-field">Sort: </label>
           <select name="sort_field" id="sort-field" class="custom-select m-1" value="{{ sort_field }}">
-            <option value="subscription_information_cache__api_calls_30d" {% if not sort_field %}selected{% endif %}>Sort by...</option>
             <option value="num_users" {% if sort_field == "num_users" %}selected{% endif %}>Users</option>
             <option value="subscription_information_cache__allowed_seats" {% if sort_field == "subscription_information_cache__allowed_seats" %}selected{% endif %}>Seats</option>
             <option value="num_projects" {% if sort_field == "num_projects" %}selected{% endif %}>Projects</option>
             <option value="num_features" {% if sort_field == "num_features" %}selected{% endif %}>Flags</option>
             <option value="subscription_information_cache__api_calls_24h" {% if sort_field == "subscription_information_cache__api_calls_24h" %}selected{% endif %}>24h API calls</option>
             <option value="subscription_information_cache__api_calls_7d" {% if sort_field == "subscription_information_cache__api_calls_7d" %}selected{% endif %}>7d API calls</option>
-            <option value="subscription_information_cache__api_calls_30d" {% if sort_field == "subscription_information_cache__api_calls_30d" %}selected{% endif %}>30d API calls</option>
+            <option value="subscription_information_cache__api_calls_30d" {% if sort_field == "subscription_information_cache__api_calls_30d" or not sort_field %}selected{% endif %}>30d API calls</option>
           </select>
           <select name="sort_direction" id="sort-direction" class="custom-select m-1">
             <option value="DESC" {% if not sort_direction or sort_direction == "DESC" %}selected{% endif %}>Descending</option>
