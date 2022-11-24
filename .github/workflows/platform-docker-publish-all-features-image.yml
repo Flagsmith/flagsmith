@@ -49,7 +49,6 @@ jobs:
             - name: Write git info to Docker image
               run: |
                   cd api
-                  echo ${{ env.GITHUB_REF_SLUG }} > CI_COMMIT_REF_NAME
                   echo ${GITHUB_SHA} > CI_COMMIT_SHA
                   echo ${{ steps.meta-build.outputs.tags }} > IMAGE_TAG
 

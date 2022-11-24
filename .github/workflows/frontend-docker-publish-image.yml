@@ -33,24 +33,14 @@ jobs:
                   username: ${{ secrets.DOCKERHUB_USERNAME }}
                   password: ${{ secrets.DOCKERHUB_TOKEN }}
 
-            - name: Inject slug/short variables
-              uses: rlespinasse/github-slug-action@v3.x
-
-            - name: Docker metadata
-              id: meta-build
-              uses: docker/metadata-action@v4
-              with:
-                  images: |
-                      flagsmith/flagsmith-frontend
-                  tags: |
-                      type=ref,event=branch
-
             - name: Docker metadata
               id: meta
-              uses: crazy-max/ghaction-docker-meta@v2
+              uses: docker/metadata-action@v3
               with:
                   images: |
                       flagsmith/flagsmith-frontend
+                  flavor: |
+                      latest=${{ startsWith(github.ref, 'refs/heads/main') }}
                   tags: |
                       type=ref,event=branch
                       type=semver,pattern={{version}}
@@ -59,9 +49,8 @@ jobs:
             - name: Write git info to Docker image
               run: |
                   cd api
-                  echo ${{ env.GITHUB_REF_SLUG }} > CI_COMMIT_REF_NAME
                   echo ${GITHUB_SHA} > CI_COMMIT_SHA
-                  echo ${{ steps.meta-build.outputs.tags }} > IMAGE_TAG
+                  echo ${{ steps.meta.outputs.tags }} > IMAGE_TAG
 
             - name: Download features
               run: >

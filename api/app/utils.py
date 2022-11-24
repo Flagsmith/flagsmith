@@ -11,7 +11,6 @@ def create_hash():
 def get_version_info():
     """Reads the version info baked into src folder of the docker container"""
     version_json = {
-        "CI_COMMIT_REF_NAME": get_file("./src/CI_COMMIT_REF_NAME"),
         "CI_COMMIT_SHA": get_file("./src/CI_COMMIT_SHA"),
         "IMAGE_TAG": get_file("./src/IMAGE_TAG"),
     }

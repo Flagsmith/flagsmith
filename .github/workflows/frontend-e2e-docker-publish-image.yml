@@ -33,24 +33,14 @@ jobs:
                   username: ${{ secrets.DOCKERHUB_USERNAME }}
                   password: ${{ secrets.DOCKERHUB_TOKEN }}
 
-            - name: Inject slug/short variables
-              uses: rlespinasse/github-slug-action@v3.x
-
             - name: Docker metadata
-              id: meta-build
+              id: meta
               uses: docker/metadata-action@v3
               with:
                   images: |
                       flagsmith/flagsmith-e2e-tests
-                  tags: |
-                      type=ref,event=branch
-
-            - name: Docker metadata
-              id: meta
-              uses: crazy-max/ghaction-docker-meta@v2
-              with:
-                  images: |
-                      flagsmith/flagsmith-e2e-tests
+                  flavor: |
+                      latest=${{ startsWith(github.ref, 'refs/heads/main') }}
                   tags: |
                       type=ref,event=branch
                       type=semver,pattern={{version}}
