@@ -10,7 +10,7 @@ from core.request_origin import RequestOrigin
 from django.conf import settings
 from django.core.cache import caches
 from django.db import models
-from django.db.models import Q, QuerySet
+from django.db.models import Q
 from django.utils import timezone
 from django.utils.translation import ugettext_lazy as _
 from django_lifecycle import AFTER_CREATE, AFTER_SAVE, LifecycleModel, hook
@@ -211,20 +211,22 @@ class Environment(LifecycleModel):
             == RequestOrigin.SERVER
         )
 
-    def get_segments_from_cache(self) -> QuerySet[Segment]:
+    def get_segments_from_cache(self) -> typing.List[Segment]:
         """
         Get any segments that have been overridden in this environment.
         """
         segments = environment_segments_cache.get(self.id)
         if not segments:
-            segments = Segment.objects.filter(
-                feature_segments__feature_states__environment=self
-            ).prefetch_related(
-                "rules",
-                "rules__conditions",
-                "rules__rules",
-                "rules__rules__conditions",
-                "rules__rules__rules",
+            segments = list(
+                Segment.objects.filter(
+                    feature_segments__feature_states__environment=self
+                ).prefetch_related(
+                    "rules",
+                    "rules__conditions",
+                    "rules__rules",
+                    "rules__rules__conditions",
+                    "rules__rules__rules",
+                )
             )
             environment_segments_cache.set(self.id, segments)
         return segments

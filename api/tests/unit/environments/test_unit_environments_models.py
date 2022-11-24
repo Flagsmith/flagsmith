@@ -261,17 +261,56 @@ def test_creating_a_feature_with_defaults_does_not_set_defaults_if_disabled(proj
 
 
 def test_get_segments_returns_no_segments_if_no_overrides(environment, segment):
-    assert list(environment.get_segments_from_cache()) == []
+    assert environment.get_segments_from_cache() == []
 
 
 def test_get_segments_returns_only_segments_that_have_an_override(
-    environment, segment_featurestate
+    environment, segment, segment_featurestate, mocker, monkeypatch
 ):
     # Given
+    mock_environment_segments_cache = mocker.MagicMock()
+    mock_environment_segments_cache.get.return_value = None
+
+    monkeypatch.setattr(
+        "environments.models.environment_segments_cache",
+        mock_environment_segments_cache,
+    )
+
     Segment.objects.create(project=environment.project, name="another segment")
 
     # When
     segments = environment.get_segments_from_cache()
 
     # Then
-    assert list(segments) == [segment_featurestate.feature_segment.segment]
+    assert segments == [segment]
+
+    mock_environment_segments_cache.set.assert_called_once_with(
+        environment.id, segments
+    )
+
+
+def test_get_segments_from_cache_does_not_hit_db_if_cache_hit(
+    environment,
+    segment,
+    segment_featurestate,
+    mocker,
+    monkeypatch,
+    django_assert_num_queries,
+):
+    # Given
+    mock_environment_segments_cache = mocker.MagicMock()
+    mock_environment_segments_cache.get.return_value = [segment]
+
+    monkeypatch.setattr(
+        "environments.models.environment_segments_cache",
+        mock_environment_segments_cache,
+    )
+
+    # When
+    with django_assert_num_queries(0):
+        segments = environment.get_segments_from_cache()
+
+    # Then
+    assert segments == [segment_featurestate.feature_segment.segment]
+
+    mock_environment_segments_cache.set.assert_not_called()
