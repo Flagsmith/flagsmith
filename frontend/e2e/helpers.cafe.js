@@ -17,13 +17,12 @@ export const waitForElementVisible = async (selector) => {
 
 export const logResults = async (requests)=> {
     console.log(JSON.stringify(requests.filter((v)=>{
-        if (v.response.statusCode >= 200 && v.response.statusCode < 300) {
+        if (!v.response || (v.response.statusCode >= 200 && v.response.statusCode < 300)) {
             return false
         }
         return true
     }), null, 2));
     console.error(JSON.stringify((await t.getBrowserConsoleMessages()).error));
-
 }
 
 export const waitForElementNotExist = async (selector) => {
