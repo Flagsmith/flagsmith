@@ -117,11 +117,10 @@ class AuditLog(LifecycleModel):
         obj,
         obj_type,
         log_message,
-        author=None,
+        author,
         project=None,
         environment=None,
         persist=True,
-        master_api_key=None,
     ):
         record = cls(
             related_object_id=obj.id,
