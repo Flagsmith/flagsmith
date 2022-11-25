@@ -217,7 +217,7 @@ const PaymentModal = class extends Component {
                                                         {!viewOnly ? (
                                                             <a
                                                               onClick={() => {
-                                                                  if (window.$crisp) {
+                                                                  if (window.zE) {
                                                                       closeModal();
                                                                       Utils.openChat();
                                                                   }
