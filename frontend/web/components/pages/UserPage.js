@@ -128,7 +128,7 @@ const UserPage = class extends Component {
           }}
           environmentFlag={environmentFlag}
         />, null, {
-            className: 'side-modal fade',
+            className: 'side-modal fade create-feature-modal',
             onClose: () => {
                 history.replaceState(
                     {},

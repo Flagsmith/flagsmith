@@ -97,7 +97,7 @@ export default class TheComponent extends PureComponent {
                                               </button>
                                           </Column>
                                       ) : (
-                                          <ion onClick={onClick} style={{ fontSize: 24 }} className="icon--primary ion ion-md-settings" />
+                                          <span onClick={onClick} style={{ fontSize: 24 }} className="icon--primary ion ion-md-settings" />
 
                                       )}
 

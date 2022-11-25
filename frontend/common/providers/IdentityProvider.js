@@ -74,7 +74,7 @@ const IdentityProvider = class extends React.Component {
 
 IdentityProvider.propTypes = {
     onSave: OptionalFunc,
-    children: OptionalNode,
+    children: OptionalFunc,
 };
 
 module.exports = IdentityProvider;

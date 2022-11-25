@@ -255,7 +255,7 @@ export default class EditPermissions extends PureComponent {
   render() {
       // const { props } = this;
       return (
-          <div className="mt-5">
+          <div className="mt-4">
               <h3>
                 Manage Permissions
               </h3>
@@ -268,7 +268,7 @@ export default class EditPermissions extends PureComponent {
                   <TabItem tabLabel="Users">
                       <OrganisationProvider>
                           {({ isLoading, name, projects, usage, users, invites }) => (
-                              <div>
+                              <div className="mt-4">
                                   {isLoading && (!users || !users.length) && <div className="centered-container"><Loader/></div>}
                                   {(users && users.length) && (
                                   <div>
@@ -312,7 +312,7 @@ export default class EditPermissions extends PureComponent {
                                                                         matchingPermissions && matchingPermissions.admin ? `${Format.camelCase(this.props.level)} Administrator` : 'Regular User'
                                                                     }
                                                                     </span>
-                                                                    <ion style={{ fontSize: 24 }} className="icon--primary ion ion-md-settings"/>
+                                                                    <span style={{ fontSize: 24 }} className="icon--primary ion ion-md-settings"/>
                                                                 </div>
                                                             )}
                                                         </Row>
@@ -339,7 +339,7 @@ export default class EditPermissions extends PureComponent {
                       </OrganisationProvider>
                   </TabItem>
                   <TabItem tabLabel="Groups">
-                      <FormGroup className="panel no-pad pl-2 pr-2 panel--nested">
+                      <FormGroup className="panel no-pad pl-2 mt-4 pr-2 panel--nested">
                           <div className={this.props.tabClassName}>
                               <UserGroupList noTitle orgId={AccountStore.getOrganisation().id} onClick={group => this.editGroupPermissions(group)}/>
                           </div>

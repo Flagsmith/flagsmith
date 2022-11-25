@@ -15,6 +15,17 @@ export const waitForElementVisible = async (selector) => {
     return t.expect(Selector(selector).visible).ok();
 };
 
+export const logResults = async (requests)=> {
+    console.log(JSON.stringify(requests.filter((v)=>{
+        if (v.response.statusCode >= 200 && v.response.statusCode < 300) {
+            return false
+        }
+        return true
+    }), null, 2));
+    console.error(JSON.stringify((await t.getBrowserConsoleMessages()).error));
+
+}
+
 export const waitForElementNotExist = async (selector) => {
     console.log(`Waiting element not visible ${selector}`);
     return t.expect(Selector(selector).exists).notOk('', { timeout: 10000 });

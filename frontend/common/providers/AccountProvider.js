@@ -126,7 +126,7 @@ AccountProvider.propTypes = {
     onSave: OptionalFunc,
     onLogin: OptionalFunc,
     onLogout: OptionalFunc,
-    children: OptionalNode,
+    children: OptionalFunc,
 };
 
 module.exports = AccountProvider;

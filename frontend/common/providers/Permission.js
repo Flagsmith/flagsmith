@@ -7,9 +7,9 @@ const Permission = class extends Component {
   static displayName = 'Permission'
 
   static propTypes = {
-      id: propTypes.string.isRequired,
+      id: propTypes.number.isRequired,
       level: propTypes.string.isRequired,
-      children: OptionalNode,
+      children: OptionalFunc,
       permission: propTypes.string.isRequired,
   }
 
