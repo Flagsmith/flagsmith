@@ -239,7 +239,6 @@ const EnvironmentSettingsPage = class extends Component {
                                                             <div>
                                                                 <div className="mb-2">
                                                                     <strong>Minimum number of approvals</strong>
-
                                                                 </div>
                                                                 <Row>
                                                                     <Column className="m-l-0">
@@ -295,15 +294,15 @@ const EnvironmentSettingsPage = class extends Component {
                                                     </FormGroup>
                                                 )}
                                                 <FormGroup className="m-y-3">
-                                                    <Row>
-                                                        <Column className="d-flex">
+                                                    <Row className="mt-4" space>
+                                                        <div className="col-md-8 pl-0">
                                                             <h3>
                                                                 Delete Environment
                                                             </h3>
                                                             <p>
                                                                 This environment will be permanently deleted.
                                                             </p>
-                                                        </Column>
+                                                        </div>
                                                         <Button
                                                             id="delete-env-btn"
                                                             onClick={() => this.confirmRemove(_.find(project.environments, { api_key: this.props.match.params.environmentId }), () => {
