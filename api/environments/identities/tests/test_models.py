@@ -843,6 +843,53 @@ class IdentityTestCase(TransactionTestCase):
         # the segment is returned
         assert len(segments) == 1 and segments[0] == segment
 
+    def test_get_segments_with_overrides_only_only_returns_segments_overridden_in_environment(
+        self,
+    ):
+        # Given
+        segment_1 = Segment.objects.create(name="Segment 1", project=self.project)
+        segment_2 = Segment.objects.create(name="Segment 2", project=self.project)
+
+        condition_property = "foo"
+        condition_value = "bar"
+        for segment in [segment_1, segment_2]:
+            rule = SegmentRule.objects.create(
+                segment=segment, type=SegmentRule.ALL_RULE
+            )
+            Condition.objects.create(
+                operator=EQUAL,
+                property=condition_property,
+                value=condition_value,
+                rule=rule,
+            )
+
+        feature = Feature.objects.create(name="test_feature", project=self.project)
+        feature_segment = FeatureSegment.objects.create(
+            feature=feature, segment=segment_1, environment=self.environment
+        )
+        FeatureState.objects.create(
+            feature=feature,
+            environment=self.environment,
+            feature_segment=feature_segment,
+        )
+
+        identity = Identity.objects.create(
+            identifier="identity", environment=self.environment
+        )
+        Trait.objects.create(
+            identity=identity,
+            trait_key=condition_property,
+            value_type=STRING,
+            string_value=condition_value,
+        )
+
+        # When
+        identity_segments = identity.get_segments(overrides_only=True)
+
+        # Then
+        assert len(identity_segments) == 1
+        assert identity_segments[0] == segment_1
+
     def test_get_all_feature_states_does_not_return_null_versions(self):
         # Given
         feature = Feature.objects.create(name="test_feature", project=self.project)
