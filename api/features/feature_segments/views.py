@@ -1,9 +1,11 @@
 import logging
 
+from core.permissions import HasMasterAPIKey
 from django.utils.decorators import method_decorator
 from drf_yasg2.utils import swagger_auto_schema
 from rest_framework import mixins, viewsets
 from rest_framework.decorators import action
+from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 
 from audit.models import (
@@ -18,6 +20,7 @@ from features.feature_segments.serializers import (
     FeatureSegmentQuerySerializer,
 )
 from features.models import FeatureSegment
+from projects.models import Project
 
 logger = logging.getLogger(__name__)
 
@@ -39,8 +42,17 @@ class FeatureSegmentViewSet(
     mixins.DestroyModelMixin,
     viewsets.GenericViewSet,
 ):
+    permission_classes = [IsAuthenticated | HasMasterAPIKey]
+
     def get_queryset(self):
-        permitted_projects = self.request.user.get_permitted_projects(["VIEW_PROJECT"])
+        if hasattr(self.request, "master_api_key"):
+            permitted_projects = Project.objects.filter(
+                organisation_id=self.request.master_api_key.organisation_id
+            )
+        else:
+            permitted_projects = self.request.user.get_permitted_projects(
+                permissions=["VIEW_PROJECT"]
+            )
         queryset = FeatureSegment.objects.filter(
             feature__project__in=permitted_projects
         )
@@ -77,16 +89,19 @@ class FeatureSegmentViewSet(
             instance.feature.name,
             instance.segment.name,
         )
-
+        author = None if self.request.user.is_anonymous else self.request.user
+        master_api_key = (
+            self.request.master_api_key if self.request.user.is_anonymous else None
+        )
         if feature_state:
-            audit_log_record = AuditLog.create_record(
-                obj=feature_state,
-                obj_type=RelatedObjectType.FEATURE_STATE,
-                log_message=message,
-                author=self.request.user,
+            audit_log_record = AuditLog(
+                related_object_id=feature_state.id,
+                related_object_type=RelatedObjectType.FEATURE_STATE.name,
+                log=message,
+                author=author,
                 project=instance.feature.project,
                 environment=instance.environment,
-                persist=False,
+                master_api_key=master_api_key,
             )
             instance.delete()
             audit_log_record.save()
