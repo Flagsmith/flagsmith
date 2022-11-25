@@ -79,7 +79,6 @@ class Feature(
     description = models.TextField(null=True, blank=True)
     default_enabled = models.BooleanField(default=False)
     type = models.CharField(max_length=50, blank=True, default=STANDARD)
-    history = HistoricalRecords(excluded_fields=["uuid"])
     tags = models.ManyToManyField(Tag, blank=True)
     is_archived = models.BooleanField(default=False)
     owners = models.ManyToManyField(
@@ -135,13 +134,13 @@ class Feature(
     def __str__(self):
         return "Project %s - Feature %s" % (self.project.name, self.name)
 
-    def get_create_log_message(self) -> str:
+    def get_create_log_message(self, history_instance) -> typing.Optional[str]:
         return f"New Flag / Remote Config created: {self.name}"
 
-    def get_delete_log_message(self) -> str:
+    def get_delete_log_message(self, history_instance) -> typing.Optional[str]:
         return f"Flag / Remote Config Deleted: {self.name}"
 
-    def get_update_log_message(self) -> str:
+    def get_update_log_message(self, history_instance) -> typing.Optional[str]:
         return f"Flag / Remote Config Updated: {self.name}"
 
     def _get_project(self) -> typing.Optional["Project"]:
@@ -234,7 +233,12 @@ class FeatureSegment(AbstractBaseExportableModel, OrderedModelBase):
         return get_correctly_typed_value(self.value_type, self.value)
 
 
-class FeatureState(LifecycleModelMixin, AbstractBaseExportableModel):
+class FeatureState(
+    LifecycleModelMixin, AbstractBaseExportableModel, AbstractBaseAuditableModel
+):
+    history_record_class_path = "features.models.HistoricalFeatureState"
+    related_object_type = RelatedObjectType.FEATURE_STATE
+
     feature = models.ForeignKey(
         Feature, related_name="feature_states", on_delete=models.CASCADE
     )
@@ -263,7 +267,6 @@ class FeatureState(LifecycleModelMixin, AbstractBaseExportableModel):
     )
 
     enabled = models.BooleanField(default=False)
-    history = HistoricalRecords(excluded_fields=["uuid"])
 
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
@@ -633,6 +636,33 @@ class FeatureState(LifecycleModelMixin, AbstractBaseExportableModel):
             .get("max_version", 0)
             + 1
         )
+
+    def get_create_log_message(self, history_instance) -> typing.Optional[str]:
+        # TODO
+        return "a message"
+
+    def get_update_log_message(self, history_instance) -> typing.Optional[str]:
+        # TODO
+        return "a message"
+
+    def get_delete_log_message(self, history_instance) -> typing.Optional[str]:
+        # TODO
+        return "a message"
+
+    def get_extra_audit_log_kwargs(self, history_instance) -> dict:
+        kwargs = super().get_extra_audit_log_kwargs(history_instance)
+
+        if (
+            history_instance.history_type == "+"
+            and self.feature_segment_id is None
+            and self.identity_id is None
+        ):
+            kwargs["skip_signals"] = "send_environments_to_dynamodb"
+
+        return kwargs
+
+    def _get_environment(self) -> typing.Optional["Environment"]:
+        return self.environment
 
 
 class FeatureStateValue(AbstractBaseFeatureValueModel, AbstractBaseExportableModel):

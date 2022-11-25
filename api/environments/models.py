@@ -19,6 +19,7 @@ from flag_engine.api.document_builders import (
     build_environment_document,
 )
 from rest_framework.request import Request
+from softdelete.models import SoftDeleteObject
 
 from app.utils import create_hash
 from environments.api_keys import (
@@ -41,7 +42,7 @@ environment_document_cache = caches[settings.ENVIRONMENT_DOCUMENT_CACHE_LOCATION
 environment_wrapper = DynamoEnvironmentWrapper()
 
 
-class Environment(LifecycleModel):
+class Environment(LifecycleModel, SoftDeleteObject):
     name = models.CharField(max_length=2000)
     created_date = models.DateTimeField("DateCreated", auto_now_add=True)
     description = models.TextField(null=True, blank=True, max_length=20000)

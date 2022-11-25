@@ -6,11 +6,6 @@ from rest_framework import mixins, viewsets
 from rest_framework.decorators import action
 from rest_framework.response import Response
 
-from audit.models import (
-    SEGMENT_FEATURE_STATE_DELETED_MESSAGE,
-    AuditLog,
-    RelatedObjectType,
-)
 from features.feature_segments.serializers import (
     FeatureSegmentChangePrioritiesSerializer,
     FeatureSegmentCreateSerializer,
@@ -68,34 +63,6 @@ class FeatureSegmentViewSet(
             # update the serializer kwargs to ensure docs here are correct
             kwargs = {**kwargs, "many": True, "partial": True}
         return super(FeatureSegmentViewSet, self).get_serializer(*args, **kwargs)
-
-    def perform_destroy(self, instance):
-        # feature state <-> feature segment relationship is incorrectly modelled as a
-        # foreign key instead of one to one, so we need to grab the first feature state
-        feature_state = instance.feature_states.first()
-        message = SEGMENT_FEATURE_STATE_DELETED_MESSAGE % (
-            instance.feature.name,
-            instance.segment.name,
-        )
-
-        if feature_state:
-            audit_log_record = AuditLog.create_record(
-                obj=feature_state,
-                obj_type=RelatedObjectType.FEATURE_STATE,
-                log_message=message,
-                author=self.request.user,
-                project=instance.feature.project,
-                environment=instance.environment,
-                persist=False,
-            )
-            instance.delete()
-            audit_log_record.save()
-        else:
-            logger.warning(
-                "FeatureSegment %d has no feature state. Deleting without AuditLog.",
-                instance.id,
-            )
-            instance.delete()
 
     @action(detail=False, methods=["POST"], url_path="update-priorities")
     def update_priorities(self, request, *args, **kwargs):

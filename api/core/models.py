@@ -1,7 +1,6 @@
 import logging
 import typing
 import uuid
-from abc import abstractmethod
 
 from django.db import models
 from django.db.models import Manager
@@ -10,6 +9,7 @@ from simple_history.models import HistoricalRecords
 if typing.TYPE_CHECKING:
     from environments.models import Environment
     from projects.models import Project
+    from users.models import FFAdminUser
 
 
 logger = logging.getLogger(__name__)
@@ -37,8 +37,17 @@ class AbstractBaseExportableModel(models.Model):
         return (str(self.uuid),)
 
 
+class BaseHistoricalModel(models.Model):
+    include_in_audit = True
+
+    class Meta:
+        abstract = True
+
+
 class AbstractBaseAuditableModel(models.Model):
-    history = HistoricalRecords()
+    history = HistoricalRecords(
+        bases=[BaseHistoricalModel], excluded_fields=["uuid"], inherit=True
+    )
 
     history_record_class_path = None
     related_object_type = None
@@ -46,17 +55,14 @@ class AbstractBaseAuditableModel(models.Model):
     class Meta:
         abstract = True
 
-    @abstractmethod
-    def get_create_log_message(self) -> str:
-        raise NotImplementedError()
+    def get_create_log_message(self, history_instance) -> typing.Optional[str]:
+        return None
 
-    @abstractmethod
-    def get_update_log_message(self) -> str:
-        raise NotImplementedError()
+    def get_update_log_message(self, history_instance) -> typing.Optional[str]:
+        return None
 
-    @abstractmethod
-    def get_delete_log_message(self) -> str:
-        raise NotImplementedError()
+    def get_delete_log_message(self, history_instance) -> typing.Optional[str]:
+        return None
 
     def get_environment_and_project(
         self,
@@ -67,6 +73,12 @@ class AbstractBaseAuditableModel(models.Model):
                 "class should implement at least one of _get_environment or _get_project"
             )  # TODO: better exception
         return environment, project
+
+    def get_extra_audit_log_kwargs(self, history_instance) -> dict:
+        return {}
+
+    def get_audit_log_author(self, history_instance) -> typing.Optional["FFAdminUser"]:
+        return None
 
     def _get_environment(self) -> typing.Optional["Environment"]:
         return None

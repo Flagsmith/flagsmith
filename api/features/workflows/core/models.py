@@ -2,7 +2,7 @@ import logging
 import typing
 
 from core.helpers import get_current_site_url
-from core.models import AbstractBaseExportableModel
+from core.models import AbstractBaseAuditableModel, AbstractBaseExportableModel
 from django.conf import settings
 from django.core.mail import send_mail
 from django.db import models
@@ -33,12 +33,18 @@ from .exceptions import (
 )
 
 if typing.TYPE_CHECKING:
+    from environments.models import Environment
     from users.models import FFAdminUser
 
 logger = logging.getLogger(__name__)
 
 
-class ChangeRequest(LifecycleModelMixin, AbstractBaseExportableModel):
+class ChangeRequest(
+    LifecycleModelMixin, AbstractBaseExportableModel, AbstractBaseAuditableModel
+):
+    related_object_type = RelatedObjectType.CHANGE_REQUEST
+    history_record_class_path = "workflows.core.models.HistoricalChangeRequest"
+
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
@@ -104,29 +110,29 @@ class ChangeRequest(LifecycleModelMixin, AbstractBaseExportableModel):
         self.committed_by = committed_by
         self.save()
 
-    @hook(AFTER_CREATE)
-    def create_cr_created_audit_log(self):
-        message = CHANGE_REQUEST_CREATED_MESSAGE % self.title
-        AuditLog.objects.create(
-            author=self.user,
-            project=self.environment.project,
-            environment=self.environment,
-            related_object_type=RelatedObjectType.CHANGE_REQUEST.name,
-            related_object_id=self.id,
-            log=message,
-        )
+    def get_create_log_message(self, history_instance) -> typing.Optional[str]:
+        return CHANGE_REQUEST_CREATED_MESSAGE % self.title
 
-    @hook(AFTER_SAVE, when="committed_at", was=None, is_not=None)
-    def create_cr_committed_audit_log(self):
-        message = CHANGE_REQUEST_COMMITTED_MESSAGE % self.title
-        AuditLog.objects.create(
-            author=self.committed_by,
-            project=self.environment.project,
-            environment=self.environment,
-            related_object_type=RelatedObjectType.CHANGE_REQUEST.name,
-            related_object_id=self.id,
-            log=message,
-        )
+    def get_update_log_message(self, history_instance) -> typing.Optional[str]:
+        if (
+            history_instance.prev_record
+            and history_instance.prev_record.committed_at is None
+            and self.committed_at is not None
+        ):
+            return CHANGE_REQUEST_COMMITTED_MESSAGE % self.title
+
+    def get_audit_log_author(self, history_instance) -> typing.Optional["FFAdminUser"]:
+        if history_instance.history_type == "+":
+            return self.user
+        elif history_instance.history_type == "~" and (
+            history_instance.prev_record
+            and history_instance.prev_record.committed_at is None
+            and self.committed_at is not None
+        ):
+            return self.committed_by
+
+    def _get_environment(self) -> typing.Optional["Environment"]:
+        return self.environment
 
     def is_approved(self):
         return self.environment.minimum_change_request_approvals is None or (
