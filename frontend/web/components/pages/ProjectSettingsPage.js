@@ -90,7 +90,7 @@ const ProjectSettingsPage = class extends Component {
                                 <Tabs inline transparent uncontrolled>
                                     <TabItem tabLabel="General" tabIcon="ion-md-settings" >
                                         <div className="mt-4">
-                                            <h3>General</h3>
+                                            <h3>Project Name</h3>
                                             <FormGroup>
                                                 <form onSubmit={(e) => {
                                                     e.preventDefault();

@@ -256,9 +256,6 @@ export default class EditPermissions extends PureComponent {
       // const { props } = this;
       return (
           <div className="mt-4">
-              <h3>
-                Manage Permissions
-              </h3>
               <p>
                   Flagsmith lets you manage fine-grained permissions for your projects and environments.
                   {' '}

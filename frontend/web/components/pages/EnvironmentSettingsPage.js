@@ -151,10 +151,8 @@ const EnvironmentSettingsPage = class extends Component {
                                     <Tabs inline transparent uncontrolled>
                                         <TabItem tabLabel="General" tabIcon="ion-md-settings" >
                                             <div className="mt-4">
-                                                <h3>General</h3>
                                                 <div>
                                                     <form onSubmit={this.saveEnv}>
-
                                                         <div className="row">
                                                             <div className="col-md-6">
                                                                 <InputGroup
@@ -164,7 +162,7 @@ const EnvironmentSettingsPage = class extends Component {
                                                                     className="full-width"
                                                                     onChange={e => this.setState({ name: Utils.safeParseEventValue(e) })}
                                                                     isValid={name && name.length}
-                                                                    type="text" title="Name"
+                                                                    type="text" title="Environment Name"
                                                                     placeholder="Environment Name"
                                                                 />
                                                             </div>
@@ -178,7 +176,7 @@ const EnvironmentSettingsPage = class extends Component {
                                                                     inputProps={{ className: 'input--wide', style: { minHeight: 100 } }}
                                                                     onChange={e => this.setState({ description: Utils.safeParseEventValue(e) })}
                                                                     isValid={name && name.length}
-                                                                    type="text" title="Description"
+                                                                    type="text" title="Environment Description"
                                                                     placeholder="Environment Description"
                                                                 />
                                                             </div>
