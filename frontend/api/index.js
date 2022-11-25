@@ -123,23 +123,24 @@ app.get('/health', (req, res) => {
 });
 
 app.get('/version', (req, res) => {
-    // eslint-disable-next-line
-    commitSha="Unknown"
-    imageTag="Unknown"
+    let commitSha = 'Unknown';
+    let imageTag = 'Unknown';
 
     try {
-        commitSha = fs.readFileSync('CI_COMMIT_SHA', 'utf8').replace(/(\r\n|\n|\r)/gm, "");
+        commitSha = fs.readFileSync('CI_COMMIT_SHA', 'utf8').replace(/(\r\n|\n|\r)/gm, '');
     } catch (err) {
-        console.log("Unable to read CI_COMMIT_SHA")
+        // eslint-disable-next-line
+        console.log('Unable to read CI_COMMIT_SHA');
     }
 
     try {
-        imageTag = fs.readFileSync('IMAGE_TAG', 'utf8').replace(/(\r\n|\n|\r)/gm, "");
+        imageTag = fs.readFileSync('IMAGE_TAG', 'utf8').replace(/(\r\n|\n|\r)/gm, '');
     } catch (err) {
-        console.log("Unable to read IMAGE_TAG")
+        // eslint-disable-next-line
+        console.log('Unable to read IMAGE_TAG');
     }
 
-    res.send({"ci_commit_sha": commitSha, "image_tag": imageTag});
+    res.send({ 'ci_commit_sha': commitSha, 'image_tag': imageTag });
 });
 
 app.use(bodyParser.json());
