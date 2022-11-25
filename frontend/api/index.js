@@ -15,6 +15,7 @@ const postToSlack = process.env.VERCEL_ENV === 'production';
 
 const isDev = process.env.NODE_ENV !== 'production';
 const port = process.env.PORT || 8080;
+const fs = require('fs');
 
 app.use(xFrameOptions());
 
@@ -119,6 +120,27 @@ app.get('/health', (req, res) => {
     // eslint-disable-next-line
     console.log('Healthcheck complete');
     res.send('OK');
+});
+
+app.get('/version', (req, res) => {
+    // eslint-disable-next-line
+    console.log('Healthcheck complete');
+    commitSha="Unknown"
+    imageTag="Unknown"
+
+    try {
+        commitSha = fs.readFileSync('CI_COMMIT_SHA', 'utf8').replace(/(\r\n|\n|\r)/gm, "");
+    } catch (err) {
+        console.log("Unable to read CI_COMMIT_SHA")
+    }
+
+    try {
+        imageTag = fs.readFileSync('IMAGE_TAG', 'utf8').replace(/(\r\n|\n|\r)/gm, "");
+    } catch (err) {
+        console.log("Unable to read IMAGE_TAG")
+    }
+
+    res.send({"ci_commit_sha": commitSha, "image_tag": imageTag});
 });
 
 app.use(bodyParser.json());
