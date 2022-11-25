@@ -124,7 +124,6 @@ app.get('/health', (req, res) => {
 
 app.get('/version', (req, res) => {
     // eslint-disable-next-line
-    console.log('Healthcheck complete');
     commitSha="Unknown"
     imageTag="Unknown"
 
