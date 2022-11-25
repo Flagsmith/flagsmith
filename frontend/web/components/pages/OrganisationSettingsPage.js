@@ -62,8 +62,8 @@ const OrganisationSettingsPage = class extends Component {
 
     confirmRemove = (organisation, cb) => {
         openModal('Remove Organisation', <ConfirmRemoveOrganisation
-          organisation={organisation}
-          cb={cb}
+            organisation={organisation}
+            cb={cb}
         />);
     };
 
@@ -80,13 +80,13 @@ const OrganisationSettingsPage = class extends Component {
         openConfirm(<h3>Delete Invite</h3>, <p>
             Are you sure you want to delete this
             invite?
-                                            </p>, () => AppActions.deleteInvite(id));
+        </p>, () => AppActions.deleteInvite(id));
     }
 
     deleteUser = (id) => {
         openConfirm(<h3>Delete User</h3>, <p>
             Are you sure you want to delete this user?
-                                          </p>, () => AppActions.deleteUser(id));
+        </p>, () => AppActions.deleteUser(id));
     }
 
     save = (e) => {
@@ -146,7 +146,7 @@ const OrganisationSettingsPage = class extends Component {
     cancelPaymentPlan = () => {
         openModal(
             <h2>Are you sure you want to cancel your plan?</h2>,
-            <CancelPaymentPlanModal/>,
+            <CancelPaymentPlanModal />,
         );
     }
 
@@ -156,25 +156,25 @@ const OrganisationSettingsPage = class extends Component {
 
     createWebhook = () => {
         openModal('New Webhook', <CreateAuditWebhookModal
-          router={this.context.router}
-          save={this.props.createWebhook}
+            router={this.context.router}
+            save={this.props.createWebhook}
         />, null, { className: 'alert fade expand' });
     };
 
 
     editWebhook = (webhook) => {
         openModal('Edit Webhook', <CreateAuditWebhookModal
-          router={this.context.router}
-          webhook={webhook}
-          isEdit
-          save={this.props.saveWebhook}
+            router={this.context.router}
+            webhook={webhook}
+            isEdit
+            save={this.props.saveWebhook}
         />, null, { className: 'alert fade expand' });
     };
 
     deleteWebhook = (webhook) => {
         openModal('Remove Webhook', <ConfirmRemoveAuditWebhook
-          url={webhook.url}
-          cb={() => this.props.deleteWebhook(webhook)}
+            url={webhook.url}
+            cb={() => this.props.deleteWebhook(webhook)}
         />);
     };
 
@@ -197,24 +197,23 @@ const OrganisationSettingsPage = class extends Component {
 
                     </div>
                     <div className="col-md-6 row mb-2">
-
                         <table className="table">
                             <thead>
                                 <th style={{ width: 200, borderBottom: '1px solid #ccc' }}>
                                     <td>
-                                    Usage type
+                                        Usage type
                                     </td>
                                 </th>
                                 <th style={{ borderBottom: '1px solid #ccc' }}>
                                     <td>
-                                    API calls
+                                        API calls
                                     </td>
                                 </th>
                             </thead>
                             <tbody>
                                 <tr style={{ borderBottom: '1px solid #ccc' }}>
                                     <td>
-                                    Environment Document
+                                        Environment Document
                                     </td>
                                     <td>
                                         {Utils.numberWithCommas(totalEnvironmentDocument)}
@@ -222,7 +221,7 @@ const OrganisationSettingsPage = class extends Component {
                                 </tr>
                                 <tr style={{ borderBottom: '1px solid #ccc' }}>
                                     <td>
-                                    Flags
+                                        Flags
                                     </td>
                                     <td>
                                         {Utils.numberWithCommas(totalFlags)}
@@ -230,7 +229,7 @@ const OrganisationSettingsPage = class extends Component {
                                 </tr>
                                 <tr style={{ borderBottom: '1px solid #ccc' }}>
                                     <td>
-                                    Identities
+                                        Identities
                                     </td>
                                     <td>
                                         {Utils.numberWithCommas(totalIdentities)}
@@ -238,7 +237,7 @@ const OrganisationSettingsPage = class extends Component {
                                 </tr>
                                 <tr style={{ borderBottom: '1px solid #ccc' }}>
                                     <td>
-                                    Traits
+                                        Traits
                                     </td>
                                     <td>
                                         {Utils.numberWithCommas(totalTraits)}
@@ -247,7 +246,7 @@ const OrganisationSettingsPage = class extends Component {
                                 <tr style={{ borderTop: '1px solid #ccc' }}>
                                     <td>
                                         <strong>
-                                        Total
+                                            Total
                                         </strong>
                                     </td>
                                     <td>
@@ -262,22 +261,21 @@ const OrganisationSettingsPage = class extends Component {
 
                     <ResponsiveContainer height={400} width="100%">
                         <BarChart data={data.events_list}>
-                            <CartesianGrid strokeDasharray="3 5"/>
-                            <XAxis allowDataOverflow={false} dataKey="name"/>
+                            <CartesianGrid strokeDasharray="3 5" />
+                            <XAxis allowDataOverflow={false} dataKey="name" />
                             <YAxis allowDataOverflow={false} />
-                            <_Tooltip/>
+                            <_Tooltip />
                             <Legend />
                             <Bar dataKey="Flags" stackId="a" fill="#6633ff" />
                             <Bar dataKey="Identities" stackId="a" fill="#00a696" />
                             <Bar dataKey="Traits" stackId="a" fill="#f18e7f" />
                             <Bar
-                              name="Environment Document" dataKey="Environment-document" stackId="a"
-                              fill="#F6D46E"
+                                name="Environment Document" dataKey="Environment-document" stackId="a"
+                                fill="#F6D46E"
                             />
                         </BarChart>
                     </ResponsiveContainer>
                 </div>
-
             );
         }
         return null;
@@ -285,27 +283,27 @@ const OrganisationSettingsPage = class extends Component {
 
     editUserPermissions = (user) => {
         openModal('Edit Organisation Permissions', <EditPermissionsModal
-          name={`${user.first_name} ${user.last_name}`}
-          id={AccountStore.getOrganisation().id}
-          onSave={() => {
-              AppActions.getOrganisation(AccountStore.getOrganisation().id);
-          }}
-          level="organisation"
-          user={user}
+            name={`${user.first_name} ${user.last_name}`}
+            id={AccountStore.getOrganisation().id}
+            onSave={() => {
+                AppActions.getOrganisation(AccountStore.getOrganisation().id);
+            }}
+            level="organisation"
+            user={user}
         />);
     }
 
     editGroupPermissions = (group) => {
         openModal('Edit Organisation Permissions', <EditPermissionsModal
-          name={`${group.name}`}
-          id={AccountStore.getOrganisation().id}
-          isGroup
-          onSave={() => {
-              AppActions.getOrganisation(AccountStore.getOrganisation().id);
-          }}
-          level="organisation"
-          group={group}
-          push={this.context.router.history.push}
+            name={`${group.name}`}
+            id={AccountStore.getOrganisation().id}
+            isGroup
+            onSave={() => {
+                AppActions.getOrganisation(AccountStore.getOrganisation().id);
+            }}
+            level="organisation"
+            group={group}
+            push={this.context.router.history.push}
         />);
     }
 
@@ -331,7 +329,7 @@ const OrganisationSettingsPage = class extends Component {
                                 const { max_seats } = subscriptionMeta || organisation.subscription || { max_seats: 1 };
                                 return (
                                     <div>
-                                        <Tabs inline transparent value={this.state.tab||0} onChange={(tab)=>this.setState({tab})}>
+                                        <Tabs inline transparent value={this.state.tab || 0} onChange={(tab) => this.setState({ tab })}>
                                             <TabItem tabLabel="General" tabIcon="ion-md-settings" >
                                                 <FormGroup>
                                                     <div className="mt-4">
@@ -374,7 +372,7 @@ const OrganisationSettingsPage = class extends Component {
                                                                                 Manage Invoices
                                                                             </a>
                                                                         )}
-                                                                        { organisation.subscription ? (
+                                                                        {organisation.subscription ? (
                                                                             <button
                                                                                 disabled={!this.state.manageSubscriptionLoaded}
                                                                                 type="button" className="btn btn-primary text-center ml-auto mt-2 mb-2"
@@ -399,7 +397,7 @@ const OrganisationSettingsPage = class extends Component {
                                                                             >
                                                                                 View plans
                                                                             </button>
-                                                                        ) }
+                                                                        )}
                                                                     </div>
                                                                 </div>
                                                             )}
@@ -420,13 +418,13 @@ const OrganisationSettingsPage = class extends Component {
                                                         <ButtonLink href="https://docs.flagsmith.com/advanced-use/system-administration#audit-log-webhooks/">Learn about Audit Webhooks.</ButtonLink>
                                                     </p>
                                                     {webhooksLoading && !webhooks ? (
-                                                        <Loader/>
+                                                        <Loader />
                                                     ) : (
                                                         <PanelSearch
                                                             id="webhook-list"
                                                             title={(
                                                                 <Tooltip
-                                                                    title={<h6 className="mb-0">Webhooks <span className="icon ion-ios-information-circle"/></h6>}
+                                                                    title={<h6 className="mb-0">Webhooks <span className="icon ion-ios-information-circle" /></h6>}
                                                                     place="right"
                                                                 >
                                                                     {Constants.strings.WEBHOOKS_DESCRIPTION}
@@ -453,7 +451,7 @@ const OrganisationSettingsPage = class extends Component {
                                                                         </div>
                                                                     </div>
                                                                     <Row>
-                                                                        <Switch checked={webhook.enabled}/>
+                                                                        <Switch checked={webhook.enabled} />
                                                                         <button
                                                                             id="delete-invite"
                                                                             type="button"
@@ -464,7 +462,7 @@ const OrganisationSettingsPage = class extends Component {
                                                                             }}
                                                                             className="btn btn--with-icon ml-auto btn--remove"
                                                                         >
-                                                                            <RemoveIcon/>
+                                                                            <RemoveIcon />
                                                                         </button>
                                                                     </Row>
                                                                 </Row>
@@ -475,7 +473,7 @@ const OrganisationSettingsPage = class extends Component {
                                                                     icon="ion-md-cloud"
                                                                     title={(
                                                                         <Tooltip
-                                                                            title={<h6 className="mb-0">Webhooks <span className="icon ion-ios-information-circle"/></h6>}
+                                                                            title={<h6 className="mb-0">Webhooks <span className="icon ion-ios-information-circle" /></h6>}
                                                                             place="right"
                                                                         >
                                                                             {Constants.strings.AUDIT_WEBHOOKS_DESCRIPTION}
@@ -489,14 +487,15 @@ const OrganisationSettingsPage = class extends Component {
                                                         />
                                                     )}
                                                 </FormGroup>
-                                                <FormGroup className="mt-5">
-                                                    <Row>
-                                                        <Column>
+
+                                                <FormGroup className="m-y-3">
+                                                    <Row className="mt-4" space>
+                                                        <div className="col-md-8 pl-0">
                                                             <h3>Delete Organisation</h3>
                                                             <p>
-                                                                This organisation will be  permanently deleted, along with all projects and features.
+                                                                This organisation will be permanently deleted, along with all projects and features.
                                                             </p>
-                                                        </Column>
+                                                        </div>
                                                         <Button
                                                             id="delete-org-btn"
                                                             onClick={() => this.confirmRemove(organisation, () => {
@@ -504,7 +503,7 @@ const OrganisationSettingsPage = class extends Component {
                                                             })}
                                                             className="btn btn--with-icon ml-auto btn--remove"
                                                         >
-                                                            <RemoveIcon/>
+                                                            <RemoveIcon />
                                                         </Button>
                                                     </Row>
                                                 </FormGroup>
@@ -512,9 +511,10 @@ const OrganisationSettingsPage = class extends Component {
 
                                             <TabItem tabLabel="Keys" tabIcon="ion-md-key" >
                                                 {Utils.getFlagsmithHasFeature('master_api_key') && (
-                                                    <AdminAPIKeys/>
+                                                    <AdminAPIKeys />
                                                 )}
                                             </TabItem>
+
                                             <TabItem data-test="tab-permissions" tabLabel="Members" tabIcon="ion-md-people" >
                                                 <FormGroup className="mt-4">
                                                     <div>
@@ -524,7 +524,7 @@ const OrganisationSettingsPage = class extends Component {
                                                                 <Button
                                                                     style={{ width: 180 }}
                                                                     id="btn-invite" onClick={() => openModal('Invite Users',
-                                                                    <InviteUsersModal/>)}
+                                                                        <InviteUsersModal />)}
                                                                     type="button"
                                                                 >
                                                                     Invite members
@@ -533,8 +533,6 @@ const OrganisationSettingsPage = class extends Component {
                                                             {paymentsEnabled && !isLoading && (
                                                                 <p>
                                                                     {'You are currently using '}
-
-
                                                                     <strong className={organisation.num_seats > max_seats ? 'text-danger' : ''}>
                                                                         {`${organisation.num_seats} of ${max_seats}`}
                                                                     </strong>
@@ -544,8 +542,8 @@ const OrganisationSettingsPage = class extends Component {
                                                                         && (
                                                                             <a
                                                                                 href="#" onClick={() => openModal('Payment Plans', <PaymentModal
-                                                                                viewOnly={false}
-                                                                            />, null, { large: true })}
+                                                                                    viewOnly={false}
+                                                                                />, null, { large: true })}
                                                                             >
                                                                                 Upgrade
                                                                             </a>
@@ -570,7 +568,8 @@ const OrganisationSettingsPage = class extends Component {
                                                                                         onChange={v => this.setState({ role: v.value })}
                                                                                         options={[
                                                                                             { label: 'Organisation Administrator', value: 'ADMIN' },
-                                                                                            { label: hasRbacPermission ? 'User' : 'User - Please upgrade for role based access',
+                                                                                            {
+                                                                                                label: hasRbacPermission ? 'User' : 'User - Please upgrade for role based access',
                                                                                                 value: 'USER',
                                                                                                 isDisabled: !hasRbacPermission,
                                                                                             },
@@ -618,10 +617,7 @@ const OrganisationSettingsPage = class extends Component {
                                                                                         </Row>
                                                                                     </>
                                                                                 )}
-
-
                                                                             </Row>
-
                                                                         </div>
                                                                         <p className="mt-3">
                                                                             Anyone with link can join as a standard user, once they have joined you can edit their role from the team members panel.
@@ -629,13 +625,13 @@ const OrganisationSettingsPage = class extends Component {
                                                                             <ButtonLink target="_blank" href="https://docs.flagsmith.com/advanced-use/permissions">Learn about User Roles.</ButtonLink>
                                                                         </p>
                                                                         <div className="text-right mt-2">
-                                                                            {error && <Error error={error}/>}
+                                                                            {error && <Error error={error} />}
                                                                         </div>
                                                                     </form>
                                                                 )
                                                             }
                                                             <div>
-                                                                {isLoading && <div className="centered-container"><Loader/></div>}
+                                                                {isLoading && <div className="centered-container"><Loader /></div>}
                                                                 {!isLoading && (
                                                                     <div>
                                                                         <FormGroup>
@@ -710,7 +706,7 @@ const OrganisationSettingsPage = class extends Component {
                                                                                                         onClick={() => this.deleteUser(id)}
                                                                                                         className="btn btn--with-icon ml-auto btn--remove"
                                                                                                     >
-                                                                                                        <RemoveIcon/>
+                                                                                                        <RemoveIcon />
                                                                                                     </button>
                                                                                                 </Column>
                                                                                             </Row>
@@ -782,7 +778,7 @@ const OrganisationSettingsPage = class extends Component {
                                                                                                         onClick={() => this.deleteInvite(id)}
                                                                                                         className="btn btn--with-icon ml-auto btn--remove"
                                                                                                     >
-                                                                                                        <RemoveIcon/>
+                                                                                                        <RemoveIcon />
                                                                                                     </button>
                                                                                                 </Column>
                                                                                             </Row>
@@ -799,7 +795,7 @@ const OrganisationSettingsPage = class extends Component {
                                                                                 <Button
                                                                                     className="mr-2"
                                                                                     id="btn-invite" onClick={() => openModal('Create Group',
-                                                                                    <CreateGroupModal orgId={organisation.id}/>)}
+                                                                                        <CreateGroupModal orgId={organisation.id} />)}
                                                                                     type="button"
                                                                                 >
                                                                                     Create Group
@@ -818,11 +814,11 @@ const OrganisationSettingsPage = class extends Component {
                                                                                 <Row space className="mt-5">
                                                                                     <h3 className="m-b-0">Enforce 2FA</h3>
                                                                                     {!force2faPermission ? (
-                                                                                        <Tooltip title={<Switch checked={organisation.force_2fa} onChange={this.save2FA}/>}>
+                                                                                        <Tooltip title={<Switch checked={organisation.force_2fa} onChange={this.save2FA} />}>
                                                                                             To access this feature please upgrade your account to scaleup or higher."
                                                                                         </Tooltip>
                                                                                     ) : (
-                                                                                        <Switch checked={organisation.force_2fa} onChange={this.save2FA}/>
+                                                                                        <Switch checked={organisation.force_2fa} onChange={this.save2FA} />
                                                                                     )}
                                                                                 </Row>
                                                                                 <p>Enabling this setting forces users within the organisation to setup 2 factor security.</p>
@@ -871,7 +867,7 @@ const OrganisationSettingsPage = class extends Component {
                                                                         </>
                                                                     )}
                                                                 </div>
-                                                            ) : <div className="text-center"><Loader/></div> }
+                                                            ) : <div className="text-center"><Loader /></div>}
                                                         </div>
                                                     )}
                                                 </TabItem>
