@@ -30,12 +30,14 @@ from environments.exceptions import EnvironmentHeaderNotPresentError
 from environments.managers import EnvironmentManager
 from features.models import Feature, FeatureSegment, FeatureState
 from projects.models import Project
+from segments.models import Segment
 from webhooks.models import AbstractBaseWebhookModel
 
 logger = logging.getLogger(__name__)
 
 environment_cache = caches[settings.ENVIRONMENT_CACHE_LOCATION]
 environment_document_cache = caches[settings.ENVIRONMENT_DOCUMENT_CACHE_LOCATION]
+environment_segments_cache = caches[settings.ENVIRONMENT_SEGMENTS_CACHE_NAME]
 
 # Intialize the dynamo environment wrapper globaly
 environment_wrapper = DynamoEnvironmentWrapper()
@@ -208,6 +210,26 @@ class Environment(LifecycleModel):
             or getattr(request, "originated_from", RequestOrigin.CLIENT)
             == RequestOrigin.SERVER
         )
+
+    def get_segments_from_cache(self) -> typing.List[Segment]:
+        """
+        Get any segments that have been overridden in this environment.
+        """
+        segments = environment_segments_cache.get(self.id)
+        if not segments:
+            segments = list(
+                Segment.objects.filter(
+                    feature_segments__feature_states__environment=self
+                ).prefetch_related(
+                    "rules",
+                    "rules__conditions",
+                    "rules__rules",
+                    "rules__rules__conditions",
+                    "rules__rules__rules",
+                )
+            )
+            environment_segments_cache.set(self.id, segments)
+        return segments
 
     @classmethod
     def get_environment_document(cls, api_key: str) -> dict:
