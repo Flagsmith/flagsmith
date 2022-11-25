@@ -25,6 +25,7 @@ const OrganisationSelect = class extends Component {
                             <a
 
                               href="#" onClick={() => {
+								  API.setCookie("organisation", `${organisation.id}`)
 													    this.props.onChange && this.props.onChange(organisation);
                               }}
                             >
