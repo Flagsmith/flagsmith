@@ -1,10 +1,10 @@
-import enum
 from importlib import import_module
 
 from django.db import models
 from django_lifecycle import AFTER_SAVE, LifecycleModel, hook
 
 from api_keys.models import MasterAPIKey
+from audit.related_object_type import RelatedObjectType
 from projects.models import Project
 
 FEATURE_CREATED_MESSAGE = "New Flag / Remote Config created: %s"
@@ -41,14 +41,6 @@ SEGMENT_FEATURE_STATE_DELETED_MESSAGE = (
 CHANGE_REQUEST_CREATED_MESSAGE = "Change Request: %s created"
 CHANGE_REQUEST_APPROVED_MESSAGE = "Change Request: %s approved"
 CHANGE_REQUEST_COMMITTED_MESSAGE = "Change Request: %s committed"
-
-
-class RelatedObjectType(enum.Enum):
-    FEATURE = "Feature"
-    FEATURE_STATE = "Feature state"
-    SEGMENT = "Segment"
-    ENVIRONMENT = "Environment"
-    CHANGE_REQUEST = "Change request"
 
 
 RELATED_OBJECT_TYPES = ((tag.name, tag.value) for tag in RelatedObjectType)

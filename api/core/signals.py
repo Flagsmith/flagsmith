@@ -31,7 +31,10 @@ def create_audit_log_from_historical_record(
         "~": instance.get_update_log_message,
     }[history_instance.history_type](history_instance)
 
-    if not log_message:
+    related_object_id = instance.get_audit_log_related_object_id(history_instance)
+    related_object_type = instance.get_audit_log_related_object_type(history_instance)
+
+    if not (log_message and related_object_id):
         return
 
     AuditLog.objects.create(
@@ -40,8 +43,8 @@ def create_audit_log_from_historical_record(
         environment_id=getattr(environment, "id", None),
         project_id=getattr(project, "id", None),
         author=override_author or history_user,
-        related_object_id=instance.id,
-        related_object_type=instance.related_object_type.name,
+        related_object_id=related_object_id,
+        related_object_type=related_object_type.name,
         log=log_message,
         **instance.get_extra_audit_log_kwargs(history_instance),
     )

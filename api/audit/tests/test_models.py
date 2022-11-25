@@ -2,7 +2,8 @@ from unittest import TestCase, mock
 
 import pytest
 
-from audit.models import AuditLog, RelatedObjectType
+from audit.models import AuditLog
+from audit.related_object_type import RelatedObjectType
 from integrations.datadog.models import DataDogConfiguration
 from organisations.models import Organisation
 from projects.models import Project

@@ -25,7 +25,16 @@ from django_lifecycle import (
 from ordered_model.models import OrderedModelBase
 from simple_history.models import HistoricalRecords
 
-from audit.models import RelatedObjectType
+from audit.models import (
+    FEATURE_DELETED_MESSAGE,
+    FEATURE_SEGMENT_UPDATED_MESSAGE,
+    FEATURE_STATE_UPDATED_MESSAGE,
+    IDENTITY_FEATURE_STATE_DELETED_MESSAGE,
+    IDENTITY_FEATURE_STATE_UPDATED_MESSAGE,
+    SEGMENT_FEATURE_STATE_DELETED_MESSAGE,
+    SEGMENT_FEATURE_STATE_UPDATED_MESSAGE,
+    RelatedObjectType,
+)
 from environments.identities.helpers import (
     get_hashed_percentage_for_object_ids,
 )
@@ -157,7 +166,12 @@ def get_next_segment_priority(feature):
         return feature_segments.first().priority + 1
 
 
-class FeatureSegment(AbstractBaseExportableModel, OrderedModelBase):
+class FeatureSegment(
+    AbstractBaseExportableModel, AbstractBaseAuditableModel, OrderedModelBase
+):
+    history_record_class_path = "features.models.HistoricalFeatureSegment"
+    related_object_type = RelatedObjectType.FEATURE
+
     feature = models.ForeignKey(
         Feature, on_delete=models.CASCADE, related_name="feature_segments"
     )
@@ -196,9 +210,6 @@ class FeatureSegment(AbstractBaseExportableModel, OrderedModelBase):
     order_field_name = "priority"
     order_with_respect_to = ("feature", "environment")
 
-    # used for audit purposes
-    history = HistoricalRecords(excluded_fields=["uuid"])
-
     objects = FeatureSegmentManager()
 
     class Meta:
@@ -231,6 +242,42 @@ class FeatureSegment(AbstractBaseExportableModel, OrderedModelBase):
     # noinspection PyTypeChecker
     def get_value(self):
         return get_correctly_typed_value(self.value_type, self.value)
+
+    def get_create_log_message(self, history_instance) -> typing.Optional[str]:
+        return FEATURE_SEGMENT_UPDATED_MESSAGE % (
+            self.feature.name,
+            self.environment.name,
+        )
+
+    def get_update_log_message(self, history_instance) -> typing.Optional[str]:
+        return self.get_create_log_message(history_instance)
+
+    def get_delete_log_message(self, history_instance) -> typing.Optional[str]:
+        return SEGMENT_FEATURE_STATE_DELETED_MESSAGE % (
+            self.feature.name,
+            self.segment.name,
+        )
+
+    def get_audit_log_related_object_id(self, history_instance) -> typing.Optional[int]:
+        # TODO: this is here to maintain current behaviour but should probably be fixed
+        if history_instance.history_type == "-":
+            feature_state = (
+                self.feature_states.first()
+            )  # due to incorrect foreign key rather than 1-1
+            return getattr(feature_state, "id", None)
+        return self.feature_id
+
+    def get_audit_log_related_object_type(self, history_instance) -> RelatedObjectType:
+        # TODO: this is here to maintain current behaviour but should probably be fixed
+        if history_instance.history_type == "-":
+            return RelatedObjectType.FEATURE_STATE
+        return RelatedObjectType.FEATURE
+
+    def _get_environment(self) -> typing.Optional["Environment"]:
+        return self.environment
+
+    def _get_project(self) -> typing.Optional["Project"]:
+        return self.feature.project
 
 
 class FeatureState(
@@ -638,16 +685,40 @@ class FeatureState(
         )
 
     def get_create_log_message(self, history_instance) -> typing.Optional[str]:
-        # TODO
-        return "a message"
+        return self.get_update_log_message(history_instance)
 
     def get_update_log_message(self, history_instance) -> typing.Optional[str]:
-        # TODO
-        return "a message"
+        if self.identity:
+            return IDENTITY_FEATURE_STATE_UPDATED_MESSAGE % (
+                self.feature.name,
+                self.identity.identifier,
+            )
+        elif self.feature_segment:
+            return SEGMENT_FEATURE_STATE_UPDATED_MESSAGE % (
+                self.feature.name,
+                self.feature_segment.segment.name,
+            )
+        return FEATURE_STATE_UPDATED_MESSAGE % self.feature.name
 
     def get_delete_log_message(self, history_instance) -> typing.Optional[str]:
-        # TODO
-        return "a message"
+        try:
+            if self.identity:
+                return IDENTITY_FEATURE_STATE_DELETED_MESSAGE % (
+                    self.feature.name,
+                    self.identity.identifier,
+                )
+            elif self.feature_segment:
+                return SEGMENT_FEATURE_STATE_DELETED_MESSAGE % (
+                    self.feature.name,
+                    self.feature_segment.segment.name,
+                )
+
+            # TODO: this is here to maintain current functionality, however, I'm not
+            #  sure that we want to create an audit log record in this case
+            return FEATURE_DELETED_MESSAGE % self.feature.name
+        except ObjectDoesNotExist:
+            # Account for cascade deletes
+            return None
 
     def get_extra_audit_log_kwargs(self, history_instance) -> dict:
         kwargs = super().get_extra_audit_log_kwargs(history_instance)

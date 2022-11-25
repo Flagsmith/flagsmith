@@ -6,6 +6,8 @@ from django.db import models
 from django.db.models import Manager
 from simple_history.models import HistoricalRecords
 
+from audit.related_object_type import RelatedObjectType
+
 if typing.TYPE_CHECKING:
     from environments.models import Environment
     from projects.models import Project
@@ -79,6 +81,12 @@ class AbstractBaseAuditableModel(models.Model):
 
     def get_audit_log_author(self, history_instance) -> typing.Optional["FFAdminUser"]:
         return None
+
+    def get_audit_log_related_object_id(self, history_instance) -> typing.Optional[int]:
+        return self.id
+
+    def get_audit_log_related_object_type(self, history_instance) -> RelatedObjectType:
+        return self.related_object_type
 
     def _get_environment(self) -> typing.Optional["Environment"]:
         return None
