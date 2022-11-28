@@ -1,4 +1,4 @@
-import React, {FC, HTMLAttributeAnchorTarget, PureComponent, ReactNode} from 'react';
+import React, {FC, HTMLAttributeAnchorTarget} from 'react';
 
 export type ButtonType = React.ButtonHTMLAttributes<HTMLButtonElement>
 export type ButtonLinkType = ButtonType & {
@@ -37,7 +37,6 @@ export const ButtonLink: FC<ButtonLinkType> = ({href, className, target, childre
             {href ? (
                 <a className="btn--link" target={target} href={href}>{children}</a>
             ) : (
-
                 <span className="btn--link">{children}</span>
             )}
         </Button>
