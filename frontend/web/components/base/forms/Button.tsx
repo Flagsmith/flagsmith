@@ -1,4 +1,5 @@
 import React, {FC, HTMLAttributeAnchorTarget, PureComponent, ReactNode} from 'react';
+
 export type ButtonType = React.ButtonHTMLAttributes<HTMLButtonElement>
 export type ButtonLinkType = ButtonType & {
     href?: string
@@ -16,10 +17,7 @@ const Button: FC<ButtonType> = (props) => {
     )
 }
 
-
 export default Button;
-
-
 
 const ButtonOutline: FC<ButtonType> = (props) => {
     return (
@@ -45,4 +43,3 @@ export const ButtonLink: FC<ButtonLinkType> = ({href, className, target, childre
         </Button>
     )
 }
-
