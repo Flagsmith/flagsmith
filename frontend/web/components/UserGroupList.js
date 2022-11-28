@@ -97,7 +97,7 @@ export default class TheComponent extends PureComponent {
                                               </button>
                                           </Column>
                                       ) : (
-                                          <ion onClick={onClick} style={{ fontSize: 24 }} className="icon--primary ion ion-md-settings" />
+                                          <span onClick={onClick} style={{ fontSize: 24 }} className="icon--primary ion ion-md-settings" />
 
                                       )}
 
@@ -110,7 +110,7 @@ export default class TheComponent extends PureComponent {
                                 icon="ion-md-people"
                                 title={this.props.noTitle ? '' : 'Groups'}
                               >
-                                  <div>
+                                  <div className="p-2 text-center">
                                         You have no groups in your organisation.
                                   </div>
                               </Panel>

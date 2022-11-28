@@ -1,9 +1,12 @@
 import logging
 
+from core.permissions import HasMasterAPIKey
 from django.utils.decorators import method_decorator
 from drf_yasg2.utils import swagger_auto_schema
 from rest_framework import mixins, viewsets
 from rest_framework.decorators import action
+from rest_framework.generics import get_object_or_404
+from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 
 from features.feature_segments.serializers import (
@@ -13,6 +16,7 @@ from features.feature_segments.serializers import (
     FeatureSegmentQuerySerializer,
 )
 from features.models import FeatureSegment
+from projects.models import Project
 
 logger = logging.getLogger(__name__)
 
@@ -34,8 +38,17 @@ class FeatureSegmentViewSet(
     mixins.DestroyModelMixin,
     viewsets.GenericViewSet,
 ):
+    permission_classes = [IsAuthenticated | HasMasterAPIKey]
+
     def get_queryset(self):
-        permitted_projects = self.request.user.get_permitted_projects(["VIEW_PROJECT"])
+        if hasattr(self.request, "master_api_key"):
+            permitted_projects = Project.objects.filter(
+                organisation_id=self.request.master_api_key.organisation_id
+            )
+        else:
+            permitted_projects = self.request.user.get_permitted_projects(
+                permissions=["VIEW_PROJECT"]
+            )
         queryset = FeatureSegment.objects.filter(
             feature__project__in=permitted_projects
         )
@@ -72,3 +85,14 @@ class FeatureSegmentViewSet(
         return Response(
             FeatureSegmentListSerializer(instance=updated_instances, many=True).data
         )
+
+    @action(
+        detail=False,
+        url_path=r"get-by-uuid/(?P<uuid>[0-9a-f-]+)",
+        methods=["get"],
+    )
+    def get_by_uuid(self, request, uuid):
+        qs = self.get_queryset()
+        feature_segment = get_object_or_404(qs, uuid=uuid)
+        serializer = self.get_serializer(feature_segment)
+        return Response(serializer.data)

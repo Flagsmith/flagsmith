@@ -68,7 +68,7 @@ const ProjectProvider = class extends React.Component {
 };
 
 ProjectProvider.propTypes = {
-    children: OptionalNode,
+    children: OptionalFunc,
     onRemove: RequiredFunc,
     onSave: OptionalFunc,
     id: RequiredString,

@@ -71,9 +71,9 @@ const OrganisationProvider = class extends Component {
 };
 
 OrganisationProvider.propTypes = {
-    id: RequiredString,
+    id: OptionalString,
     onSave: OptionalFunc,
-    children: OptionalNode,
+    children: OptionalFunc,
 };
 
 module.exports = OrganisationProvider;

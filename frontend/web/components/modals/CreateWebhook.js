@@ -49,7 +49,6 @@ const CreateWebhook = class extends Component {
               {({ project }) => (
 
                   <form
-                    id="create-feature-modal"
                     onSubmit={(e) => {
                         e.preventDefault();
                         this.save();

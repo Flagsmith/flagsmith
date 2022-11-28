@@ -1,4 +1,4 @@
-import { byId, click, getLogger, log, login, setText, waitForElementVisible } from '../helpers.cafe';
+import { byId, click, getLogger, log, login, logResults, setText, waitForElementVisible } from '../helpers.cafe';
 
 const email = 'nightwatch@solidstategroup.com';
 const password = 'str0ngp4ssw0rd!';
@@ -28,9 +28,6 @@ test('Submit a Form', async () => {
     await waitForElementVisible(byId('features-page'));
 }).after(async (t) => {
     console.log('Start of Environment Requests');
-    console.log(JSON.stringify(logger.requests, null, 2));
-    console.log('End of Environment Requests');
-    console.log('Start of Environment Errors');
-    console.error(JSON.stringify((await t.getBrowserConsoleMessages()).error));
+    await logResults(logger.requests);
     console.log('End of Environment Errors');
 });

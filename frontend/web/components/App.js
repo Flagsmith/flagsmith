@@ -319,7 +319,7 @@ const App = class extends Component {
                                                               className="nav-link"
                                                               to="/organisation-settings"
                                                             >
-                                                                <ion style={{ marginRight: 4 }} className="icon--primary ion ion-md-settings"/>
+                                                                <span style={{ marginRight: 4 }} className="icon--primary ion ion-md-settings"/>
                                                                 {'Manage'}
                                                             </NavLink>
                                                             )}

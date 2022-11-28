@@ -6,8 +6,8 @@ from features.models import FeatureSegment
 class FeatureSegmentCreateSerializer(serializers.ModelSerializer):
     class Meta:
         model = FeatureSegment
-        fields = ("id", "feature", "segment", "environment", "priority")
-        read_only_fields = ("id", "priority")
+        fields = ("id", "uuid", "feature", "segment", "environment", "priority")
+        read_only_fields = ("id", "uuid", "priority")
 
     def validate(self, data):
         data = super().validate(data)
@@ -33,8 +33,14 @@ class FeatureSegmentListSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = FeatureSegment
-        fields = ("id", "segment", "priority", "environment", "segment_name")
-        read_only_fields = ("id", "segment", "priority", "environment", "segment_name")
+        fields = ("id", "uuid", "segment", "priority", "environment", "segment_name")
+        read_only_fields = (
+            "id",
+            "uuid",
+            "segment",
+            "priority",
+            "environment",
+        )
 
     def get_value(self, instance):
         return instance.get_value()

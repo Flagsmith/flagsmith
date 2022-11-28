@@ -84,11 +84,8 @@ class Organisation(LifecycleModelMixin, AbstractBaseExportableModel, SoftDeleteO
     def num_seats(self):
         return self.users.count()
 
-    def has_subscription(self):
-        return (
-            hasattr(self, "subscription")
-            and self.subscription.subscription_id is not None
-        )
+    def has_subscription(self) -> bool:
+        return hasattr(self, "subscription") and bool(self.subscription.subscription_id)
 
     @property
     def is_paid(self):

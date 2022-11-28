@@ -244,8 +244,18 @@ const controller = {
     setUser(user) {
         if (user) {
             store.model = user;
-            store.organisation = user && user.organisations && user.organisations[0];
-
+            if (user && user.organisations) {
+                store.organisation = user.organisations[0];
+                let cookiedID = API.getCookie("organisation");
+                if (cookiedID) {
+                    let foundOrganisation = user.organisations.find((v)=>{
+                        return `${v.id}` === cookiedID
+                    })
+                    if (foundOrganisation) {
+                        store.organisation = foundOrganisation;
+                    }
+                }
+            }
 
             if (projectOverrides.delighted) {
                 delighted.survey({
