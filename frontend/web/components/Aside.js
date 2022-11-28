@@ -87,7 +87,6 @@ const Aside = class extends Component {
         const environmentId = (this.props.environmentId !== 'create' && this.props.environmentId) || (ProjectStore.model && ProjectStore.model.environments[0].api_key);
         const environment = ProjectStore.getEnvironment(this.props.environmentId);
         const hasRbacPermission = Utils.getPlansPermission('AUDIT') || !Utils.getFlagsmithHasFeature('scaleup_audit');
-        const has4Eyes = Utils.getFlagsmithHasFeature('4eyes');
         const changeRequest = environment && Utils.changeRequestsEnabled(environment.minimum_change_request_approvals) ? ChangeRequestStore.model[this.props.environmentId] : ChangeRequestStore.scheduled[this.props.environmentId];
         const changeRequests = (changeRequest && changeRequest.count) || 0;
         return (
@@ -350,7 +349,6 @@ const Aside = class extends Component {
                                                                                                   <FeaturesIcon className="aside__environment-list-item--icon"/>
                                                                                                     Features
                                                                                               </NavLink>
-                                                                                              {has4Eyes && (
                                                                                               <NavLink
                                                                                                       activeClassName="active"
 
@@ -361,7 +359,6 @@ const Aside = class extends Component {
                                                                                                         <span className="ion icon ion-md-git-pull-request aside__environment-list-item--icon"/>
                                                                                                         Change Requests {changeRequests ? <span className="unread">{changeRequests}</span> : null}
                                                                                                     </NavLink>
-                                                                                              )}
                                                                                               {manageIdentityPermission && (
                                                                                               <NavLink
                                                                                                       id="users-link"
