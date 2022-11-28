@@ -35,7 +35,7 @@ const AvailablePermissionsProvider = class extends React.Component {
 
 AvailablePermissionsProvider.propTypes = {
     level: RequiredString,
-    children: OptionalNode,
+    children: OptionalFunc,
 };
 
 module.exports = AvailablePermissionsProvider;

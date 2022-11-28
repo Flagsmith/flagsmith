@@ -33,7 +33,7 @@ const AuditLogProvider = class extends React.Component {
 };
 
 AuditLogProvider.propTypes = {
-    children: OptionalNode,
+    children: OptionalFunc,
 };
 
 module.exports = AuditLogProvider;

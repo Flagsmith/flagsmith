@@ -189,7 +189,7 @@ Code example:
                                                           target="_blank" href={docs}
                                                           className="btn btn--docs"
                                                         >
-                                                            <ion className="icon ion ion-ios-document"/>
+                                                            <span className="icon ion ion-ios-document"/>
 
                                                             {' '}{key} Docs
                                                         </a>
@@ -199,7 +199,7 @@ Code example:
                                                           target="_blank" href={github}
                                                           className="btn btn--docs"
                                                         >
-                                                            <ion className="icon ion ion-logo-github"/>
+                                                            <span className="icon ion ion-logo-github"/>
                                                             {' '}{key} GitHub
                                                         </a>
                                                     )}

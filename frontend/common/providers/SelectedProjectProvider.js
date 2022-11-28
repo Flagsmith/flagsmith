@@ -32,7 +32,7 @@ const SelectedProjectProvider = class extends React.Component {
 
 SelectedProjectProvider.propTypes = {
     id: RequiredString,
-    children: OptionalNode,
+    children: OptionalFunc,
 };
 
 module.exports = SelectedProjectProvider;

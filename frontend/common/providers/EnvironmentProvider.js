@@ -77,7 +77,7 @@ const EnvironmentProvider = class extends React.Component {
 
 EnvironmentProvider.propTypes = {
     onSave: OptionalFunc,
-    children: OptionalNode,
+    children: OptionalFunc,
 };
 
 module.exports = EnvironmentProvider;

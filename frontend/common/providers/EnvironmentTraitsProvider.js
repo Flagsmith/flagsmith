@@ -46,7 +46,7 @@ const IdentityListProvider = class extends React.Component {
 };
 
 IdentityListProvider.propTypes = {
-    children: OptionalNode,
+    children: OptionalFunc,
     environmentId: RequiredString,
 
 };

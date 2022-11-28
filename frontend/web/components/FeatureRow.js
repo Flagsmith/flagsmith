@@ -57,7 +57,7 @@ class TheComponent extends Component {
           noPermissions={!this.props.permission}
           environmentFlag={environmentFlag}
           flagId={environmentFlag.id}
-        />, null, { className: 'side-modal fade',
+        />, null, { className: 'side-modal fade create-feature-modal',
             onClose: () => {
                 history.replaceState(
                     {},
@@ -127,7 +127,7 @@ class TheComponent extends Component {
                             <Tooltip
                               title={(
                                   <ButtonLink>
-                                      <ion className="ion ion-md-person px-2"/>
+                                      <span className="ion ion-md-person px-2"/>
                                   </ButtonLink>
 )}
                               place="right"
