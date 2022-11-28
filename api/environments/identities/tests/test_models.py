@@ -1,6 +1,6 @@
 from core.constants import FLOAT
-from django.test import TransactionTestCase
 from django.utils import timezone
+from rest_framework.test import APITestCase
 
 from environments.identities.models import Identity
 from environments.identities.traits.models import Trait
@@ -32,7 +32,7 @@ from .helpers import (
 )
 
 
-class IdentityTestCase(TransactionTestCase):
+class IdentityTestCase(APITestCase):
     def setUp(self):
         self.organisation = Organisation.objects.create(name="Test Org")
         self.project = Project.objects.create(
