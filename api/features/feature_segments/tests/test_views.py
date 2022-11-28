@@ -61,6 +61,7 @@ def test_list_feature_segments(
     assert response_json["count"] == 3
     for result in response_json["results"]:
         assert result["environment"] == environment.id
+        assert "uuid" in result
         assert "segment_name" in result
 
 
@@ -162,6 +163,27 @@ def test_priority_of_multiple_feature_segments(
     json_response = response.json()
     assert json_response[0]["id"] == feature_segment.id
     assert json_response[1]["id"] == another_feature_segment.id
+
+
+@pytest.mark.parametrize(
+    "client", [lazy_fixture("master_api_key_client"), lazy_fixture("admin_client")]
+)
+def test_get_feature_segment_by_uuid(
+    feature_segment, project, client, environment, feature
+):
+    # Given
+    url = reverse(
+        "api-v1:features:feature-segment-get-by-uuid", args=[feature_segment.uuid]
+    )
+
+    # When
+    response = client.get(url)
+
+    # Then
+    assert response.status_code == status.HTTP_200_OK
+    json_response = response.json()
+    assert json_response["id"] == feature_segment.id
+    assert json_response["uuid"] == str(feature_segment.uuid)
 
 
 @pytest.mark.parametrize(
