@@ -1,5 +1,6 @@
 from core.models import AbstractBaseAuditableModel
 from django.core.exceptions import ObjectDoesNotExist
+from simple_history.models import HistoricalRecords
 
 from audit.models import AuditLog
 from users.models import FFAdminUser
@@ -13,10 +14,9 @@ def create_audit_log_from_historical_record(
 ):
     # TODO:
     #  - This should be done in a task
-    #  - handle master API keys
 
     override_author = instance.get_audit_log_author(history_instance)
-    if not (history_user or override_author):
+    if not (history_user or override_author or history_instance.master_api_key):
         return
 
     try:
@@ -46,5 +46,16 @@ def create_audit_log_from_historical_record(
         related_object_id=related_object_id,
         related_object_type=related_object_type.name,
         log=log_message,
+        master_api_key=history_instance.master_api_key,
         **instance.get_extra_audit_log_kwargs(history_instance),
     )
+
+
+def add_master_api_key(sender, **kwargs):
+    try:
+        history_instance = kwargs["history_instance"]
+        history_instance.master_api_key = (
+            HistoricalRecords.thread.request.master_api_key
+        )
+    except (KeyError, AttributeError):
+        pass

@@ -735,6 +735,9 @@ class FeatureState(
     def _get_environment(self) -> typing.Optional["Environment"]:
         return self.environment
 
+    def _get_project(self) -> typing.Optional["Project"]:
+        return self.feature.project
+
 
 class FeatureStateValue(AbstractBaseFeatureValueModel, AbstractBaseExportableModel):
     feature_state = models.OneToOneField(

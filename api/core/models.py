@@ -42,11 +42,16 @@ class AbstractBaseExportableModel(models.Model):
 class BaseHistoricalModel(models.Model):
     include_in_audit = True
 
+    master_api_key = models.ForeignKey(
+        "api_keys.MasterAPIKey", blank=True, null=True, on_delete=models.DO_NOTHING
+    )
+
     class Meta:
         abstract = True
 
 
 class AbstractBaseAuditableModel(models.Model):
+    # TODO: can we make excluded fields dynamic?
     history = HistoricalRecords(
         bases=[BaseHistoricalModel], excluded_fields=["uuid"], inherit=True
     )
