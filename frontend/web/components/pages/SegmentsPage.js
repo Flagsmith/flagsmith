@@ -49,7 +49,7 @@ const SegmentsPage = class extends Component {
           flags={flags}
           environmentId={this.props.match.params.environmentId}
           projectId={this.props.match.params.projectId}
-        />, null, { className: 'fade side-modal create-segment-modal' });
+        />, null, { className: 'fade side-modal create-new-segment-modal' });
     };
 
 

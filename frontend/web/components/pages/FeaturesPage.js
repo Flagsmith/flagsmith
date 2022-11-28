@@ -55,7 +55,7 @@ const FeaturesPage = class extends Component {
           router={this.context.router}
           environmentId={this.props.match.params.environmentId}
           projectId={this.props.match.params.projectId}
-        />, null, { className: 'side-modal fade' });
+        />, null, { className: 'side-modal fade create-feature-modal' });
     };
 
 

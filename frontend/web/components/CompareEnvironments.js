@@ -93,7 +93,7 @@ class CompareEnvironments extends Component {
                         </div>
 
                         <div>
-                            <ion className="icon ios ion-md-arrow-back mx-2"/>
+                            <span className="icon ios ion-md-arrow-back mx-2"/>
                         </div>
 
                         <div style={{ width: featureNameWidth }}>

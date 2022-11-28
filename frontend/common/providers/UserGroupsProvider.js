@@ -38,7 +38,7 @@ const UserGroupProvider = class extends React.Component {
 
 UserGroupProvider.propTypes = {
     onSave: OptionalFunc,
-    children: OptionalNode,
+    children: OptionalFunc,
 };
 
 module.exports = UserGroupProvider;

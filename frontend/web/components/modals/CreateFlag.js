@@ -442,7 +442,7 @@ const CreateFlag = class extends Component {
         const Value = (projectAdmin, createFeature, hideValue) => (
             <>
                 {!isEdit && (
-                    <FormGroup className="mb-4 mr-3 ml-3">
+                    <FormGroup className="mb-4 mr-3 mt-2 ml-3">
                         <InputGroup
                           ref={e => this.input = e}
                           data-test="featureID"
@@ -932,7 +932,7 @@ const CreateFlag = class extends Component {
                                                                     >
                                                                         {Settings(projectAdmin, createFeature)}
                                                                         {isEdit && (
-                                                                            <div className="text-right">
+                                                                            <div className="text-right mr-3">
                                                                                 {createFeature ? (
                                                                                     <p className="text-right">
                                                                                         This will save the above settings <strong>all environments</strong>.
@@ -958,7 +958,7 @@ const CreateFlag = class extends Component {
                                                                 )}
                                                             </Tabs>
                                                         ) : (
-                                                            <div>
+                                                            <div className="mr-3">
                                                                 {Value(projectAdmin, createFeature, project.prevent_flag_defaults)}
                                                                 {!identity && (
                                                                     <div className="text-right">

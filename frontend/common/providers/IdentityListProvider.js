@@ -38,7 +38,7 @@ const IdentityListProvider = class extends React.Component {
 
 IdentityListProvider.propTypes = {
     onSave: OptionalFunc,
-    children: OptionalNode,
+    children: OptionalFunc,
 };
 
 module.exports = IdentityListProvider;

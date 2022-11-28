@@ -168,7 +168,7 @@ const FeatureListProvider = class extends React.Component {
 FeatureListProvider.propTypes = {
     onSave: OptionalFunc,
     onError: OptionalFunc,
-    children: OptionalNode,
+    children: OptionalFunc,
 };
 
 module.exports = FeatureListProvider;

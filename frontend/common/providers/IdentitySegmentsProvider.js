@@ -37,7 +37,7 @@ const IdentitySegmentsProvider = class extends React.Component {
 IdentitySegmentsProvider.propTypes = {
     id: RequiredString,
     fetch: OptionalBool,
-    children: OptionalNode,
+    children: OptionalFunc,
     projectId: RequiredString,
 };
 

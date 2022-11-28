@@ -74,7 +74,7 @@ const SegmentListProvider = class extends React.Component {
 SegmentListProvider.propTypes = {
     onSave: OptionalFunc,
     onError: OptionalFunc,
-    children: OptionalNode,
+    children: OptionalFunc,
 };
 
 module.exports = SegmentListProvider;

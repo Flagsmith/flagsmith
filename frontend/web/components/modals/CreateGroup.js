@@ -79,7 +79,6 @@ const CreateGroup = class extends Component {
                     <UserGroupsProvider onSave={this.close}>
                         {({ isSaving }) => (
                             <form
-                              id="create-feature-modal"
                               onSubmit={(e) => {
                                   Utils.preventDefault(e);
                                   this.save(users);

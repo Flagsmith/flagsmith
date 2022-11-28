@@ -163,7 +163,7 @@ export default class AdminAPIKeys extends PureComponent {
         const apiKeys = this.state.apiKeys && this.state.apiKeys.results;
         return (
             <div>
-                <Row space className="mt-5">
+                <Row space className="mt-4">
                     <h3>Terraform API Keys</h3>
                     <Button onClick={this.createAPIKey} disabled={this.state.isLoading}>
                     Create Terraform API Key

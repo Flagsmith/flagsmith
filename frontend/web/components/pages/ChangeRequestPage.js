@@ -101,7 +101,7 @@ const ChangeRequestsPage = class extends Component {
               enabled: changeRequest.feature_states[0].enabled,
           }}
           flagId={environmentFlag.id}
-        />, null, { className: 'side-modal fade' });
+        />, null, { className: 'side-modal fade create-feature-modal' });
     }
 
     approveChangeRequest = () => {

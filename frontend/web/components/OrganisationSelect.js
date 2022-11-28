@@ -40,7 +40,7 @@ const OrganisationSelect = class extends Component {
                               className="btn btn-link btn-sm edit"
                               to="/organisation-settings"
                             >
-                                <ion style={{ fontSize: 16, marginRight: 4 }} className="icon--primary ion ion-md-settings"/>
+                                <span style={{ fontSize: 16, marginRight: 4 }} className="icon--primary ion ion-md-settings"/>
                                 {'Manage'}
                             </NavLink>
                             )}
