@@ -15,13 +15,11 @@ import AppLoader from './AppLoader';
 import ButterBar from './ButterBar';
 import UserSettingsIcon from './svg/UserSettingsIcon';
 import DocumentationIcon from './svg/DocumentationIcon';
-import ArrowUpIcon from './svg/ArrowUpIcon';
-import RebrandBanner from './RebrandBanner';
 import UpgradeIcon from './svg/UpgradeIcon';
-import SparklesIcon from './svg/SparklesIcon';
 import AccountSettingsPage from './pages/AccountSettingsPage';
 import Headway from './Headway';
 import ProjectStore from '../../common/stores/project-store';
+import getBuildVersion from '../project/getBuildVersion'
 
 const App = class extends Component {
     static propTypes = {
@@ -43,6 +41,7 @@ const App = class extends Component {
     }
 
     componentDidMount = () => {
+        getBuildVersion()
         this.listenTo(ProjectStore, 'change', () => this.forceUpdate());
         window.addEventListener('scroll', this.handleScroll);
     };

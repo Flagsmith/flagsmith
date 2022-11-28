@@ -5,13 +5,11 @@ import ProjectSelect from './ProjectSelect';
 import AsideProjectButton from './AsideProjectButton';
 import AsideTitleLink from './AsideTitleLink';
 import Collapsible from './Collapsible';
-import Popover from './base/Popover';
 import ProjectSettingsIcon from './svg/ProjectSettingsIcon';
 import AuditLogIcon from './svg/AuditLogIcon';
 import OrgSettingsIcon from './svg/OrgSettingsIcon';
 import EnvironmentDropdown from './EnvironmentDropdown';
 import CreateProjectModal from './modals/CreateProject';
-import LogoutIcon from './svg/LogoutIcon';
 import UserSettingsIcon from './svg/UserSettingsIcon';
 import DocumentationIcon from './svg/DocumentationIcon';
 import NavIconSmall from './svg/NavIconSmall';
@@ -22,7 +20,7 @@ import SegmentsIcon from './svg/SegmentsIcon';
 import EnvironmentSettingsIcon from './svg/EnvironmentSettingsIcon';
 import ProjectStore from '../../common/stores/project-store';
 import ChangeRequestStore from '../../common/stores/change-requests-store';
-
+import getBuildVersion from '../project/getBuildVersion'
 const Aside = class extends Component {
     static displayName = 'Aside';
 
@@ -49,6 +47,12 @@ const Aside = class extends Component {
                 AppActions.getChangeRequests(this.props.environmentId, Utils.changeRequestsEnabled(environment.minimum_change_request_approvals) ? {} : { live_from_after: new Date().toISOString() });
             }
         });
+    }
+
+    componentDidMount() {
+        getBuildVersion().then((version)=>{
+            this.setState({version})
+        })
     }
 
     componentWillReceiveProps(newProps) {
@@ -178,13 +182,11 @@ const Aside = class extends Component {
                                         </div>
                                         {(
                                             <React.Fragment>
-                                                <div className="aside__main-content" style={{ 'overflowY': 'auto' }}>
+                                                <div className="aside__main-content" >
                                                     <div className="pl-4 pr-4 pt-4">
                                                         <Row>
                                                             <h1 className="aside__project-title">
                                                                 {project && project.name ? project.name : '...'}
-
-
                                                             </h1>
                                                             {Utils.getFlagsmithHasFeature('edge_identities') && (
                                                                 <div className="text-center">
@@ -411,7 +413,7 @@ const Aside = class extends Component {
 
                                                     <div className="flex flex-1"/>
 
-                                                    <div className="aside__footer">
+                                                    <div className="align-self-end">
                                                         {Utils.getFlagsmithHasFeature('demo_feature') && (
                                                             <a
                                                               style={{ color: Utils.getFlagsmithValue('demo_feature') || '#43424f' }}
@@ -421,6 +423,24 @@ const Aside = class extends Component {
                                                                 <i className="icon mr-2 ion-ios-star aside__nav-item--icon"/>
                                                                 Super cool demo feature!
                                                             </a>
+                                                        )}
+
+                                                        {this.state.version && (
+                                                            <div
+                                                                className="text-muted text-small text-center"
+                                                            >
+                                                                {this.state.version.ci_commit_sha !== "Unknown" && (
+                                                                    <>
+                                                                        <span className="icon ion-md-git-commit mr-1"/>{this.state.version.ci_commit_sha}
+                                                                    </>
+                                                                )}
+                                                                {this.state.version.image_tag !== "Unknown" && (
+                                                                    <>
+                                                                        <span className="ml-2 icon ion-ios-pricetag"/> {this.state.version.image_tag}
+                                                                    </>
+                                                                )}
+
+                                                            </div>
                                                         )}
 
 
