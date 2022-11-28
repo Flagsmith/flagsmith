@@ -155,6 +155,7 @@ class Environment(LifecycleModel):
                     cls.objects.select_related(*select_related_args)
                     .filter(Q(api_key=api_key) | Q(api_keys__key=api_key))
                     .distinct()
+                    .defer("description")
                     .get()
                 )
                 environment_cache.set(api_key, environment, timeout=60)
