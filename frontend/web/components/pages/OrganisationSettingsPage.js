@@ -507,6 +507,37 @@ const OrganisationSettingsPage = class extends Component {
                                                         </Button>
                                                     </Row>
                                                 </FormGroup>
+                                                {Utils.getFlagsmithHasFeature('force_2fa') && (
+                                                    <div>
+                                                        <Row space className="mt-5">
+                                                            <h3 className="m-b-0">Enforce 2FA</h3>
+                                                            {!force2faPermission ? (
+                                                                <Tooltip title={<Switch checked={organisation.force_2fa} onChange={this.save2FA} />}>
+                                                                    To access this feature please upgrade your account to scaleup or higher."
+                                                                </Tooltip>
+                                                            ) : (
+                                                                <Switch checked={organisation.force_2fa} onChange={this.save2FA} />
+                                                            )}
+                                                        </Row>
+                                                        <p>Enabling this setting forces users within the organisation to setup 2 factor security.</p>
+                                                    </div>
+                                                )}
+                                                {Utils.getFlagsmithHasFeature('restrict_project_create_to_admin') && (
+                                                    <FormGroup className="mt-4">
+                                                        <Row>
+                                                            <Column>
+                                                                <h3>Admin Settings</h3>
+                                                                <Row>
+                                                                    Only allow organisation admins to create projects
+                                                                    <Switch
+                                                                        checked={organisation.restrict_project_create_to_admin} onChange={() => this.setAdminCanCreateProject(!organisation.restrict_project_create_to_admin)}
+                                                                    />
+                                                                </Row>
+                                                            </Column>
+                                                        </Row>
+
+                                                    </FormGroup>
+                                                )}
                                             </TabItem>
 
                                             <TabItem tabLabel="Keys" tabIcon="ion-md-key" >
@@ -517,124 +548,124 @@ const OrganisationSettingsPage = class extends Component {
 
                                             <TabItem data-test="tab-permissions" tabLabel="Members" tabIcon="ion-md-people" >
                                                 <FormGroup className="mt-4">
+                                                    <h3>
+                                                        Manage Users and Permissions
+                                                    </h3>
+                                                    <p>
+                                                        Flagsmith lets you manage fine-grained permissions for your projects and environments, invite members as a user or an administrator and then set permission in your Project and Environment settings.
+                                                        {' '}
+                                                        <ButtonLink href="https://docs.flagsmith.com/advanced-use/permissions" target="_blank">Learn about User Roles.</ButtonLink>
+                                                    </p>
                                                     <div>
                                                         <div>
-                                                            <Row space className="mt-5">
-                                                                <h3 className="m-b-0">Members</h3>
-                                                                <Button
-                                                                    style={{ width: 180 }}
-                                                                    id="btn-invite" onClick={() => openModal('Invite Users',
-                                                                        <InviteUsersModal />)}
-                                                                    type="button"
-                                                                >
-                                                                    Invite members
-                                                                </Button>
-                                                            </Row>
-                                                            {paymentsEnabled && !isLoading && (
-                                                                <p>
-                                                                    {'You are currently using '}
-                                                                    <strong className={organisation.num_seats > max_seats ? 'text-danger' : ''}>
-                                                                        {`${organisation.num_seats} of ${max_seats}`}
-                                                                    </strong>
-                                                                    {` seat${organisation.num_seats === 1 ? '' : 's'}. `} for your plan.
-                                                                    {' '}
-                                                                    {organisation.num_seats > max_seats
-                                                                        && (
-                                                                            <a
-                                                                                href="#" onClick={() => openModal('Payment Plans', <PaymentModal
-                                                                                    viewOnly={false}
-                                                                                />, null, { large: true })}
-                                                                            >
-                                                                                Upgrade
-                                                                            </a>
-                                                                        )
-                                                                    }
-                                                                </p>
-                                                            )}
-                                                            {
-                                                                inviteLinks && (
-                                                                    <form onSubmit={(e) => {
-                                                                        e.preventDefault();
-                                                                    }}
-                                                                    >
-                                                                        <div className="mt-3">
-                                                                            <Row>
-                                                                                <div className="mr-2" style={{ width: 280 }}>
-                                                                                    <Select
-                                                                                        value={{
-                                                                                            value: this.state.role,
-                                                                                            label: this.state.role === 'ADMIN' ? 'Organisation Administrator' : 'User',
-                                                                                        }}
-                                                                                        onChange={v => this.setState({ role: v.value })}
-                                                                                        options={[
-                                                                                            { label: 'Organisation Administrator', value: 'ADMIN' },
-                                                                                            {
-                                                                                                label: hasRbacPermission ? 'User' : 'User - Please upgrade for role based access',
-                                                                                                value: 'USER',
-                                                                                                isDisabled: !hasRbacPermission,
-                                                                                            },
-                                                                                        ]}
-                                                                                    />
-                                                                                </div>
-                                                                                {inviteLinks.find(f => f.role === this.state.role) && (
-                                                                                    <>
-                                                                                        <Flex className="mr-4">
-                                                                                            <Input
-                                                                                                style={{ width: '100%' }}
-                                                                                                value={`${document.location.origin}/invite/${inviteLinks.find(f => f.role === this.state.role).hash}`}
-                                                                                                data-test="invite-link"
-                                                                                                inputClassName="input input--wide"
-                                                                                                className="full-width"
-                                                                                                type="text"
-                                                                                                readonly="readonly"
-                                                                                                title={<h3>Link</h3>}
-                                                                                                placeholder="Link"
-                                                                                            />
-                                                                                        </Flex>
-
-                                                                                        <Row>
-                                                                                            <Button
-                                                                                                className="btn-secondary"
-                                                                                                style={{ width: 180 }}
-                                                                                                onClick={() => {
-                                                                                                    navigator.clipboard.writeText(`${document.location.origin}/invite/${inviteLinks.find(f => f.role === this.state.role).hash}`);
-                                                                                                    toast('Link copied');
-                                                                                                }}
-                                                                                            >
-                                                                                                Copy Invite Link
-                                                                                            </Button>
-                                                                                            <Button
-                                                                                                className="ml-4"
-                                                                                                type="button"
-                                                                                                onClick={() => {
-                                                                                                    openConfirm('Regenerate Invite Link', 'This will generate a new invite link for the selected role, users will no longer be able to use the existing one. Are you sure?', () => {
-                                                                                                        invalidateInviteLink(inviteLinks.find(f => f.role === this.state.role));
-                                                                                                    });
-                                                                                                }}
-                                                                                            >
-                                                                                                Regenerate
-                                                                                            </Button>
-                                                                                        </Row>
-                                                                                    </>
-                                                                                )}
-                                                                            </Row>
-                                                                        </div>
-                                                                        <p className="mt-3">
-                                                                            Anyone with link can join as a standard user, once they have joined you can edit their role from the team members panel.
-                                                                            {' '}
-                                                                            <ButtonLink target="_blank" href="https://docs.flagsmith.com/advanced-use/permissions">Learn about User Roles.</ButtonLink>
-                                                                        </p>
-                                                                        <div className="text-right mt-2">
-                                                                            {error && <Error error={error} />}
-                                                                        </div>
-                                                                    </form>
-                                                                )
-                                                            }
                                                             <div>
                                                                 {isLoading && <div className="centered-container"><Loader /></div>}
                                                                 {!isLoading && (
                                                                     <div>
-                                                                        <FormGroup>
+
+                                                                        <Tabs inline transparent uncontrolled>
+                                                                            <TabItem tabLabel="Members">
+                                                                            <FormGroup className="mt-4">
+                                                                                {paymentsEnabled && !isLoading && (
+                                                                                    <p>
+                                                                                        {'You are currently using '}
+                                                                                        <strong className={organisation.num_seats > max_seats ? 'text-danger' : ''}>
+                                                                                            {`${organisation.num_seats} of ${max_seats}`}
+                                                                                        </strong>
+                                                                                        {` seat${organisation.num_seats === 1 ? '' : 's'}. `} for your plan.
+                                                                                        {' '}
+                                                                                        {organisation.num_seats > max_seats
+                                                                                            && (
+                                                                                                <a
+                                                                                                    href="#" onClick={() => openModal('Payment Plans', <PaymentModal
+                                                                                                    viewOnly={false}
+                                                                                                />, null, { large: true })}
+                                                                                                >
+                                                                                                    Upgrade
+                                                                                                </a>
+                                                                                            )
+                                                                                        }
+                                                                                    </p>
+                                                                                )}
+                                                                                {
+                                                                                    inviteLinks && (
+                                                                                        <form onSubmit={(e) => {
+                                                                                            e.preventDefault();
+                                                                                        }}
+                                                                                        >
+                                                                                            <div className="mt-3">
+                                                                                                <Row>
+                                                                                                    <div className="mr-2" style={{ width: 280 }}>
+                                                                                                        <Select
+                                                                                                            value={{
+                                                                                                                value: this.state.role,
+                                                                                                                label: this.state.role === 'ADMIN' ? 'Organisation Administrator' : 'User',
+                                                                                                            }}
+                                                                                                            onChange={v => this.setState({ role: v.value })}
+                                                                                                            options={[
+                                                                                                                { label: 'Organisation Administrator', value: 'ADMIN' },
+                                                                                                                {
+                                                                                                                    label: hasRbacPermission ? 'User' : 'User - Please upgrade for role based access',
+                                                                                                                    value: 'USER',
+                                                                                                                    isDisabled: !hasRbacPermission,
+                                                                                                                },
+                                                                                                            ]}
+                                                                                                        />
+                                                                                                    </div>
+                                                                                                    {inviteLinks.find(f => f.role === this.state.role) && (
+                                                                                                        <>
+                                                                                                            <Flex className="mr-4">
+                                                                                                                <Input
+                                                                                                                    style={{ width: '100%' }}
+                                                                                                                    value={`${document.location.origin}/invite/${inviteLinks.find(f => f.role === this.state.role).hash}`}
+                                                                                                                    data-test="invite-link"
+                                                                                                                    inputClassName="input input--wide"
+                                                                                                                    className="full-width"
+                                                                                                                    type="text"
+                                                                                                                    readonly="readonly"
+                                                                                                                    title={<h3>Link</h3>}
+                                                                                                                    placeholder="Link"
+                                                                                                                />
+                                                                                                            </Flex>
+
+                                                                                                            <Row>
+                                                                                                                <Button
+                                                                                                                    className="btn-secondary"
+                                                                                                                    style={{ width: 180 }}
+                                                                                                                    onClick={() => {
+                                                                                                                        navigator.clipboard.writeText(`${document.location.origin}/invite/${inviteLinks.find(f => f.role === this.state.role).hash}`);
+                                                                                                                        toast('Link copied');
+                                                                                                                    }}
+                                                                                                                >
+                                                                                                                    Copy Invite Link
+                                                                                                                </Button>
+                                                                                                                <Button
+                                                                                                                    className="ml-4"
+                                                                                                                    type="button"
+                                                                                                                    onClick={() => {
+                                                                                                                        openConfirm('Regenerate Invite Link', 'This will generate a new invite link for the selected role, users will no longer be able to use the existing one. Are you sure?', () => {
+                                                                                                                            invalidateInviteLink(inviteLinks.find(f => f.role === this.state.role));
+                                                                                                                        });
+                                                                                                                    }}
+                                                                                                                >
+                                                                                                                    Regenerate
+                                                                                                                </Button>
+                                                                                                            </Row>
+                                                                                                        </>
+                                                                                                    )}
+                                                                                                </Row>
+                                                                                            </div>
+                                                                                            <p className="mt-3">
+                                                                                                Anyone with link can join as a standard user, once they have joined you can edit their role from the team members panel.
+                                                                                                {' '}
+                                                                                                <ButtonLink target="_blank" href="https://docs.flagsmith.com/advanced-use/permissions">Learn about User Roles.</ButtonLink>
+                                                                                            </p>
+                                                                                            <div className="text-right mt-2">
+                                                                                                {error && <Error error={error} />}
+                                                                                            </div>
+                                                                                        </form>
+                                                                                    )
+                                                                                }
                                                                             <PanelSearch
                                                                                 id="org-members-list"
                                                                                 title="Members"
@@ -651,7 +682,6 @@ const OrganisationSettingsPage = class extends Component {
                                                                                     return (
                                                                                         <Row
                                                                                             data-test={`user-${i}`}
-
                                                                                             space className="list-item clickable" key={id}
                                                                                         >
                                                                                             <Flex onClick={onEditClick}>
@@ -788,66 +818,37 @@ const OrganisationSettingsPage = class extends Component {
                                                                                 />
                                                                             </FormGroup>
                                                                         ) : null}
-
-                                                                        <div>
-                                                                            <Row space className="mt-5">
-                                                                                <h3 className="m-b-0">User Groups</h3>
-                                                                                <Button
-                                                                                    className="mr-2"
-                                                                                    id="btn-invite" onClick={() => openModal('Create Group',
-                                                                                        <CreateGroupModal orgId={organisation.id} />)}
-                                                                                    type="button"
-                                                                                >
-                                                                                    Create Group
-                                                                                </Button>
-                                                                            </Row>
-                                                                            <p>Groups allow you to manage permissions for viewing and editing projects, features and environments.</p>
-                                                                            <UserGroupList
-                                                                                onEditPermissions={
-                                                                                    this.editGroupPermissions
-                                                                                } showRemove orgId={organisation && organisation.id}
-                                                                            />
-                                                                        </div>
-
-                                                                        {Utils.getFlagsmithHasFeature('force_2fa') && (
-                                                                            <div>
-                                                                                <Row space className="mt-5">
-                                                                                    <h3 className="m-b-0">Enforce 2FA</h3>
-                                                                                    {!force2faPermission ? (
-                                                                                        <Tooltip title={<Switch checked={organisation.force_2fa} onChange={this.save2FA} />}>
-                                                                                            To access this feature please upgrade your account to scaleup or higher."
-                                                                                        </Tooltip>
-                                                                                    ) : (
-                                                                                        <Switch checked={organisation.force_2fa} onChange={this.save2FA} />
-                                                                                    )}
-                                                                                </Row>
-                                                                                <p>Enabling this setting forces users within the organisation to setup 2 factor security.</p>
-                                                                            </div>
-
-                                                                        )}
+                                                                            </TabItem>
+                                                                            <TabItem tabLabel="Groups">
+                                                                                <div>
+                                                                                    <Row space className="mt-4">
+                                                                                        <h3 className="m-b-0">User Groups</h3>
+                                                                                        <Button
+                                                                                            className="mr-2"
+                                                                                            id="btn-invite" onClick={() => openModal('Create Group',
+                                                                                            <CreateGroupModal orgId={organisation.id} />)}
+                                                                                            type="button"
+                                                                                        >
+                                                                                            Create Group
+                                                                                        </Button>
+                                                                                    </Row>
+                                                                                    <p>Groups allow you to manage permissions for viewing and editing projects, features and environments.</p>
+                                                                                    <UserGroupList
+                                                                                        onEditPermissions={
+                                                                                            this.editGroupPermissions
+                                                                                        } showRemove orgId={organisation && organisation.id}
+                                                                                    />
+                                                                                </div>
+                                                                            </TabItem>
+                                                                        </Tabs>
                                                                     </div>
                                                                 )}
                                                             </div>
                                                         </div>
                                                     </div>
                                                 </FormGroup>
-                                                {Utils.getFlagsmithHasFeature('restrict_project_create_to_admin') && (
-                                                    <FormGroup className="mt-5">
-                                                        <Row>
-                                                            <Column>
-                                                                <h3>Admin Settings</h3>
-                                                                <Row>
-                                                                    Only allow organisation admins to create projects
-                                                                    <Switch
-                                                                        checked={organisation.restrict_project_create_to_admin} onChange={() => this.setAdminCanCreateProject(!organisation.restrict_project_create_to_admin)}
-                                                                    />
-                                                                </Row>
-                                                            </Column>
-                                                        </Row>
-
-                                                    </FormGroup>
-                                                )}
                                             </TabItem>
+
                                             {Utils.getFlagsmithHasFeature('usage_chart') && !projectOverrides.disableInflux && (
                                                 <TabItem tabLabel="Usage" tabIcon="ion-md-analytics" >
                                                     {this.state.tab === 3 && (

@@ -76,6 +76,8 @@ Tabs.propTypes = {
     onChange: OptionalFunc,
     children: RequiredElement,
     value: OptionalNumber,
+    inline: OptionalBool,
+    transparent: OptionalBool,
     uncontrolled: OptionalBool,
 };
 

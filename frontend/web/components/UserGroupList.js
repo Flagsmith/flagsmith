@@ -110,7 +110,7 @@ export default class TheComponent extends PureComponent {
                                 icon="ion-md-people"
                                 title={this.props.noTitle ? '' : 'Groups'}
                               >
-                                  <div>
+                                  <div className="p-2 text-center">
                                         You have no groups in your organisation.
                                   </div>
                               </Panel>
