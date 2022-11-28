@@ -1,6 +1,8 @@
+import typing
 from importlib import import_module
 
 from django.db import models
+from django.db.models import Model
 from django_lifecycle import AFTER_SAVE, LifecycleModel, hook
 
 from api_keys.models import MasterAPIKey
@@ -98,10 +100,16 @@ class AuditLog(LifecycleModel):
 
     @property
     def history_record(self):
-        module_path, class_name = self.history_record_class_path.rsplit(".", maxsplit=1)
-        module = import_module(module_path)
-        klass = getattr(module, class_name)
+        klass = self.get_history_record_model_class(self.history_record_class_path)
         return klass.objects.get(id=self.history_record_id)
+
+    @staticmethod
+    def get_history_record_model_class(
+        history_record_class_path: str,
+    ) -> typing.Type[Model]:
+        module_path, class_name = history_record_class_path.rsplit(".", maxsplit=1)
+        module = import_module(module_path)
+        return getattr(module, class_name)
 
     @hook(AFTER_SAVE)
     def update_environments_updated_at(self):

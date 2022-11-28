@@ -43,7 +43,7 @@ class ChangeRequest(
     LifecycleModelMixin, AbstractBaseExportableModel, AbstractBaseAuditableModel
 ):
     related_object_type = RelatedObjectType.CHANGE_REQUEST
-    history_record_class_path = "workflows.core.models.HistoricalChangeRequest"
+    history_record_class_path = "features.workflows.core.models.HistoricalChangeRequest"
 
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
