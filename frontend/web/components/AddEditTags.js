@@ -313,10 +313,10 @@ class TheComponent extends PureComponent {
                                       {Utils.renderWithPermission(projectAdminPermission, Constants.projectPermissions('Admin'), (
                                           <ButtonLink
                                             disabled={!projectAdminPermission}
-                                            buttonText=" Create a New Tag" onClick={() => this.setState({ tab: 'CREATE', filter: '' })}
+                                            onClick={() => this.setState({ tab: 'CREATE', filter: '' })}
                                             type="button"
                                           >
-                                              <span className="ml-3 icon ion-md-add"/>
+                                              Create a New Tag <span className="ml-3 icon ion-md-add"/>
                                           </ButtonLink>
                                       ))}
                                   </div>

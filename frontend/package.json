@@ -17,6 +17,7 @@
     "lint": "eslint .",
     "lint:fix": "npx eslint --fix .",
     "start": "cross-env NODE_ENV=production node ./api/index",
+    "typecheck": "tsc",
     "dev": "cross-env npm run env && node_modules/.bin/nodemon --watch ./api --ignore server/config/config.json --watch webpack --exec node ./api",
     "bundle": "node node_modules/.bin/webpack --config ./webpack/webpack.config.prod.js",
     "bundledjango": "mkdir -p ../api/app/templates/webpack/ && node node_modules/.bin/webpack --config ./webpack/webpack.config.django.prod.js && rm -f ../api/app/templates/webpack/index.html && rm -f ../api/static/static/project-overrides.js && cp ../api/static/index.html ../api/app/templates/webpack/index.html"
@@ -128,11 +129,13 @@
     "yaml": "^2.0.0"
   },
   "devDependencies": {
+    "@babel/preset-typescript": "^7.18.6",
     "@ffmpeg-installer/ffmpeg": "^1.1.0",
     "chromedriver": "96.0.0",
     "nodemon": "^2.0.16",
     "raw-loader": "0.5.1",
-    "testcafe": "^1.17.1"
+    "testcafe": "^1.17.1",
+    "typescript": "^4.9.3"
   },
   "lint-staged": {
     "*.{js,tsx,ts}": "suppress-exit-code eslint --fix"

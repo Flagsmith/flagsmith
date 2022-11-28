@@ -169,10 +169,11 @@ const HomePage = class extends React.Component {
                                                 <p className="mb-0">We have a 100% free for life plan for smaller projects.</p>
                                                 <ButtonLink
                                                   className="pt-3 pb-3"
-                                                  buttonText="Check out our Pricing"
                                                   href="https://flagsmith.com/pricing"
                                                   target="_blank"
-                                                />
+                                                >
+                                                    Check out our Pricing
+                                                </ButtonLink>
                                             </>
                                         )}
                                     </>
@@ -198,8 +199,9 @@ const HomePage = class extends React.Component {
                                             <Link id="existing-member-btn" to={`/login${redirect}`}>
                                                 <ButtonLink
                                                   className="mt-2 pb-3 pt-2"
-                                                  buttonText="Already a member?"
-                                                />
+                                                >
+                                                    Already a member?
+                                                </ButtonLink>
                                             </Link>
                                         </div>
                                     </Card>
@@ -284,7 +286,9 @@ const HomePage = class extends React.Component {
                                                                     to={`/password-recovery${redirect}`}
                                                                     onClick={this.showForgotPassword}
                                                                   >
-                                                                      <ButtonLink tabIndex={-1} type="button" buttonText="Forgot password?" />
+                                                                      <ButtonLink tabIndex={-1} type="button">
+                                                                          Forgot password?
+                                                                      </ButtonLink>
                                                                   </Link>
                                                                   )}
                                                                   className="input-default full-width mb-2"
@@ -321,7 +325,9 @@ const HomePage = class extends React.Component {
                                                     <Row className="justify-content-center mt-2">
                                                         Creating a new account is easy{' '}
                                                         <Link id="existing-member-btn" to={`/signup${redirect}`}>
-                                                            <ButtonLink data-test="jsSignup" className="ml-1" buttonText=" Sign up" />
+                                                            <ButtonLink data-test="jsSignup" className="ml-1">
+                                                                Sign up
+                                                            </ButtonLink>
                                                         </Link>
                                                     </Row>
                                                     <div className="mt-5 text-center text-small text-muted">
@@ -498,8 +504,9 @@ const HomePage = class extends React.Component {
                                                 <Link id="existing-member-btn" to={`/login${redirect}`}>
                                                     <ButtonLink
                                                       className="ml-1"
-                                                      buttonText="Log in"
-                                                    />
+                                                    >
+                                                        Log in
+                                                    </ButtonLink>
                                                 </Link>
                                             </Row>
 

@@ -1,16 +1,21 @@
-import { PureComponent } from 'react';
-
-const Button = class extends PureComponent {
+import React, {HTMLAttributeAnchorTarget, PureComponent, ReactNode} from 'react';
+export type ButtonType = React.ButtonHTMLAttributes<HTMLButtonElement> & {
+    href?: string
+    target?: HTMLAttributeAnchorTarget
+}
+const Button = class extends PureComponent<ButtonType> {
     static displayName = 'Button'
 
+    button: HTMLButtonElement|null = null
+
     onMouseUp = () => {
-        this.refs.button.blur();
+        this.button?.blur();
     }
 
     render() {
         return (
             <button
-              ref="button" {...this.props} onMouseUp={this.onMouseUp}
+              ref={(ref)=>this.button = ref} {...this.props} onMouseUp={this.onMouseUp}
               className={`btn ${this.props.className || ''}`}
             >
                 {this.props.children}
@@ -19,12 +24,8 @@ const Button = class extends PureComponent {
     }
 };
 
-Button.propTypes = {
-    className: OptionalString,
-    children: OptionalNode,
-};
 
-export default class extends PureComponent {
+export default class extends Button {
     static displayName = 'Button';
 
     render() {
@@ -32,7 +33,7 @@ export default class extends PureComponent {
     }
 }
 
-export const ButtonOutline = class extends PureComponent {
+export const ButtonOutline = class extends Button {
     static displayName = 'ButtonOutline';
 
     render() {
@@ -40,25 +41,25 @@ export const ButtonOutline = class extends PureComponent {
     }
 };
 
-export const ButtonLink = class extends PureComponent {
+export const ButtonLink = class extends Button {
     static displayName = 'ButtonLink';
 
     render() {
-        const { buttonText, ...rest } = this.props;
+        const { ...rest } = this.props;
         return (
             <Button {...rest} className={`btn--link ${this.props.className || ''}`}>
                 {this.props.href ? (
-                    <a className="btn--link" target={this.props.target} href={this.props.href}>{this.props.buttonText}{this.props.children}</a>
+                    <a className="btn--link" target={this.props.target} href={this.props.href}>{this.props.children}</a>
                 ) : (
 
-                    <span className="btn--link">{this.props.buttonText}{this.props.children}</span>
+                    <span className="btn--link">{this.props.children}</span>
                 )}
             </Button>
         );
     }
 };
 
-export const ButtonProject = class extends PureComponent {
+export const ButtonProject = class extends Button {
     static displayName = 'ButtonProject';
 
     render() {
