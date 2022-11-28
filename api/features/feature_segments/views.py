@@ -5,6 +5,7 @@ from django.utils.decorators import method_decorator
 from drf_yasg2.utils import swagger_auto_schema
 from rest_framework import mixins, viewsets
 from rest_framework.decorators import action
+from rest_framework.generics import get_object_or_404
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 
@@ -120,3 +121,14 @@ class FeatureSegmentViewSet(
         return Response(
             FeatureSegmentListSerializer(instance=updated_instances, many=True).data
         )
+
+    @action(
+        detail=False,
+        url_path=r"get-by-uuid/(?P<uuid>[0-9a-f-]+)",
+        methods=["get"],
+    )
+    def get_by_uuid(self, request, uuid):
+        qs = self.get_queryset()
+        feature_segment = get_object_or_404(qs, uuid=uuid)
+        serializer = self.get_serializer(feature_segment)
+        return Response(serializer.data)
