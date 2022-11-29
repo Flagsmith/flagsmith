@@ -1,7 +1,6 @@
 // import propTypes from 'prop-types';
 import React, { Component } from 'react';
 import { SortableContainer, SortableElement } from 'react-sortable-hoc';
-import _data from '../../common/data/base/_data';
 import ProjectStore from '../../common/stores/project-store';
 import ValueEditor from './ValueEditor';
 import VariationOptions from './mv/VariationOptions';
@@ -236,7 +235,6 @@ class TheComponent extends Component {
     constructor(props) {
         super(props);
         this.state = {};
-        AppActions.getSegments(props.projectId, props.environmentId);
     }
 
     addItem = () => {

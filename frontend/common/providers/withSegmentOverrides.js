@@ -1,5 +1,4 @@
 import data from '../data/base/_data';
-import SegmentListStore from '../stores/segment-list-store';
 import ProjectStore from '../stores/project-store';
 
 export default (WrappedComponent) => {
@@ -10,14 +9,7 @@ export default (WrappedComponent) => {
             super(props);
             ES6Component(this);
             this.state = {
-                segments: SegmentListStore.getSegments(),
             };
-
-            this.listenTo(SegmentListStore, 'change', () => {
-                this.setState({
-                    segments: SegmentListStore.getSegments(),
-                });
-            });
         }
 
         componentDidMount() {

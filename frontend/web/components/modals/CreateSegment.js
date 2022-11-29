@@ -1,8 +1,6 @@
 import React, { Component } from 'react';
 import engine from 'bullet-train-rules-engine';
-import { Tab } from '@material-ui/core';
 import Rule from './Rule';
-import Highlight from '../Highlight';
 import SegmentStore from '../../../common/stores/segment-list-store';
 import IdentityListProvider from '../../../common/providers/IdentityListProvider';
 import Constants from '../../../common/constants';

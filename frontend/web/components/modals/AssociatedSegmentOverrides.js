@@ -10,7 +10,6 @@ import FeatureListStore from '../../../common/stores/feature-list-store';
 import FlagSelect from '../FlagSelect';
 import { ButtonLink } from '../base/forms/Button';
 import InfoMessage from '../InfoMessage';
-import SegmentStore from '../../../common/stores/segment-list-store';
 import EnvironmentSelect from '../EnvironmentSelect';
 
 class TheComponent extends Component {
@@ -210,7 +209,6 @@ class SegmentOverridesInner extends Component {
             <div>
                 <UncontrolledSegmentOverrides
                   feature={projectFlag.id}
-                  segments={SegmentStore.model}
                   readOnly
                   projectId={projectId}
                   multivariateOptions={_.cloneDeep(projectFlag.multivariate_options)}
@@ -276,6 +274,7 @@ class SegmentOverridesInner extends Component {
                               feature={projectFlag.id}
                               id={id}
                               name=" "
+                              disableCreate
                               projectId={projectId}
                               onRemove={this.props.onRemove}
                               multivariateOptions={_.cloneDeep(projectFlag.multivariate_options)}
