@@ -66,10 +66,9 @@ class MasterAPIKeyEnvironmentPermissions(BasePermission):
         if view.action == "create":
             try:
                 project_id = request.data.get("project")
-                project_lookup = Q(id=project_id)
-                project = Project.objects.get(project_lookup)
+                project = Project.objects.get(id=project_id)
+                return master_api_key.organisation_id == project.organisation.id
 
-                return master_api_key.organisation_id == project.id
             except Project.DoesNotExist:
                 return False
 
