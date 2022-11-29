@@ -23,6 +23,7 @@ from permissions.models import PermissionModel
 from projects.models import Project, UserProjectPermission
 from projects.tags.models import Tag
 from segments.models import EQUAL, Condition, Segment, SegmentRule
+from task_processor.task_run_method import TaskRunMethod
 from users.models import FFAdminUser, UserPermissionGroup
 
 trait_key = "key1"
@@ -271,3 +272,8 @@ def user_environment_permission(test_user, environment):
 @pytest.fixture()
 def user_project_permission(test_user, project):
     return UserProjectPermission.objects.create(user=test_user, project=project)
+
+
+@pytest.fixture(autouse=True)
+def task_processor_synchronously(settings):
+    settings.TASK_RUN_METHOD = TaskRunMethod.SYNCHRONOUSLY
