@@ -91,8 +91,8 @@ class AuditLog(LifecycleModel):
     )
     is_system_event = models.BooleanField(default=False)
 
-    history_record_id = models.IntegerField(null=True)
-    history_record_class_path = models.CharField(max_length=200, null=True)
+    history_record_id = models.IntegerField(blank=True, null=True)
+    history_record_class_path = models.CharField(max_length=200, blank=True, null=True)
 
     class Meta:
         verbose_name_plural = "Audit Logs"

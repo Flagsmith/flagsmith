@@ -13,11 +13,11 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='auditlog',
             name='history_record_class_path',
-            field=models.CharField(max_length=200, null=True),
+            field=models.CharField(max_length=200, blank=True, null=True),
         ),
         migrations.AddField(
             model_name='auditlog',
             name='history_record_id',
-            field=models.IntegerField(null=True),
+            field=models.IntegerField(blank=True, null=True),
         ),
     ]
