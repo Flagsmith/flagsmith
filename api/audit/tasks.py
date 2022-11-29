@@ -1,5 +1,4 @@
 from django.contrib.auth import get_user_model
-from django.core.exceptions import ObjectDoesNotExist
 
 from audit.models import (
     FEATURE_STATE_WENT_LIVE_MESSAGE,
@@ -46,11 +45,7 @@ def create_audit_log_from_historical_record(
     if not (history_user or override_author or history_instance.master_api_key):
         return
 
-    try:
-        environment, project = instance.get_environment_and_project()
-    except ObjectDoesNotExist:
-        # This can occur in cases of cascade deletes
-        return
+    environment, project = instance.get_environment_and_project()
 
     log_message = {
         "+": instance.get_create_log_message,
