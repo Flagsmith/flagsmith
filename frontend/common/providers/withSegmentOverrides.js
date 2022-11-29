@@ -1,6 +1,6 @@
 import data from '../data/base/_data';
 import ProjectStore from '../stores/project-store';
-
+import FeatureListStore from '../stores/feature-list-store'
 export default (WrappedComponent) => {
     class HOC extends React.Component {
         static displayName = 'withFoo';
@@ -8,6 +8,9 @@ export default (WrappedComponent) => {
         constructor(props) {
             super(props);
             ES6Component(this);
+            this.listenTo(FeatureListStore, 'saved', () => {
+                this.getOverrides();
+            });
             this.state = {
             };
         }

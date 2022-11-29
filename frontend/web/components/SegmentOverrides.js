@@ -357,6 +357,9 @@ class TheComponent extends Component {
                 return !value || (!foundSegment || (foundSegment && foundSegment.toRemove));
             }
         const InnerComponent = this.props.id || this.props.readOnly ? SegmentOverrideListInner : SegmentOverrideList;
+
+        const visibleValues = value && value.filter((v)=>!v.toRemove);
+
         return (
             <div>
 
@@ -411,7 +414,7 @@ class TheComponent extends Component {
                             />
                         </div>
                     )}
-                    {value && !!value.length && !this.props.showCreateSegment && (
+                    {visibleValues && !!visibleValues.length && !this.props.showCreateSegment && (
                         <div style={isLoading ? { opacity: 0.5 } : null} className="mt-4 overflow-visible">
                             {!this.props.id && (
                                 <div>
