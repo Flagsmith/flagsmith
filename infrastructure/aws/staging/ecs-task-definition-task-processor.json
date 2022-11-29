@@ -94,6 +94,18 @@
                 {
                     "name": "SSE_SERVER_BASE_URL",
                     "value": "https://origin.realtime-staging.flagsmith.com"
+                },
+                {
+                    "name": "PIPEDRIVE_BASE_API_URL",
+                    "value": "https://testing-sandbox.pipedrive.com/api/v1"
+                },
+                {
+                    "name": "PIPEDRIVE_DOMAIN_ORGANIZATION_FIELD_KEY",
+                    "value": "1eb559f404db4ca931cf6b45b99a69f592dee321"
+                },
+                {
+                    "name": "PIPEDRIVE_SIGN_UP_TYPE_DEAL_FIELD_KEY",
+                    "value": "3f142ca82a69c31c2f592b372bd1bb41dfe3407e"
                 }
             ],
             "secrets": [
@@ -140,6 +152,10 @@
                 {
                     "name": "SSE_AUTHENTICATION_TOKEN",
                     "valueFrom": "arn:aws:secretsmanager:eu-west-2:302456015006:secret:ECS-API-heAdoB:SSE_AUTHENTICATION_TOKEN::"
+                },
+                {
+                    "name": "PIPEDRIVE_API_TOKEN",
+                    "valueFrom": "arn:aws:secretsmanager:eu-west-2:302456015006:secret:ECS-API-heAdoB:PIPEDRIVE_API_TOKEN::"
                 }
             ],
             "logConfiguration": {
