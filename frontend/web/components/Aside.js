@@ -429,16 +429,16 @@ const Aside = class extends Component {
                                                             <div
                                                                 className="text-muted text-small text-center"
                                                             >
-                                                                {this.state.version.ci_commit_sha !== "Unknown" && (
-                                                                    <>
-                                                                        <span className="icon ion-md-git-commit mr-1"/>{this.state.version.ci_commit_sha}
-                                                                    </>
+                                                                {this.state.version.tag !== "Unknown" && (
+                                                                    <Tooltip html title={(
+                                                                        <span>
+                                                                            <span className="ml-2 icon ion-ios-pricetag"/> {this.state.version.tag}
+                                                                        </span>
+                                                                        )}>
+                                                                        {`${this.state.version.frontend_sha !== "Unknown" ? `Frontend: ${this.state.version.frontend_sha}` :"" }${this.state.version.backend_sha !== "Unknown" ? `${this.state.version.frontend_sha!=="Unknown"?"<br/>":""}Backend SHA: ${this.state.version.backend_sha}` :"" }`}
+                                                                    </Tooltip>
                                                                 )}
-                                                                {this.state.version.image_tag !== "Unknown" && (
-                                                                    <>
-                                                                        <span className="ml-2 icon ion-ios-pricetag"/> {this.state.version.image_tag}
-                                                                    </>
-                                                                )}
+
 
                                                             </div>
                                                         )}
