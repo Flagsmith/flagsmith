@@ -35,7 +35,8 @@ class OAuthLoginSerializerTestCase(TestCase):
     def test_create(self, mock_get_user_info):
         # Given
         access_token = "access-token"
-        data = {"access_token": access_token}
+        sign_up_type = "NO_INVITE"
+        data = {"access_token": access_token, "sign_up_type": sign_up_type}
         serializer = OAuthLoginSerializer(data=data, context={"request": self.request})
 
         # monkey patch the get_user_info method to return the mock user data
@@ -46,7 +47,9 @@ class OAuthLoginSerializerTestCase(TestCase):
         response = serializer.save()
 
         # Then
-        assert UserModel.objects.filter(email=self.test_email).exists()
+        assert UserModel.objects.filter(
+            email=self.test_email, sign_up_type=sign_up_type
+        ).exists()
         assert isinstance(response, Token)
         assert (timezone.now() - response.user.last_login).seconds < 5
         assert response.user.email == self.test_email
