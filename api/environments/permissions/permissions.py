@@ -1,8 +1,9 @@
 import typing
 
 from django.db.models import Model, Q
+from django.http import HttpRequest
 from rest_framework import exceptions
-from rest_framework.permissions import BasePermission
+from rest_framework.permissions import BasePermission, IsAuthenticated
 
 from environments.models import Environment
 from environments.permissions.constants import VIEW_ENVIRONMENT
@@ -24,8 +25,11 @@ class EnvironmentKeyPermissions(BasePermission):
         return True
 
 
-class EnvironmentPermissions(BasePermission):
+class EnvironmentPermissions(IsAuthenticated):
     def has_permission(self, request, view):
+        if not super().has_permission(request, view):
+            return False
+
         if view.action == "create":
             try:
                 project_id = request.data.get("project")
@@ -41,12 +45,46 @@ class EnvironmentPermissions(BasePermission):
         return True
 
     def has_object_permission(self, request, view, obj):
+        if request.user.is_anonymous:
+            return False
+
         if view.action == "clone":
             return request.user.is_project_admin(obj.project)
 
         return request.user.is_environment_admin(obj) or view.action in [
             "user_permissions"
         ]
+
+
+class MasterAPIKeyEnvironmentPermissions(BasePermission):
+    def has_permission(self, request: HttpRequest, view: str) -> bool:
+        master_api_key = getattr(request, "master_api_key", None)
+
+        if not master_api_key:
+            return False
+
+        if view.action == "create":
+            try:
+                project_id = request.data.get("project")
+                project_lookup = Q(id=project_id)
+                project = Project.objects.get(project_lookup)
+
+                return master_api_key.organisation_id == project.id
+            except Project.DoesNotExist:
+                return False
+
+        # return true as list will be handled by view and obj permissions will be handled later
+        return True
+
+    def has_object_permission(
+        self, request: HttpRequest, view: str, obj: Model
+    ) -> bool:
+        master_api_key = getattr(request, "master_api_key", None)
+
+        if not master_api_key:
+            return False
+
+        return master_api_key.organisation_id == obj.project.organisation_id
 
 
 class IdentityPermissions(BasePermission):
