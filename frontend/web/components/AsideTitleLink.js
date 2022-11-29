@@ -9,13 +9,13 @@ const AsideTitleLink = class extends PureComponent {
     render() {
         return (
             <Tooltip
-                title={
-                    <div id={this.props.id} className="flex-row space aside__title-wrapper">
-                        <span className="aside__link-text">{this.props.title}</span>
-                        <span className={`aside__link-icon ${this.props.iconClassName || ''}`} />
-                    </div>
-                }
-                place="top"
+              title={(
+                  <div id={this.props.id} className="flex-row space aside__title-wrapper">
+                      <span className="aside__link-text">{this.props.title}</span>
+                      <span className={`aside__link-icon ${this.props.iconClassName || ''}`} />
+                  </div>
+)}
+              place="top"
             >
                 {this.props.tooltip}
             </Tooltip>

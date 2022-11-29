@@ -1,6 +1,5 @@
 const BaseStore = require('./base/_store');
 const data = require('../data/base/_data');
-const OrganisationStore = require('../stores/organisation-store');
 
 const controller = {
 
@@ -40,7 +39,7 @@ const controller = {
 };
 
 
-var store = Object.assign({}, BaseStore, {
+const store = Object.assign({}, BaseStore, {
     id: 'permissions',
     model: {
         availablePermissions: {

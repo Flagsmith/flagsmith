@@ -1,7 +1,7 @@
-import React, { Component } from 'react';
+import React from 'react';
 import IdentitySegmentsStore from '../stores/identity-segments-store';
 
-const IdentitySegmentsProvider = class extends Component {
+const IdentitySegmentsProvider = class extends React.Component {
     static displayName = 'IdentitySegmentsProvider'
 
     constructor(props, context) {
@@ -16,7 +16,7 @@ const IdentitySegmentsProvider = class extends Component {
 
     componentDidMount() {
         if (this.props.fetch) {
-            AppActions.getIdentitySegments(this.props.projectId, this.props.id)
+            AppActions.getIdentitySegments(this.props.projectId, this.props.id);
         }
         this.listenTo(IdentitySegmentsStore, 'change', () => {
             this.setState({
@@ -34,6 +34,11 @@ const IdentitySegmentsProvider = class extends Component {
     }
 };
 
-IdentitySegmentsProvider.propTypes = {};
+IdentitySegmentsProvider.propTypes = {
+    id: RequiredString,
+    fetch: OptionalBool,
+    children: OptionalFunc,
+    projectId: RequiredString,
+};
 
 module.exports = IdentitySegmentsProvider;

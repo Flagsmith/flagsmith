@@ -1,7 +1,7 @@
 import React from 'react';
 import { Component } from 'react';
-import Popover from "./base/Popover";
-import cx from "classnames";
+import cx from 'classnames';
+import Popover from './base/Popover';
 
 
 class ButtonDropdown extends Component {
@@ -11,30 +11,32 @@ class ButtonDropdown extends Component {
         return (
             <div className="relative">
                 <Popover
-                    className="popover-bottom"
-                    contentClassName="popover-bt"
-                    renderTitle={toggle => (
-                        <Button className="btn-secondary" onClick={toggle}>
-                            {this.props.children}
-                        </Button>
-                    )}
+                  className="popover-bottom"
+                  contentClassName="popover-bt"
+                  renderTitle={toggle => (
+                      <Button className="btn-secondary" onClick={toggle}>
+                          {this.props.children}
+                      </Button>
+                  )}
                 >
                     {toggle => (
                         <div className="popover-inner__content">
                             {
                                 !!this.props.title && (
                                     <span
-                                        className="popover-bt__title"
+                                      className="popover-bt__title"
                                     >
                                         {this.props.title}
                                     </span>
                                 )
                             }
-                            {this.props.items.map(({title,onClick})=> (
-                                <Row onClick={()=>{
-                                    toggle()
-                                    onClick()
-                                }} className={cx('popover-bt__list-item list-item clickable')}>
+                            {this.props.items.map(({ title, onClick }) => (
+                                <Row
+                                  onClick={() => {
+                                      toggle();
+                                      onClick();
+                                  }} className={cx('popover-bt__list-item list-item clickable')}
+                                >
                                     {title}
                                 </Row>
                             ))}
@@ -44,8 +46,8 @@ class ButtonDropdown extends Component {
                 </Popover>
             </div>
 
-        )
+        );
     }
 }
 
-export default ButtonDropdown
+export default ButtonDropdown;

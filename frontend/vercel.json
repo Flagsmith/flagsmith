@@ -5,7 +5,7 @@
     },
     "functions": {
         "api/index.js": {
-            "includeFiles": "handlebars/**"
+            "includeFiles": "CI_COMMIT_SHA"
         }
     },
     "rewrites": [

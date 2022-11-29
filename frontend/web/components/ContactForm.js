@@ -1,4 +1,5 @@
-import data from '../../common/data/base/_data'
+import data from '../../common/data/base/_data';
+
 export class ContactForm extends React.Component {
   static displayName = 'TheComponent';
 

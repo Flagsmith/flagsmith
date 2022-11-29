@@ -150,15 +150,15 @@ class _CreateEditTag extends PureComponent {
                 component={(
                     <Row className="mb-2">
                         {Constants.tagColors.map(color => (
-                            <div                               className="tag--select mr-2 mb-2">
+                            <div className="tag--select mr-2 mb-2">
                                 <Tag
-                                    onClick={e => this.update('color', e.color)}
-                                    key={color}
-                                    selected={this.state.tag.color === color}
-                                    tag={{
-                                        color,
-                                        id: color,
-                                    }}
+                                  onClick={e => this.update('color', e.color)}
+                                  key={color}
+                                  selected={this.state.tag.color === color}
+                                  tag={{
+                                      color,
+                                      id: color,
+                                  }}
                                 />
                             </div>
 
@@ -171,8 +171,7 @@ class _CreateEditTag extends PureComponent {
                       {({ permission, isLoading }) => Utils.renderWithPermission(permission, Constants.projectPermissions('Admin'),
                           <Button onClick={this.save} type="button" disabled={this.props.tagsSaving || !this.state.tag.color || !this.state.tag.label || !permission}>
                               {isEdit ? 'Save Tag' : 'Create Tag' }
-                          </Button>
-                      )}
+                          </Button>)}
                   </Permission>
               </div>
           </div>
@@ -259,39 +258,39 @@ class TheComponent extends PureComponent {
               </Row>
 
               <Permission level="project" permission="ADMIN" id={this.props.projectId}>
-                  {({permission:projectAdminPermission})=>(
-              <InlineModal
-                title="Tags"
-                isOpen={this.state.isOpen}
-                onBack={() => this.setState({ tab: 'SELECT' })}
-                showBack={this.state.tab !== 'SELECT'}
-                onClose={this.toggle}
-                className="inline-modal--tags"
-              >
+                  {({ permission: projectAdminPermission }) => (
+                      <InlineModal
+                        title="Tags"
+                        isOpen={this.state.isOpen}
+                        onBack={() => this.setState({ tab: 'SELECT' })}
+                        showBack={this.state.tab !== 'SELECT'}
+                        onClose={this.toggle}
+                        className="inline-modal--tags"
+                      >
 
-                  {this.state.tab === 'SELECT' && !noTags && (
-                  <div>
-                      <Input
-                        value={this.state.filter} onChange={this.setFilter} className="full-width mb-2"
-                        placeholder="Search tags..."
-                      />
-                      {tagsLoading && !projectTags && (
-                      <div className="text-center">
-                          <Loader/>
-                      </div>
-                      )}
-                      <div className="tag-list">
-                          {filteredTags && filteredTags.map((tag, index) => (
-                              <div key={tag.id}>
-                                  <Row className={"py-2"}>
-                                      <Flex>
-                                          <Tag
-                                            className="px-2 py-2" onClick={this.selectTag} selected={this.props.isSelected(tag)}
-                                            tag={tag}
-                                          />
-                                      </Flex>
-                                      <Permission level="project" permission="ADMIN" id={this.props.projectId}>
-                                          {({ permission, isLoading }) => Utils.renderWithPermission(permission, Constants.projectPermissions('Admin'), (
+                          {this.state.tab === 'SELECT' && !noTags && (
+                          <div>
+                              <Input
+                                value={this.state.filter} onChange={this.setFilter} className="full-width mb-2"
+                                placeholder="Search tags..."
+                              />
+                              {tagsLoading && !projectTags && (
+                              <div className="text-center">
+                                  <Loader/>
+                              </div>
+                              )}
+                              <div className="tag-list">
+                                  {filteredTags && filteredTags.map((tag, index) => (
+                                      <div key={tag.id}>
+                                          <Row className="py-2">
+                                              <Flex>
+                                                  <Tag
+                                                    className="px-2 py-2" onClick={this.selectTag} selected={this.props.isSelected(tag)}
+                                                    tag={tag}
+                                                  />
+                                              </Flex>
+                                              <Permission level="project" permission="ADMIN" id={this.props.projectId}>
+                                                  {({ permission, isLoading }) => Utils.renderWithPermission(permission, Constants.projectPermissions('Admin'), (
                                               <>
                                                   {!readOnly && !!permission && (
                                                       <>
@@ -304,30 +303,30 @@ class TheComponent extends PureComponent {
                                                       </>
                                                   )}
                                               </>
-                                      ))}
-                                      </Permission>
-                                  </Row>
-                              </div>
-                          ))}
-                          {!readOnly && (
-                          <div className="text-center mb-2 mt-3">
-                              {Utils.renderWithPermission(projectAdminPermission, Constants.projectPermissions("Admin"), (
-                                      <ButtonLink
-                                          disabled={!projectAdminPermission}
-                                          buttonText=" Create a New Tag" onClick={() => this.setState({ tab: 'CREATE', filter: '' })}
-                                          type="button"
-                                      >
-                                          <span className="ml-3 icon ion-md-add"/>
-                                      </ButtonLink>
+                                                  ))}
+                                              </Permission>
+                                          </Row>
+                                      </div>
                                   ))}
-                          </div>
-                          )}
-                          {projectTags && projectTags.length && !filteredTags.length ? (
-                              <div className="text-center">
+                                  {!readOnly && (
+                                  <div className="text-center mb-2 mt-3">
+                                      {Utils.renderWithPermission(projectAdminPermission, Constants.projectPermissions('Admin'), (
+                                          <ButtonLink
+                                            disabled={!projectAdminPermission}
+                                            buttonText=" Create a New Tag" onClick={() => this.setState({ tab: 'CREATE', filter: '' })}
+                                            type="button"
+                                          >
+                                              <span className="ml-3 icon ion-md-add"/>
+                                          </ButtonLink>
+                                      ))}
+                                  </div>
+                                  )}
+                                  {projectTags && projectTags.length && !filteredTags.length ? (
+                                      <div className="text-center">
                           No results for "<strong>{this.state.filter}</strong>"
-                              </div>
-                          ) : null}
-                          {
+                                      </div>
+                                  ) : null}
+                                  {
                         noTags && (
                         <div className="text-center">
                             You have no tags yet
@@ -335,18 +334,18 @@ class TheComponent extends PureComponent {
                         )
                       }
 
-                      </div>
-                  </div>
-                  )}
-                  {(this.state.tab === 'CREATE' || noTags) && (
-                  <CreateEditTag
-                    projectId={this.props.projectId} onComplete={(tag) => {
-                        this.selectTag(tag);
-                        this.setState({ tab: 'SELECT' });
-                    }}
-                  />
-                  )}
-                  {
+                              </div>
+                          </div>
+                          )}
+                          {(this.state.tab === 'CREATE' || noTags) && (
+                          <CreateEditTag
+                            projectId={this.props.projectId} onComplete={(tag) => {
+                                this.selectTag(tag);
+                                this.setState({ tab: 'SELECT' });
+                            }}
+                          />
+                          )}
+                          {
                   this.state.tab === 'EDIT' && (
                   <CreateEditTag
                     tagsSaving={tagsSaving}
@@ -357,8 +356,8 @@ class TheComponent extends PureComponent {
                   />
                   )
                   }
-              </InlineModal>
-                      )}
+                      </InlineModal>
+                  )}
               </Permission>
           </div>
 

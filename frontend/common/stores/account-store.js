@@ -1,12 +1,10 @@
-import OrganisationStore from './organisation-store';
-import ConfigStore from './config-store';
 import PermissionsStore from './permissions-store';
 
 const BaseStore = require('./base/_store');
 const data = require('../data/base/_data');
 
 const controller = {
-    register: ({ email, password, first_name, last_name, marketing_consent_given, organisation_name = 'Default Organisation' }, isInvite) => {
+    register: ({ email, password, first_name, last_name, marketing_consent_given }) => {
         store.saving();
         data.post(`${Project.api}auth/users/`, {
             email,
@@ -67,7 +65,7 @@ const controller = {
             new_password: new_password1,
             re_new_password: new_password2,
         })
-            .then((res) => {
+            .then(() => {
                 store.saved();
             })
             .catch(e => API.ajaxHandler(store, e));
@@ -90,7 +88,7 @@ const controller = {
             password,
         })
             .then((res) => {
-                const isDemo = email == Project.demoAccount.email;
+                const isDemo = email === Project.demoAccount.email;
                 store.isDemo = isDemo;
                 if (isDemo) {
                     AsyncStorage.setItem('isDemo', `${isDemo}`);
@@ -212,7 +210,7 @@ const controller = {
         data.put(`${Project.api}organisations/${store.organisation.id}/`, org)
             .then((res) => {
                 const idx = _.findIndex(store.model.organisations, { id: store.organisation.id });
-                if (idx != -1) {
+                if (idx !== -1) {
                     store.model.organisations[idx] = res;
                     store.organisation = res;
                 }
@@ -246,8 +244,18 @@ const controller = {
     setUser(user) {
         if (user) {
             store.model = user;
-            store.organisation = user && user.organisations && user.organisations[0];
-
+            if (user && user.organisations) {
+                store.organisation = user.organisations[0];
+                let cookiedID = API.getCookie("organisation");
+                if (cookiedID) {
+                    let foundOrganisation = user.organisations.find((v)=>{
+                        return `${v.id}` === cookiedID
+                    })
+                    if (foundOrganisation) {
+                        store.organisation = foundOrganisation;
+                    }
+                }
+            }
 
             if (projectOverrides.delighted) {
                 delighted.survey({
@@ -287,7 +295,7 @@ const controller = {
     deleteOrganisation: () => {
         API.trackEvent(Constants.events.DELETE_ORGANISATION);
         data.delete(`${Project.api}organisations/${store.organisation.id}/`)
-            .then((res) => {
+            .then(() => {
                 store.model.organisations = _.filter(store.model.organisations, org => org.id !== store.organisation.id);
                 store.organisation = store.model.organisations.length ? store.model.organisations[0] : null;
                 store.trigger('removed');
@@ -354,11 +362,11 @@ const store = Object.assign({}, BaseStore, {
         return id && store.getOrganisationRole(id) === 'ADMIN';
     },
     getPlans() {
-        if (!store.model) return []
+        if (!store.model) return [];
         return _.filter(store.model.organisations.map(org => org.subscription && org.subscription.plan), plan => !!plan);
     },
     getActiveOrgPlan() {
-        return store.organisation && store.organisation.subscription && store.organisation.subscription.plan
+        return store.organisation && store.organisation.subscription && store.organisation.subscription.plan;
     },
     getDate() {
         return store.getOrganisation() && store.getOrganisation().created_date;

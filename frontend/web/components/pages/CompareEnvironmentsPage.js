@@ -18,7 +18,7 @@ class TheComponent extends Component {
     constructor(props) {
         super();
         this.state = {
-            tab:0
+            tab: 0,
         };
     }
 
@@ -26,16 +26,18 @@ class TheComponent extends Component {
     render() {
         return (
             <div className="app-container container">
-                <Tabs      value={this.state.tab}
-                           onChange={(tab) => {
-                               this.setState({ tab });
-                           }}>
-                    <TabItem tabLabel={`Environments`}>
+                <Tabs
+                  value={this.state.tab}
+                  onChange={(tab) => {
+                      this.setState({ tab });
+                  }}
+                >
+                    <TabItem tabLabel="Environments">
                         <div className="mt-2">
                             <CompareEnvironments projectId={this.props.match.params.projectId} environmentId={this.props.match.params.environmentId}/>
                         </div>
                     </TabItem>
-                    <TabItem tabLabel={`Feature Values`}>
+                    <TabItem tabLabel="Feature Values">
                         <div className="mt-2">
                             <CompareFeatures projectId={this.props.match.params.projectId}/>
                         </div>

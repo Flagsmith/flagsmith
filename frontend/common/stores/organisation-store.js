@@ -6,19 +6,15 @@ const controller = {
 
     invalidateInviteLink: (link) => {
         const id = AccountStore.getOrganisation().id;
-        data.delete(`${Project.api}organisations/${id}/invite-links/${link.id}`).then((links) => {
-            return data.post(`${Project.api}organisations/${id}/invite-links/`, {
-                role: 'ADMIN',
-            })
-        }).then(()=>{
-            return data.get(`${Project.api}organisations/${id}/invite-links/`).then((links) => {
-                store.model.inviteLinks = links;
-                store.loaded();
-            })
-        })
+        data.delete(`${Project.api}organisations/${id}/invite-links/${link.id}`).then(() => data.post(`${Project.api}organisations/${id}/invite-links/`, {
+            role: 'ADMIN',
+        })).then(() => data.get(`${Project.api}organisations/${id}/invite-links/`).then((links) => {
+            store.model.inviteLinks = links;
+            store.loaded();
+        }));
     },
     getOrganisation: (id, force) => {
-        if (id != store.id || force) {
+        if (id !== store.id || force) {
             store.id = id;
             store.loading();
 
@@ -27,7 +23,7 @@ const controller = {
                 data.get(`${Project.api}organisations/${id}/users/`),
             ].concat(AccountStore.getOrganisationRole(id) === 'ADMIN' ? [
                 data.get(`${Project.api}organisations/${id}/invites/`),
-                data.get(`${Project.api}organisations/${id}/get-subscription-metadata/`).catch(()=>null),
+                data.get(`${Project.api}organisations/${id}/get-subscription-metadata/`).catch(() => null),
 
             ] : [])).then((res) => {
                 if (id === store.id) {
@@ -44,7 +40,7 @@ const controller = {
                         });
                     }
                     if (projectOverrides.hideInviteLinks) {
-                        store.loaded()
+                        store.loaded();
                     } else {
                         data.get(`${Project.api}organisations/${id}/invite-links/`).then((links) => {
                             store.model.inviteLinks = links;
@@ -73,7 +69,7 @@ const controller = {
                         .then((res) => {
                             projects[i].environments = _.sortBy(res.results, 'name');
                         })
-                        .catch((res) => {
+                        .catch(() => {
                             projects[i].environments = [];
                         })))
                         .then(() => {
@@ -93,12 +89,10 @@ const controller = {
 
     createProject: (name) => {
         store.saving();
-        const createSampleUser = (res, envName, project) => {
-            return data.post(`${Project.api}environments/${res.api_key}/${Utils.getIdentitiesEndpoint(project)}/`, {
-                environment: res.id,
-                identifier: `${envName}_user_123456`,
-            }).then(() => res);
-        }
+        const createSampleUser = (res, envName, project) => data.post(`${Project.api}environments/${res.api_key}/${Utils.getIdentitiesEndpoint(project)}/`, {
+            environment: res.id,
+            identifier: `${envName}_user_123456`,
+        }).then(() => res);
         if (AccountStore.model.organisations.length === 1 && (!store.model.projects || !store.model.projects.length)) {
             API.trackEvent(Constants.events.CREATE_FIRST_PROJECT);
         }
@@ -126,7 +120,7 @@ const controller = {
         data.put(`${Project.api}organisations/${store.id}/`, { name })
             .then((res) => {
                 const idx = _.findIndex(store.model.organisations, { id: store.organisation.id });
-                if (idx != -1) {
+                if (idx !== -1) {
                     store.model.organisations[idx] = res;
                     store.organisation = res;
                 }
@@ -136,7 +130,7 @@ const controller = {
     deleteProject: (id) => {
         store.saving();
         if (store.model) {
-            store.model.projects = _.filter(store.model.projects, p => p.id != id);
+            store.model.projects = _.filter(store.model.projects, p => p.id !== id);
             store.model.keyedProjects = _.keyBy(store.model.projects, 'id');
         }
         API.trackEvent(Constants.events.REMOVE_PROJECT);
@@ -162,7 +156,6 @@ const controller = {
             store.saved();
             toast('Invite(s) sent successfully');
         }).catch((e) => {
-            console.error('Failed to send invite(s)', e);
             store.saved();
             toast(`Failed to send invite(s). ${e && e.error ? e.error : 'Please try again later'}`);
         });
@@ -198,7 +191,6 @@ const controller = {
                 toast('Invite resent successfully');
             })
             .catch((e) => {
-                console.error('Failed to resend invite', e);
                 toast(`Failed to resend invite. ${e && e.error ? e.error : 'Please try again later'}`);
             });
     },
@@ -213,18 +205,23 @@ const controller = {
                 }
             })
             .catch((e) => {
-                console.error('Failed to update user role', e);
                 toast(`Failed to update this user's role. ${e && e.error ? e.error : 'Please try again later'}`);
             });
     },
     getInfluxData: (id) => {
+        console.log("GETTING INFLUX")
         data.get(`${Project.api}organisations/${id}/influx-data/`)
             .then((resp) => {
                 API.trackEvent(Constants.events.GET_INFLUX_DATA);
+                if(!store.model) {
+                    store.model = {}
+                }
                 store.model.influx_data = resp;
+                console.log("GETTING INFLUX DONE")
                 store.saved();
             })
             .catch((e) => {
+                // eslint-disable-next-line
                 console.error('Failed to get influx data', e);
             });
     },
@@ -233,7 +230,7 @@ const controller = {
 };
 
 
-var store = Object.assign({}, BaseStore, {
+const store = Object.assign({}, BaseStore, {
     id: 'account',
     getProject(id) {
         return store.model && store.model.keyedProjects && store.model.keyedProjects[id];

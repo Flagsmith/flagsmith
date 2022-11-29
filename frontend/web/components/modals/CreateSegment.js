@@ -229,17 +229,17 @@ const CreateSegment = class extends Component {
                         </label>
                         <Flex>
                             <Input
-                                ref={e => this.input = e}
-                                data-test="segmentID"
-                                name="id"
-                                id="segmentID"
-                                readOnly={isEdit}
-                                maxLength={SEGMENT_ID_MAXLENGTH}
-                                value={name}
-                                onChange={e => this.setState({ name: Format.enumeration.set(Utils.safeParseEventValue(e)).toLowerCase() })}
-                                isValid={name && name.length}
-                                type="text" title={isEdit ? 'ID' : 'ID*'}
-                                placeholder="E.g. power_users"
+                              ref={e => this.input = e}
+                              data-test="segmentID"
+                              name="id"
+                              id="segmentID"
+                              readOnly={isEdit}
+                              maxLength={SEGMENT_ID_MAXLENGTH}
+                              value={name}
+                              onChange={e => this.setState({ name: Format.enumeration.set(Utils.safeParseEventValue(e)).toLowerCase() })}
+                              isValid={name && name.length}
+                              type="text" title={isEdit ? 'ID' : 'ID*'}
+                              placeholder="E.g. power_users"
                             />
                         </Flex>
 
@@ -326,22 +326,24 @@ const CreateSegment = class extends Component {
         const { environmentId } = this.state;
 
         return (
-            <div className="mt-2 mr-3 ml-3">
+            <div>
                 {isEdit && !this.props.condensed ? (
                     <Tabs value={this.state.tab} onChange={tab => this.setState({ tab })}>
                         <TabItem tabLabel="Rules">
-                            <div className="mt-2">
+                            <div className="mt-4 mr-3 ml-3">
                                 {Tab1}
                             </div>
                         </TabItem>
                         {this.props.hasFeature('segment_associated_features') && (
                             <TabItem tabLabel="Features">
-                                <AssociatedSegmentOverrides feature={this.props.segment.feature} projectId={this.props.projectId} id={this.props.segment.id}/>
+                                <div className="mt-4 mr-3 ml-3">
+                                    <AssociatedSegmentOverrides feature={this.props.segment.feature} projectId={this.props.projectId} id={this.props.segment.id}/>
+                                </div>
                             </TabItem>
                         )}
 
                         <TabItem tabLabel="Users">
-                            <div className="mt-4">
+                            <div className="mt-4 mr-3 ml-3">
                                 <InfoMessage>
                                     This shows allows you to see whether identities are part of the segment.
                                 </InfoMessage>
@@ -418,7 +420,7 @@ const CreateSegment = class extends Component {
                             </div>
                         </TabItem>
                     </Tabs>
-                ) : Tab1}
+                ) :<div className="mt-4 mr-3 ml-3">{Tab1}</div>}
             </div>
         );
     }

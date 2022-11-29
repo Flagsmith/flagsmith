@@ -27,8 +27,8 @@ def test_trigger_environment_update_messages_from_audit_log_with_environment(
     realtime_enabled_project_environment_one, mocker, realtime_enabled_project
 ):
     # Given
-    send_environment_update_message_using_environment = mocker.patch(
-        "audit.signals.send_environment_update_message_using_environment"
+    send_environment_update_message_for_environment = mocker.patch(
+        "audit.signals.send_environment_update_message_for_environment"
     )
     audit_log = AuditLog(
         environment=realtime_enabled_project_environment_one,
@@ -39,7 +39,7 @@ def test_trigger_environment_update_messages_from_audit_log_with_environment(
     trigger_environment_update_messages(sender=AuditLog, instance=audit_log)
 
     # Then
-    send_environment_update_message_using_environment.assert_called_once_with(
+    send_environment_update_message_for_environment.assert_called_once_with(
         realtime_enabled_project_environment_one
     )
 
@@ -67,8 +67,8 @@ def test_trigger_environment_update_messages_from_audit_log_with_project(
     mocker,
 ):
     # Given
-    send_environment_update_message_using_project = mocker.patch(
-        "audit.signals.send_environment_update_message_using_project"
+    send_environment_update_message_for_project = mocker.patch(
+        "audit.signals.send_environment_update_message_for_project"
     )
     audit_log = AuditLog(project=realtime_enabled_project)
 
@@ -76,7 +76,7 @@ def test_trigger_environment_update_messages_from_audit_log_with_project(
     trigger_environment_update_messages(sender=AuditLog, instance=audit_log)
 
     # Then
-    send_environment_update_message_using_project.assert_called_once_with(
+    send_environment_update_message_for_project.assert_called_once_with(
         realtime_enabled_project
     )
 
@@ -104,11 +104,11 @@ def test_trigger_environment_update_messages_from_audit_log_with_environment_and
     realtime_enabled_project, realtime_enabled_project_environment_one, mocker
 ):
     # Given
-    send_environment_update_message_using_environment = mocker.patch(
-        "audit.signals.send_environment_update_message_using_environment"
+    send_environment_update_message_for_environment = mocker.patch(
+        "audit.signals.send_environment_update_message_for_environment"
     )
-    send_environment_update_message_using_project = mocker.patch(
-        "audit.signals.send_environment_update_message_using_project"
+    send_environment_update_message_for_project = mocker.patch(
+        "audit.signals.send_environment_update_message_for_project"
     )
     audit_log = AuditLog(
         environment=realtime_enabled_project_environment_one,
@@ -119,7 +119,7 @@ def test_trigger_environment_update_messages_from_audit_log_with_environment_and
     trigger_environment_update_messages(sender=AuditLog, instance=audit_log)
 
     # Then
-    send_environment_update_message_using_environment.assert_called_once_with(
+    send_environment_update_message_for_environment.assert_called_once_with(
         realtime_enabled_project_environment_one
     )
-    send_environment_update_message_using_project.assert_not_called()
+    send_environment_update_message_for_project.assert_not_called()

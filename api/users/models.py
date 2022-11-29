@@ -297,9 +297,11 @@ class FFAdminUser(LifecycleModel, AbstractUser):
             | Q(grouppermission__admin=True)
         )
 
-        return Environment.objects.filter(
-            Q(project=project) & Q(user_query | group_query)
-        ).distinct()
+        return (
+            Environment.objects.filter(Q(project=project) & Q(user_query | group_query))
+            .distinct()
+            .defer("description")
+        )
 
     @staticmethod
     def send_alert_to_admin_users(subject, message):
