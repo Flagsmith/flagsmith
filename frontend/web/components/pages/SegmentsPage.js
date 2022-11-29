@@ -2,6 +2,7 @@ import React, { Component, Fragment } from 'react';
 import CreateSegmentModal from '../modals/CreateSegment';
 import ConfirmRemoveSegment from '../modals/ConfirmRemoveSegment';
 import SegmentListStore from '../../../common/stores/segment-list-store';
+import _data from "../../../common/data/base/_data";
 
 const HowToUseSegmentsMessage = () => (
     <div className="mt-2">
@@ -194,7 +195,9 @@ const SegmentsPage = class extends Component {
                                                               renderRow={({ name, id, enabled, feature, description, type }, i) => {
                                                                   if (this.state.preselect === `${id}`) {
                                                                       this.state.preselect = null;
-                                                                      this.editSegment(_.find(segments, { id }), !permission);
+                                                                      _data.get(`${Project.api}projects/${projectId}/segments/${Utils.fromParam().id}`).then((segment)=>{
+                                                                          this.editSegment(segment, !permission)
+                                                                      })
                                                                   }
                                                                   return (
                                                                       <Row className="list-item clickable" key={id} space>
