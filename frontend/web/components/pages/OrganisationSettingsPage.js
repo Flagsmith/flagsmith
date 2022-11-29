@@ -565,6 +565,17 @@ const OrganisationSettingsPage = class extends Component {
 
                                                                         <Tabs inline transparent uncontrolled>
                                                                             <TabItem tabLabel="Members">
+
+                                                                                <Row space className="mt-5">
+                                                                                    <h3 className="m-b-0">Team Members</h3>
+                                                                                    <Button
+                                                                                        style={{ width: 180 }}
+                                                                                        id="btn-invite" onClick={() => openModal('Invite Users',
+                                                                                        <InviteUsersModal/>)}
+                                                                                        type="button">
+                                                                                        Invite members
+                                                                                    </Button>
+                                                                                </Row>
                                                                             <FormGroup className="mt-4">
                                                                                 {paymentsEnabled && !isLoading && (
                                                                                     <p>
