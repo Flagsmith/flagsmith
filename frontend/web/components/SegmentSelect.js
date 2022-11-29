@@ -81,7 +81,7 @@ class FlagSelect extends Component {
                     Option: ({ innerRef, innerProps, children, data }) => (
                         <div ref={innerRef} {...innerProps} className="react-select__option">
                             {children}{!!data.feature && (
-                            <div className="unread ml-2 px-2">`
+                            <div className="unread ml-2 px-2">
                                 Feature-Specific
                             </div>
                         )}

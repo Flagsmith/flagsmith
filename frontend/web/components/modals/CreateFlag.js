@@ -716,6 +716,7 @@ const CreateFlag = class extends Component {
                                                                                                 {this.props.segmentOverrides ? (
                                                                                                     <SegmentOverrides
                                                                                                       readOnly={noPermissions}
+                                                                                                      showEditSegment
                                                                                                       showCreateSegment={this.state.showCreateSegment}
                                                                                                       setShowCreateSegment={showCreateSegment => this.setState({ showCreateSegment })}
                                                                                                       feature={projectFlag.id}

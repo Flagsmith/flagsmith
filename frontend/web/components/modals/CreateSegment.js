@@ -46,9 +46,9 @@ const CreateSegment = class extends Component {
 
         AppActions.getIdentities(props.environmentId);
 
-        this.listenTo(SegmentStore, 'saved', () => {
+        this.listenTo(SegmentStore, 'saved', (segment) => {
             if (this.props.onComplete) {
-                this.props.onComplete();
+                this.props.onComplete(segment);
             } else {
                 this.close();
             }

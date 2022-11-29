@@ -118,6 +118,14 @@ const SegmentOverrideInner = class Override extends React.Component {
                                 <RemoveIcon/>
                             </button>
                             )}
+                            {this.props.showEditSegment && (
+                                <ButtonLink
+                                    target="_blank"
+                                    href={`${document.location.origin}/project/${this.props.projectId}/environment/${this.props.environmentId}/segments?id=${v.segment}`}
+                                    className="ml-2">
+                                    Edit Segment
+                                </ButtonLink>
+                            )}
                         </Row>
                     </div>
                 </Row>
@@ -221,7 +229,7 @@ const SegmentOverrideInner = class Override extends React.Component {
 const SegmentOverride = ConfigProvider(SortableElement(
     SegmentOverrideInner,
 ));
-const SegmentOverrideListInner = ({ disabled, id, name, multivariateOptions, onSortEnd, items, controlValue, confirmRemove, toggle, setValue, setVariations, readOnly }) => {
+const SegmentOverrideListInner = ({ disabled, id, name, showEditSegment, environmentId, projectId, multivariateOptions, onSortEnd, items, controlValue, confirmRemove, toggle, setValue, setVariations, readOnly }) => {
     const InnerComponent = id || disabled ? SegmentOverrideInner : SegmentOverride;
     return (
         <div>
@@ -232,6 +240,9 @@ const SegmentOverrideListInner = ({ disabled, id, name, multivariateOptions, onS
                   segment={value.segment}
                   onSortEnd={onSortEnd}
                   disabled={disabled}
+                  showEditSegment={showEditSegment}
+                  environmentId={environmentId}
+                  projectId={projectId}
                   multivariateOptions={multivariateOptions}
                   key={value.segment.name}
                   index={index}
@@ -244,9 +255,6 @@ const SegmentOverrideListInner = ({ disabled, id, name, multivariateOptions, onS
                       setValue(index, value);
                   }}
                   setVariations={(i, override, mvOptions) => {
-                      // multivariate_feature_option: 2228
-                      // multivariate_feature_option_index: 0
-                      // percentage_allocation: 100
                       const newValue = _.cloneDeep(mvOptions);
                       newValue[i] = {
                           ...newValue[i],
@@ -396,10 +404,8 @@ class TheComponent extends Component {
                                   if (this.state.selectedSegment) {
                                       this.props.setShowCreateSegment(false);
                                   } else {
-                                      const id = document.getElementById('segmentID').value;
-                                      const selectedSegment = _.sortBy(segmentOptions, v => -v.value).find(v => v.label === id);
                                       this.props.setShowCreateSegment(false);
-                                      this.setState({ selectedSegment }, this.addItem);
+                                      this.setState({ selectedSegment: {label:segment.name, value:segment.id} }, this.addItem);
                                   }
                               }}
                               onCancel={() => {
@@ -437,6 +443,9 @@ class TheComponent extends Component {
                               toggle={this.toggle}
                               setValue={this.setValue}
                               readOnly={this.props.readOnly}
+                              showEditSegment={this.props.showEditSegment}
+                              environmentId={this.props.environmentId}
+                              projectId={this.props.projectId}
                               items={value.map(v => (
                                   {
                                       ...v,
