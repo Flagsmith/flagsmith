@@ -6,6 +6,13 @@ from simple_history.signals import (
 
 
 class BaseAppConfig(AppConfig):
+    """
+    A Base AppConfig class that all apps should inherit from
+
+    It ensures that the correct signals are attached for handling the writing of AuditLog records
+    based on the creation of HistoricalRecords (as per functionality in django-simple-history).
+    """
+
     def ready(self):
         from core.signals import (
             add_master_api_key,
