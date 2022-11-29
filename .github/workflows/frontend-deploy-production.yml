@@ -72,4 +72,5 @@ jobs:
                   npm ci --only=prod
                   npm run env
                   npm run bundle
+                  echo ${{ github.sha }} > CI_COMMIT_SHA
                   vercel --prod --token ${{ secrets.VERCEL_TOKEN }}
