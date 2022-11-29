@@ -27,6 +27,7 @@ class CustomUserCreateSerializer(UserCreateSerializer):
             "marketing_consent_given",
         )
         read_only_fields = ("is_active",)
+        write_only_fields = ("sign_up_type",)
 
     def validate(self, attrs):
         attrs = super().validate(attrs)

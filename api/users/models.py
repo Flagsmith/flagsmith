@@ -44,6 +44,12 @@ logger = logging.getLogger(__name__)
 mailer_lite = MailerLite()
 
 
+class SignUpType(models.TextChoices):
+    NO_INVITE = "NO_INVITE"
+    INVITE_EMAIL = "INVITE_EMAIL"
+    INVITE_LINK = "INVITE_LINK"
+
+
 class UserManager(BaseUserManager):
     """Define a model manager for User model with no username field."""
 
@@ -97,9 +103,12 @@ class FFAdminUser(LifecycleModel, AbstractUser):
         default=False,
         help_text="Determines whether the user has agreed to receive marketing mails",
     )
+    sign_up_type = models.CharField(
+        choices=SignUpType.choices, max_length=100, blank=True, null=True
+    )
 
     USERNAME_FIELD = "email"
-    REQUIRED_FIELDS = ["first_name", "last_name"]
+    REQUIRED_FIELDS = ["first_name", "last_name", "sign_up_type"]
 
     class Meta:
         ordering = ["id"]

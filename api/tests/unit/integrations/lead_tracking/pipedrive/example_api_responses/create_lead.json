@@ -1,0 +1,22 @@
+{
+  "success": true,
+  "data": {
+    "id": "11c18740-659d-11ed-b6e9-ab3d83dc63a5",
+    "title": "Johnny Bravo",
+    "owner_id": 13603501,
+    "creator_id": 13603501,
+    "label_ids": [],
+    "value": null,
+    "expected_close_date": null,
+    "person_id": null,
+    "organization_id": 1,
+    "is_archived": false,
+    "source_name": "API",
+    "was_seen": false,
+    "next_activity_id": null,
+    "add_time": "2022-11-16T10:54:40.052Z",
+    "update_time": "2022-11-16T10:54:40.052Z",
+    "visible_to": "3",
+    "cc_email": "testing124+10837345+lead3caRemmgzkVDQkULxFzUHk@pipedrivemail.com"
+  }
+}

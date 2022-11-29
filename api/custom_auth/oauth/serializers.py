@@ -6,6 +6,7 @@ from rest_framework.authtoken.models import Token
 from rest_framework.exceptions import PermissionDenied
 
 from organisations.invites.models import Invite
+from users.models import SignUpType
 
 from ..constants import USER_REGISTRATION_WITHOUT_INVITE_ERROR_MESSAGE
 from .github import GithubUser
@@ -19,6 +20,14 @@ class OAuthLoginSerializer(serializers.Serializer):
     access_token = serializers.CharField(
         required=True,
         help_text="Code or access token returned from the FE interaction with the third party login provider.",
+    )
+    sign_up_type = serializers.ChoiceField(
+        required=False,
+        allow_null=True,
+        allow_blank=True,
+        choices=SignUpType.choices,
+        help_text="Provide information about how the user signed up (i.e. via invite or not)",
+        write_only=True,
     )
 
     class Meta:
@@ -54,7 +63,9 @@ class OAuthLoginSerializer(serializers.Serializer):
             ):
                 raise PermissionDenied(USER_REGISTRATION_WITHOUT_INVITE_ERROR_MESSAGE)
 
-            return UserModel.objects.create(**user_data)
+            return UserModel.objects.create(
+                **user_data, sign_up_type=self.validated_data.get("sign_up_type")
+            )
 
         return existing_user
 
