@@ -51,10 +51,6 @@ RELATED_OBJECT_TYPES = ((tag.name, tag.value) for tag in RelatedObjectType)
 class AuditLog(LifecycleModel):
     created_date = models.DateTimeField("DateCreated", auto_now_add=True)
 
-    # TODO:
-    #  - work out how to migrate this properly
-    #  - can we select_related across this field?
-
     project = models.ForeignKey(
         Project, related_name="audit_logs", null=True, on_delete=models.DO_NOTHING
     )
