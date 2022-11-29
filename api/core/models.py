@@ -51,6 +51,18 @@ class BaseHistoricalModel(models.Model):
 
 
 class AbstractBaseAuditableModel(models.Model):
+    """
+    A base Model class that all models we want to be included in the audit log should inherit from.
+
+    Some field descriptions:
+
+     :history_record_class_path: the python class path to the HistoricalRecord model class.
+        e.g. features.models.HistoricalFeature
+     :related_object_type: a RelatedObjectType enum representing the related object type of the model.
+        Note that this can be overridden by the `get_related_object_type` method in cases where it's
+        different for certain scenarios.
+    """
+
     # TODO: can we make excluded fields dynamic?
     history = HistoricalRecords(
         bases=[BaseHistoricalModel], excluded_fields=["uuid"], inherit=True
@@ -63,12 +75,15 @@ class AbstractBaseAuditableModel(models.Model):
         abstract = True
 
     def get_create_log_message(self, history_instance) -> typing.Optional[str]:
+        """Override if audit log records should be written when model is created"""
         return None
 
     def get_update_log_message(self, history_instance) -> typing.Optional[str]:
+        """Override if audit log records should be written when model is updated"""
         return None
 
     def get_delete_log_message(self, history_instance) -> typing.Optional[str]:
+        """Override if audit log records should be written when model is deleted"""
         return None
 
     def get_environment_and_project(
@@ -82,19 +97,28 @@ class AbstractBaseAuditableModel(models.Model):
         return environment, project
 
     def get_extra_audit_log_kwargs(self, history_instance) -> dict:
+        """Add extra kwargs to the creation of the AuditLog record"""
         return {}
 
     def get_audit_log_author(self, history_instance) -> typing.Optional["FFAdminUser"]:
+        """Override the AuditLog author (in cases where history_user isn't populated for example)"""
         return None
 
     def get_audit_log_related_object_id(self, history_instance) -> typing.Optional[int]:
+        """Override the related object ID in cases where it shouldn't be self.id"""
         return self.id
 
     def get_audit_log_related_object_type(self, history_instance) -> RelatedObjectType:
+        """
+        Override the related object type to account for writing audit logs for related objects
+        when certain events happen on this model.
+        """
         return self.related_object_type
 
     def _get_environment(self) -> typing.Optional["Environment"]:
+        """Return the related environment for this model."""
         return None
 
     def _get_project(self) -> typing.Optional["Project"]:
+        """Return the related project for this model."""
         return None
