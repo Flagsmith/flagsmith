@@ -96,7 +96,6 @@ class AuditLog(LifecycleModel):
 
     @property
     def history_record(self):
-        # TODO: add tests
         klass = self.get_history_record_model_class(self.history_record_class_path)
         return klass.objects.get(id=self.history_record_id)
 
@@ -104,7 +103,6 @@ class AuditLog(LifecycleModel):
     def get_history_record_model_class(
         history_record_class_path: str,
     ) -> typing.Type[Model]:
-        # TODO: add tests
         module_path, class_name = history_record_class_path.rsplit(".", maxsplit=1)
         module = import_module(module_path)
         return getattr(module, class_name)

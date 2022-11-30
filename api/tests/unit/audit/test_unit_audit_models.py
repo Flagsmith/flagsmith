@@ -88,3 +88,62 @@ def test_data_dog_track_event_called_on_audit_log_saved_when_correct_type(
 
     # Then datadog track even triggered for each AuditLog
     assert 3 == datadog_mock.call_count
+
+
+def test_audit_log_get_history_record_model_class(mocker):
+    # Given
+    module_name = "module"
+
+    mocked_import_module = mocker.patch("audit.models.import_module")
+
+    class DummyHistoricalRecordModel:
+        pass
+
+    class_path = f"{module_name}.{DummyHistoricalRecordModel.__name__}"
+
+    def import_module_side_effect(m):
+        if m == module_name:
+            return mocker.MagicMock(
+                **{DummyHistoricalRecordModel.__name__: DummyHistoricalRecordModel}
+            )
+
+        raise ImportError()
+
+    mocked_import_module.side_effect = import_module_side_effect
+
+    # When
+    klass = AuditLog.get_history_record_model_class(class_path)
+
+    # Then
+    assert klass == DummyHistoricalRecordModel
+
+
+def test_audit_log_history_record(mocker):
+    # Given
+    module_name = "app.models"
+    model_class_name = "MyModel"
+
+    audit_log = AuditLog(
+        history_record_id=1,
+        history_record_class_path=f"{module_name}.{model_class_name}",
+    )
+
+    # Since we're using a lot of mocking here, I am explaining the setup.
+    # In summary, here we are simulating a django model existing at app.models.MyModel. We mock the
+    # import_module function to return another magic mock which has the MyModel attribute. Then we're
+    # mocking the django ORM to get a mock model object returned at the end of it that we can use
+    # in our assertions below.
+    mocked_model = mocker.MagicMock()
+    mocked_model_class = mocker.MagicMock()
+    mocked_module = mocker.MagicMock(**{model_class_name: mocked_model_class})
+    mocker.patch("audit.models.import_module", return_value=mocked_module)
+    mocked_model_class.objects.get.return_value = mocked_model
+
+    # When
+    record = audit_log.history_record
+
+    # Then
+    assert record == mocked_model
+    mocked_model_class.objects.get.assert_called_once_with(
+        id=audit_log.history_record_id
+    )
