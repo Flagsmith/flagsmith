@@ -1,4 +1,4 @@
-from core.models import AbstractBaseAuditableModel
+from core.models import _AbstractBaseAuditableModel
 from simple_history.models import HistoricalRecords
 
 from audit import tasks
@@ -6,7 +6,7 @@ from users.models import FFAdminUser
 
 
 def create_audit_log_from_historical_record(
-    instance: AbstractBaseAuditableModel,
+    instance: _AbstractBaseAuditableModel,
     history_user: FFAdminUser,
     history_instance,  # TODO: typing
     **kwargs,

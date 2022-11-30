@@ -2,7 +2,10 @@ import logging
 import typing
 
 from core.helpers import get_current_site_url
-from core.models import AbstractBaseAuditableModel, AbstractBaseExportableModel
+from core.models import (
+    AbstractBaseExportableModel,
+    abstract_base_auditable_model_factory,
+)
 from django.conf import settings
 from django.core.mail import send_mail
 from django.db import models
@@ -40,7 +43,9 @@ logger = logging.getLogger(__name__)
 
 
 class ChangeRequest(
-    LifecycleModelMixin, AbstractBaseExportableModel, AbstractBaseAuditableModel
+    LifecycleModelMixin,
+    AbstractBaseExportableModel,
+    abstract_base_auditable_model_factory(["uuid"]),
 ):
     related_object_type = RelatedObjectType.CHANGE_REQUEST
     history_record_class_path = "features.workflows.core.models.HistoricalChangeRequest"

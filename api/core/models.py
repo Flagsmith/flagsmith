@@ -50,7 +50,7 @@ class BaseHistoricalModel(models.Model):
         abstract = True
 
 
-class AbstractBaseAuditableModel(models.Model):
+class _AbstractBaseAuditableModel(models.Model):
     """
     A base Model class that all models we want to be included in the audit log should inherit from.
 
@@ -62,11 +62,6 @@ class AbstractBaseAuditableModel(models.Model):
         Note that this can be overridden by the `get_related_object_type` method in cases where it's
         different for certain scenarios.
     """
-
-    # TODO: can we make excluded fields dynamic?
-    history = HistoricalRecords(
-        bases=[BaseHistoricalModel], excluded_fields=["uuid"], inherit=True
-    )
 
     history_record_class_path = None
     related_object_type = None
@@ -123,3 +118,19 @@ class AbstractBaseAuditableModel(models.Model):
     def _get_project(self) -> typing.Optional["Project"]:
         """Return the related project for this model."""
         return None
+
+
+def abstract_base_auditable_model_factory(
+    historical_records_excluded_fields: typing.List[str] = None,
+) -> typing.Type[_AbstractBaseAuditableModel]:
+    class Base(_AbstractBaseAuditableModel):
+        history = HistoricalRecords(
+            bases=[BaseHistoricalModel],
+            excluded_fields=historical_records_excluded_fields or [],
+            inherit=True,
+        )
+
+        class Meta:
+            abstract = True
+
+    return Base

@@ -6,7 +6,10 @@ import typing
 import uuid
 from copy import deepcopy
 
-from core.models import AbstractBaseAuditableModel, AbstractBaseExportableModel
+from core.models import (
+    AbstractBaseExportableModel,
+    abstract_base_auditable_model_factory,
+)
 from django.core.exceptions import (
     NON_FIELD_ERRORS,
     ObjectDoesNotExist,
@@ -67,7 +70,9 @@ if typing.TYPE_CHECKING:
 
 
 class Feature(
-    CustomLifecycleModelMixin, AbstractBaseExportableModel, AbstractBaseAuditableModel
+    CustomLifecycleModelMixin,
+    AbstractBaseExportableModel,
+    abstract_base_auditable_model_factory(["uuid"]),
 ):
     name = models.CharField(max_length=2000)
     created_date = models.DateTimeField("DateCreated", auto_now_add=True)
@@ -167,7 +172,9 @@ def get_next_segment_priority(feature):
 
 
 class FeatureSegment(
-    AbstractBaseExportableModel, AbstractBaseAuditableModel, OrderedModelBase
+    AbstractBaseExportableModel,
+    abstract_base_auditable_model_factory(["uuid"]),
+    OrderedModelBase,
 ):
     history_record_class_path = "features.models.HistoricalFeatureSegment"
     related_object_type = RelatedObjectType.FEATURE
@@ -281,7 +288,9 @@ class FeatureSegment(
 
 
 class FeatureState(
-    LifecycleModelMixin, AbstractBaseExportableModel, AbstractBaseAuditableModel
+    LifecycleModelMixin,
+    AbstractBaseExportableModel,
+    abstract_base_auditable_model_factory(["uuid"]),
 ):
     history_record_class_path = "features.models.HistoricalFeatureState"
     related_object_type = RelatedObjectType.FEATURE_STATE
