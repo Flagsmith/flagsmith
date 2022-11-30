@@ -412,8 +412,6 @@ class TheComponent extends Component {
                                   this.props.setShowCreateSegment(false);
                               }}
                               condensed
-                              isEdit={!!this.state.selectedSegment}
-                              segment={this.state.selectedSegment}
                               feature={this.props.feature}
                               environmentId={this.props.environmentId}
                               projectId={this.props.projectId}

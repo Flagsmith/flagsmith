@@ -1,6 +1,6 @@
 import React from 'react';
 import { Component } from 'react';
-import Select, { components } from 'react-select';
+import { components } from 'react-select';
 import _data from '../../common/data/base/_data';
 const PAGE_SIZE = 100;
 class FlagSelect extends Component {

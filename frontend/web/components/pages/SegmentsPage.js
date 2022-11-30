@@ -54,30 +54,31 @@ const SegmentsPage = class extends Component {
     };
 
 
-    editSegment = (segment, readOnly) => {
+    editSegment = (id, readOnly) => {
         API.trackEvent(Constants.events.VIEW_SEGMENT);
         history.replaceState(
             {},
             null,
-            `${document.location.pathname}?id=${segment.id}`,
+            `${document.location.pathname}?id=${id}`,
         );
-        openModal(`Edit Segment - ${segment.name}`, <CreateSegmentModal
-          segment={segment}
-          isEdit
-          readOnly={readOnly}
-          environmentId={this.props.match.params.environmentId}
-          projectId={this.props.match.params.projectId}
-          projectFlag={segment}
-        />, null, {
-            onClose: () => {
-                history.replaceState(
-                    {},
-                    null,
-                    `${document.location.pathname}`,
-                );
-            },
-            className: 'fade side-modal create-segment-modal',
-        });
+
+            openModal(`Edit Segment`, <CreateSegmentModal
+                segment={id}
+                isEdit
+                readOnly={readOnly}
+                environmentId={this.props.match.params.environmentId}
+                projectId={this.props.match.params.projectId}
+            />, null, {
+                onClose: () => {
+                    history.replaceState(
+                        {},
+                        null,
+                        `${document.location.pathname}`,
+                    );
+                },
+                className: 'fade side-modal create-segment-modal',
+            });
+
     };
 
 
@@ -194,23 +195,21 @@ const SegmentsPage = class extends Component {
                                                               })}
                                                               renderRow={({ name, id, enabled, feature, description, type }, i) => {
                                                                   if (this.state.preselect === `${id}`) {
+                                                                      this.editSegment(this.state.preselect, !permission)
                                                                       this.state.preselect = null;
-                                                                      _data.get(`${Project.api}projects/${projectId}/segments/${Utils.fromParam().id}`).then((segment)=>{
-                                                                          this.editSegment(segment, !permission)
-                                                                      })
                                                                   }
                                                                   return (
                                                                       <Row className="list-item clickable" key={id} space>
                                                                               <div
                                                                                 className="flex flex-1"
-                                                                                onClick={() => this.editSegment(_.find(segments, { id }), !permission)}
+                                                                                onClick={() => this.editSegment(id, !permission)}
                                                                               >
                                                                                   <Row>
                                                                                       <ButtonLink>
                                                                                           <span data-test={`segment-${i}-name`}>
-                                                                                              {name} { feature &&
+                                                                                              {name}{ feature &&
                                                                                               <div className="unread ml-2 px-2">
-                                                                                                  Feature-Specific
+                                                                                                  {" "}Feature-Specific
                                                                                               </div>
                                                                                           }
                                                                                           </span>
