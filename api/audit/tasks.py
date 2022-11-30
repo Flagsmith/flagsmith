@@ -36,6 +36,8 @@ def create_feature_state_went_live_audit_log(feature_state_id: int):
 def create_audit_log_from_historical_record(
     history_instance_id: int, history_user_id: int, history_record_class_path: str
 ):
+    # TODO: tests
+
     model_class = AuditLog.get_history_record_model_class(history_record_class_path)
     history_instance = model_class.objects.get(history_id=history_instance_id)
     instance = history_instance.instance
