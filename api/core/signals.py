@@ -8,7 +8,7 @@ from users.models import FFAdminUser
 def create_audit_log_from_historical_record(
     instance: _AbstractBaseAuditableModel,
     history_user: FFAdminUser,
-    history_instance,  # TODO: typing
+    history_instance,
     **kwargs,
 ):
     tasks.create_audit_log_from_historical_record.delay(
