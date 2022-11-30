@@ -120,26 +120,3 @@ class AuditLog(LifecycleModel):
             self.environment.save()
         else:
             self.project.environments.update(updated_at=self.created_date)
-
-    @classmethod
-    def create_record(
-        cls,
-        obj,
-        obj_type,
-        log_message,
-        author,
-        project=None,
-        environment=None,
-        persist=True,
-    ):
-        record = cls(
-            related_object_id=obj.id,
-            related_object_type=obj_type.name,
-            log=log_message,
-            author=author,
-            project=project,
-            environment=environment,
-        )
-        if persist:
-            record.save()
-        return record
