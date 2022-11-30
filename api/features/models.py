@@ -29,9 +29,11 @@ from ordered_model.models import OrderedModelBase
 from simple_history.models import HistoricalRecords
 
 from audit.models import (
+    FEATURE_CREATED_MESSAGE,
     FEATURE_DELETED_MESSAGE,
     FEATURE_SEGMENT_UPDATED_MESSAGE,
     FEATURE_STATE_UPDATED_MESSAGE,
+    FEATURE_UPDATED_MESSAGE,
     IDENTITY_FEATURE_STATE_DELETED_MESSAGE,
     IDENTITY_FEATURE_STATE_UPDATED_MESSAGE,
     SEGMENT_FEATURE_STATE_DELETED_MESSAGE,
@@ -149,13 +151,13 @@ class Feature(
         return "Project %s - Feature %s" % (self.project.name, self.name)
 
     def get_create_log_message(self, history_instance) -> typing.Optional[str]:
-        return f"New Flag / Remote Config created: {self.name}"
+        return FEATURE_CREATED_MESSAGE % self.name
 
     def get_delete_log_message(self, history_instance) -> typing.Optional[str]:
-        return f"Flag / Remote Config Deleted: {self.name}"
+        return FEATURE_DELETED_MESSAGE % self.name
 
     def get_update_log_message(self, history_instance) -> typing.Optional[str]:
-        return f"Flag / Remote Config Updated: {self.name}"
+        return FEATURE_UPDATED_MESSAGE % self.name
 
     def _get_project(self) -> typing.Optional["Project"]:
         return self.project
