@@ -1,3 +1,5 @@
+import typing
+
 from django.contrib.auth import get_user_model
 
 from audit.models import (
@@ -34,10 +36,10 @@ def create_feature_state_went_live_audit_log(feature_state_id: int):
 
 @register_task_handler()
 def create_audit_log_from_historical_record(
-    history_instance_id: int, history_user_id: int, history_record_class_path: str
+    history_instance_id: int,
+    history_user_id: typing.Optional[int],
+    history_record_class_path: str,
 ):
-    # TODO: tests
-
     model_class = AuditLog.get_history_record_model_class(history_record_class_path)
     history_instance = model_class.objects.get(history_id=history_instance_id)
     instance = history_instance.instance
@@ -63,9 +65,9 @@ def create_audit_log_from_historical_record(
 
     AuditLog.objects.create(
         history_record_id=history_instance.history_id,
-        history_record_class_path=instance.history_record_class_path,
-        environment_id=getattr(environment, "id", None),
-        project_id=getattr(project, "id", None),
+        history_record_class_path=history_record_class_path,
+        environment=environment,
+        project=project,
         author=override_author or history_user,
         related_object_id=related_object_id,
         related_object_type=related_object_type.name,
