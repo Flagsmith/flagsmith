@@ -588,7 +588,9 @@ class SimpleFeatureStateViewSet(
             raise NotFound("Environment not found.")
 
 
-@swagger_auto_schema(responses={200: ListCreateFeatureSerializer()}, method="get")
+@swagger_auto_schema(
+    responses={200: WritableNestedFeatureStateSerializer()}, method="get"
+)
 @api_view(["GET"])
 @permission_classes([IsAuthenticated | HasMasterAPIKey])
 def get_feature_state_by_uuid(request, uuid):
