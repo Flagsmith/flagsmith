@@ -65,11 +65,11 @@ const SegmentOverrideInner = class Override extends React.Component {
                     >
                         <strong>
                             {name || v.segment_name}
-                            {/*{segment && segment.feature && (*/}
-                            {/*<div className="unread ml-2 px-2">*/}
-                            {/*            Feature-Specific*/}
-                            {/*</div>*/}
-                            {/*)}*/}
+                            {v.is_feature_specific && (
+                            <div className="unread ml-2 px-2">
+                                        Feature-Specific
+                            </div>
+                            )}
                             {changed && (
                             <div className="unread ml-2 px-2">
                                         Unsaved
