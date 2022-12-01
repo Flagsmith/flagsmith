@@ -20,13 +20,12 @@ from django_lifecycle import (
     hook,
 )
 
-from audit.models import (
+from audit.constants import (
     CHANGE_REQUEST_APPROVED_MESSAGE,
     CHANGE_REQUEST_COMMITTED_MESSAGE,
     CHANGE_REQUEST_CREATED_MESSAGE,
-    AuditLog,
-    RelatedObjectType,
 )
+from audit.models import AuditLog, RelatedObjectType
 from audit.tasks import create_feature_state_went_live_audit_log
 from features.models import FeatureState
 

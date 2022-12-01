@@ -4,12 +4,12 @@ import pytest
 from django.contrib.sites.models import Site
 from django.utils import timezone
 
-from audit.models import (
+from audit.constants import (
     CHANGE_REQUEST_APPROVED_MESSAGE,
     CHANGE_REQUEST_COMMITTED_MESSAGE,
     CHANGE_REQUEST_CREATED_MESSAGE,
-    AuditLog,
 )
+from audit.models import AuditLog
 from features.workflows.core.exceptions import (
     CannotApproveOwnChangeRequest,
     ChangeRequestNotApprovedError,

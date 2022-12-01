@@ -23,7 +23,7 @@ from rest_framework.request import Request
 from softdelete.models import SoftDeleteObject
 
 from app.utils import create_hash
-from audit.models import (
+from audit.constants import (
     ENVIRONMENT_CREATED_MESSAGE,
     ENVIRONMENT_UPDATED_MESSAGE,
 )

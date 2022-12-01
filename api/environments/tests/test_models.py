@@ -337,6 +337,7 @@ def test_updated_at_gets_updated_when_environment_audit_log_created(environment)
     )
 
     # Then
+    environment.refresh_from_db()
     assert environment.updated_at == audit_log.created_date
 
 
