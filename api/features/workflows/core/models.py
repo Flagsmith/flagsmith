@@ -25,7 +25,7 @@ from audit.constants import (
     CHANGE_REQUEST_COMMITTED_MESSAGE,
     CHANGE_REQUEST_CREATED_MESSAGE,
 )
-from audit.models import AuditLog, RelatedObjectType
+from audit.related_object_type import RelatedObjectType
 from audit.tasks import create_feature_state_went_live_audit_log
 from features.models import FeatureState
 
@@ -177,7 +177,12 @@ class ChangeRequest(
             )
 
 
-class ChangeRequestApproval(LifecycleModel):
+class ChangeRequestApproval(LifecycleModel, abstract_base_auditable_model_factory()):
+    related_object_type = RelatedObjectType.CHANGE_REQUEST
+    history_record_class_path = (
+        "features.workflows.core.models.HistoricalChangeRequestApproval"
+    )
+
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
     change_request = models.ForeignKey(
         ChangeRequest, on_delete=models.CASCADE, related_name="approvals"
@@ -231,15 +236,22 @@ class ChangeRequestApproval(LifecycleModel):
             ),
         )
 
-    @hook(AFTER_CREATE, when="approved_at", is_not=None)
-    @hook(AFTER_UPDATE, when="approved_at", was=None, is_not=None)
-    def create_cr_approved_audit_logs(self):
-        message = CHANGE_REQUEST_APPROVED_MESSAGE % self.change_request.title
-        AuditLog.objects.create(
-            author=self.user,
-            project=self.change_request.environment.project,
-            environment=self.change_request.environment,
-            related_object_type=RelatedObjectType.CHANGE_REQUEST.name,
-            related_object_id=self.id,
-            log=message,
-        )
+    def get_create_log_message(self, history_instance) -> typing.Optional[str]:
+        if self.approved_at is not None:
+            return CHANGE_REQUEST_APPROVED_MESSAGE % self.change_request.title
+
+    def get_update_log_message(self, history_instance) -> typing.Optional[str]:
+        if (
+            history_instance.prev_record.approved_at is None
+            and self.approved_at is not None
+        ):
+            return CHANGE_REQUEST_APPROVED_MESSAGE % self.change_request.title
+
+    def get_audit_log_related_object_id(self, history_instance) -> int:
+        return self.change_request_id
+
+    def get_audit_log_author(self, history_instance) -> "FFAdminUser":
+        return self.user
+
+    def _get_environment(self):
+        return self.change_request.environment

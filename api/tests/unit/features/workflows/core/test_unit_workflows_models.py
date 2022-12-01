@@ -149,7 +149,7 @@ def test_approving_a_change_request_creates_audit_logs(
     user = django_user_model.objects.create(email="approver@example.com")
 
     # When
-    approval = ChangeRequestApproval.objects.create(
+    ChangeRequestApproval.objects.create(
         change_request=change_request_no_required_approvals,
         user=user,
         approved_at=timezone.now(),
@@ -159,7 +159,7 @@ def test_approving_a_change_request_creates_audit_logs(
     log = CHANGE_REQUEST_APPROVED_MESSAGE % change_request_no_required_approvals.title
     assert (
         AuditLog.objects.filter(
-            related_object_id=approval.id,
+            related_object_id=change_request_no_required_approvals.id,
             author=user,
             log=log,
         ).count()
