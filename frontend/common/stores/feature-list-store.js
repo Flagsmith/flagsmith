@@ -262,6 +262,7 @@ const controller = {
                 }).then((featureSegmentValue) => {
                     const newValue = {
                         ...featureSegment,
+                        segment_name: v.segment_name,
                         feature_segment_value: featureSegmentValue,
                         enabled: segmentOverrides[i].enabled,
                         value: segmentOverrides[i].value,

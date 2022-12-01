@@ -2,7 +2,7 @@ const BaseStore = require('./base/_store');
 const OrganisationStore = require('./organisation-store');
 const data = require('../data/base/_data');
 
-const PAGE_SIZE = 999;
+const PAGE_SIZE = 100;
 
 const controller = {
 
@@ -33,12 +33,12 @@ const controller = {
             ..._data,
             project: parseInt(projectId),
         })
-            .then(() => {
+            .then((savedSegment) => {
                 data.get(`${Project.api}projects/${projectId}/segments/`)
                     .then((res) => {
                         store.model = res.results && _.sortBy(res.results, 'name');
                         store.loaded();
-                        store.saved();
+                        store.saved(savedSegment);
                     });
             }).catch(e => API.ajaxHandler(store, e));
     },
