@@ -194,7 +194,6 @@ const EnvironmentSettingsPage = class extends Component {
 
                                                     </form>
                                                 </div>
-                                                {Utils.getFlagsmithHasFeature('4eyes') && (
                                                     <FormGroup className="m-y-3">
                                                         <Row space>
                                                             <div className="col-md-8 pl-0">
@@ -269,7 +268,6 @@ const EnvironmentSettingsPage = class extends Component {
                                                                 </Row>
                                                             </div>
                                                         )}
-                                                        {flagsmith.hasFeature('allow_client_traits') && (
                                                             <Row className="mt-4" space>
                                                                 <div className="col-md-8 pl-0">
                                                                     <h3 className="m-b-0">Allow client SDKs to set user traits</h3>
@@ -287,10 +285,7 @@ const EnvironmentSettingsPage = class extends Component {
                                                                     </div>
                                                                 </div>
                                                             </Row>
-                                                        )}
-
                                                     </FormGroup>
-                                                )}
                                                 <FormGroup className="m-y-3">
                                                     <Row className="mt-4" space>
                                                         <div className="col-md-8 pl-0">

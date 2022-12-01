@@ -541,9 +541,7 @@ const OrganisationSettingsPage = class extends Component {
                                             </TabItem>
 
                                             <TabItem tabLabel="Keys" tabIcon="ion-md-key" >
-                                                {Utils.getFlagsmithHasFeature('master_api_key') && (
-                                                    <AdminAPIKeys />
-                                                )}
+                                                <AdminAPIKeys />
                                             </TabItem>
 
                                             <TabItem data-test="tab-permissions" tabLabel="Members" tabIcon="ion-md-people" >
