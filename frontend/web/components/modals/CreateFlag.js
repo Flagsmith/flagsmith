@@ -352,7 +352,7 @@ const CreateFlag = class extends Component {
         const Provider = identity ? IdentityProvider : FeatureListProvider;
         const environmentVariations = this.props.environmentVariations;
         const environment = ProjectStore.getEnvironment(this.props.environmentId);
-        const is4Eyes = !!environment && Utils.changeRequestsEnabled(environment.minimum_change_request_approvals) && Utils.getFlagsmithHasFeature('4eyes');
+        const is4Eyes = !!environment && Utils.changeRequestsEnabled(environment.minimum_change_request_approvals)
         const canSchedule = Utils.getPlansPermission('SCHEDULE_FLAGS');
         const is4EyesSegmentOverrides = is4Eyes && Utils.getFlagsmithHasFeature('4eyes_segment_overrides'); //
         const controlValue = Utils.calculateControl(multivariate_options);
@@ -630,7 +630,7 @@ const CreateFlag = class extends Component {
                                                                             {({ permission: savePermission }) => (
                                                                                 Utils.renderWithPermission(savePermission, Constants.environmentPermissions(Utils.getManageFeaturePermissionDescription(is4Eyes)), (
                                                                                     <div className="text-right">
-                                                                                        {Utils.getFlagsmithHasFeature('scheduling') && !is4Eyes && (
+                                                                                        {!is4Eyes && (
                                                                                                 <>
                                                                                                     {canSchedule ? (
                                                                                                         <ButtonOutline

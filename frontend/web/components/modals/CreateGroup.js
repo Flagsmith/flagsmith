@@ -99,7 +99,6 @@ const CreateGroup = class extends Component {
                                   name="Name*"
                                   placeholder="E.g. Developers"
                                 />
-                                {Utils.getFlagsmithHasFeature('group_external_ids') && (
                                     <InputGroup
                                       title="External ID"
                                       ref={e => this.input = e}
@@ -115,9 +114,7 @@ const CreateGroup = class extends Component {
                                       name="Name*"
                                       placeholder="Add an optional external reference ID"
                                     />
-                                )}
 
-                                {Utils.getFlagsmithHasFeature('default_user_groups') && (
                                     <InputGroup
                                       title="Add users by default"
                                       tooltipPlace="top"
@@ -133,7 +130,6 @@ const CreateGroup = class extends Component {
                                       isValid={name && name.length}
                                       type="text"
                                     />
-                                )}
                                 <div className="mb-5">
                                     <PanelSearch
                                       id="org-members-list"

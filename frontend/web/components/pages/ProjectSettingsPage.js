@@ -135,7 +135,6 @@ const ProjectSettingsPage = class extends Component {
                                                 </div>
                                             </div>
                                         </FormGroup>
-                                        {Utils.getFlagsmithHasFeature('prevent_flag_defaults') && (
                                             <FormGroup className="mt-4">
                                                 <h3>Prevent flag defaults</h3>
                                                 <div className="row">
@@ -152,8 +151,7 @@ const ProjectSettingsPage = class extends Component {
                                                     </div>
                                                 </div>
                                             </FormGroup>
-                                        )}
-                                        {!Utils.getIsEdge() && this.props.hasFeature('edge_migrator') && (
+                                        {!Utils.getIsEdge() && this.props.hasFeature('edge_identities') && (
                                             <FormGroup className="mt-4">
                                                 <h3>Global Edge API Opt in</h3>
                                                 <div className="row">

@@ -385,7 +385,7 @@ class TheComponent extends Component {
                             />
                         </Flex>
                     )}
-                    {Utils.getFlagsmithHasFeature('flag_based_segments') && !this.props.showCreateSegment && !this.props.readOnly && !this.props.disableCreate &&  (
+                    {!this.props.showCreateSegment && !this.props.readOnly && !this.props.disableCreate &&  (
                         <div className="text-right">
                             <Button
                               className="mt-2" onClick={() => {
