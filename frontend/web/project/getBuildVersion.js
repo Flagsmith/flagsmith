@@ -13,7 +13,7 @@ module.exports = ()=> {
 
                 res.tag = tag;
                 res.backend_sha = backend_sha;
-                res.frontend_sha = "Other sha";
+                res.frontend_sha = frontend_sha;
                 global.flagsmithVersion = res;
                 return res;
             })
