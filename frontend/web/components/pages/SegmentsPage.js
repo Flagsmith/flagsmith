@@ -2,6 +2,7 @@ import React, { Component, Fragment } from 'react';
 import CreateSegmentModal from '../modals/CreateSegment';
 import ConfirmRemoveSegment from '../modals/ConfirmRemoveSegment';
 import SegmentListStore from '../../../common/stores/segment-list-store';
+import _data from "../../../common/data/base/_data";
 
 const HowToUseSegmentsMessage = () => (
     <div className="mt-2">
@@ -53,30 +54,31 @@ const SegmentsPage = class extends Component {
     };
 
 
-    editSegment = (segment, readOnly) => {
+    editSegment = (id, readOnly) => {
         API.trackEvent(Constants.events.VIEW_SEGMENT);
         history.replaceState(
             {},
             null,
-            `${document.location.pathname}?id=${segment.id}`,
+            `${document.location.pathname}?id=${id}`,
         );
-        openModal(`Edit Segment - ${segment.name}`, <CreateSegmentModal
-          segment={segment}
-          isEdit
-          readOnly={readOnly}
-          environmentId={this.props.match.params.environmentId}
-          projectId={this.props.match.params.projectId}
-          projectFlag={segment}
-        />, null, {
-            onClose: () => {
-                history.replaceState(
-                    {},
-                    null,
-                    `${document.location.pathname}`,
-                );
-            },
-            className: 'fade side-modal create-segment-modal',
-        });
+
+            openModal(`Edit Segment`, <CreateSegmentModal
+                segment={id}
+                isEdit
+                readOnly={readOnly}
+                environmentId={this.props.match.params.environmentId}
+                projectId={this.props.match.params.projectId}
+            />, null, {
+                onClose: () => {
+                    history.replaceState(
+                        {},
+                        null,
+                        `${document.location.pathname}`,
+                    );
+                },
+                className: 'fade side-modal create-segment-modal',
+            });
+
     };
 
 
@@ -133,8 +135,6 @@ const SegmentsPage = class extends Component {
                     {({ permission, isLoading }) => (
                         <SegmentListProvider onSave={this.onSave} onError={this.onError}>
                             {({ isLoading, segments }, { removeSegment }) => {
-                                const projectSegments = segments && segments.filter(s => !s.feature);
-                                const featureSegments = segments && segments.filter(s => !!s.feature);
                                 return (
                                     <div className="segments-page">
                                         {isLoading && !segments && <div className="centered-container"><Loader/></div>}
@@ -190,29 +190,28 @@ const SegmentsPage = class extends Component {
                                                               id="segment-list"
                                                               icon="ion-ios-globe"
                                                               title="Segments"
-                                                              items={projectSegments.concat(featureSegments)}
-                                                              renderRow={({ name, id, enabled, description, type }, i) => {
+                                                              items={_.sortBy(segments, (v)=> {
+                                                                  return `${v.feature?'z':'a'}${v.name}`
+                                                              })}
+                                                              renderRow={({ name, id, enabled, feature, description, type }, i) => {
                                                                   if (this.state.preselect === `${id}`) {
+                                                                      this.editSegment(this.state.preselect, !permission)
                                                                       this.state.preselect = null;
-                                                                      this.editSegment(_.find(segments, { id }), !permission);
                                                                   }
                                                                   return (
-                                                                      <Fragment>
-                                                                          {i === 0 && !!featureSegments.length && !!projectSegments.length && (
-                                                                          <h4 className="mx-2 mt-2">Project Segments</h4>
-                                                                          )}
-                                                                          {i === projectSegments.length && !!featureSegments.length && (
-                                                                          <h4 className="mx-2 mt-2">Feature-Specific Segments</h4>
-                                                                          )}
-                                                                          <Row className="list-item clickable" key={id} space>
+                                                                      <Row className="list-item clickable" key={id} space>
                                                                               <div
                                                                                 className="flex flex-1"
-                                                                                onClick={() => this.editSegment(_.find(segments, { id }), !permission)}
+                                                                                onClick={() => this.editSegment(id, !permission)}
                                                                               >
                                                                                   <Row>
                                                                                       <ButtonLink>
                                                                                           <span data-test={`segment-${i}-name`}>
-                                                                                              {name}
+                                                                                              {name}{ feature &&
+                                                                                              <div className="unread ml-2 px-2">
+                                                                                                  {" "}Feature-Specific
+                                                                                              </div>
+                                                                                          }
                                                                                           </span>
                                                                                       </ButtonLink>
                                                                                   </Row>
@@ -235,7 +234,6 @@ const SegmentsPage = class extends Component {
                                                                                   </Column>
                                                                               </Row>
                                                                           </Row>
-                                                                      </Fragment>
                                                                   );
                                                               }}
                                                               paging={SegmentListStore.paging}
