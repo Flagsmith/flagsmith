@@ -20,6 +20,10 @@ class TheComponent extends Component {
         };
     }
 
+    componentDidMount() {
+
+    }
+
     save = (e) => {
         Utils.preventDefault(e);
         const { state: {
