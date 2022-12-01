@@ -654,10 +654,9 @@ class SDKFeatureStatesTestCase(APITestCase):
 )
 def test_get_feature_states_by_uuid(client, environment, feature, feature_state):
     # Given
-    base_url = reverse(
+    url = reverse(
         "api-v1:features:get-feature-state-by-uuid", args=[feature_state.uuid]
     )
-    url = f"{base_url}?environment={environment}"
 
     # When
     response = client.get(url)
