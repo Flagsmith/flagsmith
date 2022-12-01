@@ -716,6 +716,7 @@ const CreateFlag = class extends Component {
                                                                                                 {this.props.segmentOverrides ? (
                                                                                                     <SegmentOverrides
                                                                                                       readOnly={noPermissions}
+                                                                                                      showEditSegment
                                                                                                       showCreateSegment={this.state.showCreateSegment}
                                                                                                       setShowCreateSegment={showCreateSegment => this.setState({ showCreateSegment })}
                                                                                                       feature={projectFlag.id}
@@ -724,7 +725,6 @@ const CreateFlag = class extends Component {
                                                                                                       environmentId={this.props.environmentId}
                                                                                                       value={this.props.segmentOverrides}
                                                                                                       controlValue={initial_value}
-                                                                                                      segments={this.props.segments}
                                                                                                       onChange={(v) => {
                                                                                                           this.setState({ segmentsChanged: true });
                                                                                                           this.props.updateSegments(v);
