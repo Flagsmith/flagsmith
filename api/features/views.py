@@ -598,11 +598,9 @@ def get_feature_state_by_uuid(request, uuid):
         accessible_projects = request.master_api_key.organisation.projects.all()
     else:
         accessible_projects = request.user.get_permitted_projects(["VIEW_PROJECT"])
-    qs = (
-        FeatureState.objects.filter(feature__project__in=accessible_projects)
-        .select_related("feature_state_value")
-        .prefetch_related("multivariate_feature_state_values")
-    )
+    qs = FeatureState.objects.filter(
+        feature__project__in=accessible_projects
+    ).select_related("feature_state_value")
     feature_state = get_object_or_404(qs, uuid=uuid)
     serializer = WritableNestedFeatureStateSerializer(instance=feature_state)
     return Response(serializer.data)
