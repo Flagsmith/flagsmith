@@ -183,6 +183,9 @@ elif "DJANGO_DB_NAME" in os.environ:
             "CONN_MAX_AGE": DJANGO_DB_CONN_MAX_AGE,
         },
     }
+
+LOGIN_THROTTLE_RATE = env("LOGIN_THROTTLE_RATE", "20/min")
+SIGNUP_THROTTLE_RATE = env("SIGNUP_THROTTLE_RATE", "10000/min")
 REST_FRAMEWORK = {
     "DEFAULT_PERMISSION_CLASSES": ["rest_framework.permissions.IsAuthenticated"],
     "DEFAULT_AUTHENTICATION_CLASSES": (
@@ -192,8 +195,8 @@ REST_FRAMEWORK = {
     "UNICODE_JSON": False,
     "DEFAULT_PAGINATION_CLASS": "rest_framework.pagination.PageNumberPagination",
     "DEFAULT_THROTTLE_RATES": {
-        "login": "20/min",
-        "signup": "10/min",
+        "login": LOGIN_THROTTLE_RATE,
+        "signup": SIGNUP_THROTTLE_RATE,
         "mfa_code": "5/min",
         "invite": "10/min",
     },
@@ -781,3 +784,14 @@ SSE_SERVER_BASE_URL = env.str("SSE_SERVER_BASE_URL", None)
 SSE_AUTHENTICATION_TOKEN = env.str("SSE_AUTHENTICATION_TOKEN", None)
 
 DISABLE_INVITE_LINKS = env.bool("DISABLE_INVITE_LINKS", False)
+
+PIPEDRIVE_API_TOKEN = env.str("PIPEDRIVE_API_TOKEN", None)
+PIPEDRIVE_BASE_API_URL = env.str(
+    "PIPEDRIVE_BASE_API_URL", "https://flagsmith.pipedrive.com/api/v1"
+)
+PIPEDRIVE_DOMAIN_ORGANIZATION_FIELD_KEY = env.str(
+    "PIPEDRIVE_DOMAIN_ORGANIZATION_FIELD_KEY", None
+)
+PIPEDRIVE_SIGN_UP_TYPE_DEAL_FIELD_KEY = env.str(
+    "PIPEDRIVE_SIGN_UP_TYPE_DEAL_FIELD_KEY", None
+)

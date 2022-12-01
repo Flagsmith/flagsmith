@@ -39,7 +39,9 @@ const Aside = class extends Component {
         this.state = {};
         ES6Component(this);
         AppActions.getProject(this.props.projectId);
-        AppActions.getChangeRequests(this.props.environmentId, {});
+        if (this.props.environmentId && this.props.environmentId !== 'create') {
+            AppActions.getChangeRequests(this.props.environmentId, {});
+        }
         this.listenTo(ChangeRequestStore, 'change', () => this.forceUpdate());
         this.listenTo(ProjectStore, 'loaded', () => {
             const environment = ProjectStore.getEnvironment(this.props.environmentId);
@@ -88,7 +90,7 @@ const Aside = class extends Component {
         const { toggleAside, asideIsVisible } = this.props;
         let integrations = Utils.getFlagsmithValue('integrations') || '[]';
         integrations = JSON.parse(integrations);
-        const environmentId = (this.props.environmentId !== 'create' && this.props.environmentId) || (ProjectStore.model && ProjectStore.model.environments[0].api_key);
+        const environmentId = (this.props.environmentId !== 'create' && this.props.environmentId) || (ProjectStore.model && ProjectStore.model.environments[0] && ProjectStore.model.environments[0].api_key);
         const environment = ProjectStore.getEnvironment(this.props.environmentId);
         const hasRbacPermission = Utils.getPlansPermission('AUDIT') || !Utils.getFlagsmithHasFeature('scaleup_audit');
         const has4Eyes = Utils.getFlagsmithHasFeature('4eyes');
