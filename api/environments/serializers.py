@@ -2,12 +2,6 @@ import typing
 
 from rest_framework import serializers
 
-from audit.models import (
-    ENVIRONMENT_CREATED_MESSAGE,
-    ENVIRONMENT_UPDATED_MESSAGE,
-    AuditLog,
-    RelatedObjectType,
-)
 from environments.models import Environment, EnvironmentAPIKey, Webhook
 from features.serializers import FeatureStateSerializerFull
 from organisations.models import Subscription
@@ -48,32 +42,6 @@ class EnvironmentSerializerLight(serializers.ModelSerializer):
             "allow_client_traits",
         )
 
-    def create(self, validated_data):
-        instance = super(EnvironmentSerializerLight, self).create(validated_data)
-        self._create_audit_log(instance, True)
-        return instance
-
-    def update(self, instance, validated_data):
-        updated_instance = super(EnvironmentSerializerLight, self).update(
-            instance, validated_data
-        )
-        self._create_audit_log(instance, False)
-        return updated_instance
-
-    def _create_audit_log(self, instance, created):
-        message = (
-            ENVIRONMENT_CREATED_MESSAGE if created else ENVIRONMENT_UPDATED_MESSAGE
-        ) % instance.name
-        request = self.context.get("request")
-        AuditLog.objects.create(
-            author=getattr(request, "user", None),
-            related_object_id=instance.id,
-            related_object_type=RelatedObjectType.ENVIRONMENT.name,
-            environment=instance,
-            project=instance.project,
-            log=message,
-        )
-
 
 class CreateUpdateEnvironmentSerializer(
     ReadOnlyIfNotValidPlanMixin, EnvironmentSerializerLight
@@ -112,7 +80,6 @@ class CloneEnvironmentSerializer(EnvironmentSerializerLight):
         name = validated_data.get("name")
         source_env = validated_data.get("source_env")
         clone = source_env.clone(name)
-        self._create_audit_log(clone, True)
         return clone
 
 

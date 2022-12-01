@@ -3,7 +3,12 @@ from rest_framework import status
 
 
 def test_audit_logs_only_makes_two_queries(
-    admin_client, project, environment, django_assert_num_queries
+    admin_client,
+    project,
+    environment,
+    feature,
+    feature_state,
+    django_assert_num_queries,
 ):
     url = reverse("api-v1:audit-list")
 
@@ -11,4 +16,4 @@ def test_audit_logs_only_makes_two_queries(
         res = admin_client.get(url, {"project": project})
 
     assert res.status_code == status.HTTP_200_OK
-    assert res.json()["count"] == 1
+    assert res.json()["count"] == 4
