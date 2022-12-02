@@ -224,6 +224,7 @@ async function globalSetup(config: FullConfig) {
         await click('#update-feature-segments-btn',page);
         await closeModal(page);
         await gotoTraits(page);
+        await page.waitForTimeout(2000)
         await page.reload({waitUntil:'domcontentloaded'})
         await assertTextContent(byId('user-feature-value-0'), '"small"',page);
 
