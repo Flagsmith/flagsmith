@@ -83,7 +83,6 @@ const HomePage = class extends React.Component {
                 const id = invite.split('invite/')[1];
                 API.setInviteType("INVITE_EMAIL")
                 API.setInvite(id);
-            } else {
             }
         }
     }
