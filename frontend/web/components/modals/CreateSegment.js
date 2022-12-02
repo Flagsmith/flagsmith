@@ -347,7 +347,7 @@ const CreateSegment = class extends Component {
                         <TabItem tabLabel="Users">
                             <div className="mt-4 mr-3 ml-3">
                                 <InfoMessage>
-                                    This shows allows you to see whether identities are part of the segment.
+                                    This is a random sample of Identities who are either in or out of this Segment based on the current Segment rules.
                                 </InfoMessage>
                                 <IdentityListProvider>
                                     {({ isLoading, identities, identitiesPaging }) => (
@@ -414,7 +414,6 @@ const CreateSegment = class extends Component {
                                                       AppActions.searchIdentities(this.state.environmentId, Utils.safeParseEventValue(e));
                                                   }}
                                                 />
-                                                <p className="text-right mt-4">This is a random sample of users who are either in or out of the Segment.</p>
                                             </FormGroup>
                                         </div>
                                     )}
