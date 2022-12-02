@@ -798,3 +798,7 @@ PIPEDRIVE_DOMAIN_ORGANIZATION_FIELD_KEY = env.str(
 PIPEDRIVE_SIGN_UP_TYPE_DEAL_FIELD_KEY = env.str(
     "PIPEDRIVE_SIGN_UP_TYPE_DEAL_FIELD_KEY", None
 )
+PIPEDRIVE_IGNORE_DOMAINS = env.list(
+    "PIPEDRIVE_IGNORE_DOMAINS",
+    ["solidstategroup.com", "flagsmith.com", "bullet-train.io"],
+)
