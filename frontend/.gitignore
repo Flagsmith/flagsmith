@@ -25,3 +25,6 @@ env.yaml
 .envrc
 .vercel
 common/project.js
+/test-results/
+/playwright-report/
+/playwright/.cache/

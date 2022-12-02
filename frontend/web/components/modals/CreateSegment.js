@@ -190,7 +190,7 @@ const CreateSegment = class extends Component {
                                 {
                                     Utils.getFlagsmithValue('not_operator') ? (
                                         <Tooltip title={(
-                                            <ButtonOutline className="ml-2 btn--outline-danger" data-test="add-rule" type="button">
+                                            <ButtonOutline className="ml-2 btn--outline-danger" data-test="add-not-rule" type="button">
                                                 Add AND NOT Condition
                                             </ButtonOutline>
                                         )}
@@ -198,7 +198,7 @@ const CreateSegment = class extends Component {
                                             {`Note: If using clientside evaluations on your SDK, this feature is only supported by the following SDKs: ${JSON.parse(Utils.getFlagsmithValue('not_operator'))}`}
                                         </Tooltip>
                                     ) : (
-                                        <ButtonOutline className="ml-2 btn--outline-danger" data-test="add-rule" type="button">
+                                        <ButtonOutline className="ml-2 btn--outline-danger" data-test="add-not-rule" type="button">
                                             Add AND NOT Condition
                                         </ButtonOutline>
                                     )

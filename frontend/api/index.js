@@ -14,6 +14,7 @@ const slackClient = SLACK_TOKEN && require('./slack-client');
 const postToSlack = process.env.VERCEL_ENV === 'production';
 
 const isDev = process.env.NODE_ENV !== 'production';
+const isE2E = !!process.env.E2E;
 const port = process.env.PORT || 8080;
 const fs = require('fs');
 
@@ -129,15 +130,19 @@ app.get('/version', (req, res) => {
     try {
         commitSha = fs.readFileSync('CI_COMMIT_SHA', 'utf8').replace(/(\r\n|\n|\r)/gm, '');
     } catch (err) {
-        // eslint-disable-next-line
-        console.log('Unable to read CI_COMMIT_SHA');
+        if(!isDev && !isE2E) {
+            // eslint-disable-next-line
+            console.log('Unable to read CI_COMMIT_SHA');
+        }
     }
 
     try {
         imageTag = fs.readFileSync('IMAGE_TAG', 'utf8').replace(/(\r\n|\n|\r)/gm, '');
     } catch (err) {
-        // eslint-disable-next-line
-        console.log('Unable to read IMAGE_TAG');
+        if(!isDev && !isE2E) {
+            // eslint-disable-next-line
+            console.log('Unable to read IMAGE_TAG');
+        }
     }
 
     res.send({ 'ci_commit_sha': commitSha, 'image_tag': imageTag });

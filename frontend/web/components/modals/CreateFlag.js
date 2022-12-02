@@ -945,7 +945,7 @@ const CreateFlag = class extends Component {
 
                                                                                 {createFeature ? (
                                                                                     <Button
-                                                                                      onClick={saveSettings} data-test="update-feature-btn" id="update-feature-btn"
+                                                                                      onClick={saveSettings} data-test="update-settings-btn" id="update-settings-btn"
                                                                                       disabled={(isSaving || !name || invalid)}
                                                                                     >
                                                                                         {isSaving ? 'Updating' : 'Update Settings'}

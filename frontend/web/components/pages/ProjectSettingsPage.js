@@ -145,7 +145,7 @@ const ProjectSettingsPage = class extends Component {
                                                     </div>
                                                     <div className="col-md-2 text-right">
                                                         <Switch
-                                                            data-test="js-hide-disabled-flags" disabled={isSaving} onChange={() => this.togglePreventDefaults(project, editProject)}
+                                                            data-test="js-prevent-flag-defaults" disabled={isSaving} onChange={() => this.togglePreventDefaults(project, editProject)}
                                                             checked={project.prevent_flag_defaults}
                                                         />
                                                     </div>
