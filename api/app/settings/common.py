@@ -800,5 +800,5 @@ PIPEDRIVE_SIGN_UP_TYPE_DEAL_FIELD_KEY = env.str(
 )
 PIPEDRIVE_IGNORE_DOMAINS = env.list(
     "PIPEDRIVE_IGNORE_DOMAINS",
-    ["solidstategroup.com", "flagsmith.com", "bullet-train.io"],
+    ["solidstategroup.com", "flagsmith.com", "bullet-train.io", "restmail.net"],
 )
