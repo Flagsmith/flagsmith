@@ -626,7 +626,7 @@ const OrganisationSettingsPage = class extends Component {
                                                                                                             <Flex className="mr-4">
                                                                                                                 <Input
                                                                                                                     style={{ width: '100%' }}
-                                                                                                                    value={`${document.location.origin}/invite/${inviteLinks.find(f => f.role === this.state.role).hash}`}
+                                                                                                                    value={`${document.location.origin}/invite-link/${inviteLinks.find(f => f.role === this.state.role).hash}`}
                                                                                                                     data-test="invite-link"
                                                                                                                     inputClassName="input input--wide"
                                                                                                                     className="full-width"

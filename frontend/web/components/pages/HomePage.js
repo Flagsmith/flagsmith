@@ -74,10 +74,16 @@ const HomePage = class extends React.Component {
         if (document.location.href.indexOf('invite') != -1) {
             const invite = Utils.fromParam().redirect;
 
-            if (invite.includes('invite')) {
+            if (invite.includes("invite-link")) {
+                const id = invite.split('invite-link/')[1];
+                API.setInviteType("INVITE_LINK")
+                API.setInvite(id);
+            } else if (invite.includes('invite')) {
                 // persist invite incase user changes page or logs in with oauth
                 const id = invite.split('invite/')[1];
+                API.setInviteType("INVITE_EMAIL")
                 API.setInvite(id);
+            } else {
             }
         }
     }
