@@ -100,6 +100,18 @@
                 {
                     "name": "SSE_SERVER_BASE_URL",
                     "value": "https://origin.realtime.flagsmith.com"
+                },
+                {
+                    "name": "PIPEDRIVE_SIGN_UP_TYPE_DEAL_FIELD_KEY",
+                    "value": "ab20826fa9dce795b0f078fed778b8dbdf89fe01"
+                },
+                {
+                    "name": "PIPEDRIVE_DOMAIN_ORGANIZATION_FIELD_KEY",
+                    "value": "66f192b2d9660f1472d9a238133be6f78fb7cf93"
+                },
+                {
+                    "name": "PIPEDRIVE_BASE_API_URL",
+                    "value": "https://bullettrain2.pipedrive.com/api/v1"
                 }
             ],
             "secrets": [
@@ -154,6 +166,10 @@
                 {
                     "name": "SSE_AUTHENTICATION_TOKEN",
                     "valueFrom": "arn:aws:secretsmanager:eu-west-2:084060095745:secret:ECS-API-LxUiIQ:SSE_AUTHENTICATION_TOKEN::"
+                },
+                {
+                    "name": "PIPEDRIVE_API_TOKEN",
+                    "valueFrom": "arn:aws:secretsmanager:eu-west-2:084060095745:secret:ECS-API-LxUiIQ:PIPEDRIVE_API_TOKEN::"
                 }
             ],
             "logConfiguration": {

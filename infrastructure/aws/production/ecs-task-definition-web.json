@@ -162,6 +162,10 @@
                 {
                     "name": "SSE_SERVER_BASE_URL",
                     "value": "https://origin.realtime.flagsmith.com"
+                },
+                {
+                    "name": "ENABLE_PIPEDRIVE_LEAD_TRACKING",
+                    "value": "True"
                 }
             ],
             "secrets": [
