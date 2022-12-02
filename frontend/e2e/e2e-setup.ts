@@ -206,14 +206,16 @@ async function globalSetup(config: FullConfig) {
 
 
 
-        log('Add segment trait for user');
+        log('Put user in medium');
         await gotoTraits(page);
         await createTrait(0, 'age', 18,page);
-
+        await page.waitForTimeout(2000)
+        await page.reload({waitUntil:'domcontentloaded'})
         await assertTextContent(byId('user-feature-value-0'), '"medium"',page);
         await gotoFeatures(page);
         await gotoFeature(0, page);
 
+        log('Put user in small');
         await addSegmentOverride(page, 0, true, 0, [
             { value: 'medium', weight: 0 },
             { value: 'small', weight: 100 },
@@ -222,6 +224,7 @@ async function globalSetup(config: FullConfig) {
         await click('#update-feature-segments-btn',page);
         await closeModal(page);
         await gotoTraits(page);
+        await page.reload({waitUntil:'domcontentloaded'})
         await assertTextContent(byId('user-feature-value-0'), '"small"',page);
 
         // log('Check user now belongs to segment');
