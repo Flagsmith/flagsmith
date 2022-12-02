@@ -11,7 +11,7 @@ import {
     createRemoteConfig, createSegment, createTrait,
     deleteFeature, deleteSegment, deleteTrait, getText, gotoFeature, gotoFeatures, gotoSegments, gotoTraits,
     log,
-    setText, toggleFeature, waitAndRefresh,
+    setText, toggleFeature,
     waitForElementVisible
 } from "./tests/helpers.e2e";
 require('dotenv').config();
@@ -221,7 +221,6 @@ async function globalSetup(config: FullConfig) {
         ]);
         await click('#update-feature-segments-btn',page);
         await closeModal(page);
-        await waitAndRefresh(page);
         await gotoTraits(page);
         await assertTextContent(byId('user-feature-value-0'), '"small"',page);
 
@@ -236,7 +235,6 @@ async function globalSetup(config: FullConfig) {
         await click(byId('user-feature-0'),page);
         await click(byId('select-variation-medium'),page);
         await click(byId('update-feature-btn'),page);
-        await waitAndRefresh(page);
         await assertTextContent(byId('user-feature-value-0'), '"medium"',page);
 
         log('Delete segment');

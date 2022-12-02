@@ -9,7 +9,7 @@ import {
     gotoSegments, goToUser,
     log,
     login, saveFeatureSegments, setSegmentOverrideIndex,
-    setText, viewFeature, waitAndRefresh,
+    setText, viewFeature,
     waitForElementVisible
 } from "./helpers.e2e";
 const email = 'nightwatch@solidstategroup.com';
@@ -67,7 +67,8 @@ test('Segments', async ({page}) => {
     await createTrait(0, 'trait', 1,page);
     await createTrait(1, 'trait2', 2,page);
     await createTrait(2, 'trait3', 3,page);
-    // await assertTextContent(byId('segment-0-name'), 'segment_1'); todo: view user segments disabled in edge
+    await page.reload({waitUntil:'domcontentloaded'})
+
     await waitForElementVisible(byId('user-feature-switch-1-on'),page);
     await assertTextContent(byId('user-feature-value-0'), '1',page);
 
@@ -107,19 +108,16 @@ test('Segments', async ({page}) => {
     await goToUser(0,page);
     await click(byId('user-feature-switch-1-on'),page);
     await click('#confirm-toggle-feature-btn',page);
-    await waitAndRefresh(page); // wait and refresh to avoid issues with data sync from UK -> US in github workflows
     await waitForElementVisible(byId('user-feature-switch-1-off'),page);
 
     log('Edit flag for user', 'Segment Test');
     await click(byId('user-feature-0'),page);
     await setText(byId('featureValue'), 'small',page);
     await click('#update-feature-btn',page);
-    await waitAndRefresh(page); // wait and refresh to avoid issues with data sync from UK -> US in github workflows
     await assertTextContent(byId('user-feature-value-0'), '"small"',page);
 
     log('Toggle flag for user again', 'Segment Test');
     await click(byId('user-feature-switch-1-off'),page);
     await click('#confirm-toggle-feature-btn',page);
-    await waitAndRefresh(page); // wait and refresh to avoid issues with data sync from UK -> US in github workflows
     await waitForElementVisible(byId('user-feature-switch-1-on'),page);
 });

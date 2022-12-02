@@ -148,8 +148,6 @@ export const createTrait = async (index:number, id:string, value:string|number,p
     await setText('[name="traitValue"]', value,page);
     await click('#create-trait-btn',page);
     await page.waitForTimeout(1000);
-    await page.reload({waitUntil:'domcontentloaded'})
-    await page.waitForTimeout(100);
     await waitForElementVisible(byId(`user-trait-value-${index}`),page);
     const expectedValue = typeof value === 'string' ? `"${value}"` : `${value}`;
     await assertTextContent(byId(`user-trait-value-${index}`), expectedValue,page);
@@ -196,13 +194,6 @@ export const saveFeature = async (page:Page) => {
     await waitForElementNotExist('.toast-message',page, true);
     await closeModal(page);
     await waitForElementNotExist('#create-feature-modal',page);
-};
-
-export const waitAndRefresh = async (page:Page, waitFor = 3000) => {
-    console.log(`Waiting for ${waitFor}ms, then refreshing.`);
-    await page.waitForTimeout(waitFor);
-    await page.reload({waitUntil:'domcontentloaded'})
-    await page.waitForTimeout(100)
 };
 
 export const deleteSegment = async (index:number, name:string, page:Page) => {
