@@ -63,6 +63,39 @@ def test_list_feature_segments(
         assert result["environment"] == environment.id
         assert "uuid" in result
         assert "segment_name" in result
+        assert not result["is_feature_specific"]
+
+
+@pytest.mark.parametrize(
+    "client",
+    [lazy_fixture("admin_client"), lazy_fixture("master_api_key_client")],
+)
+def test_list_feature_segments_is_feature_specific(
+    segment,
+    feature,
+    environment,
+    project,
+    client,
+):
+    # Given
+    base_url = reverse("api-v1:features:feature-segment-list")
+    url = f"{base_url}?environment={environment.id}&feature={feature.id}"
+
+    segment = Segment.objects.create(
+        project=project, name="Test segment", feature=feature
+    )
+    FeatureSegment.objects.create(
+        feature=feature, segment=segment, environment=environment
+    )
+
+    # When
+    response = client.get(url)
+
+    # Then
+    assert response.status_code == status.HTTP_200_OK
+    response_json = response.json()
+    assert response_json["count"] == 1
+    assert response_json["results"][0]["is_feature_specific"]
 
 
 @pytest.mark.parametrize(

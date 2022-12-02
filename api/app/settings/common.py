@@ -785,6 +785,9 @@ SSE_AUTHENTICATION_TOKEN = env.str("SSE_AUTHENTICATION_TOKEN", None)
 
 DISABLE_INVITE_LINKS = env.bool("DISABLE_INVITE_LINKS", False)
 
+# use a separate boolean setting so that we add it to the API containers in environments
+# where we're running the task processor, so we avoid creating unnecessary tasks
+ENABLE_PIPEDRIVE_LEAD_TRACKING = env.bool("ENABLE_PIPEDRIVE_LEAD_TRACKING", False)
 PIPEDRIVE_API_TOKEN = env.str("PIPEDRIVE_API_TOKEN", None)
 PIPEDRIVE_BASE_API_URL = env.str(
     "PIPEDRIVE_BASE_API_URL", "https://flagsmith.pipedrive.com/api/v1"
