@@ -22,7 +22,10 @@ def warn_insecure(sender, **kwargs):
 
 @receiver(post_save, sender=FFAdminUser)
 def create_pipedrive_lead_signal(sender, instance, created, **kwargs):
-    if not created or not settings.PIPEDRIVE_API_TOKEN:
+    if not (
+        created
+        and (settings.PIPEDRIVE_API_TOKEN or settings.ENABLE_PIPEDRIVE_LEAD_TRACKING)
+    ):
         return
 
     create_pipedrive_lead.delay(args=(instance.id,))

@@ -160,12 +160,16 @@
                     "value": "60"
                 },
                 {
-                  "name":  "LOG_LEVEL",
-                  "value": "INFO"
+                    "name":  "LOG_LEVEL",
+                    "value": "INFO"
                 },
                 {
                     "name": "SSE_SERVER_BASE_URL",
                     "value": "https://origin.realtime-staging.flagsmith.com"
+                },
+                {
+                    "name": "ENABLE_PIPEDRIVE_LEAD_TRACKING",
+                    "value": "True"
                 }
             ],
             "secrets": [
