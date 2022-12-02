@@ -209,7 +209,7 @@ async function globalSetup(config: FullConfig) {
         log('Put user in medium');
         await gotoTraits(page);
         await createTrait(0, 'age', 18,page);
-        await page.waitForTimeout(2000)
+        await page.waitForTimeout(5000)
         await page.reload({waitUntil:'domcontentloaded'})
         await assertTextContent(byId('user-feature-value-0'), '"medium"',page);
         await gotoFeatures(page);
@@ -224,7 +224,7 @@ async function globalSetup(config: FullConfig) {
         await click('#update-feature-segments-btn',page);
         await closeModal(page);
         await gotoTraits(page);
-        await page.waitForTimeout(2000)
+        await page.waitForTimeout(5000)
         await page.reload({waitUntil:'domcontentloaded'})
         await assertTextContent(byId('user-feature-value-0'), '"small"',page);
 
