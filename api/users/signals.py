@@ -22,9 +22,14 @@ def warn_insecure(sender, **kwargs):
 
 @receiver(post_save, sender=FFAdminUser)
 def create_pipedrive_lead_signal(sender, instance, created, **kwargs):
-    if not (
-        created
-        and (settings.PIPEDRIVE_API_TOKEN or settings.ENABLE_PIPEDRIVE_LEAD_TRACKING)
+    if (
+        not (
+            created
+            and (
+                settings.PIPEDRIVE_API_TOKEN or settings.ENABLE_PIPEDRIVE_LEAD_TRACKING
+            )
+        )
+        or instance.email_domain in settings.PIPEDRIVE_IGNORE_DOMAINS
     ):
         return
 
