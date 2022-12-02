@@ -129,7 +129,7 @@
   },
   "devDependencies": {
     "@ffmpeg-installer/ffmpeg": "^1.1.0",
-    "@playwright/test": "^1.28.1",
+    "@playwright/test": "^1.29.0-alpha-nov-30-2022",
     "chromedriver": "96.0.0",
     "nodemon": "^2.0.16",
     "raw-loader": "0.5.1",
