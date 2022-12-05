@@ -76,27 +76,28 @@ export default class Rule extends PureComponent {
                                 />
                             </Flex>
                         </Row>
-                        <Row>
-                            <div className="mb-2"/>
-                        </Row>
-                        <Row noWrap className="rule">
-                            <Input
+                        {this.props.showDescription && (
+                            <Row noWrap className="rule">
+                            <textarea
                                 readOnly={this.props.readOnly}
                                 data-test={`${this.props['data-test']}-description-${i}`}
-                                className="input-container full-width"
+                                className="full-width borderless"
                                 value={`${rule.description||""}`}
-                                placeholder= "Segment condition description"
+                                placeholder= "Condition description (Optional)"
                                 onChange={(e) => {
                                     const value = Utils.safeParseEventValue(e);
                                     this.setRuleProperty(i, 'description', {value}, true);
                                 }}
                             />
-                        </Row>
+                            </Row>
+                        )}
+
                     </Flex>
                     <div>
                         <Row noWrap>
                             {isLastRule && !this.props.readOnly ? (
                                 <ButtonOutline
+                                    className="ml-2"
                                   data-test={`${this.props['data-test']}-or`}
                                   type="button" onClick={this.addRule}
 
@@ -172,8 +173,8 @@ export default class Rule extends PureComponent {
     render() {
         const { props: { rule: { conditions: rules } } } = this;
         return (
-            <div className="mb-2">
-                <div className="panel overflow-visible">
+            <div>
+                <div className="panel panel-without-heading overflow-visible">
                     <div className="panel-content">
                         {rules.map(this.renderRule)}
                     </div>
