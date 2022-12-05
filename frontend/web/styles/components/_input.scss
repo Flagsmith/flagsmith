@@ -10,10 +10,10 @@ textarea {
 	padding-top: 8px;
 	text-indent: 10px;
 	&.borderless {
-			border-left: none !important;
-			border-top: none !important;
-			border-right: none !important;
-			border-radius: 0;
+		border-left: none !important;
+		border-top: none !important;
+		border-right: none !important;
+		border-radius: 0;
 	}
 	&::placeholder{
 		color:$input-placeholder-color-dark !important;

@@ -159,7 +159,7 @@ const CreateSegment = class extends Component {
                                     </Row>
                                 )}
                                 <Rule
-                                    showDescription={this.state.showDescriptions}
+                                  showDescription={this.state.showDescriptions}
                                   readOnly={readOnly}
                                   data-test={`rule-${i}`}
                                   rule={rule}

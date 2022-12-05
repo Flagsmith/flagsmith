@@ -78,17 +78,17 @@ export default class Rule extends PureComponent {
                         </Row>
                         {this.props.showDescription && (
                             <Row noWrap className="rule">
-                            <textarea
-                                readOnly={this.props.readOnly}
-                                data-test={`${this.props['data-test']}-description-${i}`}
-                                className="full-width borderless"
-                                value={`${rule.description||""}`}
-                                placeholder= "Condition description (Optional)"
-                                onChange={(e) => {
-                                    const value = Utils.safeParseEventValue(e);
-                                    this.setRuleProperty(i, 'description', {value}, true);
-                                }}
-                            />
+                                <textarea
+                                    readOnly={this.props.readOnly}
+                                    data-test={`${this.props['data-test']}-description-${i}`}
+                                    className="full-width borderless"
+                                    value={`${rule.description||""}`}
+                                    placeholder= "Condition description (Optional)"
+                                    onChange={(e) => {
+                                        const value = Utils.safeParseEventValue(e);
+                                        this.setRuleProperty(i, 'description', {value}, true);
+                                    }}
+                                />
                             </Row>
                         )}
 
