@@ -1,8 +1,6 @@
-import React, { Component } from 'react';
+import React, { Component, useEffect, useState } from 'react';
 import engine from 'bullet-train-rules-engine';
-import { Tab } from '@material-ui/core';
 import Rule from './Rule';
-import Highlight from '../Highlight';
 import SegmentStore from '../../../common/stores/segment-list-store';
 import IdentityListProvider from '../../../common/providers/IdentityListProvider';
 import Constants from '../../../common/constants';
@@ -11,6 +9,7 @@ import Tabs from '../base/forms/Tabs';
 import TabItem from '../base/forms/TabItem';
 import AssociatedSegmentOverrides from './AssociatedSegmentOverrides';
 import InfoMessage from '../InfoMessage';
+import _data from "../../../common/data/base/_data";
 
 const SEGMENT_ID_MAXLENGTH = Constants.forms.maxLength.SEGMENT_ID;
 
@@ -48,9 +47,9 @@ const CreateSegment = class extends Component {
 
         AppActions.getIdentities(props.environmentId);
 
-        this.listenTo(SegmentStore, 'saved', () => {
+        this.listenTo(SegmentStore, 'saved', (segment) => {
             if (this.props.onComplete) {
-                this.props.onComplete();
+                this.props.onComplete(segment);
             } else {
                 this.close();
             }
@@ -143,6 +142,9 @@ const CreateSegment = class extends Component {
         const { name, description, rules, isSaving, error } = this.state;
         const { isEdit, identity, readOnly } = this.props;
 
+
+
+
         const rulesEl = (
             <div className="mt-4 overflow-visible">
                 <div>
@@ -229,17 +231,17 @@ const CreateSegment = class extends Component {
                         </label>
                         <Flex>
                             <Input
-                                ref={e => this.input = e}
-                                data-test="segmentID"
-                                name="id"
-                                id="segmentID"
-                                readOnly={isEdit}
-                                maxLength={SEGMENT_ID_MAXLENGTH}
-                                value={name}
-                                onChange={e => this.setState({ name: Format.enumeration.set(Utils.safeParseEventValue(e)).toLowerCase() })}
-                                isValid={name && name.length}
-                                type="text" title={isEdit ? 'ID' : 'ID*'}
-                                placeholder="E.g. power_users"
+                              ref={e => this.input = e}
+                              data-test="segmentID"
+                              name="id"
+                              id="segmentID"
+                              readOnly={isEdit}
+                              maxLength={SEGMENT_ID_MAXLENGTH}
+                              value={name}
+                              onChange={e => this.setState({ name: Format.enumeration.set(Utils.safeParseEventValue(e)).toLowerCase() })}
+                              isValid={name && name.length}
+                              type="text" title={isEdit ? 'ID' : 'ID*'}
+                              placeholder="E.g. power_users"
                             />
                         </Flex>
 
@@ -326,24 +328,26 @@ const CreateSegment = class extends Component {
         const { environmentId } = this.state;
 
         return (
-            <div className="mt-2 mr-3 ml-3">
+            <div>
                 {isEdit && !this.props.condensed ? (
                     <Tabs value={this.state.tab} onChange={tab => this.setState({ tab })}>
                         <TabItem tabLabel="Rules">
-                            <div className="mt-2">
+                            <div className="mt-4 mr-3 ml-3">
                                 {Tab1}
                             </div>
                         </TabItem>
                         {this.props.hasFeature('segment_associated_features') && (
                             <TabItem tabLabel="Features">
-                                <AssociatedSegmentOverrides feature={this.props.segment.feature} projectId={this.props.projectId} id={this.props.segment.id}/>
+                                <div className="mt-4 mr-3 ml-3">
+                                    <AssociatedSegmentOverrides feature={this.props.segment.feature} projectId={this.props.projectId} id={this.props.segment.id}/>
+                                </div>
                             </TabItem>
                         )}
 
                         <TabItem tabLabel="Users">
-                            <div className="mt-4">
+                            <div className="mt-4 mr-3 ml-3">
                                 <InfoMessage>
-                                    This shows allows you to see whether identities are part of the segment.
+                                    This is a random sample of Identities who are either in or out of this Segment based on the current Segment rules.
                                 </InfoMessage>
                                 <IdentityListProvider>
                                     {({ isLoading, identities, identitiesPaging }) => (
@@ -410,7 +414,6 @@ const CreateSegment = class extends Component {
                                                       AppActions.searchIdentities(this.state.environmentId, Utils.safeParseEventValue(e));
                                                   }}
                                                 />
-                                                <p className="text-right mt-4">This is a random sample of users who are either in or out of the Segment.</p>
                                             </FormGroup>
                                         </div>
                                     )}
@@ -418,11 +421,33 @@ const CreateSegment = class extends Component {
                             </div>
                         </TabItem>
                     </Tabs>
-                ) : Tab1}
+                ) :<div className="mt-4 mr-3 ml-3">{Tab1}</div>}
             </div>
         );
     }
 };
 CreateSegment.propTypes = {};
 
-module.exports = hot(module)(ConfigProvider(CreateSegment));
+
+
+const LoadingCreateSegment  = (props) => {
+    const [loading, setLoading] = useState(!!props.segment);
+    const [segmentData, setSegmentData] = useState(null);
+
+    useEffect(()=>{
+        if(props.segment) {
+            _data.get(`${Project.api}projects/${props.projectId}/segments/${props.segment}`).then((segment)=> {
+                setSegmentData(segment);
+                setLoading(false)
+            })
+        }
+    },[props.segment])
+
+    return loading?<div className="text-center"><Loader/></div> : (
+        <CreateSegment {...props} segment={segmentData}/>
+    )
+}
+
+export default LoadingCreateSegment
+
+module.exports = hot(module)(ConfigProvider(LoadingCreateSegment));

@@ -3,6 +3,7 @@ require('dotenv').config();
 const exphbs = require('express-handlebars');
 const express = require('express');
 const bodyParser = require('body-parser');
+const xFrameOptions = require('x-frame-options');
 const spm = require('./middleware/single-page-middleware');
 
 const app = express();
@@ -14,7 +15,7 @@ const postToSlack = process.env.VERCEL_ENV === 'production';
 
 const isDev = process.env.NODE_ENV !== 'production';
 const port = process.env.PORT || 8080;
-const xFrameOptions = require('x-frame-options');
+const fs = require('fs');
 
 app.use(xFrameOptions());
 
@@ -71,6 +72,7 @@ app.get('/config/project-overrides', (req, res) => {
         { name: 'amplitude', value: process.env.AMPLITUDE_API_KEY },
         { name: 'delighted', value: process.env.DELIGHTED_API_KEY },
         { name: 'capterraKey', value: process.env.CAPTERRA_API_KEY },
+        { name: 'hideInviteLinks', value: envToBool('DISABLE_INVITE_LINKS', false) },
     ];
     const output = values.map(getVariable).join('');
 
@@ -91,6 +93,7 @@ if (process.env.FLAGSMITH_PROXY_API_URL) {
 }
 
 if (isDev) { // Serve files from src directory and use webpack-dev-server
+    // eslint-disable-next-line
     console.log('Enabled Webpack Hot Reloading');
     const webpackMiddleware = require('./middleware/webpack-middleware');
     webpackMiddleware(app);
@@ -114,8 +117,30 @@ app.get('/robots.txt', (req, res) => {
 });
 
 app.get('/health', (req, res) => {
+    // eslint-disable-next-line
     console.log('Healthcheck complete');
     res.send('OK');
+});
+
+app.get('/version', (req, res) => {
+    let commitSha = 'Unknown';
+    let imageTag = 'Unknown';
+
+    try {
+        commitSha = fs.readFileSync('CI_COMMIT_SHA', 'utf8').replace(/(\r\n|\n|\r)/gm, '');
+    } catch (err) {
+        // eslint-disable-next-line
+        console.log('Unable to read CI_COMMIT_SHA');
+    }
+
+    try {
+        imageTag = fs.readFileSync('IMAGE_TAG', 'utf8').replace(/(\r\n|\n|\r)/gm, '');
+    } catch (err) {
+        // eslint-disable-next-line
+        console.log('Unable to read IMAGE_TAG');
+    }
+
+    res.send({ 'ci_commit_sha': commitSha, 'image_tag': imageTag });
 });
 
 app.use(bodyParser.json());
@@ -132,7 +157,7 @@ app.post('/api/event', (req, res) => {
         const body = req.body;
         const channel = body.tag ? `infra_${body.tag.replace(/ /g, '').toLowerCase()}` : process.env.EVENTS_SLACK_CHANNEL;
         if (process.env.SLACK_TOKEN && channel && postToSlack && !body.event.includes('Bullet Train')) {
-            const match = body.event.match(/([a-zA-Z0-9_\-\.]+)@([a-zA-Z0-9_\-\.]+)\.([a-zA-Z]{2,5})/);
+            const match = body.event.match(/([a-zA-Z0-9_\-.]+)@([a-zA-Z0-9_\-.]+)\.([a-zA-Z]{2,5})/);
             let url = '';
             if (match && match[0]) {
                 const urlMatch = match[0].split('@')[1];
@@ -147,6 +172,7 @@ app.post('/api/event', (req, res) => {
             res.json({});
         }
     } catch (e) {
+        // eslint-disable-next-line
         console.log(`Error posting to from /api/event:${e}`);
     }
 });
@@ -161,6 +187,7 @@ app.get('/', (req, res) => {
 });
 
 app.listen(port, () => {
+    // eslint-disable-next-line
     console.log(`Server listening on: ${port}`);
     if (!isDev && process.send) {
         process.send({ done: true });

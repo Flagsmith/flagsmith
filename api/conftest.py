@@ -1,5 +1,6 @@
 import pytest
 from django.core.cache import cache
+from rest_framework.authtoken.models import Token
 from rest_framework.test import APIClient
 
 from api_keys.models import MasterAPIKey
@@ -15,6 +16,7 @@ from features.feature_types import MULTIVARIATE
 from features.models import Feature, FeatureSegment, FeatureState
 from features.multivariate.models import MultivariateFeatureOption
 from features.value_types import STRING
+from features.workflows.core.models import ChangeRequest
 from organisations.models import Organisation, OrganisationRole, Subscription
 from organisations.subscriptions.constants import CHARGEBEE, XERO
 from permissions.models import PermissionModel
@@ -30,6 +32,11 @@ trait_value = "value1"
 @pytest.fixture()
 def test_user(django_user_model):
     return django_user_model.objects.create(email="user@example.com")
+
+
+@pytest.fixture()
+def auth_token(test_user):
+    return Token.objects.create(user=test_user)
 
 
 @pytest.fixture()
@@ -166,6 +173,25 @@ def api_client():
 @pytest.fixture()
 def feature(project, environment):
     return Feature.objects.create(name="Test Feature1", project=project)
+
+
+@pytest.fixture()
+def change_request(environment, admin_user):
+    return ChangeRequest.objects.create(
+        environment=environment, title="Test CR", user_id=admin_user.id
+    )
+
+
+@pytest.fixture()
+def feature_state(feature, environment):
+    return FeatureState.objects.filter(environment=environment, feature=feature).first()
+
+
+@pytest.fixture()
+def change_request_feature_state(feature, environment, change_request, feature_state):
+    feature_state.change_request = change_request
+    feature_state.save()
+    return feature_state
 
 
 @pytest.fixture()

@@ -43,7 +43,6 @@ runs:
           ENABLE_INFLUXDB_FEATURES: ${{ inputs.enable_influxdb_features }}
 
         run: |
-          google-chrome --version
           node -v
           npm run env
           npm run test

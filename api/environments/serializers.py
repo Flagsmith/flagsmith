@@ -65,13 +65,17 @@ class EnvironmentSerializerLight(serializers.ModelSerializer):
             ENVIRONMENT_CREATED_MESSAGE if created else ENVIRONMENT_UPDATED_MESSAGE
         ) % instance.name
         request = self.context.get("request")
+
+        author = None if request.user.is_anonymous else request.user
+        master_api_key = request.master_api_key if request.user.is_anonymous else None
         AuditLog.objects.create(
-            author=getattr(request, "user", None),
+            author=author,
             related_object_id=instance.id,
             related_object_type=RelatedObjectType.ENVIRONMENT.name,
             environment=instance,
             project=instance.project,
             log=message,
+            master_api_key=master_api_key,
         )
 
 
@@ -127,4 +131,4 @@ class EnvironmentAPIKeySerializer(serializers.ModelSerializer):
     class Meta:
         model = EnvironmentAPIKey
         fields = ("id", "key", "active", "created_at", "name", "expires_at")
-        read_only_fields = ("id", "created_at")
+        read_only_fields = ("id", "created_at", "key")

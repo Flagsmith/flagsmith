@@ -3,6 +3,7 @@ import typing
 from functools import reduce
 
 from app_analytics.influxdb_wrapper import get_multiple_event_list_for_feature
+from core.constants import FLAGSMITH_UPDATED_AT_HEADER
 from core.permissions import HasMasterAPIKey
 from django.conf import settings
 from django.core.cache import caches
@@ -587,6 +588,24 @@ class SimpleFeatureStateViewSet(
             raise NotFound("Environment not found.")
 
 
+@swagger_auto_schema(
+    responses={200: WritableNestedFeatureStateSerializer()}, method="get"
+)
+@api_view(["GET"])
+@permission_classes([IsAuthenticated | HasMasterAPIKey])
+def get_feature_state_by_uuid(request, uuid):
+    if getattr(request, "master_api_key", None):
+        accessible_projects = request.master_api_key.organisation.projects.all()
+    else:
+        accessible_projects = request.user.get_permitted_projects(["VIEW_PROJECT"])
+    qs = FeatureState.objects.filter(
+        feature__project__in=accessible_projects
+    ).select_related("feature_state_value")
+    feature_state = get_object_or_404(qs, uuid=uuid)
+    serializer = WritableNestedFeatureStateSerializer(instance=feature_state)
+    return Response(serializer.data)
+
+
 class SDKFeatureStates(GenericAPIView):
     serializer_class = FeatureStateSerializerFull
     permission_classes = (EnvironmentKeyPermissions,)
@@ -643,7 +662,11 @@ class SDKFeatureStates(GenericAPIView):
                 many=True,
             ).data
 
-        return Response(data)
+        updated_at = self.request.environment.updated_at
+        return Response(
+            data,
+            headers={FLAGSMITH_UPDATED_AT_HEADER: updated_at.timestamp()},
+        )
 
     @property
     def _additional_filters(self) -> Q:

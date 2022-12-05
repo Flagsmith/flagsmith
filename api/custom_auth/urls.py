@@ -5,6 +5,7 @@ from custom_auth.views import (
     CustomAuthTokenLoginOrRequestMFACode,
     CustomAuthTokenLoginWithMFACode,
     ThrottledUserViewSet,
+    delete_token,
 )
 
 app_name = "custom_auth"
@@ -24,6 +25,7 @@ urlpatterns = [
         name="mfa-authtoken-login-code",
     ),
     path("", include(throttled_user_router.urls)),
+    path("token/", delete_token, name="delete-token"),
     # NOTE: endpoints provided by `djoser.urls`
     # are deprecated and will be removed in the next Major release
     path("", include("djoser.urls")),

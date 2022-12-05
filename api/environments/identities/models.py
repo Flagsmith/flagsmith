@@ -10,6 +10,7 @@ from environments.identities.traits.models import Trait
 from environments.models import Environment
 from features.models import FeatureState
 from features.multivariate.models import MultivariateFeatureStateValue
+from segments.models import Segment
 
 
 class Identity(models.Model):
@@ -50,7 +51,7 @@ class Identity(models.Model):
         :return: (list) flags for an identity with the correct values based on
             identity / segment priorities
         """
-        segments = self.get_segments(traits=traits)
+        segments = self.get_segments(traits=traits, overrides_only=True)
 
         # define sub queries
         belongs_to_environment_query = Q(environment=self.environment)
@@ -114,15 +115,29 @@ class Identity(models.Model):
 
         return list(identity_flags.values())
 
-    def get_segments(self, traits: typing.List[Trait] = None):
-        segments = []
+    def get_segments(
+        self, traits: typing.List[Trait] = None, overrides_only: bool = False
+    ) -> typing.List[Segment]:
+        """
+        Get the list of segments this identity is a part of.
+
+        :param traits: override the identity's traits when evaluating segments
+        :param overrides_only: only retrieve the segments which have a valid override in the environment
+        :return: List of matching segments
+        """
+        matching_segments = []
         traits = self.identity_traits.all() if traits is None else traits
 
-        for segment in self.environment.project.get_segments_from_cache():
-            if segment.does_identity_match(self, traits=traits):
-                segments.append(segment)
+        if overrides_only:
+            all_segments = self.environment.get_segments_from_cache()
+        else:
+            all_segments = self.environment.project.get_segments_from_cache()
 
-        return segments
+        for segment in all_segments:
+            if segment.does_identity_match(self, traits=traits):
+                matching_segments.append(segment)
+
+        return matching_segments
 
     def get_all_user_traits(self):
         # this is pointless, we should probably replace all uses with the below code
@@ -190,6 +205,10 @@ class Identity(models.Model):
 
             if trait_key in current_traits:
                 current_trait = current_traits[trait_key]
+                # Don't update the trait if the value hasn't changed
+                if current_trait.trait_value == trait_value:
+                    continue
+
                 for attr, value in trait_value_data.items():
                     setattr(current_trait, attr, value)
                 updated_traits.append(current_trait)

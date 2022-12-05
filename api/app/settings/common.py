@@ -191,6 +191,8 @@ elif "DJANGO_DB_NAME" in os.environ:
         },
     }
 
+LOGIN_THROTTLE_RATE = env("LOGIN_THROTTLE_RATE", "20/min")
+SIGNUP_THROTTLE_RATE = env("SIGNUP_THROTTLE_RATE", "10000/min")
 REST_FRAMEWORK = {
     "DEFAULT_PERMISSION_CLASSES": ["rest_framework.permissions.IsAuthenticated"],
     "DEFAULT_AUTHENTICATION_CLASSES": (
@@ -200,8 +202,8 @@ REST_FRAMEWORK = {
     "UNICODE_JSON": False,
     "DEFAULT_PAGINATION_CLASS": "rest_framework.pagination.PageNumberPagination",
     "DEFAULT_THROTTLE_RATES": {
-        "login": "20/min",
-        "signup": "10/min",
+        "login": LOGIN_THROTTLE_RATE,
+        "signup": SIGNUP_THROTTLE_RATE,
         "mfa_code": "5/min",
         "invite": "10/min",
     },
@@ -517,6 +519,16 @@ GET_IDENTITIES_ENDPOINT_CACHE_LOCATION = env.str(
 CACHE_PROJECT_SEGMENTS_SECONDS = env.int("CACHE_PROJECT_SEGMENTS_SECONDS", 0)
 PROJECT_SEGMENTS_CACHE_LOCATION = "project-segments"
 
+ENVIRONMENT_SEGMENTS_CACHE_NAME = "environment-segments"
+ENVIRONMENT_SEGMENTS_CACHE_SECONDS = env.int("CACHE_ENVIRONMENT_SEGMENTS_SECONDS", 0)
+ENVIRONMENT_SEGMENTS_CACHE_LOCATION = env(
+    "ENVIRONMENT_SEGMENTS_CACHE_LOCATION", "environment-segments"
+)
+ENVIRONMENT_SEGMENTS_CACHE_BACKEND = env(
+    "CACHE_ENVIRONMENT_SEGMENTS_BACKEND",
+    "django.core.cache.backends.locmem.LocMemCache",
+)
+
 CACHE_ENVIRONMENT_DOCUMENT_SECONDS = env.int("CACHE_ENVIRONMENT_DOCUMENT_SECONDS", 0)
 ENVIRONMENT_DOCUMENT_CACHE_LOCATION = "environment-documents"
 
@@ -554,6 +566,11 @@ CACHES = {
     GET_IDENTITIES_ENDPOINT_CACHE_NAME: {
         "BACKEND": GET_IDENTITIES_ENDPOINT_CACHE_BACKEND,
         "LOCATION": GET_IDENTITIES_ENDPOINT_CACHE_LOCATION,
+    },
+    ENVIRONMENT_SEGMENTS_CACHE_NAME: {
+        "BACKEND": ENVIRONMENT_SEGMENTS_CACHE_BACKEND,
+        "LOCATION": ENVIRONMENT_SEGMENTS_CACHE_LOCATION,
+        "TIMEOUT": ENVIRONMENT_SEGMENTS_CACHE_SECONDS,
     },
 }
 
@@ -772,3 +789,23 @@ ENABLE_TASK_PROCESSOR_HEALTH_CHECK = env.bool(
 # Real time(server sent events) settings
 SSE_SERVER_BASE_URL = env.str("SSE_SERVER_BASE_URL", None)
 SSE_AUTHENTICATION_TOKEN = env.str("SSE_AUTHENTICATION_TOKEN", None)
+
+DISABLE_INVITE_LINKS = env.bool("DISABLE_INVITE_LINKS", False)
+
+# use a separate boolean setting so that we add it to the API containers in environments
+# where we're running the task processor, so we avoid creating unnecessary tasks
+ENABLE_PIPEDRIVE_LEAD_TRACKING = env.bool("ENABLE_PIPEDRIVE_LEAD_TRACKING", False)
+PIPEDRIVE_API_TOKEN = env.str("PIPEDRIVE_API_TOKEN", None)
+PIPEDRIVE_BASE_API_URL = env.str(
+    "PIPEDRIVE_BASE_API_URL", "https://flagsmith.pipedrive.com/api/v1"
+)
+PIPEDRIVE_DOMAIN_ORGANIZATION_FIELD_KEY = env.str(
+    "PIPEDRIVE_DOMAIN_ORGANIZATION_FIELD_KEY", None
+)
+PIPEDRIVE_SIGN_UP_TYPE_DEAL_FIELD_KEY = env.str(
+    "PIPEDRIVE_SIGN_UP_TYPE_DEAL_FIELD_KEY", None
+)
+PIPEDRIVE_IGNORE_DOMAINS = env.list(
+    "PIPEDRIVE_IGNORE_DOMAINS",
+    ["solidstategroup.com", "flagsmith.com", "bullet-train.io", "restmail.net"],
+)

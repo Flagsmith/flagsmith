@@ -99,6 +99,7 @@ $animation-timing-function: ease-in-out;
         }
 
         &__main-content {
+            @include customScrollDark();
             background-color: $aside-bg-dark;
         }
         &__nav-item {
@@ -226,7 +227,7 @@ $animation-timing-function: ease-in-out;
         justify-content: center;
         overflow-y: auto;
         height: 100%;
-        @include customScroll;
+        @include customScrollDark();
     }
 
     &__projects-list-container {
@@ -319,8 +320,15 @@ $animation-timing-function: ease-in-out;
     }
 
     &__main-content {
+        position: relative;
+        height: 100vh;
+        overflow-y: auto !important;
         background-color: $aside-bg;
         width: 250px;
+        overflow-x: hidden;
+        display: flex;
+        flex-direction: column;
+        @include customScroll()
     }
 
     &__logo {
@@ -427,10 +435,6 @@ $animation-timing-function: ease-in-out;
     &__environment-nav {
 
     }
-	&__environments-wrapper {
-		height: 55vh;
-        @include customScroll;
-    }
     &__environment-list-item {
         position: relative;
         display: block;
@@ -472,13 +476,6 @@ $animation-timing-function: ease-in-out;
         }
     }
 
-    &__footer {
-        background-color: $aside-bg;
-        position: absolute;
-        bottom: 0;
-		padding-bottom: 1em;
-        width: 250px;
-    }
     &__popover {
         left: 78px;
     }
@@ -514,10 +511,6 @@ $animation-timing-function: ease-in-out;
         &__projects-sidebar {
             position: relative;
             top: 3em;
-        }
-        &__footer {
-            padding-top: .5em;
-            padding-bottom: .5em;
         }
     }
 }

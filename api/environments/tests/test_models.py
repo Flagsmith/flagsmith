@@ -9,6 +9,7 @@ from flag_engine.api.document_builders import (
     build_environment_api_key_document,
 )
 
+from audit.models import AuditLog, RelatedObjectType
 from environments.identities.models import Identity
 from environments.models import (
     Environment,
@@ -326,3 +327,39 @@ def test_get_from_cache_sets_the_cache_correctly_with_environment_api_key(
 
     # and
     assert environment == environment_cache.get(environment_api_key.key)
+
+
+def test_updated_at_gets_updated_when_environment_audit_log_created(environment):
+    # When
+    audit_log = AuditLog.objects.create(
+        environment=environment, project=environment.project, log="random_audit_log"
+    )
+
+    # Then
+    assert environment.updated_at == audit_log.created_date
+
+
+def test_updated_at_gets_updated_when_project_audit_log_created(environment):
+    # When
+    audit_log = AuditLog.objects.create(
+        project=environment.project, log="random_audit_log"
+    )
+    environment.refresh_from_db()
+    # Then
+    assert environment.updated_at == audit_log.created_date
+
+
+def test_change_request_audit_logs_does_not_update_updated_at(environment):
+    # Given
+    updated_at_before_audit_log = environment.updated_at
+
+    # When
+    audit_log = AuditLog.objects.create(
+        environment=environment,
+        log="random_test",
+        related_object_type=RelatedObjectType.CHANGE_REQUEST.name,
+    )
+
+    # Then
+    assert environment.updated_at == updated_at_before_audit_log
+    assert environment.updated_at != audit_log.created_date

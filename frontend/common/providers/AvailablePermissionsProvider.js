@@ -1,7 +1,7 @@
-import React, { Component } from 'react';
+import React from 'react';
 import PermissionsStore from '../stores/permissions-store';
 
-const AvailablePermissionsProvider = class extends Component {
+const AvailablePermissionsProvider = class extends React.Component {
     static displayName = 'AvailablePermissionsProvider'
 
     constructor(props, context) {
@@ -33,6 +33,9 @@ const AvailablePermissionsProvider = class extends Component {
     }
 };
 
-AvailablePermissionsProvider.propTypes = {};
+AvailablePermissionsProvider.propTypes = {
+    level: RequiredString,
+    children: OptionalFunc,
+};
 
 module.exports = AvailablePermissionsProvider;

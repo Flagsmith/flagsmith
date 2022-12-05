@@ -1,4 +1,4 @@
-module.exports = (envId, { LIB_NAME, FEATURE_NAME, FEATURE_FUNCTION, FEATURE_NAME_ALT, FEATURE_NAME_ALT_VALUE, NPM_CLIENT }, customFeature) => `// App root
+module.exports = (envId, { LIB_NAME, FEATURE_NAME, FEATURE_NAME_ALT, NPM_CLIENT }) => `// App root
 import ${LIB_NAME} from "${NPM_CLIENT}";
 import { FlagsmithProvider } from 'flagsmith/react';
 

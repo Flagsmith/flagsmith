@@ -1,4 +1,4 @@
-module.exports = (envId, { LIB_NAME, LIB_NAME_JAVA, FEATURE_NAME, FEATURE_FUNCTION, FEATURE_NAME_ALT, FEATURE_NAME_ALT_VALUE, NPM_CLIENT }, customFeature) => `${LIB_NAME_JAVA} ${LIB_NAME} = ${LIB_NAME_JAVA}
+module.exports = (envId, { LIB_NAME, LIB_NAME_JAVA, FEATURE_NAME, FEATURE_NAME_ALT }, customFeature) => `${LIB_NAME_JAVA} ${LIB_NAME} = ${LIB_NAME_JAVA}
     .newBuilder()
     .setApiKey("${envId}")
     .build();
