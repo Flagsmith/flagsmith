@@ -21,7 +21,6 @@ window.AccountProvider = require('../../common/providers/AccountProvider');
 window.AccountStore = require('../../common/stores/account-store');
 window.FeatureListProvider = require('../../common/providers/FeatureListProvider');
 window.OrganisationProvider = require('../../common/providers/OrganisationProvider');
-window.SelectedProjectProvider = require('../../common/providers/SelectedProjectProvider');
 window.ProjectProvider = require('../../common/providers/ProjectProvider');
 window.EnvironmentProvider = require('../../common/providers/EnvironmentProvider');
 window.IdentityListProvider = require('../../common/providers/IdentityListProvider');
