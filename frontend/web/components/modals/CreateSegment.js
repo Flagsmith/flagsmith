@@ -435,10 +435,12 @@ const LoadingCreateSegment  = (props) => {
     const [segmentData, setSegmentData] = useState(null);
 
     useEffect(()=>{
-        _data.get(`${Project.api}projects/${props.projectId}/segments/${props.segment}`).then((segment)=> {
-            setSegmentData(segment);
-            setLoading(false)
-        })
+        if(props.segment) {
+            _data.get(`${Project.api}projects/${props.projectId}/segments/${props.segment}`).then((segment)=> {
+                setSegmentData(segment);
+                setLoading(false)
+            })
+        }
     },[props.segment])
 
     return loading?<div className="text-center"><Loader/></div> : (
