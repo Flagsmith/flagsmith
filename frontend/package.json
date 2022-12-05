@@ -140,7 +140,7 @@
     "nodemon": "^2.0.16",
     "raw-loader": "0.5.1",
     "ssgrtk": "^0.3.3",
-    "testcafe": "^1.17.1",
+    "testcafe": "^2.1.0",
     "typescript": "^4.9.3"
   },
   "lint-staged": {
