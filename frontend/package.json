@@ -129,10 +129,9 @@
   },
   "devDependencies": {
     "@ffmpeg-installer/ffmpeg": "^1.1.0",
-    "chromedriver": "96.0.0",
     "nodemon": "^2.0.16",
     "raw-loader": "0.5.1",
-    "testcafe": "^1.17.1"
+    "testcafe": "^2.1.0"
   },
   "lint-staged": {
     "*.{js,tsx,ts}": "suppress-exit-code eslint --fix"
