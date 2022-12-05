@@ -1,6 +1,6 @@
 import React,{FC, useState} from 'react'
 import {Res, Segment} from "../../common/types/responses";
-import {useGetSegmentsQuery} from "../../common/services/useSegments";
+import {useGetSegmentsQuery} from "../../common/services/useSegment";
 import {ButtonOutline} from "./base/forms/Button";
 import useInfiniteScroll from "../../common/useInfiniteScroll";
 import {Req} from "../../common/types/requests"; // we need this to make JSX compile

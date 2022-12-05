@@ -253,3 +253,5 @@ global.API = {
         console.log.apply(this, arguments);
     },
 };
+
+export default API

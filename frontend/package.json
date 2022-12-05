@@ -127,14 +127,15 @@
     "webpack": "5.52.1",
     "webpack-bundle-analyzer": "^4.5.0",
     "webpack-cli": "^4.10.0",
-    "webpack-dev-middleware": "5.3.1",
-    "webpack-hot-middleware": "2.25.1",
+    "webpack-dev-middleware": "5.3.3",
+    "webpack-hot-middleware": "2.25.3",
     "whatwg-fetch": "3.0.0",
     "x-frame-options": "^1.0.0",
     "yaml": "^2.0.0"
   },
   "devDependencies": {
     "@ffmpeg-installer/ffmpeg": "^1.1.0",
+    "@types/react-router": "^5.1.19",
     "@types/react-select": "^2.0.3",
     "chromedriver": "96.0.0",
     "nodemon": "^2.0.16",

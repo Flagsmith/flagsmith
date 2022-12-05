@@ -100,7 +100,7 @@ const CreateSegment = class extends Component {
 
     componentDidMount = () => {
         this.focusTimeout = setTimeout(() => {
-            this.input.focus();
+            this.input?.focus?.();
             this.focusTimeout = null;
         }, 500);
     };

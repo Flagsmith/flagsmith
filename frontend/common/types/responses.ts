@@ -26,5 +26,6 @@ export type Segment = {
 }
 export type Res = {
   segments: PagedResponse<Segment>
+  segment: {id:string}
   // END OF TYPES
 }

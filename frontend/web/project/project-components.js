@@ -16,7 +16,6 @@ window.ES6Component = require('../../common/ES6Component');
 window.Permission = require('../../common/providers/Permission');
 window.IdentityProvider = require('../../common/providers/IdentityProvider');
 window.IdentitySegmentsProvider = require('../../common/providers/IdentitySegmentsProvider');
-window.SegmentListProvider = require('../../common/providers/SegmentListProvider');
 window.AccountProvider = require('../../common/providers/AccountProvider');
 window.AccountStore = require('../../common/stores/account-store');
 window.FeatureListProvider = require('../../common/providers/FeatureListProvider');
