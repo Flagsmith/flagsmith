@@ -5,10 +5,6 @@ import { PagedResponse } from 'common/types/responses'
 import { QueryDefinition } from '@reduxjs/toolkit/query'
 import useThrottle from './useThrottle'
 
-export const isValidNotEmptyArray = (array: any[]): boolean => {
-    return !!(array && array?.length && array?.length > 0)
-}
-
 const useInfiniteScroll = <
     REQ extends PagedRequest<{}>,
     RES extends PagedResponse<{}>,
@@ -44,7 +40,7 @@ const useInfiniteScroll = <
                 )
             }
         }
-    }, [queryResponse])
+    }, [queryResponse?.data])
 
     const searchItems = useThrottle((search: string) => {
         setQ(search)
