@@ -41,7 +41,6 @@ jobs:
                 environment: local
                 enable_influxdb_features: false
 
-    # Need to get proper exit codes from NPM to prevent the action from hanging
     run-e2e-tests-docker-unified:
         if: github.event.pull_request.draft == false
         runs-on: ubuntu-latest
