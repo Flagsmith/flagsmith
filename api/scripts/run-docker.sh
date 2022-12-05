@@ -1,6 +1,10 @@
 #!/bin/bash
 set -e
 
+# The script can take 2 optional arguments:
+# 1. The django target to run
+# 2. For migrate, serve and migrate-and-serve, the number of seconds to sleep before running
+
 function migrate () {
     python manage.py migrate && python manage.py createcachetable
 }
@@ -33,10 +37,20 @@ function dump_organisation_to_s3(){
 function dump_organisation_to_local_fs(){
     python manage.py dumporganisationtolocalfs "$1" "$2"
 }
+function go_to_sleep(){
+    echo "Sleeping for ${1} seconds before startup"
+    sleep ${1}
+}
 
 if [ "$1" == "migrate" ]; then
+    if [ $# -eq 2 ]; then go_to_sleep "$2"; fi
     migrate
 elif [ "$1" == "serve" ]; then
+    if [ $# -eq 2 ]; then go_to_sleep "$2"; fi
+    serve
+elif [ "$1" == "migrate-and-serve" ]; then
+    if [ $# -eq 2 ]; then go_to_sleep "$2"; fi
+    migrate
     serve
 elif [ "$1" == "migrate_identities" ]; then
     migrate_identities "$2"
@@ -46,9 +60,6 @@ elif [ "$1" == "dump-organisation-to-s3" ]; then
     dump_organisation_to_s3 "$2" "$3" "$4"
 elif [ "$1" == "dump-organisation-to-local-fs" ]; then
     dump_organisation_to_local_fs "$2" "$3"
-elif [ "$1" == "migrate-and-serve" ]; then
-    migrate
-    serve
 else
    echo "ERROR: unrecognised command '$1'"
 fi
