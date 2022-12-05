@@ -4,6 +4,7 @@ from unittest import TestCase, mock
 
 import pytest
 import pytz
+from core.constants import FLAGSMITH_UPDATED_AT_HEADER
 from django.forms import model_to_dict
 from django.urls import reverse
 from rest_framework import status
@@ -602,6 +603,11 @@ class SDKFeatureStatesTestCase(APITestCase):
         assert len(response_json) == 1
         assert response_json[0]["feature"]["id"] == self.feature.id
         assert response_json[0]["feature_state_value"] == self.environment_fs_value
+        # refresh the last_updated_at
+        self.environment.refresh_from_db()
+        assert response.headers[FLAGSMITH_UPDATED_AT_HEADER] == str(
+            self.environment.updated_at.timestamp()
+        )
 
     def test_get_flags_exclude_disabled(self):
 

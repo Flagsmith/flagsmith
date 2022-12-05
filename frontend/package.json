@@ -6,12 +6,16 @@
   "scripts": {
     "kill": "kill -9 $(lsof -ti tcp:4444)",
     "test:bundle": "cross-env E2E=1 npm run bundle",
+    "postinstall": "npm run env",
+    "husky:install": "cd ../ && husky install ./frontend/husky && cd ./frontend",
     "test:bundle:staging": "cross-env E2E=1 ENV=staging npm run bundle",
     "test:dev": "cross-env NODE_ENV=production E2E=true E2E_DEV=true node ./e2e/index.cafe",
     "test:devBundle": "npm run test:bundle && npm run test:dev",
     "test": "npm run test:bundle && cross-env NODE_ENV=production E2E=true node ./e2e/index.cafe",
     "test:staging": "npm run test:bundle:staging && cross-env NODE_ENV=production E2E=true ENV=staging node ./e2e/index.cafe",
     "env": "node ./bin/env.js",
+    "lint": "eslint .",
+    "lint:fix": "npx eslint --fix .",
     "start": "cross-env NODE_ENV=production node ./api/index",
     "dev": "cross-env npm run env && node_modules/.bin/nodemon --watch ./api --ignore server/config/config.json --watch webpack --exec node ./api",
     "bundle": "node node_modules/.bin/webpack --config ./webpack/webpack.config.prod.js",
@@ -72,9 +76,11 @@
     "html-loader": "0.5.5",
     "html-webpack-plugin": "5.5.0",
     "http-proxy-middleware": "^1.0.6",
+    "husky": "^8.0.2",
     "ionicons": "4.0.0",
     "js-cookie": "2.2.1",
     "json-loader": "0.5.4",
+    "lint-staged": "^12.3.4",
     "lodash": "4.17.21",
     "material-ui-chip-input": "^1.1.0",
     "mini-css-extract-plugin": "^2.6.0",
@@ -109,6 +115,8 @@
     "sass-loader": "^12.6.0",
     "semver": "^7.3.7",
     "style-loader": "0.23.1",
+    "suppress-exit-code": "^1.0.0",
+    "terser-webpack-plugin": "^5.3.6",
     "toml": "^3.0.0",
     "webpack": "5.52.1",
     "webpack-bundle-analyzer": "^4.5.0",
@@ -122,9 +130,11 @@
   "devDependencies": {
     "@ffmpeg-installer/ffmpeg": "^1.1.0",
     "chromedriver": "96.0.0",
-    "nightwatch": "^1.7.13",
     "nodemon": "^2.0.16",
     "raw-loader": "0.5.1",
-    "testcafe": "^2.0.1"
+    "testcafe": "^1.17.1"
+  },
+  "lint-staged": {
+    "*.{js,tsx,ts}": "suppress-exit-code eslint --fix"
   }
 }

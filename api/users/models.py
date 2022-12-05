@@ -44,6 +44,12 @@ logger = logging.getLogger(__name__)
 mailer_lite = MailerLite()
 
 
+class SignUpType(models.TextChoices):
+    NO_INVITE = "NO_INVITE"
+    INVITE_EMAIL = "INVITE_EMAIL"
+    INVITE_LINK = "INVITE_LINK"
+
+
 class UserManager(BaseUserManager):
     """Define a model manager for User model with no username field."""
 
@@ -97,9 +103,12 @@ class FFAdminUser(LifecycleModel, AbstractUser):
         default=False,
         help_text="Determines whether the user has agreed to receive marketing mails",
     )
+    sign_up_type = models.CharField(
+        choices=SignUpType.choices, max_length=100, blank=True, null=True
+    )
 
     USERNAME_FIELD = "email"
-    REQUIRED_FIELDS = ["first_name", "last_name"]
+    REQUIRED_FIELDS = ["first_name", "last_name", "sign_up_type"]
 
     class Meta:
         ordering = ["id"]
@@ -125,6 +134,10 @@ class FFAdminUser(LifecycleModel, AbstractUser):
     @property
     def full_name(self):
         return self.get_full_name()
+
+    @property
+    def email_domain(self):
+        return self.email.split("@")[1]
 
     def get_full_name(self):
         if not self.first_name:
@@ -288,9 +301,11 @@ class FFAdminUser(LifecycleModel, AbstractUser):
             | Q(grouppermission__admin=True)
         )
 
-        return Environment.objects.filter(
-            Q(project=project) & Q(user_query | group_query)
-        ).distinct()
+        return (
+            Environment.objects.filter(Q(project=project) & Q(user_query | group_query))
+            .distinct()
+            .defer("description")
+        )
 
     @staticmethod
     def send_alert_to_admin_users(subject, message):
@@ -392,8 +407,16 @@ class UserPermissionGroup(models.Model):
         help_text="If set to true, all new users will be added to this group",
     )
 
+    external_id = models.CharField(
+        blank=True,
+        null=True,
+        max_length=255,
+        help_text="Unique ID of the group in an external system",
+    )
+
     class Meta:
         ordering = ("id",)  # explicit ordering to prevent pagination warnings
+        unique_together = ("organisation", "external_id")
 
     def add_users_by_id(self, user_ids: list):
         users_to_add = []

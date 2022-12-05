@@ -15,13 +15,11 @@ import AppLoader from './AppLoader';
 import ButterBar from './ButterBar';
 import UserSettingsIcon from './svg/UserSettingsIcon';
 import DocumentationIcon from './svg/DocumentationIcon';
-import ArrowUpIcon from './svg/ArrowUpIcon';
-import RebrandBanner from './RebrandBanner';
 import UpgradeIcon from './svg/UpgradeIcon';
-import SparklesIcon from './svg/SparklesIcon';
 import AccountSettingsPage from './pages/AccountSettingsPage';
-import Headway from "./Headway";
-import ProjectStore from "../../common/stores/project-store";
+import Headway from './Headway';
+import ProjectStore from '../../common/stores/project-store';
+import getBuildVersion from '../project/getBuildVersion'
 
 const App = class extends Component {
     static propTypes = {
@@ -43,7 +41,8 @@ const App = class extends Component {
     }
 
     componentDidMount = () => {
-        this.listenTo(ProjectStore, 'change', ()=>this.forceUpdate())
+        getBuildVersion()
+        this.listenTo(ProjectStore, 'change', () => this.forceUpdate());
         window.addEventListener('scroll', this.handleScroll);
     };
 
@@ -102,7 +101,7 @@ const App = class extends Component {
         // Redirect on login
         if (this.props.location.pathname == '/' || this.props.location.pathname == '/saml' || this.props.location.pathname.includes('/oauth') || this.props.location.pathname == '/login' || this.props.location.pathname == '/demo' || this.props.location.pathname == '/signup') {
             if (redirect) {
-                API.setRedirect("")
+                API.setRedirect('');
                 this.context.router.history.replace(redirect);
             } else {
                 AsyncStorage.getItem('lastEnv')
@@ -209,7 +208,7 @@ const App = class extends Component {
         if (AccountStore.forced2Factor()) {
             return <AccountSettingsPage/>;
         }
-        const projectNotLoaded = (!ProjectStore.model && document.location.href.includes("project/"));
+        const projectNotLoaded = (!ProjectStore.model && document.location.href.includes('project/'));
         return (
             <div>
                 <AccountProvider onNoUser={this.onNoUser} onLogout={this.onLogout} onLogin={this.onLogin}>
@@ -295,7 +294,7 @@ const App = class extends Component {
                                                                     Upgrade
                                                                 </a>
                                                             )}
-                                                            <Headway className={"nav-link cursor-pointer"}/>
+                                                            <Headway className="nav-link cursor-pointer"/>
                                                             <a
                                                               href="https://docs.flagsmith.com"
                                                               target="_blank" className="nav-link p-2"
@@ -319,7 +318,7 @@ const App = class extends Component {
                                                               className="nav-link"
                                                               to="/organisation-settings"
                                                             >
-                                                                <ion style={{ marginRight: 4 }} className="icon--primary ion ion-md-settings"/>
+                                                                <span style={{ marginRight: 4 }} className="icon--primary ion ion-md-settings"/>
                                                                 {'Manage'}
                                                             </NavLink>
                                                             )}
@@ -415,7 +414,7 @@ const App = class extends Component {
                                 {isMobile && pageHasAside && asideIsVisible ? null : (
                                     <div>
                                         <ButterBar/>
-                                        {projectNotLoaded? <div className="text-center"><Loader/></div> : this.props.children}
+                                        {projectNotLoaded ? <div className="text-center"><Loader/></div> : this.props.children}
                                     </div>
                                 )}
 
@@ -437,8 +436,8 @@ App.propTypes = {
 export default withRouter(ConfigProvider(App));
 
 if (E2E) {
-    const e2e = document.getElementsByClassName("e2e")
+    const e2e = document.getElementsByClassName('e2e');
     if (e2e && e2e[0]) {
-        e2e[0].classList.toggle("display-none")
+        e2e[0].classList.toggle('display-none');
     }
 }

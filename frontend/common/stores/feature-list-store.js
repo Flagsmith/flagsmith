@@ -4,7 +4,7 @@ const data = require('../data/base/_data');
 
 let createdFirstFeature = false;
 const PAGE_SIZE = 200;
-const recursivePageGet = function (url, parentRes) {
+function recursivePageGet(url, parentRes) {
     return data.get(url).then((res) => {
         let response;
         if (parentRes) {
@@ -20,11 +20,11 @@ const recursivePageGet = function (url, parentRes) {
         }
         return Promise.resolve(response);
     });
-};
+}
 const controller = {
 
     getFeatures: (projectId, environmentId, force, page, filter) => {
-        if (!store.model || store.envId != environmentId || force) { // todo: change logic a bit
+        if (!store.model || store.envId !== environmentId || force) { // todo: change logic a bit
             store.loading();
             store.envId = environmentId;
             store.projectId = projectId;
@@ -79,7 +79,7 @@ const controller = {
             });
         }
     },
-    createFlag(projectId, environmentId, flag, segmentOverrides) {
+    createFlag(projectId, environmentId, flag) {
         store.saving();
         API.trackEvent(Constants.events.CREATE_FEATURE);
         if ((!createdFirstFeature && !flagsmith.getTrait('first_feature')) && AccountStore.model.organisations.length === 1 && OrganisationStore.model.projects.length === 1 && (!store.model.features || !store.model.features.length)) {
@@ -98,7 +98,7 @@ const controller = {
                 ...v,
                 feature: res.id,
             }).then(() => res))).then(() => data.get(`${Project.api}projects/${projectId}/features/${res.id}/`)))
-            .then(res => Promise.all([
+            .then(() => Promise.all([
                 data.get(`${Project.api}projects/${projectId}/features/`),
                 data.get(`${Project.api}environments/${environmentId}/featurestates/`),
             ]).then(([features, environmentFeatures]) => {
@@ -141,6 +141,7 @@ const controller = {
                 feature: flag.id,
                 default_percentage_allocation: 0,
             })).then((res) => {
+                // It's important to preserve the original order of multivariate_options, so that editing feature states can use the updated ID
                 flag.multivariate_options[i] = res;
                 return {
                     ...v,
@@ -158,8 +159,13 @@ const controller = {
                 project: projectId,
             })
                 .then((res) => {
+                    // onComplete calls back preserving the order of multivariate_options with their updated ids
                     if (onComplete) {
-                        onComplete(res);
+                        onComplete({
+                            ...res,
+                            // return multivariate_options in the same order they were originally in the action
+                            multivariate_options: flag.multivariate_options,
+                        });
                     }
                     if (store.model) {
                         const index = _.findIndex(store.model.features, { id: flag.id });
@@ -169,6 +175,7 @@ const controller = {
                     }
                 })
                 .catch((e) => {
+                    // onComplete calls back preserving the order of multivariate_options with their updated ids
                     if (onComplete) {
                         onComplete({
                             ...flag,
@@ -184,8 +191,8 @@ const controller = {
         data.get(`${Project.api}projects/${projectId}/features/${flag}/influx-data/?period=${period}&environment_id=${environmentId}`)
             .then((result) => {
                 const firstResult = result.events_list[0];
-                const lastResult = result.events_list[result.events_list.length - 1];
-                const diff = moment(lastResult.datetime, 'YYYY-MM-DD').diff(moment(firstResult.datetime, 'YYYY-MM-DD'), 'days');
+                const lastResult = firstResult && result.events_list[result.events_list.length - 1];
+                const diff = firstResult ? moment(lastResult.datetime, 'YYYY-MM-DD').diff(moment(firstResult.datetime, 'YYYY-MM-DD'), 'days') : 0;
                 if (firstResult && diff) {
                     const key = Object.keys(firstResult).find(v => v !== 'datetime');
                     _.range(0, diff).map((v) => {
@@ -205,7 +212,7 @@ const controller = {
                 result.timespan = diff;
                 store.model.influxData = result;
                 store.changed();
-            }).catch(e => API.ajaxHandler(store, e));
+            });
     },
     toggleFlag: (index, environments, comment, environmentFlags, projectFlags) => {
         const flag = (projectFlags || store.model.features)[index];
@@ -237,7 +244,7 @@ const controller = {
         let prom;
         const segmentOverridesProm = (segmentOverrides || []).map((v, i) => () => {
             if (v.toRemove) {
-                return (v.id ? data.delete(`${Project.api}features/feature-segments/${v.id}/`) : Promise.resolve()).then((res) => {
+                return (v.id ? data.delete(`${Project.api}features/feature-segments/${v.id}/`) : Promise.resolve()).then(() => {
                     segmentOverrides = segmentOverrides.filter(s => v.id !== s.id);
                 });
             } if (!v.id) {
@@ -255,6 +262,7 @@ const controller = {
                 }).then((featureSegmentValue) => {
                     const newValue = {
                         ...featureSegment,
+                        segment_name: v.segment_name,
                         feature_segment_value: featureSegmentValue,
                         enabled: segmentOverrides[i].enabled,
                         value: segmentOverrides[i].value,
@@ -277,7 +285,7 @@ const controller = {
             } else if (environmentFlag) {
                 prom = data.get(`${Project.api}environments/${environmentId}/featurestates/${environmentFlag.id}/`)
                     .then((environmentFeatureStates) => {
-                        const multivariate_feature_state_values = environmentFeatureStates.multivariate_feature_state_values && environmentFeatureStates.multivariate_feature_state_values.map((v, i) => {
+                        const multivariate_feature_state_values = environmentFeatureStates.multivariate_feature_state_values && environmentFeatureStates.multivariate_feature_state_values.map((v) => {
                             const matching = environmentFlag.multivariate_feature_state_values.find(m => m.id === v.multivariate_feature_option) || {};
                             return {
                                 ...v,
@@ -344,15 +352,7 @@ const controller = {
         API.trackEvent(Constants.events.EDIT_FEATURE);
 
         const prom = data.get(`${Project.api}environments/${environmentId}/featurestates/${environmentFlag.id}/`)
-            .then((environmentFeatureStates) => {
-                const multivariate_feature_state_values = environmentFeatureStates.multivariate_feature_state_values && environmentFeatureStates.multivariate_feature_state_values.map((v) => {
-                    const matching = flag.multivariate_options.find(m => m.id === v.multivariate_feature_option);
-                    if (!matching) { // multivariate is new, meaning the value is already correct from the default allocation
-                        return v;
-                    }
-                    // multivariate is existing, override the existing with the new value
-                    return { ...v, percentage_allocation: matching.default_percentage_allocation };
-                });
+            .then(() => {
                 const { featureStateId, multivariate_options, ...changeRequestData } = changeRequest;
                 const req = {
                     feature_states: [{
@@ -406,7 +406,7 @@ const controller = {
             });
 
 
-        Promise.all([prom]).then(([res, segmentRes]) => {
+        Promise.all([prom]).then(() => {
             store.saved();
             if (typeof closeModal !== 'undefined') {
                 closeModal();
@@ -418,7 +418,7 @@ const controller = {
         API.trackEvent(Constants.events.REMOVE_FEATURE);
         return data.delete(`${Project.api}projects/${projectId}/features/${flag.id}/`)
             .then(() => {
-                store.model.features = _.filter(store.model.features, f => f.id != flag.id);
+                store.model.features = _.filter(store.model.features, f => f.id !== flag.id);
                 store.model.lastSaved = new Date().valueOf();
                 store.saved();
             });

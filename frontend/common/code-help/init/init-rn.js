@@ -1,4 +1,4 @@
-module.exports = (envId, { LIB_NAME, FEATURE_NAME, FEATURE_FUNCTION,NPM_RN_CLIENT, FEATURE_NAME_ALT, FEATURE_NAME_ALT_VALUE, NPM_CLIENT }, customFeature) => `// App root
+module.exports = (envId, { LIB_NAME, FEATURE_NAME, NPM_RN_CLIENT, FEATURE_NAME_ALT }) => `// App root
 import ${LIB_NAME} from "${NPM_RN_CLIENT}";
 import { FlagsmithProvider } from 'flagsmith/react';
 import AsyncStorage from '@react-native-async-storage/async-storage';

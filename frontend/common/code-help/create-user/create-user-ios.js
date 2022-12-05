@@ -1,4 +1,4 @@
-module.exports = (envId, { FEATURE_NAME,USER_ID, FEATURE_NAME_ALT }) => `import FlagsmithClient
+module.exports = (envId, { FEATURE_NAME, USER_ID, FEATURE_NAME_ALT }) => `import FlagsmithClient
 
 func application(_ application: UIApplication,
  didFinishLaunchingWithOptions launchOptions:

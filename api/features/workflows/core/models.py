@@ -24,7 +24,7 @@ from audit.models import (
     AuditLog,
     RelatedObjectType,
 )
-from environments.tasks import rebuild_environment_document
+from audit.tasks import create_feature_state_went_live_audit_log
 from features.models import FeatureState
 
 from .exceptions import (
@@ -156,37 +156,15 @@ class ChangeRequest(LifecycleModelMixin, AbstractBaseExportableModel):
 
     @hook(AFTER_CREATE, when="committed_at", is_not=None)
     @hook(AFTER_SAVE, when="committed_at", was=None, is_not=None)
-    def schedule_environment_rebuild(self):
-        logger.debug("Scheduling environment rebuild for change request #%d", self.id)
-
-        if not settings.EDGE_ENABLED:
-            logger.debug("Edge is disabled. Not scheduling environment rebuild.")
-            return
-
+    def schedule_audit_log_creation_task_for_feature_state_going_live(self):
         now = timezone.now()
         feature_states = list(
             self.feature_states.filter(live_from__gt=now).order_by("live_from")
         )
-
-        logger.debug("Number of associated feature states: %d", len(feature_states))
-
-        previous_live_from = None
         for feature_state in feature_states:
-            # currently we only support a single feature state and single schedule date
-            # however this will ensure that if, in the future, we allow multiple feature
-            # states per change request (and perhaps multiple schedule dates) then this
-            # functionality will work as expected.
-            if not previous_live_from or feature_state.live_from != previous_live_from:
-                logger.debug(
-                    "Scheduling rebuild of environment %d at %s",
-                    self.environment_id,
-                    feature_state.live_from.isoformat(),
-                )
-                rebuild_environment_document.delay(
-                    delay_until=feature_state.live_from,
-                    kwargs={"environment_id": self.environment_id},
-                )
-            previous_live_from = feature_state.live_from
+            create_feature_state_went_live_audit_log.delay(
+                delay_until=feature_state.live_from, args=(feature_state.id,)
+            )
 
 
 class ChangeRequestApproval(LifecycleModel):

@@ -1,3 +1,4 @@
+import json
 import re
 from collections import ChainMap
 
@@ -7,7 +8,7 @@ from django.core import mail
 from django.core.cache import cache
 from django.urls import reverse
 from rest_framework import status
-from rest_framework.test import APITestCase, override_settings
+from rest_framework.test import APIClient, APITestCase, override_settings
 
 from organisations.invites.models import Invite
 from organisations.models import Organisation
@@ -329,3 +330,49 @@ def test_get_user_is_not_throttled(admin_client, settings, reset_cache):
         response = admin_client.get(url)
         # Then
         assert response.status_code == status.HTTP_200_OK
+
+
+def test_delete_token(test_user, auth_token):
+    # Given
+    url = reverse("api-v1:custom_auth:delete-token")
+    client = APIClient(HTTP_AUTHORIZATION=f"Token {auth_token.key}")
+
+    # When
+    response = client.delete(url)
+
+    # Then
+    assert response.status_code == status.HTTP_204_NO_CONTENT
+
+    # and - if we try to delete the token again(i.e: access anything that uses is_authenticated)
+    # we should will get 401
+    assert client.delete(url).status_code == status.HTTP_401_UNAUTHORIZED
+
+
+def test_register_with_sign_up_type(client, db, settings):
+    # Given
+    password = FFAdminUser.objects.make_random_password()
+    sign_up_type = "NO_INVITE"
+    email = "test@example.com"
+    register_data = {
+        "email": email,
+        "password": password,
+        "re_password": password,
+        "first_name": "test",
+        "last_name": "tester",
+        "sign_up_type": sign_up_type,
+    }
+
+    # When
+    response = client.post(
+        reverse("api-v1:custom_auth:ffadminuser-list"),
+        data=json.dumps(register_data),
+        content_type="application/json",
+    )
+
+    # Then
+    assert response.status_code == status.HTTP_201_CREATED
+
+    response_json = response.json()
+    assert response_json["sign_up_type"] == sign_up_type
+
+    assert FFAdminUser.objects.filter(email=email, sign_up_type=sign_up_type).exists()

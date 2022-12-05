@@ -24,3 +24,4 @@ coverage/*
 env.yaml
 .envrc
 .vercel
+common/project.js

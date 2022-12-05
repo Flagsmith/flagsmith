@@ -16,7 +16,7 @@ from features.models import FeatureState
 from features.serializers import SegmentAssociatedFeatureStateSerializer
 
 from .models import Segment
-from .permissions import SegmentPermissions
+from .permissions import MasterAPIKeySegmentPermissions, SegmentPermissions
 from .serializers import SegmentSerializer
 
 logger = logging.getLogger()
@@ -45,14 +45,17 @@ logger = logging.getLogger()
 )
 class SegmentViewSet(viewsets.ModelViewSet):
     serializer_class = SegmentSerializer
-    permission_classes = [IsAuthenticated, SegmentPermissions]
+    permission_classes = [SegmentPermissions | MasterAPIKeySegmentPermissions]
     pagination_class = CustomPagination
 
     def get_queryset(self):
-        project = get_object_or_404(
-            self.request.user.get_permitted_projects(["VIEW_PROJECT"]),
-            pk=self.kwargs["project_pk"],
-        )
+        if hasattr(self.request, "master_api_key"):
+            permitted_projects = self.request.master_api_key.organisation.projects.all()
+        else:
+            permitted_projects = self.request.user.get_permitted_projects(
+                permissions=["VIEW_PROJECT"]
+            )
+        project = get_object_or_404(permitted_projects, pk=self.kwargs["project_pk"])
 
         queryset = project.segments.all()
 

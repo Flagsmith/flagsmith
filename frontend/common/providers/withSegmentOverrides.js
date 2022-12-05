@@ -1,7 +1,6 @@
 import data from '../data/base/_data';
-import SegmentListStore from '../stores/segment-list-store';
 import ProjectStore from '../stores/project-store';
-
+import FeatureListStore from '../stores/feature-list-store'
 export default (WrappedComponent) => {
     class HOC extends React.Component {
         static displayName = 'withFoo';
@@ -9,15 +8,11 @@ export default (WrappedComponent) => {
         constructor(props) {
             super(props);
             ES6Component(this);
-            this.state = {
-                segments: SegmentListStore.getSegments(),
-            };
-
-            this.listenTo(SegmentListStore, 'change', () => {
-                this.setState({
-                    segments: SegmentListStore.getSegments(),
-                });
+            this.listenTo(FeatureListStore, 'saved', () => {
+                this.getOverrides();
             });
+            this.state = {
+            };
         }
 
         componentDidMount() {
@@ -42,20 +37,21 @@ export default (WrappedComponent) => {
                                     results[index].enabled = f.enabled;
                                     results[index].feature_segment_value = f;
                                     const multiVariates = res2 && res2.results.find(mv => mv.feature_segment = f.feature_segment);
-                                    results[index].multivariate_feature_state_values = multiVariates && multiVariates.multivariate_feature_state_values || [];
+                                    results[index].multivariate_feature_state_values = (multiVariates && multiVariates.multivariate_feature_state_values) || [];
                                     results[index].multivariate_options = f.multivariate_feature_state_values;
                                 }
                             }
                         });
-                        const resResults = res.results||[]
+                        const resResults = res.results || [];
                         const segmentOverrides = (results).concat(
-                            (this.props.newSegmentOverrides||[]).map((v, i)=>{return {
+                            (this.props.newSegmentOverrides || []).map((v, i) => ({
                                 ...v,
-                                priority: resResults.length + (i)
-                            }}))
-                        const originalSegmentOverrides = _.cloneDeep(segmentOverrides)
+                                priority: resResults.length + (i),
+                            })),
+                        );
+                        const originalSegmentOverrides = _.cloneDeep(segmentOverrides);
                         this.setState({
-                            segmentOverrides,originalSegmentOverrides, environmentVariations: environmentOverride && environmentOverride.multivariate_feature_state_values && environmentOverride.multivariate_feature_state_values });
+                            segmentOverrides, originalSegmentOverrides, environmentVariations: environmentOverride && environmentOverride.multivariate_feature_state_values && environmentOverride.multivariate_feature_state_values });
                     });
             }
         }

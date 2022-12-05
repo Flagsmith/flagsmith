@@ -83,11 +83,8 @@ class Organisation(LifecycleModelMixin, AbstractBaseExportableModel):
     def num_seats(self):
         return self.users.count()
 
-    def has_subscription(self):
-        return (
-            hasattr(self, "subscription")
-            and self.subscription.subscription_id is not None
-        )
+    def has_subscription(self) -> bool:
+        return hasattr(self, "subscription") and bool(self.subscription.subscription_id)
 
     @property
     def is_paid(self):
@@ -205,3 +202,23 @@ class OrganisationWebhook(AbstractBaseWebhookModel):
 
     class Meta:
         ordering = ("id",)  # explicit ordering to prevent pagination warnings
+
+
+class OrganisationSubscriptionInformationCache(models.Model):
+    """
+    Model to hold a cache of an organisation's API usage and their Chargebee plan limits.
+    """
+
+    organisation = models.OneToOneField(
+        Organisation,
+        related_name="subscription_information_cache",
+        on_delete=models.CASCADE,
+    )
+    updated_at = models.DateTimeField(auto_now=True)
+
+    api_calls_24h = models.IntegerField(default=0)
+    api_calls_7d = models.IntegerField(default=0)
+    api_calls_30d = models.IntegerField(default=0)
+
+    allowed_seats = models.IntegerField(default=1)
+    allowed_30d_api_calls = models.IntegerField(default=50000)

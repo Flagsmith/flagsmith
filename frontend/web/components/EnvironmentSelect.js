@@ -25,9 +25,7 @@ const EnvironmentSelect = class extends Component {
                         <div>
                             <Select
                               onChange={env => this.props.onChange(env.value)}
-                              options={project.environments && project.environments.map(env => ({ label: env.name, value: env.api_key })).filter(v => {
-                                  return v.value !== this.props.ignoreAPIKey
-                              })}
+                              options={project.environments && project.environments.map(env => ({ label: env.name, value: env.api_key })).filter(v => v.value !== this.props.ignoreAPIKey)}
                               value={selectedEnv ? {
                                   label: selectedEnv.name,
                                   value: selectedEnv.api_key,

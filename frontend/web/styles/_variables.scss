@@ -195,8 +195,8 @@ $panel-alt-heading-color: #fff;
 
 //TABS
 $tab-inactive-color: $body-text;
-$tab-active-background: $bt-brand-faint;
-$tab-inactive-background: $bt-brand-faint;
+$tab-active-background: $bt-brand-faint-alt;
+$tab-inactive-background: $bt-brand-faint-alt;
 $tab-inactive-color-dark: $header-color-dark;
 $tab-active-background-dark: $panel-heading-bg-dark;
 $tab-inactive-background-dark: $panel-heading-bg-dark;
@@ -319,6 +319,10 @@ $aside-nav-collapse-border-dark:$aside-base-highlight-dark;
 
 
 // Aside scrollbar
-$bt-scrollbar-track: rgba(243,236,255,0.1);
-$bt-scrollbar-thumb: rgba(243, 236, 255, 0.2);
+$bt-scrollbar-track: rgba(0,0,0,0.1);
+$bt-scrollbar-thumb: rgba(0, 0, 0, 0.2);
 $bt-scrollbar-thumb-hover: rgba(243,236,255,0.6);
+
+$bt-scrollbar-track-dark: rgba(243,236,255,0.1);
+$bt-scrollbar-thumb-dark: rgba(243, 236, 255, 0.2);
+$bt-scrollbar-thumb-dark-hover: rgba(243,236,255,0.6);

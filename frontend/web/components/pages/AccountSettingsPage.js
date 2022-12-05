@@ -6,7 +6,7 @@ import _data from '../../../common/data/base/_data';
 import ConfigProvider from '../../../common/providers/ConfigProvider';
 import TwoFactor from '../TwoFactor';
 import PaymentModal from '../modals/Payment';
-import Token from "../Token";
+import Token from '../Token';
 
 class TheComponent extends Component {
     static displayName = 'TheComponent';
@@ -18,6 +18,10 @@ class TheComponent extends Component {
         this.state = {
             ...AccountStore.getUser(),
         };
+    }
+
+    componentDidMount() {
+
     }
 
     save = (e) => {
@@ -41,6 +45,18 @@ class TheComponent extends Component {
         }).then(() => {
             toast('Your account has been updated');
         }).catch(error => this.setState({ error: 'There was an error setting your account, please check your details' }));
+    }
+
+    invalidateToken = ()=> {
+            openConfirm("Invalidate Token", (
+                <div>
+                    Invalidating your token will generate a new token to use with our API, <strong>your current token will no longer work</strong>. Performing this action will also log you out, are you sure you wish to do this?
+                </div>
+            ),()=>{
+                _data.delete(`${Project.api}auth/token/`).then(()=>{
+                    AppActions.logout()
+                })
+            })
     }
 
     savePassword = (e) => {
@@ -103,46 +119,46 @@ class TheComponent extends Component {
                                 <div className="col-md-8">
                                     <form className="mb-4" onSubmit={this.save}>
                                         <InputGroup
-                                            className="mt-2"
-                                            title="Email Address"
-                                            data-test="firstName"
-                                            inputProps={{
-                                                className: 'full-width',
-                                                name: 'groupName',
-                                                readOnly: true,
-                                            }}
-                                            value={email}
-                                            onChange={e => this.setState({ first_name: Utils.safeParseEventValue(e) })}
-                                            type="text"
-                                            name="Email Address"
+                                          className="mt-2"
+                                          title="Email Address"
+                                          data-test="firstName"
+                                          inputProps={{
+                                              className: 'full-width',
+                                              name: 'groupName',
+                                              readOnly: true,
+                                          }}
+                                          value={email}
+                                          onChange={e => this.setState({ first_name: Utils.safeParseEventValue(e) })}
+                                          type="text"
+                                          name="Email Address"
                                         />
                                         <InputGroup
-                                            className="mt-2"
-                                            title="First Name"
-                                            data-test="firstName"
-                                            inputProps={{
-                                                className: 'full-width',
-                                                name: 'groupName',
-                                            }}
-                                            value={first_name}
-                                            onChange={e => this.setState({ first_name: Utils.safeParseEventValue(e) })}
-                                            isValid={first_name && first_name.length}
-                                            type="text"
-                                            name="First Name*"
+                                          className="mt-2"
+                                          title="First Name"
+                                          data-test="firstName"
+                                          inputProps={{
+                                              className: 'full-width',
+                                              name: 'groupName',
+                                          }}
+                                          value={first_name}
+                                          onChange={e => this.setState({ first_name: Utils.safeParseEventValue(e) })}
+                                          isValid={first_name && first_name.length}
+                                          type="text"
+                                          name="First Name*"
                                         />
                                         <InputGroup
-                                            className="mt-2"
-                                            title="Last Name"
-                                            data-test="lastName"
-                                            inputProps={{
-                                                className: 'full-width',
-                                                name: 'groupName',
-                                            }}
-                                            value={last_name}
-                                            onChange={e => this.setState({ last_name: Utils.safeParseEventValue(e) })}
-                                            isValid={last_name && last_name.length}
-                                            type="text"
-                                            name="Last Name*"
+                                          className="mt-2"
+                                          title="Last Name"
+                                          data-test="lastName"
+                                          inputProps={{
+                                              className: 'full-width',
+                                              name: 'groupName',
+                                          }}
+                                          value={last_name}
+                                          onChange={e => this.setState({ last_name: Utils.safeParseEventValue(e) })}
+                                          isValid={last_name && last_name.length}
+                                          type="text"
+                                          name="Last Name*"
                                         />
                                         {error && (
                                             <ErrorMessage>
@@ -167,7 +183,15 @@ class TheComponent extends Component {
                                     </p>
                                 </div>
                                 <div className="col-md-12">
-                                    <Token style={{width:400}} token={_data.token}/>
+                                    <Row>
+                                        <Token style={{ width: 400 }} token={_data.token}/>
+                                        {Utils.getFlagsmithHasFeature("rotate_api_token") && (
+                                            <Button onClick={this.invalidateToken}
+                                                    className="btn btn-danger">
+                                                Invalidate
+                                            </Button>
+                                        )}
+                                    </Row>
                                 </div>
                             </div>
 
@@ -179,46 +203,46 @@ class TheComponent extends Component {
                                     <div className="col-md-8">
                                         <form className="mb-4" onSubmit={this.savePassword}>
                                             <InputGroup
-                                                className="mt-2"
-                                                title="Current Password"
-                                                data-test="currentPassword"
-                                                inputProps={{
-                                                    className: 'full-width',
-                                                    name: 'groupName',
-                                                }}
-                                                value={current_password}
-                                                onChange={e => this.setState({ current_password: Utils.safeParseEventValue(e) })}
-                                                isValid={current_password && current_password.length}
-                                                type="password"
-                                                name="Current Password*"
+                                              className="mt-2"
+                                              title="Current Password"
+                                              data-test="currentPassword"
+                                              inputProps={{
+                                                  className: 'full-width',
+                                                  name: 'groupName',
+                                              }}
+                                              value={current_password}
+                                              onChange={e => this.setState({ current_password: Utils.safeParseEventValue(e) })}
+                                              isValid={current_password && current_password.length}
+                                              type="password"
+                                              name="Current Password*"
                                             />
                                             <InputGroup
-                                                className="mt-2"
-                                                title="New Password"
-                                                data-test="newPassword"
-                                                inputProps={{
-                                                    className: 'full-width',
-                                                    name: 'groupName',
-                                                }}
-                                                value={new_password1}
-                                                onChange={e => this.setState({ new_password1: Utils.safeParseEventValue(e) })}
-                                                isValid={new_password1 && new_password1.length}
-                                                type="password"
-                                                name="New Password*"
+                                              className="mt-2"
+                                              title="New Password"
+                                              data-test="newPassword"
+                                              inputProps={{
+                                                  className: 'full-width',
+                                                  name: 'groupName',
+                                              }}
+                                              value={new_password1}
+                                              onChange={e => this.setState({ new_password1: Utils.safeParseEventValue(e) })}
+                                              isValid={new_password1 && new_password1.length}
+                                              type="password"
+                                              name="New Password*"
                                             />
                                             <InputGroup
-                                                className="mt-2"
-                                                title="Confirm New Password"
-                                                data-test="newPassword"
-                                                inputProps={{
-                                                    className: 'full-width',
-                                                    name: 'groupName',
-                                                }}
-                                                value={new_password2}
-                                                onChange={e => this.setState({ new_password2: Utils.safeParseEventValue(e) })}
-                                                isValid={new_password2 && new_password2.length}
-                                                type="password"
-                                                name="Confirm New Password*"
+                                              className="mt-2"
+                                              title="Confirm New Password"
+                                              data-test="newPassword"
+                                              inputProps={{
+                                                  className: 'full-width',
+                                                  name: 'groupName',
+                                              }}
+                                              value={new_password2}
+                                              onChange={e => this.setState({ new_password2: Utils.safeParseEventValue(e) })}
+                                              isValid={new_password2 && new_password2.length}
+                                              type="password"
+                                              name="Confirm New Password*"
                                             />
                                             {passwordError && (
                                                 <ErrorMessage>
@@ -245,12 +269,12 @@ class TheComponent extends Component {
                                     {has2fPermission ? <TwoFactor/> : (
                                         <div className="text-right">
                                             <button
-                                                type="button" className="btn btn-primary text-center ml-auto mt-2 mb-2"
-                                                onClick={() => {
-                                                    openModal('Payment plans', <PaymentModal
-                                                        viewOnly={false}
-                                                    />, null, { large: true });
-                                                }}
+                                              type="button" className="btn btn-primary text-center ml-auto mt-2 mb-2"
+                                              onClick={() => {
+                                                  openModal('Payment plans', <PaymentModal
+                                                    viewOnly={false}
+                                                  />, null, { large: true });
+                                              }}
                                             >
                                                 Manage payment plan
                                             </button>

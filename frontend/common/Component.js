@@ -1,4 +1,5 @@
-module.exports = function (options) {
+module.exports = function Component(options) {
+    // eslint-disable-next-line
     return React.createClass(Object.assign({}, options, {
         _listeners: [],
         setTheme(theme) {

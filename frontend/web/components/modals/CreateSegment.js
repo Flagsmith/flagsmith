@@ -1,15 +1,15 @@
-import React, { Component } from 'react';
+import React, { Component, useEffect, useState } from 'react';
 import engine from 'bullet-train-rules-engine';
-import { Tab } from '@material-ui/core';
 import Rule from './Rule';
-import Highlight from '../Highlight';
 import SegmentStore from '../../../common/stores/segment-list-store';
 import IdentityListProvider from '../../../common/providers/IdentityListProvider';
 import Constants from '../../../common/constants';
+import EnvironmentSelect from '../EnvironmentSelect';
 import Tabs from '../base/forms/Tabs';
 import TabItem from '../base/forms/TabItem';
 import AssociatedSegmentOverrides from './AssociatedSegmentOverrides';
-import InfoMessage from "../InfoMessage";
+import InfoMessage from '../InfoMessage';
+import _data from "../../../common/data/base/_data";
 
 const SEGMENT_ID_MAXLENGTH = Constants.forms.maxLength.SEGMENT_ID;
 
@@ -39,15 +39,17 @@ const CreateSegment = class extends Component {
             description,
             name,
             rules,
+            environmentId: props.environmentId,
             id,
             isValid: this.validateRules(rules),
             data: '{\n}',
         };
+
         AppActions.getIdentities(props.environmentId);
 
-        this.listenTo(SegmentStore, 'saved', () => {
-            if(this.props.onComplete) {
-                this.props.onComplete()
+        this.listenTo(SegmentStore, 'saved', (segment) => {
+            if (this.props.onComplete) {
+                this.props.onComplete(segment);
             } else {
                 this.close();
             }
@@ -61,9 +63,7 @@ const CreateSegment = class extends Component {
         if (!rules || !rules[0] || !rules[0].rules) {
             return false;
         }
-        const res = rules[0].rules.find(v => v.conditions.find(c => {
-            return !Utils.validateRule(c);
-        }));
+        const res = rules[0].rules.find(v => v.conditions.find(c => !Utils.validateRule(c)));
 
         return !res;
     }
@@ -117,9 +117,9 @@ const CreateSegment = class extends Component {
         const { state: { description = '', id, name, rules } } = this;
         if (name) {
             if (this.props.segment) {
-                AppActions.editSegment(this.props.projectId, { description, name, rules, id: this.props.segment.id, feature:this.props.feature });
+                AppActions.editSegment(this.props.projectId, { description, name, rules, id: this.props.segment.id, feature: this.props.feature });
             } else {
-                AppActions.createSegment(this.props.projectId, { description, name, rules, feature:this.props.feature });
+                AppActions.createSegment(this.props.projectId, { description, name, rules, feature: this.props.feature });
             }
         }
     };
@@ -142,6 +142,9 @@ const CreateSegment = class extends Component {
         const { name, description, rules, isSaving, error } = this.state;
         const { isEdit, identity, readOnly } = this.props;
 
+
+
+
         const rulesEl = (
             <div className="mt-4 overflow-visible">
                 <div>
@@ -156,14 +159,14 @@ const CreateSegment = class extends Component {
                                     </Row>
                                 )}
                                 <Rule
-                                    readOnly={readOnly}
-                                    data-test={`rule-${i}`}
-                                    rule={rule}
-                                    operators={
+                                  readOnly={readOnly}
+                                  data-test={`rule-${i}`}
+                                  rule={rule}
+                                  operators={
                                         Utils.getFlagsmithValue('segment_operators') ? JSON.parse(Utils.getFlagsmithValue('segment_operators')) : null
                                     }
-                                    onRemove={v => this.removeRule(0, i, v)}
-                                    onChange={v => this.updateRule(0, i, v)}
+                                  onRemove={v => this.removeRule(0, i, v)}
+                                  onChange={v => this.updateRule(0, i, v)}
                                 />
                             </div>
                         ))}
@@ -171,8 +174,8 @@ const CreateSegment = class extends Component {
                     <Row className="justify-content-center">
                         {!readOnly && (
                             <div
-                                onClick={() => this.addRule('ANY')} style={{ marginTop: 20 }}
-                                className="text-center"
+                              onClick={() => this.addRule('ANY')} style={{ marginTop: 20 }}
+                              className="text-center"
                             >
                                 <ButtonOutline data-test="add-rule" type="button">
                                     Add AND Condition
@@ -181,8 +184,8 @@ const CreateSegment = class extends Component {
                         )}
                         {!readOnly && Utils.getFlagsmithHasFeature('not_operator') && (
                             <div
-                                onClick={() => this.addRule('NOT')} style={{ marginTop: 20 }}
-                                className="text-center"
+                              onClick={() => this.addRule('NOT')} style={{ marginTop: 20 }}
+                              className="text-center"
                             >
                                 {
                                     Utils.getFlagsmithValue('not_operator') ? (
@@ -210,8 +213,8 @@ const CreateSegment = class extends Component {
 
         const Tab1 = (
             <form
-                id="create-segment-modal"
-                onSubmit={this.save}
+              id="create-segment-modal"
+              onSubmit={this.save}
             >
                 {!this.props.condensed && (
                     <div className="mt-4">
@@ -221,41 +224,44 @@ const CreateSegment = class extends Component {
                     </div>
                 )}
 
-                <Row className="mb-4">
-                    <label className="mr-2 mb-0" htmlFor="segmentID">
-                        ID
-                    </label>
-                    <div style={{width:200}}>
-                        <Input
-                            ref={e => this.input = e}
-                            data-test="segmentID"
-                            name="id"
-                            id="segmentID"
-                            readOnly={isEdit}
-                            maxLength={SEGMENT_ID_MAXLENGTH}
-                            value={name}
-                            onChange={e => this.setState({ name: Format.enumeration.set(Utils.safeParseEventValue(e)).toLowerCase() })}
-                            isValid={name && name.length}
-                            type="text" title={isEdit ? 'ID' : 'ID*'}
-                            placeholder="E.g. power_users"
-                        />
-                    </div>
+                {!isEdit && (
+                    <Row className="mb-4">
+                        <label className="mr-2 mb-0" htmlFor="segmentID">
+                            ID
+                        </label>
+                        <Flex>
+                            <Input
+                              ref={e => this.input = e}
+                              data-test="segmentID"
+                              name="id"
+                              id="segmentID"
+                              readOnly={isEdit}
+                              maxLength={SEGMENT_ID_MAXLENGTH}
+                              value={name}
+                              onChange={e => this.setState({ name: Format.enumeration.set(Utils.safeParseEventValue(e)).toLowerCase() })}
+                              isValid={name && name.length}
+                              type="text" title={isEdit ? 'ID' : 'ID*'}
+                              placeholder="E.g. power_users"
+                            />
+                        </Flex>
 
-                </Row>
+                    </Row>
+                )}
+
 
                 {!this.props.condensed && (
                     <FormGroup className="mb-4">
                         <InputGroup
-                            value={description}
-                            inputProps={{
-                                className: 'full-width',
-                                readOnly: !!identity || readOnly,
-                                name: 'featureDesc',
-                            }}
-                            onChange={e => this.setState({ description: Utils.safeParseEventValue(e) })}
-                            isValid={name && name.length}
-                            type="text" title="Description (optional)"
-                            placeholder="e.g. 'People who have spent over $100' "
+                          value={description}
+                          inputProps={{
+                              className: 'full-width',
+                              readOnly: !!identity || readOnly,
+                              name: 'featureDesc',
+                          }}
+                          onChange={e => this.setState({ description: Utils.safeParseEventValue(e) })}
+                          isValid={name && name.length}
+                          type="text" title="Description (optional)"
+                          placeholder="e.g. 'People who have spent over $100' "
                         />
                     </FormGroup>
                 )}
@@ -276,15 +282,15 @@ const CreateSegment = class extends Component {
                 {this.props.readOnly ? (
                     <div className="text-right">
                         <Tooltip
-                            html
-                            title={(
-                                <Button
-                                    disabled data-test="show-create-feature-btn" id="show-create-feature-btn"
-                                >
+                          html
+                          title={(
+                              <Button
+                                disabled data-test="show-create-feature-btn" id="show-create-feature-btn"
+                              >
                                     Update Segment
-                                </Button>
+                              </Button>
                             )}
-                            place="left"
+                          place="left"
                         >
                             {Constants.projectPermissions('Admin')}
                         </Tooltip>
@@ -297,16 +303,16 @@ const CreateSegment = class extends Component {
                             )}
                             {isEdit ? (
                                 <Button
-                                    type="submit" data-test="update-segment" id="update-feature-btn"
-                                    disabled={isSaving || !name || !this.state.isValid}
+                                  type="submit" data-test="update-segment" id="update-feature-btn"
+                                  disabled={isSaving || !name || !this.state.isValid}
                                 >
                                     {isSaving ? 'Creating' : 'Update Segment'}
                                 </Button>
                             ) : (
                                 <Button
-                                    type="submit" data-test="create-segment" disabled
-                                    id="create-feature-btn"
-                                    disabled={isSaving || !name || !this.state.isValid}
+                                  type="submit" data-test="create-segment" disabled
+                                  id="create-feature-btn"
+                                  disabled={isSaving || !name || !this.state.isValid}
                                 >
                                     {isSaving ? 'Creating' : 'Create Segment'}
                                 </Button>
@@ -319,78 +325,95 @@ const CreateSegment = class extends Component {
             </form>
         );
 
-        const { environmentId } = this.props;
+        const { environmentId } = this.state;
 
         return (
-            <div className="mt-2 mr-3 ml-3">
+            <div>
                 {isEdit && !this.props.condensed ? (
                     <Tabs value={this.state.tab} onChange={tab => this.setState({ tab })}>
                         <TabItem tabLabel="Rules">
-                            <div className="mt-2">
+                            <div className="mt-4 mr-3 ml-3">
                                 {Tab1}
                             </div>
                         </TabItem>
-                        {this.props.hasFeature("segment_associated_features") && (
+                        {this.props.hasFeature('segment_associated_features') && (
                             <TabItem tabLabel="Features">
-                                <AssociatedSegmentOverrides feature={this.props.segment.feature} projectId={this.props.projectId} id={this.props.segment.id}/>
+                                <div className="mt-4 mr-3 ml-3">
+                                    <AssociatedSegmentOverrides feature={this.props.segment.feature} projectId={this.props.projectId} id={this.props.segment.id}/>
+                                </div>
                             </TabItem>
                         )}
 
                         <TabItem tabLabel="Users">
-                            <div className="mt-2">
+                            <div className="mt-4 mr-3 ml-3">
+                                <InfoMessage>
+                                    This is a random sample of Identities who are either in or out of this Segment based on the current Segment rules.
+                                </InfoMessage>
                                 <IdentityListProvider>
                                     {({ isLoading, identities, identitiesPaging }) => (
                                         <div className="mt-2">
                                             <FormGroup>
-                                                <PanelSearch
-                                                    renderSearchWithNoResults
-                                                    id="users-list"
-                                                    title="Segment Users"
-                                                    className="no-pad"
-                                                    isLoading={isLoading}
-                                                    icon="ion-md-person"
-                                                    items={identities}
-                                                    paging={identitiesPaging}
-                                                    showExactFilter
-                                                    nextPage={() => AppActions.getIdentitiesPage(environmentId, identitiesPaging.next)}
-                                                    prevPage={() => AppActions.getIdentitiesPage(environmentId, identitiesPaging.previous)}
-                                                    goToPage={page => AppActions.getIdentitiesPage(environmentId, `${Project.api}environments/${environmentId}/${Utils.getIdentitiesEndpoint()}/?page=${page}`)}
-                                                    renderRow={({
-                                                                    id,
-                                                                    identifier,
-                                                                }, index) => (
-                                                        <div key={id}>
-                                                            <IdentitySegmentsProvider fetch id={id} projectId={this.props.projectId}>{({ isLoading: segmentsLoading, segments }) => {
-                                                                let inSegment = false;
-                                                                if (segments && segments.find(v => v.name === name)) {
-                                                                    inSegment = true;
-                                                                }
-                                                                return (
-                                                                    <Row
-                                                                        space className="list-item clickable" key={id}
-                                                                        data-test={`user-item-${index}`}
-                                                                    >
-                                                                        <strong>
-                                                                            {identifier}
-                                                                        </strong>
-                                                                        <div className={`${inSegment ? 'strong text-primary' : 'text-faint muted faint text-small'} badge`}>
-                                                                            <span className={`ion mr-1 line ${inSegment ? ' text-primary ion-ios-checkmark-circle' : 'ion-ios-remove-circle'}`}/>
-                                                                            {inSegment ? 'User in segment' : 'Not in segment'}
-                                                                        </div>
-                                                                    </Row>
-                                                                );
-                                                            }}
-                                                            </IdentitySegmentsProvider>
-                                                        </div>
-                                                    )}
-                                                    filterRow={(flag, search) => flag.identifier && flag.identifier.toLowerCase().indexOf(search) !== -1}
-                                                    search={this.state.search}
-                                                    onChange={(e) => {
-                                                        this.setState({ search: Utils.safeParseEventValue(e) });
-                                                        AppActions.searchIdentities(this.props.environmentId, Utils.safeParseEventValue(e));
-                                                    }}
+
+                                                <InputGroup
+                                                  title="Environment"
+                                                  component={(
+                                                      <EnvironmentSelect
+                                                        value={this.state.environmentId}
+                                                        onChange={(environmentId) => {
+                                                            this.setState({ environmentId });
+                                                            AppActions.getIdentities(environmentId);
+                                                        }}
+                                                      />
+)}
                                                 />
-                                                <p className="text-right mt-4">This is a random sample of users who are either in or out of the Segment.</p>
+                                                <PanelSearch
+                                                  renderSearchWithNoResults
+                                                  id="users-list"
+                                                  title="Segment Users"
+                                                  className="no-pad"
+                                                  isLoading={isLoading}
+                                                  icon="ion-md-person"
+                                                  items={identities}
+                                                  paging={identitiesPaging}
+                                                  showExactFilter
+                                                  nextPage={() => AppActions.getIdentitiesPage(environmentId, identitiesPaging.next)}
+                                                  prevPage={() => AppActions.getIdentitiesPage(environmentId, identitiesPaging.previous)}
+                                                  goToPage={page => AppActions.getIdentitiesPage(environmentId, `${Project.api}environments/${environmentId}/${Utils.getIdentitiesEndpoint()}/?page=${page}`)}
+                                                  renderRow={({
+                                                      id,
+                                                      identifier,
+                                                  }, index) => (
+                                                      <div key={id}>
+                                                          <IdentitySegmentsProvider fetch id={id} projectId={this.props.projectId}>{({ isLoading: segmentsLoading, segments }) => {
+                                                              let inSegment = false;
+                                                              if (segments && segments.find(v => v.name === name)) {
+                                                                  inSegment = true;
+                                                              }
+                                                              return (
+                                                                  <Row
+                                                                    space className="list-item clickable" key={id}
+                                                                    data-test={`user-item-${index}`}
+                                                                  >
+                                                                      <strong>
+                                                                          {identifier}
+                                                                      </strong>
+                                                                      <div className={`${inSegment ? 'strong text-primary' : 'text-faint muted faint text-small'} badge`}>
+                                                                          <span className={`ion mr-1 line ${inSegment ? ' text-primary ion-ios-checkmark-circle' : 'ion-ios-remove-circle'}`}/>
+                                                                          {inSegment ? 'User in segment' : 'Not in segment'}
+                                                                      </div>
+                                                                  </Row>
+                                                              );
+                                                          }}
+                                                          </IdentitySegmentsProvider>
+                                                      </div>
+                                                  )}
+                                                  filterRow={(flag, search) => flag.identifier && flag.identifier.toLowerCase().indexOf(search) !== -1}
+                                                  search={this.state.search}
+                                                  onChange={(e) => {
+                                                      this.setState({ search: Utils.safeParseEventValue(e) });
+                                                      AppActions.searchIdentities(this.state.environmentId, Utils.safeParseEventValue(e));
+                                                  }}
+                                                />
                                             </FormGroup>
                                         </div>
                                     )}
@@ -398,11 +421,31 @@ const CreateSegment = class extends Component {
                             </div>
                         </TabItem>
                     </Tabs>
-                ) : Tab1}
+                ) :<div className="mt-4 mr-3 ml-3">{Tab1}</div>}
             </div>
         );
     }
 };
 CreateSegment.propTypes = {};
 
-module.exports = hot(module)(ConfigProvider(CreateSegment));
+
+
+const LoadingCreateSegment  = (props) => {
+    const [loading, setLoading] = useState(!!props.segment);
+    const [segmentData, setSegmentData] = useState(null);
+
+    useEffect(()=>{
+        _data.get(`${Project.api}projects/${props.projectId}/segments/${props.segment}`).then((segment)=> {
+            setSegmentData(segment);
+            setLoading(false)
+        })
+    },[props.segment])
+
+    return loading?<div className="text-center"><Loader/></div> : (
+        <CreateSegment {...props} segment={segmentData}/>
+    )
+}
+
+export default LoadingCreateSegment
+
+module.exports = hot(module)(ConfigProvider(LoadingCreateSegment));

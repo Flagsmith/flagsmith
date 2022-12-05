@@ -1,7 +1,7 @@
-import React, { Component } from 'react';
+import React from 'react';
 import FeatureListStore from '../stores/feature-list-store';
 
-const FeatureListProvider = class extends Component {
+const FeatureListProvider = class extends React.Component {
     static displayName = 'FeatureListProvider'
 
     constructor(props, context) {
@@ -71,7 +71,7 @@ const FeatureListProvider = class extends Component {
         });
     };
 
-    editFlagValue = (projectId, environmentId, flag, projectFlag, environmentFlag, segmentOverrides) => {
+    editFlagValue = (projectId, environmentId, flag, projectFlag, environmentFlag) => {
         AppActions.editFlag(projectId, Object.assign({}, projectFlag, {
             multivariate_options: flag.multivariate_options && flag.multivariate_options.map((v) => {
                 const matchingProjectVariate = (projectFlag.multivariate_options && projectFlag.multivariate_options.find(p => p.id === v.id)) || v;
@@ -83,8 +83,8 @@ const FeatureListProvider = class extends Component {
         }), (newProjectFlag) => {
             AppActions.editEnvironmentFlag(projectId, environmentId, flag, newProjectFlag, {
                 ...environmentFlag,
-                multivariate_feature_state_values: flag.multivariate_options,
-            }, null, "VALUE");
+                multivariate_feature_state_values: newProjectFlag.multivariate_options.map((v, i) => ({ ...flag.multivariate_options[i], id: v.id })),
+            }, null, 'VALUE');
         });
     };
 
@@ -101,11 +101,11 @@ const FeatureListProvider = class extends Component {
             AppActions.editEnvironmentFlag(projectId, environmentId, flag, newProjectFlag, {
                 ...environmentFlag,
                 multivariate_feature_state_values: flag.multivariate_options,
-            }, segmentOverrides, "SEGMENT", onComplete);
+            }, segmentOverrides, 'SEGMENT', onComplete);
         });
     };
 
-    editFlagSettings = (projectId, environmentId, flag, projectFlag, environmentFlag, segmentOverrides) => {
+    editFlagSettings = (projectId, environmentId, flag, projectFlag) => {
         AppActions.editFlag(projectId, Object.assign({}, projectFlag, flag, {
             multivariate_options: flag.multivariate_options && flag.multivariate_options.map((v) => {
                 const matchingProjectVariate = (projectFlag.multivariate_options && projectFlag.multivariate_options.find(p => p.id === v.id)) || v;
@@ -114,10 +114,10 @@ const FeatureListProvider = class extends Component {
                     default_percentage_allocation: matchingProjectVariate.default_percentage_allocation,
                 };
             }),
-        }), ()=>{
+        }), () => {
             FeatureListStore.isSaving = false;
-            FeatureListStore.trigger("saved")
-            FeatureListStore.trigger("change")
+            FeatureListStore.trigger('saved');
+            FeatureListStore.trigger('change');
         });
     };
 
@@ -165,6 +165,10 @@ const FeatureListProvider = class extends Component {
     }
 };
 
-FeatureListProvider.propTypes = {};
+FeatureListProvider.propTypes = {
+    onSave: OptionalFunc,
+    onError: OptionalFunc,
+    children: OptionalFunc,
+};
 
 module.exports = FeatureListProvider;

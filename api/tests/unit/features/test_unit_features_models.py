@@ -124,4 +124,4 @@ def test_creating_a_feature_with_defaults_does_not_set_defaults_if_disabled(
     # Then
     feature_state = FeatureState.objects.get(feature=feature, environment=environment)
     assert feature_state.enabled is False
-    assert feature_state.get_feature_state_value() is None
+    assert not feature_state.get_feature_state_value()

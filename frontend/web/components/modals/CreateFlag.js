@@ -352,13 +352,14 @@ const CreateFlag = class extends Component {
         const Provider = identity ? IdentityProvider : FeatureListProvider;
         const environmentVariations = this.props.environmentVariations;
         const environment = ProjectStore.getEnvironment(this.props.environmentId);
-        const is4Eyes = !!environment && Utils.changeRequestsEnabled(environment.minimum_change_request_approvals) && Utils.getFlagsmithHasFeature('4eyes');
+        const is4Eyes = !!environment && Utils.changeRequestsEnabled(environment.minimum_change_request_approvals)
         const canSchedule = Utils.getPlansPermission('SCHEDULE_FLAGS');
         const is4EyesSegmentOverrides = is4Eyes && Utils.getFlagsmithHasFeature('4eyes_segment_overrides'); //
         const controlValue = Utils.calculateControl(multivariate_options);
         const invalid = !!multivariate_options && multivariate_options.length && controlValue < 0;
         const existingChangeRequest = this.props.changeRequest;
         const hideIdentityOverridesTab = Utils.getShouldHideIdentityOverridesTab();
+        const noPermissions = this.props.noPermissions;
         const Settings = (projectAdmin, createFeature) => (
             <>
                 {!identity && this.state.tags && (
@@ -441,7 +442,7 @@ const CreateFlag = class extends Component {
         const Value = (projectAdmin, createFeature, hideValue) => (
             <>
                 {!isEdit && (
-                    <FormGroup className="mb-4 mr-3 ml-3">
+                    <FormGroup className="mb-4 mr-3 mt-2 ml-3">
                         <InputGroup
                           ref={e => this.input = e}
                           data-test="featureID"
@@ -467,7 +468,7 @@ const CreateFlag = class extends Component {
                           data-test="featureDesc"
                           inputProps={{
                               className: 'full-width',
-                              readOnly: !!identity,
+                              readOnly: !!identity || noPermissions,
                               name: 'featureDesc',
                               valueChanged: true,
                           }}
@@ -481,6 +482,7 @@ const CreateFlag = class extends Component {
                 {!hideValue && (
                     <div className={identity && !description ? 'mt-2' : ''}>
                         <Feature
+                          readOnly={noPermissions}
                           hide_from_client={hide_from_client}
                           multivariate_options={multivariate_options}
                           environmentVariations={environmentVariations}
@@ -622,60 +624,59 @@ const CreateFlag = class extends Component {
                                                                                 }
                                                                             </strong>
                                                                         </p>
-                                                                        <div className="text-right">
-                                                                            {Utils.getFlagsmithHasFeature('scheduling') && !is4Eyes && (
-                                                                                <>
-                                                                                    {canSchedule ? (
-                                                                                        <ButtonOutline
-                                                                                          onClick={() => saveFeatureValue(true)} className="mr-2" type="button"
-                                                                                          data-test="create-change-request"
-                                                                                          id="create-change-request-btn" disabled={isSaving || !name || invalid}
-                                                                                        >
-                                                                                            {isSaving ? existingChangeRequest ? 'Updating Change Request' : 'Scheduling Update' : existingChangeRequest ? 'Update Change Request' : 'Schedule Update'}
-                                                                                        </ButtonOutline>
-                                                                                    ) : (
-                                                                                        <Tooltip title={(
-                                                                                            <ButtonOutline
-                                                                                              disabled
-                                                                                              className="mr-2" type="button"
-                                                                                              data-test="create-change-request"
-                                                                                              id="create-change-request-btn"
-                                                                                            >
-                                                                                                {isSaving ? existingChangeRequest ? 'Updating Change Request' : 'Scheduling Update' : existingChangeRequest ? 'Update Change Request' : 'Schedule Update'}
-                                                                                            </ButtonOutline>
-                                                                                        )}
-                                                                                        >
-                                                                                            {'This feature is available on our start-up plan'}
-                                                                                        </Tooltip>
-                                                                                    )}
-                                                                                </>
 
-                                                                            )}
-                                                                            {is4Eyes ? (
-                                                                                <Permission level="environment" permission={Utils.getManageFeaturePermission(is4Eyes)} id={this.props.environmentId}>
-                                                                                    {({ permission: changeRequestPermission }) => (
-                                                                                        Utils.renderWithPermission(changeRequestPermission, Constants.environmentPermissions(Utils.getManageFeaturePermissionDescription(is4Eyes)), (
+
+                                                                        <Permission level="environment" permission={Utils.getManageFeaturePermission(is4Eyes)} id={this.props.environmentId}>
+                                                                            {({ permission: savePermission }) => (
+                                                                                Utils.renderWithPermission(savePermission, Constants.environmentPermissions(Utils.getManageFeaturePermissionDescription(is4Eyes)), (
+                                                                                    <div className="text-right">
+                                                                                        {!is4Eyes && (
+                                                                                                <>
+                                                                                                    {canSchedule ? (
+                                                                                                        <ButtonOutline
+                                                                                                          onClick={() => saveFeatureValue(true)} className="mr-2" type="button"
+                                                                                                          data-test="create-change-request"
+                                                                                                          id="create-change-request-btn" disabled={isSaving || !name || invalid || !savePermission}
+                                                                                                        >
+                                                                                                            {isSaving ? existingChangeRequest ? 'Updating Change Request' : 'Scheduling Update' : existingChangeRequest ? 'Update Change Request' : 'Schedule Update'}
+                                                                                                        </ButtonOutline>
+                                                                                                    ) : (
+                                                                                                        <Tooltip title={(
+                                                                                                            <ButtonOutline
+                                                                                                              disabled
+                                                                                                              className="mr-2" type="button"
+                                                                                                              data-test="create-change-request"
+                                                                                                              id="create-change-request-btn"
+                                                                                                            >
+                                                                                                                {isSaving ? existingChangeRequest ? 'Updating Change Request' : 'Scheduling Update' : existingChangeRequest ? 'Update Change Request' : 'Schedule Update'}
+                                                                                                            </ButtonOutline>
+                                                                                                        )}
+                                                                                                        >
+                                                                                                            {'This feature is available on our start-up plan'}
+                                                                                                        </Tooltip>
+                                                                                                    )}
+                                                                                                </>
+
+                                                                                        )}
+                                                                                        {is4Eyes ? (
                                                                                             <Button
                                                                                               onClick={() => saveFeatureValue()} type="button" data-test="update-feature-btn"
-                                                                                              id="update-feature-btn" disabled={!changeRequestPermission || isSaving || !name || invalid}
+                                                                                              id="update-feature-btn" disabled={!savePermission || isSaving || !name || invalid}
                                                                                             >
                                                                                                 {isSaving ? existingChangeRequest ? 'Updating Change Request' : 'Creating Change Request' : existingChangeRequest ? 'Update Change Request' : 'Create Change Request'}
                                                                                             </Button>
-                                                                                        ))
-                                                                                    )}
 
-                                                                                </Permission>
-                                                                            ) : (
-                                                                                <Button
-                                                                                  onClick={() => saveFeatureValue()} type="button" data-test="update-feature-btn"
-                                                                                  id="update-feature-btn" disabled={isSaving || !name || invalid}
-                                                                                >
-                                                                                    {isSaving ? 'Updating' : 'Update Feature Value'}
-                                                                                </Button>
-                                                                            )}
+                                                                                        ) : (
+                                                                                            <Button
+                                                                                              onClick={() => saveFeatureValue()} type="button" data-test="update-feature-btn"
+                                                                                              id="update-feature-btn" disabled={isSaving || !name || invalid || !savePermission}
+                                                                                            >
+                                                                                                {isSaving ? 'Updating' : 'Update Feature Value'}
+                                                                                            </Button>
+                                                                                        )}
+                                                                                    </div>)))}
+                                                                        </Permission>
 
-
-                                                                        </div>
                                                                     </FormGroup>
                                                                 </TabItem>
                                                                 {!existingChangeRequest && (
@@ -692,7 +693,7 @@ const CreateFlag = class extends Component {
                                                                         {!identity && isEdit && (
                                                                             <FormGroup className="mb-4 mr-3 ml-3">
                                                                                 <Permission level="environment" permission={Utils.getManageFeaturePermission()} id={this.props.environmentId}>
-                                                                                    {({ permission: environmentAdmin }) => (environmentAdmin ? (
+                                                                                    {({ permission: environmentAdmin }) => ((
                                                                                         <div>
                                                                                             <Panel
                                                                                               icon="ion-ios-settings"
@@ -705,7 +706,7 @@ const CreateFlag = class extends Component {
                                                                                                   </Tooltip>
                                                                                                 )}
                                                                                               action={
-                                                                                                    !this.state.showCreateSegment && (
+                                                                                                    !this.state.showCreateSegment && !noPermissions && (
                                                                                                         <Button onClick={() => this.changeSegment(this.props.segmentOverrides)} type="button" className={`btn--outline${enabledSegment ? '' : '-red'}`}>
                                                                                                             {enabledSegment ? 'Enable All' : 'Disable All'}
                                                                                                         </Button>
@@ -714,6 +715,8 @@ const CreateFlag = class extends Component {
                                                                                             >
                                                                                                 {this.props.segmentOverrides ? (
                                                                                                     <SegmentOverrides
+                                                                                                      readOnly={noPermissions}
+                                                                                                      showEditSegment
                                                                                                       showCreateSegment={this.state.showCreateSegment}
                                                                                                       setShowCreateSegment={showCreateSegment => this.setState({ showCreateSegment })}
                                                                                                       feature={projectFlag.id}
@@ -722,7 +725,6 @@ const CreateFlag = class extends Component {
                                                                                                       environmentId={this.props.environmentId}
                                                                                                       value={this.props.segmentOverrides}
                                                                                                       controlValue={initial_value}
-                                                                                                      segments={this.props.segments}
                                                                                                       onChange={(v) => {
                                                                                                           this.setState({ segmentsChanged: true });
                                                                                                           this.props.updateSegments(v);
@@ -745,34 +747,24 @@ const CreateFlag = class extends Component {
                                                                                                             }
                                                                                                         </strong>
                                                                                                     </p>
-                                                                                                    <div className="text-right">
-                                                                                                        <Button
-                                                                                                          onClick={saveFeatureSegments} type="button" data-test="update-feature-segments-btn"
-                                                                                                          id="update-feature-segments-btn" disabled={isSaving || !name || invalid}
-                                                                                                        >
-                                                                                                            {isSaving ? 'Updating' : 'Update Segment Overrides'}
-                                                                                                        </Button>
-                                                                                                    </div>
+                                                                                                    <Permission level="environment" permission={Utils.getManageFeaturePermission(is4Eyes)} id={this.props.environmentId}>
+                                                                                                        {({ permission: savePermission }) => (
+                                                                                                            Utils.renderWithPermission(savePermission, Constants.environmentPermissions(Utils.getManageFeaturePermissionDescription(is4Eyes)), (
+                                                                                                                <div className="text-right">
+                                                                                                                    <Button
+                                                                                                                      onClick={saveFeatureSegments} type="button" data-test="update-feature-segments-btn"
+                                                                                                                      id="update-feature-segments-btn" disabled={isSaving || !name || invalid || !savePermission}
+                                                                                                                    >
+                                                                                                                        {isSaving ? 'Updating' : 'Update Segment Overrides'}
+                                                                                                                    </Button>
+                                                                                                                </div>
+
+                                                                                                            )))}
+                                                                                                    </Permission>
                                                                                                 </div>
                                                                                             )}
-
-
                                                                                         </div>
 
-                                                                                    ) : (
-                                                                                        <Panel
-                                                                                          icon="ion-ios-settings"
-                                                                                          title={(
-                                                                                              <Tooltip
-                                                                                                title={<h6 className="mb-0">Segment Overrides <span className="icon ion-ios-information-circle"/></h6>}
-                                                                                                place="right"
-                                                                                              >
-                                                                                                  {Constants.strings.SEGMENT_OVERRIDES_DESCRIPTION}
-                                                                                              </Tooltip>
-                                                                                            )}
-                                                                                        >
-                                                                                            <div dangerouslySetInnerHTML={{ __html: Constants.environmentPermissions(Utils.getManageFeaturePermission()) }}/>
-                                                                                        </Panel>
                                                                                     ))}
                                                                                 </Permission>
                                                                             </FormGroup>
@@ -920,6 +912,8 @@ const CreateFlag = class extends Component {
                                                                             <Panel
                                                                               title={!!influxData && <h6 className="mb-0">Flag events for last {influxData.timespan} days</h6>}
                                                                             >
+                                                                                {!influxData && <div className="text-center"><Loader/></div> }
+
                                                                                 {this.drawChart(influxData)}
                                                                             </Panel>
                                                                         </FormGroup>
@@ -938,7 +932,7 @@ const CreateFlag = class extends Component {
                                                                     >
                                                                         {Settings(projectAdmin, createFeature)}
                                                                         {isEdit && (
-                                                                            <div className="text-right">
+                                                                            <div className="text-right mr-3">
                                                                                 {createFeature ? (
                                                                                     <p className="text-right">
                                                                                         This will save the above settings <strong>all environments</strong>.
@@ -964,7 +958,7 @@ const CreateFlag = class extends Component {
                                                                 )}
                                                             </Tabs>
                                                         ) : (
-                                                            <div>
+                                                            <div className="mr-3">
                                                                 {Value(projectAdmin, createFeature, project.prevent_flag_defaults)}
                                                                 {!identity && (
                                                                     <div className="text-right">

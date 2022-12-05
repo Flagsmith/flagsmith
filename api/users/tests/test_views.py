@@ -415,3 +415,21 @@ def test_user_permission_group_can_update_is_default(
     # and
     user_permission_group.refresh_from_db()
     assert user_permission_group.is_default is True
+
+
+def test_user_permission_group_can_update_external_id(
+    admin_client, organisation, user_permission_group
+):
+    # Given
+    args = [organisation.id, user_permission_group.id]
+    url = reverse("api-v1:organisations:organisation-groups-detail", args=args)
+    external_id = "some_external_id"
+
+    data = {"external_id": external_id, "name": user_permission_group.name}
+
+    # When
+    response = admin_client.put(url, data=data)
+
+    # Then
+    assert response.status_code == status.HTTP_200_OK
+    assert response.json()["external_id"] == external_id
