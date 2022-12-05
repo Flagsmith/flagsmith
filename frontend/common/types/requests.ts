@@ -1,7 +1,7 @@
 export type PagedRequest<T> =  T & {
   page?:number
   q?:string
-  page_size?: string
+  page_size?: number
 }
 
 export type Req = {

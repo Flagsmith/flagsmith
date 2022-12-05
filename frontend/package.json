@@ -134,6 +134,7 @@
   },
   "devDependencies": {
     "@ffmpeg-installer/ffmpeg": "^1.1.0",
+    "@types/react-select": "^2.0.3",
     "babel-plugin-module-resolver": "^4.1.0",
     "chromedriver": "96.0.0",
     "nodemon": "^2.0.16",

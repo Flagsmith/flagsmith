@@ -1,15 +1,15 @@
 import { Res } from 'common/types/responses'
 import { Req } from 'common/types/requests'
 import { service } from 'common/service'
-
+import Utils from '../utils/utils'
 export const segmentService = service
   .enhanceEndpoints({ addTagTypes: ['Segment'] })
     .injectEndpoints({
   endpoints: (builder) => ({
 
     getSegments: builder.query<Res['segments'], Req['getSegments']>({
-      query: (data) => ({
-        url: `projects/${data.projectId}/segments/`,
+      query: ({projectId,...rest}) => ({
+        url: `projects/${projectId}/segments/?${Utils.toParam(rest)}`,
       }),
       providesTags:[{ type: 'Segment', id: 'LIST' },],
     }),
