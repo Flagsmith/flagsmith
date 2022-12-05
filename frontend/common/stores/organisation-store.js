@@ -6,7 +6,7 @@ const controller = {
 
     invalidateInviteLink: (link) => {
         const id = AccountStore.getOrganisation().id;
-        data.delete(`${Project.api}organisations/${id}/invite-links/${link.id}`).then(() => data.post(`${Project.api}organisations/${id}/invite-links/`, {
+        data.delete(`${Project.api}organisations/${id}/invite-links/${link.id}/`).then(() => data.post(`${Project.api}organisations/${id}/invite-links/`, {
             role: 'ADMIN',
         })).then(() => data.get(`${Project.api}organisations/${id}/invite-links/`).then((links) => {
             store.model.inviteLinks = links;
@@ -149,7 +149,7 @@ const controller = {
                     role: invite.role.value,
                 };
             }),
-            frontend_base_url: `${document.location.origin}/invite/`,
+            frontend_base_url: `${document.location.origin}/email-invite/`,
         }).then((res) => {
             store.model.invites = store.model.invites || [];
             store.model.invites = store.model.invites.concat(res);

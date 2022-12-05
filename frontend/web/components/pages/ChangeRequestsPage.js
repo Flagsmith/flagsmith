@@ -119,7 +119,6 @@ const ChangeRequestsPage = class extends Component {
                                 />
                             </TabItem>
                         )}
-                        {Utils.getFlagsmithHasFeature('scheduling') && (
                         <TabItem tabLabel={`Scheduled${dataScheduledPaging ? ` (${dataScheduledPaging.count})` : ''}`}>
                             <PanelSearch
                               renderSearchWithNoResults
@@ -153,7 +152,6 @@ const ChangeRequestsPage = class extends Component {
                               }}
                             />
                         </TabItem>
-                        )}
                         <TabItem tabLabel={`Closed${dataClosedPaging ? ` (${dataClosedPaging.count})` : ''}`}>
                             <PanelSearch
                               renderSearchWithNoResults

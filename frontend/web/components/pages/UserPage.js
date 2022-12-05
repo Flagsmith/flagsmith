@@ -64,13 +64,12 @@ const UserPage = class extends Component {
     editSegment = (segment) => {
         API.trackEvent(Constants.events.VIEW_SEGMENT);
         openModal(`Segment - ${segment.name}`, <CreateSegmentModal
-          segment={segment}
+          segment={segment.id}
           readOnly
           isEdit
           environmentId={this.props.match.params.environmentId}
           projectId={this.props.match.params.projectId}
-          projectFlag={segment}
-        />, null, { className: 'alert fade expand create-segment-modal' });
+        />, null, { className: 'fade side-modal create-segment-modal' });
     };
 
 
@@ -531,7 +530,7 @@ const UserPage = class extends Component {
                                                 </FormGroup>
                                             )}
                                             <IdentitySegmentsProvider id={this.props.match.params.id}>
-                                                {({ isLoading: segmentsLoading, segments }) => (segmentsLoading ? <div className="text-center"><Loader/></div> : (
+                                                {({ isLoading: segmentsLoading, segments }) => (!segments ? <div className="text-center"><Loader/></div> : (
                                                     <FormGroup>
                                                         <PanelSearch
                                                           id="user-segments-list"

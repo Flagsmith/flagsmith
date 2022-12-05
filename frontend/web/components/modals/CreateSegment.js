@@ -1,8 +1,6 @@
-import React, { Component } from 'react';
+import React, { Component, useEffect, useState } from 'react';
 import engine from 'bullet-train-rules-engine';
-import { Tab } from '@material-ui/core';
 import Rule from './Rule';
-import Highlight from '../Highlight';
 import SegmentStore from '../../../common/stores/segment-list-store';
 import IdentityListProvider from '../../../common/providers/IdentityListProvider';
 import Constants from '../../../common/constants';
@@ -11,6 +9,7 @@ import Tabs from '../base/forms/Tabs';
 import TabItem from '../base/forms/TabItem';
 import AssociatedSegmentOverrides from './AssociatedSegmentOverrides';
 import InfoMessage from '../InfoMessage';
+import _data from "../../../common/data/base/_data";
 
 const SEGMENT_ID_MAXLENGTH = Constants.forms.maxLength.SEGMENT_ID;
 
@@ -48,9 +47,9 @@ const CreateSegment = class extends Component {
 
         AppActions.getIdentities(props.environmentId);
 
-        this.listenTo(SegmentStore, 'saved', () => {
+        this.listenTo(SegmentStore, 'saved', (segment) => {
             if (this.props.onComplete) {
-                this.props.onComplete();
+                this.props.onComplete(segment);
             } else {
                 this.close();
             }
@@ -142,6 +141,9 @@ const CreateSegment = class extends Component {
     render() {
         const { name, description, rules, isSaving, error } = this.state;
         const { isEdit, identity, readOnly } = this.props;
+
+
+
 
         const rulesEl = (
             <div className="mt-4 overflow-visible">
@@ -345,7 +347,7 @@ const CreateSegment = class extends Component {
                         <TabItem tabLabel="Users">
                             <div className="mt-4 mr-3 ml-3">
                                 <InfoMessage>
-                                    This shows allows you to see whether identities are part of the segment.
+                                    This is a random sample of Identities who are either in or out of this Segment based on the current Segment rules.
                                 </InfoMessage>
                                 <IdentityListProvider>
                                     {({ isLoading, identities, identitiesPaging }) => (
@@ -412,7 +414,6 @@ const CreateSegment = class extends Component {
                                                       AppActions.searchIdentities(this.state.environmentId, Utils.safeParseEventValue(e));
                                                   }}
                                                 />
-                                                <p className="text-right mt-4">This is a random sample of users who are either in or out of the Segment.</p>
                                             </FormGroup>
                                         </div>
                                     )}
@@ -427,4 +428,24 @@ const CreateSegment = class extends Component {
 };
 CreateSegment.propTypes = {};
 
-module.exports = hot(module)(ConfigProvider(CreateSegment));
+
+
+const LoadingCreateSegment  = (props) => {
+    const [loading, setLoading] = useState(!!props.segment);
+    const [segmentData, setSegmentData] = useState(null);
+
+    useEffect(()=>{
+        _data.get(`${Project.api}projects/${props.projectId}/segments/${props.segment}`).then((segment)=> {
+            setSegmentData(segment);
+            setLoading(false)
+        })
+    },[props.segment])
+
+    return loading?<div className="text-center"><Loader/></div> : (
+        <CreateSegment {...props} segment={segmentData}/>
+    )
+}
+
+export default LoadingCreateSegment
+
+module.exports = hot(module)(ConfigProvider(LoadingCreateSegment));
