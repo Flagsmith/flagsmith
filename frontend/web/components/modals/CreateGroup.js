@@ -39,11 +39,7 @@ const CreateGroup = class extends Component {
         }
     }
 
-    getUsersToRemove = (users) => {
-        return _.filter(users, ({id})=>{
-            return !_.find(this.state.users, {id})
-        })
-    }
+    getUsersToRemove = users => _.filter(users, ({ id }) => !_.find(this.state.users, { id }))
 
     save = (allUsers) => {
         const { name, users, is_default, external_id } = this.state;
@@ -83,7 +79,6 @@ const CreateGroup = class extends Component {
                     <UserGroupsProvider onSave={this.close}>
                         {({ isSaving }) => (
                             <form
-                              id="create-feature-modal"
                               onSubmit={(e) => {
                                   Utils.preventDefault(e);
                                   this.save(users);
@@ -104,41 +99,37 @@ const CreateGroup = class extends Component {
                                   name="Name*"
                                   placeholder="E.g. Developers"
                                 />
-                                {Utils.getFlagsmithHasFeature("group_external_ids") && (
                                     <InputGroup
-                                        title="External ID"
-                                        ref={e => this.input = e}
-                                        data-test="groupName"
-                                        inputProps={{
-                                            className: 'full-width',
-                                            name: 'groupName',
-                                        }}
-                                        value={external_id}
-                                        onChange={e => this.setState({ external_id: Utils.safeParseEventValue(e) })}
-                                        isValid={name && name.length}
-                                        type="text"
-                                        name="Name*"
-                                        placeholder="Add an optional external reference ID"
+                                      title="External ID"
+                                      ref={e => this.input = e}
+                                      data-test="groupName"
+                                      inputProps={{
+                                          className: 'full-width',
+                                          name: 'groupName',
+                                      }}
+                                      value={external_id}
+                                      onChange={e => this.setState({ external_id: Utils.safeParseEventValue(e) })}
+                                      isValid={name && name.length}
+                                      type="text"
+                                      name="Name*"
+                                      placeholder="Add an optional external reference ID"
                                     />
-                                )}
 
-                                {Utils.getFlagsmithHasFeature("default_user_groups")&&(
                                     <InputGroup
-                                        title="Add users by default"
-                                        tooltipPlace="top"
-                                        tooltip="New users that sign up to your organisation will be automatically added to this group with USER permissions"
-                                        ref={e => this.input = e}
-                                        data-test="groupName"
-                                        component={<Switch onChange={e => this.setState({ is_default: Utils.safeParseEventValue(e) })} checked={!!this.state.is_default}/>}
-                                        inputProps={{
-                                            className: 'full-width',
-                                            name: 'groupName',
-                                        }}
-                                        value={name}
-                                        isValid={name && name.length}
-                                        type="text"
+                                      title="Add users by default"
+                                      tooltipPlace="top"
+                                      tooltip="New users that sign up to your organisation will be automatically added to this group with USER permissions"
+                                      ref={e => this.input = e}
+                                      data-test="groupName"
+                                      component={<Switch onChange={e => this.setState({ is_default: Utils.safeParseEventValue(e) })} checked={!!this.state.is_default}/>}
+                                      inputProps={{
+                                          className: 'full-width',
+                                          name: 'groupName',
+                                      }}
+                                      value={name}
+                                      isValid={name && name.length}
+                                      type="text"
                                     />
-                                )}
                                 <div className="mb-5">
                                     <PanelSearch
                                       id="org-members-list"

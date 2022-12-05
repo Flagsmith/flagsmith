@@ -43,8 +43,7 @@ module.exports = Object.assign({}, require('./base/_utils'), {
         }
         return 'Admin';
     },
-    getTraitEndpointMethod(_project) {
-        const project = _project || ProjectStore.model;
+    getTraitEndpointMethod() {
         if (Utils.getFlagsmithHasFeature('edge_identities') && ProjectStore.model && ProjectStore.model.use_edge_identities) {
             return 'put';
         }
@@ -58,19 +57,19 @@ module.exports = Object.assign({}, require('./base/_utils'), {
     },
     openChat() {
         if (typeof $crisp !== 'undefined') {
-            $crisp.push(['do', 'chat:open'])
+            $crisp.push(['do', 'chat:open']);
         }
         if (window.zE) {
             zE('messenger', 'open');
         }
     },
     isMigrating() {
-        if (Utils.getFlagsmithHasFeature('edge_migrator') && ProjectStore.model && (ProjectStore.model.migration_status === 'MIGRATION_IN_PROGRESS' || ProjectStore.model.migration_status === 'MIGRATION_SCHEDULED')) {
+        if (Utils.getFlagsmithHasFeature('edge_identities') && ProjectStore.model && (ProjectStore.model.migration_status === 'MIGRATION_IN_PROGRESS' || ProjectStore.model.migration_status === 'MIGRATION_SCHEDULED')) {
             return true;
         }
         return false;
     },
-    getUpdateTraitEndpoint(environmentId, userId, _project) {
+    getUpdateTraitEndpoint(environmentId, userId) {
         if (Utils.getFlagsmithHasFeature('edge_identities') && ProjectStore.model && ProjectStore.model.use_edge_identities) {
             return `${Project.api}environments/${environmentId}/edge-identities/${userId}/update-traits/`;
         }
@@ -99,7 +98,6 @@ module.exports = Object.assign({}, require('./base/_utils'), {
         const operatorObj = Utils.findOperator(rule.operator, rule.value, operators);
 
         if (operatorObj && operatorObj.value && operatorObj.value.toLowerCase().includes('semver')) {
-            console.log(semver);
             return !!semver.valid(`${rule.value.split(':')[0]}`);
         }
 
@@ -128,7 +126,7 @@ module.exports = Object.assign({}, require('./base/_utils'), {
                 return false;
             }
             default:
-                return (operatorObj && operatorObj.hideValue) ||  rule.value !== '' && rule.value !== undefined && rule.value !== null;
+                return (operatorObj && operatorObj.hideValue) || (rule.value !== '' && rule.value !== undefined && rule.value !== null);
         }
     },
 
@@ -351,17 +349,17 @@ module.exports = Object.assign({}, require('./base/_utils'), {
         }
 
 
-        if (str == 'true') {
+        if (str === 'true') {
             if (boolToString) return 'true';
             return true;
         }
-        if (str == 'false') {
+        if (str === 'false') {
             if (boolToString) return 'false';
             return false;
         }
 
         if (isNum) {
-            if (str.indexOf('.') != -1) {
+            if (str.indexOf('.') !== -1) {
                 return parseFloat(str);
             }
             return parseInt(str);

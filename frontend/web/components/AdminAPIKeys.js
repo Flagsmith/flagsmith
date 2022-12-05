@@ -42,12 +42,12 @@ export class CreateAPIKey extends PureComponent {
                                 <label>Name</label>
                             </div>
                             <Input
-                                value={this.state.name}
-                                onChange={e => this.setState({ name: Utils.safeParseEventValue(e) })}
-                                isValid={!!this.state.name}
-                                type="text"
-                                inputClassName="input--wide"
-                                placeholder="e.g. Admin API Key"
+                              value={this.state.name}
+                              onChange={e => this.setState({ name: Utils.safeParseEventValue(e) })}
+                              isValid={!!this.state.name}
+                              type="text"
+                              inputClassName="input--wide"
+                              placeholder="e.g. Admin API Key"
                             />
                         </Flex>
                         <Flex className="mb-4 mr-3">
@@ -57,15 +57,15 @@ export class CreateAPIKey extends PureComponent {
                             <Row>
                                 <Flex>
                                     <DatePicker
-                                        minDate={new Date()}
-                                        onChange={(e) => {
-                                            this.setState({
-                                                expiry_date: e.toISOString(),
-                                            });
-                                        }}
-                                        showTimeInput
-                                        selected={this.state.expiry_date ? moment(this.state.expiry_date)._d : null}
-                                        value={this.state.expiry_date ? `${moment(this.state.expiry_date).format('Do MMM YYYY hh:mma')}` : 'Never'}
+                                      minDate={new Date()}
+                                      onChange={(e) => {
+                                          this.setState({
+                                              expiry_date: e.toISOString(),
+                                          });
+                                      }}
+                                      showTimeInput
+                                      selected={this.state.expiry_date ? moment(this.state.expiry_date)._d : null}
+                                      value={this.state.expiry_date ? `${moment(this.state.expiry_date).format('Do MMM YYYY hh:mma')}` : 'Never'}
                                     />
                                 </Flex>
 
@@ -163,14 +163,14 @@ export default class AdminAPIKeys extends PureComponent {
         const apiKeys = this.state.apiKeys && this.state.apiKeys.results;
         return (
             <div>
-                <Row space className="mt-5">
-                <h3>Terraform API Keys</h3>
-                <Button onClick={this.createAPIKey} disabled={this.state.isLoading}>
+                <Row space className="mt-4">
+                    <h3>Terraform API Keys</h3>
+                    <Button onClick={this.createAPIKey} disabled={this.state.isLoading}>
                     Create Terraform API Key
-                </Button>
-                <p>
+                    </Button>
+                    <p>
                     Terraform API keys are used to authenticate with the Admin API. <a href="https://docs.flagsmith.com/advanced-use/system-administration#terraform-api-keys-for-organisations" target="_blank">Learn about Terraform Keys.</a>
-                </p>
+                    </p>
                 </Row>
                 {
                     this.state.isLoading && <div className="text-center"><Loader/></div>

@@ -75,7 +75,7 @@ setTimeout(() => {
       || document.location.pathname.indexOf('/invite') !== -1
       || document.location.pathname.indexOf('/projects') !== -1)
     && !AccountStore.getUser()) {
-        API.setRedirect(document.location.pathname + (document.location.search || ''))
+        API.setRedirect(document.location.pathname + (document.location.search || ''));
         browserHistory.push(`/?redirect=${encodeURIComponent(document.location.pathname + (document.location.search || ''))}`);
     }
 
@@ -105,10 +105,10 @@ if (!E2E && Project.crispChat) {
 }
 
 if (!E2E && Project.zendesk) {
-    var script = document.createElement('script');
+    const script = document.createElement('script');
     script.type = 'text/javascript';
     script.id = 'ze-snippet';
     script.async = true;
-    script.src = 'https://static.zdassets.com/ekr/snippet.js?key='+Project.zendesk;
+    script.src = `https://static.zdassets.com/ekr/snippet.js?key=${Project.zendesk}`;
     document.getElementsByTagName('head')[0].appendChild(script);
 }

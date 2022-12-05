@@ -287,3 +287,34 @@ def test_user_remove_organisation_removes_user_from_the_user_permission_group(
     # Then
     # extra group did not cause any errors and the user is removed from the group
     assert user_permission_group not in admin_user.permission_groups.all()
+
+
+def test_user_create_calls_pipedrive_tracking(mocker, db, settings):
+    # Given
+    mocked_create_pipedrive_lead = mocker.patch("users.signals.create_pipedrive_lead")
+    settings.ENABLE_PIPEDRIVE_LEAD_TRACKING = True
+
+    # When
+    FFAdminUser.objects.create(email="test@example.com")
+
+    # Then
+    mocked_create_pipedrive_lead.delay.assert_called()
+
+
+def test_user_create_does_not_call_pipedrive_tracking_if_ignored_domain(
+    mocker, db, settings
+):
+    # Given
+    mocked_create_pipedrive_lead = mocker.patch("users.signals.create_pipedrive_lead")
+    settings.ENABLE_PIPEDRIVE_LEAD_TRACKING = True
+    settings.PIPEDRIVE_IGNORE_DOMAINS = ["example.com"]
+
+    # When
+    FFAdminUser.objects.create(email="test@example.com")
+
+    # Then
+    mocked_create_pipedrive_lead.delay.assert_not_called()
+
+
+def test_user_email_domain_property():
+    assert FFAdminUser(email="test@example.com").email_domain == "example.com"

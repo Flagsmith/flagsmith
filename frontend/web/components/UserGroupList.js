@@ -45,76 +45,75 @@ export default class TheComponent extends PureComponent {
                 {({ isLoading, userGroups, userGroupsPaging }) => (
                     <FormGroup>
                         <PanelSearch
-                            id="users-list"
-                            title={this.props.noTitle ? '' : 'Groups'}
-                            className="no-pad"
-                            itemHeight={64}
-                            icon="ion-md-people"
-                            items={userGroups}
-                            paging={userGroupsPaging}
-                            nextPage={() => AppActions.getGroupsPage(this.props.orgId, userGroupsPaging.next)}
-                            prevPage={() => AppActions.getGroupsPage(this.props.orgId, userGroupsPaging.previous)}
-                            goToPage={page => AppActions.getGroupsPage(this.props.orgId, `${Project.api}organisations/${this.props.orgId}/groups/?page=${page}`)}
-                            renderRow={(group, index) => {
-                                const { id, name, users } = group;
-                                const onClick = () => {
-                                    if (this.props.onClick) {
-                                        this.props.onClick(group);
-                                    } else {
-                                        openModal('Edit Group', <CreateGroup orgId={this.props.orgId} group={group} />);
-                                    }
-                                };
-                                return (
-                                    <Row
-                                        space className="list-item clickable" key={id}
-                                        data-test={`user-item-${index}`}
-                                    >
-                                        <Flex
-                                            onClick={onClick}
+                          id="users-list"
+                          title={this.props.noTitle ? '' : 'Groups'}
+                          className="no-pad"
+                          itemHeight={64}
+                          icon="ion-md-people"
+                          items={userGroups}
+                          paging={userGroupsPaging}
+                          nextPage={() => AppActions.getGroupsPage(this.props.orgId, userGroupsPaging.next)}
+                          prevPage={() => AppActions.getGroupsPage(this.props.orgId, userGroupsPaging.previous)}
+                          goToPage={page => AppActions.getGroupsPage(this.props.orgId, `${Project.api}organisations/${this.props.orgId}/groups/?page=${page}`)}
+                          renderRow={(group, index) => {
+                              const { id, name, users } = group;
+                              const onClick = () => {
+                                  if (this.props.onClick) {
+                                      this.props.onClick(group);
+                                  } else {
+                                      openModal('Edit Group', <CreateGroup orgId={this.props.orgId} group={group} />);
+                                  }
+                              };
+                              return (
+                                  <Row
+                                    space className="list-item clickable" key={id}
+                                    data-test={`user-item-${index}`}
+                                  >
+                                      <Flex
+                                        onClick={onClick}
+                                      >
+                                          <div>
+                                              <ButtonLink>
+                                                  {name}
+                                              </ButtonLink>
+                                          </div>
+                                          <div className="list-item-footer faint">
+                                              {users.length}{users.length == 1 ? ' Member' : ' Members'}
+                                          </div>
+                                      </Flex>
 
-                                        >
-                                            <div>
-                                                <ButtonLink>
-                                                    {name}
-                                                </ButtonLink>
-                                            </div>
-                                            <div className="list-item-footer faint">
-                                                {users.length}{users.length == 1 ? ' Member' : ' Members'}
-                                            </div>
-                                        </Flex>
+                                      {this.props.onEditPermissions && (
+                                      <Button onClick={() => this.props.onEditPermissions(group)} className="btn--link">Edit Permissions</Button>
+                                      )}
+                                      {this.props.showRemove ? (
+                                          <Column>
+                                              <button
+                                                id="remove-group"
+                                                className="btn btn--with-icon"
+                                                type="button"
+                                                onClick={() => this.removeGroup(id, name)}
+                                              >
+                                                  <RemoveIcon />
+                                              </button>
+                                          </Column>
+                                      ) : (
+                                          <span onClick={onClick} style={{ fontSize: 24 }} className="icon--primary ion ion-md-settings" />
 
-                                        {this.props.onEditPermissions && (
-                                            <Button onClick={() => this.props.onEditPermissions(group)} className="btn--link">Edit Permissions</Button>
-                                        )}
-                                        {this.props.showRemove ? (
-                                            <Column>
-                                                <button
-                                                    id="remove-group"
-                                                    className="btn btn--with-icon"
-                                                    type="button"
-                                                    onClick={() => this.removeGroup(id, name)}
-                                                >
-                                                    <RemoveIcon />
-                                                </button>
-                                            </Column>
-                                        ) : (
-                                            <ion onClick={onClick} style={{ fontSize: 24 }} className="icon--primary ion ion-md-settings" />
+                                      )}
 
-                                        )}
-
-                                    </Row>
-                                );
-                            }}
-                            isLoading={isLoading}
-                            renderNoResults={(
-                                <Panel
-                                    icon="ion-md-people"
-                                    title={this.props.noTitle ? '' : 'Groups'}
-                                    >
-                                    <div>
+                                  </Row>
+                              );
+                          }}
+                          isLoading={isLoading}
+                          renderNoResults={(
+                              <Panel
+                                icon="ion-md-people"
+                                title={this.props.noTitle ? '' : 'Groups'}
+                              >
+                                  <div className="p-2 text-center">
                                         You have no groups in your organisation.
-                                    </div>
-                                </Panel>
+                                  </div>
+                              </Panel>
                             )}
                         />
                     </FormGroup>

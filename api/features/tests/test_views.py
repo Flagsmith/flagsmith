@@ -4,8 +4,10 @@ from unittest import TestCase, mock
 
 import pytest
 import pytz
+from core.constants import FLAGSMITH_UPDATED_AT_HEADER
 from django.forms import model_to_dict
 from django.urls import reverse
+from pytest_lazyfixture import lazy_fixture
 from rest_framework import status
 from rest_framework.test import APIClient, APITestCase
 
@@ -602,6 +604,11 @@ class SDKFeatureStatesTestCase(APITestCase):
         assert len(response_json) == 1
         assert response_json[0]["feature"]["id"] == self.feature.id
         assert response_json[0]["feature_state_value"] == self.environment_fs_value
+        # refresh the last_updated_at
+        self.environment.refresh_from_db()
+        assert response.headers[FLAGSMITH_UPDATED_AT_HEADER] == str(
+            self.environment.updated_at.timestamp()
+        )
 
     def test_get_flags_exclude_disabled(self):
 
@@ -640,3 +647,22 @@ class SDKFeatureStatesTestCase(APITestCase):
 
         # but enabled ones are
         assert response_json[0]["feature"]["id"] == enabled_flag.id
+
+
+@pytest.mark.parametrize(
+    "client", [(lazy_fixture("master_api_key_client")), (lazy_fixture("admin_client"))]
+)
+def test_get_feature_states_by_uuid(client, environment, feature, feature_state):
+    # Given
+    url = reverse(
+        "api-v1:features:get-feature-state-by-uuid", args=[feature_state.uuid]
+    )
+
+    # When
+    response = client.get(url)
+
+    # Then
+    assert response.status_code == status.HTTP_200_OK
+
+    response_json = response.json()
+    assert response_json["uuid"] == str(feature_state.uuid)

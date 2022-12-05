@@ -1,6 +1,4 @@
-import Utils from '../../utils/utils';
-
-module.exports = (envId, { FEATURE_NAME, FEATURE_FUNCTION, FEATURE_NAME_ALT }) => `
+module.exports = (envId, { FEATURE_NAME, FEATURE_NAME_ALT }) => `
 use flagsmith::{Flag, Flagsmith, FlagsmithOptions};
 
 let options = FlagsmithOptions {..Default::default()};

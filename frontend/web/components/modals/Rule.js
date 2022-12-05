@@ -1,7 +1,7 @@
 // import propTypes from 'prop-types';
 import React, { PureComponent } from 'react';
 
-const splitIfValue = (v, append) => (append ? v.split(append) : [v===null?"":v]);
+const splitIfValue = (v, append) => (append ? v.split(append) : [v === null ? '' : v]);
 
 export default class Rule extends PureComponent {
     static displayName = 'Rule';
@@ -16,7 +16,7 @@ export default class Rule extends PureComponent {
         const operator = operatorObj && operatorObj.value;
         const value = typeof rule.value === 'string' ? rule.value.replace((operatorObj && operatorObj.append) || '', '') : rule.value;
 
-        const valuePlaceholder = rule.hideValue?  "Value (N/A)" : rule.valuePlaceholder || "Value"
+        const valuePlaceholder = rule.hideValue ? 'Value (N/A)' : rule.valuePlaceholder || 'Value';
         return (
             <div className="rule__row reveal" key={i}>
                 {hasOr && (
@@ -65,7 +65,7 @@ export default class Rule extends PureComponent {
                                   readOnly={this.props.readOnly}
                                   data-test={`${this.props['data-test']}-value-${i}`}
                                   className="input-container--flat full-width"
-                                  value={value?value:""}
+                                  value={value || ''}
                                   placeholder={valuePlaceholder}
                                   disabled={operatorObj && operatorObj.hideValue}
                                   onChange={(e) => {
@@ -152,9 +152,9 @@ export default class Rule extends PureComponent {
         // remove append if one was added
 
 
-        const formattedValue = value === null? null:`${value}`
-        //split operator by append
-        rules[i][prop] = prop === 'operator' ? formattedValue.split(":")[0] : formattedValue;
+        const formattedValue = value === null ? null : `${value}`;
+        // split operator by append
+        rules[i][prop] = prop === 'operator' ? formattedValue.split(':')[0] : formattedValue;
 
         if (prop === 'operator' && value === 'PERCENTAGE_SPLIT') {
             rules[i].property = '';

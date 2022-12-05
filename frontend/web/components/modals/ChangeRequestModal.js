@@ -68,7 +68,6 @@ const ChangeRequestModal = class extends Component {
                                   placeholder="Add an optional description..."
                                 />
                             </FormGroup>
-                            {Utils.getFlagsmithHasFeature('scheduling') && (
                                 <div>
                                     <InputGroup
                                       tooltip="Allows you to set a date and time in which your change will only become active "
@@ -89,16 +88,17 @@ const ChangeRequestModal = class extends Component {
                                                   />
                                               </Flex>
 
-                                              <ButtonLink className="ml-2" onClick={() => {
-                                                  this.setState({ live_from: null })
-                                              }}>
+                                              <ButtonLink
+                                                className="ml-2" onClick={() => {
+                                                    this.setState({ live_from: null });
+                                                }}
+                                              >
                                                     Clear
                                               </ButtonLink>
                                           </Row>
                                             )}
                                     />
                                 </div>
-                            )}
                             {!this.props.changeRequest && this.props.showAssignees && (
                                 <FormGroup className="mb-4" >
                                     <InputGroup

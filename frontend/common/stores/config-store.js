@@ -33,7 +33,7 @@ const store = Object.assign({}, BaseStore, {
 
 
 store.dispatcherIndex = Dispatcher.register(store, (payload) => {
-    const action = payload.action; // this is our action from	handleViewAction
+    const action = payload.action; // this is our action from handleViewAction
 
     switch (action.actionType) {
         case Actions.GET_CONFIG:

@@ -1,3 +1,4 @@
+import { t } from 'testcafe';
 import {
     addSegmentOverride,
     addSegmentOverrideConfig,
@@ -11,16 +12,16 @@ import {
     login, saveFeature, saveFeatureSegments, setSegmentOverrideIndex,
     setText, viewFeature,
     waitForElementVisible,
-    waitAndRefresh,
+    waitAndRefresh, logResults,
 } from '../helpers.cafe';
-import {t} from 'testcafe'
+
 const email = 'nightwatch@solidstategroup.com';
 const password = 'str0ngp4ssw0rd!';
-const logger = getLogger()
+const logger = getLogger();
 
 fixture`Segments Tests`
     .page`http://localhost:3000/`
-    .requestHooks(logger)
+    .requestHooks(logger);
 
 test('Segments Test', async () => {
     log('Login', 'Segment Test');
@@ -130,12 +131,8 @@ test('Segments Test', async () => {
     await click('#confirm-toggle-feature-btn');
     await waitAndRefresh(); // wait and refresh to avoid issues with data sync from UK -> US in github workflows
     await waitForElementVisible(byId('user-feature-switch-1-on'));
-}).after(async (t)=>{
-    console.log("Start of Segments Requests")
-    console.log(JSON.stringify(logger.requests, null,2))
-    console.log("End of Segments Requests")
-    console.log("Start of Segments Errors")
-    console.error(JSON.stringify((await t.getBrowserConsoleMessages()).error));
-    console.log("End of Segments Errors")
-})
-
+}).after(async (t) => {
+    console.log('Start of Segments Requests');
+    await logResults(logger.requests);
+    console.log('End of Segments Errors');
+});

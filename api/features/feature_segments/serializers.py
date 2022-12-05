@@ -6,8 +6,8 @@ from features.models import FeatureSegment
 class FeatureSegmentCreateSerializer(serializers.ModelSerializer):
     class Meta:
         model = FeatureSegment
-        fields = ("id", "feature", "segment", "environment", "priority")
-        read_only_fields = ("id", "priority")
+        fields = ("id", "uuid", "feature", "segment", "environment", "priority")
+        read_only_fields = ("id", "uuid", "priority")
 
     def validate(self, data):
         data = super().validate(data)
@@ -30,17 +30,37 @@ class FeatureSegmentQuerySerializer(serializers.Serializer):
 
 class FeatureSegmentListSerializer(serializers.ModelSerializer):
     segment_name = serializers.SerializerMethodField()
+    is_feature_specific = serializers.SerializerMethodField()
 
     class Meta:
         model = FeatureSegment
-        fields = ("id", "segment", "priority", "environment", "segment_name")
-        read_only_fields = ("id", "segment", "priority", "environment", "segment_name")
+        fields = (
+            "id",
+            "uuid",
+            "segment",
+            "priority",
+            "environment",
+            "segment_name",
+            "is_feature_specific",
+        )
+        read_only_fields = (
+            "id",
+            "uuid",
+            "segment",
+            "priority",
+            "environment",
+            "segment_name",
+            "is_feature_specific",
+        )
 
     def get_value(self, instance):
         return instance.get_value()
 
     def get_segment_name(self, instance: FeatureSegment) -> str:
         return instance.segment.name
+
+    def get_is_feature_specific(self, instance: FeatureSegment) -> bool:
+        return instance.segment.feature is not None
 
 
 class FeatureSegmentChangePrioritiesSerializer(serializers.Serializer):
