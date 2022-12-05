@@ -5,5 +5,8 @@ export type PagedRequest<T> =  T & {
 }
 
 export type Req = {
+  getSegments: PagedRequest<{
+    projectId: string
+  }>
   // END OF TYPES
 }

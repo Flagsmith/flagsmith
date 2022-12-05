@@ -9,7 +9,7 @@ const CopyWebpackPlugin = require('copy-webpack-plugin');
 const TerserPlugin = require('terser-webpack-plugin');
 const moment = require('moment');
 const MiniCssExtractPlugin = require('mini-css-extract-plugin');
-const base = require("./webpack.base");
+const base = require('./webpack.base');
 
 module.exports = {
     ...base,

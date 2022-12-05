@@ -5,7 +5,8 @@ const path = require('path');
 
 const whitelabel = typeof process.env.WHITELABEL === 'undefined' ? false : process.env.WHITELABEL;
 const styles = whitelabel ? path.join(__dirname, `../web/styles/whitelabel/${process.env.WHITELABEL}`) : path.join(__dirname, '../web/styles');
-const base = require('./webpack.base')
+const base = require('./webpack.base');
+
 module.exports = {
     ...base,
     devtool: 'eval-source-map',

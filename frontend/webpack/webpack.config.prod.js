@@ -8,7 +8,7 @@ const MiniCssExtractPlugin = require('mini-css-extract-plugin');
 const CleanWebpackPlugin = require('clean-webpack-plugin');
 const TerserPlugin = require('terser-webpack-plugin');
 const moment = require('moment');
-const base = require("./webpack.base");
+const base = require('./webpack.base');
 
 const extraPlugins = [
     // Clear out build folder

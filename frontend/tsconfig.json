@@ -16,6 +16,9 @@
     "incremental": true,
     "skipLibCheck": true,
     "paths": {
+      "common/": [
+        "./common/*"
+      ]
     }
   },
   "exclude": [
