@@ -183,11 +183,15 @@ def change_request(environment, admin_user):
 
 
 @pytest.fixture()
-def change_request_feature_state(feature, environment, change_request):
-    fs = FeatureState.objects.filter(environment=environment, feature=feature).first()
-    fs.change_request = change_request
-    fs.save()
-    return fs
+def feature_state(feature, environment):
+    return FeatureState.objects.filter(environment=environment, feature=feature).first()
+
+
+@pytest.fixture()
+def change_request_feature_state(feature, environment, change_request, feature_state):
+    feature_state.change_request = change_request
+    feature_state.save()
+    return feature_state
 
 
 @pytest.fixture()

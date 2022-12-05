@@ -222,6 +222,25 @@ def test_get_feature_segment_by_uuid(
 @pytest.mark.parametrize(
     "client", [lazy_fixture("master_api_key_client"), lazy_fixture("admin_client")]
 )
+def test_get_feature_segment_by_id(
+    feature_segment, project, client, environment, feature
+):
+    # Given
+    url = reverse("api-v1:features:feature-segment-detail", args=[feature_segment.id])
+
+    # When
+    response = client.get(url)
+
+    # Then
+    assert response.status_code == status.HTTP_200_OK
+    json_response = response.json()
+    assert json_response["id"] == feature_segment.id
+    assert json_response["uuid"] == str(feature_segment.uuid)
+
+
+@pytest.mark.parametrize(
+    "client", [lazy_fixture("master_api_key_client"), lazy_fixture("admin_client")]
+)
 def test_delete_feature_segment_creates_audit_log(
     feature_segment,
     segment_featurestate,
