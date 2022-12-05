@@ -149,7 +149,7 @@ const controller = {
                     role: invite.role.value,
                 };
             }),
-            frontend_base_url: `${document.location.origin}/invite/`,
+            frontend_base_url: `${document.location.origin}/email-invite/`,
         }).then((res) => {
             store.model.invites = store.model.invites || [];
             store.model.invites = store.model.invites.concat(res);

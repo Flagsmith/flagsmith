@@ -124,6 +124,13 @@ global.API = {
     getInvite() {
         return require('js-cookie').get('invite');
     },
+    setInviteType(id) {
+        const cookie = require('js-cookie');
+        cookie.set('invite-type', id);
+    },
+    getInviteType() {
+        return require('js-cookie').get('invite-type') || "NO_INVITE";
+    },
     trackPage(title) {
         if (Project.ga) {
             ga('send', {
