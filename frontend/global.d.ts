@@ -2,7 +2,7 @@ import {Component, FC, ReactNode} from "react";
 
 export declare const openModal: (name?: string) => Promise<void>;
 declare global {
-    var openModal: (title:string, body:ReactNode, footer?:ReactNode, other?: {className:string, onClose?:()=>void})
+    var openModal: (title:string, body:ReactNode, footer?:ReactNode, other?: {className:string, onClose?:()=>void})=>void
     var Row: typeof Component
     var Flex: typeof Component
     var FormGroup: typeof Component
