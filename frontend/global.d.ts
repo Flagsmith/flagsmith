@@ -10,5 +10,6 @@ declare global {
     var RemoveIcon: typeof Component
     var ConfigProvider: (Component:typeof Component)=> typeof Component
     var Loader: typeof Component
+    var closeModal: ()=>void
     var Tooltip: typeof FC<{title:ReactNode, place?:string, html?:boolean}>
 }

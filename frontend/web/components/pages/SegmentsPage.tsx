@@ -43,7 +43,7 @@ const SegmentsPage: FC<SegmentsPageType> = (props) => {
     const [searchInput, setSearchInput] = useState("");
 
     const [page, setPage] = useState(1);
-    const {data, isLoading, error} = useGetSegmentsQuery({projectId,page,q:search, page_size:1})
+    const {data, isLoading, error, refetch} = useGetSegmentsQuery({projectId,page,q:search, page_size:100})
     const [removeSegment] = useDeleteSegmentMutation()
     const hasHadResults = useRef(false)
 
@@ -58,6 +58,11 @@ const SegmentsPage: FC<SegmentsPageType> = (props) => {
     },[error])
     const newSegment = () => {
         openModal('New Segment', <CreateSegmentModal
+            onComplete={()=>{
+                //todo: remove when CreateSegment uses hooks
+                closeModal()
+                refetch()
+            }}
             environmentId={props.match.params.environmentId}
             projectId={props.match.params.projectId}
         />, null, { className: 'fade side-modal create-new-segment-modal' });
@@ -90,6 +95,10 @@ const SegmentsPage: FC<SegmentsPageType> = (props) => {
             segment={id}
             isEdit
             readOnly={readOnly}
+            onComplete={()=>{
+                refetch()
+                closeModal()
+            }}
             environmentId={props.match.params.environmentId}
             projectId={props.match.params.projectId}
         />, null, {
