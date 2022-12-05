@@ -5,12 +5,12 @@ import API from '../../project/api'
 import {useDeleteSegmentMutation, useGetSegmentsQuery} from "common/services/useSegment";
 import {Segment} from "common/types/responses";
 import ConfirmRemoveSegment from '../modals/ConfirmRemoveSegment';
-const Utils = require('common/utils/utils')
 import {find, sortBy} from 'lodash'
 import useThrottle from "../../../common/useThrottle";
 import Button, {ButtonLink} from "../base/forms/Button";
-import {Router, RouterChildContext} from "react-router";
-import propTypes from "prop-types";
+import {RouterChildContext} from "react-router";
+
+const Utils = require('common/utils/utils')
 const Permission = require('common/providers/Permission')
 const PanelSearch = require("../../components/PanelSearch")
 const Panel = require("../../components/base/grid/Panel")
