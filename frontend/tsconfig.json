@@ -9,6 +9,7 @@
     "moduleResolution": "node",
     "resolveJsonModule": true,
     "isolatedModules": true,
+    "allowJs": true,
     "lib": [
       "dom"
     ],
@@ -16,13 +17,16 @@
     "incremental": true,
     "skipLibCheck": true,
     "paths": {
+      "common/": [
+        "./common/*"
+      ]
     }
   },
   "exclude": [
     "node_modules",
   ],
   "include": [
-    "next-env.d.ts",
+    "global.d.ts",
     "**/*.ts",
     "**/*.tsx"
   ]

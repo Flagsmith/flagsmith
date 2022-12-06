@@ -19,7 +19,7 @@ const Button: FC<ButtonType> = (props) => {
 
 export default Button;
 
-const ButtonOutline: FC<ButtonType> = (props) => {
+export const ButtonOutline: FC<ButtonType> = (props) => {
     return (
         <Button {...props} className={`btn--outline ${props.className || ''}`}/>
     )

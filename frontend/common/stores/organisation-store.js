@@ -212,8 +212,8 @@ const controller = {
         data.get(`${Project.api}organisations/${id}/influx-data/`)
             .then((resp) => {
                 API.trackEvent(Constants.events.GET_INFLUX_DATA);
-                if(!store.model) {
-                    store.model = {}
+                if (!store.model) {
+                    store.model = {};
                 }
                 store.model.influx_data = resp;
                 store.saved();
