@@ -487,29 +487,9 @@ const OrganisationSettingsPage = class extends Component {
                                                         />
                                                     )}
                                                 </FormGroup>
-
-                                                <FormGroup className="m-y-3">
-                                                    <Row className="mt-4" space>
-                                                        <div className="col-md-8 pl-0">
-                                                            <h3>Delete Organisation</h3>
-                                                            <p>
-                                                                This organisation will be permanently deleted, along with all projects and features.
-                                                            </p>
-                                                        </div>
-                                                        <Button
-                                                            id="delete-org-btn"
-                                                            onClick={() => this.confirmRemove(organisation, () => {
-                                                                deleteOrganisation();
-                                                            })}
-                                                            className="btn btn--with-icon ml-auto btn--remove"
-                                                        >
-                                                            <RemoveIcon />
-                                                        </Button>
-                                                    </Row>
-                                                </FormGroup>
                                                 {Utils.getFlagsmithHasFeature('force_2fa') && (
                                                     <div>
-                                                        <Row space className="mt-5">
+                                                        <Row space className="mt-4">
                                                             <h3 className="m-b-0">Enforce 2FA</h3>
                                                             {!force2faPermission ? (
                                                                 <Tooltip title={<Switch checked={organisation.force_2fa} onChange={this.save2FA} />}>
@@ -538,12 +518,30 @@ const OrganisationSettingsPage = class extends Component {
 
                                                     </FormGroup>
                                                 )}
+                                                <FormGroup className="mt-4">
+                                                    <Row className="mt-4" space>
+                                                        <div className="col-md-8 pl-0">
+                                                            <h3>Delete Organisation</h3>
+                                                            <p>
+                                                                This organisation will be permanently deleted, along with all projects and features.
+                                                            </p>
+                                                        </div>
+                                                        <Button
+                                                            id="delete-org-btn"
+                                                            onClick={() => this.confirmRemove(organisation, () => {
+                                                                deleteOrganisation();
+                                                            })}
+                                                            className="btn btn--with-icon ml-auto btn--remove"
+                                                        >
+                                                            <RemoveIcon />
+                                                        </Button>
+                                                    </Row>
+                                                </FormGroup>
+
                                             </TabItem>
 
                                             <TabItem tabLabel="Keys" tabIcon="ion-md-key" >
-                                                {Utils.getFlagsmithHasFeature('master_api_key') && (
-                                                    <AdminAPIKeys />
-                                                )}
+                                                <AdminAPIKeys />
                                             </TabItem>
 
                                             <TabItem data-test="tab-permissions" tabLabel="Members" tabIcon="ion-md-people" >
@@ -565,6 +563,17 @@ const OrganisationSettingsPage = class extends Component {
 
                                                                         <Tabs inline transparent uncontrolled>
                                                                             <TabItem tabLabel="Members">
+
+                                                                                <Row space className="mt-5">
+                                                                                    <h3 className="m-b-0">Team Members</h3>
+                                                                                    <Button
+                                                                                        style={{ width: 180 }}
+                                                                                        id="btn-invite" onClick={() => openModal('Invite Users',
+                                                                                        <InviteUsersModal/>)}
+                                                                                        type="button">
+                                                                                        Invite members
+                                                                                    </Button>
+                                                                                </Row>
                                                                             <FormGroup className="mt-4">
                                                                                 {paymentsEnabled && !isLoading && (
                                                                                     <p>
@@ -617,7 +626,7 @@ const OrganisationSettingsPage = class extends Component {
                                                                                                             <Flex className="mr-4">
                                                                                                                 <Input
                                                                                                                     style={{ width: '100%' }}
-                                                                                                                    value={`${document.location.origin}/invite/${inviteLinks.find(f => f.role === this.state.role).hash}`}
+                                                                                                                    value={`${document.location.origin}/invite-link/${inviteLinks.find(f => f.role === this.state.role).hash}`}
                                                                                                                     data-test="invite-link"
                                                                                                                     inputClassName="input input--wide"
                                                                                                                     className="full-width"

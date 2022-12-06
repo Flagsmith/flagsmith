@@ -12,6 +12,7 @@ const controller = {
             first_name,
             last_name,
             marketing_consent_given,
+            sign_up_type: API.getInviteType(),
             referrer: API.getReferrer() || '',
         })
             .then((res) => {
@@ -30,7 +31,10 @@ const controller = {
         store.loading();
         API.trackEvent(Constants.events.OAUTH(type));
 
-        data.post(type === 'saml' ? `${Project.api}auth/saml/login/` : `${Project.api}auth/oauth/${type}/`, _data)
+        data.post(type === 'saml' ? `${Project.api}auth/saml/login/` : `${Project.api}auth/oauth/${type}/`, {
+            ...(_data||{}),
+            sign_up_type: API.getInviteType(),
+        })
             .then((res) => {
                 // const isDemo = email == Project.demoAccount.email;
                 // store.isDemo = isDemo;
@@ -120,6 +124,7 @@ const controller = {
     acceptInvite: (id) => {
         store.saving();
         API.setInvite('');
+        API.setInviteType('');
         return data.post(`${Project.api}users/join/link/${id}/`)
             .catch(() => data.post(`${Project.api}users/join/${id}/`))
             .then((res) => {
@@ -244,8 +249,18 @@ const controller = {
     setUser(user) {
         if (user) {
             store.model = user;
-            store.organisation = user && user.organisations && user.organisations[0];
-
+            if (user && user.organisations) {
+                store.organisation = user.organisations[0];
+                let cookiedID = API.getCookie("organisation");
+                if (cookiedID) {
+                    let foundOrganisation = user.organisations.find((v)=>{
+                        return `${v.id}` === cookiedID
+                    })
+                    if (foundOrganisation) {
+                        store.organisation = foundOrganisation;
+                    }
+                }
+            }
 
             if (projectOverrides.delighted) {
                 delighted.survey({
