@@ -170,7 +170,10 @@ if "DATABASE_URL" in os.environ:
             env("DATABASE_URL"), conn_max_age=DJANGO_DB_CONN_MAX_AGE
         ),
     }
-    REPLICA_DATABASE_URLS = env.list("REPLICA_DATABASE_URLS", default=[])
+    REPLICA_DATABASE_URLS_DELIMITER = env("REPLICA_DATABASE_URLS_DELIMITER", ",")
+    REPLICA_DATABASE_URLS = env.list(
+        "REPLICA_DATABASE_URLS", default=[], delimiter=REPLICA_DATABASE_URLS_DELIMITER
+    )
     NUM_DB_REPLICAS = len(REPLICA_DATABASE_URLS)
     for i, db_url in enumerate(REPLICA_DATABASE_URLS, start=1):
         DATABASES[f"replica_{i}"] = dj_database_url.parse(
