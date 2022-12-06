@@ -321,3 +321,38 @@ def test_search_segments(django_assert_num_queries, project, client):
     response_json = response.json()
     assert response_json["count"] == 1
     assert response_json["results"][0]["name"] == segment_names[0]
+
+
+@pytest.mark.parametrize(
+    "client", [lazy_fixture("master_api_key_client"), lazy_fixture("admin_client")]
+)
+def test_create_segments_with_description_condition(project, client):
+    # Given
+    url = reverse("api-v1:projects:project-segments-list", args=[project.id])
+    data = {
+        "name": "New segment name",
+        "project": project.id,
+        "rules": [
+            {
+                "type": "ALL",
+                "rules": [],
+                "conditions": [
+                    {
+                        "operator": EQUAL,
+                        "property": "test-property",
+                        "value": True,
+                        "description": "test-description",
+                    }
+                ],
+            }
+        ],
+    }
+
+    # When
+    response = client.post(url, data=json.dumps(data), content_type="application/json")
+
+    # Then
+    segment_condition_description_value = response.json()["rules"][0]["conditions"][0][
+        "description"
+    ]
+    assert segment_condition_description_value == "test-description"
