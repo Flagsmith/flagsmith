@@ -30,7 +30,9 @@ def test_create_lead_adds_to_existing_organization_if_exists(db, mocker, setting
     expected_create_lead_kwargs = {
         "title": user.email,
         "organization_id": organization.id,
-        settings.PIPEDRIVE_SIGN_UP_TYPE_DEAL_FIELD_KEY: SignUpType.NO_INVITE.value,
+        "custom_fields": {
+            settings.PIPEDRIVE_SIGN_UP_TYPE_DEAL_FIELD_KEY: SignUpType.NO_INVITE.value
+        },
     }
     mock_pipedrive_client.create_lead.assert_called_once_with(
         **expected_create_lead_kwargs
@@ -62,7 +64,9 @@ def test_create_lead_creates_new_organization_if_not_exists(db, settings, mocker
     expected_create_lead_kwargs = {
         "title": user.email,
         "organization_id": organization.id,
-        settings.PIPEDRIVE_SIGN_UP_TYPE_DEAL_FIELD_KEY: SignUpType.NO_INVITE.value,
+        "custom_fields": {
+            settings.PIPEDRIVE_SIGN_UP_TYPE_DEAL_FIELD_KEY: SignUpType.NO_INVITE.value
+        },
     }
     mock_pipedrive_client.create_lead.assert_called_once_with(
         **expected_create_lead_kwargs

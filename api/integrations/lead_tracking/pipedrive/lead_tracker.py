@@ -26,9 +26,13 @@ class PipedriveLeadTracker(LeadTracker):
             )
             raise e
 
-        create_lead_kwargs = {"title": user.email, "organization_id": organization.id}
+        create_lead_kwargs = {
+            "title": user.email,
+            "organization_id": organization.id,
+            "custom_fields": {},
+        }
         if user.sign_up_type:
-            create_lead_kwargs[
+            create_lead_kwargs["custom_fields"][
                 settings.PIPEDRIVE_SIGN_UP_TYPE_DEAL_FIELD_KEY
             ] = user.sign_up_type
 
