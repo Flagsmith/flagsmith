@@ -64,7 +64,7 @@
     "eslint-plugin-jsx-a11y": "6.1.2",
     "eslint-plugin-prettier": "3.0.0",
     "eslint-plugin-react": "7.11.1",
-    "express": "4.16.3",
+    "express": "4.17.3",
     "express-handlebars": "6.0.5",
     "fbjs": "^3.0.4",
     "fetchify": "0.0.2",
