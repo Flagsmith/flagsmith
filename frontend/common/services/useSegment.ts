@@ -15,7 +15,7 @@ export const segmentService = service
             }),
             deleteSegment: builder.mutation<Res['segment'], Req['deleteSegment']>({
                 query: (query: Req['deleteSegment']) => ({
-                    url: `projects/${query.projectId}/segments/${query.id}`,
+                    url: `projects/${query.projectId}/segments/${query.id}/`,
                     method: 'DELETE',
                     body: query,
                 }),
