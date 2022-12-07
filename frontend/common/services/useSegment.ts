@@ -23,7 +23,7 @@ export const segmentService = service
             }),
             updateSegment: builder.mutation<Res['segment'], Req['updateSegment']>({
                 query: (query: Req['updateSegment']) => ({
-                    url: `projects/${query.projectId}/segments/${query.id}`,
+                    url: `projects/${query.projectId}/segments/${query.id}/`,
                     method: 'PUT',
                     body: query.segment,
                 }),
@@ -31,7 +31,7 @@ export const segmentService = service
             }),
             createSegment: builder.mutation<Res['segment'], Req['createSegment']>({
                 query: (query: Req['createSegment']) => ({
-                    url: `projects/${query.projectId}/segments`,
+                    url: `projects/${query.projectId}/segments/`,
                     method: 'POST',
                     body: query,
                 }),
