@@ -211,6 +211,13 @@ const App = class extends Component {
             return <AccountSettingsPage/>;
         }
         const projectNotLoaded = (!ProjectStore.model && document.location.href.includes('project/'));
+        if (document.location.href.includes("/datadog")) {
+            return (
+                <div>
+                    {this.props.children}
+                </div>
+            )
+        }
         return (
             <Provider store={getStore()}>
                 <AccountProvider onNoUser={this.onNoUser} onLogout={this.onLogout} onLogin={this.onLogin}>

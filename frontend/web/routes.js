@@ -29,6 +29,7 @@ import ChangeRequestPage from './components/pages/ChangeRequestPage';
 import TermsPoliciesPage from './components/pages/TermsPoliciesPage';
 import AuditLogPage from './components/pages/AuditLogPage';
 import CompareEnvironmentsPage from './components/pages/CompareEnvironmentsPage';
+import WidgetPage from './components/pages/WidgetPage';
 
 export default (
     <App>
@@ -49,6 +50,7 @@ export default (
             <Route path="/project/:projectId/environment/:environmentId/features" exact component={FlagsPage}/>
             <Route path="/project/:projectId/environment/:environmentId/change-requests" exact component={ChangeRequestsPage}/>
             <Route path="/project/:projectId/environment/:environmentId/change-requests/:id" exact component={ChangeRequestPage}/>
+            <Route path="/datadog/widget" exact component={WidgetPage}/>
             <Route path="/invite/:id" exact component={InvitePage}/>
             <Route path="/invite-link/:id" exact component={InvitePage}/>
             <Route path="/oauth/:type" exact component={HomePage}/>

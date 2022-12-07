@@ -183,7 +183,7 @@ class TheComponent extends Component {
                         </Column>
                     </Row>
 
-                    {AccountStore.getOrganisationRole() === 'ADMIN' && (
+                    {AccountStore.getOrganisationRole() === 'ADMIN' && !this.props.hideAudit && (
                     <Tooltip
                       html
                       title={(
@@ -201,29 +201,32 @@ class TheComponent extends Component {
                         Feature history
                     </Tooltip>
                     )}
-                    <Permission level="project" permission="DELETE_FEATURE" id={projectId}>
-                        {({ permission: removeFeaturePermission }) => Utils.renderWithPermission(removeFeaturePermission, Constants.projectPermissions('Delete Feature'), (
-                            <Column>
-                                <Tooltip
-                                  html
-                                  title={(
-                                      <button
-                                        disabled={!removeFeaturePermission || readOnly || isProtected}
-                                        onClick={() => this.confirmRemove(projectFlag, () => {
-                                            removeFlag(projectId, projectFlag);
-                                        })}
-                                        className="btn btn--with-icon"
-                                        data-test={`remove-feature-btn-${this.props.index}`}
-                                      >
-                                          <RemoveIcon/>
-                                      </button>
-                                )}
-                                >
-                                    {isProtected ? '<span>This feature has tagged as <bold>protected</bold>, <bold>permanent</bold>, <bold>do not delete</bold>, or <bold>read only</bold>. Please remove the tag before attempting to delete this flag.</span>' : 'Remove feature'}
-                                </Tooltip>
-                            </Column>
-                        ))}
-                    </Permission>
+                    {!this.props.hideRemove && (
+                        <Permission level="project" permission="DELETE_FEATURE" id={projectId}>
+                            {({ permission: removeFeaturePermission }) => Utils.renderWithPermission(removeFeaturePermission, Constants.projectPermissions('Delete Feature'), (
+                                <Column>
+                                    <Tooltip
+                                        html
+                                        title={(
+                                            <button
+                                                disabled={!removeFeaturePermission || readOnly || isProtected}
+                                                onClick={() => this.confirmRemove(projectFlag, () => {
+                                                    removeFlag(projectId, projectFlag);
+                                                })}
+                                                className="btn btn--with-icon"
+                                                data-test={`remove-feature-btn-${this.props.index}`}
+                                            >
+                                                <RemoveIcon/>
+                                            </button>
+                                        )}
+                                    >
+                                        {isProtected ? '<span>This feature has tagged as <bold>protected</bold>, <bold>permanent</bold>, <bold>do not delete</bold>, or <bold>read only</bold>. Please remove the tag before attempting to delete this flag.</span>' : 'Remove feature'}
+                                    </Tooltip>
+                                </Column>
+                            ))}
+                        </Permission>
+                    )}
+
                 </Row>
             </Row>
         );
