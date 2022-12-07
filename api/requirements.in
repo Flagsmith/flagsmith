@@ -49,3 +49,4 @@ opencensus-ext-django
 djangorestframework-api-key
 backoff
 pymemcache
+google-re2
