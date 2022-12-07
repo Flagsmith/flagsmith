@@ -10,6 +10,7 @@ import Utils from 'common/utils/utils';
 import { AuditLogItem, Project } from '../../../common/types/responses';
 import { RouterChildContext } from 'react-router';
 import { useGetAuditLogsQuery } from '../../../common/services/useAuditLog';
+import useThrottle from '../../../common/useThrottle';
 
 type AuditLogType = {
     router: RouterChildContext['router']
@@ -25,7 +26,17 @@ const AuditLog: FC<AuditLogType> = (props) => {
     const projectId = props.match.params.projectId
     const [page, setPage] = useState(1);
     const [search, setSearch] = useState(Utils.fromParam().search);
+    const [searchInput, setSearchInput] = useState(search);
+
     const [environment, setEnvironment] = useState(Utils.fromParam().env);
+    const searchItems = useThrottle((search: string) => {
+        setSearch(search)
+        setPage(1)
+    }, 100)
+    useEffect(()=>{
+        searchItems(searchInput)
+    },[searchInput])
+
     const {data:auditLog,isLoading} = useGetAuditLogsQuery({
         search,
         project:projectId,
@@ -109,9 +120,9 @@ const AuditLog: FC<AuditLogType> = (props) => {
                                                     icon="ion-md-browsers"
                                                     items={auditLog?.results}
                                                     filter={envFilter}
-                                                    search={search}
+                                                    search={searchInput}
                                                     onChange={(e:InputEvent) => {
-                                                        setSearch(Utils.safeParseEventValue(e))
+                                                        setSearchInput(Utils.safeParseEventValue(e))
                                                     }}
                                                     paging={auditLog}
                                                     nextPage={() => {
