@@ -61,7 +61,6 @@
     "cross-env": "5.2.0",
     "css-loader": "3.6.0",
     "dotenv": "6.2.0",
-
     "express": "4.17.3",
     "express-handlebars": "6.0.5",
     "fbjs": "^3.0.4",
