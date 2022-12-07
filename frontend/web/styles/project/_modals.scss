@@ -162,6 +162,11 @@ $side-width: 66%;
                 height: calc(100vh - 100px);
             }
         }
+        .create-feature-tab {
+            margin-top: 16px;
+            overflow-y: auto;
+            height: calc(100vh - 100px);
+        }
     }
 
 }
