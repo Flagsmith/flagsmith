@@ -1,4 +1,4 @@
-import React, { Component, useEffect, useState } from 'react';
+import React, { Component, useEffect, useRef, useState } from 'react';
 import moment from 'moment'
 import { FC } from 'react'; // we need this to make JSX compile
 
@@ -7,10 +7,10 @@ const PanelSearch = require("../../components/PanelSearch")
 const ProjectProvider = require('common/providers/ProjectProvider');
 import ToggleChip from '../ToggleChip';
 import Utils from 'common/utils/utils';
-import { AuditLogItem, Project } from '../../../common/types/responses';
+import { AuditLogItem, Project } from 'common/types/responses';
 import { RouterChildContext } from 'react-router';
-import { useGetAuditLogsQuery } from '../../../common/services/useAuditLog';
-import useThrottle from '../../../common/useThrottle';
+import { useGetAuditLogsQuery } from 'common/services/useAuditLog';
+import useSearchThrottle from 'common/useSearchThrottle';
 
 type AuditLogType = {
     router: RouterChildContext['router']
@@ -25,17 +25,12 @@ type AuditLogType = {
 const AuditLog: FC<AuditLogType> = (props) => {
     const projectId = props.match.params.projectId
     const [page, setPage] = useState(1);
-    const [search, setSearch] = useState(Utils.fromParam().search);
-    const [searchInput, setSearchInput] = useState(search);
-
-    const [environment, setEnvironment] = useState(Utils.fromParam().env);
-    const searchItems = useThrottle((search: string) => {
-        setSearch(search)
+    const [searchInput, search, setSearch] = useSearchThrottle(Utils.fromParam().search, ()=>{
         setPage(1)
-    }, 100)
-    useEffect(()=>{
-        searchItems(searchInput)
-    },[searchInput])
+    });
+
+    const hasHadResults = useRef(false)
+    const [environment, setEnvironment] = useState(Utils.fromParam().env);
 
     const {data:auditLog,isLoading} = useGetAuditLogsQuery({
         search,
@@ -44,6 +39,10 @@ const AuditLog: FC<AuditLogType> = (props) => {
         page_size:10,
         environments:environment
     })
+
+    if(auditLog?.results) {
+        hasHadResults.current = true
+    }
 
     useEffect(()=>{
         props.router.history.replace(`${document.location.pathname}?${Utils.toParam({
@@ -122,7 +121,7 @@ const AuditLog: FC<AuditLogType> = (props) => {
                                                     filter={envFilter}
                                                     search={searchInput}
                                                     onChange={(e:InputEvent) => {
-                                                        setSearchInput(Utils.safeParseEventValue(e))
+                                                        setSearch(Utils.safeParseEventValue(e))
                                                     }}
                                                     paging={auditLog}
                                                     nextPage={() => {
