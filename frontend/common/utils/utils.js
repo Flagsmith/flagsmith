@@ -3,7 +3,7 @@ const semver = require('semver');
 const ProjectStore = require('../../common/stores/project-store');
 
 let flagsmithBetaFeatures = null;
-module.exports = Object.assign({}, require('./base/_utils'), {
+export default Object.assign({}, require('./base/_utils'), {
     numberWithCommas(x) {
         return x.toString()
             .replace(/\B(?=(\d{3})+(?!\d))/g, ',');

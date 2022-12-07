@@ -1,5 +1,5 @@
 require('dotenv').config();
-
+const fs = require('fs');
 const exphbs = require('express-handlebars');
 const express = require('express');
 const bodyParser = require('body-parser');
@@ -15,7 +15,6 @@ const postToSlack = process.env.VERCEL_ENV === 'production';
 
 const isDev = process.env.NODE_ENV !== 'production';
 const port = process.env.PORT || 8080;
-const fs = require('fs');
 
 app.use(xFrameOptions());
 
