@@ -32,7 +32,7 @@ const controller = {
         API.trackEvent(Constants.events.OAUTH(type));
 
         data.post(type === 'saml' ? `${Project.api}auth/saml/login/` : `${Project.api}auth/oauth/${type}/`, {
-            ...(_data||{}),
+            ...(_data || {}),
             sign_up_type: API.getInviteType(),
         })
             .then((res) => {
@@ -251,11 +251,9 @@ const controller = {
             store.model = user;
             if (user && user.organisations) {
                 store.organisation = user.organisations[0];
-                let cookiedID = API.getCookie("organisation");
+                const cookiedID = API.getCookie('organisation');
                 if (cookiedID) {
-                    let foundOrganisation = user.organisations.find((v)=>{
-                        return `${v.id}` === cookiedID
-                    })
+                    const foundOrganisation = user.organisations.find(v => `${v.id}` === cookiedID);
                     if (foundOrganisation) {
                         store.organisation = foundOrganisation;
                     }

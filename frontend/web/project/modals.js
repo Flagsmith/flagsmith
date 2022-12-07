@@ -1,11 +1,13 @@
 import { render } from 'react-dom';
 import React from 'react';
+import { getStore } from "../../common/store";
+import { Provider } from "react-redux";
 
 let interceptClose;
 export const setInterceptClose = (fn) => {
     interceptClose = fn;
 };
-const Provider = class extends React.Component {
+const ModalProvider = class extends React.Component {
     componentDidMount() {
         if (this.props.type !== 'confirm') {
             if (this.props.isModal2) {
@@ -71,11 +73,16 @@ const Provider = class extends React.Component {
   }
 
   render() {
-      return this.props.children;
+      return (
+          <Provider store={getStore()}>
+              {this.props.children}
+          </Provider>
+      )
+
   }
 };
 
-Provider.propTypes = {
+ModalProvider.propTypes = {
     children: RequiredElement,
     onClose: OptionalFunc,
 };
@@ -103,7 +110,7 @@ const Modal = class extends React.Component {
 
   render() {
       return (
-          <Provider
+          <ModalProvider
             addCloseInterception onClose={this.props.onClose} isModal2={this.props.isModal2}
             ref="modal"
           >
@@ -127,7 +134,7 @@ const Modal = class extends React.Component {
                       </div>
                   </div>
               </div>
-          </Provider>
+          </ModalProvider>
       );
   }
 };
@@ -192,7 +199,7 @@ const Confirm = class extends React.Component {
 
   render() {
       return (
-          <Provider onClose={this.props.onNo} ref="modal" type="confirm">
+          <ModalProvider onClose={this.props.onNo} ref="modal" type="confirm">
               <div
                 tabIndex="-1" className="modal alert modal-confirm fade expand" role="dialog"
                 aria-hidden="true"
@@ -205,7 +212,7 @@ const Confirm = class extends React.Component {
                       </div>
                   </div>
               </div>
-          </Provider>
+          </ModalProvider>
       );
   }
 };

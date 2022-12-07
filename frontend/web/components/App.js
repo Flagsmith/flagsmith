@@ -20,6 +20,8 @@ import AccountSettingsPage from './pages/AccountSettingsPage';
 import Headway from './Headway';
 import ProjectStore from '../../common/stores/project-store';
 import getBuildVersion from '../project/getBuildVersion'
+import { Provider } from "react-redux";
+import { getStore } from "../../common/store";
 
 const App = class extends Component {
     static propTypes = {
@@ -210,7 +212,7 @@ const App = class extends Component {
         }
         const projectNotLoaded = (!ProjectStore.model && document.location.href.includes('project/'));
         return (
-            <div>
+            <Provider store={getStore()}>
                 <AccountProvider onNoUser={this.onNoUser} onLogout={this.onLogout} onLogin={this.onLogin}>
                     {({
                         isLoading,
@@ -423,7 +425,7 @@ const App = class extends Component {
                     ))}
                 </AccountProvider>
 
-            </div>
+            </Provider>
         );
     }
 };

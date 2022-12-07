@@ -175,10 +175,11 @@ const HomePage = class extends React.Component {
                                                 <p className="mb-0">We have a 100% free for life plan for smaller projects.</p>
                                                 <ButtonLink
                                                   className="pt-3 pb-3"
-                                                  buttonText="Check out our Pricing"
                                                   href="https://flagsmith.com/pricing"
                                                   target="_blank"
-                                                />
+                                                >
+                                                    Check out our Pricing
+                                                </ButtonLink>
                                             </>
                                         )}
                                     </>
@@ -204,8 +205,9 @@ const HomePage = class extends React.Component {
                                             <Link id="existing-member-btn" to={`/login${redirect}`}>
                                                 <ButtonLink
                                                   className="mt-2 pb-3 pt-2"
-                                                  buttonText="Already a member?"
-                                                />
+                                                >
+                                                    Already a member?
+                                                </ButtonLink>
                                             </Link>
                                         </div>
                                     </Card>

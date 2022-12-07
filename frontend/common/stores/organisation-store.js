@@ -209,15 +209,13 @@ const controller = {
             });
     },
     getInfluxData: (id) => {
-        console.log("GETTING INFLUX")
         data.get(`${Project.api}organisations/${id}/influx-data/`)
             .then((resp) => {
                 API.trackEvent(Constants.events.GET_INFLUX_DATA);
-                if(!store.model) {
-                    store.model = {}
+                if (!store.model) {
+                    store.model = {};
                 }
                 store.model.influx_data = resp;
-                console.log("GETTING INFLUX DONE")
                 store.saved();
             })
             .catch((e) => {

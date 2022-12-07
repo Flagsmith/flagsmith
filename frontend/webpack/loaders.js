@@ -5,6 +5,11 @@ module.exports = [
         exclude: /node_modules/,
         use: ['babel-loader'],
     },
+    {
+        test: /\.tsx?$/,
+        exclude: /node_modules/,
+        use: ['babel-loader'],
+    },
     { test: /.json$/, loader: 'json-loader', exclude: /node_modules/ },
 
     {
