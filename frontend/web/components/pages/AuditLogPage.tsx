@@ -25,7 +25,7 @@ type AuditLogType = {
 const AuditLog: FC<AuditLogType> = (props) => {
     const projectId = props.match.params.projectId
     const [page, setPage] = useState(1);
-    const [searchInput, search, setSearch] = useSearchThrottle(Utils.fromParam().search, ()=>{
+    const {searchInput, search, setSearchInput} = useSearchThrottle(Utils.fromParam().search, ()=>{
         setPage(1)
     });
 
@@ -121,7 +121,7 @@ const AuditLog: FC<AuditLogType> = (props) => {
                                                     filter={envFilter}
                                                     search={searchInput}
                                                     onChange={(e:InputEvent) => {
-                                                        setSearch(Utils.safeParseEventValue(e))
+                                                        setSearchInput(Utils.safeParseEventValue(e))
                                                     }}
                                                     paging={auditLog}
                                                     nextPage={() => {

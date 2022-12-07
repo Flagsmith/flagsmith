@@ -12,7 +12,7 @@ export default function useSearchThrottle(defaultValue:string, cb?:()=>void) {
     useEffect(() => {
         searchItems(searchInput);
     }, [searchInput]);
-    return [searchInput, search, setSearchInput];
+    return { searchInput, search, setSearchInput };
 }
 /* Usage example:
 const searchItems =  useThrottle((search:string) => {
