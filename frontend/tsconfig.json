@@ -1,0 +1,33 @@
+{
+  "compilerOptions": {
+    "strict": true,
+    "baseUrl": ".",
+    "esModuleInterop": true,
+    "downlevelIteration": true,
+    "noEmit": true,
+    "module": "esnext",
+    "moduleResolution": "node",
+    "resolveJsonModule": true,
+    "isolatedModules": true,
+    "allowJs": true,
+    "lib": [
+      "dom"
+    ],
+    "jsx": "preserve",
+    "incremental": true,
+    "skipLibCheck": true,
+    "paths": {
+      "common/": [
+        "./common/*"
+      ]
+    }
+  },
+  "exclude": [
+    "node_modules",
+  ],
+  "include": [
+    "global.d.ts",
+    "**/*.ts",
+    "**/*.tsx"
+  ]
+}
