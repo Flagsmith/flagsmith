@@ -179,6 +179,69 @@ class _CreateEditTag extends PureComponent {
   }
 }
 
+export class ColourSelect extends PureComponent {
+  static displayName = 'TheComponent';
+
+constructor() {
+    super();
+    this.state  = {
+
+    }
+}
+  componentDidMount() {
+      this.input && this.input.focus();
+  }
+
+  render() {
+      const value = this.props.value || Constants.tagColors[0].color;
+      return (
+          <>
+              <Tag
+                  selected
+                  onClick={e => this.setState({isOpen:true})}
+                  tag={{
+                      color:value,
+                      id: value,
+                  }}
+              />
+
+              <InlineModal
+                  title="Select a colour"
+                  isOpen={this.state.isOpen}
+                  onBack={() => this.setState({ tab: 'SELECT' })}
+                  onClose={()=>this.setState({isOpen:false})}
+                  className="inline-modal--tags"
+              >
+                  <div>
+                      <Row className="mb-2">
+                          {Constants.tagColors.map(color => (
+                              <div className="tag--select mr-2 mb-2">
+                                  <Tag
+                                      onClick={e => {
+                                          this.props.onChange(e.color)
+                                          this.setState({isOpen:false})
+                                      }}
+                                      key={color}
+                                      selected={value === color}
+                                      tag={{
+                                          color,
+                                          id: color,
+                                      }}
+                                  />
+                              </div>
+
+                          ))}
+                      </Row>
+                  </div>
+              </InlineModal>
+          </>
+
+      );
+  }
+}
+
+ColourSelect.prototype
+
 const CreateEditTag = withTags(_CreateEditTag);
 
 class TheComponent extends PureComponent {
