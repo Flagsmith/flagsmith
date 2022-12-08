@@ -78,7 +78,11 @@ class HasOrganisationPermission(BasePermission):
     def has_object_permission(self, request, view, obj):
         organisation = self.get_organisation_from_object_callable(obj)
         organisation_pk = self.get_organisation_pk_from_view_callable(view)
-        return organisation.id == organisation_pk and self.has_permission(request, view)
+        return (
+            organisation_pk
+            and organisation.id == int(organisation_pk)
+            and self.has_permission(request, view)
+        )
 
 
 class OrganisationPermission(BasePermission):

@@ -59,14 +59,14 @@ def test_organisation_permission_allows_users_with_manage_users_to_manage_users(
 
 
 def test_user_organisation_permissions_has_permission_allows_organisation_members_to_list_groups(
-    organisation, organisation_one_user, mocker
+    organisation_one, organisation_one_user, mocker
 ):
     # Given
     permissions = UserPermissionGroupPermission()
 
     mock_request = mocker.MagicMock(user=organisation_one_user)
     mock_view = mocker.MagicMock(
-        kwargs={"organisation_pk": organisation.id}, action="list"
+        kwargs={"organisation_pk": organisation_one.id}, action="list"
     )
 
     # When
@@ -86,7 +86,6 @@ def test_user_organisation_permissions_has_permission_permits_users_with_manage_
     mock_request = mocker.MagicMock(user=mock_user)
     mock_view = mocker.MagicMock(kwargs={"organisation_pk": organisation.id})
 
-    mock_user.belongs_to.side_effect = lambda id_: id_ == organisation.id
     mock_user.has_organisation_permission.side_effect = (
         lambda o, perm: o == organisation and perm == MANAGE_USER_GROUPS
     )
