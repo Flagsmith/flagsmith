@@ -538,7 +538,15 @@ def test_audit_log_entry_created_when_environment_updated(environment, project, 
     # Given
     environment = Environment.objects.create(name="Test environment", project=project)
     url = reverse("api-v1:environments:environment-detail", args=[environment.api_key])
-    data = {"project": project.id, "name": "New name"}
+    banner_text = "production environment be careful"
+    banner_colour = "#FF0000"
+
+    data = {
+        "project": project.id,
+        "name": "New name",
+        "banner_text": banner_text,
+        "banner_colour": banner_colour,
+    }
 
     # When
     response = client.put(url, data=data)
@@ -551,6 +559,8 @@ def test_audit_log_entry_created_when_environment_updated(environment, project, 
         ).count()
         == 1
     )
+    assert response.json()["banner_text"] == banner_text
+    assert response.json()["banner_colour"] == banner_colour
 
 
 @pytest.mark.parametrize(
