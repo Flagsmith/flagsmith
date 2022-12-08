@@ -10,9 +10,16 @@ from rest_framework.permissions import BasePermission
 from organisations.models import Organisation
 
 CREATE_PROJECT = "CREATE_PROJECT"
+INVITE_USERS = "INVITE_USERS"
+MANAGE_USER_GROUPS = "MANAGE_USER_GROUPS"
 
 ORGANISATION_PERMISSIONS = (
     (CREATE_PROJECT, "Allows the user to create projects in this organisation."),
+    (INVITE_USERS, "Allows the user to invite users to the organisation."),
+    (
+        MANAGE_USER_GROUPS,
+        "Allows the user to manage the groups in the organisation and their members.",
+    ),
 )
 
 
