@@ -122,25 +122,23 @@ class OrganisationUsersPermission(BasePermission):
 
 class UserPermissionGroupPermission(BasePermission):
     def has_permission(self, request, view):
-        organisation_pk = view.kwargs.get("organisation_pk")
-        if organisation_pk and request.user.is_organisation_admin(
-            Organisation.objects.get(pk=organisation_pk)
-        ):
-            return True
+        try:
+            organisation_pk = view.kwargs.get("organisation_pk")
+            organisation = Organisation.objects.get(pk=organisation_pk)
+        except Organisation.DoesNotExist:
+            return False
 
-        if view.action == "list" and request.user.belongs_to(int(organisation_pk)):
-            return True
-
-        return False
+        return (
+            view.action == "list" and request.user.belongs_to(organisation.id)
+        ) or request.user.has_organisation_permission(organisation, MANAGE_USER_GROUPS)
 
     def has_object_permission(self, request, view, obj):
         organisation_id = view.kwargs.get("organisation_pk")
         organisation = Organisation.objects.get(id=organisation_id)
 
-        if request.user.is_organisation_admin(organisation):
-            return True
-
-        return False
+        return request.user.has_organisation_permission(
+            organisation, MANAGE_USER_GROUPS
+        )
 
 
 class NestedIsOrganisationAdminPermission(BasePermission):

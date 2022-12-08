@@ -54,7 +54,6 @@ from webhooks.webhooks import WebhookType
 logger = logging.getLogger(__name__)
 
 # TODO:
-#  - Allow users with MANAGE_USER_GROUPS to manage user groups / their members
 #  - Prevent users with MANAGE_USER_GROUPS from managing their own groups(?)
 
 
