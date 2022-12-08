@@ -202,9 +202,9 @@ const EnvironmentSettingsPage = class extends Component {
                                                     <div>
                                                     <Row space>
                                                         <div className="col-md-8 pl-0">
-                                                            <h3 className="m-b-0">Tag Environment</h3>
-                                                            <p>
-                                                                Tagging the environment will show a banner whenever you view its pages, this is generally used to warn people that they are viewing and editing a sensitive environment.
+                                                            <h3 className="m-b-0">Environment Banner</h3>
+                                                            <p className="mb-0">
+                                                                This will show a banner whenever you view its pages, this is generally used to warn people that they are viewing and editing a sensitive environment.
                                                             </p>
                                                         </div>
                                                         <Switch
@@ -213,16 +213,16 @@ const EnvironmentSettingsPage = class extends Component {
                                                         />
                                                     </Row>
                                                         {typeof this.state.banner_text === "string" && (
-                                                            <Row>
-                                                                <div className="ml-2">
-                                                                    <ColourSelect value={this.state.banner_colour} onChange={(banner_colour)=>this.setState({banner_colour})}/>
-                                                                </div>
+                                                            <Row className="mt-2">
                                                                 <Input
                                                                     style={{width:400}}
                                                                     placeholder="Banner text"
                                                                     value={this.state.banner_text}
                                                                     onChange={(e)=>this.setState({banner_text:Utils.safeParseEventValue(e)})}
                                                                 />
+                                                                <div className="ml-2">
+                                                                    <ColourSelect value={this.state.banner_colour} onChange={(banner_colour)=>this.setState({banner_colour})}/>
+                                                                </div>
                                                                 <Button onClick={this.saveEnv} className="ml-2">
                                                                     Save
                                                                 </Button>
@@ -231,7 +231,7 @@ const EnvironmentSettingsPage = class extends Component {
 
                                                     </div>
                                                 )}
-                                                    <FormGroup className="m-y-3">
+                                                    <FormGroup className="mt-4">
                                                         <Row space>
                                                             <div className="col-md-8 pl-0">
                                                                 <h3 className="m-b-0">Change Requests</h3>
@@ -323,7 +323,7 @@ const EnvironmentSettingsPage = class extends Component {
                                                                 </div>
                                                             </Row>
                                                     </FormGroup>
-                                                <FormGroup className="m-y-3">
+                                                <FormGroup className="mt-4">
                                                     <Row className="mt-4" space>
                                                         <div className="col-md-8 pl-0">
                                                             <h3>
