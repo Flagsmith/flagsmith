@@ -1,5 +1,5 @@
 # Step 1 - Build Python virtualenv
-FROM python:3.10 as build-python
+FROM python:3.11 as build-python
 WORKDIR /app
 
 RUN apt-get update && apt-get install -y gcc build-essential libpq-dev musl-dev python3-dev
@@ -14,7 +14,7 @@ RUN pip install --upgrade pip
 RUN pip install -r requirements.txt
 
 # Step 2 - Build Django Application
-FROM python:3.10-slim as application
+FROM python:3.11-slim as application
 
 WORKDIR /app
 COPY . .
@@ -22,6 +22,9 @@ COPY . .
 # Install SAML dependency if required
 ARG SAML_INSTALLED="0"
 RUN if [ "${SAML_INSTALLED}" = "1" ]; then apt-get update && apt-get install -y xmlsec1; fi;
+
+# Install postgres
+RUN apt-get update && apt-get install -y libpq-dev && rm -rf /var/lib/apt/lists/*
 
 # Copy the python venv from step 2
 COPY --from=build-python /opt/venv /opt/venv
