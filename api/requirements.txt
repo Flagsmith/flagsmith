@@ -33,7 +33,7 @@ botocore==1.27.16
     #   s3transfer
 cachetools==4.1.1
     # via google-auth
-certifi==2020.11.8
+certifi==2022.12.7
     # via
     #   influxdb-client
     #   requests
