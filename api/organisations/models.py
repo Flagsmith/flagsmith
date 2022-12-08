@@ -26,6 +26,7 @@ from organisations.chargebee.chargebee import (
 )
 from organisations.subscriptions.constants import (
     CHARGEBEE,
+    FREE_PLAN_ID,
     FREE_PLAN_SUBSCRIPTION_METADATA,
     MAX_SEATS_IN_FREE_PLAN,
     SUBSCRIPTION_PAYMENT_METHODS,
@@ -106,6 +107,10 @@ class Organisation(LifecycleModelMixin, AbstractBaseExportableModel):
         if self.has_subscription():
             self.subscription.cancel()
 
+    @hook(AFTER_CREATE)
+    def create_subscription(self):
+        Subscription.objects.create(organisation=self)
+
 
 class UserOrganisation(models.Model):
     user = models.ForeignKey("users.FFAdminUser", on_delete=models.CASCADE)
@@ -126,7 +131,7 @@ class Subscription(LifecycleModelMixin, AbstractBaseExportableModel):
     )
     subscription_id = models.CharField(max_length=100, blank=True, null=True)
     subscription_date = models.DateTimeField(blank=True, null=True)
-    plan = models.CharField(max_length=100, null=True, blank=True)
+    plan = models.CharField(max_length=100, null=True, blank=True, default=FREE_PLAN_ID)
     max_seats = models.IntegerField(default=1)
     max_api_calls = models.BigIntegerField(default=50000)
     cancellation_date = models.DateTimeField(blank=True, null=True)
@@ -150,6 +155,7 @@ class Subscription(LifecycleModelMixin, AbstractBaseExportableModel):
 
     @hook(AFTER_CREATE)
     @hook(AFTER_SAVE, when="cancellation_date", has_changed=True)
+    @hook(AFTER_SAVE, when="subscription_id", has_changed=True)
     def update_mailer_lite_subscribers(self):
         if settings.MAILERLITE_API_KEY:
             mailer_lite = MailerLite()
