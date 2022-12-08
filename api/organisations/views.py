@@ -53,9 +53,6 @@ from webhooks.webhooks import WebhookType
 
 logger = logging.getLogger(__name__)
 
-# TODO:
-#  - Prevent users with MANAGE_USER_GROUPS from managing their own groups(?)
-
 
 class OrganisationViewSet(viewsets.ModelViewSet):
     permission_classes = (IsAuthenticated, OrganisationPermission)
