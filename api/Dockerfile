@@ -23,8 +23,9 @@ COPY . .
 ARG SAML_INSTALLED="0"
 RUN if [ "${SAML_INSTALLED}" = "1" ]; then apt-get update && apt-get install -y xmlsec1; fi;
 
-# Install postgres
-RUN apt-get update && apt-get install -y libpq-dev && rm -rf /var/lib/apt/lists/*
+# arm architecture platform builds need postgres drivers installing via apt
+ARG TARGETARCH
+RUN if [ "${TARGETARCH}" != "amd64" ]; then apt-get update && apt-get install -y gcc libpq-dev && rm -rf /var/lib/apt/lists/*; fi;
 
 # Copy the python venv from step 2
 COPY --from=build-python /opt/venv /opt/venv
