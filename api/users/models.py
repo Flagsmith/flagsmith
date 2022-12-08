@@ -356,7 +356,7 @@ class FFAdminUser(LifecycleModel, AbstractUser):
         if self.is_organisation_admin(organisation):
             return True
 
-        return (
+        return permission_key is not None and (
             UserOrganisationPermission.objects.filter(
                 user=self, organisation=organisation, permissions__key=permission_key
             ).exists()

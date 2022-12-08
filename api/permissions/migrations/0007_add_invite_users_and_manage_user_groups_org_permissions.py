@@ -2,7 +2,7 @@
 
 from django.db import migrations
 
-from organisations.permissions.permissions import INVITE_USERS, MANAGE_USER_GROUPS
+from organisations.permissions.permissions import MANAGE_USERS, MANAGE_USER_GROUPS
 from permissions.models import ORGANISATION_PERMISSION_TYPE
 
 
@@ -10,7 +10,7 @@ def create_permissions(apps, schema_editor):
     permission_model_class = apps.get_model("permissions", "PermissionModel")
 
     permission_model_class.objects.get_or_create(
-        key=INVITE_USERS,
+        key=MANAGE_USERS,
         description="Allows the user to invite users to the organisation.",
         type=ORGANISATION_PERMISSION_TYPE,
     )
@@ -24,7 +24,7 @@ def create_permissions(apps, schema_editor):
 
 def remove_permissions(apps, schema_editor):
     apps.get_model("permissions", "PermissionModel").objects.filter(
-        key__in=[INVITE_USERS, MANAGE_USER_GROUPS]
+        key__in=[MANAGE_USERS, MANAGE_USER_GROUPS]
     ).delete()
 
 
