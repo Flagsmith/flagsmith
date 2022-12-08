@@ -20,14 +20,13 @@ class ButterBar extends Component {
             const environmentDetail = ProjectStore.getEnvironment(environment)
             if(environmentDetail && environmentDetail.banner_text) {
                 return (
-                    <div
-                        className="butter-bar"
-                        style={{backgroundColor:environmentDetail.banner_colour, color:'white', fontWeight:'500'}}
-                    >
-                        {environmentDetail.banner_text}
-                    </div>
+                        <div
+                            className="butter-bar"
+                            style={{backgroundColor:environmentDetail.banner_colour, color:'white', fontWeight:'500'}}
+                        >
+                            {environmentDetail.banner_text}
+                        </div>
                     )
-
             }
         }
         return <>

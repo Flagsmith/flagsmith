@@ -228,7 +228,6 @@ const EnvironmentSettingsPage = class extends Component {
                                                                 </Button>
                                                             </Row>
                                                         )}
-
                                                     </div>
                                                 )}
                                                     <FormGroup className="mt-4">
