@@ -1,5 +1,5 @@
-from django.apps import AppConfig
+from core.apps import BaseAppConfig
 
 
-class SegmentsConfig(AppConfig):
+class SegmentsConfig(BaseAppConfig):
     name = "segments"

@@ -7,43 +7,8 @@ from django_lifecycle import AFTER_SAVE, LifecycleModel, hook
 
 from api_keys.models import MasterAPIKey
 from audit.related_object_type import RelatedObjectType
+from environments.models import Environment
 from projects.models import Project
-
-FEATURE_CREATED_MESSAGE = "New Flag / Remote Config created: %s"
-FEATURE_DELETED_MESSAGE = "Flag / Remote Config Deleted: %s"
-FEATURE_UPDATED_MESSAGE = "Flag / Remote Config updated: %s"
-SEGMENT_CREATED_MESSAGE = "New Segment created: %s"
-SEGMENT_UPDATED_MESSAGE = "Segment updated: %s"
-FEATURE_SEGMENT_UPDATED_MESSAGE = (
-    "Segment rules updated for flag: %s in environment: %s"
-)
-ENVIRONMENT_CREATED_MESSAGE = "New Environment created: %s"
-ENVIRONMENT_UPDATED_MESSAGE = "Environment updated: %s"
-FEATURE_STATE_UPDATED_MESSAGE = (
-    "Flag state / Remote Config value updated for feature: %s"
-)
-FEATURE_STATE_WENT_LIVE_MESSAGE = (
-    "Scheduled change to Flag state / Remote config value went live for feature: %s by"
-    " Change Request: %s"
-)
-
-IDENTITY_FEATURE_STATE_UPDATED_MESSAGE = (
-    "Flag state / Remote config value updated for feature '%s' and identity '%s'"
-)
-SEGMENT_FEATURE_STATE_UPDATED_MESSAGE = (
-    "Flag state / Remote config value updated for feature '%s' and segment '%s'"
-)
-IDENTITY_FEATURE_STATE_DELETED_MESSAGE = (
-    "Flag state / Remote config value deleted for feature '%s' and identity '%s'"
-)
-SEGMENT_FEATURE_STATE_DELETED_MESSAGE = (
-    "Flag state / Remote config value deleted for feature '%s' and segment '%s'"
-)
-
-CHANGE_REQUEST_CREATED_MESSAGE = "Change Request: %s created"
-CHANGE_REQUEST_APPROVED_MESSAGE = "Change Request: %s approved"
-CHANGE_REQUEST_COMMITTED_MESSAGE = "Change Request: %s committed"
-
 
 RELATED_OBJECT_TYPES = ((tag.name, tag.value) for tag in RelatedObjectType)
 
@@ -110,13 +75,18 @@ class AuditLog(LifecycleModel):
     @hook(AFTER_SAVE)
     def update_environments_updated_at(self):
         # Don't update the environments updated_at if the audit log
-        # is of CHANGE_REQUEST type since they(directly) don't impact
-        # value of a given feature in an environment
+        # is of CHANGE_REQUEST type (since they don't (directly) impact
+        # the value of a given feature in an environment) or ENVIRONMENT
+        # since the environment itself has no impact on the feature states
+        # within it
         if self.related_object_type == RelatedObjectType.CHANGE_REQUEST.name:
             return
 
         if self.environment:
-            self.environment.updated_at = self.created_date
-            self.environment.save()
+            environments = Environment.objects.filter(id=self.environment_id)
         else:
-            self.project.environments.update(updated_at=self.created_date)
+            environments = self.project.environments.all()
+
+        # Use a queryset to perform update to prevent signals being called at this point.
+        # Since we're re-saving the environment, we don't want to duplicate signals.
+        environments.update(updated_at=self.created_date)

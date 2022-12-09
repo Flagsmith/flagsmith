@@ -28,7 +28,7 @@ from django_lifecycle import (
 from ordered_model.models import OrderedModelBase
 from simple_history.models import HistoricalRecords
 
-from audit.models import (
+from audit.constants import (
     FEATURE_CREATED_MESSAGE,
     FEATURE_DELETED_MESSAGE,
     FEATURE_SEGMENT_UPDATED_MESSAGE,
@@ -38,8 +38,8 @@ from audit.models import (
     IDENTITY_FEATURE_STATE_UPDATED_MESSAGE,
     SEGMENT_FEATURE_STATE_DELETED_MESSAGE,
     SEGMENT_FEATURE_STATE_UPDATED_MESSAGE,
-    RelatedObjectType,
 )
+from audit.related_object_type import RelatedObjectType
 from environments.identities.helpers import (
     get_hashed_percentage_for_object_ids,
 )

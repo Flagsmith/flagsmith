@@ -2,11 +2,8 @@ import typing
 
 from django.contrib.auth import get_user_model
 
-from audit.models import (
-    FEATURE_STATE_WENT_LIVE_MESSAGE,
-    AuditLog,
-    RelatedObjectType,
-)
+from audit.constants import FEATURE_STATE_WENT_LIVE_MESSAGE
+from audit.models import AuditLog, RelatedObjectType
 from features.models import FeatureState
 from task_processor.decorators import register_task_handler
 
