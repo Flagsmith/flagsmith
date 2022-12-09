@@ -29,6 +29,7 @@ from organisations.subscriptions.constants import (
     CHARGEBEE,
     FREE_PLAN_ID,
     FREE_PLAN_SUBSCRIPTION_METADATA,
+    MAX_API_CALLS_IN_FREE_PLAN,
     MAX_SEATS_IN_FREE_PLAN,
     SUBSCRIPTION_PAYMENT_METHODS,
     XERO,
@@ -137,7 +138,7 @@ class Subscription(LifecycleModelMixin, AbstractBaseExportableModel):
     subscription_date = models.DateTimeField(blank=True, null=True)
     plan = models.CharField(max_length=100, null=True, blank=True, default=FREE_PLAN_ID)
     max_seats = models.IntegerField(default=1)
-    max_api_calls = models.BigIntegerField(default=50000)
+    max_api_calls = models.BigIntegerField(default=MAX_API_CALLS_IN_FREE_PLAN)
     cancellation_date = models.DateTimeField(blank=True, null=True)
     customer_id = models.CharField(max_length=100, blank=True, null=True)
 
