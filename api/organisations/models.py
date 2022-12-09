@@ -28,8 +28,8 @@ from organisations.chargebee.chargebee import (
 from organisations.subscriptions.constants import (
     CHARGEBEE,
     FREE_PLAN_ID,
-    FREE_PLAN_SUBSCRIPTION_METADATA,
     MAX_API_CALLS_IN_FREE_PLAN,
+    MAX_PROJECTS_IN_FREE_PLAN,
     MAX_SEATS_IN_FREE_PLAN,
     SUBSCRIPTION_PAYMENT_METHODS,
     XERO,
@@ -202,7 +202,11 @@ class Subscription(LifecycleModelMixin, AbstractBaseExportableModel):
             )
 
         if not metadata:
-            metadata = FREE_PLAN_SUBSCRIPTION_METADATA
+            metadata = BaseSubscriptionMetadata(
+                seats=self.max_seats,
+                api_calls=self.max_api_calls,
+                projects=MAX_PROJECTS_IN_FREE_PLAN,
+            )
 
         return metadata
 
