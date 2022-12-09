@@ -8,3 +8,7 @@ class InvalidSubscriptionPlanError(APIException):
 
 class CannotCancelChargebeeSubscription(APIException):
     default_detail = "Unable to cancel subscription in Chargebee"
+
+
+class UpgradeSeatsError(APIException):
+    default_detail = "Failed to upgrade seats in Chargebee"
