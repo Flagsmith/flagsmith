@@ -21,6 +21,7 @@ from organisations.chargebee import (
     get_portal_url,
     get_subscription_metadata,
 )
+from organisations.chargebee.chargebee import add_single_seat
 from organisations.chargebee.chargebee import (
     cancel_subscription as cancel_chargebee_subscription,
 )
@@ -31,6 +32,9 @@ from organisations.subscriptions.constants import (
     MAX_SEATS_IN_FREE_PLAN,
     SUBSCRIPTION_PAYMENT_METHODS,
     XERO,
+)
+from organisations.subscriptions.exceptions import (
+    SubscriptionDoesNotSupportSeatUpgrade,
 )
 from organisations.subscriptions.metadata import BaseSubscriptionMetadata
 from organisations.subscriptions.xero.metadata import XeroSubscriptionMetadata
@@ -153,7 +157,10 @@ class Subscription(LifecycleModelMixin, AbstractBaseExportableModel):
         self.max_api_calls = get_max_api_calls_for_plan(plan_metadata)
         self.save()
 
-    @hook(AFTER_CREATE)
+    @property
+    def can_auto_upgrade_seats(self) -> bool:
+        return self.plan in settings.AUTO_SEAT_UPGRADE_PLANS
+
     @hook(AFTER_SAVE, when="cancellation_date", has_changed=True)
     @hook(AFTER_SAVE, when="subscription_id", has_changed=True)
     def update_mailer_lite_subscribers(self):
@@ -197,6 +204,12 @@ class Subscription(LifecycleModelMixin, AbstractBaseExportableModel):
             metadata = FREE_PLAN_SUBSCRIPTION_METADATA
 
         return metadata
+
+    def add_single_seat(self):
+        if not self.can_auto_upgrade_seats:
+            raise SubscriptionDoesNotSupportSeatUpgrade()
+
+        add_single_seat(self.subscription_id)
 
 
 class OrganisationWebhook(AbstractBaseWebhookModel):

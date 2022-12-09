@@ -16,6 +16,9 @@ from organisations.subscriptions.constants import (
     FREE_PLAN_SUBSCRIPTION_METADATA,
     XERO,
 )
+from organisations.subscriptions.exceptions import (
+    SubscriptionDoesNotSupportSeatUpgrade,
+)
 from organisations.subscriptions.metadata import BaseSubscriptionMetadata
 from organisations.subscriptions.xero.metadata import XeroSubscriptionMetadata
 
@@ -289,3 +292,45 @@ def test_subscription_get_subscription_metadata_for_trial():
     assert subscription_metadata.seats == max_seats
     assert subscription_metadata.api_calls == max_api_calls
     assert subscription_metadata.projects is None
+
+
+def test_subscription_add_single_seat_calls_correct_chargebee_method_for_upgradable_plan(
+    mocker, settings
+):
+    # Given
+    settings.AUTO_SEAT_UPGRADE_PLANS = ["scale-up"]
+
+    subscription_id = "subscription-id"
+    subscription = Subscription(subscription_id=subscription_id, plan="scale-up")
+
+    mocked_add_single_seat = mocker.patch(
+        "organisations.models.add_single_seat", autospec=True
+    )
+    # When
+    subscription.add_single_seat()
+
+    # Then
+    mocked_add_single_seat.assert_called_once_with(subscription_id)
+
+
+def test_subscription_add_single_seat_raises_error_for_non_upgradable_plan(
+    mocker, settings
+):
+    # Given
+    settings.AUTO_SEAT_UPGRADE_PLANS = ["scale-up"]
+
+    subscription_id = "subscription-id"
+    subscription = Subscription(
+        subscription_id=subscription_id, plan="not-a-scale-up-plan"
+    )
+
+    mocked_add_single_seat = mocker.patch(
+        "organisations.models.add_single_seat", autospec=True
+    )
+
+    # When
+    with pytest.raises(SubscriptionDoesNotSupportSeatUpgrade):
+        subscription.add_single_seat()
+
+    # and add_single_seat was not called
+    mocked_add_single_seat.assert_not_called()
