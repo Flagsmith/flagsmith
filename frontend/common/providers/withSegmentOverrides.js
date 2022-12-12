@@ -1,6 +1,7 @@
 import data from '../data/base/_data';
 import ProjectStore from '../stores/project-store';
-import FeatureListStore from '../stores/feature-list-store'
+import FeatureListStore from '../stores/feature-list-store';
+
 export default (WrappedComponent) => {
     class HOC extends React.Component {
         static displayName = 'withFoo';

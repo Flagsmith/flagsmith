@@ -16,7 +16,7 @@ import Feature from '../Feature';
 import { ButtonOutline } from '../base/forms/Button';
 import ChangeRequestStore from '../../../common/stores/change-requests-store';
 import { setInterceptClose } from '../../project/modals';
-
+import classNames from 'classnames'
 const FEATURE_ID_MAXLENGTH = Constants.forms.maxLength.FEATURE_ID;
 
 const CreateFlag = class extends Component {
@@ -958,10 +958,10 @@ const CreateFlag = class extends Component {
                                                                 )}
                                                             </Tabs>
                                                         ) : (
-                                                            <div className="mr-3">
+                                                            <div className={classNames(!isEdit?"create-feature-tab":"")}>
                                                                 {Value(projectAdmin, createFeature, project.prevent_flag_defaults)}
                                                                 {!identity && (
-                                                                    <div className="text-right">
+                                                                    <div className="text-right mr-3">
                                                                         {project.prevent_flag_defaults ? (
                                                                             <p className="text-right">
                                                                                 This will create the feature for <strong>all environments</strong>, you can edit this feature per environment once the feature's enabled state and environment once the feature is created.

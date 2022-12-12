@@ -32,7 +32,7 @@ createTestCafe()
                     return runner
                         .src(['./e2e/cafe'])
                         .browsers(process.env.E2E_DEV ? ['chrome'] : ['chrome:headless'])
-                        .concurrency(4)
+                        .concurrency(2)
                         .run();
                 }
                 return v;

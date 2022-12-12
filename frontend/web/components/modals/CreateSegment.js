@@ -100,7 +100,7 @@ const CreateSegment = class extends Component {
 
     componentDidMount = () => {
         this.focusTimeout = setTimeout(() => {
-            this.input.focus();
+            this.input?.focus?.();
             this.focusTimeout = null;
         }, 500);
     };
@@ -146,19 +146,20 @@ const CreateSegment = class extends Component {
 
 
         const rulesEl = (
-            <div className="mt-4 overflow-visible">
+            <div className="overflow-visible">
                 <div>
                     <div className="mb-2">
                         {rules[0].rules.map((rule, i) => (
                             <div key={i}>
                                 {i > 0 && (
-                                    <Row className="and-divider">
+                                    <Row className="and-divider my-1">
                                         <Flex className="and-divider__line"/>
                                         {rule.type === 'ANY' ? 'AND' : 'AND NOT'}
                                         <Flex className="and-divider__line"/>
                                     </Row>
                                 )}
                                 <Rule
+                                  showDescription={this.state.showDescriptions}
                                   readOnly={readOnly}
                                   data-test={`rule-${i}`}
                                   rule={rule}
@@ -268,13 +269,20 @@ const CreateSegment = class extends Component {
 
 
                 <div className="form-group ">
-                    <label className="cols-sm-2 control-label">Include users when the following rules apply:</label>
-                    <span className="text-small text-muted">Note: Trait names are case sensitive</span>
+                    <Row className="mt-2 mb-2">
+                        <Flex>
+                            <label className="cols-sm-2 control-label">Include users when the following rules apply:</label>
+                            <span className="text-small text-muted">Note: Trait names are case sensitive</span>
+                        </Flex>
+                        <span>
+                            {this.state.showDescriptions? "Hide condition descriptions" : "Show condition descriptions"}
+                        </span>
+                        <Switch checked={!!this.state.showDescriptions} onChange={()=>{this.setState({showDescriptions:!this.state.showDescriptions})}}/>
+                    </Row>
                     {
                         rulesEl
                     }
                 </div>
-
                 {error
                     && <div className="alert alert-danger">Error creating segment, please ensure you have entered a trait and value for each rule.</div>
                 }
@@ -435,10 +443,12 @@ const LoadingCreateSegment  = (props) => {
     const [segmentData, setSegmentData] = useState(null);
 
     useEffect(()=>{
-        _data.get(`${Project.api}projects/${props.projectId}/segments/${props.segment}`).then((segment)=> {
-            setSegmentData(segment);
-            setLoading(false)
-        })
+        if(props.segment) {
+            _data.get(`${Project.api}projects/${props.projectId}/segments/${props.segment}`).then((segment)=> {
+                setSegmentData(segment);
+                setLoading(false)
+            })
+        }
     },[props.segment])
 
     return loading?<div className="text-center"><Loader/></div> : (

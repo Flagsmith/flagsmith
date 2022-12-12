@@ -10,6 +10,7 @@ from django.views.generic.edit import FormView
 from drf_yasg2.utils import swagger_auto_schema
 from rest_framework import mixins, status, viewsets
 from rest_framework.decorators import action
+from rest_framework.exceptions import PermissionDenied
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 
@@ -154,8 +155,15 @@ class UserPermissionGroupViewSet(viewsets.ModelViewSet):
     @action(detail=True, methods=["POST"], url_path="add-users")
     def add_users(self, request, organisation_pk, pk):
         group = self.get_object()
+        user_ids = request.data["user_ids"]
+
+        if request.user.id in user_ids and not request.user.is_organisation_admin(
+            Organisation.objects.get(pk=organisation_pk)
+        ):
+            raise PermissionDenied("Non-admin users cannot add themselves to a group.")
+
         try:
-            group.add_users_by_id(request.data["user_ids"])
+            group.add_users_by_id(user_ids)
         except FFAdminUser.DoesNotExist as e:
             return Response({"detail": str(e)}, status=status.HTTP_400_BAD_REQUEST)
 
@@ -168,5 +176,14 @@ class UserPermissionGroupViewSet(viewsets.ModelViewSet):
     @action(detail=True, methods=["POST"], url_path="remove-users")
     def remove_users(self, request, organisation_pk, pk):
         group = self.get_object()
-        group.remove_users_by_id(request.data["user_ids"])
+        user_ids = request.data["user_ids"]
+
+        if request.user.id in user_ids and not request.user.is_organisation_admin(
+            Organisation.objects.get(pk=organisation_pk)
+        ):
+            raise PermissionDenied(
+                "Non-admin users cannot remove themselves from a group."
+            )
+
+        group.remove_users_by_id(user_ids)
         return Response(UserPermissionGroupSerializerDetail(instance=group).data)

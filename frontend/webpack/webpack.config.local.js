@@ -5,7 +5,10 @@ const path = require('path');
 
 const whitelabel = typeof process.env.WHITELABEL === 'undefined' ? false : process.env.WHITELABEL;
 const styles = whitelabel ? path.join(__dirname, `../web/styles/whitelabel/${process.env.WHITELABEL}`) : path.join(__dirname, '../web/styles');
+const base = require('./webpack.base');
+
 module.exports = {
+    ...base,
     devtool: 'eval-source-map',
     mode: 'development',
     stats: 'errors-only',
@@ -22,16 +25,7 @@ module.exports = {
         publicPath: '/',
         devtoolModuleFilenameTemplate: 'file://[absolute-resource-path]',
     },
-    externals: {
-        // require('jquery') is external and available
-        //  on the global var jQuery
-        'jquery': 'jQuery',
-    },
-    resolve: {
-        alias: {
-            styles,
-        },
-    },
+
     plugins: require('./plugins').concat([
         new webpack.HotModuleReplacementPlugin(),
         new webpack.DefinePlugin({

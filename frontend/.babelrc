@@ -1,10 +1,12 @@
 {
   "presets": [
     "@babel/preset-react",
+    "@babel/preset-typescript",
     [
       "@babel/preset-env",
       {
         "targets": {
+          "esmodules": true,
           "browsers": [
             "last 2 versions"
           ]
@@ -14,6 +16,12 @@
     ]
   ],
   "plugins": [
+    ["module-resolver", {
+      "root": ["."],
+      "alias": {
+        "common": "./common"
+      }
+    }],
     "react-hot-loader/babel",
     "@babel/plugin-proposal-class-properties",
     "babel-plugin-transform-object-rest-spread",
