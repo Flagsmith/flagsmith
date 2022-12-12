@@ -566,7 +566,7 @@ def test_get_project_by_uuid(client, project, mocker, settings, organisation):
 @pytest.mark.parametrize(
     "client", [(lazy_fixture("master_api_key_client")), (lazy_fixture("admin_client"))]
 )
-def test_can_enable_enable_realtime_updates_for_project(
+def test_can_enable_realtime_updates_for_project(
     client, project, mocker, settings, organisation
 ):
     # Given
@@ -585,3 +585,27 @@ def test_can_enable_enable_realtime_updates_for_project(
     assert response.status_code == status.HTTP_200_OK
     assert response.json()["uuid"] == str(project.uuid)
     assert response.json()["enable_realtime_updates"] is True
+
+
+@pytest.mark.parametrize(
+    "client", [(lazy_fixture("master_api_key_client")), (lazy_fixture("admin_client"))]
+)
+def test_can_update_only_allow_lower_case_feature_names_for_project(
+    client, project, mocker, settings, organisation
+):
+    # Given
+    url = reverse("api-v1:projects:project-detail", args=[project.id])
+
+    data = {
+        "name": project.name,
+        "organisation": organisation.id,
+        "only_allow_lower_case_feature_names": False,
+    }
+
+    # When
+    response = client.put(url, data=data)
+
+    # Then
+    assert response.status_code == status.HTTP_200_OK
+    assert response.json()["uuid"] == str(project.uuid)
+    assert response.json()["enable_realtime_updates"] is False
