@@ -6,7 +6,7 @@ export default function (props) {
         <Row style={props.color ? { backgroundColor: props.color } : null} onClick={props.onClick} className={cx('chip mr-2 clickable', props.className, { 'light': !!props.color, 'chip--active': props.active })}>
             {props.children}
             <span
-              className={cx('chip-icon ion', {
+              className={cx('mx-1 chip-icon ion', {
                   'ion-ellipse-outline': !props.active,
                   'ion-ios-checkmark': props.active,
               })}

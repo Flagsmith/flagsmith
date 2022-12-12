@@ -3,7 +3,8 @@ FROM node:16
 RUN mkdir /srv/flagsmith && chown node:node /srv/flagsmith
 
 RUN apt-get update
-RUN wget -q https://dl.google.com/linux/chrome/deb/pool/main/g/google-chrome-stable/google-chrome-stable_96.0.4664.110-1_amd64.deb
+ARG CHROME_URL='https://dl.google.com/linux/deb/pool/main/g/google-chrome-stable/google-chrome-stable_107.0.5304.121-1_amd64.deb'
+RUN wget -q $CHROME_URL
 RUN apt install -y ./google-chrome*.deb -f
 RUN apt-get clean
 
