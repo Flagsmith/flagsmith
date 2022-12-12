@@ -112,7 +112,7 @@ class TheComponent extends Component {
         return (
             <Row
               style={{ flexWrap: 'nowrap' }}
-              className={this.props.canDelete ? 'list-item clickable py-2' : 'list-item py-1'} key={id} space
+              className={`list-item clickable ${this.props.widget?"py-1":"py-2"}`} key={id} space
               data-test={`feature-item-${this.props.index}`}
             >
                 <div
@@ -120,36 +120,34 @@ class TheComponent extends Component {
                   onClick={() => !readOnly && this.editFlag(projectFlag, environmentFlags[id])}
                 >
                     <div>
-                        <ButtonLink>
-                            {name}
-                        </ButtonLink>
-                        {projectFlag.owners && !!projectFlag.owners.length ? (
-                            <Tooltip
-                              title={(
-                                  <ButtonLink>
-                                      <span className="ion ion-md-person px-2"/>
-                                  </ButtonLink>
-)}
-                              place="right"
-                            >
-                                {`Flag assigned to ${projectFlag.owners.map(v => `${v.first_name} ${v.last_name}`).join(', ')}`}
-                            </Tooltip>
-
-                        ) : (
-                            <span/>
-                        )}
-                    </div>
-                    <div className="list-item-footer faint">
                         <Row>
-                            {(
-                                <TagValues projectId={projectId} value={projectFlag.tags}/>
-                        )}
-                            <div>
-                            Created {moment(created_date).format('Do MMM YYYY HH:mma')}{' - '}
-                                {description || 'No description'}
-                            </div>
+                            <ButtonLink className="mr-2">
+                                {name}
+                            </ButtonLink>
+                            {projectFlag.owners && !!projectFlag.owners.length ? (
+                                <Tooltip
+                                    title={(
+                                        <ButtonLink>
+                                            <span className="ion ion-md-person pr-2"/>
+                                        </ButtonLink>
+                                    )}
+                                    place="right"
+                                >
+                                    {`Flag assigned to ${projectFlag.owners.map(v => `${v.first_name} ${v.last_name}`).join(', ')}`}
+                                </Tooltip>
+
+                            ) : (
+                                <span/>
+                            )}
+                            <TagValues projectId={projectId} value={projectFlag.tags}/>
+
                         </Row>
+                        <span className="text-small text-muted">
+                            Created {moment(created_date).format('Do MMM YYYY HH:mma')}{' - '}
+                            {description || 'No description'}
+                        </span>
                     </div>
+
                 </div>
                 <Row>
                     <Row style={{

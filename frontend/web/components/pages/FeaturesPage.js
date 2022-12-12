@@ -210,7 +210,7 @@ const FeaturesPage = class extends Component {
                                                                             AsyncStorage.setItem(`${projectId}tags`, JSON.stringify(tags));
                                                                         }}
                                                                       >
-                                                                          <div className="mr-2 mb-2">
+                                                                          <div className="mr-2">
                                                                               <Tag
                                                                                 selected={this.state.showArchived}
                                                                                 onClick={() => {

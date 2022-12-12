@@ -22,6 +22,8 @@ import ProjectStore from '../../common/stores/project-store';
 import getBuildVersion from '../project/getBuildVersion'
 import { Provider } from "react-redux";
 import { getStore } from "../../common/store";
+import { resolveAuthFlow } from "@datadog/ui-extensions-sdk";
+import client from "./datadog-client";
 
 const App = class extends Component {
     static propTypes = {
@@ -78,6 +80,10 @@ const App = class extends Component {
     };
 
     onLogin = () => {
+        resolveAuthFlow({
+            isAuthenticated: true,
+        });
+
         let redirect = API.getRedirect();
         const invite = API.getInvite();
         if (invite) {
@@ -101,7 +107,7 @@ const App = class extends Component {
         }
 
         // Redirect on login
-        if (this.props.location.pathname == '/' || this.props.location.pathname == '/saml' || this.props.location.pathname.includes('/oauth') || this.props.location.pathname == '/login' || this.props.location.pathname == '/demo' || this.props.location.pathname == '/signup') {
+        if (this.props.location.pathname == '/' || this.props.location.pathname == '/widget' || this.props.location.pathname == '/saml' || this.props.location.pathname.includes('/oauth') || this.props.location.pathname == '/login' || this.props.location.pathname == '/demo' || this.props.location.pathname == '/signup') {
             if (redirect) {
                 API.setRedirect('');
                 this.context.router.history.replace(redirect);
@@ -150,6 +156,9 @@ const App = class extends Component {
     };
 
     onLogout = () => {
+        resolveAuthFlow({
+            isAuthenticated: false,
+        });
         if (document.location.href.includes('saml?')) {
             return;
         }
@@ -211,7 +220,7 @@ const App = class extends Component {
             return <AccountSettingsPage/>;
         }
         const projectNotLoaded = (!ProjectStore.model && document.location.href.includes('project/'));
-        if (document.location.href.includes("/datadog")) {
+        if (document.location.href.includes("widget")) {
             return (
                 <div>
                     {this.props.children}

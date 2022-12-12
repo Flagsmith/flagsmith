@@ -3,7 +3,6 @@ require('dotenv').config();
 const exphbs = require('express-handlebars');
 const express = require('express');
 const bodyParser = require('body-parser');
-const xFrameOptions = require('x-frame-options');
 const spm = require('./middleware/single-page-middleware');
 
 const app = express();
@@ -16,8 +15,6 @@ const postToSlack = process.env.VERCEL_ENV === 'production';
 const isDev = process.env.NODE_ENV !== 'production';
 const port = process.env.PORT || 8080;
 const fs = require('fs');
-
-app.use(xFrameOptions());
 
 app.get('/config/project-overrides', (req, res) => {
     const getVariable = ({ name, value }) => {

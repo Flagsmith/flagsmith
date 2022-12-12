@@ -221,7 +221,6 @@ const UserPage = class extends Component {
                                                   title="Features"
 
                                                   header={(
-                                                      <Row className="px-0 pt-0 pb-2">
                                                           <TagSelect
                                                             showUntagged
                                                             showClearAll={(this.state.tags && !!this.state.tags.length) || this.state.showArchived}
@@ -240,7 +239,6 @@ const UserPage = class extends Component {
                                                                 AsyncStorage.setItem(`${projectId}tags`, JSON.stringify(tags));
                                                             }}
                                                           >
-                                                              <div className="mr-2 mb-2">
                                                                   <Tag
                                                                     selected={this.state.showArchived}
                                                                     onClick={() => {
@@ -250,9 +248,7 @@ const UserPage = class extends Component {
                                                                     className="px-2 py-2 ml-2 mr-2"
                                                                     tag={{ label: 'Archived' }}
                                                                   />
-                                                              </div>
                                                           </TagSelect>
-                                                      </Row>
                                                   )}
                                                   isLoading={FeatureListStore.isLoading}
                                                   onSortChange={(sort) => {
@@ -294,7 +290,7 @@ const UserPage = class extends Component {
                                                       }
                                                       return (
                                                           <Row
-                                                            className={`list-item clickable ${flagDifferent && 'flag-different'}`} key={id} space
+                                                            className={`list-item clickable py-1 ${flagDifferent && 'flag-different'}`} key={id} space
                                                             data-test={`user-feature-${i}`}
                                                           >
                                                               <div

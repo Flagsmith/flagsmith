@@ -7,18 +7,18 @@ import FeatureRow from '../FeatureRow';
 import FeatureListStore from '../../../common/stores/feature-list-store';
 import ProjectStore from '../../../common/stores/project-store';
 import { useCustomWidgetOptionString } from '@datadog/ui-extensions-react';
-import { init } from '@datadog/ui-extensions-sdk';
+import client from "../datadog-client";
+import NavIconSmall from '../svg/NavIconSmall';
 
-const client = init();
-const pageSize = 8;
-const WidgetPage = class extends Component {
-    static displayName = 'WidgetPage';
+type WidgetPageType = {
+    projectId: string
+    environmentId: string
+    pageSize: number
+    hideTags: boolean
+}
 
-    static propTypes = {
-        projectId: RequiredString,
-        environmentIdId: RequiredString,
-    };
-
+const WidgetPage = class extends Component<WidgetPageType> {
+    state = {}
     constructor(props, context) {
         super(props, context);
         this.state = {
@@ -32,7 +32,20 @@ const WidgetPage = class extends Component {
             const tags = TagStore.model && TagStore.model[parseInt(this.props.projectId)];
         });
         AppActions.getProject(this.props.projectId);
-        AppActions.getFeatures(this.props.projectId, this.props.environmentId, true, this.state.search, this.state.sort, 0, this.getFilter(), pageSize);
+        AppActions.getFeatures(this.props.projectId, this.props.environmentId, true, this.state.search, this.state.sort, 0, this.getFilter(), this.props.pageSize);
+    }
+
+    componentDidUpdate(prevProps: Readonly<WidgetPageType>, prevState: Readonly<{}>, snapshot?: any) {
+        if( (this.props.projectId !== prevProps.projectId)) {
+            AppActions.getProject(this.props.projectId);
+
+        }
+        if( (this.props.projectId !== prevProps.projectId) ||
+            (this.props.environmentId !== prevProps.environmentId) ||
+            (this.props.pageSize !== prevProps.pageSize)
+        ) {
+            AppActions.getFeatures(this.props.projectId, this.props.environmentId, true, this.state.search, this.state.sort, 0, this.getFilter(), this.props.pageSize);
+        }
     }
 
     componentWillUnmount() {
@@ -82,7 +95,6 @@ const WidgetPage = class extends Component {
             </Permission>
         );
     }
-
     render() {
         const { projectId, environmentId } = this.props;
         const readOnly = Utils.getFlagsmithHasFeature('read_only_mode');
@@ -118,7 +130,7 @@ const WidgetPage = class extends Component {
                                                                       AppActions.searchFeatures(this.props.projectId, this.props.environmentId, true, this.state.search, this.state.sort, 0, this.getFilter(),pageSize);
                                                                   });
                                                               }}
-                                                              nextPage={() => AppActions.getFeatures(this.props.projectId, this.props.environmentId, true, this.state.search, this.state.sort, FeatureListStore.paging.next, this.getFilter(), pageSize)}
+                                                              nextPage={() => AppActions.getFeatures(this.props.projectId, this.props.environmentId, true, this.state.search, this.state.sort, FeatureListStore.paging.next||1, this.getFilter(), pageSize)}
                                                               prevPage={() => AppActions.getFeatures(this.props.projectId, this.props.environmentId, true, this.state.search, this.state.sort, FeatureListStore.paging.previous, this.getFilter(), pageSize)}
                                                               goToPage={page => AppActions.getFeatures(this.props.projectId, this.props.environmentId, true, this.state.search, this.state.sort, page, this.getFilter())}
                                                               onSortChange={(sort) => {
@@ -131,8 +143,8 @@ const WidgetPage = class extends Component {
                                                                   { label: 'Created Date', value: 'created_date', order: 'asc' },
                                                               ]}
                                                               items={projectFlags}
-                                                              header={(
-                                                                  <Row className="px-0 pt-0 pb-2">
+                                                              header={this.props.hideTags? null : (
+                                                                  <Row className="px-0 pt-0">
                                                                       <TagSelect
                                                                         showUntagged
                                                                         showClearAll={(this.state.tags && !!this.state.tags.length) || this.state.showArchived}
@@ -151,7 +163,7 @@ const WidgetPage = class extends Component {
                                                                             AsyncStorage.setItem(`${projectId}tags`, JSON.stringify(tags));
                                                                         }}
                                                                       >
-                                                                          <div className="mr-2 mb-2">
+                                                                          <div className="mr-2">
                                                                               <Tag
                                                                                 selected={this.state.showArchived}
                                                                                 onClick={() => {
@@ -169,12 +181,13 @@ const WidgetPage = class extends Component {
                                                                   <FeatureRow
                                                                     hideRemove
                                                                     hideAudit
+                                                                    widget
                                                                     environmentFlags={environmentFlags}
                                                                     projectFlags={projectFlags}
                                                                     permission={permission}
                                                                     environmentId={environmentId}
                                                                     projectId={projectId}
-                                                                    index={i} canDelete={permission}
+                                                                    index={i}
                                                                     toggleFlag={toggleFlag}
                                                                     editFlag={editFlag}
                                                                     removeFlag={removeFlag}
@@ -196,19 +209,38 @@ const WidgetPage = class extends Component {
                     }}
                 </FeatureListProvider>
             </div>
-        );
+        )
     }
-};
+}
 
-const WidgetPageWrapper = ({}) => {
-    // const projectId = useCustomWidgetOptionString(client, 'project');
-    // const environmentId = useCustomWidgetOptionString(client, 'environment');
 
-    const projectId = "12"
-    const environmentId = "Ueo6zkrS8kt4LzuaJF9NFJ"
-    return (
-        <WidgetPage projectId={projectId} environmentId={environmentId}/>
-    );
-};
 
-export default WidgetPageWrapper;
+export default function Widget() {
+    const projectId = useCustomWidgetOptionString(client, 'Project');
+    const environmentId = useCustomWidgetOptionString(client, 'Environment');
+    const pageSize = useCustomWidgetOptionString(client, 'PageSize') || "5";
+    const hideTags = useCustomWidgetOptionString(client, 'HideTags') === "Yes";
+    if (!API.getCookie("t")) {
+        return null
+    }
+
+
+
+    if (projectId && environmentId) {
+        return <WidgetPage hideTags={hideTags} pageSize={parseInt(pageSize)} projectId={`${projectId}`} environmentId={`${environmentId}`}/>
+    }
+
+    return <div className="text-center pt-5">
+        <div className="mb-4">
+            <NavIconSmall className="signup-icon" />
+        </div>
+        <h3>Please enter the required Options to get started.</h3>
+        <p>
+            You can find your Project ID and Environment ID in by inspecting your Environment's URL in the <a target="_blank" className="text-primary" href="https://app.flagsmith.com/">Flagsmith Dashboard.</a>
+            <div className="text-center mt-2">
+                <img src="/static/images/dd-instructions.png"/>
+
+            </div>
+        </p>
+    </div>
+}

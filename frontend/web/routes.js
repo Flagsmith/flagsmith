@@ -50,7 +50,7 @@ export default (
             <Route path="/project/:projectId/environment/:environmentId/features" exact component={FlagsPage}/>
             <Route path="/project/:projectId/environment/:environmentId/change-requests" exact component={ChangeRequestsPage}/>
             <Route path="/project/:projectId/environment/:environmentId/change-requests/:id" exact component={ChangeRequestPage}/>
-            <Route path="/datadog/widget" exact component={WidgetPage}/>
+            <Route path="/widget" exact component={WidgetPage}/>
             <Route path="/invite/:id" exact component={InvitePage}/>
             <Route path="/invite-link/:id" exact component={InvitePage}/>
             <Route path="/oauth/:type" exact component={HomePage}/>

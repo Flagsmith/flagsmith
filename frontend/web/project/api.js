@@ -111,7 +111,7 @@ global.API = {
                 require('js-cookie').remove(key, { path: '/', domain: Project.cookieDomain });
                 require('js-cookie').remove(key, { path: '/' });
             } else {
-                require('js-cookie').set(key, v, { path: '/' });
+                require('js-cookie').set(key, v, { path: '/', sameSite: 'none', secure:true });
             }
         } catch (e) {
 
