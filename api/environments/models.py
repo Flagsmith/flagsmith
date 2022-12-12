@@ -92,6 +92,12 @@ class Environment(
         null=True, blank=True, max_length=7, help_text="hex code for the banner colour"
     )
 
+    hide_disabled_flags = models.BooleanField(
+        default=False,
+        help_text="If true will exclude flags from SDK which are "
+        "disabled. NOTE: This will override the project setting.",
+    )
+
     objects = EnvironmentManager()
 
     class Meta:
