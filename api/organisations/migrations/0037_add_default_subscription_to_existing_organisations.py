@@ -21,7 +21,7 @@ def create_default_subscription(apps, schema_editor):
 class Migration(migrations.Migration):
 
     dependencies = [
-        ("organisations", "0035_add_organisation_subscription_information_cache"),
+        ("organisations", "0036_alter_subscription_plan"),
     ]
 
     operations = [
