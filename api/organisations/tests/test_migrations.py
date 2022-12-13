@@ -34,7 +34,7 @@ def test_migration_creates_default_subscription_for_organisations_without_subscr
     # When
     # we apply the migration we want to test
     new_state = migrator.apply_tested_migration(
-        ("organisations", "0036_add_default_subscription_to_existing_organisations")
+        ("organisations", "0037_add_default_subscription_to_existing_organisations")
     )
 
     new_subscription_model_class = new_state.apps.get_model(
