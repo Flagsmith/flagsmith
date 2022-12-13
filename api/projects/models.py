@@ -41,6 +41,9 @@ class Project(LifecycleModelMixin, AbstractBaseExportableModel):
         default=False,
         help_text="Enable this to trigger a realtime(sse) event whenever the value of a flag changes",
     )
+    only_allow_lower_case_feature_names = models.BooleanField(
+        default=True, help_text="Used by UI to validate feature names"
+    )
 
     objects = ProjectManager()
 
