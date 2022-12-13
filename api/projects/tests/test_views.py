@@ -590,16 +590,15 @@ def test_can_enable_realtime_updates_for_project(
 @pytest.mark.parametrize(
     "client", [(lazy_fixture("master_api_key_client")), (lazy_fixture("admin_client"))]
 )
-def test_can_update_only_allow_lower_case_feature_names_for_project(
-    client, project, mocker, settings, organisation
-):
+def test_update_project(client, project, mocker, settings, organisation):
     # Given
     url = reverse("api-v1:projects:project-detail", args=[project.id])
-
+    feature_name_regex = r"^[a-zA-Z0-9_]+$"
     data = {
         "name": project.name,
         "organisation": organisation.id,
         "only_allow_lower_case_feature_names": False,
+        "feature_name_regex": feature_name_regex,
     }
 
     # When
@@ -608,3 +607,4 @@ def test_can_update_only_allow_lower_case_feature_names_for_project(
     # Then
     assert response.status_code == status.HTTP_200_OK
     assert response.json()["only_allow_lower_case_feature_names"] is False
+    assert response.json()["feature_name_regex"] == feature_name_regex

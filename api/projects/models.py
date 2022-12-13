@@ -44,6 +44,12 @@ class Project(LifecycleModelMixin, AbstractBaseExportableModel):
     only_allow_lower_case_feature_names = models.BooleanField(
         default=True, help_text="Used by UI to validate feature names"
     )
+    feature_name_regex = models.CharField(
+        null=True,
+        blank=True,
+        max_length=255,
+        help_text="Used for validating feature names",
+    )
 
     objects = ProjectManager()
 
