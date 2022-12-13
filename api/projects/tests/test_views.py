@@ -607,5 +607,4 @@ def test_can_update_only_allow_lower_case_feature_names_for_project(
 
     # Then
     assert response.status_code == status.HTTP_200_OK
-    assert response.json()["uuid"] == str(project.uuid)
-    assert response.json()["enable_realtime_updates"] is False
+    assert response.json()["only_allow_lower_case_feature_names"] is False
