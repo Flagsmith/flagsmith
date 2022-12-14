@@ -40,7 +40,7 @@ const AuditLog: FC<AuditLogType> = (props) => {
             <Row space className='list-item py-2 audit__item' key={created_date}>
                 <Flex>
                     <div
-                        className='audit__log'
+                        className='audit__log mb-1'
                     >
                         {log}
                     </div>
