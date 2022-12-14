@@ -62,10 +62,10 @@ class OrganisationTestCase(TestCase):
         # Given
         organisation = Organisation.objects.create(name="Test org")
 
+        Subscription.objects.filter(organisation=organisation).update(
+            subscription_id="subscription_id", payment_method=CHARGEBEE
+        )
         subscription = Subscription.objects.get(organisation=organisation)
-        subscription.payment_method = CHARGEBEE
-        subscription.subscription_id = "subscription-id"
-        subscription.save()
 
         # refresh organisation to load subscription
         organisation.refresh_from_db()

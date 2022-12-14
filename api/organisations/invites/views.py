@@ -126,10 +126,10 @@ class InviteViewSet(
 
     def perform_create(self, serializer):
         organisation = Organisation.objects.get(id=self.kwargs.get("organisation_pk"))
-        susbcription_metadata = organisation.subscription.get_subscription_metadata()
+        subscription_metadata = organisation.subscription.get_subscription_metadata()
 
         if (
-            organisation.num_seats >= susbcription_metadata.seats
+            organisation.num_seats >= subscription_metadata.seats
             and not organisation.subscription.can_auto_upgrade_seats
         ):
             raise SubscriptionDoesNotSupportSeatUpgrade()
