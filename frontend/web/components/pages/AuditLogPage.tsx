@@ -11,6 +11,7 @@ import { AuditLogItem, Project } from 'common/types/responses';
 import { RouterChildContext } from 'react-router';
 import { useGetAuditLogsQuery } from 'common/services/useAuditLog';
 import useSearchThrottle from 'common/useSearchThrottle';
+import AuditLog from "../AuditLog";
 
 type AuditLogType = {
     router: RouterChildContext['router']
@@ -22,7 +23,7 @@ type AuditLogType = {
     }
 }
 
-const AuditLog: FC<AuditLogType> = (props) => {
+const AuditLogPage: FC<AuditLogType> = (props) => {
     const projectId = props.match.params.projectId;
     const [page, setPage] = useState(1);
     const { searchInput, search, setSearchInput } = useSearchThrottle(Utils.fromParam().search, () => {
@@ -32,17 +33,6 @@ const AuditLog: FC<AuditLogType> = (props) => {
     const hasHadResults = useRef(false);
     const [environment, setEnvironment] = useState(Utils.fromParam().env);
 
-    const { data: auditLog, isLoading } = useGetAuditLogsQuery({
-        search,
-        project: projectId,
-        page,
-        page_size: 10,
-        environments: environment,
-    });
-
-    if (auditLog?.results) {
-        hasHadResults.current = true;
-    }
 
     useEffect(() => {
         props.router.history.replace(`${document.location.pathname}?${Utils.toParam({
@@ -73,6 +63,7 @@ const AuditLog: FC<AuditLogType> = (props) => {
             </Row>
         );
     };
+
     const { env: envFilter } = Utils.fromParam();
 
     const hasRbacPermission = Utils.getPlansPermission('AUDIT') || !Utils.getFlagsmithHasFeature('scaleup_audit');
@@ -113,39 +104,7 @@ const AuditLog: FC<AuditLogType> = (props) => {
                                     )}
                                 </ProjectProvider>
                                 <FormGroup>
-                                    <PanelSearch
-                                        id='messages-list'
-                                        title='Log entries'
-                                        isLoading={isLoading || (!auditLog)}
-                                        className='no-pad'
-                                        icon='ion-md-browsers'
-                                        items={auditLog?.results}
-                                        filter={envFilter}
-                                        search={searchInput}
-                                        onChange={(e: InputEvent) => {
-                                            setSearchInput(Utils.safeParseEventValue(e));
-                                        }}
-                                        paging={auditLog}
-                                        nextPage={() => {
-                                            setPage(page + 1);
-                                        }}
-                                        prevPage={() => {
-                                            setPage(page - 1);
-                                        }}
-                                        goToPage={(page: number) => {
-                                            setPage(page);
-                                        }}
-                                        filterRow={() => true}
-                                        renderRow={renderRow}
-                                        renderNoResults={(
-                                            <FormGroup className='text-center'>
-                                                You have no
-                                                log messages
-                                                for your
-                                                project.
-                                            </FormGroup>
-                                        )}
-                                    />
+                                    <AuditLog pageSize={10} environmentId={environment} projectId={projectId}/>
                                 </FormGroup>
                             </div>
                         </div>
@@ -157,4 +116,4 @@ const AuditLog: FC<AuditLogType> = (props) => {
 };
 
 
-export default ConfigProvider(AuditLog);
+export default ConfigProvider(AuditLogPage);

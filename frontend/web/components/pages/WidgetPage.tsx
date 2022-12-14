@@ -9,15 +9,18 @@ import ProjectStore from '../../../common/stores/project-store';
 import { useCustomWidgetOptionString } from '@datadog/ui-extensions-react';
 import client from "../datadog-client";
 import NavIconSmall from '../svg/NavIconSmall';
+import AuditLog from "../AuditLog";
+import {getStore} from "../../../common/store";
+import { Provider } from 'react-redux';
 
-type WidgetPageType = {
+type FeatureListType = {
     projectId: string
     environmentId: string
     pageSize: number
     hideTags: boolean
 }
 
-const WidgetPage = class extends Component<WidgetPageType> {
+const FeatureList = class extends Component<FeatureListType> {
     state = {}
     constructor(props, context) {
         super(props, context);
@@ -35,7 +38,7 @@ const WidgetPage = class extends Component<WidgetPageType> {
         AppActions.getFeatures(this.props.projectId, this.props.environmentId, true, this.state.search, this.state.sort, 0, this.getFilter(), this.props.pageSize);
     }
 
-    componentDidUpdate(prevProps: Readonly<WidgetPageType>, prevState: Readonly<{}>, snapshot?: any) {
+    componentDidUpdate(prevProps: Readonly<FeatureListType>, prevState: Readonly<{}>, snapshot?: any) {
         if( (this.props.projectId !== prevProps.projectId)) {
             AppActions.getProject(this.props.projectId);
 
@@ -101,7 +104,7 @@ const WidgetPage = class extends Component<WidgetPageType> {
         const environment = ProjectStore.getEnvironment(environmentId);
 
         return (
-            <div data-test="features-page" id="features-page" style={{padding:10}}>
+            <div className="widget-container" data-test="features-page" id="features-page">
                 <FeatureListProvider onSave={this.onSave} onError={this.onError}>
                     {({ projectFlags, environmentFlags }, { environmentHasFlag, toggleFlag, editFlag, removeFlag }) => {
                         const isLoading = FeatureListStore.isLoading;
@@ -219,15 +222,24 @@ export default function Widget() {
     const projectId = useCustomWidgetOptionString(client, 'Project');
     const environmentId = useCustomWidgetOptionString(client, 'Environment');
     const pageSize = useCustomWidgetOptionString(client, 'PageSize') || "5";
+  const id = client.context?.widget?.definition?.custom_widget_key;
+    const isAudit = id === "flagsmith_audit_widget";
     const hideTags = useCustomWidgetOptionString(client, 'HideTags') === "Yes";
     if (!API.getCookie("t")) {
         return null
     }
 
-
-
     if (projectId && environmentId) {
-        return <WidgetPage hideTags={hideTags} pageSize={parseInt(pageSize)} projectId={`${projectId}`} environmentId={`${environmentId}`}/>
+        if (id === "flagsmith_audit_widget") {
+            return (
+                <Provider store={getStore()}>
+                    <div className="widget-container">
+                        <AuditLog environmentId={environmentId} projectId={projectId} pageSize={parseInt(pageSize)}/>
+                    </div>
+                </Provider>
+            )
+        }
+        return <FeatureList hideTags={hideTags} pageSize={parseInt(pageSize)} projectId={`${projectId}`} environmentId={`${environmentId}`}/>
     }
 
     return <div className="text-center pt-5">
@@ -238,8 +250,12 @@ export default function Widget() {
         <p>
             You can find your Project ID and Environment ID in by inspecting your Environment's URL in the <a target="_blank" className="text-primary" href="https://app.flagsmith.com/">Flagsmith Dashboard.</a>
             <div className="text-center mt-2">
-                <img src="/static/images/dd-instructions.png"/>
+                {isAudit ? (
+                    <img src="/static/images/dd-instructions-audit.png"/>
 
+                ) : (
+                    <img src="/static/images/dd-instructions.png"/>
+                )}
             </div>
         </p>
     </div>

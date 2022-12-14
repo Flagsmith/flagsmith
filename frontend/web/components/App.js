@@ -22,10 +22,7 @@ import ProjectStore from '../../common/stores/project-store';
 import getBuildVersion from '../project/getBuildVersion'
 import { Provider } from "react-redux";
 import { getStore } from "../../common/store";
-import { Provider } from "react-redux";
-import { getStore } from "../../common/store";
 import { resolveAuthFlow } from "@datadog/ui-extensions-sdk";
-import client from "./datadog-client";
 
 const App = class extends Component {
     static propTypes = {
