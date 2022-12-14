@@ -247,16 +247,31 @@ export default function Widget() {
             <NavIconSmall className="signup-icon" />
         </div>
         <h3>Please enter the required Options to get started.</h3>
-        <p>
-            You can find your Project ID and Environment ID in by inspecting your Environment's URL in the <a target="_blank" className="text-primary" href="https://app.flagsmith.com/">Flagsmith Dashboard.</a>
-            <div className="text-center mt-2">
-                {isAudit ? (
-                    <img src="/static/images/dd-instructions-audit.png"/>
+        {isAudit? (
+                <p>
+                    You can find your Project ID and numeric Environment ID when viewing your audit log in the <a target="_blank" className="text-primary" href="https://app.flagsmith.com/">Flagsmith Dashboard.</a>
+                    <div className="text-center mt-2">
+                        {isAudit ? (
+                            <img src="/static/images/dd-instructions-audit.png"/>
 
-                ) : (
-                    <img src="/static/images/dd-instructions.png"/>
-                )}
-            </div>
-        </p>
+                        ) : (
+                            <img src="/static/images/dd-instructions.png"/>
+                        )}
+                    </div>
+                </p>
+            ) : (
+            <p>
+                You can find your Project ID and Environment ID when viewing your environment in the <a target="_blank" className="text-primary" href="https://app.flagsmith.com/">Flagsmith Dashboard.</a>
+                <div className="text-center mt-2">
+                    {isAudit ? (
+                        <img src="/static/images/dd-instructions-audit.png"/>
+
+                    ) : (
+                        <img src="/static/images/dd-instructions.png"/>
+                    )}
+                </div>
+            </p>
+            )}
+
     </div>
 }
