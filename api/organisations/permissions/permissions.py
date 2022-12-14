@@ -11,12 +11,10 @@ from rest_framework.permissions import BasePermission
 from organisations.models import Organisation
 
 CREATE_PROJECT = "CREATE_PROJECT"
-MANAGE_USERS = "MANAGE_USERS"
 MANAGE_USER_GROUPS = "MANAGE_USER_GROUPS"
 
 ORGANISATION_PERMISSIONS = (
     (CREATE_PROJECT, "Allows the user to create projects in this organisation."),
-    (MANAGE_USERS, "Allows the user to manage and invite users to the organisation."),
     (
         MANAGE_USER_GROUPS,
         "Allows the user to manage the groups in the organisation and their members.",
@@ -89,10 +87,6 @@ class OrganisationPermission(BasePermission):
     def has_permission(self, request, view):
         if view.action == "create" and settings.RESTRICT_ORG_CREATE_TO_SUPERUSERS:
             return request.user.is_superuser
-        if view.action in ("invite", "remove-users"):
-            return request.user.has_organisation_permission(
-                view.get_object(), MANAGE_USERS
-            )
         return True
 
     def has_object_permission(self, request, view, obj):
