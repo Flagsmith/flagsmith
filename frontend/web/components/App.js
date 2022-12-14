@@ -323,7 +323,7 @@ const App = class extends Component {
                                                                 <span style={{ marginRight: 4 }} className="icon--primary ion ion-md-settings"/>
                                                                 {'Manage'}
                                                             </NavLink>
-                                                            ): (
+                                                            ): !!AccountStore.getOrganisation() && (
                                                                 <Permission level="organisation" permission="MANAGE_USER_GROUPS" id={AccountStore.getOrganisation().id}>
                                                                     {({permission})=>(
                                                                         <>
