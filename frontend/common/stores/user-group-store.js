@@ -25,10 +25,7 @@ const controller = {
             .then((res) => {
                 let prom = Promise.resolve();
                 if (group.users) {
-                    prom = Promise.all([
-                        data.post(`${Project.api}organisations/${orgId}/groups/${res.id}/add-users/`, { user_ids: group.users.map(u => u.id) }),
-                        data.post(`${Project.api}organisations/${orgId}/groups/${res.id}/remove-users/`, { user_ids: group.usersToRemove.map(u => u.id) }),
-                    ]);
+                    prom = data.post(`${Project.api}organisations/${orgId}/groups/${res.id}/add-users/`, { user_ids: group.users.map(u => u.id) })
                 }
                 prom.then(() => {
                     controller.getGroups(orgId);
