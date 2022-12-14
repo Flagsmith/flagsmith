@@ -163,8 +163,8 @@ global.API = {
 
         if (Project.heap) {
             heap.identify(id);
-            const orgs = (user && user.organisations && _.map(user.organisations, o => `${o.name} #${o.id}(${o.role})[${o.num_seats}]`).join(',')) || '';
             const user = AccountStore.model;
+            const orgs = (user && user.organisations && _.map(user.organisations, o => `${o.name} #${o.id}(${o.role})[${o.num_seats}]`).join(',')) || '';
             const plans = AccountStore.getPlans();
             heap.addUserProperties({
                 email: id,
@@ -253,3 +253,5 @@ global.API = {
         console.log.apply(this, arguments);
     },
 };
+
+export default API

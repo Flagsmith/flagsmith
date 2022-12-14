@@ -54,6 +54,8 @@ jobs:
                   context: frontend/
                   push: true
                   tags: ${{ steps.meta.outputs.tags }}
+                  build-args: |
+                      CHROME_URL=${{ secrets.CHROME_URL }}
 
             - name: Image digest
               run: echo ${{ steps.docker_build.outputs.digest }}

@@ -34,7 +34,6 @@ export default (
     <App>
         <Switch>
             <Route path="/" exact component={HomePage}/>
-            {/* <Route path="/markup" exact component={MarkupPage}/> */}
             <Route path="/login" exact component={HomePage}/>
             <Route path="/404" exact component={NotFoundErrorPage}/>
             <Route path="/signup" exact component={HomePage}/>

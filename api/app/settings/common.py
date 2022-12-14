@@ -168,8 +168,18 @@ if "DATABASE_URL" in os.environ:
     DATABASES = {
         "default": dj_database_url.parse(
             env("DATABASE_URL"), conn_max_age=DJANGO_DB_CONN_MAX_AGE
-        )
+        ),
     }
+    REPLICA_DATABASE_URLS_DELIMITER = env("REPLICA_DATABASE_URLS_DELIMITER", ",")
+    REPLICA_DATABASE_URLS = env.list(
+        "REPLICA_DATABASE_URLS", default=[], delimiter=REPLICA_DATABASE_URLS_DELIMITER
+    )
+    NUM_DB_REPLICAS = len(REPLICA_DATABASE_URLS)
+    for i, db_url in enumerate(REPLICA_DATABASE_URLS, start=1):
+        DATABASES[f"replica_{i}"] = dj_database_url.parse(
+            db_url, conn_max_age=DJANGO_DB_CONN_MAX_AGE
+        )
+    DATABASE_ROUTERS = ("app.routers.PrimaryReplicaRouter",)
 elif "DJANGO_DB_NAME" in os.environ:
     # If there is no DATABASE_URL configured, check for old style DB config parameters
     DATABASES = {
@@ -681,6 +691,7 @@ API_URL = env("API_URL", default="/api/v1/")
 ASSET_URL = env("ASSET_URL", default="/")
 MAINTENANCE_MODE = env.bool("MAINTENANCE_MODE", default=False)
 PREVENT_SIGNUP = env.bool("PREVENT_SIGNUP", default=False)
+PREVENT_EMAIL_PASSWORD = env.bool("PREVENT_EMAIL_PASSWORD", default=False)
 DISABLE_INFLUXDB_FEATURES = env.bool("DISABLE_INFLUXDB_FEATURES", default=True)
 FLAGSMITH_ANALYTICS = env.bool("FLAGSMITH_ANALYTICS", default=False)
 FLAGSMITH_ON_FLAGSMITH_API_URL = env("FLAGSMITH_ON_FLAGSMITH_API_URL", default=None)

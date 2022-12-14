@@ -22,7 +22,8 @@ from organisations.invites.serializers import (
 )
 from organisations.models import Organisation
 from organisations.permissions.permissions import (
-    NestedOrganisationEntityPermission,
+    MANAGE_USERS,
+    HasOrganisationPermission,
 )
 from organisations.serializers import (
     InviteSerializer,
@@ -79,7 +80,6 @@ class InviteLinkViewSet(
     GenericViewSet,
 ):
     serializer_class = InviteLinkSerializer
-    permission_classes = (IsAuthenticated, NestedOrganisationEntityPermission)
     pagination_class = None
 
     def get_queryset(self):
@@ -88,6 +88,12 @@ class InviteLinkViewSet(
         return InviteLink.objects.filter(
             organisation__in=user.organisations.all()
         ).filter(organisation__pk=organisation_pk)
+
+    def get_permissions(self):
+        return [
+            IsAuthenticated(),
+            HasOrganisationPermission(permission_key=MANAGE_USERS),
+        ]
 
     def perform_create(self, serializer):
         serializer.save(organisation_id=self.kwargs.get("organisation_pk"))
@@ -100,7 +106,6 @@ class InviteViewSet(
     GenericViewSet,
     RetrieveModelMixin,
 ):
-    permission_classes = (IsAuthenticated, NestedOrganisationEntityPermission)
     throttle_scope = "invite"
 
     def get_serializer_class(self):
@@ -117,6 +122,12 @@ class InviteViewSet(
         return Invite.objects.filter(organisation__in=user.organisations.all()).filter(
             organisation__id=organisation_pk
         )
+
+    def get_permissions(self):
+        return [
+            IsAuthenticated(),
+            HasOrganisationPermission(permission_key=MANAGE_USERS),
+        ]
 
     @action(detail=True, methods=["POST"], throttle_classes=[ScopedRateThrottle])
     def resend(self, request, organisation_pk, pk):

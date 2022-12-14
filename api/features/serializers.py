@@ -1,3 +1,5 @@
+import re
+
 import django.core.exceptions
 from rest_framework import serializers
 from rest_framework.exceptions import PermissionDenied
@@ -127,6 +129,15 @@ class ListCreateFeatureSerializer(WritableNestedModelSerializer):
 
     def validate_name(self, name: str):
         view = self.context["view"]
+
+        project = self.context["project"]
+        feature_name_regex = project.feature_name_regex
+
+        if feature_name_regex and not re.match(feature_name_regex, name):
+            raise serializers.ValidationError(
+                f"Feature name must match regex: {feature_name_regex}"
+            )
+
         unique_filters = {
             "project__id": view.kwargs.get("project_pk"),
             "name__iexact": name,
