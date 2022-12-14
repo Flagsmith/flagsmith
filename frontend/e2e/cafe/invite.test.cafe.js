@@ -41,10 +41,10 @@ test('Invite Test', async () => {
         }).then((res) => {
             if (res.ok) {
                 // eslint-disable-next-line no-console
-                console.log('\n', '\x1b[32m', 'e2e teardown successful', '\x1b[0m', '\n');
+                console.log('\n', '\x1b[32m', 'update-seats successful', '\x1b[0m', '\n');
             } else {
                 // eslint-disable-next-line no-console
-                console.error('\n', '\x1b[31m', 'e2e teardown failed', res.status, '\x1b[0m', '\n');
+                console.error('\n', '\x1b[31m', 'update-seats failed', res.status, '\x1b[0m', '\n');
             }
         });
     }
