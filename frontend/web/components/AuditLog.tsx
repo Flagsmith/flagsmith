@@ -46,7 +46,7 @@ const AuditLog: FC<AuditLogType> = (props) => {
                     </div>
                     {!!author && (
                         <div
-                            className='audit__author'
+                            className='text-small text-muted'
                         >
                             {`${author.first_name} ${author.last_name}`}{" "}
                             {moment(created_date).format('Do MMM YYYY HH:mma')}
