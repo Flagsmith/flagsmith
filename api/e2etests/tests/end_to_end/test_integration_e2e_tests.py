@@ -1,9 +1,11 @@
+import json
 import os
 
 from django.urls import reverse
 from rest_framework import status
 from rest_framework.test import APIClient
 
+from organisations.models import Subscription
 from users.models import FFAdminUser
 
 
@@ -36,3 +38,38 @@ def test_e2e_teardown(settings, db):
     teardown_response = client.post(url)
     assert teardown_response.status_code == status.HTTP_204_NO_CONTENT
     assert not FFAdminUser.objects.filter(email=e2e_user_email).exists()
+
+
+def test_e2e_teardown_with_incorrect_token(settings, db):
+    # Given
+    os.environ["E2E_TEST_AUTH_TOKEN"] = "expected-token"
+    url = reverse("api-v1:e2etests:teardown")
+
+    client = APIClient(HTTP_X_E2E_TEST_AUTH_TOKEN="incorrect-token")
+
+    # When
+    teardown_response = client.post(url)
+
+    # Then
+    assert teardown_response.status_code == status.HTTP_401_UNAUTHORIZED
+
+
+def test_e2e_add_seats(settings, db, admin_user, organisation):
+    # Given
+    token = "test-token"
+    os.environ["E2E_TEST_AUTH_TOKEN"] = token
+    os.environ["FE_E2E_TEST_USER_EMAIL"] = admin_user.email
+
+    url = reverse("api-v1:e2etests:update-seats")
+    seats = 10
+
+    client = APIClient(HTTP_X_E2E_TEST_AUTH_TOKEN=token)
+
+    # When
+    teardown_response = client.put(
+        url, data=json.dumps({"seats": seats}), content_type="application/json"
+    )
+
+    # Then
+    assert teardown_response.status_code == status.HTTP_204_NO_CONTENT
+    assert Subscription.objects.get(organisation=organisation).max_seats == seats
