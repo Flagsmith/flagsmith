@@ -434,7 +434,7 @@ const Aside = class extends Component {
                                                                             <span className="ml-2 icon ion-ios-pricetag"/> {this.state.version.tag}
                                                                         </span>
                                                                         )}>
-                                                                        {`${this.state.version.frontend_sha !== "Unknown" ? `Frontend: ${this.state.version.frontend_sha}` :"" }${this.state.version.backend_sha !== "Unknown" ? `${this.state.version.frontend_sha!=="Unknown"?"<br/>":""}Backend SHA: ${this.state.version.backend_sha}` :"" }`}
+                                                                        {`${this.state.version.frontend_sha !== "Unknown" ? `Frontend SHA: ${this.state.version.frontend_sha}` :"" }${this.state.version.backend_sha !== "Unknown" ? `${this.state.version.frontend_sha!=="Unknown"?"<br/>":""}Backend SHA: ${this.state.version.backend_sha}` :"" }`}
                                                                     </Tooltip>
                                                                 )}
 
