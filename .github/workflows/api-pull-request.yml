@@ -54,7 +54,9 @@ jobs:
 
             - name: Check flake8 linting
               working-directory: . # working dir should be root due to conflicts with pre-commit
-              run: flake8 api --config=.flake8
+              run: |
+                  flake8 --version
+                  flake8 api --config=.flake8
 
             - name: Check isort imports
               run: isort --check .
