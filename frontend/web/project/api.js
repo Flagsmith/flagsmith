@@ -103,7 +103,11 @@ global.API = {
         return API.getCookie('redirect');
     },
     getCookie(key) {
-        return require('js-cookie').get(key);
+        const res = require('js-cookie').get(key);
+        if(res) { //reset expiry
+            API.setCookie(key,res)
+        }
+        return res;
     },
     setCookie(key, v) {
         try {
@@ -111,7 +115,7 @@ global.API = {
                 require('js-cookie').remove(key, { path: '/', domain: Project.cookieDomain });
                 require('js-cookie').remove(key, { path: '/' });
             } else {
-                require('js-cookie').set(key, v, { path: '/' });
+                require('js-cookie').set(key, v, { path: '/', expires: 30 });
             }
         } catch (e) {
 
