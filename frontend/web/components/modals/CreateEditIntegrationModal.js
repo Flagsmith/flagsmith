@@ -86,7 +86,7 @@ const CreateEditIntegration = class extends Component {
     }
 
     onError = (res) => {
-        const defaultError = 'There was an error adding your integration, please the details and try again.';
+        const defaultError = 'There was an error adding your integration. Please check the details and try again.';
         res.text().then((error) => {
             let err = error;
             try {
