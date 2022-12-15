@@ -41,6 +41,7 @@ services:
             DATABASE_URL: postgresql://postgres:password@localhost:5432/flagsmith
             DISABLE_INFLUXDB_FEATURES: 'true' # set to false to enable InfluxDB
             PREVENT_SIGNUP: 'false'
+            ENABLE_ADMIN_ACCESS_USER_PASS: 'true'
 
             ENV: dev # set to "prod" in production.
 
