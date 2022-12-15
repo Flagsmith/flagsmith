@@ -103,7 +103,11 @@ global.API = {
         return API.getCookie('redirect');
     },
     getCookie(key) {
-        return require('js-cookie').get(key);
+        const res = require('js-cookie').get(key);
+        if(res) { //reset expiry
+            API.setCookie(key,res)
+        }
+        return res;
     },
     setCookie(key, v) {
         try {
@@ -113,10 +117,10 @@ global.API = {
             } else {
                 if (E2E) {
                     // Since E2E is not https, we can't set secure cookies
-                    require('js-cookie').set(key, v, { path: '/' });
+                    require('js-cookie').set(key, v, { path: '/', expires: 30 });
                 } else {
                     // We need samesite secure cookies to allow for IFrame embeds from 3rd parties
-                    require('js-cookie').set(key, v, { path: '/', sameSite: 'none', secure:true });
+                    require('js-cookie').set(key, v, { path: '/', sameSite: 'none', secure:true, expires: 30 });
                 }
             }
         } catch (e) {
