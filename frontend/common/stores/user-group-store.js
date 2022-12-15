@@ -35,13 +35,22 @@ const controller = {
     },
     updateGroup: (orgId, group) => {
         store.saving();
-        Promise.all([
-            data.put(`${Project.api}organisations/${orgId}/groups/${group.id}/`, group),
-            data.post(`${Project.api}organisations/${orgId}/groups/${group.id}/add-users/`, { user_ids: group.users.map(u => u.id) }).catch(()=>{}),
-            data.post(`${Project.api}organisations/${orgId}/groups/${group.id}/remove-users/`, { user_ids: group.usersToRemove.map(u => u.id) }).catch(()=>{}),
-        ]).then(() => {
-            controller.getGroups(orgId);
+        data.put(`${Project.api}organisations/${orgId}/groups/${group.id}/`, group).then((currentGroup)=>{
+            const toRemove = group.usersToRemove.filter((toRemove)=>{
+                return !!currentGroup.users.find((user)=>user.id === toRemove.id)
+            })
+            const toAdd = group.users.filter((toRemove)=>{
+                return !currentGroup.users.find((user)=>user.id === toRemove.id)
+            })
+
+            Promise.all([
+                data.post(`${Project.api}organisations/${orgId}/groups/${group.id}/add-users/`, { user_ids: toAdd.map(u => u.id) }).catch(()=>{}),
+                data.post(`${Project.api}organisations/${orgId}/groups/${group.id}/remove-users/`, { user_ids: toRemove.map(u => u.id) }).catch(()=>{}),
+            ]).then(() => {
+                controller.getGroups(orgId);
+            })
         })
+
             .catch(e => API.ajaxHandler(store, e));
     },
     deleteGroup: (orgId, group) => {
