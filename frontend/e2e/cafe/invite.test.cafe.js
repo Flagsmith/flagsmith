@@ -31,7 +31,7 @@ test('Invite Test', async () => {
 
     if (token) {
         await fetch(`${Project.api}e2etests/update-seats/`, {
-            method: 'POST',
+            method: 'PUT',
             headers: {
                 'Accept': 'application/json',
                 'Content-Type': 'application/json',
