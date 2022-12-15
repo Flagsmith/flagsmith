@@ -37,8 +37,8 @@ const controller = {
         store.saving();
         Promise.all([
             data.put(`${Project.api}organisations/${orgId}/groups/${group.id}/`, group),
-            data.post(`${Project.api}organisations/${orgId}/groups/${group.id}/add-users/`, { user_ids: group.users.map(u => u.id) }),
-            data.post(`${Project.api}organisations/${orgId}/groups/${group.id}/remove-users/`, { user_ids: group.usersToRemove.map(u => u.id) }),
+            data.post(`${Project.api}organisations/${orgId}/groups/${group.id}/add-users/`, { user_ids: group.users.map(u => u.id) }).catch(()=>{}),
+            data.post(`${Project.api}organisations/${orgId}/groups/${group.id}/remove-users/`, { user_ids: group.usersToRemove.map(u => u.id) }).catch(()=>{}),
         ]).then(() => {
             controller.getGroups(orgId);
         })
