@@ -499,7 +499,7 @@ class OrganisationTestCase(TestCase):
 
         # Then
         assert response.status_code == status.HTTP_200_OK
-        assert len(response.json()) == 3
+        assert len(response.json()) == 2
 
     def test_get_my_permissions_for_non_admin(self):
         # Given
