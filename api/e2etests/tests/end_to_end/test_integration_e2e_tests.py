@@ -66,10 +66,10 @@ def test_e2e_add_seats(settings, db, admin_user, organisation):
     client = APIClient(HTTP_X_E2E_TEST_AUTH_TOKEN=token)
 
     # When
-    teardown_response = client.put(
+    update_seats_response = client.put(
         url, data=json.dumps({"seats": seats}), content_type="application/json"
     )
 
     # Then
-    assert teardown_response.status_code == status.HTTP_204_NO_CONTENT
+    assert update_seats_response.status_code == status.HTTP_204_NO_CONTENT
     assert Subscription.objects.get(organisation=organisation).max_seats == seats
