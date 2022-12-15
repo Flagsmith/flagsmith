@@ -44,8 +44,8 @@ const controller = {
             })
 
             Promise.all([
-                data.post(`${Project.api}organisations/${orgId}/groups/${group.id}/add-users/`, { user_ids: toAdd.map(u => u.id) }).catch(()=>{}),
-                data.post(`${Project.api}organisations/${orgId}/groups/${group.id}/remove-users/`, { user_ids: toRemove.map(u => u.id) }).catch(()=>{}),
+                data.post(`${Project.api}organisations/${orgId}/groups/${group.id}/add-users/`, { user_ids: toAdd.map(u => u.id) }),
+                data.post(`${Project.api}organisations/${orgId}/groups/${group.id}/remove-users/`, { user_ids: toRemove.map(u => u.id) }),
             ]).then(() => {
                 controller.getGroups(orgId);
             })
