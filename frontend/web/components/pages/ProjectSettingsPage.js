@@ -6,6 +6,7 @@ import Switch from '../Switch';
 import _data from '../../../common/data/base/_data';
 import Tabs from '../base/forms/Tabs'
 import TabItem from '../base/forms/TabItem'
+
 const ProjectSettingsPage = class extends Component {
     static displayName = 'ProjectSettingsPage'
 
@@ -49,21 +50,21 @@ const ProjectSettingsPage = class extends Component {
 
     confirmRemove = (project, cb) => {
         openModal('Remove Project', <ConfirmRemoveProject
-          project={project}
-          cb={cb}
+            project={project}
+            cb={cb}
         />);
     };
 
     toggleHideDisabledFlags = (project, editProject) => {
         openModal('Hide Disabled Flags', <ConfirmHideFlags
-          project={project}
-          value={!!project.hide_disabled_flags}
-          cb={() => {
-              editProject({
-                  ...project,
-                  hide_disabled_flags: !project.hide_disabled_flags,
-              });
-          }}
+            project={project}
+            value={!!project.hide_disabled_flags}
+            cb={() => {
+                editProject({
+                    ...project,
+                    hide_disabled_flags: !project.hide_disabled_flags,
+                });
+            }}
         />);
     };
 
@@ -71,6 +72,27 @@ const ProjectSettingsPage = class extends Component {
         editProject({
             ...project,
             prevent_flag_defaults: !project.prevent_flag_defaults,
+        });
+    };
+
+    toggleFeatureValidation = (project, editProject) => {
+        if (project.feature_name_regex) {
+            editProject({
+                ...project,
+                feature_name_regex: null,
+            });
+        } else {
+            editProject({
+                ...project,
+                feature_name_regex: ".+",
+            });
+        }
+    };
+
+    updateFeatureNameRegex = (project, editProject) => {
+        editProject({
+            ...project,
+            feature_name_regex: this.state.feature_name_regex,
         });
     };
 
@@ -84,130 +106,204 @@ const ProjectSettingsPage = class extends Component {
         return (
             <div className="app-container container">
                 <ProjectProvider id={this.props.match.params.projectId} onRemove={this.onRemove} onSave={this.onSave}>
-                    {({ isLoading, isSaving, editProject, deleteProject, project }) => (
-                        <div>
-                            {(
-                                <Tabs inline transparent uncontrolled>
-                                    <TabItem tabLabel="General" tabIcon="ion-md-settings" >
-                                        <div className="mt-4">
-                                            <h3>Project Name</h3>
-                                            <FormGroup>
-                                                <form onSubmit={(e) => {
-                                                    e.preventDefault();
-                                                    !isSaving && name && editProject(Object.assign({}, project, { name }));
-                                                }}
-                                                >
-                                                    <Row>
-                                                        <Column className="m-l-0">
-                                                            <Input
-                                                                ref={e => this.input = e}
-                                                                defaultValue={project.name}
-                                                                value={this.state.name}
-                                                                inputClassName="input input--wide"
-                                                                name="proj-name"
-                                                                onChange={e => this.setState({ name: Utils.safeParseEventValue(e) })}
-                                                                isValid={name && name.length}
-                                                                type="text" title={<h3>Project Name</h3>}
-                                                                placeholder="My Project Name"
-                                                            />
-                                                        </Column>
-                                                        <Button id="save-proj-btn" disabled={isSaving || !name}>
-                                                            {isSaving ? 'Updating' : 'Update Name'}
-                                                        </Button>
-                                                    </Row>
-                                                </form>
-                                            </FormGroup>
-                                        </div>
-
-                                        <FormGroup className="mt-4">
-                                            <h3>Hide disabled flags from SDKs</h3>
-                                            <div className="row">
-                                                <div className="col-md-10">
-                                                    <p>
-                                                        To prevent letting your users know about your upcoming features and to cut down on payload, enabling this will prevent the API from returning features that are disabled.
-                                                    </p>
-                                                </div>
-                                                <div className="col-md-2 text-right">
-                                                    <Switch
-                                                        data-test="js-hide-disabled-flags" disabled={isSaving} onChange={() => this.toggleHideDisabledFlags(project, editProject)}
-                                                        checked={project.hide_disabled_flags}
-                                                    />
-                                                </div>
+                    {({ isLoading, isSaving, editProject, deleteProject, project }) => {
+                        if(typeof this.state.feature_name_regex !=='string' && project?.feature_name_regex) {
+                            this.state.feature_name_regex = project?.feature_name_regex
+                        }
+                        let regexValid = true;
+                        if(this.state.feature_name_regex)
+                        try {
+                            new RegExp(this.state.feature_name_regex);
+                        } catch(e) {
+                            regexValid = false;
+                        }
+                        const featureRegexEnabled = typeof project.feature_name_regex === 'string';
+                        return (
+                            <div>
+                                {(
+                                    <Tabs inline transparent uncontrolled>
+                                        <TabItem tabLabel="General" tabIcon="ion-md-settings">
+                                            <div className="mt-4">
+                                                <h3>Project Name</h3>
+                                                <FormGroup>
+                                                    <form onSubmit={(e) => {
+                                                        e.preventDefault();
+                                                        !isSaving && name && editProject(Object.assign({}, project, { name }));
+                                                    }}
+                                                    >
+                                                        <Row>
+                                                            <Column className="m-l-0">
+                                                                <Input
+                                                                    ref={e => this.input = e}
+                                                                    defaultValue={project.name}
+                                                                    value={this.state.name}
+                                                                    inputClassName="input input--wide"
+                                                                    name="proj-name"
+                                                                    onChange={e => this.setState({ name: Utils.safeParseEventValue(e) })}
+                                                                    isValid={name && name.length}
+                                                                    type="text" title={<h3>Project Name</h3>}
+                                                                    placeholder="My Project Name"
+                                                                />
+                                                            </Column>
+                                                            <Button id="save-proj-btn" disabled={isSaving || !name}>
+                                                                {isSaving ? 'Updating' : 'Update Name'}
+                                                            </Button>
+                                                        </Row>
+                                                    </form>
+                                                </FormGroup>
                                             </div>
-                                        </FormGroup>
+
+                                            <FormGroup className="mt-4">
+                                                <h3>Hide disabled flags from SDKs</h3>
+                                                <div className="row">
+                                                    <div className="col-md-10">
+                                                        <p>
+                                                            To prevent letting your users know about your upcoming features
+                                                            and to cut down on payload, enabling this will prevent the API
+                                                            from returning features that are disabled.
+                                                        </p>
+                                                    </div>
+                                                    <div className="col-md-2 text-right">
+                                                        <Switch
+                                                            data-test="js-hide-disabled-flags" disabled={isSaving}
+                                                            onChange={() => this.toggleHideDisabledFlags(project, editProject)}
+                                                            checked={project.hide_disabled_flags}
+                                                        />
+                                                    </div>
+                                                </div>
+                                            </FormGroup>
                                             <FormGroup className="mt-4">
                                                 <h3>Prevent flag defaults</h3>
                                                 <div className="row">
                                                     <div className="col-md-10">
                                                         <p>
-                                                            By default, when you create a feature with a value and enabled state it acts as a default for your other environments. Enabling this setting forces the user to create a feature before setting its values per environment.
+                                                            By default, when you create a feature with a value and enabled
+                                                            state it acts as a default for your other environments. Enabling
+                                                            this setting forces the user to create a feature before setting
+                                                            its values per environment.
                                                         </p>
                                                     </div>
                                                     <div className="col-md-2 text-right">
                                                         <Switch
-                                                            data-test="js-hide-disabled-flags" disabled={isSaving} onChange={() => this.togglePreventDefaults(project, editProject)}
+                                                            data-test="js-hide-disabled-flags" disabled={isSaving}
+                                                            onChange={() => this.togglePreventDefaults(project, editProject)}
                                                             checked={project.prevent_flag_defaults}
                                                         />
                                                     </div>
                                                 </div>
                                             </FormGroup>
-                                        {!Utils.getIsEdge() && this.props.hasFeature('edge_identities') && (
+                                            {
+                                                Utils.getFlagsmithHasFeature("feature_name_regex") && (
+                                                    <FormGroup className="mt-4">
+                                                        <h3>Feature name RegEx</h3>
+                                                        <div className="row">
+                                                            <div className="col-md-10">
+                                                                <p>
+                                                                    This allows you to define a regular expression that all
+                                                                    feature names must adhere to.
+                                                                </p>
+                                                            </div>
+                                                            <div className="col-md-2 text-right">
+                                                                <Switch
+                                                                    data-test="js-flag-case-sensitivity" disabled={isSaving}
+                                                                    onChange={() => this.toggleFeatureValidation(project, editProject)}
+                                                                    checked={featureRegexEnabled}
+                                                                />
+                                                            </div>
+                                                        </div>
+                                                        {featureRegexEnabled && (
+                                                            <InputGroup title="Feature Name Regex"
+                                                                        component={(
+                                                                            <form onSubmit={(e)=>{
+                                                                                e.preventDefault()
+                                                                                if(regexValid) {
+                                                                                    this.updateFeatureNameRegex(project, editProject);
+                                                                                }
+                                                                            }}>
+                                                                                <Row>
+                                                                                    <Input
+                                                                                        ref={e => this.input = e}
+                                                                                        value={this.state.feature_name_regex}
+                                                                                        inputClassName="input input--wide"
+                                                                                        name="feature-name-regex"
+                                                                                        onChange={e => this.setState({ feature_name_regex: Utils.safeParseEventValue(e) })}
+                                                                                        isValid={regexValid}
+                                                                                        type="text"
+                                                                                        placeholder="Regular Expression"
+                                                                                    />
+                                                                                    <Button className="ml-2" disabled={!regexValid||isLoading}>
+                                                                                        Save
+                                                                                    </Button>
+                                                                                </Row>
+                                                                            </form>
+                                                                        )}
+                                                            />
+                                                        )}
+                                                    </FormGroup>
+                                                )
+                                            }
+                                            {!Utils.getIsEdge() && this.props.hasFeature('edge_identities') && (
+                                                <FormGroup className="mt-4">
+                                                    <h3>Global Edge API Opt in</h3>
+                                                    <div className="row">
+                                                        <div className="col-md-10">
+                                                            <p>
+                                                                Migrate your project onto our Global Edge API. Existing Core
+                                                                API endpoints will continue to work whilst the migration
+                                                                takes place. Find out more <a
+                                                                href="https://docs.flagsmith.com/advanced-use/edge-api"
+                                                            >here</a>.
+                                                            </p>
+                                                        </div>
+                                                        <div className="col-md-2 text-right">
+                                                            <Button
+                                                                disabled={isSaving || Utils.isMigrating()}
+                                                                onClick={() => openConfirm('Are you sure?', 'This will migrate your project to the Global Edge API.', () => {
+                                                                    this.migrate(project);
+                                                                })}
+                                                            >
+                                                                {this.state.migrating || Utils.isMigrating() ? 'Migrating to Edge' : 'Start Migration'}
+                                                            </Button>
+                                                        </div>
+                                                    </div>
+                                                </FormGroup>
+                                            )}
+
                                             <FormGroup className="mt-4">
-                                                <h3>Global Edge API Opt in</h3>
+                                                <h3>Delete Project</h3>
                                                 <div className="row">
                                                     <div className="col-md-10">
                                                         <p>
-                                                            Migrate your project onto our Global Edge API. Existing Core API endpoints will continue to work whilst the migration takes place. Find out more <a href="https://docs.flagsmith.com/advanced-use/edge-api">here</a>.
+                                                            This project will be permanently deleted.
                                                         </p>
                                                     </div>
                                                     <div className="col-md-2 text-right">
                                                         <Button
-                                                            disabled={isSaving || Utils.isMigrating()}
-                                                            onClick={() => openConfirm('Are you sure?', 'This will migrate your project to the Global Edge API.', () => {
-                                                                this.migrate(project);
+                                                            onClick={() => this.confirmRemove(project, () => {
+                                                                deleteProject(this.props.match.params.projectId);
                                                             })}
+                                                            className="btn btn--with-icon ml-auto btn--remove"
                                                         >
-                                                            {this.state.migrating || Utils.isMigrating() ? 'Migrating to Edge' : 'Start Migration'}
+                                                            <RemoveIcon/>
                                                         </Button>
                                                     </div>
                                                 </div>
                                             </FormGroup>
-                                        )}
+                                        </TabItem>
+                                        <TabItem tabLabel="Members" tabIcon="ion-md-people">
+                                            <EditPermissions
+                                                onSaveUser={() => {
+                                                    this.getPermissions();
+                                                }} permissions={this.state.permissions} tabClassName="flat-panel"
+                                                id={this.props.match.params.projectId} level="project"
+                                            />
+                                        </TabItem>
+                                    </Tabs>
 
-                                        <FormGroup className="mt-4">
-                                            <h3>Delete Project</h3>
-                                            <div className="row">
-                                                <div className="col-md-10">
-                                                    <p>
-                                                        This project will be permanently deleted.
-                                                    </p>
-                                                </div>
-                                                <div className="col-md-2 text-right">
-                                                    <Button
-                                                        onClick={() => this.confirmRemove(project, () => {
-                                                            deleteProject(this.props.match.params.projectId);
-                                                        })}
-                                                        className="btn btn--with-icon ml-auto btn--remove"
-                                                    >
-                                                        <RemoveIcon/>
-                                                    </Button>
-                                                </div>
-                                            </div>
-                                        </FormGroup>
-                                    </TabItem>
-                                    <TabItem tabLabel="Members" tabIcon="ion-md-people" >
-                                        <EditPermissions
-                                            onSaveUser={() => {
-                                                this.getPermissions();
-                                            }} permissions={this.state.permissions} tabClassName="flat-panel"
-                                            id={this.props.match.params.projectId} level="project"
-                                        />
-                                    </TabItem>
-                                </Tabs>
-
-                    )}
-                        </div>
-                    )}
+                                )}
+                            </div>
+                        )
+                    }}
                 </ProjectProvider>
             </div>
         );
