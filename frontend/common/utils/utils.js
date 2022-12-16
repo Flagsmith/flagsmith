@@ -23,7 +23,7 @@ module.exports = Object.assign({}, require('./base/_utils'), {
         if (Utils.getFlagsmithHasFeature('update_feature_state_permission')) {
             return 'APPROVE_CHANGE_REQUEST';
         }
-        return 'VIEW_ENVIRONMENT';
+        return 'VIEW_ENVIRONMENT';i
     },
     getManageFeaturePermission(isChangeRequest) {
         if (isChangeRequest && Utils.getFlagsmithHasFeature('update_feature_state_permission')) {
@@ -80,6 +80,9 @@ module.exports = Object.assign({}, require('./base/_utils'), {
             return `${Project.api}environments/${environmentId}/edge-identities/${userId}/list-traits/`;
         }
         return `${Project.api}environments/${environmentId}/identities/${userId}/traits/`;
+    },
+    removeElementFromArray(array,index) {
+        return array.slice(0, index).concat(array.slice(index+1))
     },
     findOperator(operator, value, operators) {
         const findAppended = `${value}`.includes(':') ? (operators || []).find((v) => {

@@ -18,5 +18,21 @@ export type Req = {
     project: string
     environments?: string
   }>
+  deleteIdentity: {
+    id: string
+    environmentId: string
+    isEdge: boolean
+  }
+  createIdentities: {
+    isEdge: boolean
+    environmentId: string
+    identifiers: string[]
+  }
+  getIdentities: PagedRequest<{
+    environmentId: string
+    search?:string
+    pages?: string[] // this is needed for edge since it returns no paging info other than a key
+    isEdge: boolean
+  }>
   // END OF TYPES
 }

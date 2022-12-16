@@ -54,14 +54,6 @@ const controller = {
                 store.loaded();
             });
     },
-    saveIdentity: (id, identity) => {
-        store.saving();
-        setTimeout(() => {
-            const index = _.findIndex(store.model, { id });
-            store.model[index] = identity;
-            store.saved();
-        }, 2000);
-    },
     searchIdentities: _.throttle((envId, search, pageSize) => {
         store.search = search;
         controller.getIdentities(envId, null, pageSize);
@@ -103,9 +95,6 @@ store.dispatcherIndex = Dispatcher.register(store, (payload) => {
         case Actions.GET_IDENTITIES:
             store.search = '';
             controller.getIdentities(action.envId, null, action.pageSize);
-            break;
-        case Actions.SAVE_IDENTITY:
-            controller.saveIdentity(action.id, action.identity);
             break;
         case Actions.GET_IDENTITIES_PAGE:
             controller.getIdentities(action.envId, action.page, null, action.pageType);
