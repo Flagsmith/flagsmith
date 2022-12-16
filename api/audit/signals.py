@@ -6,7 +6,7 @@ from django.dispatch import receiver
 
 from audit.decorators import handle_skipped_signals
 from audit.models import AuditLog, RelatedObjectType
-from audit.serializers import AuditLogSerializer
+from audit.serializers import AuditLogListSerializer
 from environments.models import Environment
 from integrations.datadog.datadog import DataDogWrapper
 from integrations.dynatrace.dynatrace import DynatraceWrapper
@@ -24,7 +24,7 @@ logger = logging.getLogger(__name__)
 @receiver(post_save, sender=AuditLog)
 @handle_skipped_signals
 def call_webhooks(sender, instance, **kwargs):
-    data = AuditLogSerializer(instance=instance).data
+    data = AuditLogListSerializer(instance=instance).data
 
     if not (instance.project or instance.environment):
         logger.warning("Audit log without project or environment. Not sending webhook.")

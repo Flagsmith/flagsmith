@@ -26,7 +26,6 @@ from django_lifecycle import (
     hook,
 )
 from ordered_model.models import OrderedModelBase
-from simple_history.models import HistoricalRecords
 
 from audit.constants import (
     FEATURE_CREATED_MESSAGE,
@@ -750,12 +749,17 @@ class FeatureState(
         return self.feature.project
 
 
-class FeatureStateValue(AbstractBaseFeatureValueModel, AbstractBaseExportableModel):
+class FeatureStateValue(
+    AbstractBaseFeatureValueModel,
+    AbstractBaseExportableModel,
+    abstract_base_auditable_model_factory(["uuid"]),
+):
+    history_record_class_path = "features.models.HistoricalFeatureStateValue"
+    related_object_type = RelatedObjectType.FEATURE_STATE
+
     feature_state = models.OneToOneField(
         FeatureState, related_name="feature_state_value", on_delete=models.CASCADE
     )
-
-    history = HistoricalRecords(excluded_fields=["uuid"])
 
     def clone(self, feature_state: FeatureState) -> "FeatureStateValue":
         clone = deepcopy(self)
@@ -764,3 +768,25 @@ class FeatureStateValue(AbstractBaseFeatureValueModel, AbstractBaseExportableMod
         clone.feature_state = feature_state
         clone.save()
         return clone
+
+    def get_audit_log_related_object_id(self, history_instance) -> int:
+        return self.feature_state_id
+
+    def get_update_log_message(self, history_instance) -> typing.Optional[str]:
+        if self.feature_state.identity:
+            return IDENTITY_FEATURE_STATE_UPDATED_MESSAGE % (
+                self.feature_state.feature.name,
+                self.feature_state.identity.identifier,
+            )
+        elif self.feature_state.feature_segment:
+            return SEGMENT_FEATURE_STATE_UPDATED_MESSAGE % (
+                self.feature_state.feature.name,
+                self.feature_state.feature_segment.segment.name,
+            )
+        return FEATURE_STATE_UPDATED_MESSAGE % self.feature_state.feature.name
+
+    def _get_project(self) -> typing.Optional["Project"]:
+        return self.feature_state.feature.project
+
+    def _get_environment(self) -> typing.Optional["Environment"]:
+        return self.feature_state.environment

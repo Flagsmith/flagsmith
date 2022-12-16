@@ -60,9 +60,9 @@ class AuditLog(LifecycleModel):
         ordering = ("-created_date",)
 
     @property
-    def history_record(self):
+    def history_record(self) -> typing.Optional[Model]:
         klass = self.get_history_record_model_class(self.history_record_class_path)
-        return klass.objects.get(id=self.history_record_id)
+        return klass.objects.filter(history_id=self.history_record_id).first()
 
     @staticmethod
     def get_history_record_model_class(
