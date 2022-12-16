@@ -75,16 +75,14 @@ const ProjectSettingsPage = class extends Component {
     };
 
     toggleFeatureValidation = (project, editProject) => {
-        if (project.feature_name_regex) {
+        if (this.state.feature_name_regex) {
             editProject({
                 ...project,
                 feature_name_regex: null,
             });
+            this.setState({feature_name_regex: null})
         } else {
-            editProject({
-                ...project,
-                feature_name_regex: ".+",
-            });
+            this.setState({feature_name_regex:".+"})
         }
     };
 
@@ -113,7 +111,8 @@ const ProjectSettingsPage = class extends Component {
             <div className="app-container container">
                 <ProjectProvider id={this.props.match.params.projectId} onRemove={this.onRemove} onSave={this.onSave}>
                     {({ isLoading, isSaving, editProject, deleteProject, project }) => {
-                        if(typeof this.state.feature_name_regex !=='string' && project?.feature_name_regex) {
+                        if(!this.state.populatedProjectState && project?.feature_name_regex) {
+                            this.state.populatedProjectState = true
                             this.state.feature_name_regex = project?.feature_name_regex
                         }
                         let regexValid = true;
@@ -123,7 +122,7 @@ const ProjectSettingsPage = class extends Component {
                         } catch(e) {
                             regexValid = false;
                         }
-                        const featureRegexEnabled = typeof project.feature_name_regex === 'string';
+                        const featureRegexEnabled = typeof this.state.feature_name_regex === 'string';
                         return (
                             <div>
                                 {(
