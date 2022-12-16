@@ -1,4 +1,4 @@
-import React, {FC, useRef, useState} from 'react'; // we need this to make JSX compile
+import React, {FC, useEffect, useRef, useState} from 'react'; // we need this to make JSX compile
 import moment from 'moment';
 import Utils from 'common/utils/utils';
 import {AuditLogItem} from 'common/types/responses';
@@ -13,6 +13,7 @@ type AuditLogType = {
     environmentId: string
     projectId: string
     pageSize:number
+    onSearchChange?:(search:string)=>void
 }
 
 const AuditLog: FC<AuditLogType> = (props) => {
@@ -20,6 +21,12 @@ const AuditLog: FC<AuditLogType> = (props) => {
     const {searchInput, search, setSearchInput} = useSearchThrottle(Utils.fromParam().search, () => {
         setPage(1);
     });
+
+    useEffect(()=>{
+        if(props.onSearchChange) {
+            props.onSearchChange(search)
+        }
+    },[search])
 
     const hasHadResults = useRef(false);
 
