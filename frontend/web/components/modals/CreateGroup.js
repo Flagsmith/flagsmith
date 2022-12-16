@@ -72,6 +72,8 @@ const CreateGroup = class extends Component {
     render() {
         const { name, external_id } = this.state;
         const isEdit = !!this.props.group;
+        const isAdmin = AccountStore.isAdmin();
+        const yourEmail = AccountStore.model.email;
         return (
 
             <OrganisationProvider>
@@ -116,7 +118,7 @@ const CreateGroup = class extends Component {
                                     />
 
                                     <InputGroup
-                                      title="Add users by default"
+                                      title="Add new users by default"
                                       tooltipPlace="top"
                                       tooltip="New users that sign up to your organisation will be automatically added to this group with USER permissions"
                                       ref={e => this.input = e}
@@ -150,7 +152,7 @@ const CreateGroup = class extends Component {
                                                       {email}
                                                   </div>
                                               </div>
-                                              <Switch onChange={() => this.toggleUser(id)} checked={!!_.find(this.state.users, { id })}/>
+                                                  <Switch disabled={!(isAdmin || email !== yourEmail)} onChange={() => this.toggleUser(id)} checked={!!_.find(this.state.users, { id })}/>
                                           </Row>
                                       )}
                                     />
