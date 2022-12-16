@@ -4,7 +4,7 @@ from organisations.chargebee import (
 from organisations.models import Organisation
 from organisations.subscriptions.xero.metadata import XeroSubscriptionMetadata
 
-from .constants import CHARGEBEE, SUBSCRIPTION_DEFAULT_LIMITS
+from .constants import CHARGEBEE, SUBSCRIPTION_DEFAULT_LIMITS, XERO
 from .metadata import BaseSubscriptionMetadata
 
 
@@ -13,17 +13,16 @@ def get_subscription_metadata(organisation: Organisation) -> BaseSubscriptionMet
     subscription_metadata = BaseSubscriptionMetadata(
         seats=max_seats, api_calls=max_api_calls, projects=max_projects
     )
-    if getattr(organisation, "subscription", None) is not None:
-        if organisation.subscription.payment_method == CHARGEBEE:
-            chargebee_subscription_metadata = get_chargebee_subscription_metadata(
-                organisation.subscription.subscription_id
-            )
-            if chargebee_subscription_metadata is not None:
-                subscription_metadata = chargebee_subscription_metadata
-        else:
-            subscription_metadata = XeroSubscriptionMetadata(
-                seats=organisation.subscription.max_seats,
-                api_calls=organisation.subscription.max_api_calls,
-            )
+    if organisation.subscription.payment_method == CHARGEBEE:
+        chargebee_subscription_metadata = get_chargebee_subscription_metadata(
+            organisation.subscription.subscription_id
+        )
+        if chargebee_subscription_metadata is not None:
+            subscription_metadata = chargebee_subscription_metadata
+    elif organisation.subscription.payment_method == XERO:
+        subscription_metadata = XeroSubscriptionMetadata(
+            seats=organisation.subscription.max_seats,
+            api_calls=organisation.subscription.max_api_calls,
+        )
 
     return subscription_metadata

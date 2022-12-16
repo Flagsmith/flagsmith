@@ -813,3 +813,8 @@ PIPEDRIVE_IGNORE_DOMAINS = env.list(
     "PIPEDRIVE_IGNORE_DOMAINS",
     ["solidstategroup.com", "flagsmith.com", "bullet-train.io", "restmail.net"],
 )
+
+# List of plan ids that support seat upgrades
+AUTO_SEAT_UPGRADE_PLANS = env.list(
+    "AUTO_SEAT_UPGRADE_PLANS", ["scale-up", "scale-up-v2", "scale-up-annual-v2"]
+)

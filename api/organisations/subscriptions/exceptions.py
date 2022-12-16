@@ -8,3 +8,12 @@ class InvalidSubscriptionPlanError(APIException):
 
 class CannotCancelChargebeeSubscription(APIException):
     default_detail = "Unable to cancel subscription in Chargebee"
+
+
+class UpgradeSeatsError(APIException):
+    default_detail = "Failed to upgrade seats in Chargebee"
+
+
+class SubscriptionDoesNotSupportSeatUpgrade(APIException):
+    status_code = 400
+    default_detail = "Please Upgrade your plan to add additional seats/users"

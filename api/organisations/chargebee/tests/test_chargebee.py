@@ -7,6 +7,7 @@ from chargebee import APIError
 from pytz import UTC
 
 from organisations.chargebee import (
+    add_single_seat,
     get_customer_id_from_subscription_id,
     get_hosted_page_url_for_subscription_upgrade,
     get_max_api_calls_for_plan,
@@ -17,8 +18,10 @@ from organisations.chargebee import (
     get_subscription_metadata,
 )
 from organisations.chargebee.chargebee import cancel_subscription
+from organisations.chargebee.constants import ADDITIONAL_SEAT_ADDON_ID
 from organisations.subscriptions.exceptions import (
     CannotCancelChargebeeSubscription,
+    UpgradeSeatsError,
 )
 
 
@@ -349,3 +352,119 @@ def test_get_subscription_metadata_returns_none_for_invalid_subscription_id(
     # Then
     mocked_chargebee.Subscription.retrieve.assert_not_called()
     assert subscription_metadata is None
+
+
+def test_add_single_seat_with_existing_addon(mocker):
+    # Given
+    plan_id = "plan-id"
+    addon_id = ADDITIONAL_SEAT_ADDON_ID
+    subscription_id = "subscription-id"
+    addon_quantity = 1
+
+    # Let's create a (mocked) subscription object
+    mocked_subscription = mocker.MagicMock(
+        id=subscription_id,
+        plan_id=plan_id,
+        addons=[mocker.MagicMock(id=addon_id, quantity=addon_quantity)],
+    )
+    mocked_chargebee = mocker.patch("organisations.chargebee.chargebee.chargebee")
+
+    # tie that subscription object to the mocked chargebee object
+    mocked_chargebee.Subscription.retrieve.return_value.subscription = (
+        mocked_subscription
+    )
+
+    # When
+    add_single_seat(subscription_id)
+
+    # Then
+    mocked_chargebee.Subscription.update.assert_called_once_with(
+        subscription_id,
+        {
+            "addons": [
+                {"id": ADDITIONAL_SEAT_ADDON_ID, "quantity": addon_quantity + 1}
+            ],
+            "prorate": True,
+            "invoice_immediately": True,
+        },
+    )
+
+
+def test_add_single_seat_without_existing_addon(mocker):
+    # Given
+    subscription_id = "subscription-id"
+
+    # Let's create a (mocked) subscription object
+    mocked_subscription = mocker.MagicMock(
+        id=subscription_id,
+        plan_id="plan_id",
+        addons=[],
+    )
+    mocked_chargebee = mocker.patch("organisations.chargebee.chargebee.chargebee")
+
+    # tie that subscription object to the mocked chargebee object
+    mocked_chargebee.Subscription.retrieve.return_value.subscription = (
+        mocked_subscription
+    )
+
+    # When
+    add_single_seat(subscription_id)
+
+    # Then
+    mocked_chargebee.Subscription.update.assert_called_once_with(
+        subscription_id,
+        {
+            "addons": [{"id": ADDITIONAL_SEAT_ADDON_ID, "quantity": 1}],
+            "prorate": True,
+            "invoice_immediately": True,
+        },
+    )
+
+
+def test_add_single_seat_throws_upgrade_seats_error_error_if_api_error(mocker, caplog):
+    # Given
+
+    # Chargebee's APIError requires additional arguments to instantiate it so instead
+    # we mock it with our own exception here to test that it is caught correctly
+    class MockException(Exception):
+        pass
+
+    mocked_chargebee = mocker.patch("organisations.chargebee.chargebee.chargebee")
+
+    mocker.patch("organisations.chargebee.chargebee.ChargebeeAPIError", MockException)
+
+    mocked_chargebee.Subscription.update.side_effect = MockException
+
+    # Let's create a (mocked) subscription object
+    subscription_id = "sub-id"
+    mocked_subscription = mocker.MagicMock(
+        id=subscription_id,
+        plan_id="plan-id",
+        addons=[],
+    )
+
+    # tie that subscription object to the mocked chargebee object
+    mocked_chargebee.Subscription.retrieve.return_value.subscription = (
+        mocked_subscription
+    )
+
+    # When
+    with pytest.raises(UpgradeSeatsError):
+        add_single_seat(subscription_id)
+
+    # Then
+    mocked_chargebee.Subscription.update.assert_called_once_with(
+        subscription_id,
+        {
+            "addons": [{"id": ADDITIONAL_SEAT_ADDON_ID, "quantity": 1}],
+            "prorate": True,
+            "invoice_immediately": True,
+        },
+    )
+    assert len(caplog.records) == 1
+    assert caplog.records[0].levelname == "ERROR"
+    assert (
+        caplog.records[0].message
+        == "Failed to add additional seat to CB subscription for subscription id: %s"
+        % subscription_id
+    )

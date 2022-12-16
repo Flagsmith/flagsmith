@@ -156,6 +156,11 @@ class FFAdminUser(LifecycleModel, AbstractUser):
 
     def join_organisation_from_invite(self, invite: "AbstractBaseInviteModel"):
         organisation = invite.organisation
+        susbcription_metadata = organisation.subscription.get_subscription_metadata()
+
+        if invite.organisation.num_seats >= susbcription_metadata.seats:
+            organisation.subscription.add_single_seat()
+
         self.add_organisation(organisation, role=OrganisationRole(invite.role))
 
     def is_organisation_admin(self, organisation):

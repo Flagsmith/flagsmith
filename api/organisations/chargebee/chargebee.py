@@ -9,8 +9,12 @@ from django.conf import settings
 from pytz import UTC
 
 from ..subscriptions.constants import CHARGEBEE
-from ..subscriptions.exceptions import CannotCancelChargebeeSubscription
+from ..subscriptions.exceptions import (
+    CannotCancelChargebeeSubscription,
+    UpgradeSeatsError,
+)
 from .cache import ChargebeeCache
+from .constants import ADDITIONAL_SEAT_ADDON_ID
 from .metadata import ChargebeeObjMetadata
 
 chargebee.configure(settings.CHARGEBEE_API_KEY, settings.CHARGEBEE_SITE)
@@ -129,3 +133,37 @@ def cancel_subscription(subscription_id: str):
         msg = "Cannot cancel CB subscription for subscription id: %s" % subscription_id
         logger.error(msg)
         raise CannotCancelChargebeeSubscription(msg) from e
+
+
+def add_single_seat(subscription_id: str):
+    try:
+        subscription = chargebee.Subscription.retrieve(subscription_id).subscription
+        addons = subscription.addons or []
+
+        current_seats = next(
+            (
+                addon.quantity
+                for addon in addons
+                if addon.id == ADDITIONAL_SEAT_ADDON_ID
+            ),
+            0,
+        )
+
+        chargebee.Subscription.update(
+            subscription_id,
+            {
+                "addons": [
+                    {"id": ADDITIONAL_SEAT_ADDON_ID, "quantity": current_seats + 1}
+                ],
+                "prorate": True,
+                "invoice_immediately": True,
+            },
+        )
+
+    except ChargebeeAPIError as e:
+        msg = (
+            "Failed to add additional seat to CB subscription for subscription id: %s"
+            % subscription_id
+        )
+        logger.error(msg)
+        raise UpgradeSeatsError(msg) from e

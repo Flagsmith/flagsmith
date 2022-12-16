@@ -443,6 +443,10 @@ module.exports = Object.assign({}, require('./base/_utils'), {
                 valid = isScaleupOrGreater;
                 break;
             }
+            case 'AUTO_SEATS': {
+                valid = isScaleupOrGreater;
+                break;
+            }
             case 'FORCE_2FA': {
                 valid = isScaleupOrGreater;
                 break;

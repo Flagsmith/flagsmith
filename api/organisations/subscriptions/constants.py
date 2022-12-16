@@ -21,3 +21,4 @@ FREE_PLAN_SUBSCRIPTION_METADATA = BaseSubscriptionMetadata(
     api_calls=MAX_API_CALLS_IN_FREE_PLAN,
     projects=MAX_PROJECTS_IN_FREE_PLAN,
 )
+FREE_PLAN_ID = "free"

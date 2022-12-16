@@ -1,7 +1,10 @@
 import pytest
 
 from organisations.chargebee.metadata import ChargebeeObjMetadata
-from organisations.subscriptions.constants import MAX_SEATS_IN_FREE_PLAN
+from organisations.subscriptions.constants import (
+    FREE_PLAN_ID,
+    MAX_SEATS_IN_FREE_PLAN,
+)
 from organisations.subscriptions.xero.metadata import XeroSubscriptionMetadata
 from organisations.tasks import (
     ALERT_EMAIL_MESSAGE,
@@ -10,7 +13,7 @@ from organisations.tasks import (
 )
 
 
-def test_send_org_over_limit_alert_for_organisation_without_subscription(
+def test_send_org_over_limit_alert_for_organisation_with_free_subscription(
     organisation, mocker
 ):
     # Given
@@ -27,7 +30,7 @@ def test_send_org_over_limit_alert_for_organisation_without_subscription(
         organisation.name,
         organisation.num_seats,
         MAX_SEATS_IN_FREE_PLAN,
-        "Free",
+        FREE_PLAN_ID,
     )
     assert kwargs["subject"] == ALERT_EMAIL_SUBJECT
 

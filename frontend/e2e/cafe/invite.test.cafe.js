@@ -10,6 +10,8 @@ import {
     waitForElementVisible,
     waitForXPathElementVisible,
 } from '../helpers.cafe';
+import fetch from "node-fetch";
+import Project from "../../common/project";
 
 const invitePrefix = `flagsmith${new Date().valueOf()}`;
 const inviteEmail = `${invitePrefix}@restmail.net`;
@@ -24,6 +26,28 @@ fixture`Invite Tests`
 test('Invite Test', async () => {
     log('Login', 'Invite Test');
     await login(email, password);
+    const token = process.env.E2E_TEST_TOKEN
+        ? process.env.E2E_TEST_TOKEN : process.env[`E2E_TEST_TOKEN_${Project.env.toUpperCase()}`];
+
+    if (token) {
+        await fetch(`${Project.api}e2etests/update-seats/`, {
+            method: 'PUT',
+            headers: {
+                'Accept': 'application/json',
+                'Content-Type': 'application/json',
+                'X-E2E-Test-Auth-Token': token.trim(),
+            },
+            body: JSON.stringify({seats:2}),
+        }).then((res) => {
+            if (res.ok) {
+                // eslint-disable-next-line no-console
+                console.log('\n', '\x1b[32m', 'update-seats successful', '\x1b[0m', '\n');
+            } else {
+                // eslint-disable-next-line no-console
+                console.error('\n', '\x1b[31m', 'update-seats failed', res.status, '\x1b[0m', '\n');
+            }
+        });
+    }
     log('Get Invite url', 'Invite Test');
     await t.navigateTo('http://localhost:3000/organisation-settings');
     const organisationName = await Selector(byId('organisation-name')).value;

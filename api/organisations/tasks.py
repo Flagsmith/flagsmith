@@ -24,9 +24,7 @@ def send_org_over_limit_alert(organisation_id):
             str(organisation.name),
             organisation.num_seats,
             subscription_metadata.seats,
-            organisation.subscription.plan
-            if subscription_metadata.payment_source
-            else "Free",
+            organisation.subscription.plan,
         ),
     )
 

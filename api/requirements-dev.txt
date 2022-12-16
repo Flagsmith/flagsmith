@@ -10,7 +10,7 @@ black
 pip-tools
 responses
 pre-commit
-flake8
+flake8==4.0.1
 pytest-mock
 pytest-lazy-fixture
 moto
