@@ -82,7 +82,7 @@ const ProjectSettingsPage = class extends Component {
             });
             this.setState({feature_name_regex: null})
         } else {
-            this.setState({feature_name_regex:".+"})
+            this.setState({feature_name_regex:"^.+$"})
         }
     };
 
@@ -251,6 +251,16 @@ const ProjectSettingsPage = class extends Component {
                                                                                         value={this.state.feature_name_regex}
                                                                                         inputClassName="input input--wide"
                                                                                         name="feature-name-regex"
+                                                                                        onBlur={()=>{
+                                                                                            let newRegex = this.state.feature_name_regex;
+                                                                                            if (!newRegex.startsWith("^")) {
+                                                                                                newRegex = `^${newRegex}`
+                                                                                            }
+                                                                                            if (!newRegex.endsWith("$")) {
+                                                                                                newRegex = `${newRegex}$`
+                                                                                            }
+                                                                                            this.setState({feature_name_regex:newRegex})
+                                                                                        }}
                                                                                         onChange={e => this.setState({ feature_name_regex: Utils.safeParseEventValue(e) })}
                                                                                         isValid={regexValid}
                                                                                         type="text"

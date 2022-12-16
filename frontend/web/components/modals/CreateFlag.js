@@ -471,7 +471,7 @@ const CreateFlag = class extends Component {
                           isValid={!!name && regexValid}
                           type="text" title={<>
                             {isEdit ? 'ID' : 'ID*'}
-                            {!!regex && !isEdit && <div className="mt-2"> <InfoMessage> This must conform to the regular expression <code>${regex}</code></InfoMessage></div>}
+                            {!!regex && !isEdit && <div className="mt-2"> <InfoMessage> This must conform to the regular expression <code>{regex}</code></InfoMessage></div>}
                         </>}
                           placeholder="E.g. header_size"
                         />
