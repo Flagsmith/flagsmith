@@ -79,9 +79,9 @@ class AuditLog(LifecycleModel):
         return "send_environments_to_dynamodb" not in skip_signals_and_hooks
 
     @property
-    def history_record(self):
+    def history_record(self) -> typing.Optional[Model]:
         klass = self.get_history_record_model_class(self.history_record_class_path)
-        return klass.objects.get(id=self.history_record_id)
+        return klass.objects.filter(history_id=self.history_record_id).first()
 
     @property
     def environment_name(self) -> str:

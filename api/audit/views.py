@@ -10,16 +10,21 @@ from audit.permissions import (
     OrganisationAuditLogPermissions,
     ProjectAuditLogPermissions,
 )
-from audit.serializers import AuditLogSerializer, AuditLogsQueryParamSerializer
 from organisations.models import OrganisationRole
+from audit.serializers import (
+    AuditLogListSerializer,
+    AuditLogRetrieveSerializer,
+    AuditLogsQueryParamSerializer,
+)
 
 
 @method_decorator(
     name="list",
     decorator=swagger_auto_schema(query_serializer=AuditLogsQueryParamSerializer()),
 )
-class _BaseAuditLogViewSet(mixins.ListModelMixin, viewsets.GenericViewSet):
-    serializer_class = AuditLogSerializer
+class _BaseAuditLogViewSet(
+    mixins.ListModelMixin, mixins.RetrieveModelMixin, viewsets.GenericViewSet
+):
     pagination_class = CustomPagination
 
     def get_queryset(self) -> QuerySet[AuditLog]:
@@ -45,6 +50,11 @@ class _BaseAuditLogViewSet(mixins.ListModelMixin, viewsets.GenericViewSet):
 
     def _get_base_filters(self) -> Q:
         return Q()
+
+    def get_serializer_class(self):
+        return {"retrieve": AuditLogRetrieveSerializer}.get(
+            self.action, AuditLogListSerializer
+        )
 
 
 class AllAuditLogViewSet(_BaseAuditLogViewSet):

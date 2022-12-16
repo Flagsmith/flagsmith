@@ -28,7 +28,6 @@ from django_lifecycle import (
     hook,
 )
 from ordered_model.models import OrderedModelBase
-from simple_history.models import HistoricalRecords
 
 from audit.constants import (
     FEATURE_CREATED_MESSAGE,
