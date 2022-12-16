@@ -313,7 +313,7 @@ const App = class extends Component {
                                                                 <UserSettingsIcon />
                                                                 Account
                                                             </NavLink>
-                                                            {AccountStore.getOrganisationRole() === 'ADMIN' && (
+                                                            {AccountStore.getOrganisationRole() === 'ADMIN' ? (
                                                             <NavLink
                                                               id="org-settings-link"
                                                               activeClassName="active"
@@ -323,6 +323,24 @@ const App = class extends Component {
                                                                 <span style={{ marginRight: 4 }} className="icon--primary ion ion-md-settings"/>
                                                                 {'Manage'}
                                                             </NavLink>
+                                                            ): !!AccountStore.getOrganisation() && (
+                                                                <Permission level="organisation" permission="MANAGE_USER_GROUPS" id={AccountStore.getOrganisation().id}>
+                                                                    {({permission})=>(
+                                                                        <>
+                                                                            {!!permission && (
+                                                                                <NavLink
+                                                                                    id="org-settings-link"
+                                                                                    activeClassName="active"
+                                                                                    className="nav-link"
+                                                                                    to="/organisation-groups"
+                                                                                >
+                                                                                    <span style={{ marginRight: 4 }} className="icon--primary ion ion-md-settings"/>
+                                                                                    {'Manage'}
+                                                                                </NavLink>
+                                                                            )}
+                                                                        </>
+                                                                    )}
+                                                                </Permission>
                                                             )}
                                                         </nav>
                                                         <div style={{ marginRight: 16, marginTop: 0 }} className="dark-mode">
