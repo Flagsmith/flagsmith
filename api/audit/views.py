@@ -6,7 +6,11 @@ from rest_framework import mixins, viewsets
 
 from app.pagination import CustomPagination
 from audit.models import AuditLog
-from audit.serializers import AuditLogSerializer, AuditLogsQueryParamSerializer
+from audit.serializers import (
+    AuditLogListSerializer,
+    AuditLogRetrieveSerializer,
+    AuditLogsQueryParamSerializer,
+)
 
 project_query_param = openapi.Parameter(
     "project",
@@ -29,8 +33,9 @@ environment_query_param = openapi.Parameter(
         manual_parameters=[project_query_param, environment_query_param]
     ),
 )
-class AuditLogViewSet(mixins.ListModelMixin, viewsets.GenericViewSet):
-    serializer_class = AuditLogSerializer
+class AuditLogViewSet(
+    mixins.ListModelMixin, mixins.RetrieveModelMixin, viewsets.GenericViewSet
+):
     pagination_class = CustomPagination
     filterset_fields = ["is_system_event"]
 
@@ -50,4 +55,9 @@ class AuditLogViewSet(mixins.ListModelMixin, viewsets.GenericViewSet):
             q = q & Q(log__icontains=search)
         return AuditLog.objects.filter(q).select_related(
             "project", "environment", "author"
+        )
+
+    def get_serializer_class(self):
+        return {"retrieve": AuditLogRetrieveSerializer}.get(
+            self.action, AuditLogListSerializer
         )

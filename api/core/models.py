@@ -4,7 +4,7 @@ import uuid
 
 from django.db import models
 from django.db.models import Manager
-from simple_history.models import HistoricalRecords
+from simple_history.models import HistoricalRecords, ModelChange
 
 from audit.related_object_type import RelatedObjectType
 
@@ -48,6 +48,13 @@ class BaseHistoricalModel(models.Model):
 
     class Meta:
         abstract = True
+
+    def get_change_details(self) -> typing.Optional[typing.List[ModelChange]]:
+        if not self.history_type == "~":
+            # we only return the change details for updates
+            return
+
+        return self.diff_against(self.prev_record).changes
 
 
 class _AbstractBaseAuditableModel(models.Model):
