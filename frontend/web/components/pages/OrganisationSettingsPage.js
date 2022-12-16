@@ -609,10 +609,8 @@ const OrganisationSettingsPage = class extends Component {
                                                                                                                 Upgrade your plan
                                                                                                             </a>
                                                                                                         )}.</strong> :
-                                                                                                        <strong>You will be charged automatically for any additional members that join your organisation.</strong>
-
+                                                                                                        <strong>You will automatically be charged $20/month for each additional member that joins your organisation.</strong>
                                                                                                 )}
-
                                                                                             </>
                                                                                         )}
                                                                                     </InfoMessage>
