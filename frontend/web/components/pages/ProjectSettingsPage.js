@@ -6,7 +6,6 @@ import Switch from '../Switch';
 import _data from '../../../common/data/base/_data';
 import Tabs from '../base/forms/Tabs'
 import TabItem from '../base/forms/TabItem'
-
 const ProjectSettingsPage = class extends Component {
     static displayName = 'ProjectSettingsPage'
 
@@ -50,21 +49,21 @@ const ProjectSettingsPage = class extends Component {
 
     confirmRemove = (project, cb) => {
         openModal('Remove Project', <ConfirmRemoveProject
-            project={project}
-            cb={cb}
+          project={project}
+          cb={cb}
         />);
     };
 
     toggleHideDisabledFlags = (project, editProject) => {
         openModal('Hide Disabled Flags', <ConfirmHideFlags
-            project={project}
-            value={!!project.hide_disabled_flags}
-            cb={() => {
-                editProject({
-                    ...project,
-                    hide_disabled_flags: !project.hide_disabled_flags,
-                });
-            }}
+          project={project}
+          value={!!project.hide_disabled_flags}
+          cb={() => {
+              editProject({
+                  ...project,
+                  hide_disabled_flags: !project.hide_disabled_flags,
+              });
+          }}
         />);
     };
 
@@ -93,6 +92,13 @@ const ProjectSettingsPage = class extends Component {
         editProject({
             ...project,
             feature_name_regex: this.state.feature_name_regex,
+        });
+    };
+
+    toggleCaseSensitivity = (project, editProject) => {
+        editProject({
+            ...project,
+            only_allow_lower_case_feature_names: !project.only_allow_lower_case_feature_names,
         });
     };
 
@@ -192,6 +198,26 @@ const ProjectSettingsPage = class extends Component {
                                                     </div>
                                                 </div>
                                             </FormGroup>
+                                            {
+                                                Utils.getFlagsmithHasFeature("case_sensitive_flags") && (
+                                                    <FormGroup className="mt-4">
+                                                        <h3>Case sensitive features</h3>
+                                                        <div className="row">
+                                                            <div className="col-md-10">
+                                                                <p>
+                                                                    By default, features are lower case in order to prevent human error. Enabling this will allow you to use upper case characters when creating features.
+                                                                </p>
+                                                            </div>
+                                                            <div className="col-md-2 text-right">
+                                                                <Switch
+                                                                    data-test="js-flag-case-sensitivity" disabled={isSaving} onChange={() => this.toggleCaseSensitivity(project, editProject)}
+                                                                    checked={!project.only_allow_lower_case_feature_names}
+                                                                />
+                                                            </div>
+                                                        </div>
+                                                    </FormGroup>
+                                                )
+                                            }
                                             {
                                                 Utils.getFlagsmithHasFeature("feature_name_regex") && (
                                                     <FormGroup className="mt-4">
