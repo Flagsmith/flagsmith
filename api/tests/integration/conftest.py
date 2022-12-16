@@ -71,10 +71,17 @@ def environment_api_key():
 
 
 @pytest.fixture()
-def environment(admin_client, project, environment_api_key, settings) -> int:
+def environment_name():
+    return "Test Environment"
+
+
+@pytest.fixture()
+def environment(
+    admin_client, project, environment_api_key, environment_name, settings
+) -> int:
     settings.EDGE_RELEASE_DATETIME = None
     environment_data = {
-        "name": "Test Environment",
+        "name": environment_name,
         "api_key": environment_api_key,
         "project": project,
     }
