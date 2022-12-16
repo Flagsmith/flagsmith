@@ -52,7 +52,7 @@ class SoftDeleteExportableModel(SoftDeleteObject, AbstractBaseExportableModel):
         abstract = True
 
 
-class BaseHistoricalModel(models.Model):
+class _BaseHistoricalModel(models.Model):
     include_in_audit = True
 
     master_api_key = models.ForeignKey(
@@ -67,7 +67,23 @@ class BaseHistoricalModel(models.Model):
             # we only return the change details for updates
             return
 
-        return self.diff_against(self.prev_record).changes
+        return [
+            change
+            for change in self.diff_against(self.prev_record).changes
+            if change.field not in self._change_details_excluded_fields
+        ]
+
+
+def base_historical_model_factory(
+    change_details_excluded_fields: typing.Sequence[str],
+) -> typing.Type[_BaseHistoricalModel]:
+    class BaseHistoricalModel(_BaseHistoricalModel):
+        _change_details_excluded_fields = set(change_details_excluded_fields)
+
+        class Meta:
+            abstract = True
+
+    return BaseHistoricalModel
 
 
 class _AbstractBaseAuditableModel(models.Model):
@@ -152,10 +168,11 @@ def get_history_user(
 
 def abstract_base_auditable_model_factory(
     historical_records_excluded_fields: typing.List[str] = None,
+    change_details_excluded_fields: typing.Sequence[str] = None,
 ) -> typing.Type[_AbstractBaseAuditableModel]:
     class Base(_AbstractBaseAuditableModel):
         history = HistoricalRecords(
-            bases=[BaseHistoricalModel],
+            bases=[base_historical_model_factory(change_details_excluded_fields or [])],
             excluded_fields=historical_records_excluded_fields or [],
             get_user=get_history_user,
             inherit=True,

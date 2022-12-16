@@ -64,7 +64,11 @@ environment_api_key_wrapper = DynamoEnvironmentAPIKeyWrapper()
 
 
 class Environment(
-    LifecycleModel, abstract_base_auditable_model_factory(), SoftDeleteObject
+    LifecycleModel,
+    abstract_base_auditable_model_factory(
+        change_details_excluded_fields=["updated_at"]
+    ),
+    SoftDeleteObject,
 ):
     history_record_class_path = "environments.models.HistoricalEnvironment"
     related_object_type = RelatedObjectType.ENVIRONMENT
