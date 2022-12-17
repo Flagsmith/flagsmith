@@ -104,6 +104,16 @@ const ProjectSettingsPage = class extends Component {
         AppActions.migrateProject(this.props.match.params.projectId);
     }
 
+    forceSelectionRange = (e)=>{
+        const input = e.currentTarget;
+        setTimeout(()=>{
+            const range = input.selectionStart;
+            if (range === input.value.length) {
+                input.setSelectionRange(input.value.length-1,input.value.length-1)
+            }
+        },0)
+    }
+
     render() {
         const { name } = this.state;
 
@@ -251,8 +261,10 @@ const ProjectSettingsPage = class extends Component {
                                                                                         value={this.state.feature_name_regex}
                                                                                         inputClassName="input input--wide"
                                                                                         name="feature-name-regex"
-                                                                                        onBlur={()=>{
-                                                                                            let newRegex = this.state.feature_name_regex;
+                                                                                        onClick={this.forceSelectionRange}
+                                                                                        onKeyUp={this.forceSelectionRange}
+                                                                                        onChange={e => {
+                                                                                            let newRegex = Utils.safeParseEventValue(e).replace("$","");
                                                                                             if (!newRegex.startsWith("^")) {
                                                                                                 newRegex = `^${newRegex}`
                                                                                             }
@@ -261,7 +273,6 @@ const ProjectSettingsPage = class extends Component {
                                                                                             }
                                                                                             this.setState({feature_name_regex:newRegex})
                                                                                         }}
-                                                                                        onChange={e => this.setState({ feature_name_regex: Utils.safeParseEventValue(e) })}
                                                                                         isValid={regexValid}
                                                                                         type="text"
                                                                                         placeholder="Regular Expression"
