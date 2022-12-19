@@ -82,6 +82,15 @@ export const identityService = service
 
           return {
             ...baseQueryReturnValue,
+            results: baseQueryReturnValue.results?.map((v)=>{
+              if (v.id) {
+                return v;
+              }
+              return {
+                ...v,
+                id: v.identity_uuid,
+              };
+            }),
             pages,
             next:baseQueryReturnValue.results.length<page_size?undefined:"1", //
             previous:pages.length? "1": undefined, //
