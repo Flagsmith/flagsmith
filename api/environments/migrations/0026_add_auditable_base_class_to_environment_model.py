@@ -11,10 +11,10 @@ import simple_history.models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('projects', '0014_soft_delete_projects'),
+        ('projects', '0016_soft_delete_projects'),
         migrations.swappable_dependency(settings.AUTH_USER_MODEL),
         ('api_keys', '0002_soft_delete_api_keys'),
-        ('environments', '0024_soft_delete_environments'),
+        ('environments', '0025_soft_delete_environments'),
     ]
 
     operations = [
@@ -39,6 +39,8 @@ class Migration(migrations.Migration):
                 ('history_user', models.ForeignKey(null=True, on_delete=django.db.models.deletion.SET_NULL, related_name='+', to=settings.AUTH_USER_MODEL)),
                 ('master_api_key', models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.DO_NOTHING, to='api_keys.masterapikey')),
                 ('project', models.ForeignKey(blank=True, db_constraint=False, help_text='Changing the project selected will remove all previous Feature States for the previously associated projects Features that are related to this Environment. New default Feature States will be created for the new selected projects Features for this Environment.', null=True, on_delete=django.db.models.deletion.DO_NOTHING, related_name='+', to='projects.project')),
+                ('banner_colour', models.CharField(blank=True, help_text='hex code for the banner colour', max_length=7, null=True)),
+                ('banner_text', models.CharField(blank=True, max_length=255, null=True)),
             ],
             options={
                 'verbose_name': 'historical environment',

@@ -10,10 +10,10 @@ class Migration(migrations.Migration):
 
     dependencies = [
         ('api_keys', '0002_soft_delete_api_keys'),
-        ('projects', '0014_soft_delete_projects'),
+        ('projects', '0016_soft_delete_projects'),
         migrations.swappable_dependency(settings.AUTH_USER_MODEL),
         ('features', '0048_add_master_api_key_to_historical_records'),
-        ('segments', '0014_alter_condition_operator'),
+        ('segments', '0014_add_description_to_segment_condition'),
     ]
 
     operations = [

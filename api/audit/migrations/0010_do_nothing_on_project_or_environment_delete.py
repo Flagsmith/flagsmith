@@ -7,8 +7,8 @@ import django.db.models.deletion
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('environments', '0024_soft_delete_environments'),
-        ('projects', '0014_soft_delete_projects'),
+        ('environments', '0025_soft_delete_environments'),
+        ('projects', '0016_soft_delete_projects'),
         ('audit', '0008_attach_historical_record_to_audit_log'),
     ]
 
