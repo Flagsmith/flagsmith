@@ -137,13 +137,13 @@ def test_audit_log_history_record(mocker):
     mocked_model_class = mocker.MagicMock()
     mocked_module = mocker.MagicMock(**{model_class_name: mocked_model_class})
     mocker.patch("audit.models.import_module", return_value=mocked_module)
-    mocked_model_class.objects.get.return_value = mocked_model
+    mocked_model_class.objects.filter.return_value.first.return_value = mocked_model
 
     # When
     record = audit_log.history_record
 
     # Then
     assert record == mocked_model
-    mocked_model_class.objects.get.assert_called_once_with(
-        id=audit_log.history_record_id
+    mocked_model_class.objects.filter.assert_called_once_with(
+        history_id=audit_log.history_record_id
     )
