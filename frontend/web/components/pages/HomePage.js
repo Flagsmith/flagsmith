@@ -7,6 +7,7 @@ import NavIconSmall from '../svg/NavIconSmall';
 import SamlForm from '../SamlForm';
 import data from '../../../common/data/base/_data';
 import GoogleButton from '../GoogleButton';
+import JSONReference from "../JSONReference";
 
 const HomePage = class extends React.Component {
     static contextTypes = {
@@ -326,7 +327,6 @@ const HomePage = class extends React.Component {
                                                     )}
                                                 </AccountProvider>
                                             </Card>
-
                                             {(!projectOverrides.preventSignup) && (
 
                                                 <div>

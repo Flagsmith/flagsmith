@@ -15,7 +15,7 @@ type JSONReferenceType = {
     className?:string
 }
 
-function pickProperties(obj: any, idsOnly:boolean, condenseInclude?:string[]): any {
+function pickProperties(value: any, idsOnly:boolean, condenseInclude?:string[]): any {
     const propertyCheck = (key:string)=>{
         if (condenseInclude?.includes(key)) {
             return true
@@ -31,27 +31,32 @@ function pickProperties(obj: any, idsOnly:boolean, condenseInclude?:string[]): a
         }
     }
     var retObj: any = {};
-    if (isArray(obj)) {
-        return obj.map(function (arrayObj: any[]) {
+    if (isArray(value)) {
+        return value.map(function (arrayObj: any) {
             return pickProperties(arrayObj, idsOnly, condenseInclude);
         });
     }
-    Object.keys(obj).forEach(function (key) {
-        if (propertyCheck(key)) {
-            if (isArray(obj[key])) {
-                if (!obj[key].length) {
-                    return
+    if (isObject(value)) {
+        Object.keys(value).forEach(function (key) {
+            if (propertyCheck(key)) {
+                let valueObj = value as Record<string,any>
+                if (isArray(valueObj[key])) {
+                    if (!valueObj[key].length) {
+                        return
+                    }
+                    retObj[key] = valueObj[key].map(function (arrayObj: any[]) {
+                        return pickProperties(arrayObj, idsOnly, condenseInclude);
+                    });
+                } else if (isObject(valueObj[key])) {
+                    retObj[key] = pickProperties(valueObj[key], idsOnly, condenseInclude);
+                } else {
+                    retObj[key] = valueObj[key];
                 }
-                retObj[key] = obj[key].map(function (arrayObj: any[]) {
-                    return pickProperties(arrayObj, idsOnly, condenseInclude);
-                });
-            } else if (isObject(obj[key])) {
-                retObj[key] = pickProperties(obj[key], idsOnly, condenseInclude);
-            } else {
-                retObj[key] = obj[key];
             }
-        }
-    });
+        });
+    } else {
+        return value
+    }
     return retObj;
 }
 
