@@ -1,6 +1,7 @@
 import { Res } from 'common/types/responses'
 import { Req } from 'common/types/requests'
 import { service } from 'common/service'
+const Utils = require("../utils/utils")
 const getIdentityEndpoint = (environmentId: string, isEdge:boolean)=> {
   const identityPart = isEdge? 'edge-identities' : 'identities';
   return `environments/${environmentId}/${identityPart}`
@@ -42,9 +43,54 @@ export const identityService = service
       invalidatesTags: [{ type: 'Identity', id: 'LIST' },],
     }),
     getIdentities: builder.query<Res['identities'], Req['getIdentities']>({
-      query: () => ({
-        url: `identities`,
-      }),
+      query: (baseQuery) => {
+        const {page,search,page_size=10, environmentId,isEdge, pageType, pages} = baseQuery;
+        let url = `${getIdentityEndpoint(environmentId,isEdge)}/?q=${encodeURIComponent(search||"")}&page_size=${page_size}`;
+        let last_evaluated_key = null
+        if(!isEdge) {
+          url += `&page=${page}`
+        }
+        if (pageType  === "NEXT") {
+          last_evaluated_key = pages?.[pages.length-1]
+        } else if (pageType === "PREVIOUS") {
+          last_evaluated_key = (pages?.length||0) >=1 ? pages![pages!.length-1] : null
+        }
+        if (last_evaluated_key) {
+          url += `&last_evaluated_key=${encodeURIComponent(last_evaluated_key)}`
+        }
+
+        return ({
+          url,
+        })
+      },
+      transformResponse(baseQueryReturnValue:Res['identities'], meta, {
+        isEdge,
+        pages:_pages,
+        page_size=10,
+        pageType,
+      }) {
+        if (isEdge) {
+          // For edge, we create our own paging
+          let pages = _pages? _pages.concat([]) : []
+          const next_evaluated_key = baseQueryReturnValue.last_evaluated_key;
+
+          if (pageType==="NEXT") {
+            pages.push(next_evaluated_key);
+          } else if (pageType==="PREVIOUS") {
+            pages.unshift()
+          } else {
+            pages = []
+          }
+
+          return {
+            ...baseQueryReturnValue,
+            pages,
+            next:baseQueryReturnValue.results.length<page_size?undefined:"1", //
+            previous:pages.length? "1": undefined, //
+          }
+        }
+        return  baseQueryReturnValue
+      },
       providesTags:[{ type: 'Identity', id: 'LIST' },],
     }),
     // END OF ENDPOINTS

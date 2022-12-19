@@ -1,5 +1,5 @@
 // eslint-disable-next-line @typescript-eslint/no-empty-interface
-export type EdgePagedResponse<T> = PagedResponse<T> & {last_evaluated_key?:string}
+export type EdgePagedResponse<T> = PagedResponse<T> & {last_evaluated_key?:string, pages?:(string|undefined)[]}
 export type PagedResponse<T> = {
   count?: number;
   next?: string;
@@ -65,8 +65,9 @@ export type AuditLogItem = {
 }
 
 export type Identity = {
-  id: string
+  id?: string
   identifier: string
+  identity_uuid?: string
 }
 
 export type Res = {

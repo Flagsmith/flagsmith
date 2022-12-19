@@ -335,21 +335,6 @@ const AppActions = Object.assign({}, require('./base/_app-actions'), {
             onError,
         });
     },
-    getIdentities(envId, pageSize) {
-        Dispatcher.handleViewAction({
-            actionType: Actions.GET_IDENTITIES,
-            envId,
-            pageSize,
-        });
-    },
-    getIdentitiesPage(envId, page, pageType) {
-        Dispatcher.handleViewAction({
-            actionType: Actions.GET_IDENTITIES_PAGE,
-            envId,
-            page,
-            pageType,
-        });
-    },
     getIdentity(envId, id) {
         Dispatcher.handleViewAction({
             actionType: Actions.GET_IDENTITY,
@@ -451,45 +436,6 @@ const AppActions = Object.assign({}, require('./base/_app-actions'), {
         Dispatcher.handleViewAction({
             actionType: Actions.REMOVE_SEGMENT,
             projectId,
-            id,
-        });
-    },
-    searchIdentities(envId, search, pageSize) {
-        Dispatcher.handleViewAction({
-            actionType: Actions.SEARCH_IDENTITIES,
-            envId,
-            search,
-            pageSize,
-        });
-    },
-    getAuditLog(projectId, search, environmentId) {
-        Dispatcher.handleViewAction({
-            actionType: Actions.GET_AUDIT_LOG,
-            projectId,
-            environmentId,
-            search,
-        });
-    },
-    getAuditLogPage(projectId, page, environmentId) {
-        Dispatcher.handleViewAction({
-            projectId,
-            actionType: Actions.GET_AUDIT_LOG_PAGE,
-            page,
-            environmentId,
-        });
-    },
-    searchAuditLog(search, projectId, environmentId) {
-        Dispatcher.handleViewAction({
-            actionType: Actions.SEARCH_AUDIT_LOG,
-            projectId,
-            search,
-            environmentId,
-        });
-    },
-    deleteIdentity(envId, id) {
-        Dispatcher.handleViewAction({
-            actionType: Actions.DELETE_IDENTITY,
-            envId,
             id,
         });
     },
