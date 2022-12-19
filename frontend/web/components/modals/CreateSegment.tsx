@@ -391,11 +391,11 @@ const CreateSegment = class extends Component {
                                                           pages: page.pages? Utils.removeElementFromArray(page.pages, page.pages.length-1) : undefined
                                                       })
                                                   }}
-                                                  goToPage={(newPage) => {
+                                                  goToPage={(newPage: number) => {
                                                       setPage({
                                                           number:newPage,
                                                           pageType: undefined,
-                                                          pages: page.pages? Utils.removeElementFromArray(page.pages, page.pages.length-1) : undefined
+                                                          pages: undefined
                                                       })
                                                   }}
                                                   renderRow={({

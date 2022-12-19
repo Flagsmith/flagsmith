@@ -7,8 +7,6 @@ const getIdentityEndpoint = (environmentId: string, isEdge:boolean)=> {
   return `environments/${environmentId}/${identityPart}`
 }
 
-
-
 export const identityService = service
   .enhanceEndpoints({ addTagTypes: ['Identity'] })
     .injectEndpoints({
