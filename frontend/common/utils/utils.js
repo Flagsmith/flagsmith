@@ -32,7 +32,7 @@ module.exports = Object.assign({}, require('./base/_utils'), {
 
     },
     getManageFeaturePermission(isChangeRequest, isUser) {
-        if (isUser){
+        if (isUser && Utils.getFlagsmithHasFeature("view_identities_permission")){
             return "MANAGE_IDENTITIES"
         }
         if (isChangeRequest && Utils.getFlagsmithHasFeature('update_feature_state_permission')) {
@@ -44,7 +44,7 @@ module.exports = Object.assign({}, require('./base/_utils'), {
         return 'ADMIN';
     },
     getManageFeaturePermissionDescription(isChangeRequest, user) {
-        if (user) {
+        if (user && Utils.getFlagsmithHasFeature("view_identities_permission")) {
             return "Manage Identities"
         }
         if (isChangeRequest && Utils.getFlagsmithHasFeature('update_feature_state_permission')) {

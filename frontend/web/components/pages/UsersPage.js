@@ -3,6 +3,7 @@ import EditIdentityModal from './UserPage';
 import CreateUserModal from '../modals/CreateUser';
 import EnvironmentTraitsProvider from '../../../common/providers/EnvironmentTraitsProvider';
 import RemoveIcon from '../RemoveIcon';
+import Constants from "../../../common/constants";
 
 const UsersPage = class extends Component {
     static displayName = 'UsersPage'
@@ -147,17 +148,22 @@ const UsersPage = class extends Component {
 
                                                               </Link>
                                                           </Flex>
+                                                          {
+                                                              Utils.renderWithPermission(permission, Constants.environmentPermissions(Utils.getManageFeaturePermissionDescription(false,true)), (
+                                                                  <Column>
+                                                                      <button
+                                                                          disabled={!permission}
+                                                                          id="remove-feature"
+                                                                          className="btn btn--with-icon"
+                                                                          type="button"
+                                                                          onClick={() => this.removeIdentity(id, identifier)}
+                                                                      >
+                                                                          <RemoveIcon/>
+                                                                      </button>
+                                                                  </Column>
+                                                              ))
+                                                          }
 
-                                                          <Column>
-                                                              <button
-                                                                  id="remove-feature"
-                                                                  className="btn btn--with-icon"
-                                                                  type="button"
-                                                                  onClick={() => this.removeIdentity(id, identifier)}
-                                                              >
-                                                                  <RemoveIcon/>
-                                                              </button>
-                                                          </Column>
                                                       </Row>
                                                   )}
                                                   renderNoResults={(
