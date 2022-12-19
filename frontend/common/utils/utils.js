@@ -23,7 +23,7 @@ module.exports = Object.assign({}, require('./base/_utils'), {
         if (Utils.getFlagsmithHasFeature('update_feature_state_permission')) {
             return 'APPROVE_CHANGE_REQUEST';
         }
-        return 'VIEW_ENVIRONMENT';i
+        return 'VIEW_ENVIRONMENT';
     },
     getManageFeaturePermission(isChangeRequest) {
         if (isChangeRequest && Utils.getFlagsmithHasFeature('update_feature_state_permission')) {

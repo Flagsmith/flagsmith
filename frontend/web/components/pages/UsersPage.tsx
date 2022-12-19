@@ -157,7 +157,7 @@ const UsersPage: FC<UsersPageType> = (props) => {
                                                     setPage({
                                                         number:newPage,
                                                         pageType: undefined,
-                                                        pages: page.pages? Utils.removeElementFromArray(page.pages, page.pages.length-1) : undefined
+                                                        pages: undefined
                                                     })
                                                 }}
                                                 renderRow={({ id, identifier, identity_uuid }:Identity, index:number) => (permission ? (
