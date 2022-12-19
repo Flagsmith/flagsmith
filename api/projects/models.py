@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
 from __future__ import unicode_literals
 
+import re
+
 from core.models import AbstractBaseExportableModel
 from django.conf import settings
 from django.core.cache import caches
@@ -91,6 +93,19 @@ class Project(LifecycleModelMixin, AbstractBaseExportableModel):
         return bool(
             settings.EDGE_RELEASE_DATETIME
             and self.created_date >= settings.EDGE_RELEASE_DATETIME
+        )
+
+    def is_feature_name_valid(self, feature_name: str) -> bool:
+        """
+        Validate the feature name based on the feature_name_regex attribute.
+
+        Since we always want to evaluate the regex against the whole string, we're wrapping the
+        attribute value in ^(...)$. Note that ^(...)$ and ^^(...)$$ are equivalent (in case the
+        attribute already has the boundaries defined)
+        """
+        return (
+            self.feature_name_regex is None
+            or re.match(f"^{self.feature_name_regex}$", feature_name) is not None
         )
 
 
