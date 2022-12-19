@@ -8,7 +8,6 @@ module.exports = (WrappedComponent) => {
         static contextTypes = {
             router: propTypes.object.isRequired,
         };
-
         constructor(props) {
             super(props);
             this.state = {
