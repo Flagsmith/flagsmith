@@ -22,15 +22,21 @@ from organisations.chargebee import (
     get_portal_url,
     get_subscription_metadata,
 )
+from organisations.chargebee.chargebee import add_single_seat
 from organisations.chargebee.chargebee import (
     cancel_subscription as cancel_chargebee_subscription,
 )
 from organisations.subscriptions.constants import (
     CHARGEBEE,
-    FREE_PLAN_SUBSCRIPTION_METADATA,
+    FREE_PLAN_ID,
+    MAX_API_CALLS_IN_FREE_PLAN,
+    MAX_PROJECTS_IN_FREE_PLAN,
     MAX_SEATS_IN_FREE_PLAN,
     SUBSCRIPTION_PAYMENT_METHODS,
     XERO,
+)
+from organisations.subscriptions.exceptions import (
+    SubscriptionDoesNotSupportSeatUpgrade,
 )
 from organisations.subscriptions.metadata import BaseSubscriptionMetadata
 from organisations.subscriptions.xero.metadata import XeroSubscriptionMetadata
@@ -107,6 +113,10 @@ class Organisation(LifecycleModelMixin, AbstractBaseExportableModel, SoftDeleteO
         if self.has_subscription():
             self.subscription.cancel()
 
+    @hook(AFTER_CREATE)
+    def create_subscription(self):
+        Subscription.objects.create(organisation=self)
+
 
 class UserOrganisation(models.Model):
     user = models.ForeignKey("users.FFAdminUser", on_delete=models.CASCADE)
@@ -127,9 +137,9 @@ class Subscription(LifecycleModelMixin, AbstractBaseExportableModel):
     )
     subscription_id = models.CharField(max_length=100, blank=True, null=True)
     subscription_date = models.DateTimeField(blank=True, null=True)
-    plan = models.CharField(max_length=100, null=True, blank=True)
+    plan = models.CharField(max_length=100, null=True, blank=True, default=FREE_PLAN_ID)
     max_seats = models.IntegerField(default=1)
-    max_api_calls = models.BigIntegerField(default=50000)
+    max_api_calls = models.BigIntegerField(default=MAX_API_CALLS_IN_FREE_PLAN)
     cancellation_date = models.DateTimeField(blank=True, null=True)
     customer_id = models.CharField(max_length=100, blank=True, null=True)
 
@@ -149,8 +159,12 @@ class Subscription(LifecycleModelMixin, AbstractBaseExportableModel):
         self.max_api_calls = get_max_api_calls_for_plan(plan_metadata)
         self.save()
 
-    @hook(AFTER_CREATE)
+    @property
+    def can_auto_upgrade_seats(self) -> bool:
+        return self.plan in settings.AUTO_SEAT_UPGRADE_PLANS
+
     @hook(AFTER_SAVE, when="cancellation_date", has_changed=True)
+    @hook(AFTER_SAVE, when="subscription_id", has_changed=True)
     def update_mailer_lite_subscribers(self):
         if settings.MAILERLITE_API_KEY:
             mailer_lite = MailerLite()
@@ -189,9 +203,19 @@ class Subscription(LifecycleModelMixin, AbstractBaseExportableModel):
             )
 
         if not metadata:
-            metadata = FREE_PLAN_SUBSCRIPTION_METADATA
+            metadata = BaseSubscriptionMetadata(
+                seats=self.max_seats,
+                api_calls=self.max_api_calls,
+                projects=MAX_PROJECTS_IN_FREE_PLAN,
+            )
 
         return metadata
+
+    def add_single_seat(self):
+        if not self.can_auto_upgrade_seats:
+            raise SubscriptionDoesNotSupportSeatUpgrade()
+
+        add_single_seat(self.subscription_id)
 
 
 class OrganisationWebhook(AbstractBaseWebhookModel):

@@ -20,6 +20,10 @@ class TheComponent extends Component {
         };
     }
 
+    componentDidMount() {
+
+    }
+
     save = (e) => {
         Utils.preventDefault(e);
         const { state: {
@@ -41,6 +45,18 @@ class TheComponent extends Component {
         }).then(() => {
             toast('Your account has been updated');
         }).catch(error => this.setState({ error: 'There was an error setting your account, please check your details' }));
+    }
+
+    invalidateToken = ()=> {
+            openConfirm("Invalidate Token", (
+                <div>
+                    Invalidating your token will generate a new token to use with our API, <strong>your current token will no longer work</strong>. Performing this action will also log you out, are you sure you wish to do this?
+                </div>
+            ),()=>{
+                _data.delete(`${Project.api}auth/token/`).then(()=>{
+                    AppActions.logout()
+                })
+            })
     }
 
     savePassword = (e) => {
@@ -167,7 +183,15 @@ class TheComponent extends Component {
                                     </p>
                                 </div>
                                 <div className="col-md-12">
-                                    <Token style={{ width: 400 }} token={_data.token}/>
+                                    <Row>
+                                        <Token style={{ width: 400 }} token={_data.token}/>
+                                        {Utils.getFlagsmithHasFeature("rotate_api_token") && (
+                                            <Button onClick={this.invalidateToken}
+                                                    className="btn btn-danger">
+                                                Invalidate
+                                            </Button>
+                                        )}
+                                    </Row>
                                 </div>
                             </div>
 

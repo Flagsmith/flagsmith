@@ -16,6 +16,7 @@ import IntegrationsPage from './components/pages/IntegrationsPage';
 import FlagsPage from './components/pages/FeaturesPage';
 import SegmentsPage from './components/pages/SegmentsPage';
 import OrganisationSettingsPage from './components/pages/OrganisationSettingsPage';
+import OrganisationGroupsPage from './components/pages/OrganisationGroupsPage';
 import AccountSettingsPage from './components/pages/AccountSettingsPage';
 import NotFoundErrorPage from './components/pages/NotFoundErrorPage';
 import ProjectSettingsPage from './components/pages/ProjectSettingsPage';
@@ -34,7 +35,6 @@ export default (
     <App>
         <Switch>
             <Route path="/" exact component={HomePage}/>
-            {/* <Route path="/markup" exact component={MarkupPage}/> */}
             <Route path="/login" exact component={HomePage}/>
             <Route path="/404" exact component={NotFoundErrorPage}/>
             <Route path="/signup" exact component={HomePage}/>
@@ -51,6 +51,7 @@ export default (
             <Route path="/project/:projectId/environment/:environmentId/change-requests" exact component={ChangeRequestsPage}/>
             <Route path="/project/:projectId/environment/:environmentId/change-requests/:id" exact component={ChangeRequestPage}/>
             <Route path="/invite/:id" exact component={InvitePage}/>
+            <Route path="/invite-link/:id" exact component={InvitePage}/>
             <Route path="/oauth/:type" exact component={HomePage}/>
             <Route path="/saml" exact component={HomePage}/>
             <Route path="/project/:projectId/environment/:environmentId/settings" exact component={EnvironmentSettingsPage}/>
@@ -65,6 +66,7 @@ export default (
             <Route path="/project/:projectId/environment/:environmentId/segments" exact component={SegmentsPage}/>
             <Route path="/project/:projectId/environment/:environmentId/organisation-settings" exact component={OrganisationSettingsPage}/>
             <Route path="/organisation-settings" exact component={OrganisationSettingsPage}/>
+            <Route path="/organisation-groups" exact component={OrganisationGroupsPage}/>
             <Route path="/project/:projectId/environment/:environmentId/account" exact component={AccountSettingsPage}/>
             <Route path="/account" exact component={AccountSettingsPage}/>
             <Route path="/project/:projectId/environment/:environmentId/audit-log" exact component={AuditLogPage}/>

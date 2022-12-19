@@ -4,9 +4,9 @@ from users.signals import warn_insecure
 
 
 @pytest.mark.django_db
-def test_warn_insecure_emits_a_warning_when_no_user_exists(recwarn):
+def test_warn_insecure_emits_a_warning_when_no_user_exists(recwarn, django_user_model):
     # When
-    warn_insecure(None)
+    warn_insecure(django_user_model)
 
     # Then
     assert len(recwarn) == 1
@@ -15,9 +15,11 @@ def test_warn_insecure_emits_a_warning_when_no_user_exists(recwarn):
 
 
 @pytest.mark.django_db
-def test_warn_insecure_emits_no_warning_when_user_exists(admin_user, recwarn):
+def test_warn_insecure_emits_no_warning_when_user_exists(
+    admin_user, recwarn, django_user_model
+):
     # When
-    warn_insecure(None)
+    warn_insecure(django_user_model)
 
     # Then
     assert len(recwarn) == 0

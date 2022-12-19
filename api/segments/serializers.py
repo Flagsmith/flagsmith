@@ -11,7 +11,7 @@ from . import models
 class ConditionSerializer(serializers.ModelSerializer):
     class Meta:
         model = models.Condition
-        fields = ("operator", "property", "value")
+        fields = ("operator", "property", "value", "description")
 
     def validate(self, attrs):
         super(ConditionSerializer, self).validate(attrs)

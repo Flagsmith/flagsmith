@@ -15,6 +15,7 @@ import { EditPermissionsModal } from '../EditPermissions';
 import AdminAPIKeys from '../AdminAPIKeys';
 import Tabs from '../base/forms/Tabs'
 import TabItem from '../base/forms/TabItem'
+import InfoMessage from "../InfoMessage";
 
 const OrganisationSettingsPage = class extends Component {
     static contextTypes = {
@@ -327,6 +328,10 @@ const OrganisationSettingsPage = class extends Component {
                         <OrganisationProvider>
                             {({ isLoading, name, error, projects, usage, users, invites, influx_data, inviteLinks, subscriptionMeta, invalidateInviteLink }) => {
                                 const { max_seats } = subscriptionMeta || organisation.subscription || { max_seats: 1 };
+                                const autoSeats = Utils.getPlansPermission("AUTO_SEATS")
+                                const usedSeats = organisation.num_seats >= max_seats;
+                                const overSeats = organisation.num_seats > max_seats;
+                                const needsUpgradeForAdditionalSeats = overSeats || (!autoSeats && usedSeats);
                                 return (
                                     <div>
                                         <Tabs inline transparent value={this.state.tab || 0} onChange={(tab) => this.setState({ tab })}>
@@ -487,29 +492,9 @@ const OrganisationSettingsPage = class extends Component {
                                                         />
                                                     )}
                                                 </FormGroup>
-
-                                                <FormGroup className="m-y-3">
-                                                    <Row className="mt-4" space>
-                                                        <div className="col-md-8 pl-0">
-                                                            <h3>Delete Organisation</h3>
-                                                            <p>
-                                                                This organisation will be permanently deleted, along with all projects and features.
-                                                            </p>
-                                                        </div>
-                                                        <Button
-                                                            id="delete-org-btn"
-                                                            onClick={() => this.confirmRemove(organisation, () => {
-                                                                deleteOrganisation();
-                                                            })}
-                                                            className="btn btn--with-icon ml-auto btn--remove"
-                                                        >
-                                                            <RemoveIcon />
-                                                        </Button>
-                                                    </Row>
-                                                </FormGroup>
                                                 {Utils.getFlagsmithHasFeature('force_2fa') && (
                                                     <div>
-                                                        <Row space className="mt-5">
+                                                        <Row space className="mt-4">
                                                             <h3 className="m-b-0">Enforce 2FA</h3>
                                                             {!force2faPermission ? (
                                                                 <Tooltip title={<Switch checked={organisation.force_2fa} onChange={this.save2FA} />}>
@@ -538,12 +523,30 @@ const OrganisationSettingsPage = class extends Component {
 
                                                     </FormGroup>
                                                 )}
+                                                <FormGroup className="mt-4">
+                                                    <Row className="mt-4" space>
+                                                        <div className="col-md-8 pl-0">
+                                                            <h3>Delete Organisation</h3>
+                                                            <p>
+                                                                This organisation will be permanently deleted, along with all projects and features.
+                                                            </p>
+                                                        </div>
+                                                        <Button
+                                                            id="delete-org-btn"
+                                                            onClick={() => this.confirmRemove(organisation, () => {
+                                                                deleteOrganisation();
+                                                            })}
+                                                            className="btn btn--with-icon ml-auto btn--remove"
+                                                        >
+                                                            <RemoveIcon />
+                                                        </Button>
+                                                    </Row>
+                                                </FormGroup>
+
                                             </TabItem>
 
                                             <TabItem tabLabel="Keys" tabIcon="ion-md-key" >
-                                                {Utils.getFlagsmithHasFeature('master_api_key') && (
-                                                    <AdminAPIKeys />
-                                                )}
+                                                <AdminAPIKeys />
                                             </TabItem>
 
                                             <TabItem data-test="tab-permissions" tabLabel="Members" tabIcon="ion-md-people" >
@@ -565,27 +568,52 @@ const OrganisationSettingsPage = class extends Component {
 
                                                                         <Tabs inline transparent uncontrolled>
                                                                             <TabItem tabLabel="Members">
+
+                                                                                <Row space className="mt-5">
+                                                                                    <h3 className="m-b-0">Team Members</h3>
+                                                                                    <Button
+                                                                                        disabled={needsUpgradeForAdditionalSeats}
+                                                                                        style={{ width: 180 }}
+                                                                                        id="btn-invite" onClick={() => openModal('Invite Users',
+                                                                                        <InviteUsersModal/>)}
+                                                                                        type="button">
+                                                                                        Invite members
+                                                                                    </Button>
+                                                                                </Row>
                                                                             <FormGroup className="mt-4">
                                                                                 {paymentsEnabled && !isLoading && (
-                                                                                    <p>
+                                                                                    <InfoMessage>
                                                                                         {'You are currently using '}
-                                                                                        <strong className={organisation.num_seats > max_seats ? 'text-danger' : ''}>
+                                                                                        <strong className={overSeats ? 'text-danger' : ''}>
                                                                                             {`${organisation.num_seats} of ${max_seats}`}
                                                                                         </strong>
-                                                                                        {` seat${organisation.num_seats === 1 ? '' : 's'}. `} for your plan.
-                                                                                        {' '}
-                                                                                        {organisation.num_seats > max_seats
-                                                                                            && (
-                                                                                                <a
-                                                                                                    href="#" onClick={() => openModal('Payment Plans', <PaymentModal
-                                                                                                    viewOnly={false}
-                                                                                                />, null, { large: true })}
-                                                                                                >
-                                                                                                    Upgrade
-                                                                                                </a>
-                                                                                            )
-                                                                                        }
-                                                                                    </p>
+                                                                                        {` seat${organisation.num_seats === 1 ? '' : 's'} `} for your plan. {usedSeats &&
+                                                                                        (
+                                                                                            <>
+                                                                                                {overSeats ? (
+                                                                                                    <strong>If you wish to invite any additional members, please {(
+                                                                                                        <a
+                                                                                                            href="#" onClick={Utils.openChat}
+                                                                                                        >
+                                                                                                            Contact us
+                                                                                                        </a>
+                                                                                                    )}.</strong>
+                                                                                                ): (
+                                                                                                    needsUpgradeForAdditionalSeats?
+                                                                                                        <strong>If you wish to invite any additional members, please {(
+                                                                                                            <a
+                                                                                                                href="#" onClick={() => openModal('Payment Plans', <PaymentModal
+                                                                                                                viewOnly={false}
+                                                                                                            />, null, { large: true })}
+                                                                                                            >
+                                                                                                                Upgrade your plan
+                                                                                                            </a>
+                                                                                                        )}.</strong> :
+                                                                                                        <strong>You will automatically be charged $20/month for each additional member that joins your organisation.</strong>
+                                                                                                )}
+                                                                                            </>
+                                                                                        )}
+                                                                                    </InfoMessage>
                                                                                 )}
                                                                                 {
                                                                                     inviteLinks && (
@@ -617,7 +645,7 @@ const OrganisationSettingsPage = class extends Component {
                                                                                                             <Flex className="mr-4">
                                                                                                                 <Input
                                                                                                                     style={{ width: '100%' }}
-                                                                                                                    value={`${document.location.origin}/invite/${inviteLinks.find(f => f.role === this.state.role).hash}`}
+                                                                                                                    value={`${document.location.origin}/invite-link/${inviteLinks.find(f => f.role === this.state.role).hash}`}
                                                                                                                     data-test="invite-link"
                                                                                                                     inputClassName="input input--wide"
                                                                                                                     className="full-width"

@@ -1,3 +1,4 @@
+import json
 import re
 from collections import ChainMap
 
@@ -345,3 +346,33 @@ def test_delete_token(test_user, auth_token):
     # and - if we try to delete the token again(i.e: access anything that uses is_authenticated)
     # we should will get 401
     assert client.delete(url).status_code == status.HTTP_401_UNAUTHORIZED
+
+
+def test_register_with_sign_up_type(client, db, settings):
+    # Given
+    password = FFAdminUser.objects.make_random_password()
+    sign_up_type = "NO_INVITE"
+    email = "test@example.com"
+    register_data = {
+        "email": email,
+        "password": password,
+        "re_password": password,
+        "first_name": "test",
+        "last_name": "tester",
+        "sign_up_type": sign_up_type,
+    }
+
+    # When
+    response = client.post(
+        reverse("api-v1:custom_auth:ffadminuser-list"),
+        data=json.dumps(register_data),
+        content_type="application/json",
+    )
+
+    # Then
+    assert response.status_code == status.HTTP_201_CREATED
+
+    response_json = response.json()
+    assert response_json["sign_up_type"] == sign_up_type
+
+    assert FFAdminUser.objects.filter(email=email, sign_up_type=sign_up_type).exists()

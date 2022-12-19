@@ -16,7 +16,7 @@ import Feature from '../Feature';
 import { ButtonOutline } from '../base/forms/Button';
 import ChangeRequestStore from '../../../common/stores/change-requests-store';
 import { setInterceptClose } from '../../project/modals';
-
+import classNames from 'classnames'
 const FEATURE_ID_MAXLENGTH = Constants.forms.maxLength.FEATURE_ID;
 
 const CreateFlag = class extends Component {
@@ -352,9 +352,11 @@ const CreateFlag = class extends Component {
         const Provider = identity ? IdentityProvider : FeatureListProvider;
         const environmentVariations = this.props.environmentVariations;
         const environment = ProjectStore.getEnvironment(this.props.environmentId);
-        const is4Eyes = !!environment && Utils.changeRequestsEnabled(environment.minimum_change_request_approvals) && Utils.getFlagsmithHasFeature('4eyes');
+        const is4Eyes = !!environment && Utils.changeRequestsEnabled(environment.minimum_change_request_approvals)
         const canSchedule = Utils.getPlansPermission('SCHEDULE_FLAGS');
         const is4EyesSegmentOverrides = is4Eyes && Utils.getFlagsmithHasFeature('4eyes_segment_overrides'); //
+        const project = ProjectStore.model;
+        const caseSensitive = Utils.getFlagsmithHasFeature("case_sensitive_flags") && project?.only_allow_lower_case_feature_names;
         const controlValue = Utils.calculateControl(multivariate_options);
         const invalid = !!multivariate_options && multivariate_options.length && controlValue < 0;
         const existingChangeRequest = this.props.changeRequest;
@@ -453,7 +455,10 @@ const CreateFlag = class extends Component {
                               maxLength: FEATURE_ID_MAXLENGTH,
                           }}
                           value={name}
-                          onChange={e => this.setState({ name: Format.enumeration.set(Utils.safeParseEventValue(e)).toLowerCase() })}
+                          onChange={e => {
+                              const newName = Utils.safeParseEventValue(e).replace(/ /g, '_');
+                              this.setState({ name: caseSensitive?newName.toLowerCase() : newName })
+                          }}
                           isValid={name && name.length}
                           type="text" title={isEdit ? 'ID' : 'ID*'}
                           placeholder="E.g. header_size"
@@ -630,7 +635,7 @@ const CreateFlag = class extends Component {
                                                                             {({ permission: savePermission }) => (
                                                                                 Utils.renderWithPermission(savePermission, Constants.environmentPermissions(Utils.getManageFeaturePermissionDescription(is4Eyes)), (
                                                                                     <div className="text-right">
-                                                                                        {Utils.getFlagsmithHasFeature('scheduling') && !is4Eyes && (
+                                                                                        {!is4Eyes && (
                                                                                                 <>
                                                                                                     {canSchedule ? (
                                                                                                         <ButtonOutline
@@ -716,6 +721,7 @@ const CreateFlag = class extends Component {
                                                                                                 {this.props.segmentOverrides ? (
                                                                                                     <SegmentOverrides
                                                                                                       readOnly={noPermissions}
+                                                                                                      showEditSegment
                                                                                                       showCreateSegment={this.state.showCreateSegment}
                                                                                                       setShowCreateSegment={showCreateSegment => this.setState({ showCreateSegment })}
                                                                                                       feature={projectFlag.id}
@@ -724,7 +730,6 @@ const CreateFlag = class extends Component {
                                                                                                       environmentId={this.props.environmentId}
                                                                                                       value={this.props.segmentOverrides}
                                                                                                       controlValue={initial_value}
-                                                                                                      segments={this.props.segments}
                                                                                                       onChange={(v) => {
                                                                                                           this.setState({ segmentsChanged: true });
                                                                                                           this.props.updateSegments(v);
@@ -958,10 +963,10 @@ const CreateFlag = class extends Component {
                                                                 )}
                                                             </Tabs>
                                                         ) : (
-                                                            <div className="mr-3">
+                                                            <div className={classNames(!isEdit?"create-feature-tab":"")}>
                                                                 {Value(projectAdmin, createFeature, project.prevent_flag_defaults)}
                                                                 {!identity && (
-                                                                    <div className="text-right">
+                                                                    <div className="text-right mr-3">
                                                                         {project.prevent_flag_defaults ? (
                                                                             <p className="text-right">
                                                                                 This will create the feature for <strong>all environments</strong>, you can edit this feature per environment once the feature's enabled state and environment once the feature is created.

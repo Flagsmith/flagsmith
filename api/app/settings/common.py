@@ -169,8 +169,18 @@ if "DATABASE_URL" in os.environ:
     DATABASES = {
         "default": dj_database_url.parse(
             env("DATABASE_URL"), conn_max_age=DJANGO_DB_CONN_MAX_AGE
-        )
+        ),
     }
+    REPLICA_DATABASE_URLS_DELIMITER = env("REPLICA_DATABASE_URLS_DELIMITER", ",")
+    REPLICA_DATABASE_URLS = env.list(
+        "REPLICA_DATABASE_URLS", default=[], delimiter=REPLICA_DATABASE_URLS_DELIMITER
+    )
+    NUM_DB_REPLICAS = len(REPLICA_DATABASE_URLS)
+    for i, db_url in enumerate(REPLICA_DATABASE_URLS, start=1):
+        DATABASES[f"replica_{i}"] = dj_database_url.parse(
+            db_url, conn_max_age=DJANGO_DB_CONN_MAX_AGE
+        )
+    DATABASE_ROUTERS = ("app.routers.PrimaryReplicaRouter",)
 elif "DJANGO_DB_NAME" in os.environ:
     # If there is no DATABASE_URL configured, check for old style DB config parameters
     DATABASES = {
@@ -184,6 +194,9 @@ elif "DJANGO_DB_NAME" in os.environ:
             "CONN_MAX_AGE": DJANGO_DB_CONN_MAX_AGE,
         },
     }
+
+LOGIN_THROTTLE_RATE = env("LOGIN_THROTTLE_RATE", "20/min")
+SIGNUP_THROTTLE_RATE = env("SIGNUP_THROTTLE_RATE", "10000/min")
 REST_FRAMEWORK = {
     "DEFAULT_PERMISSION_CLASSES": ["rest_framework.permissions.IsAuthenticated"],
     "DEFAULT_AUTHENTICATION_CLASSES": (
@@ -193,8 +206,8 @@ REST_FRAMEWORK = {
     "UNICODE_JSON": False,
     "DEFAULT_PAGINATION_CLASS": "rest_framework.pagination.PageNumberPagination",
     "DEFAULT_THROTTLE_RATES": {
-        "login": "20/min",
-        "signup": "10/min",
+        "login": LOGIN_THROTTLE_RATE,
+        "signup": SIGNUP_THROTTLE_RATE,
         "mfa_code": "5/min",
         "invite": "10/min",
     },
@@ -679,6 +692,7 @@ API_URL = env("API_URL", default="/api/v1/")
 ASSET_URL = env("ASSET_URL", default="/")
 MAINTENANCE_MODE = env.bool("MAINTENANCE_MODE", default=False)
 PREVENT_SIGNUP = env.bool("PREVENT_SIGNUP", default=False)
+PREVENT_EMAIL_PASSWORD = env.bool("PREVENT_EMAIL_PASSWORD", default=False)
 DISABLE_INFLUXDB_FEATURES = env.bool("DISABLE_INFLUXDB_FEATURES", default=True)
 FLAGSMITH_ANALYTICS = env.bool("FLAGSMITH_ANALYTICS", default=False)
 FLAGSMITH_ON_FLAGSMITH_API_URL = env("FLAGSMITH_ON_FLAGSMITH_API_URL", default=None)
@@ -782,6 +796,29 @@ SSE_SERVER_BASE_URL = env.str("SSE_SERVER_BASE_URL", None)
 SSE_AUTHENTICATION_TOKEN = env.str("SSE_AUTHENTICATION_TOKEN", None)
 
 DISABLE_INVITE_LINKS = env.bool("DISABLE_INVITE_LINKS", False)
+
+# use a separate boolean setting so that we add it to the API containers in environments
+# where we're running the task processor, so we avoid creating unnecessary tasks
+ENABLE_PIPEDRIVE_LEAD_TRACKING = env.bool("ENABLE_PIPEDRIVE_LEAD_TRACKING", False)
+PIPEDRIVE_API_TOKEN = env.str("PIPEDRIVE_API_TOKEN", None)
+PIPEDRIVE_BASE_API_URL = env.str(
+    "PIPEDRIVE_BASE_API_URL", "https://flagsmith.pipedrive.com/api/v1"
+)
+PIPEDRIVE_DOMAIN_ORGANIZATION_FIELD_KEY = env.str(
+    "PIPEDRIVE_DOMAIN_ORGANIZATION_FIELD_KEY", None
+)
+PIPEDRIVE_SIGN_UP_TYPE_DEAL_FIELD_KEY = env.str(
+    "PIPEDRIVE_SIGN_UP_TYPE_DEAL_FIELD_KEY", None
+)
+PIPEDRIVE_IGNORE_DOMAINS = env.list(
+    "PIPEDRIVE_IGNORE_DOMAINS",
+    ["solidstategroup.com", "flagsmith.com", "bullet-train.io", "restmail.net"],
+)
+
+# List of plan ids that support seat upgrades
+AUTO_SEAT_UPGRADE_PLANS = env.list(
+    "AUTO_SEAT_UPGRADE_PLANS", ["scale-up", "scale-up-v2", "scale-up-annual-v2"]
+)
 
 
 SKIP_MIGRATION_TESTS = env.bool("SKIP_MIGRATION_TESTS", False)

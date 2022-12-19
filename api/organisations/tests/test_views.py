@@ -464,9 +464,9 @@ class OrganisationTestCase(TestCase):
         organisation = Organisation.objects.create(name="Test organisation")
         self.user.add_organisation(organisation, OrganisationRole.ADMIN)
 
-        subscription = Subscription.objects.create(
-            subscription_id="sub-id", organisation=organisation
-        )
+        subscription = Subscription.objects.get(organisation=organisation)
+        subscription.subscription_id = "sub-id"
+        subscription.save()
 
         url = reverse(
             "api-v1:organisations:organisation-get-hosted-page-url-for-subscription-upgrade",
@@ -499,7 +499,7 @@ class OrganisationTestCase(TestCase):
 
         # Then
         assert response.status_code == status.HTTP_200_OK
-        assert len(response.json()) == 1
+        assert len(response.json()) == 2
 
     def test_get_my_permissions_for_non_admin(self):
         # Given
@@ -561,12 +561,14 @@ class ChargeBeeWebhookTestCase(TestCase):
         self.subscription_id = "subscription-id"
         self.old_plan_id = "old-plan-id"
         self.old_max_seats = 1
-        self.subscription = Subscription.objects.create(
+
+        Subscription.objects.filter(organisation=self.organisation).update(
             organisation=self.organisation,
             subscription_id=self.subscription_id,
             plan=self.old_plan_id,
             max_seats=self.old_max_seats,
         )
+        self.subscription = Subscription.objects.get(organisation=self.organisation)
 
     @mock.patch("organisations.models.get_plan_meta_data")
     def test_when_subscription_plan_is_changed_max_seats_and_max_api_calls_are_updated(

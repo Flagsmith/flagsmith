@@ -91,6 +91,10 @@ class Environment(
         default=timezone.now,
         help_text="Tracks changes to self and related entities, e.g. FeatureStates.",
     )
+    banner_text = models.CharField(null=True, blank=True, max_length=255)
+    banner_colour = models.CharField(
+        null=True, blank=True, max_length=7, help_text="hex code for the banner colour"
+    )
 
     objects = EnvironmentManager()
 

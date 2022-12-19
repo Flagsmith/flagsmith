@@ -78,27 +78,34 @@ def user_permission_group(organisation, admin_user):
 
 @pytest.fixture()
 def subscription(organisation):
-    return Subscription.objects.create(
-        organisation=organisation, subscription_id="subscription_id", plan="test-plan"
-    )
+    subscription = Subscription.objects.get(organisation=organisation)
+    # refresh organisation to load subscription
+    organisation.refresh_from_db()
+    return subscription
 
 
 @pytest.fixture()
 def xero_subscription(organisation):
-    return Subscription.objects.create(
-        organisation=organisation,
-        subscription_id="subscription_id",
-        payment_method=XERO,
-    )
+    subscription = Subscription.objects.get(organisation=organisation)
+    subscription.payment_method = XERO
+    subscription.subscription_id = "subscription-id"
+    subscription.save()
+
+    # refresh organisation to load subscription
+    organisation.refresh_from_db()
+    return subscription
 
 
 @pytest.fixture()
 def chargebee_subscription(organisation):
-    return Subscription.objects.create(
-        organisation=organisation,
-        subscription_id="cb-subscription",
-        payment_method=CHARGEBEE,
-    )
+    subscription = Subscription.objects.get(organisation=organisation)
+    subscription.payment_method = CHARGEBEE
+    subscription.subscription_id = "subscription-id"
+    subscription.save()
+
+    # refresh organisation to load subscription
+    organisation.refresh_from_db()
+    return subscription
 
 
 @pytest.fixture()
@@ -184,11 +191,15 @@ def change_request(environment, admin_user):
 
 
 @pytest.fixture()
-def change_request_feature_state(feature, environment, change_request):
-    fs = FeatureState.objects.filter(environment=environment, feature=feature).first()
-    fs.change_request = change_request
-    fs.save()
-    return fs
+def feature_state(feature, environment):
+    return FeatureState.objects.filter(environment=environment, feature=feature).first()
+
+
+@pytest.fixture()
+def change_request_feature_state(feature, environment, change_request, feature_state):
+    feature_state.change_request = change_request
+    feature_state.save()
+    return feature_state
 
 
 @pytest.fixture()

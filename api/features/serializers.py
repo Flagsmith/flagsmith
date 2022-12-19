@@ -120,6 +120,15 @@ class ListCreateFeatureSerializer(WritableNestedModelSerializer):
 
     def validate_name(self, name: str):
         view = self.context["view"]
+
+        project = self.context["project"]
+        feature_name_regex = project.feature_name_regex
+
+        if not project.is_feature_name_valid(name):
+            raise serializers.ValidationError(
+                f"Feature name must match regex: {feature_name_regex}"
+            )
+
         unique_filters = {
             "project__id": view.kwargs.get("project_pk"),
             "name__iexact": name,

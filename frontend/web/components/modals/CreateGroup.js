@@ -72,6 +72,8 @@ const CreateGroup = class extends Component {
     render() {
         const { name, external_id } = this.state;
         const isEdit = !!this.props.group;
+        const isAdmin = AccountStore.isAdmin();
+        const yourEmail = AccountStore.model.email;
         return (
 
             <OrganisationProvider>
@@ -99,7 +101,6 @@ const CreateGroup = class extends Component {
                                   name="Name*"
                                   placeholder="E.g. Developers"
                                 />
-                                {Utils.getFlagsmithHasFeature('group_external_ids') && (
                                     <InputGroup
                                       title="External ID"
                                       ref={e => this.input = e}
@@ -115,11 +116,9 @@ const CreateGroup = class extends Component {
                                       name="Name*"
                                       placeholder="Add an optional external reference ID"
                                     />
-                                )}
 
-                                {Utils.getFlagsmithHasFeature('default_user_groups') && (
                                     <InputGroup
-                                      title="Add users by default"
+                                      title="Add new users by default"
                                       tooltipPlace="top"
                                       tooltip="New users that sign up to your organisation will be automatically added to this group with USER permissions"
                                       ref={e => this.input = e}
@@ -133,7 +132,6 @@ const CreateGroup = class extends Component {
                                       isValid={name && name.length}
                                       type="text"
                                     />
-                                )}
                                 <div className="mb-5">
                                     <PanelSearch
                                       id="org-members-list"
@@ -154,7 +152,7 @@ const CreateGroup = class extends Component {
                                                       {email}
                                                   </div>
                                               </div>
-                                              <Switch onChange={() => this.toggleUser(id)} checked={!!_.find(this.state.users, { id })}/>
+                                                  <Switch disabled={!(isAdmin || email !== yourEmail)} onChange={() => this.toggleUser(id)} checked={!!_.find(this.state.users, { id })}/>
                                           </Row>
                                       )}
                                     />

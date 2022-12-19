@@ -74,9 +74,14 @@ const HomePage = class extends React.Component {
         if (document.location.href.indexOf('invite') != -1) {
             const invite = Utils.fromParam().redirect;
 
-            if (invite.includes('invite')) {
+            if (invite.includes("invite-link")) {
+                const id = invite.split('invite-link/')[1];
+                API.setInviteType("INVITE_LINK")
+                API.setInvite(id);
+            } else if (invite.includes('invite')) {
                 // persist invite incase user changes page or logs in with oauth
                 const id = invite.split('invite/')[1];
+                API.setInviteType("INVITE_EMAIL")
                 API.setInvite(id);
             }
         }
@@ -97,6 +102,7 @@ const HomePage = class extends React.Component {
         const isInvite = document.location.href.indexOf('invite') != -1;
         const isSignup = (!projectOverrides.preventSignup) && ((isInvite && document.location.href.indexOf('login') === -1) || document.location.href.indexOf('signup') != -1);
         const disableSignup = Project.preventSignup && isSignup;
+        const preventEmailPassword = Project.preventEmailPassword;
         const disableForgotPassword = Project.preventForgotPassword;
         const oauths = [];
         const disableOauthRegister = Utils.getFlagsmithHasFeature('disable_oauth_registration');
@@ -169,10 +175,11 @@ const HomePage = class extends React.Component {
                                                 <p className="mb-0">We have a 100% free for life plan for smaller projects.</p>
                                                 <ButtonLink
                                                   className="pt-3 pb-3"
-                                                  buttonText="Check out our Pricing"
                                                   href="https://flagsmith.com/pricing"
                                                   target="_blank"
-                                                />
+                                                >
+                                                    Check out our Pricing
+                                                </ButtonLink>
                                             </>
                                         )}
                                     </>
@@ -198,8 +205,9 @@ const HomePage = class extends React.Component {
                                             <Link id="existing-member-btn" to={`/login${redirect}`}>
                                                 <ButtonLink
                                                   className="mt-2 pb-3 pt-2"
-                                                  buttonText="Already a member?"
-                                                />
+                                                >
+                                                    Already a member?
+                                                </ButtonLink>
                                             </Link>
                                         </div>
                                     </Card>
@@ -213,104 +221,108 @@ const HomePage = class extends React.Component {
                                             <Card>
                                                 <AccountProvider>
                                                     {({ isLoading, isSaving, error }, { login }) => (
-                                                        <form
-                                                          id="form" name="form" onSubmit={(e) => {
-                                                              Utils.preventDefault(e);
-                                                              login({ email, password });
-                                                          }}
-                                                        >
+                                                        <>
                                                             {!!oauths.length && (
                                                                 <Row style={{ justifyContent: 'center' }}>
                                                                     {oauths}
                                                                 </Row>
                                                             )}
-
-                                                            {isInvite
-                                                            && (
-                                                                <div className="notification flex-row">
+                                                            {!preventEmailPassword && (
+                                                                <form
+                                                                    id="form" name="form" onSubmit={(e) => {
+                                                                    Utils.preventDefault(e);
+                                                                    login({ email, password });
+                                                                }}
+                                                                >
+                                                                    {isInvite
+                                                                        && (
+                                                                            <div className="notification flex-row">
                                                                     <span
-                                                                      className="notification__icon ion-md-information-circle-outline mb-2"
+                                                                        className="notification__icon ion-md-information-circle-outline mb-2"
                                                                     />
-                                                                    <p className="notification__text pl-3">Login to accept your invite</p>
-                                                                </div>
-                                                            )
-                                                            }
-                                                            <fieldset id="details">
-                                                                {error && error.email ? (
-                                                                    <span
-                                                                      id="email-error"
-                                                                      className="text-danger"
-                                                                    >
+                                                                                <p className="notification__text pl-3">Login to accept your invite</p>
+                                                                            </div>
+                                                                        )
+                                                                    }
+                                                                    <fieldset id="details">
+                                                                        {error && error.email ? (
+                                                                            <span
+                                                                                id="email-error"
+                                                                                className="text-danger"
+                                                                            >
                                                                         {error.email}
                                                                     </span>
-                                                                ) : null}
-                                                                <InputGroup
-                                                                  title="Email Address / Username"
-                                                                  data-test="email"
-                                                                  inputProps={{
-                                                                      name: 'email',
-                                                                      className: 'full-width',
-                                                                      error: error && error.email,
-                                                                  }}
-                                                                  onChange={(e) => {
-                                                                      this.setState({ email: Utils.safeParseEventValue(e) });
-                                                                  }}
-                                                                  className="input-default full-width mb-2 "
-                                                                  type="text"
-                                                                  name="email" id="email"
-                                                                />
-                                                                {error && error.password ? (
-                                                                    <span
-                                                                      id="password-error"
-                                                                      className="text-danger"
-                                                                    >
+                                                                        ) : null}
+                                                                        <InputGroup
+                                                                            title="Email Address / Username"
+                                                                            data-test="email"
+                                                                            inputProps={{
+                                                                                name: 'email',
+                                                                                className: 'full-width',
+                                                                                error: error && error.email,
+                                                                            }}
+                                                                            onChange={(e) => {
+                                                                                this.setState({ email: Utils.safeParseEventValue(e) });
+                                                                            }}
+                                                                            className="input-default full-width mb-2 "
+                                                                            type="text"
+                                                                            name="email" id="email"
+                                                                        />
+                                                                        {error && error.password ? (
+                                                                            <span
+                                                                                id="password-error"
+                                                                                className="text-danger"
+                                                                            >
                                                                         {error.password}
                                                                     </span>
-                                                                ) : null}
-                                                                <InputGroup
-                                                                  title="Password"
-                                                                  inputProps={{
-                                                                      name: 'password',
-                                                                      className: 'full-width',
-                                                                      error: error && error.password,
-                                                                  }}
-                                                                  onChange={(e) => {
-                                                                      this.setState({ password: Utils.safeParseEventValue(e) });
-                                                                  }}
-                                                                  rightComponent={!disableForgotPassword && (
-                                                                  <Link
-                                                                    tabIndex={-1}
-                                                                    className="float-right"
-                                                                    to={`/password-recovery${redirect}`}
-                                                                    onClick={this.showForgotPassword}
-                                                                  >
-                                                                      <ButtonLink tabIndex={-1} type="button" buttonText="Forgot password?" />
-                                                                  </Link>
-                                                                  )}
-                                                                  className="input-default full-width mb-2"
-                                                                  type="password"
-                                                                  name="password"
-                                                                  data-test="password"
-                                                                  id="password"
-                                                                />
-                                                                <div className="form-cta">
-
-                                                                    <Button
-                                                                      id="login-btn"
-                                                                      disabled={isLoading || isSaving}
-                                                                      type="submit"
-                                                                      className="mt-3 px-4 full-width"
-                                                                    >Login
-                                                                    </Button>
-                                                                </div>
-                                                            </fieldset>
-                                                            {error && (
-                                                                <div id="error-alert" className="alert mt-3 alert-danger">
-                                                                    {typeof AccountStore.error === 'string' ? AccountStore.error : 'Please check your details and try again'}
-                                                                </div>
+                                                                        ) : null}
+                                                                        <InputGroup
+                                                                            title="Password"
+                                                                            inputProps={{
+                                                                                name: 'password',
+                                                                                className: 'full-width',
+                                                                                error: error && error.password,
+                                                                            }}
+                                                                            onChange={(e) => {
+                                                                                this.setState({ password: Utils.safeParseEventValue(e) });
+                                                                            }}
+                                                                            rightComponent={!disableForgotPassword && (
+                                                                                <Link
+                                                                                    tabIndex={-1}
+                                                                                    className="float-right"
+                                                                                    to={`/password-recovery${redirect}`}
+                                                                                    onClick={this.showForgotPassword}
+                                                                                >
+                                                                                    <ButtonLink tabIndex={-1} type="button">
+                                                                                        Forgot password?
+                                                                                    </ButtonLink>
+                                                                                </Link>
+                                                                            )}
+                                                                            className="input-default full-width mb-2"
+                                                                            type="password"
+                                                                            name="password"
+                                                                            data-test="password"
+                                                                            id="password"
+                                                                        />
+                                                                        <div className="form-cta">
+                                                                            <Button
+                                                                                id="login-btn"
+                                                                                disabled={isLoading || isSaving}
+                                                                                type="submit"
+                                                                                className="mt-3 px-4 full-width"
+                                                                            >Login
+                                                                            </Button>
+                                                                        </div>
+                                                                    </fieldset>
+                                                                    {error && (
+                                                                        <div id="error-alert" className="alert mt-3 alert-danger">
+                                                                            {typeof AccountStore.error === 'string' ? AccountStore.error : 'Please check your details and try again'}
+                                                                        </div>
+                                                                    )}
+                                                                </form>
                                                             )}
+                                                        </>
 
-                                                        </form>
                                                     )}
                                                 </AccountProvider>
                                             </Card>
@@ -318,13 +330,18 @@ const HomePage = class extends React.Component {
                                             {(!projectOverrides.preventSignup) && (
 
                                                 <div>
-                                                    <Row className="justify-content-center mt-2">
-                                                        Creating a new account is easy{' '}
-                                                        <Link id="existing-member-btn" to={`/signup${redirect}`}>
-                                                            <ButtonLink data-test="jsSignup" className="ml-1" buttonText=" Sign up" />
-                                                        </Link>
-                                                    </Row>
-                                                    <div className="mt-5 text-center text-small text-muted">
+                                                    {!preventEmailPassword && (
+                                                        <Row className="justify-content-center mt-2">
+                                                            Creating a new account is easy{' '}
+                                                            <Link id="existing-member-btn" to={`/signup${redirect}`}>
+                                                                <ButtonLink data-test="jsSignup" className="ml-1">
+                                                                    Sign up
+                                                                </ButtonLink>
+                                                            </Link>
+                                                        </Row>
+                                                    )}
+
+                                                    <div className="mt-4 text-center text-small text-muted">
                                                         By signing up you agree to our <a
                                                           style={{ opacity: 0.8 }} target="_blank" className="text-small"
                                                           href="https://flagsmith.com/terms-of-service/"
@@ -343,163 +360,167 @@ const HomePage = class extends React.Component {
                                         <React.Fragment>
 
                                             <Card>
-                                                <form
-                                                  id="form" name="form" onSubmit={(e) => {
-                                                      Utils.preventDefault(e);
-                                                      const isInvite = document.location.href.indexOf('invite') != -1;
-                                                      register({
-                                                          email,
-                                                          password,
-                                                          first_name,
-                                                          last_name,
-                                                          marketing_consent_given: this.state.marketing_consent_given,
-                                                      },
-                                                      isInvite);
-                                                  }}
-                                                >
 
-                                                    {!!oauths.length && (
-                                                        <Row style={{ justifyContent: 'center' }}>
-                                                            {oauths}
-                                                        </Row>
-                                                    )}
+                                                {!!oauths.length && (
+                                                    <Row style={{ justifyContent: 'center' }}>
+                                                        {oauths}
+                                                    </Row>
+                                                )}
 
-                                                    {error
-                                                    && (
-                                                        <FormGroup>
-                                                            <div id="error-alert" className="alert alert-danger">
-                                                                {typeof AccountStore.error === 'string' ? AccountStore.error : 'Please check your details and try again'}
-                                                            </div>
-                                                        </FormGroup>
-                                                    )
-                                                    }
-                                                    {isInvite
-                                                    && (
-                                                        <div className="notification flex-row">
+                                                {!preventEmailPassword && (
+                                                    <form
+                                                        id="form" name="form" onSubmit={(e) => {
+                                                        Utils.preventDefault(e);
+                                                        const isInvite = document.location.href.indexOf('invite') != -1;
+                                                        register({
+                                                                email,
+                                                                password,
+                                                                first_name,
+                                                                last_name,
+                                                                marketing_consent_given: this.state.marketing_consent_given,
+                                                            },
+                                                            isInvite);
+                                                    }}
+                                                    >
+
+                                                        {error
+                                                            && (
+                                                                <FormGroup>
+                                                                    <div id="error-alert" className="alert alert-danger">
+                                                                        {typeof AccountStore.error === 'string' ? AccountStore.error : 'Please check your details and try again'}
+                                                                    </div>
+                                                                </FormGroup>
+                                                            )
+                                                        }
+                                                        {isInvite
+                                                            && (
+                                                                <div className="notification flex-row">
                                                             <span
-                                                              className="notification__icon ion-md-information-circle-outline mb-2"
+                                                                className="notification__icon ion-md-information-circle-outline mb-2"
                                                             />
-                                                            <p className="notification__text pl-3">Create an account to accept your
-                                                                invite
-                                                            </p>
-                                                        </div>
-                                                    )
-                                                    }
-                                                    <fieldset id="details" className="">
-                                                        <InputGroup
-                                                          title="First Name"
-                                                          data-test="firstName"
-                                                          inputProps={{
-                                                              name: 'firstName',
-                                                              className: 'full-width mb-2',
-                                                              error: error && error.first_name,
-                                                          }}
-                                                          onChange={(e) => {
-                                                              this.setState({ first_name: Utils.safeParseEventValue(e) });
-                                                          }}
-                                                          className="input-default full-width"
-                                                          type="text"
-                                                          name="firstName" id="firstName"
-                                                        />
-                                                        <InputGroup
-                                                          title="Last Name"
-                                                          data-test="lastName"
-                                                          inputProps={{
-                                                              name: 'lastName',
-                                                              className: 'full-width mb-2',
-                                                              error: error && error.last_name,
-                                                          }}
-                                                          onChange={(e) => {
-                                                              this.setState({ last_name: Utils.safeParseEventValue(e) });
-                                                          }}
-                                                          className="input-default full-width"
-                                                          type="text"
-                                                          name="lastName" id="lastName"
-                                                        />
+                                                                    <p className="notification__text pl-3">Create an account to accept your
+                                                                        invite
+                                                                    </p>
+                                                                </div>
+                                                            )
+                                                        }
+                                                        <fieldset id="details" className="">
+                                                            <InputGroup
+                                                                title="First Name"
+                                                                data-test="firstName"
+                                                                inputProps={{
+                                                                    name: 'firstName',
+                                                                    className: 'full-width mb-2',
+                                                                    error: error && error.first_name,
+                                                                }}
+                                                                onChange={(e) => {
+                                                                    this.setState({ first_name: Utils.safeParseEventValue(e) });
+                                                                }}
+                                                                className="input-default full-width"
+                                                                type="text"
+                                                                name="firstName" id="firstName"
+                                                            />
+                                                            <InputGroup
+                                                                title="Last Name"
+                                                                data-test="lastName"
+                                                                inputProps={{
+                                                                    name: 'lastName',
+                                                                    className: 'full-width mb-2',
+                                                                    error: error && error.last_name,
+                                                                }}
+                                                                onChange={(e) => {
+                                                                    this.setState({ last_name: Utils.safeParseEventValue(e) });
+                                                                }}
+                                                                className="input-default full-width"
+                                                                type="text"
+                                                                name="lastName" id="lastName"
+                                                            />
 
-                                                        {error && error.email ? (
-                                                            <span
-                                                              id="email-error"
-                                                              className="text-danger"
-                                                            >
+                                                            {error && error.email ? (
+                                                                <span
+                                                                    id="email-error"
+                                                                    className="text-danger"
+                                                                >
                                                                 {error.email}
                                                             </span>
-                                                        ) : null}
-                                                        <InputGroup
-                                                          title="Email Address"
-                                                          data-test="email"
-                                                          inputProps={{
-                                                              name: 'email',
-                                                              className: 'full-width mb-2',
-                                                              error: error && error.email,
-                                                          }}
-                                                          onChange={(e) => {
-                                                              this.setState({ email: Utils.safeParseEventValue(e) });
-                                                          }}
-                                                          className="input-default full-width"
-                                                          type="email"
-                                                          name="email"
-                                                          id="email"
-                                                        />
+                                                            ) : null}
+                                                            <InputGroup
+                                                                title="Email Address"
+                                                                data-test="email"
+                                                                inputProps={{
+                                                                    name: 'email',
+                                                                    className: 'full-width mb-2',
+                                                                    error: error && error.email,
+                                                                }}
+                                                                onChange={(e) => {
+                                                                    this.setState({ email: Utils.safeParseEventValue(e) });
+                                                                }}
+                                                                className="input-default full-width"
+                                                                type="email"
+                                                                name="email"
+                                                                id="email"
+                                                            />
 
-                                                        {error && error.password ? (
-                                                            <span
-                                                              id="password-error"
-                                                              className="text-danger"
-                                                            >
+                                                            {error && error.password ? (
+                                                                <span
+                                                                    id="password-error"
+                                                                    className="text-danger"
+                                                                >
                                                                 {error.password}
                                                             </span>
-                                                        ) : null}
-                                                        <InputGroup
-                                                          title="Password"
-                                                          data-test="password"
-                                                          inputProps={{
-                                                              name: 'password',
-                                                              className: 'full-width mb-2',
-                                                              error: error && error.password,
-                                                          }}
-                                                          onChange={(e) => {
-                                                              this.setState({ password: Utils.safeParseEventValue(e) });
-                                                          }}
-                                                          className="input-default full-width"
-                                                          type="password"
-                                                          name="password"
-                                                          id="password"
-                                                        />
-                                                        {Utils.getFlagsmithHasFeature('mailing_list') && (
-                                                            <Row className="text-right">
-                                                                <Flex/>
-                                                                <input
-                                                                  onChange={(e) => {
-                                                                      API.setCookie('marketing_consent_given', `${e.target.checked}`);
-                                                                      this.setState({ marketing_consent_given: e.target.checked });
-                                                                  }} id="mailinglist" className="mr-2"
-                                                                  type="checkbox" checked={this.state.marketing_consent_given}
-                                                                />
-                                                                <label className="mb-0" htmlFor="mailinglist">Join our mailing list!</label>
-                                                            </Row>
-                                                        )}
-                                                        <div classNam e="form-cta">
-                                                            <Button
-                                                              data-test="signup-btn"
-                                                              name="signup-btn"
-                                                              disabled={isLoading || isSaving}
-                                                              className="px-4 mt-3 full-width"
-                                                              type="submit"
-                                                            >
-                                                                Create Account
-                                                            </Button>
-                                                        </div>
-                                                    </fieldset>
-                                                </form>
+                                                            ) : null}
+                                                            <InputGroup
+                                                                title="Password"
+                                                                data-test="password"
+                                                                inputProps={{
+                                                                    name: 'password',
+                                                                    className: 'full-width mb-2',
+                                                                    error: error && error.password,
+                                                                }}
+                                                                onChange={(e) => {
+                                                                    this.setState({ password: Utils.safeParseEventValue(e) });
+                                                                }}
+                                                                className="input-default full-width"
+                                                                type="password"
+                                                                name="password"
+                                                                id="password"
+                                                            />
+                                                            {Utils.getFlagsmithHasFeature('mailing_list') && (
+                                                                <Row className="text-right">
+                                                                    <Flex/>
+                                                                    <input
+                                                                        onChange={(e) => {
+                                                                            API.setCookie('marketing_consent_given', `${e.target.checked}`);
+                                                                            this.setState({ marketing_consent_given: e.target.checked });
+                                                                        }} id="mailinglist" className="mr-2"
+                                                                        type="checkbox" checked={this.state.marketing_consent_given}
+                                                                    />
+                                                                    <label className="mb-0" htmlFor="mailinglist">Join our mailing list!</label>
+                                                                </Row>
+                                                            )}
+                                                            <div className="form-cta">
+                                                                <Button
+                                                                    data-test="signup-btn"
+                                                                    name="signup-btn"
+                                                                    disabled={isLoading || isSaving}
+                                                                    className="px-4 mt-3 full-width"
+                                                                    type="submit"
+                                                                >
+                                                                    Create Account
+                                                                </Button>
+                                                            </div>
+                                                        </fieldset>
+                                                    </form>
+                                                )}
                                             </Card>
                                             <Row className="justify-content-center mt-2">
                                                 Have an account?{' '}
                                                 <Link id="existing-member-btn" to={`/login${redirect}`}>
                                                     <ButtonLink
                                                       className="ml-1"
-                                                      buttonText="Log in"
-                                                    />
+                                                    >
+                                                        Log in
+                                                    </ButtonLink>
                                                 </Link>
                                             </Row>
 
