@@ -3,6 +3,7 @@ import EditIdentityModal from './UserPage';
 import CreateUserModal from '../modals/CreateUser';
 import EnvironmentTraitsProvider from '../../../common/providers/EnvironmentTraitsProvider';
 import RemoveIcon from '../RemoveIcon';
+import JSONReference from "../JSONReference";
 
 const UsersPage = class extends Component {
     static displayName = 'UsersPage'
@@ -127,6 +128,7 @@ const UsersPage = class extends Component {
                                                   items={identities}
                                                   paging={identitiesPaging}
                                                   showExactFilter
+                                                  renderFooter={()=><JSONReference className="mx-2 mt-4" title={"Users"} json={identities}/>}
                                                   nextPage={() => AppActions.getIdentitiesPage(environmentId, identitiesPaging.next, 'NEXT')}
                                                   prevPage={() => AppActions.getIdentitiesPage(environmentId, identitiesPaging.previous, 'PREVIOUS')}
                                                   goToPage={page => AppActions.getIdentitiesPage(environmentId, `${Project.api}environments/${environmentId}/${Utils.getIdentitiesEndpoint()}/?page=${page}`)}
@@ -207,7 +209,6 @@ const UsersPage = class extends Component {
                                             </FormGroup>
                                         </div>
                                     )}
-
                                 </IdentityListProvider>
                             </FormGroup>
                         </div>
