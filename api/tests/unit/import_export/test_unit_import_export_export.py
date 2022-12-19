@@ -29,11 +29,7 @@ from integrations.segment.models import SegmentConfiguration
 from integrations.slack.models import SlackConfiguration, SlackEnvironment
 from integrations.webhook.models import WebhookConfiguration
 from organisations.invites.models import InviteLink
-from organisations.models import (
-    Organisation,
-    OrganisationWebhook,
-    Subscription,
-)
+from organisations.models import Organisation, OrganisationWebhook
 from projects.models import Project
 from projects.tags.models import Tag
 from segments.models import EQUAL, Condition, Segment, SegmentRule
@@ -44,11 +40,6 @@ def test_export_organisation(db):
     # an organisation
     organisation_name = "test org"
     organisation = Organisation.objects.create(name=organisation_name)
-
-    # with a subscription
-    Subscription.objects.create(
-        organisation=organisation, max_seats=1, max_api_calls=50000
-    )
 
     # and an invite link
     InviteLink.objects.create(organisation=organisation)

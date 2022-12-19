@@ -356,7 +356,7 @@ const store = Object.assign({}, BaseStore, {
         const organisations = store.getOrganisations();
         const organisation = organisations && organisations.find(v => v.id === id);
         if (organisation) {
-            return !!organisation.subscription;
+            return !!organisation.subscription?.subscription_id;
         }
         return null;
     },
