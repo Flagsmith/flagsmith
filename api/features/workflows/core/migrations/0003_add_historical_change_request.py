@@ -10,7 +10,7 @@ class Migration(migrations.Migration):
 
     dependencies = [
         migrations.swappable_dependency(settings.AUTH_USER_MODEL),
-        ('environments', '0024_soft_delete_environments'),
+        ('environments', '0025_soft_delete_environments'),
         ('api_keys', '0002_soft_delete_api_keys'),
         ('workflows_core', '0002_add_uuid_field'),
     ]
