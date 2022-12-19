@@ -1,7 +1,6 @@
 import {init, DDClient} from "@datadog/ui-extensions-sdk";
 import API from "../project/api"
 
-console.log("Initialised Client")
 const client:DDClient = init({
     authProvider: {
         authStateCallback: async ()=>{
