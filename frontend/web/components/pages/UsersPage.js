@@ -67,7 +67,7 @@ const UsersPage = class extends Component {
 
         return (
             <div className="app-container container">
-                <Permission level="environment" permission={Utils.getManageFeaturePermission(false)} id={environmentId}>
+                <Permission level="environment" permission={Utils.getManageFeaturePermission(false, true)} id={environmentId}>
                     {({ permission }) => (
                         <div>
                             <div>
@@ -130,14 +130,14 @@ const UsersPage = class extends Component {
                                                   nextPage={() => AppActions.getIdentitiesPage(environmentId, identitiesPaging.next, 'NEXT')}
                                                   prevPage={() => AppActions.getIdentitiesPage(environmentId, identitiesPaging.previous, 'PREVIOUS')}
                                                   goToPage={page => AppActions.getIdentitiesPage(environmentId, `${Project.api}environments/${environmentId}/${Utils.getIdentitiesEndpoint()}/?page=${page}`)}
-                                                  renderRow={({ id, identifier }, index) => (permission ? (
+                                                  renderRow={({ id, identifier }, index) =>(
                                                       <Row
-                                                        space className="list-item clickable" key={id}
-                                                        data-test={`user-item-${index}`}
+                                                          space className="list-item clickable" key={id}
+                                                          data-test={`user-item-${index}`}
                                                       >
                                                           <Flex>
                                                               <Link
-                                                                to={`/project/${this.props.match.params.projectId}/environment/${this.props.match.params.environmentId}/users/${encodeURIComponent(identifier)}/${id}`}
+                                                                  to={`/project/${this.props.match.params.projectId}/environment/${this.props.match.params.environmentId}/users/${encodeURIComponent(identifier)}/${id}`}
                                                               >
                                                                   <ButtonLink>
                                                                       {identifier}
@@ -150,23 +150,16 @@ const UsersPage = class extends Component {
 
                                                           <Column>
                                                               <button
-                                                                id="remove-feature"
-                                                                className="btn btn--with-icon"
-                                                                type="button"
-                                                                onClick={() => this.removeIdentity(id, identifier)}
+                                                                  id="remove-feature"
+                                                                  className="btn btn--with-icon"
+                                                                  type="button"
+                                                                  onClick={() => this.removeIdentity(id, identifier)}
                                                               >
                                                                   <RemoveIcon/>
                                                               </button>
                                                           </Column>
                                                       </Row>
-                                                  ) : (
-                                                      <Row
-                                                        space className="list-item" key={id}
-                                                        data-test={`user-item-${index}`}
-                                                      >
-                                                          {identifier}
-                                                      </Row>
-                                                  ))}
+                                                  )}
                                                   renderNoResults={(
                                                       <div>
                                                                     You have no users in your project{this.state.search ? <span> for <strong>"{this.state.search}"</strong></span> : ''}.

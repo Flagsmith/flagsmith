@@ -25,7 +25,16 @@ module.exports = Object.assign({}, require('./base/_utils'), {
         }
         return 'VIEW_ENVIRONMENT';
     },
-    getManageFeaturePermission(isChangeRequest) {
+    getViewIdentitiesPermission() {
+        if (Utils.getFlagsmithHasFeature("view_identities_permission")){
+            return "VIEW_IDENTITIES"
+        }
+
+    },
+    getManageFeaturePermission(isChangeRequest, isUser) {
+        if (isUser){
+            return "MANAGE_IDENTITIES"
+        }
         if (isChangeRequest && Utils.getFlagsmithHasFeature('update_feature_state_permission')) {
             return 'CREATE_CHANGE_REQUEST';
         }
@@ -34,7 +43,10 @@ module.exports = Object.assign({}, require('./base/_utils'), {
         }
         return 'ADMIN';
     },
-    getManageFeaturePermissionDescription(isChangeRequest) {
+    getManageFeaturePermissionDescription(isChangeRequest, user) {
+        if (user) {
+            return "Manage Identities"
+        }
         if (isChangeRequest && Utils.getFlagsmithHasFeature('update_feature_state_permission')) {
             return 'Create Change Request';
         }
