@@ -285,6 +285,8 @@ const CreateFlag = class extends Component {
         const is4Eyes = !!environment && Utils.changeRequestsEnabled(environment.minimum_change_request_approvals)
         const canSchedule = Utils.getPlansPermission('SCHEDULE_FLAGS');
         const is4EyesSegmentOverrides = is4Eyes && Utils.getFlagsmithHasFeature('4eyes_segment_overrides'); //
+        const project = ProjectStore.model;
+        const caseSensitive = Utils.getFlagsmithHasFeature("case_sensitive_flags") && project?.only_allow_lower_case_feature_names;
         const controlValue = Utils.calculateControl(multivariate_options);
         const invalid = !!multivariate_options && multivariate_options.length && controlValue < 0;
         const existingChangeRequest = this.props.changeRequest;
@@ -382,7 +384,10 @@ const CreateFlag = class extends Component {
                               maxLength: FEATURE_ID_MAXLENGTH,
                           }}
                           value={name}
-                          onChange={e => this.setState({ name: Format.enumeration.set(Utils.safeParseEventValue(e)).toLowerCase() })}
+                          onChange={e => {
+                              const newName = Utils.safeParseEventValue(e).replace(/ /g, '_');
+                              this.setState({ name: caseSensitive?newName.toLowerCase() : newName })
+                          }}
                           isValid={name && name.length}
                           type="text" title={isEdit ? 'ID' : 'ID*'}
                           placeholder="E.g. header_size"
