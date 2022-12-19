@@ -103,7 +103,11 @@ global.API = {
         return API.getCookie('redirect');
     },
     getCookie(key) {
-        return require('js-cookie').get(key);
+        const res = require('js-cookie').get(key);
+        if(res) { //reset expiry
+            API.setCookie(key,res)
+        }
+        return res;
     },
     setCookie(key, v) {
         try {
@@ -111,7 +115,7 @@ global.API = {
                 require('js-cookie').remove(key, { path: '/', domain: Project.cookieDomain });
                 require('js-cookie').remove(key, { path: '/' });
             } else {
-                require('js-cookie').set(key, v, { path: '/' });
+                require('js-cookie').set(key, v, { path: '/', expires: 30 });
             }
         } catch (e) {
 
@@ -123,6 +127,13 @@ global.API = {
     },
     getInvite() {
         return require('js-cookie').get('invite');
+    },
+    setInviteType(id) {
+        const cookie = require('js-cookie');
+        cookie.set('invite-type', id);
+    },
+    getInviteType() {
+        return require('js-cookie').get('invite-type') || "NO_INVITE";
     },
     trackPage(title) {
         if (Project.ga) {
@@ -156,8 +167,8 @@ global.API = {
 
         if (Project.heap) {
             heap.identify(id);
-            const orgs = (user && user.organisations && _.map(user.organisations, o => `${o.name} #${o.id}(${o.role})[${o.num_seats}]`).join(',')) || '';
             const user = AccountStore.model;
+            const orgs = (user && user.organisations && _.map(user.organisations, o => `${o.name} #${o.id}(${o.role})[${o.num_seats}]`).join(',')) || '';
             const plans = AccountStore.getPlans();
             heap.addUserProperties({
                 email: id,
@@ -246,3 +257,5 @@ global.API = {
         console.log.apply(this, arguments);
     },
 };
+
+export default API

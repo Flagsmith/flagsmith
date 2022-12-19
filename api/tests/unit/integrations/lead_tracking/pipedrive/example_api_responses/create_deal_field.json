@@ -1,0 +1,26 @@
+{
+  "success": true,
+  "data": {
+    "id": 12486,
+    "key": "8a66c8cbf4295894315aef845661469fd98f0842",
+    "name": "new-field",
+    "order_nr": 34,
+    "field_type": "varchar",
+    "json_column_flag": true,
+    "add_time": "2022-11-18 11:36:51",
+    "update_time": "2022-11-18 11:36:51",
+    "last_updated_by_user_id": 13603501,
+    "active_flag": true,
+    "edit_flag": true,
+    "index_visible_flag": true,
+    "details_visible_flag": true,
+    "add_visible_flag": true,
+    "important_flag": false,
+    "bulk_edit_allowed": true,
+    "searchable_flag": true,
+    "filtering_allowed": true,
+    "sortable_flag": true,
+    "projects_detail_visible_flag": false,
+    "mandatory_flag": false
+  }
+}

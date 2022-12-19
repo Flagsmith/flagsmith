@@ -189,7 +189,7 @@ class TheComponent extends Component {
                       title={(
                           <button
                             onClick={() => {
-                                this.context.router.history.push(`/project/${projectId}/environment/${environmentId}/audit-log?env=${environmentId}&search=${projectFlag.name}`);
+                                this.context.router.history.push(`/project/${projectId}/environment/${environmentId}/audit-log?env=${environment.id}&search=${projectFlag.name}`);
                             }}
                             className="btn btn--with-icon"
                             data-test={`feature-history-${this.props.index}`}

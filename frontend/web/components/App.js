@@ -15,13 +15,13 @@ import AppLoader from './AppLoader';
 import ButterBar from './ButterBar';
 import UserSettingsIcon from './svg/UserSettingsIcon';
 import DocumentationIcon from './svg/DocumentationIcon';
-import ArrowUpIcon from './svg/ArrowUpIcon';
-import RebrandBanner from './RebrandBanner';
 import UpgradeIcon from './svg/UpgradeIcon';
-import SparklesIcon from './svg/SparklesIcon';
 import AccountSettingsPage from './pages/AccountSettingsPage';
 import Headway from './Headway';
 import ProjectStore from '../../common/stores/project-store';
+import getBuildVersion from '../project/getBuildVersion'
+import { Provider } from "react-redux";
+import { getStore } from "../../common/store";
 
 const App = class extends Component {
     static propTypes = {
@@ -43,6 +43,7 @@ const App = class extends Component {
     }
 
     componentDidMount = () => {
+        getBuildVersion()
         this.listenTo(ProjectStore, 'change', () => this.forceUpdate());
         window.addEventListener('scroll', this.handleScroll);
     };
@@ -211,7 +212,7 @@ const App = class extends Component {
         }
         const projectNotLoaded = (!ProjectStore.model && document.location.href.includes('project/'));
         return (
-            <div>
+            <Provider store={getStore()}>
                 <AccountProvider onNoUser={this.onNoUser} onLogout={this.onLogout} onLogin={this.onLogin}>
                     {({
                         isLoading,
@@ -312,7 +313,7 @@ const App = class extends Component {
                                                                 <UserSettingsIcon />
                                                                 Account
                                                             </NavLink>
-                                                            {AccountStore.getOrganisationRole() === 'ADMIN' && (
+                                                            {AccountStore.getOrganisationRole() === 'ADMIN' ? (
                                                             <NavLink
                                                               id="org-settings-link"
                                                               activeClassName="active"
@@ -322,6 +323,24 @@ const App = class extends Component {
                                                                 <span style={{ marginRight: 4 }} className="icon--primary ion ion-md-settings"/>
                                                                 {'Manage'}
                                                             </NavLink>
+                                                            ): !!AccountStore.getOrganisation() && (
+                                                                <Permission level="organisation" permission="MANAGE_USER_GROUPS" id={AccountStore.getOrganisation().id}>
+                                                                    {({permission})=>(
+                                                                        <>
+                                                                            {!!permission && (
+                                                                                <NavLink
+                                                                                    id="org-settings-link"
+                                                                                    activeClassName="active"
+                                                                                    className="nav-link"
+                                                                                    to="/organisation-groups"
+                                                                                >
+                                                                                    <span style={{ marginRight: 4 }} className="icon--primary ion ion-md-settings"/>
+                                                                                    {'Manage'}
+                                                                                </NavLink>
+                                                                            )}
+                                                                        </>
+                                                                    )}
+                                                                </Permission>
                                                             )}
                                                         </nav>
                                                         <div style={{ marginRight: 16, marginTop: 0 }} className="dark-mode">
@@ -424,7 +443,7 @@ const App = class extends Component {
                     ))}
                 </AccountProvider>
 
-            </div>
+            </Provider>
         );
     }
 };

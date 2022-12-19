@@ -69,4 +69,4 @@ const ConfirmRemoveSegment = class extends Component {
 
 ConfirmRemoveSegment.propTypes = {};
 
-module.exports = ConfirmRemoveSegment;
+export default ConfirmRemoveSegment;

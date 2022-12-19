@@ -5,13 +5,11 @@ import ProjectSelect from './ProjectSelect';
 import AsideProjectButton from './AsideProjectButton';
 import AsideTitleLink from './AsideTitleLink';
 import Collapsible from './Collapsible';
-import Popover from './base/Popover';
 import ProjectSettingsIcon from './svg/ProjectSettingsIcon';
 import AuditLogIcon from './svg/AuditLogIcon';
 import OrgSettingsIcon from './svg/OrgSettingsIcon';
 import EnvironmentDropdown from './EnvironmentDropdown';
 import CreateProjectModal from './modals/CreateProject';
-import LogoutIcon from './svg/LogoutIcon';
 import UserSettingsIcon from './svg/UserSettingsIcon';
 import DocumentationIcon from './svg/DocumentationIcon';
 import NavIconSmall from './svg/NavIconSmall';
@@ -22,7 +20,7 @@ import SegmentsIcon from './svg/SegmentsIcon';
 import EnvironmentSettingsIcon from './svg/EnvironmentSettingsIcon';
 import ProjectStore from '../../common/stores/project-store';
 import ChangeRequestStore from '../../common/stores/change-requests-store';
-
+import getBuildVersion from '../project/getBuildVersion'
 const Aside = class extends Component {
     static displayName = 'Aside';
 
@@ -51,6 +49,12 @@ const Aside = class extends Component {
                 AppActions.getChangeRequests(this.props.environmentId, Utils.changeRequestsEnabled(environment.minimum_change_request_approvals) ? {} : { live_from_after: new Date().toISOString() });
             }
         });
+    }
+
+    componentDidMount() {
+        getBuildVersion().then((version)=>{
+            this.setState({version})
+        })
     }
 
     componentWillReceiveProps(newProps) {
@@ -89,7 +93,6 @@ const Aside = class extends Component {
         const environmentId = (this.props.environmentId !== 'create' && this.props.environmentId) || (ProjectStore.model && ProjectStore.model.environments[0] && ProjectStore.model.environments[0].api_key);
         const environment = ProjectStore.getEnvironment(this.props.environmentId);
         const hasRbacPermission = Utils.getPlansPermission('AUDIT') || !Utils.getFlagsmithHasFeature('scaleup_audit');
-        const has4Eyes = Utils.getFlagsmithHasFeature('4eyes');
         const changeRequest = environment && Utils.changeRequestsEnabled(environment.minimum_change_request_approvals) ? ChangeRequestStore.model[this.props.environmentId] : ChangeRequestStore.scheduled[this.props.environmentId];
         const changeRequests = (changeRequest && changeRequest.count) || 0;
         return (
@@ -180,13 +183,11 @@ const Aside = class extends Component {
                                         </div>
                                         {(
                                             <React.Fragment>
-                                                <div className="aside__main-content" style={{ 'overflowY': 'auto' }}>
+                                                <div className="aside__main-content" >
                                                     <div className="pl-4 pr-4 pt-4">
                                                         <Row>
                                                             <h1 className="aside__project-title">
                                                                 {project && project.name ? project.name : '...'}
-
-
                                                             </h1>
                                                             {Utils.getFlagsmithHasFeature('edge_identities') && (
                                                                 <div className="text-center">
@@ -352,7 +353,6 @@ const Aside = class extends Component {
                                                                                                   <FeaturesIcon className="aside__environment-list-item--icon"/>
                                                                                                     Features
                                                                                               </NavLink>
-                                                                                              {has4Eyes && (
                                                                                               <NavLink
                                                                                                       activeClassName="active"
 
@@ -363,7 +363,6 @@ const Aside = class extends Component {
                                                                                                         <span className="ion icon ion-md-git-pull-request aside__environment-list-item--icon"/>
                                                                                                         Change Requests {changeRequests ? <span className="unread">{changeRequests}</span> : null}
                                                                                                     </NavLink>
-                                                                                              )}
                                                                                               {manageIdentityPermission && (
                                                                                               <NavLink
                                                                                                       id="users-link"
@@ -413,7 +412,7 @@ const Aside = class extends Component {
 
                                                     <div className="flex flex-1"/>
 
-                                                    <div className="aside__footer">
+                                                    <div className="align-self-end">
                                                         {Utils.getFlagsmithHasFeature('demo_feature') && (
                                                             <a
                                                               style={{ color: Utils.getFlagsmithValue('demo_feature') || '#43424f' }}
@@ -423,6 +422,24 @@ const Aside = class extends Component {
                                                                 <i className="icon mr-2 ion-ios-star aside__nav-item--icon"/>
                                                                 Super cool demo feature!
                                                             </a>
+                                                        )}
+
+                                                        {this.state.version && (
+                                                            <div
+                                                                className="text-muted text-small text-center"
+                                                            >
+                                                                {this.state.version.tag !== "Unknown" && (
+                                                                    <Tooltip html title={(
+                                                                        <span>
+                                                                            <span className="ml-2 icon ion-ios-pricetag"/> {this.state.version.tag}
+                                                                        </span>
+                                                                        )}>
+                                                                        {`${this.state.version.frontend_sha !== "Unknown" ? `Frontend SHA: ${this.state.version.frontend_sha}` :"" }${this.state.version.backend_sha !== "Unknown" ? `${this.state.version.frontend_sha!=="Unknown"?"<br/>":""}Backend SHA: ${this.state.version.backend_sha}` :"" }`}
+                                                                    </Tooltip>
+                                                                )}
+
+
+                                                            </div>
                                                         )}
 
 

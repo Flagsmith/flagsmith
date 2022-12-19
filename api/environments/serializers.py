@@ -40,6 +40,8 @@ class EnvironmentSerializerLight(serializers.ModelSerializer):
             "project",
             "minimum_change_request_approvals",
             "allow_client_traits",
+            "banner_text",
+            "banner_colour",
         )
 
 

@@ -10,6 +10,7 @@ import ServerSideSDKKeys from '../ServerSideSDKKeys';
 import PaymentModal from '../modals/Payment';
 import Tabs from '../base/forms/Tabs'
 import TabItem from '../base/forms/TabItem'
+import { ColourSelect } from '../AddEditTags';
 const EnvironmentSettingsPage = class extends Component {
     static displayName = 'EnvironmentSettingsPage'
 
@@ -72,6 +73,8 @@ const EnvironmentSettingsPage = class extends Component {
             name: name || env.name,
             description: description || env.description,
             allow_client_traits: !!this.state.allow_client_traits,
+            banner_text: this.state.banner_text,
+            banner_colour: this.state.banner_colour,
             minimum_change_request_approvals: has4EyesPermission ? this.state.minimum_change_request_approvals : null,
         }));
     }
@@ -138,7 +141,8 @@ const EnvironmentSettingsPage = class extends Component {
                             setTimeout(() => {
                                 this.setState({
                                     name: env.name,
-                                    description: env.description,
+                                    banner_colour: env.banner_colour || Constants.tagColors[0],
+                                    banner_text: env.banner_text,
                                     allow_client_traits: !!env.allow_client_traits,
                                     minimum_change_request_approvals: Utils.changeRequestsEnabled(env.minimum_change_request_approvals) ? env.minimum_change_request_approvals : null,
                                 });
@@ -194,8 +198,39 @@ const EnvironmentSettingsPage = class extends Component {
 
                                                     </form>
                                                 </div>
-                                                {Utils.getFlagsmithHasFeature('4eyes') && (
-                                                    <FormGroup className="m-y-3">
+                                                {Utils.getFlagsmithHasFeature("tag_environments") && (
+                                                    <div>
+                                                    <Row space>
+                                                        <div className="col-md-8 pl-0">
+                                                            <h3 className="m-b-0">Environment Banner</h3>
+                                                            <p className="mb-0">
+                                                                This will show a banner whenever you view its pages, this is generally used to warn people that they are viewing and editing a sensitive environment.
+                                                            </p>
+                                                        </div>
+                                                        <Switch
+                                                            onChange={(value)=>this.setState({banner_text:value?env.name + " Environment":null}, this.saveEnv)}
+                                                            checked={typeof this.state.banner_text === "string"}
+                                                        />
+                                                    </Row>
+                                                        {typeof this.state.banner_text === "string" && (
+                                                            <Row className="mt-2">
+                                                                <Input
+                                                                    style={{width:400}}
+                                                                    placeholder="Banner text"
+                                                                    value={this.state.banner_text}
+                                                                    onChange={(e)=>this.setState({banner_text:Utils.safeParseEventValue(e)})}
+                                                                />
+                                                                <div className="ml-2">
+                                                                    <ColourSelect value={this.state.banner_colour} onChange={(banner_colour)=>this.setState({banner_colour})}/>
+                                                                </div>
+                                                                <Button onClick={this.saveEnv} className="ml-2">
+                                                                    Save
+                                                                </Button>
+                                                            </Row>
+                                                        )}
+                                                    </div>
+                                                )}
+                                                    <FormGroup className="mt-4">
                                                         <Row space>
                                                             <div className="col-md-8 pl-0">
                                                                 <h3 className="m-b-0">Change Requests</h3>
@@ -269,7 +304,6 @@ const EnvironmentSettingsPage = class extends Component {
                                                                 </Row>
                                                             </div>
                                                         )}
-                                                        {flagsmith.hasFeature('allow_client_traits') && (
                                                             <Row className="mt-4" space>
                                                                 <div className="col-md-8 pl-0">
                                                                     <h3 className="m-b-0">Allow client SDKs to set user traits</h3>
@@ -287,11 +321,8 @@ const EnvironmentSettingsPage = class extends Component {
                                                                     </div>
                                                                 </div>
                                                             </Row>
-                                                        )}
-
                                                     </FormGroup>
-                                                )}
-                                                <FormGroup className="m-y-3">
+                                                <FormGroup className="mt-4">
                                                     <Row className="mt-4" space>
                                                         <div className="col-md-8 pl-0">
                                                             <h3>

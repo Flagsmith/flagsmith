@@ -349,6 +349,48 @@ def test_should_delete_feature_states_when_feature_deleted(
 @pytest.mark.parametrize(
     "client", [lazy_fixture("master_api_key_client"), lazy_fixture("admin_client")]
 )
+def test_create_feature_returns_201_if_name_matches_regex(client, project):
+    # Given
+    project.feature_name_regex = "^[a-z_]{18}$"
+    project.save()
+
+    # feature name that has 18 characters
+    feature_name = "valid_feature_name"
+
+    url = reverse("api-v1:projects:project-features-list", args=[project.id])
+    data = {"name": feature_name, "type": "FLAG", "project": project.id}
+
+    # When
+    response = client.post(url, data=data)
+    assert response.status_code == status.HTTP_201_CREATED
+
+
+@pytest.mark.parametrize(
+    "client", [lazy_fixture("master_api_key_client"), lazy_fixture("admin_client")]
+)
+def test_create_feature_returns_400_if_name_does_not_matches_regex(client, project):
+    # Given
+    project.feature_name_regex = "^[a-z]{18}$"
+    project.save()
+
+    # feature name longer than 18 characters
+    feature_name = "not_a_valid_feature_name"
+
+    url = reverse("api-v1:projects:project-features-list", args=[project.id])
+    data = {"name": feature_name, "type": "FLAG", "project": project.id}
+
+    # When
+    response = client.post(url, data=data)
+    assert response.status_code == status.HTTP_400_BAD_REQUEST
+    assert (
+        response.json()["name"][0]
+        == f"Feature name must match regex: {project.feature_name_regex}"
+    )
+
+
+@pytest.mark.parametrize(
+    "client", [lazy_fixture("master_api_key_client"), lazy_fixture("admin_client")]
+)
 def test_audit_log_created_when_feature_created(client, project, environment):
     # Given
     url = reverse("api-v1:projects:project-features-list", args=[project.id])

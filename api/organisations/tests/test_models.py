@@ -16,6 +16,9 @@ from organisations.subscriptions.constants import (
     FREE_PLAN_SUBSCRIPTION_METADATA,
     XERO,
 )
+from organisations.subscriptions.exceptions import (
+    SubscriptionDoesNotSupportSeatUpgrade,
+)
 from organisations.subscriptions.metadata import BaseSubscriptionMetadata
 from organisations.subscriptions.xero.metadata import XeroSubscriptionMetadata
 
@@ -35,24 +38,19 @@ class OrganisationTestCase(TestCase):
     def test_has_subscription_true(self):
         # Given
         organisation = Organisation.objects.create(name="Test org")
-        Subscription.objects.create(
-            organisation=organisation, subscription_id="subscription_id"
+        Subscription.objects.filter(organisation=organisation).update(
+            subscription_id="subscription_id"
         )
+
+        # refresh organisation to load subscription
+        organisation.refresh_from_db()
 
         # Then
         assert organisation.has_subscription()
 
-    def test_has_subscription_missing_subscription(self):
-        # Given
-        organisation = Organisation.objects.create(name="Test org")
-
-        # Then
-        assert not organisation.has_subscription()
-
     def test_has_subscription_missing_subscription_id(self):
         # Given
         organisation = Organisation.objects.create(name="Test org")
-        Subscription.objects.create(organisation=organisation)
 
         # Then
         assert not organisation.has_subscription()
@@ -63,11 +61,14 @@ class OrganisationTestCase(TestCase):
     ):
         # Given
         organisation = Organisation.objects.create(name="Test org")
-        subscription = Subscription.objects.create(
-            organisation=organisation,
-            payment_method=CHARGEBEE,
-            subscription_id="subscription-id",
+
+        Subscription.objects.filter(organisation=organisation).update(
+            subscription_id="subscription_id", payment_method=CHARGEBEE
         )
+        subscription = Subscription.objects.get(organisation=organisation)
+
+        # refresh organisation to load subscription
+        organisation.refresh_from_db()
 
         # When
         organisation.cancel_subscription()
@@ -76,11 +77,13 @@ class OrganisationTestCase(TestCase):
         mocked_cancel_chargebee_subscription.assert_called_once_with(
             subscription.subscription_id
         )
+        # refresh subscription object
+        subscription.refresh_from_db()
         assert subscription.cancellation_date
 
 
 def test_organisation_over_plan_seats_limit_returns_false_if_not_over_plan_seats_limit(
-    organisation, subscription, mocker
+    organisation, chargebee_subscription, mocker
 ):
     # Given
     seats = 200
@@ -91,11 +94,11 @@ def test_organisation_over_plan_seats_limit_returns_false_if_not_over_plan_seats
     )
     # Then
     assert organisation.over_plan_seats_limit() is False
-    mocked_get_subscription_metadata.assert_called_once_with(subscription)
+    mocked_get_subscription_metadata.assert_called_once_with(chargebee_subscription)
 
 
 def test_organisation_over_plan_seats_limit_returns_true_if_over_plan_seats_limit(
-    organisation, subscription, mocker, admin_user
+    organisation, chargebee_subscription, mocker, admin_user
 ):
     # Given
     seats = 0
@@ -106,7 +109,7 @@ def test_organisation_over_plan_seats_limit_returns_true_if_over_plan_seats_limi
     )
     # Then
     assert organisation.over_plan_seats_limit() is True
-    mocked_get_subscription_metadata.assert_called_once_with(subscription)
+    mocked_get_subscription_metadata.assert_called_once_with(chargebee_subscription)
 
 
 def test_organisation_over_plan_seats_no_subscription(organisation, mocker, admin_user):
@@ -130,26 +133,23 @@ class SubscriptionTestCase(TestCase):
 
     def test_max_seats_set_as_one_if_subscription_has_no_subscription_id(self):
         # Given
-        subscription = Subscription(organisation=self.organisation)
-
-        # When
-        subscription.save()
+        subscription = Subscription.objects.get(organisation=self.organisation)
 
         # Then
         assert subscription.max_seats == 1
 
 
 @override_settings(MAILERLITE_API_KEY="some-test-key")
-def test_creating_a_subscription_calls_mailer_lite_update_organisation_users(
-    mocker, db
+def test_updating_subscription_id_calls_mailer_lite_update_organisation_users(
+    mocker, db, organisation, subscription
 ):
     # Given
-    organisation = Organisation.objects.create(name="Test org")
     mocked_mailer_lite = mocker.MagicMock()
     mocker.patch("organisations.models.MailerLite", return_value=mocked_mailer_lite)
 
     # When
-    Subscription.objects.create(organisation=organisation)
+    subscription.subscription_id = "some-id"
+    subscription.save()
 
     # Then
     mocked_mailer_lite.update_organisation_users.assert_called_with(organisation.id)
@@ -157,18 +157,16 @@ def test_creating_a_subscription_calls_mailer_lite_update_organisation_users(
 
 @override_settings(MAILERLITE_API_KEY="some-test-key")
 def test_updating_a_cancelled_subscription_calls_mailer_lite_update_organisation_users(
-    mocker, db
+    mocker, db, organisation, subscription
 ):
     # Given
-    organisation = Organisation.objects.create(name="Test org")
     mocked_mailer_lite = mocker.MagicMock()
     mocker.patch("organisations.models.MailerLite", return_value=mocked_mailer_lite)
 
-    subscription = Subscription.objects.create(
-        organisation=organisation, cancellation_date=datetime.now()
-    )
+    subscription.cancellation_date = datetime.now()
+    subscription.save()
 
-    # reset the mock as it will have been called on subscription create above
+    # reset the mock to remove the call by saving the subscription above
     mocked_mailer_lite.reset_mock()
 
     # When
@@ -181,23 +179,21 @@ def test_updating_a_cancelled_subscription_calls_mailer_lite_update_organisation
 
 @override_settings(MAILERLITE_API_KEY="some-test-key")
 def test_cancelling_a_subscription_calls_mailer_lite_update_organisation_users(
-    mocker, db
+    mocker, db, organisation, subscription
 ):
     # Given
 
     mocked_mailer_lite = mocker.MagicMock()
     mocker.patch("organisations.models.MailerLite", return_value=mocked_mailer_lite)
-    organisation = Organisation.objects.create(name="Test org")
-    subscription = Subscription.objects.create(organisation=organisation)
 
     # When
     subscription.cancellation_date = datetime.now()
     subscription.save()
 
     # Then
-    mocked_mailer_lite.update_organisation_users.assert_called_with(organisation.id)
-    # once for creating a subscription and second time for cancellation
-    assert mocked_mailer_lite.update_organisation_users.call_count == 2
+    mocked_mailer_lite.update_organisation_users.assert_called_once_with(
+        organisation.id
+    )
 
 
 def test_organisation_is_paid_returns_false_if_subscription_does_not_exists(db):
@@ -207,20 +203,21 @@ def test_organisation_is_paid_returns_false_if_subscription_does_not_exists(db):
     assert organisation.is_paid is False
 
 
-def test_organisation_is_paid_returns_true_if_active_subscription_exists(db):
-    # Given
-    organisation = Organisation.objects.create(name="Test org")
-    Subscription.objects.create(organisation=organisation, subscription_id="random_id")
-    # Then
+def test_organisation_is_paid_returns_true_if_active_subscription_exists(
+    organisation, chargebee_subscription
+):
+    # When/Then
     assert organisation.is_paid is True
 
 
-def test_organisation_is_paid_returns_false_if_cancelled_subscription_exists(db):
+def test_organisation_is_paid_returns_false_if_cancelled_subscription_exists(
+    organisation, chargebee_subscription
+):
     # Given
     organisation = Organisation.objects.create(name="Test org")
-    Subscription.objects.create(
-        organisation=organisation, cancellation_date=datetime.now()
-    )
+    chargebee_subscription.cancellation_date = datetime.now()
+    chargebee_subscription.save()
+
     # Then
     assert organisation.is_paid is False
 
@@ -295,3 +292,45 @@ def test_subscription_get_subscription_metadata_for_trial():
     assert subscription_metadata.seats == max_seats
     assert subscription_metadata.api_calls == max_api_calls
     assert subscription_metadata.projects is None
+
+
+def test_subscription_add_single_seat_calls_correct_chargebee_method_for_upgradable_plan(
+    mocker, settings
+):
+    # Given
+    settings.AUTO_SEAT_UPGRADE_PLANS = ["scale-up"]
+
+    subscription_id = "subscription-id"
+    subscription = Subscription(subscription_id=subscription_id, plan="scale-up")
+
+    mocked_add_single_seat = mocker.patch(
+        "organisations.models.add_single_seat", autospec=True
+    )
+    # When
+    subscription.add_single_seat()
+
+    # Then
+    mocked_add_single_seat.assert_called_once_with(subscription_id)
+
+
+def test_subscription_add_single_seat_raises_error_for_non_upgradable_plan(
+    mocker, settings
+):
+    # Given
+    settings.AUTO_SEAT_UPGRADE_PLANS = ["scale-up"]
+
+    subscription_id = "subscription-id"
+    subscription = Subscription(
+        subscription_id=subscription_id, plan="not-a-scale-up-plan"
+    )
+
+    mocked_add_single_seat = mocker.patch(
+        "organisations.models.add_single_seat", autospec=True
+    )
+
+    # When
+    with pytest.raises(SubscriptionDoesNotSupportSeatUpgrade):
+        subscription.add_single_seat()
+
+    # and add_single_seat was not called
+    mocked_add_single_seat.assert_not_called()

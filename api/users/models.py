@@ -44,6 +44,12 @@ logger = logging.getLogger(__name__)
 mailer_lite = MailerLite()
 
 
+class SignUpType(models.TextChoices):
+    NO_INVITE = "NO_INVITE"
+    INVITE_EMAIL = "INVITE_EMAIL"
+    INVITE_LINK = "INVITE_LINK"
+
+
 class UserManager(BaseUserManager):
     """Define a model manager for User model with no username field."""
 
@@ -97,9 +103,12 @@ class FFAdminUser(LifecycleModel, AbstractUser):
         default=False,
         help_text="Determines whether the user has agreed to receive marketing mails",
     )
+    sign_up_type = models.CharField(
+        choices=SignUpType.choices, max_length=100, blank=True, null=True
+    )
 
     USERNAME_FIELD = "email"
-    REQUIRED_FIELDS = ["first_name", "last_name"]
+    REQUIRED_FIELDS = ["first_name", "last_name", "sign_up_type"]
 
     class Meta:
         ordering = ["id"]
@@ -126,6 +135,10 @@ class FFAdminUser(LifecycleModel, AbstractUser):
     def full_name(self):
         return self.get_full_name()
 
+    @property
+    def email_domain(self):
+        return self.email.split("@")[1]
+
     def get_full_name(self):
         if not self.first_name:
             return None
@@ -143,6 +156,11 @@ class FFAdminUser(LifecycleModel, AbstractUser):
 
     def join_organisation_from_invite(self, invite: "AbstractBaseInviteModel"):
         organisation = invite.organisation
+        susbcription_metadata = organisation.subscription.get_subscription_metadata()
+
+        if invite.organisation.num_seats >= susbcription_metadata.seats:
+            organisation.subscription.add_single_seat()
+
         self.add_organisation(organisation, role=OrganisationRole(invite.role))
 
     def is_organisation_admin(self, organisation):
@@ -343,7 +361,7 @@ class FFAdminUser(LifecycleModel, AbstractUser):
         if self.is_organisation_admin(organisation):
             return True
 
-        return (
+        return permission_key is not None and (
             UserOrganisationPermission.objects.filter(
                 user=self, organisation=organisation, permissions__key=permission_key
             ).exists()
@@ -406,18 +424,14 @@ class UserPermissionGroup(models.Model):
         unique_together = ("organisation", "external_id")
 
     def add_users_by_id(self, user_ids: list):
-        users_to_add = []
-        for user_id in user_ids:
-            try:
-                user = FFAdminUser.objects.get(
-                    id=user_id, organisations=self.organisation
-                )
-            except FFAdminUser.DoesNotExist:
-                # re-raise exception with useful error message
-                raise FFAdminUser.DoesNotExist(
-                    "User %d does not exist in this organisation" % user_id
-                )
-            users_to_add.append(user)
+        users_to_add = list(
+            FFAdminUser.objects.filter(id__in=user_ids, organisations=self.organisation)
+        )
+        if len(user_ids) != len(users_to_add):
+            missing_ids = set(users_to_add).difference({u.id for u in users_to_add})
+            raise FFAdminUser.DoesNotExist(
+                "Users %s do not exist in this organisation" % ", ".join(missing_ids)
+            )
         self.users.add(*users_to_add)
 
     def remove_users_by_id(self, user_ids: list):

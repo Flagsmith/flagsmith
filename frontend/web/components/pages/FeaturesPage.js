@@ -125,7 +125,7 @@ const FeaturesPage = class extends Component {
                                                             View and manage
                                                             {' '}
                                                             <Tooltip
-                                                              title={<ButtonLink buttonText="feature flags" />}
+                                                                title={<ButtonLink>feature flags</ButtonLink>}
                                                               place="right"
                                                             >
                                                                 {Constants.strings.FEATURE_FLAG_DESCRIPTION}
@@ -135,7 +135,7 @@ const FeaturesPage = class extends Component {
                                                             {' '}
                                                             {' '}
                                                             <Tooltip
-                                                              title={<ButtonLink buttonText="remote config" />}
+                                                                title={<ButtonLink>remote config</ButtonLink>}
                                                               place="right"
                                                             >
                                                                 {Constants.strings.REMOTE_CONFIG_DESCRIPTION}

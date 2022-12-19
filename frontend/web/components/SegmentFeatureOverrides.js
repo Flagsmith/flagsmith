@@ -1,7 +1,6 @@
 // import propTypes from 'prop-types';
 import React, { Component } from 'react';
 import { SortableContainer, SortableElement } from 'react-sortable-hoc';
-import _data from '../../common/data/base/_data';
 import ProjectStore from '../../common/stores/project-store';
 import ValueEditor from './ValueEditor';
 import VariationOptions from './mv/VariationOptions';
@@ -236,7 +235,6 @@ class TheComponent extends Component {
     constructor(props) {
         super(props);
         this.state = {};
-        AppActions.getSegments(props.projectId, props.environmentId);
     }
 
     addItem = () => {
@@ -319,6 +317,7 @@ class TheComponent extends Component {
             },
         )
             .map(({ name: label, id: value }) => ({ value, label }));
+        const visibleValues = value && value.filter((v)=>!v.toRemove);
         return (
             <div>
 
@@ -344,7 +343,7 @@ class TheComponent extends Component {
                             />
                         </Flex>
                     )}
-                    {value && !!value.length && (
+                    {visibleValues && !!visibleValues.length && (
                         <div style={isLoading ? { opacity: 0.5 } : null} className="mt-4 overflow-visible">
                             <Row className="mb-2">
                                 <div

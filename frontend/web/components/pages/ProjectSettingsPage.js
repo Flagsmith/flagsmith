@@ -74,6 +74,13 @@ const ProjectSettingsPage = class extends Component {
         });
     };
 
+    toggleCaseSensitivity = (project, editProject) => {
+        editProject({
+            ...project,
+            only_allow_lower_case_feature_names: !project.only_allow_lower_case_feature_names,
+        });
+    };
+
     migrate = () => {
         AppActions.migrateProject(this.props.match.params.projectId);
     }
@@ -135,7 +142,6 @@ const ProjectSettingsPage = class extends Component {
                                                 </div>
                                             </div>
                                         </FormGroup>
-                                        {Utils.getFlagsmithHasFeature('prevent_flag_defaults') && (
                                             <FormGroup className="mt-4">
                                                 <h3>Prevent flag defaults</h3>
                                                 <div className="row">
@@ -152,8 +158,28 @@ const ProjectSettingsPage = class extends Component {
                                                     </div>
                                                 </div>
                                             </FormGroup>
-                                        )}
-                                        {!Utils.getIsEdge() && this.props.hasFeature('edge_migrator') && (
+                                        {
+                                            Utils.getFlagsmithHasFeature("case_sensitive_flags") && (
+                                                <FormGroup className="mt-4">
+                                                    <h3>Case sensitive features</h3>
+                                                    <div className="row">
+                                                        <div className="col-md-10">
+                                                            <p>
+                                                                By default, features are lower case in order to prevent human error. Enabling this will allow you to use upper case characters when creating features.
+                                                            </p>
+                                                        </div>
+                                                        <div className="col-md-2 text-right">
+                                                            <Switch
+                                                                data-test="js-flag-case-sensitivity" disabled={isSaving} onChange={() => this.toggleCaseSensitivity(project, editProject)}
+                                                                checked={!project.only_allow_lower_case_feature_names}
+                                                            />
+                                                        </div>
+                                                    </div>
+                                                </FormGroup>
+                                            )
+                                        }
+
+                                        {!Utils.getIsEdge() && this.props.hasFeature('edge_identities') && (
                                             <FormGroup className="mt-4">
                                                 <h3>Global Edge API Opt in</h3>
                                                 <div className="row">

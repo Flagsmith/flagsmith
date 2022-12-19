@@ -54,9 +54,9 @@ module.exports = Object.assign({}, EventEmitter.prototype, {
         this.trigger(DEFAULT_CHANGE_EVENT);
     },
 
-    saved() {
+    saved(data) {
         this.isSaving = false;
-        this.trigger(DEFAULT_SAVED_EVENT);
+        this.trigger(DEFAULT_SAVED_EVENT, data);
         this.trigger(DEFAULT_CHANGE_EVENT);
     },
 
