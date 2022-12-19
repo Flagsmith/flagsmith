@@ -30,8 +30,9 @@ export type Req = {
   }
   getIdentities: PagedRequest<{
     environmentId: string
+    pageType?: "NEXT" | "PREVIOUS"
     search?:string
-    pages?: string[] // this is needed for edge since it returns no paging info other than a key
+    pages?: (string|undefined)[] // this is needed for edge since it returns no paging info other than a key
     isEdge: boolean
   }>
   // END OF TYPES

@@ -11,6 +11,7 @@ import useSearchThrottle from "common/useSearchThrottle";
 import {Req} from "common/types/requests";
 import {Identity} from "common/types/responses";
 
+const CodeHelp = require('../CodeHelp');
 import CreateUserModal from '../modals/CreateUser';
 import RemoveIcon from '../RemoveIcon';
 const PanelSearch = require('../PanelSearch');
@@ -30,12 +31,14 @@ const Utils = require("common/utils/utils")
 const UsersPage: FC<UsersPageType> = (props) => {
     const [page, setPage] = useState<{
         number:number,
+        pageType: Req['getIdentities']['pageType'],
         pages:Req['getIdentities']['pages']
-    }>({number:1, pages:undefined});
+    }>({number:1, pageType:undefined, pages:undefined});
 
     const {searchInput, search, setSearchInput} = useSearchThrottle(Utils.fromParam().search, () => {
         setPage({
             number: 1,
+            pageType: undefined,
             pages: undefined
         });
     });
@@ -45,6 +48,8 @@ const UsersPage: FC<UsersPageType> = (props) => {
     const { data:identities, isLoading } = useGetIdentitiesQuery({
         pages: page.pages,
         page: page.number,
+        search,
+        pageType: page.pageType,
         page_size: 10,
         environmentId:props.match.params.environmentId,
         isEdge
@@ -136,23 +141,26 @@ const UsersPage: FC<UsersPageType> = (props) => {
                                                 showExactFilter
                                                 nextPage={() => {
                                                     setPage({
-                                                        number:page.number-1,
+                                                        number:page.number+1,
+                                                        pageType: 'NEXT',
                                                         pages: identities?.last_evaluated_key? (page.pages||[]).concat([identities?.last_evaluated_key]) : undefined
                                                     })
                                                 }}
                                                 prevPage={() => {
                                                     setPage({
                                                         number:page.number-1,
+                                                        pageType: 'PREVIOUS',
                                                         pages: page.pages? Utils.removeElementFromArray(page.pages, page.pages.length-1) : undefined
                                                     })
                                                 }}
                                                 goToPage={(newPage:number) => {
                                                     setPage({
                                                         number:newPage,
+                                                        pageType: undefined,
                                                         pages: page.pages? Utils.removeElementFromArray(page.pages, page.pages.length-1) : undefined
                                                     })
                                                 }}
-                                                renderRow={({ id, identifier }:Identity, index:number) => (permission ? (
+                                                renderRow={({ id, identifier, identity_uuid }:Identity, index:number) => (permission ? (
                                                     <Row
                                                         space className="list-item clickable" key={id}
                                                         data-test={`user-item-${index}`}
@@ -172,7 +180,13 @@ const UsersPage: FC<UsersPageType> = (props) => {
                                                                 id="remove-feature"
                                                                 className="btn btn--with-icon"
                                                                 type="button"
-                                                                onClick={() => removeIdentity(id, identifier)}
+                                                                onClick={() => {
+                                                                    if (id) {
+                                                                        removeIdentity(id, identifier)
+                                                                    } else if (identity_uuid) {
+                                                                        removeIdentity(identity_uuid, identifier)
+                                                                    }
+                                                                }}
                                                             >
                                                                 <RemoveIcon/>
                                                             </button>
@@ -216,7 +230,7 @@ const UsersPage: FC<UsersPageType> = (props) => {
                                                     <CodeHelp
                                                         showInitially
                                                         title="Creating users and getting their feature settings"
-                                                        snippets={Constants.codeHelp.CREATE_USER(props.match.params.environmentId, identities && identities[0] && identities[0].identifier)}
+                                                        snippets={Constants.codeHelp.CREATE_USER(props.match.params.environmentId, identities?.results?.[0]?.identifier)}
                                                     />
                                                 </div>
                                             </div>
