@@ -28,8 +28,9 @@ module.exports = Object.assign({}, require('./base/_utils'), {
     getViewIdentitiesPermission() {
         if (Utils.getFlagsmithHasFeature("view_identities_permission")){
             return "VIEW_IDENTITIES"
+        } else {
+            return "MANAGE_IDENTITIES"
         }
-
     },
     getManageFeaturePermission(isChangeRequest, isUser) {
         if (isUser && Utils.getFlagsmithHasFeature("view_identities_permission")){
