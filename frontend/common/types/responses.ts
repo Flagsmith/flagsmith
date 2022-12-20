@@ -7,6 +7,7 @@ export type PagedResponse<T> = {
   results: T[];
 }
 export type FlagsmithValue = string | number | boolean | null
+
 export type SegmentRule = {
   type: string;
   rules: SegmentRule[];
@@ -16,6 +17,7 @@ export type SegmentRule = {
     value: FlagsmithValue;
   }[];
 }
+
 export type Segment = {
   id: number;
   rules: SegmentRule[];
@@ -25,6 +27,7 @@ export type Segment = {
   project: number;
   feature?: number;
 }
+
 export type Environment = {
   id: number;
   name: string;
@@ -34,6 +37,7 @@ export type Environment = {
   minimum_change_request_approvals?: number;
   allow_client_traits: boolean;
 }
+
 export type Project =  {
   id: number;
   uuid: string;
@@ -70,6 +74,9 @@ export type UserPermission = {
   admin: boolean
   id:number
 }
+export type GroupPermission = Omit<UserPermission,"user"> & {
+  group: UserGroup
+}
 
 export type AuditLogItem = {
   id: number;
@@ -89,6 +96,11 @@ export type Identity = {
   identity_uuid?: string
 }
 
+export type AvailablePermission = {
+  key: string,
+  description: string
+}
+
 export type Res = {
   segments: PagedResponse<Segment>;
   segment: {id:string};
@@ -96,6 +108,6 @@ export type Res = {
   identity: {id:string} //todo: we don't consider this until we migrate identity-store
   identities: EdgePagedResponse<Identity>
   permission: Record<string, boolean>
-  availablePermissions: {id:string}
+  availablePermissions: AvailablePermission[]
   // END OF TYPES
 }

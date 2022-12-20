@@ -1,106 +1,120 @@
-import React, {PureComponent, FC, Component, useEffect, useState} from 'react';
-import Switch from './Switch';
-import Tabs from './base/forms/Tabs';
-import TabItem from './base/forms/TabItem';
-import _data from '../../common/data/base/_data';
-import UserGroupList from './UserGroupList';
-import InfoMessage from './InfoMessage';
-import {PermissionLevel} from "../../common/types/requests";
-import {RouterChildContext} from "react-router";
-import Button, {ButtonLink} from "./base/forms/Button";
-import {User, UserGroup, UserPermission} from "../../common/types/responses";
-const OrganisationProvider = require('../../common/providers/OrganisationProvider');
-const AvailablePermissionsProvider = require('../../common/providers/AvailablePermissionsProvider');
-const AppActions = require('../../common/dispatcher/app-actions');
-const AccountStore = require('../../common/stores/account-store');
-const Format = require('../../common/utils/format');
-const Project = require('../../common/project');
+import React, {FC, useEffect, useState} from 'react';
+import {find} from 'lodash'
+import _data from 'common/data/base/_data';
+import {AvailablePermission, GroupPermission, User, UserGroup, UserPermission} from "common/types/responses";
+const OrganisationProvider = require('common/providers/OrganisationProvider');
+const AppActions = require('common/dispatcher/app-actions');
+const Utils = require('common/utils/utils');
+const AccountStore = require('common/stores/account-store');
+const Format = require('common/utils/format');
+const Project = require('common/project');
 const PanelSearch = require('./PanelSearch');
-
-class _EditPermissionsModal extends Component {
-  static displayName = 'EditPermissionsModal';
-
-  static propTypes = {};
-
-  constructor(props) {
-      super(props);
-      let parentGet = Promise.resolve();
-      if (this.props.parentLevel) {
-          const parentUrl = props.isGroup ? `${props.parentLevel}s/${props.parentId}/user-group-permissions/` : `${props.parentLevel}s/${props.parentId}/user-permissions/`;
-
-          parentGet = _data.get(`${Project.api}${parentUrl}`)
-              .then((results) => {
-                  let entityPermissions = props.isGroup ? _.find(results, r => r.group.id === props.group.id) : _.find(results, r => r.user.id === props.user.id);
-                  if (!entityPermissions) {
-                      entityPermissions = { admin: false, permissions: [] };
-                  }
-                  if (this.props.user) {
-                      entityPermissions.user = this.props.user.id;
-                  }
-                  if (this.props.group) {
-                      entityPermissions.group = this.props.group.id;
-                  }
-
-                  if (!entityPermissions.admin && !(entityPermissions.permissions.find(v => v === (`VIEW_${this.props.parentLevel.toUpperCase()}`)))) {
-                      this.state.parentError = true;
-                  }
-              });
-      }
-      parentGet.then(() => {
-          const url = props.isGroup ? `${props.level}s/${props.id}/user-group-permissions/` : `${props.level}s/${props.id}/user-permissions/`;
-          _data.get(`${Project.api}${url}`)
-              .then((results) => {
-                  let entityPermissions = props.isGroup ? _.find(results, r => r.group.id === props.group.id) : _.find(results, r => r.user.id === props.user.id);
-                  if (!entityPermissions) {
-                      entityPermissions = { admin: false, permissions: [] };
-                  }
-                  if (this.props.user) {
-                      entityPermissions.user = this.props.user.id;
-                  }
-                  if (this.props.group) {
-                      entityPermissions.group = this.props.group.id;
-                  }
-                  this.setState({ entityPermissions });
-              });
-      }).catch(() => {
-          this.setState({ parentError: true });
-      });
-
-      this.state = {};
-  }
-
-
-  render() {
-      const {
-          props: {
-              level,
-          },
-          state: {
-              entityPermissions,
-              isSaving,
-          },
-      } = this;
-
-      return (
-
-      );
-  }
-}
+import Button, {ButtonLink} from "./base/forms/Button";
+import InfoMessage from './InfoMessage';
+import Switch from './Switch';
+import TabItem from './base/forms/TabItem';
+import Tabs from './base/forms/Tabs';
+import UserGroupList from './UserGroupList';
+import {PermissionLevel} from "common/types/requests";
+import {RouterChildContext} from "react-router";
+import {useGetAvailablePermissionsQuery} from "../../common/services/useAvailablePermissions";
 
 
 type EditPermissionModalType = {
-    level: PermissionLevel
-    isGroup?:boolean
+    group?: UserGroup
     id: string
+    isGroup?: boolean
+    level: PermissionLevel
+    name: string
+    onSave: () => void
+    parentId?: string
+    parentLevel?: string
+    parentSettingsLink?: string
+    permissions?: UserPermission[]
+    push: (route: string) => void
+    user?:User
 }
 
-const _EditPermissionModal: FC<EditPermissionModalType> = ({level, isGroup}) => {
-    const [entityPermissions, setEntityPermissions] = useState();
+type EditPermissionsType = Omit<EditPermissionModalType, "onSave"> & {
+    onSaveGroup?: () => void
+    onSaveUser: () => void
+    router: RouterChildContext['router']
+    tabClassName?: string
+}
+type EntityPermissions = Omit<UserPermission,"user"|"id"|"group"|"isGroup"> & {
+    id?:number
+    user?:number
+};
 
+const _EditPermissionsModal: FC<EditPermissionModalType> = (props) => {
+    const [entityPermissions, setEntityPermissions] = useState<EntityPermissions>({ admin: false, permissions: [] });
+    const [parentError, setParentError] = useState(false);
+    const [saving, setSaving] = useState(false);
+    const [error, setError] = useState(false);
+    const {
+        group,
+        id,
+        isGroup,
+        level,
+        name,
+        onSave,
+        parentId,
+        parentLevel,
+        parentSettingsLink,
+        push,
+        user,
+    } = props
+
+    const {data:permissions} = useGetAvailablePermissionsQuery({level})
+
+
+    useEffect(() => {
+        let parentGet = Promise.resolve();
+        const processResults = (results:(UserPermission&GroupPermission)[])=> {
+            let entityPermissions: Omit<EntityPermissions,"user"|"group">&{user?:any,group?:any} = isGroup ?
+                find(results, r => r.group.id === group?.id)!:
+                find(results, r => r.user?.id === user?.id)!;
+
+            if (!entityPermissions) {
+                entityPermissions = {admin: false, permissions: []};
+            }
+            if (user) {
+                entityPermissions.user = user.id;
+            }
+            if (group) {
+                entityPermissions.group = group.id;
+            }
+            return entityPermissions
+        }
+        if (parentLevel) {
+            const parentUrl = isGroup ? `${parentLevel}s/${parentId}/user-group-permissions/` : `${parentLevel}s/${parentId}/user-permissions/`;
+            parentGet = _data.get(`${Project.api}${parentUrl}`)
+                .then((results:(UserPermission&GroupPermission)[]) => {
+                    let entityPermissions = processResults(results)
+                    if (!entityPermissions.admin && !(entityPermissions.permissions.find(v => v === (`VIEW_${parentLevel.toUpperCase()}`)))) {
+                        // e.g. trying to set an environment permission but don't have view_projec
+                        setParentError(true);
+                    } else {
+                        setParentError(false)
+                    }
+                });
+        }
+        parentGet.then(() => {
+            const url = isGroup ? `${level}s/${id}/user-group-permissions/` : `${level}s/${id}/user-permissions/`;
+            _data.get(`${Project.api}${url}`)
+                .then((results:(UserPermission&GroupPermission)[]) => {
+                    // @ts-ignore
+                    let entityPermissions = processResults(results)
+                    setEntityPermissions(entityPermissions);
+                });
+        }).catch(() => {
+            setParentError(true);
+        });
+    }, [])
 
     const admin = () => entityPermissions && entityPermissions.admin
 
-    const hasPermission = (key) => {
+    const hasPermission = (key:string) => {
         if (admin()) return true;
         return entityPermissions.permissions.includes(key);
     }
@@ -110,180 +124,182 @@ const _EditPermissionModal: FC<EditPermissionModalType> = ({level, isGroup}) => 
     }
 
     const save = () => {
-        const id = typeof entityPermissions.id === 'undefined' ? '' : this.state.entityPermissions.id;
-        const url = isGroup ? `${this.props.level}s/${this.props.id}/user-group-permissions/${id}`
-            : `${this.props.level}s/${this.props.id}/user-permissions/${id}`;
-        this.setState({ isSaving: true });
-        const action = id ? 'put' : 'post';
-        _data[action](`${Project.api}${url}${id && '/'}`, this.state.entityPermissions)
+        const entityId = typeof entityPermissions.id === 'undefined' ? '' : entityPermissions.id;
+        const url = isGroup ?
+            `${level}s/${id}/user-group-permissions/${entityId}` :
+            `${level}s/${id}/user-permissions/${entityId}`;
+        setSaving(true)
+        const action = entityId ? 'put' : 'post';
+        _data[action](`${Project.api}${url}${entityId && '/'}`, entityPermissions)
             .then(() => {
-                this.props.onSave && this.props.onSave();
-                this.close();
+                onSave && onSave();
+                close();
             })
             .catch((e) => {
-                this.setState({ isSaving: false, error: e });
+                setSaving(false)
+                setError(e);
             });
     }
 
-    togglePermission = (key) => {
-        const index = this.state.entityPermissions.permissions.indexOf(key);
+    const togglePermission = (key:string) => {
+        const newEntityPermissions = {...entityPermissions}
+        const index = newEntityPermissions.permissions.indexOf(key);
         if (index === -1) {
-            this.state.entityPermissions.permissions.push(key);
+            newEntityPermissions.permissions.push(key);
         } else {
-            this.state.entityPermissions.permissions.splice(index, 1);
+            newEntityPermissions.permissions.splice(index, 1);
         }
-        this.forceUpdate();
+        setEntityPermissions(newEntityPermissions)
     }
 
-    toggleAdmin = (p) => {
-        this.state.entityPermissions.admin = !this.state.entityPermissions.admin;
-        this.forceUpdate();
+    const toggleAdmin = () => {
+        setEntityPermissions({
+            ...entityPermissions,
+            admin: !entityPermissions.admin
+        })
     }
 
 
-    const isAdmin = this.admin();
+    const isAdmin = admin();
     const hasRbacPermission = Utils.getPlansPermission('RBAC');
 
+    return  !permissions || !entityPermissions ? <div className="text-center"><Loader/></div> : (
+            <div>
+                <div className="list-item">
+                    {level !== 'organisation' && (
+                        <Row>
+                            <Flex>
+                                <strong>
+                                    Administrator
+                                </strong>
+                                <div className="list-item-footer faint">
+                                    {
+                                        hasRbacPermission ? `Full View and Write permissions for the given ${Format.camelCase(level)}.`
+                                            : (
+                                                <span>
+                                                    Role-based access is not available on our Free Plan. Please
+                                                    visit <a href="https://flagsmith.com/pricing/">our Pricing
+                                                    Page</a> for more information on our licensing options.
+                                                </span>
+                                            )
+                                    }
+                                </div>
+                            </Flex>
+                            <Switch disabled={!hasRbacPermission} onChange={toggleAdmin}
+                                    checked={isAdmin}
+                            />
+                        </Row>
+                    )}
 
-    return (
-        <AvailablePermissionsProvider level={level}>
-            {(props) => {
-                const { permissions, isLoading } = props;
-                return (isLoading || !permissions || !entityPermissions ? <div className="text-center"><Loader/></div>
-                    : (
-                        <div>
-                            <div className="list-item">
-                                {this.props.level !== 'organisation' && (
+                </div>
+                <div className="panel--grey">
+                    <PanelSearch
+                        title="Permissions"
+                        className="no-pad"
+                        items={permissions}
+                        renderRow={(p:AvailablePermission) => {
+                            const levelUpperCase = level.toUpperCase();
+                            const disabled = level !== 'organisation' && p.key !== `VIEW_${levelUpperCase}` && !hasPermission(`VIEW_${levelUpperCase}`);
+                            return (
+                                <div key={p.key} style={admin() ? {opacity: 0.5} : undefined}
+                                     className="list-item"
+                                >
                                     <Row>
                                         <Flex>
-                                            <bold>
-                                                Administrator
-                                            </bold>
+                                            <strong>
+                                                {Format.enumeration.get(p.key)}
+                                            </strong>
                                             <div className="list-item-footer faint">
-                                                {
-                                                    hasRbacPermission ? `Full View and Write permissions for the given ${Format.camelCase(this.props.level)}.`
-                                                        : (
-                                                            <span>
-                                                                Role-based access is not available on our Free Plan. Please visit <a href="https://flagsmith.com/pricing/">our Pricing Page</a> for more information on our licensing options.
-                                                            </span>
-                                                        )
-                                                }
+                                                {p.description}
                                             </div>
                                         </Flex>
-                                        <Switch disabled={!hasRbacPermission} onChange={this.toggleAdmin} checked={isAdmin}/>
+                                        <Switch onChange={() => togglePermission(p.key)}
+                                                disabled={disabled || admin() || !hasRbacPermission}
+                                                checked={!disabled && hasPermission(p.key)}
+                                        />
                                     </Row>
-                                )}
+                                </div>
+                            );
+                        }}
+                    />
+                </div>
 
-                            </div>
-                            <div className="panel--grey">
-                                <PanelSearch
-                                    title="Permissions"
-                                    className="no-pad"
-                                    items={permissions}
-                                    renderRow={(p) => {
-                                        const levelUpperCase = this.props.level.toUpperCase();
-                                        const disabled = this.props.level !== 'organisation' && p.key !== `VIEW_${levelUpperCase}` && !this.hasPermission(`VIEW_${levelUpperCase}`);
-                                        return (
-                                            <div key={p.key} style={this.admin() ? { opacity: 0.5 } : null} className="list-item">
-                                                <Row>
-                                                    <Flex>
-                                                        <bold>
-                                                            {Format.enumeration.get(p.key)}
-                                                        </bold>
-                                                        <div className="list-item-footer faint">
-                                                            {p.description}
-                                                        </div>
-                                                    </Flex>
-                                                    <Switch onChange={() => this.togglePermission(p.key)} disabled={disabled || this.admin() || !hasRbacPermission} checked={!disabled && this.hasPermission(p.key)}/>
-                                                </Row>
-                                            </div>
-                                        );
-                                    }}
-                                />
-                            </div>
+                <p className="text-right mt-2">
+                    This will edit the permissions
+                    for <strong>{isGroup ? `the ${name} group` : ` ${name}`}</strong>.
+                </p>
 
-                            <p className="text-right mt-2">
-                                This will edit the permissions for <bold>{this.props.isGroup ? `the ${this.props.name} group` : ` ${this.props.name}`}</bold>.
-                            </p>
-
-                            {
-                                this.state.parentError && (
-                                    <InfoMessage>
-                                        The selected {this.props.isGroup ? 'group' : 'user'} does not have explicit user permissions to view this {this.props.parentLevel}. If the user does not belong to any groups with this permissions, you may have to adjust their permissions in <a onClick={() => {
-                                        this.props.push(this.props.parentSettingsLink);
-                                        closeModal();
-                                    }}
-                                    ><strong>{this.props.parentLevel} settings</strong>
-                                    </a>.
-                                    </InfoMessage>
-                                )
-                            }
-                            <div className="text-right">
-                                <Button
-                                    onClick={this.save} data-test="update-feature-btn" id="update-feature-btn"
-                                    disabled={isSaving || !hasRbacPermission}
-                                >
-                                    {isSaving ? 'Saving' : 'Save'}
-                                </Button>
-                            </div>
-                        </div>
-                    ));
-            } }
-        </AvailablePermissionsProvider>
-    )
+                {
+                    parentError && (
+                        <InfoMessage>
+                            The selected {isGroup ? 'group' : 'user'} does not have explicit user permissions to
+                            view this {parentLevel}. If the user does not belong to any groups with this
+                            permissions, you may have to adjust their permissions in <a onClick={() => {
+                            push(parentSettingsLink!);
+                            closeModal();
+                        }}
+                        ><strong>{parentLevel} settings</strong>
+                        </a>.
+                        </InfoMessage>
+                    )
+                }
+                <div className="text-right">
+                    <Button
+                        onClick={save} data-test="update-feature-btn" id="update-feature-btn"
+                        disabled={saving || !hasRbacPermission}
+                    >
+                        {saving ? 'Saving' : 'Save'}
+                    </Button>
+                </div>
+            </div>
+        );
 }
-
-export default EditPermissionModal
-
 
 export const EditPermissionsModal = ConfigProvider(_EditPermissionsModal);
 
-type EditPermissionsType = {
-    id: string
-    isGroup?:boolean
-    parentId?:string
-    tabClassName?:string
-    parentLevel?:string
-    onSaveGroup?: ()=>void
-    onSaveUser: ()=>void
-    permissions?: UserPermission[]
-    level: PermissionLevel
-    parentSettingsLink?: string
-    group?: {}
-}
-
 const EditPermissions: FC<EditPermissionsType> = (props) => {
+    const {
+        id,
+        level,
+        onSaveGroup,
+        onSaveUser,
+        parentId,
+        parentLevel,
+        parentSettingsLink,
+        permissions,
+        router,
+        tabClassName,
+    } = props;
     const [tab, setTab] = useState();
-
-    useEffect(()=>{
+    useEffect(() => {
         AppActions.getGroups(AccountStore.getOrganisation().id);
-    },[])
-    const editUserPermissions = (user:User) => {
-        openModal(`Edit ${Format.camelCase(props.level)} Permissions`, <EditPermissionsModal
+    }, [])
+    const editUserPermissions = (user: User) => {
+        openModal(`Edit ${Format.camelCase(level)} Permissions`, <EditPermissionsModal
             name={`${user.first_name} ${user.last_name}`}
-            id={props.id}
-            onSave={props.onSaveUser}
-            level={props.level}
-            parentId={props.parentId}
-            parentLevel={props.parentLevel}
-            parentSettingsLink={props.parentSettingsLink}
+            id={id}
+            onSave={onSaveUser}
+            level={level}
+            parentId={parentId}
+            parentLevel={parentLevel}
+            parentSettingsLink={parentSettingsLink}
             user={user}
-            push={props.router.history.push}
+            push={router.history.push}
         />);
     }
 
-    const editGroupPermissions = (group:UserGroup) => {
-        openModal(`Edit ${Format.camelCase(props.level)} Permissions`, <EditPermissionsModal
+    const editGroupPermissions = (group: UserGroup) => {
+        openModal(`Edit ${Format.camelCase(level)} Permissions`, <EditPermissionsModal
             name={`${group.name}`}
-            id={props.id}
+            id={id}
             isGroup
-            onSave={props.onSaveGroup}
-            level={props.level}
-            parentId={props.parentId}
-            parentLevel={props.parentLevel}
-            parentSettingsLink={props.parentSettingsLink}
+            onSave={onSaveGroup}
+            level={level}
+            parentId={parentId}
+            parentLevel={parentLevel}
+            parentSettingsLink={parentSettingsLink}
             group={group}
-            push={props.router.history.push}
+            push={router.history.push}
         />);
     }
 
@@ -292,34 +308,42 @@ const EditPermissions: FC<EditPermissionsType> = (props) => {
             <p>
                 Flagsmith lets you manage fine-grained permissions for your projects and environments.
                 {' '}
-                <ButtonLink href="https://docs.flagsmith.com/advanced-use/permissions" target="_blank">Learn about User Roles.</ButtonLink>
+                <ButtonLink href="https://docs.flagsmith.com/advanced-use/permissions" target="_blank">Learn about User
+                    Roles.</ButtonLink>
             </p>
             <Tabs value={tab} onChange={setTab}>
                 <TabItem tabLabel="Users">
                     <OrganisationProvider>
-                        {({ isLoading, users }:{isLoading:boolean, users?:User[]}) => (
+                        {({isLoading, users}: { isLoading: boolean, users?: User[] }) => (
                             <div className="mt-4">
                                 {isLoading && (!users?.length) && <div className="centered-container"><Loader/></div>}
                                 {!!users?.length && (
                                     <div>
                                         <FormGroup className="panel no-pad pl-2 pr-2 panel--nested">
-                                            <div className={props.tabClassName}>
+                                            <div className={tabClassName}>
                                                 <PanelSearch
                                                     id="org-members-list"
                                                     title=""
                                                     className="panel--transparent"
                                                     items={users}
-                                                    renderRow={({ id, first_name, last_name, email, role }:User) => {
+                                                    renderRow={({id, first_name, last_name, email, role}: User) => {
                                                         const onClick = () => {
                                                             if (role !== 'ADMIN') {
-                                                                editUserPermissions({ id, first_name, last_name, email, role });
+                                                                editUserPermissions({
+                                                                    id,
+                                                                    first_name,
+                                                                    last_name,
+                                                                    email,
+                                                                    role
+                                                                });
                                                             }
                                                         };
-                                                        const matchingPermissions = props.permissions?.find(v => v.user.id === id);
+                                                        const matchingPermissions = permissions?.find(v => v.user.id === id);
 
                                                         return (
                                                             <Row
-                                                                onClick={onClick} space className={`list-item${role === 'ADMIN' ? '' : ' clickable'}`}
+                                                                onClick={onClick} space
+                                                                className={`list-item${role === 'ADMIN' ? '' : ' clickable'}`}
                                                                 key={id}
                                                             >
                                                                 <div>
@@ -339,10 +363,12 @@ const EditPermissions: FC<EditPermissionsType> = (props) => {
                                                                 ) : (
                                                                     <div onClick={onClick} className="flex-row">
                                                                         <span className="mr-3">{
-                                                                            matchingPermissions && matchingPermissions.admin ? `${Format.camelCase(props.level)} Administrator` : 'Regular User'
+                                                                            matchingPermissions && matchingPermissions.admin ? `${Format.camelCase(level)} Administrator` : 'Regular User'
                                                                         }
                                                                         </span>
-                                                                        <span style={{ fontSize: 24 }} className="icon--primary ion ion-md-settings"/>
+                                                                        <span style={{fontSize: 24}}
+                                                                              className="icon--primary ion ion-md-settings"
+                                                                        />
                                                                     </div>
                                                                 )}
                                                             </Row>
@@ -353,7 +379,7 @@ const EditPermissions: FC<EditPermissionsType> = (props) => {
                                                             You have no users in this organisation.
                                                         </div>
                                                     )}
-                                                    filterRow={(item:User, search:string) => {
+                                                    filterRow={(item: User, search: string) => {
                                                         const strToSearch = `${item.first_name} ${item.last_name} ${item.email}`;
                                                         return strToSearch.toLowerCase().indexOf(search.toLowerCase()) !== -1;
                                                     }}
@@ -370,8 +396,10 @@ const EditPermissions: FC<EditPermissionsType> = (props) => {
                 </TabItem>
                 <TabItem tabLabel="Groups">
                     <FormGroup className="panel no-pad pl-2 mt-4 pr-2 panel--nested">
-                        <div className={props.tabClassName}>
-                            <UserGroupList noTitle orgId={AccountStore.getOrganisation().id} onClick={(group:UserGroup) => editGroupPermissions(group)}/>
+                        <div className={tabClassName}>
+                            <UserGroupList noTitle orgId={AccountStore.getOrganisation().id}
+                                           onClick={(group: UserGroup) => editGroupPermissions(group)}
+                            />
                         </div>
                     </FormGroup>
                 </TabItem>
@@ -380,4 +408,4 @@ const EditPermissions: FC<EditPermissionsType> = (props) => {
     )
 }
 
-export default ConfigProvider(EditPermissions);
+export default ConfigProvider(EditPermissions) as FC<Omit<EditPermissionsType, "router">>;
