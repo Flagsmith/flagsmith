@@ -1,8 +1,7 @@
 import React, {Component, useEffect, FC, useState} from 'react';
 import {RouterChildContext} from "react-router";
 import {Link} from "react-router-dom";
-
-const Permission = require("common/providers/Permission")
+import Permission from "common/providers/Permission";
 const AccountStore = require("common/stores/account-store")
 import {PermissionCallback} from "common/types";
 import Constants from 'common/constants';

@@ -35,5 +35,6 @@ export type Req = {
     pages?: (string|undefined)[] // this is needed for edge since it returns no paging info other than a key
     isEdge: boolean
   }>
+  getPermission: {id:string, level: string}
   // END OF TYPES
 }

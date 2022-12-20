@@ -76,5 +76,6 @@ export type Res = {
   auditLogs: PagedResponse<AuditLogItem>;
   identity: {id:string} //todo: we don't consider this until we migrate identity-store
   identities: EdgePagedResponse<Identity>
+  permission: Record<string, boolean>
   // END OF TYPES
 }

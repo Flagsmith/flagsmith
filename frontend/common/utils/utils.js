@@ -81,8 +81,8 @@ module.exports = Object.assign({}, require('./base/_utils'), {
         }
         return `${Project.api}environments/${environmentId}/identities/${userId}/traits/`;
     },
-    removeElementFromArray(array,index) {
-        return array.slice(0, index).concat(array.slice(index+1))
+    removeElementFromArray(array, index) {
+        return array.slice(0, index).concat(array.slice(index + 1));
     },
     findOperator(operator, value, operators) {
         const findAppended = `${value}`.includes(':') ? (operators || []).find((v) => {
