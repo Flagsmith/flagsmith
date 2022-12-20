@@ -59,7 +59,7 @@ const RegexTester: FC<RegexTesterType> = ({regex:defaultRegex, onChange}) => {
             />
             <InputGroup
                 id="regex"
-                title="Test input"
+                title="Test Input"
                 value={exampleText}
                 autoValidate
                 inputProps={{
