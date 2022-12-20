@@ -129,7 +129,8 @@ class InviteViewSet(
         subscription_metadata = organisation.subscription.get_subscription_metadata()
 
         if (
-            organisation.num_seats >= subscription_metadata.seats
+            len(settings.AUTO_SEAT_UPGRADE_PLANS) > 0
+            and organisation.num_seats >= subscription_metadata.seats
             and not organisation.subscription.can_auto_upgrade_seats
         ):
             raise SubscriptionDoesNotSupportSeatUpgrade()

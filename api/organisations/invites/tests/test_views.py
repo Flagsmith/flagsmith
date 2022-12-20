@@ -149,9 +149,15 @@ def test_create_invite_with_permission_groups(
 
 
 def test_create_invite_returns_400_if_seats_are_over(
-    admin_client, organisation, user_permission_group, admin_user, subscription
+    admin_client,
+    organisation,
+    user_permission_group,
+    admin_user,
+    subscription,
+    settings,
 ):
     # Given
+    settings.AUTO_SEAT_UPGRADE_PLANS = ["scale-up"]
     url = reverse(
         "api-v1:organisations:organisation-invites-list",
         args=[organisation.pk],
@@ -223,12 +229,13 @@ def test_join_organisation_returns_400_if_exceeds_plan_limit(
     test_user_client,
     organisation,
     admin_user,
-    mocker,
     invite_object,
     url,
     subscription,
+    settings,
 ):
     # Given
+    settings.AUTO_SEAT_UPGRADE_PLANS = ["scale-up"]
     url = reverse(url, args=[invite_object.hash])
 
     # When
