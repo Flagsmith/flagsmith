@@ -275,7 +275,6 @@ module.exports = Object.assign({}, require('./base/_utils'), {
                 type: 'bool',
                 boolean_value: val,
                 integer_value: null,
-                float_value: null,
                 string_value: null,
             };
         }
@@ -285,7 +284,6 @@ module.exports = Object.assign({}, require('./base/_utils'), {
                 type: 'int',
                 boolean_value: null,
                 integer_value: val,
-                float_value: val,
                 string_value: null,
             };
         }
@@ -294,7 +292,6 @@ module.exports = Object.assign({}, require('./base/_utils'), {
             type: 'unicode',
             boolean_value: null,
             integer_value: null,
-            float_value: null,
             string_value: value === null ? null : val || '',
         };
     },
