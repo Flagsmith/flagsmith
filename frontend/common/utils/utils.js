@@ -411,7 +411,7 @@ module.exports = Object.assign({}, require('./base/_utils'), {
         if (!Utils.getFlagsmithHasFeature('plan_based_access')) {
             return true;
         }
-        if (!plan || plan === 'free') {
+        if (!plan) {
             return false;
         }
         const date = AccountStore.getDate();
@@ -420,8 +420,8 @@ module.exports = Object.assign({}, require('./base/_utils'), {
             .valueOf() < cutOff.valueOf()) {
             return true;
         }
-        const isSideProjectOrGreater = !plan.includes('side-project');
-        const isScaleupOrGreater = !plan.includes('side-project') && !plan.includes('startup');
+        const isSideProjectOrGreater = !plan.includes('side-project') && !plan.includes("free");
+        const isScaleupOrGreater = !plan.includes('side-project') && !plan.includes("free") && !plan.includes('startup');
         switch (permission) {
             case 'FLAG_OWNERS': {
                 valid = isScaleupOrGreater;
