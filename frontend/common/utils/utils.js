@@ -260,7 +260,11 @@ module.exports = Object.assign({}, require('./base/_utils'), {
         }
 
 
-        return Utils.getTypedValue(typeof featureState.integer_value === 'number' ? featureState.integer_value : featureState.string_value || featureState.boolean_value);
+        return Utils.getTypedValue((
+            typeof featureState.integer_value === 'number' ||
+            typeof featureState.float_value === 'number'
+
+        ) ? featureState.float_value || featureState.integer_value : featureState.string_value || featureState.boolean_value);
     },
     valueToFeatureState(value) {
         const val = Utils.getTypedValue(value);
@@ -270,6 +274,7 @@ module.exports = Object.assign({}, require('./base/_utils'), {
                 type: 'bool',
                 boolean_value: val,
                 integer_value: null,
+                float_value: null,
                 string_value: null,
             };
         }
@@ -279,6 +284,7 @@ module.exports = Object.assign({}, require('./base/_utils'), {
                 type: 'int',
                 boolean_value: null,
                 integer_value: val,
+                float_value: val,
                 string_value: null,
             };
         }
@@ -287,6 +293,7 @@ module.exports = Object.assign({}, require('./base/_utils'), {
             type: 'unicode',
             boolean_value: null,
             integer_value: null,
+            float_value: null,
             string_value: value === null ? null : val || '',
         };
     },
@@ -342,8 +349,8 @@ module.exports = Object.assign({}, require('./base/_utils'), {
         if (typeof str !== 'string') {
             return str;
         }
-
-        const isNum = /^\d+$/.test(str);
+        const isFloat = /^[0-9]+[.]?[0-9]+$/.test(str);
+        const isNum = isFloat || /^\d+$/.test(str);
         if (isNum && parseInt(str) > Number.MAX_SAFE_INTEGER) {
             return `${str}`;
         }
