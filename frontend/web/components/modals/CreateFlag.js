@@ -65,7 +65,7 @@ const CreateFlag = class extends Component {
                         const matchingVariation = (this.props.multivariate_options || this.props.environmentVariations).find(e => e.multivariate_feature_option === v.id);
                         return {
                             ...v,
-                            default_percentage_allocation: matchingVariation && matchingVariation.percentage_allocation || 0,
+                            default_percentage_allocation: v.default_percentage_allocation || (matchingVariation && matchingVariation.percentage_allocation) || 0,
                         };
                     }),
                 });
