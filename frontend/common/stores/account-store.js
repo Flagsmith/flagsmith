@@ -1,4 +1,3 @@
-import PermissionsStore from './permissions-store';
 
 const BaseStore = require('./base/_store');
 const data = require('../data/base/_data');
@@ -285,11 +284,6 @@ const controller = {
             store.isDemo = false;
             store.model = user;
             store.organisation = null;
-            PermissionsStore.model = {
-                availablePermissions: {
-
-                },
-            };
             store.trigger('logout');
             API.reset();
         }

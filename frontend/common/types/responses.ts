@@ -7,6 +7,7 @@ export type PagedResponse<T> = {
   results: T[];
 }
 export type FlagsmithValue = string | number | boolean | null
+
 export type SegmentRule = {
   type: string;
   rules: SegmentRule[];
@@ -16,6 +17,7 @@ export type SegmentRule = {
     value: FlagsmithValue;
   }[];
 }
+
 export type Segment = {
   id: number;
   rules: SegmentRule[];
@@ -25,6 +27,7 @@ export type Segment = {
   project: number;
   feature?: number;
 }
+
 export type Environment = {
   id: number;
   name: string;
@@ -34,6 +37,7 @@ export type Environment = {
   minimum_change_request_approvals?: number;
   allow_client_traits: boolean;
 }
+
 export type Project =  {
   id: number;
   uuid: string;
@@ -47,16 +51,38 @@ export type Project =  {
   enable_realtime_updates: boolean;
   environments: Environment[];
 }
+
+export type User = {
+  id: number;
+  email: string;
+  first_name: string;
+  last_name: string;
+  role: "ADMIN" | "USER"
+}
+
+export type UserGroup = {
+  external_id: string|null
+  id: number
+  is_default: boolean
+  name:string
+  users: User[]
+}
+
+export type UserPermission = {
+  user: User
+  permissions: string[]
+  admin: boolean
+  id:number
+}
+export type GroupPermission = Omit<UserPermission,"user"> & {
+  group: UserGroup
+}
+
 export type AuditLogItem = {
   id: number;
   created_date: string;
   log: string;
-  author?: {
-    id: number;
-    email: string;
-    first_name: string;
-    last_name: string;
-  };
+  author?: User;
   environment?: Environment;
   project: Omit<Project, 'environments'>;
   related_object_id: number;
@@ -70,11 +96,18 @@ export type Identity = {
   identity_uuid?: string
 }
 
+export type AvailablePermission = {
+  key: string,
+  description: string
+}
+
 export type Res = {
   segments: PagedResponse<Segment>;
   segment: {id:string};
   auditLogs: PagedResponse<AuditLogItem>;
   identity: {id:string} //todo: we don't consider this until we migrate identity-store
   identities: EdgePagedResponse<Identity>
+  permission: Record<string, boolean>
+  availablePermissions: AvailablePermission[]
   // END OF TYPES
 }

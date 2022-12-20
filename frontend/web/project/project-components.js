@@ -13,7 +13,8 @@ window.Actions = require('../../common/dispatcher/action-constants');
 window.Format = require('../../common/utils/format');
 window.ES6Component = require('../../common/ES6Component');
 
-window.Permission = require('../../common/providers/Permission');
+import Permission from 'common/providers/Permission'
+window.Permission = Permission;
 window.IdentityProvider = require('../../common/providers/IdentityProvider');
 window.IdentitySegmentsProvider = require('../../common/providers/IdentitySegmentsProvider');
 window.AccountProvider = require('../../common/providers/AccountProvider');

@@ -37,7 +37,7 @@ const controller = {
                 filterUrl = `&${Utils.toParam(store.filter)}`;
             }
 
-            let featuresEndpoint = typeof page === 'string'? page: `${Project.api}projects/${projectId}/features/?page=${page || 1}&page_size=${pageSize||PAGE_SIZE}${filterUrl}`;
+            let featuresEndpoint = typeof page === 'string' ? page : `${Project.api}projects/${projectId}/features/?page=${page || 1}&page_size=${pageSize || PAGE_SIZE}${filterUrl}`;
             if (store.search) {
                 featuresEndpoint += `&search=${store.search}`;
             }

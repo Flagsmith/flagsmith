@@ -4,7 +4,7 @@ export type PagedRequest<T> =  T & {
   page?:number
   page_size?: number
 }
-
+export type PermissionLevel = "organisation" | "project" | "environment"
 export type Req = {
   getSegments: PagedRequest<{
     q?:string
@@ -35,5 +35,7 @@ export type Req = {
     pages?: (string|undefined)[] // this is needed for edge since it returns no paging info other than a key
     isEdge: boolean
   }>
+  getPermission: {id:string, level: PermissionLevel}
+  getAvailablePermissions: {level:PermissionLevel}
   // END OF TYPES
 }
