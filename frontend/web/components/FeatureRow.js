@@ -5,7 +5,8 @@ import ConfirmToggleFeature from './modals/ConfirmToggleFeature';
 import ConfirmRemoveFeature from './modals/ConfirmRemoveFeature';
 import CreateFlagModal from './modals/CreateFlag';
 import TagStore from '../../common/stores/tags-store'; // we need this to make JSX compile
-import ProjectStore from '../../common/stores/project-store'; // we need this to make JSX compile
+import ProjectStore from '../../common/stores/project-store';
+import Permission from "../../common/providers/Permission"; // we need this to make JSX compile
 
 
 class TheComponent extends Component {

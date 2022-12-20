@@ -15,6 +15,8 @@ import Feature from '../Feature';
 import { ButtonOutline } from '../base/forms/Button';
 import { setInterceptClose } from '../../project/modals';
 import classNames from 'classnames'
+import Permission from "../../../common/providers/Permission";
+
 const FEATURE_ID_MAXLENGTH = Constants.forms.maxLength.FEATURE_ID;
 
 const CreateFlag = class extends Component {
@@ -515,7 +517,6 @@ const CreateFlag = class extends Component {
                             };
 
                             return (
-
                                 <Permission level="project" permission="CREATE_FEATURE" id={this.props.projectId}>
                                     {({ permission: createFeature }) => (
                                         <Permission level="project" permission="ADMIN" id={this.props.projectId}>
@@ -558,7 +559,6 @@ const CreateFlag = class extends Component {
                                                                                 }
                                                                             </strong>
                                                                         </p>
-
 
                                                                         <Permission level="environment" permission={Utils.getManageFeaturePermission(is4Eyes)} id={this.props.environmentId}>
                                                                             {({ permission: savePermission }) => (
@@ -692,7 +692,6 @@ const CreateFlag = class extends Component {
                                                                                                                         {isSaving ? 'Updating' : 'Update Segment Overrides'}
                                                                                                                     </Button>
                                                                                                                 </div>
-
                                                                                                             )))}
                                                                                                     </Permission>
                                                                                                 </div>

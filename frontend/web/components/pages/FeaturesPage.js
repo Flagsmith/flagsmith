@@ -7,6 +7,7 @@ import { Tag } from '../AddEditTags';
 import FeatureRow from '../FeatureRow';
 import FeatureListStore from '../../../common/stores/feature-list-store';
 import ProjectStore from '../../../common/stores/project-store';
+import Permission from "../../../common/providers/Permission";
 
 const FeaturesPage = class extends Component {
     static displayName = 'FeaturesPage';

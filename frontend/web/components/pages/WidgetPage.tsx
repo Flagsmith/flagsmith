@@ -12,6 +12,7 @@ import NavIconSmall from '../svg/NavIconSmall';
 import AuditLog from "../AuditLog";
 import {getStore} from "../../../common/store";
 import { Provider } from 'react-redux';
+import Permission from "../../../common/providers/Permission";
 
 type FeatureListType = {
     projectId: string

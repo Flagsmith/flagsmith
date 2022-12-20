@@ -4,6 +4,7 @@ import color from 'color';
 import cx from 'classnames';
 import withTags from '../../common/providers/withTags';
 import InlineModal from './InlineModal';
+import Permission from "../../common/providers/Permission";
 
 export class TagValues extends PureComponent {
   static displayName = 'TheComponent';
@@ -239,8 +240,6 @@ constructor() {
       );
   }
 }
-
-ColourSelect.prototype
 
 const CreateEditTag = withTags(_CreateEditTag);
 

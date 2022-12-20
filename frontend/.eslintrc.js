@@ -96,7 +96,6 @@ module.exports = {
         'OptionalBool': true,
         'OptionalFunc': true,
         'OptionalNode': true,
-        'Permission': true,
         'Project': true,
         'Radio': true,
         'React': true,

@@ -4,16 +4,15 @@ import OrganisationStore from '../../../common/stores/organisation-store';
 import FeatureListStore from '../../../common/stores/feature-list-store';
 import Button from '../base/forms/Button';
 import UserSelect from '../UserSelect';
-import Tabs from '../base/forms/Tabs';
-import TabItem from '../base/forms/TabItem';
-import Feature from '../Feature';
 import withSegmentOverrides from '../../../common/providers/withSegmentOverrides';
 import ProjectStore from '../../../common/stores/project-store';
 import ValueEditor from '../ValueEditor';
 import CreateFlagModal from '../modals/CreateFlag';
 import InfoMessage from '../InfoMessage';
+import Permission from "../../../common/providers/Permission";
 
 const labelWidth = 200;
+
 const ChangeRequestsPage = class extends Component {
     static displayName = 'ChangeRequestsPage';
 
@@ -22,7 +21,6 @@ const ChangeRequestsPage = class extends Component {
     };
 
     getApprovals = (users, approvals) => users.filter(v => approvals.includes(v.id))
-
 
     constructor(props, context) {
         super(props, context);

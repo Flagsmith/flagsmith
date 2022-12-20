@@ -17,7 +17,7 @@ export const useHasPermission = ({id, level, permission}:Omit<PermissionType,"ch
 
 const Permission: FC<PermissionType> = ({children, id, level, permission}) => {
     const { permission:hasPermission, isLoading } = useHasPermission({id,level,permission})
-    return children({ permission:hasPermission, isLoading }) || <div/> as any
+    return <>{children({ permission:hasPermission, isLoading }) || <div/>}</>
 }
 
 export default Permission
