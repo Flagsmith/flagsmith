@@ -6,6 +6,7 @@ import Switch from '../Switch';
 import _data from '../../../common/data/base/_data';
 import Tabs from '../base/forms/Tabs'
 import TabItem from '../base/forms/TabItem'
+import RegexTester from "../RegexTester";
 const ProjectSettingsPage = class extends Component {
     static displayName = 'ProjectSettingsPage'
 
@@ -247,7 +248,7 @@ const ProjectSettingsPage = class extends Component {
                                                             </div>
                                                         </div>
                                                         {featureRegexEnabled && (
-                                                            <InputGroup title="Feature Name Regex"
+                                                            <InputGroup title="Feature Name RegEx"
                                                                         component={(
                                                                             <form onSubmit={(e)=>{
                                                                                 e.preventDefault()
@@ -280,6 +281,13 @@ const ProjectSettingsPage = class extends Component {
                                                                                     <Button className="ml-2" disabled={!regexValid||isLoading}>
                                                                                         Save
                                                                                     </Button>
+                                                                                    <ButtonLink type="button" onClick={()=>{
+                                                                                        openModal(<span>RegEx Tester</span>, (
+                                                                                            <RegexTester regex={this.state.feature_name_regex} onChange={(feature_name_regex)=>this.setState({feature_name_regex})}/>
+                                                                                        ))
+                                                                                    }} className="ml-2" disabled={!regexValid||isLoading}>
+                                                                                        Test RegEx
+                                                                                    </ButtonLink>
                                                                                 </Row>
                                                                             </form>
                                                                         )}
