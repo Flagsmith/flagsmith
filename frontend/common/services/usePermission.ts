@@ -6,10 +6,9 @@ export const permissionService = service
   .enhanceEndpoints({ addTagTypes: ['Permission'] })
     .injectEndpoints({
   endpoints: (builder) => ({
-
     getPermission: builder.query<Res['permission'], Req['getPermission']>({
-      query: (query: Req['getPermission']) => ({
-        url: `permission/${query.id}`,
+      query: ({level,id}: Req['getPermission']) => ({
+        url: `${level}s/${id}/my-permissions/`,
       }),
       transformResponse(baseQueryReturnValue: {admin:boolean, permissions:string[]}) {
         let res:Res['permission'] = {
@@ -20,9 +19,8 @@ export const permissionService = service
         })
         return res
       },
-      providesTags:(res,req)=>{
-        debugger
-        return [{ type: 'Permission', id: res?.id },]
+      providesTags:(res,err,req)=>{
+        return [{ type: 'Permission', id: `${req.level}${req.id}` },]
       },
     }),
     // END OF ENDPOINTS

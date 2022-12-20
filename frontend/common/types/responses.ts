@@ -47,16 +47,35 @@ export type Project =  {
   enable_realtime_updates: boolean;
   environments: Environment[];
 }
+
+export type User = {
+  id: number;
+  email: string;
+  first_name: string;
+  last_name: string;
+  role: "ADMIN" | "USER"
+}
+
+export type UserGroup = {
+  external_id: string|null
+  id: number
+  is_default: boolean
+  name:string
+  users: User[]
+}
+
+export type UserPermission = {
+  user: User
+  permissions: string[]
+  admin: boolean
+  id:number
+}
+
 export type AuditLogItem = {
   id: number;
   created_date: string;
   log: string;
-  author?: {
-    id: number;
-    email: string;
-    first_name: string;
-    last_name: string;
-  };
+  author?: User;
   environment?: Environment;
   project: Omit<Project, 'environments'>;
   related_object_id: number;
@@ -77,5 +96,6 @@ export type Res = {
   identity: {id:string} //todo: we don't consider this until we migrate identity-store
   identities: EdgePagedResponse<Identity>
   permission: Record<string, boolean>
+  availablePermissions: {id:string}
   // END OF TYPES
 }

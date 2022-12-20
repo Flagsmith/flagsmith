@@ -1,18 +1,23 @@
 import React, {FC, ReactNode} from 'react';
-import {useGetPermissionQuery} from "common/services/usePermission"; // we need this to make JSX compile
+import {useGetPermissionQuery} from "common/services/usePermission";
+import {PermissionLevel} from "../types/requests"; // we need this to make JSX compile
 
 type PermissionType = {
     id: string
     permission: string
-    level: "project" | "organisation" | "environment"
+    level: PermissionLevel
     children: (data:{ permission:boolean, isLoading:boolean })=> ReactNode
 }
 
-const Permission: FC<PermissionType> = ({children, id, level, permission}) => {
+export const useHasPermission = ({id, level, permission}:Omit<PermissionType,"children">) => {
     const {data, isLoading} = useGetPermissionQuery({level,id});
     const hasPermission = !!data?.[permission] || !!data?.ADMIN
+    return {permission:hasPermission, isLoading};
+}
 
-    return children({ permission:hasPermission, isLoading }) || <div>Hi</div> as any
+const Permission: FC<PermissionType> = ({children, id, level, permission}) => {
+    const { permission:hasPermission, isLoading } = useHasPermission({id,level,permission})
+    return children({ permission:hasPermission, isLoading }) || <div/> as any
 }
 
 export default Permission

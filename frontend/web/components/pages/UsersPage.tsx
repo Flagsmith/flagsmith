@@ -1,9 +1,8 @@
 import React, {Component, useEffect, FC, useState} from 'react';
 import {RouterChildContext} from "react-router";
 import {Link} from "react-router-dom";
-import Permission from "common/providers/Permission";
-const AccountStore = require("common/stores/account-store")
-import {PermissionCallback} from "common/types";
+import {useHasPermission} from "common/providers/Permission";
+
 import Constants from 'common/constants';
 import {useDeleteIdentityMutation, useGetIdentitiesQuery} from "common/services/useIdentity";
 import useSearchThrottle from "common/useSearchThrottle";
@@ -29,10 +28,10 @@ type UsersPageType = {
 const Utils = require("common/utils/utils")
 const UsersPage: FC<UsersPageType> = (props) => {
     const [page, setPage] = useState<{
-        number:number,
+        number: number,
         pageType: Req['getIdentities']['pageType'],
-        pages:Req['getIdentities']['pages']
-    }>({number:1, pageType:undefined, pages:undefined});
+        pages: Req['getIdentities']['pages']
+    }>({number: 1, pageType: undefined, pages: undefined});
 
     const {searchInput, search, setSearchInput} = useSearchThrottle(Utils.fromParam().search, () => {
         setPage({
@@ -44,24 +43,25 @@ const UsersPage: FC<UsersPageType> = (props) => {
     const [deleteIdentity] = useDeleteIdentityMutation({})
     const isEdge = Utils.getIsEdge();
 
-    const { data:identities, isLoading } = useGetIdentitiesQuery({
+    const {data: identities, isLoading} = useGetIdentitiesQuery({
         pages: page.pages,
         page: page.number,
         search,
         pageType: page.pageType,
         page_size: 10,
-        environmentId:props.match.params.environmentId,
+        environmentId: props.match.params.environmentId,
         isEdge
     })
 
-    const { projectId, environmentId } = props.match.params;
-    const preventAddTrait = !AccountStore.getOrganisation().persist_trait_data;
+    const {environmentId} = props.match.params;
 
-    const onSave = () => {
-        toast('Environment Saved');
-    };
+    const {permission} = useHasPermission({
+        level: "environment",
+        permission: Utils.getManageFeaturePermission(false),
+        id: environmentId
+    })
 
-    const removeIdentity = (id:string, identifier:string) => {
+    const removeIdentity = (id: string, identifier: string) => {
         openConfirm(
             <h3>Delete User</h3>,
             <p>
@@ -69,177 +69,178 @@ const UsersPage: FC<UsersPageType> = (props) => {
                 <strong>{identifier}</strong>
                 {'?'}
             </p>,
-            () => deleteIdentity({environmentId, isEdge:Utils.getIsEdge(), id}),
+            () => deleteIdentity({environmentId, isEdge: Utils.getIsEdge(), id}),
         );
     }
 
     const newUser = () => {
         openModal('New Users', <CreateUserModal
             environmentId={environmentId}
-        />, null, { className: 'alert fade expand' });
+        />, null, {className: 'alert fade expand'});
     }
 
     return (
         <div className="app-container container">
-            <Permission level="environment" permission={Utils.getManageFeaturePermission(false)} id={environmentId}>
-                {({ permission }:PermissionCallback) => (
-                    <div>
-                        <div>
-                            <Row>
-                                <Flex>
-                                    <div>
-                                        <h3>Users</h3>
-                                        <p>
-                                            View and manage features states for individual users. This will override individual default
-                                            feature settings for your selected environment.
-                                            {' '}
-                                            <ButtonLink target="_blank" href="https://docs.flagsmith.com/basic-features/managing-identities">Learn more.</ButtonLink>
-                                        </p>
-                                    </div>
-                                </Flex>
-                                {permission ? (
-                                    <FormGroup className="float-right">
-                                        <Button
-                                            className="float-right" data-test="show-create-feature-btn" id="show-create-feature-btn"
-                                            onClick={newUser}
-                                        >
-                                            Create Users
-                                        </Button>
-                                    </FormGroup>
-                                ) : (
-                                    <Tooltip
-                                        html
-                                        title={(
-                                            <Button
-                                                disabled data-test="show-create-feature-btn" id="show-create-feature-btn"
-                                                onClick={newUser}
-                                            >
-                                                Create Users
-                                            </Button>
-                                        )}
-                                        place="right"
+            <div>
+                <div>
+                    <Row>
+                        <Flex>
+                            <div>
+                                <h3>Users</h3>
+                                <p>
+                                    View and manage features states for individual users. This will override individual
+                                    default
+                                    feature settings for your selected environment.
+                                    {' '}
+                                    <ButtonLink target="_blank"
+                                                href="https://docs.flagsmith.com/basic-features/managing-identities"
+                                    >Learn more.</ButtonLink>
+                                </p>
+                            </div>
+                        </Flex>
+                        {permission ? (
+                            <FormGroup className="float-right">
+                                <Button
+                                    className="float-right" data-test="show-create-feature-btn"
+                                    id="show-create-feature-btn"
+                                    onClick={newUser}
+                                >
+                                    Create Users
+                                </Button>
+                            </FormGroup>
+                        ) : (
+                            <Tooltip
+                                html
+                                title={(
+                                    <Button
+                                        disabled data-test="show-create-feature-btn" id="show-create-feature-btn"
+                                        onClick={newUser}
                                     >
-                                        {Constants.environmentPermissions('Admin')}
-                                    </Tooltip>
+                                        Create Users
+                                    </Button>
                                 )}
-                            </Row>
-                        </div>
+                                place="right"
+                            >
+                                {Constants.environmentPermissions('Admin')}
+                            </Tooltip>
+                        )}
+                    </Row>
+                </div>
+                <FormGroup>
+                    <div>
                         <FormGroup>
+                            <PanelSearch
+                                renderSearchWithNoResults
+                                id="users-list"
+                                title="Users"
+                                className="no-pad"
+                                isLoading={isLoading}
+                                filterLabel={Utils.getIsEdge() ? 'Starts with' : 'Contains'}
+                                icon="ion-md-person"
+                                items={identities?.results}
+                                paging={identities}
+                                showExactFilter
+                                nextPage={() => {
+                                    setPage({
+                                        number: page.number + 1,
+                                        pageType: 'NEXT',
+                                        pages: identities?.last_evaluated_key ? (page.pages || []).concat([identities?.last_evaluated_key]) : undefined
+                                    })
+                                }}
+                                prevPage={() => {
+                                    setPage({
+                                        number: page.number - 1,
+                                        pageType: 'PREVIOUS',
+                                        pages: page.pages ? Utils.removeElementFromArray(page.pages, page.pages.length - 1) : undefined
+                                    })
+                                }}
+                                goToPage={(newPage: number) => {
+                                    setPage({
+                                        number: newPage,
+                                        pageType: undefined,
+                                        pages: undefined
+                                    })
+                                }}
+                                renderRow={({id, identifier, identity_uuid}: Identity, index: number) => (permission ? (
+                                    <Row
+                                        space className="list-item clickable" key={id}
+                                        data-test={`user-item-${index}`}
+                                    >
+                                        <Flex>
+                                            <Link
+                                                to={`/project/${props.match.params.projectId}/environment/${props.match.params.environmentId}/users/${encodeURIComponent(identifier)}/${id}`}
+                                            >
+                                                <ButtonLink>
+                                                    {identifier}
+                                                    <span className="ion-ios-arrow-forward ml-3"/>
+                                                </ButtonLink>
+                                            </Link>
+                                        </Flex>
+                                        <Column>
+                                            <button
+                                                id="remove-feature"
+                                                className="btn btn--with-icon"
+                                                type="button"
+                                                onClick={() => {
+                                                    if (id) {
+                                                        removeIdentity(id, identifier)
+                                                    } else if (identity_uuid) {
+                                                        removeIdentity(identity_uuid, identifier)
+                                                    }
+                                                }}
+                                            >
+                                                <RemoveIcon/>
+                                            </button>
+                                        </Column>
+                                    </Row>
+                                ) : (
+                                    <Row
+                                        space className="list-item" key={id}
+                                        data-test={`user-item-${index}`}
+                                    >
+                                        {identifier}
+                                    </Row>
+                                ))}
+                                renderNoResults={(
                                     <div>
-                                        <FormGroup>
-                                            <PanelSearch
-                                                renderSearchWithNoResults
-                                                id="users-list"
-                                                title="Users"
-                                                className="no-pad"
-                                                isLoading={isLoading}
-                                                filterLabel={Utils.getIsEdge() ? 'Starts with' : 'Contains'}
-                                                icon="ion-md-person"
-                                                items={identities?.results}
-                                                paging={identities}
-                                                showExactFilter
-                                                nextPage={() => {
-                                                    setPage({
-                                                        number:page.number+1,
-                                                        pageType: 'NEXT',
-                                                        pages: identities?.last_evaluated_key? (page.pages||[]).concat([identities?.last_evaluated_key]) : undefined
-                                                    })
-                                                }}
-                                                prevPage={() => {
-                                                    setPage({
-                                                        number:page.number-1,
-                                                        pageType: 'PREVIOUS',
-                                                        pages: page.pages? Utils.removeElementFromArray(page.pages, page.pages.length-1) : undefined
-                                                    })
-                                                }}
-                                                goToPage={(newPage:number) => {
-                                                    setPage({
-                                                        number:newPage,
-                                                        pageType: undefined,
-                                                        pages: undefined
-                                                    })
-                                                }}
-                                                renderRow={({ id, identifier, identity_uuid }:Identity, index:number) => (permission ? (
-                                                    <Row
-                                                        space className="list-item clickable" key={id}
-                                                        data-test={`user-item-${index}`}
-                                                    >
-                                                        <Flex>
-                                                            <Link
-                                                                to={`/project/${props.match.params.projectId}/environment/${props.match.params.environmentId}/users/${encodeURIComponent(identifier)}/${id}`}
-                                                            >
-                                                                <ButtonLink>
-                                                                    {identifier}
-                                                                    <span className="ion-ios-arrow-forward ml-3"/>
-                                                                </ButtonLink>
-                                                            </Link>
-                                                        </Flex>
-                                                        <Column>
-                                                            <button
-                                                                id="remove-feature"
-                                                                className="btn btn--with-icon"
-                                                                type="button"
-                                                                onClick={() => {
-                                                                    if (id) {
-                                                                        removeIdentity(id, identifier)
-                                                                    } else if (identity_uuid) {
-                                                                        removeIdentity(identity_uuid, identifier)
-                                                                    }
-                                                                }}
-                                                            >
-                                                                <RemoveIcon/>
-                                                            </button>
-                                                        </Column>
-                                                    </Row>
-                                                ) : (
-                                                    <Row
-                                                        space className="list-item" key={id}
-                                                        data-test={`user-item-${index}`}
-                                                    >
-                                                        {identifier}
-                                                    </Row>
-                                                ))}
-                                                renderNoResults={(
-                                                    <div>
-                                                        You have no users in your project{search ? <span> for <strong>"{search}"</strong></span> : ''}.
-                                                    </div>
-                                                )}
-                                                filterRow={() => true}
-                                                search={searchInput}
-                                                onChange={(e:InputEvent) => {
-                                                    setSearchInput(Utils.safeParseEventValue(e))
-                                                }}
-                                            />
-                                        </FormGroup>
-                                        <FormGroup>
-                                            <p className="faint mt-4">
-                                                Users are created for your environment automatically when calling
-                                                identify/get flags
-                                                from any of the SDKs.
-                                                <br/>
-                                                We've created
-                                                {' '}
-                                                <strong>user_123456</strong>
-                                                {' '}
-                                                for you so you always have an example user to
-                                                test with on your environments.
-                                            </p>
-                                            <div className="row">
-                                                <div className="col-md-12">
-                                                    <CodeHelp
-                                                        showInitially
-                                                        title="Creating users and getting their feature settings"
-                                                        snippets={Constants.codeHelp.CREATE_USER(props.match.params.environmentId, identities?.results?.[0]?.identifier)}
-                                                    />
-                                                </div>
-                                            </div>
-
-                                        </FormGroup>
+                                        You have no users in your project{search ?
+                                        <span> for <strong>"{search}"</strong></span> : ''}.
                                     </div>
+                                )}
+                                filterRow={() => true}
+                                search={searchInput}
+                                onChange={(e: InputEvent) => {
+                                    setSearchInput(Utils.safeParseEventValue(e))
+                                }}
+                            />
+                        </FormGroup>
+                        <FormGroup>
+                            <p className="faint mt-4">
+                                Users are created for your environment automatically when calling
+                                identify/get flags
+                                from any of the SDKs.
+                                <br/>
+                                We've created
+                                {' '}
+                                <strong>user_123456</strong>
+                                {' '}
+                                for you so you always have an example user to
+                                test with on your environments.
+                            </p>
+                            <div className="row">
+                                <div className="col-md-12">
+                                    <CodeHelp
+                                        showInitially
+                                        title="Creating users and getting their feature settings"
+                                        snippets={Constants.codeHelp.CREATE_USER(props.match.params.environmentId, identities?.results?.[0]?.identifier)}
+                                    />
+                                </div>
+                            </div>
+
                         </FormGroup>
                     </div>
-                )}
-            </Permission>
+                </FormGroup>
+            </div>
         </div>
     )
 }

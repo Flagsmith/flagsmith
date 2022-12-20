@@ -382,6 +382,7 @@ const EnvironmentSettingsPage = class extends Component {
                                                     parentLevel="project"
                                                     parentSettingsLink={`/project/${this.props.match.params.projectId}/settings`}
                                                     id={this.props.match.params.environmentId}
+                                                    router={this.context.router}
                                                     level="environment"
                                                 />
                                             </FormGroup>
