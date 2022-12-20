@@ -815,6 +815,4 @@ PIPEDRIVE_IGNORE_DOMAINS = env.list(
 )
 
 # List of plan ids that support seat upgrades
-AUTO_SEAT_UPGRADE_PLANS = env.list(
-    "AUTO_SEAT_UPGRADE_PLANS", ["scale-up", "scale-up-v2", "scale-up-annual-v2"]
-)
+AUTO_SEAT_UPGRADE_PLANS = env.list("AUTO_SEAT_UPGRADE_PLANS", default=[])
