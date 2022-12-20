@@ -43,6 +43,7 @@ def project_overrides(request):
         "disableInflux": "DISABLE_INFLUXDB_FEATURES",
         "flagsmith": "FLAGSMITH_ON_FLAGSMITH_API_KEY",
         "flagsmithAnalytics": "FLAGSMITH_ANALYTICS",
+        "flagsmithRealtime": "ENABLE_FLAGSMITH_REALTIME",
         "flagsmithClientAPI": "FLAGSMITH_ON_FLAGSMITH_API_URL",
         "ga": "GOOGLE_ANALYTICS_API_KEY",
         "hideInviteLinks": "DISABLE_INVITE_LINKS",
