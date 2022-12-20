@@ -259,12 +259,13 @@ module.exports = Object.assign({}, require('./base/_utils'), {
             return null;
         }
 
+        if (typeof featureState.integer_value === 'number') {
+            return Utils.getTypedValue(featureState.integer_value)
+        } else if (typeof featureState.float_value === 'number') {
+            return Utils.getTypedValue(featureState.float_value)
+        }
 
-        return Utils.getTypedValue((
-            typeof featureState.integer_value === 'number' ||
-            typeof featureState.float_value === 'number'
-
-        ) ? featureState.float_value || featureState.integer_value : featureState.string_value || featureState.boolean_value);
+        return Utils.getTypedValue(featureState.string_value || featureState.boolean_value);
     },
     valueToFeatureState(value) {
         const val = Utils.getTypedValue(value);
