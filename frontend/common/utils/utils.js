@@ -411,7 +411,7 @@ module.exports = Object.assign({}, require('./base/_utils'), {
         if (!Utils.getFlagsmithHasFeature('plan_based_access')) {
             return true;
         }
-        if (!plan) {
+        if (!plan || plan === 'free') {
             return false;
         }
         const date = AccountStore.getDate();
@@ -444,7 +444,7 @@ module.exports = Object.assign({}, require('./base/_utils'), {
                 break;
             }
             case 'AUTO_SEATS': {
-                valid = isScaleupOrGreater;
+                valid = isScaleupOrGreater && Utils.getFlagsmithHasFeature("auto_seats");
                 break;
             }
             case 'FORCE_2FA': {
