@@ -10,7 +10,6 @@ module.exports = Object.assign({}, require('./base/_utils'), {
     },
 
     loadScriptPromise(url){
-
         return new Promise(function(resolve, reject){
             const cb =  function(){
                 this.removeEventListener('load', cb)
