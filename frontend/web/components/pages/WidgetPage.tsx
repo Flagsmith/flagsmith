@@ -1,16 +1,19 @@
-import React, { Component } from 'react';
-import TryIt from '../TryIt';
+import React, {Component} from 'react';
 import TagFilter from '../tags/TagFilter';
 import FeatureRow from '../FeatureRow';
 import FeatureListStore from '../../../common/stores/feature-list-store';
 import ProjectStore from '../../../common/stores/project-store';
-import { useCustomWidgetOptionString } from '@datadog/ui-extensions-react';
+import {useCustomWidgetOptionString} from '@datadog/ui-extensions-react';
 import client from "../datadog-client";
+const Utils = require("common/utils/utils")
+const AppActions = require("common/dispatcher/app-actions")
+const ES6Component = require("common/ES6Component")
 import NavIconSmall from '../svg/NavIconSmall';
 import AuditLog from "../AuditLog";
 import {getStore} from "../../../common/store";
-import { Provider } from 'react-redux';
+import {Provider} from 'react-redux';
 import Permission from "../../../common/providers/Permission";
+import Tag from "../tags/Tag";
 
 type FeatureListType = {
     projectId: string
@@ -95,7 +98,8 @@ const FeatureList = class extends Component<FeatureListType> {
         const environment = ProjectStore.getEnvironment(environmentId);
 
         return (
-            <div className="widget-container" data-test="features-page" id="features-page">
+            <Provider store={getStore()}>
+                <div className="widget-container" data-test="features-page" id="features-page">
                 <FeatureListProvider onSave={this.onSave} onError={this.onError}>
                     {({ projectFlags, environmentFlags }, { environmentHasFlag, toggleFlag, editFlag, removeFlag }) => {
                         const isLoading = FeatureListStore.isLoading;
@@ -203,6 +207,7 @@ const FeatureList = class extends Component<FeatureListType> {
                     }}
                 </FeatureListProvider>
             </div>
+            </Provider>
         )
     }
 }
