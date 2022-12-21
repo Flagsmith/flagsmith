@@ -9,10 +9,8 @@ import Input from '../components/base/forms/Input'
 import InputGroup from '../components/base/forms/InputGroup'
 import PanelSearch from '../components/PanelSearch'
 
-window.Dispatcher = require('../../common/dispatcher/dispatcher');
 window.AppActions = require('../../common/dispatcher/app-actions');
 window.Actions = require('../../common/dispatcher/action-constants');
-window.Format = require('../../common/utils/format');
 window.ES6Component = require('../../common/ES6Component');
 
 window.IdentityProvider = require('../../common/providers/IdentityProvider');

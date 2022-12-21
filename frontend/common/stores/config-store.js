@@ -1,3 +1,4 @@
+const Dispatcher = require('../dispatcher/dispatcher');
 const BaseStore = require('./base/_store');
 window.Project = require('../project');
 
@@ -36,9 +37,6 @@ store.dispatcherIndex = Dispatcher.register(store, (payload) => {
     const action = payload.action; // this is our action from handleViewAction
 
     switch (action.actionType) {
-        case Actions.GET_CONFIG:
-            controller.get();
-            break;
         default:
             break;
     }

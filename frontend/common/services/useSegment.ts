@@ -33,7 +33,7 @@ export const segmentService = service
                 query: (query: Req['createSegment']) => ({
                     url: `projects/${query.projectId}/segments/`,
                     method: 'POST',
-                    body: query,
+                    body: query.segment,
                 }),
                 invalidatesTags: (q, e, arg) => [{ type: 'Segment', id: `LIST${arg.projectId}` }],
             }),

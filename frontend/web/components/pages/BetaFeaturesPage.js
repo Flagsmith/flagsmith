@@ -1,6 +1,7 @@
 import React, { Component } from 'react';
 import Switch from '../Switch';
 import EditBetaFeatureModal from '../modals/EditBetaFeature';
+import Format from "../../../common/utils/format";
 
 const BetaFeaturesPage = class extends Component {
     static displayName = 'BetaFeaturesPage';

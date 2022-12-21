@@ -6,7 +6,7 @@ const OrganisationProvider = require('common/providers/OrganisationProvider');
 const AppActions = require('common/dispatcher/app-actions');
 const Utils = require('common/utils/utils');
 const AccountStore = require('common/stores/account-store');
-const Format = require('common/utils/format');
+import Format from 'common/utils/format';
 const Project = require('common/project');
 import PanelSearch from './PanelSearch'
 import Button, {ButtonLink} from "./base/forms/Button";

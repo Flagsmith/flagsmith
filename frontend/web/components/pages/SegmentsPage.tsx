@@ -1,22 +1,22 @@
 import React, {FC, ReactNode, useEffect, useRef, useState} from 'react'; // we need this to make JSX compile
-import CreateSegmentModal from '../modals/CreateSegment';
-import Constants from 'common/constants'
-import API from '../../project/api'
-import {useDeleteSegmentMutation, useGetSegmentsQuery} from "common/services/useSegment";
-import {Segment} from "common/types/responses";
-import ConfirmRemoveSegment from '../modals/ConfirmRemoveSegment';
-import {find, sortBy} from 'lodash'
-import useThrottle from "../../../common/useThrottle";
-import Button, {ButtonLink} from "../base/forms/Button";
 import {RouterChildContext} from "react-router";
-import {useHasPermission} from "../../../common/providers/Permission";
-import PanelSearch from '../PanelSearch'
-import useSearchThrottle from "../../../common/useSearchThrottle";
+import {find, sortBy} from 'lodash'
 
 const Utils = require('common/utils/utils')
+import Constants from 'common/constants'
+import useSearchThrottle from "common/useSearchThrottle";
+import {Segment} from "common/types/responses";
+import {useDeleteSegmentMutation, useGetSegmentsQuery} from "common/services/useSegment";
+import {useHasPermission} from "common/providers/Permission";
 
-const Panel = require("../../components/base/grid/Panel")
 const CodeHelp = require("../../components/CodeHelp")
+const Panel = require("../../components/base/grid/Panel")
+import API from '../../project/api'
+import Button, {ButtonLink} from "../base/forms/Button";
+import ConfirmRemoveSegment from '../modals/ConfirmRemoveSegment';
+import CreateSegmentModal from '../modals/CreateSegment';
+import PanelSearch from '../PanelSearch'
+
 type SegmentsPageType = {
     router: RouterChildContext['router']
     match: {

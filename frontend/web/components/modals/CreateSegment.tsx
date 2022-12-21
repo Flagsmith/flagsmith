@@ -10,24 +10,21 @@ import {
     useGetSegmentQuery,
     useUpdateSegmentMutation
 } from "common/services/useSegment";
-
+import IdentitySegmentsProvider from "common/providers/IdentitySegmentsProvider"
+import Format from "common/utils/format"
 const Utils = require("common/utils/utils")
-const IdentitySegmentsProvider = require("common/providers/IdentitySegmentsProvider")
-const Format = require("common/format")
 
 import AssociatedSegmentOverrides from './AssociatedSegmentOverrides';
+import Button, {ButtonLink, ButtonOutline} from "../base/forms/Button";
 import EnvironmentSelect from '../EnvironmentSelect';
 import InfoMessage from '../InfoMessage';
+import Input from "../base/forms/Input";
+import InputGroup from"../base/forms/InputGroup"
+import PanelSearch from "../PanelSearch";
 import Rule from './Rule';
+import Switch from "../Switch";
 import TabItem from '../base/forms/TabItem';
 import Tabs from '../base/forms/Tabs';
-import Button, {ButtonLink, ButtonOutline} from "../base/forms/Button";
-import Switch from "../Switch";
-import Input from "../base/forms/Input";
-import PanelSearch from "../PanelSearch";
-import {hot} from "react-hot-loader";
-
-const InputGroup = require("../base/forms/InputGroup")
 
 const SEGMENT_ID_MAXLENGTH = Constants.forms.maxLength.SEGMENT_ID;
 
@@ -144,7 +141,7 @@ const CreateSegment: FC<CreateSegmentType> = ({
             feature: feature,
         }
         if (name) {
-            if (segment) {
+            if (segment.id) {
                 editSegment({
                     projectId,
                     segment: {
@@ -296,7 +293,6 @@ const CreateSegment: FC<CreateSegmentType> = ({
                 </Row>
             )}
 
-
             {!condensed && (
                 <FormGroup className="mb-4">
                     <InputGroup
@@ -313,7 +309,6 @@ const CreateSegment: FC<CreateSegmentType> = ({
                     />
                 </FormGroup>
             )}
-
 
             <div className="form-group ">
                 <Row className="mt-2 mb-2">
@@ -333,6 +328,7 @@ const CreateSegment: FC<CreateSegmentType> = ({
                     rulesEl
                 }
             </div>
+
             {isError
                 &&
                 <div className="alert alert-danger">Error creating segment, please ensure you have entered a trait and
@@ -370,7 +366,7 @@ const CreateSegment: FC<CreateSegmentType> = ({
                             </Button>
                         ) : (
                             <Button
-                                disabled
+                                disabled={isSaving || !name || !isValid}
                                 type="submit" data-test="create-segment"
                                 id="create-feature-btn"
                             >
@@ -381,7 +377,6 @@ const CreateSegment: FC<CreateSegmentType> = ({
 
                 </div>
             )}
-
         </form>
     );
 
@@ -412,7 +407,6 @@ const CreateSegment: FC<CreateSegmentType> = ({
                             </InfoMessage>
                             <div className="mt-2">
                                 <FormGroup>
-
                                     <InputGroup
                                         title="Environment"
                                         component={(

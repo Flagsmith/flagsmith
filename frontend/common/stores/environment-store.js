@@ -1,3 +1,4 @@
+const Dispatcher = require('../dispatcher/dispatcher');
 const BaseStore = require('./base/_store');
 
 

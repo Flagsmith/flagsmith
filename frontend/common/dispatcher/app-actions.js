@@ -1,3 +1,5 @@
+const Dispatcher = require('../dispatcher/dispatcher');
+
 const AppActions = Object.assign({}, require('./base/_app-actions'), {
     getOrganisation(organisationId) {
         Dispatcher.handleViewAction({
@@ -51,7 +53,6 @@ const AppActions = Object.assign({}, require('./base/_app-actions'), {
             name,
         });
     },
-
     getGroupsPage(orgId, page) {
         Dispatcher.handleViewAction({
             actionType: Actions.GET_GROUPS_PAGE,
@@ -59,7 +60,6 @@ const AppActions = Object.assign({}, require('./base/_app-actions'), {
             page,
         });
     },
-
     migrateProject(projectId) {
         Dispatcher.handleViewAction({
             actionType: Actions.MIGRATE_PROJECT,
@@ -97,12 +97,6 @@ const AppActions = Object.assign({}, require('./base/_app-actions'), {
     getProject(projectId) {
         Dispatcher.handleViewAction({
             actionType: Actions.GET_PROJECT,
-            projectId,
-        });
-    },
-    getConfig(projectId) {
-        Dispatcher.handleViewAction({
-            actionType: Actions.GET_CONFIG,
             projectId,
         });
     },
@@ -400,7 +394,6 @@ const AppActions = Object.assign({}, require('./base/_app-actions'), {
             changeRequest,
         });
     },
-
     deleteChangeRequest(id, cb) {
         Dispatcher.handleViewAction({
             actionType: Actions.DELETE_CHANGE_REQUEST,

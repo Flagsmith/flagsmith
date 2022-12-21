@@ -1,6 +1,7 @@
 import React, { Component } from 'react';
 import Highlight from '../Highlight';
 import Constants from '../../../common/constants';
+import Format from "../../../common/utils/format";
 
 const TRAITS_ID_MAXLENGTH = Constants.forms.maxLength.TRAITS_ID;
 

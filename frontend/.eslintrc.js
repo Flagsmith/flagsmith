@@ -90,7 +90,6 @@ module.exports = {
         'E2E': true,
         'ES6Component': true,
         'FormGroup': true,
-        'Format': true,
         'Link': true,
         'Loader': true,
         'OptionalBool': true,
