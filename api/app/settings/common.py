@@ -703,6 +703,7 @@ CRISP_CHAT_API_KEY = env("CRISP_CHAT_API_KEY", default=None)
 MIXPANEL_API_KEY = env("MIXPANEL_API_KEY", default=None)
 SENTRY_API_KEY = env("SENTRY_API_KEY", default=None)
 AMPLITUDE_API_KEY = env("AMPLITUDE_API_KEY", default=None)
+ENABLE_FLAGSMITH_REALTIME = env.bool("ENABLE_FLAGSMITH_REALTIME", default=False)
 
 # Set this to enable create organisation for only superusers
 RESTRICT_ORG_CREATE_TO_SUPERUSERS = env.bool("RESTRICT_ORG_CREATE_TO_SUPERUSERS", False)
@@ -816,9 +817,7 @@ PIPEDRIVE_IGNORE_DOMAINS = env.list(
 )
 
 # List of plan ids that support seat upgrades
-AUTO_SEAT_UPGRADE_PLANS = env.list(
-    "AUTO_SEAT_UPGRADE_PLANS", ["scale-up", "scale-up-v2", "scale-up-annual-v2"]
-)
+AUTO_SEAT_UPGRADE_PLANS = env.list("AUTO_SEAT_UPGRADE_PLANS", default=[])
 
 
 SKIP_MIGRATION_TESTS = env.bool("SKIP_MIGRATION_TESTS", False)
