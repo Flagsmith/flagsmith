@@ -12,7 +12,7 @@ import {Identity} from "common/types/responses";
 const CodeHelp = require('../CodeHelp');
 import CreateUserModal from '../modals/CreateUser';
 import RemoveIcon from '../RemoveIcon';
-const PanelSearch = require('../PanelSearch');
+import PanelSearch from '../PanelSearch'
 import Button, {ButtonLink} from "../base/forms/Button"; // we need this to make JSX compile
 
 type UsersPageType = {

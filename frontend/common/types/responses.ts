@@ -135,7 +135,7 @@ export type ProjectFlag = {
 
 export type Res = {
   segments: PagedResponse<Segment>;
-  segment: {id:string};
+  segment: Segment;
   auditLogs: PagedResponse<AuditLogItem>;
   identity: {id:string} //todo: we don't consider this until we migrate identity-store
   identities: EdgePagedResponse<Identity>

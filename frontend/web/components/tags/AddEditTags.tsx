@@ -2,7 +2,6 @@ import React, {FC, useMemo, useState} from 'react'
 import {filter as loFilter} from 'lodash'
 import {useHasPermission} from "../../../common/providers/Permission";
 import InlineModal from "../InlineModal";
-const Input = require("../base/forms/Input");
 import Constants from "../../../common/constants";
 const Utils = require("common/utils/utils")
 import TagValues from "./TagValues";

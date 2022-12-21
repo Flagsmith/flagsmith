@@ -132,7 +132,6 @@ class CompareEnvironments extends Component {
                                                           }}
                                                               fadeEnabled={fadeEnabled}
                                                               fadeValue={fadeValue}
-
                                                               condensed
                                                               environmentFlags={flagValues}
                                                               projectFlags={[this.state.flag]}

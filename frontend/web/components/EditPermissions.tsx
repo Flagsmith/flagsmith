@@ -8,7 +8,7 @@ const Utils = require('common/utils/utils');
 const AccountStore = require('common/stores/account-store');
 const Format = require('common/utils/format');
 const Project = require('common/project');
-const PanelSearch = require('./PanelSearch');
+import PanelSearch from './PanelSearch'
 import Button, {ButtonLink} from "./base/forms/Button";
 import InfoMessage from './InfoMessage';
 import Switch from './Switch';

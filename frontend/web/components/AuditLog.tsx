@@ -4,9 +4,9 @@ import Utils from 'common/utils/utils';
 import {AuditLogItem} from 'common/types/responses';
 import {useGetAuditLogsQuery} from 'common/services/useAuditLog';
 import useSearchThrottle from 'common/useSearchThrottle';
+import PanelSearch from './PanelSearch'
 
 const ConfigProvider = require('common/providers/ConfigProvider');
-const PanelSearch = require('../components/PanelSearch');
 const ProjectProvider = require('common/providers/ProjectProvider');
 
 type AuditLogType = {

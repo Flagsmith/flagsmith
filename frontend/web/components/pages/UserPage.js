@@ -12,6 +12,7 @@ import Tag from "../tags/Tag";
 import { getTags } from "../../../common/services/useTag";
 import { getStore } from "../../../common/store";
 import TagValues from "../tags/TagValues";
+import IdentitySegmentsProvider from "../../../common/providers/IdentitySegmentsProvider";
 
 const returnIfDefined = (value, value2) => {
     if (value === null || value === undefined) {

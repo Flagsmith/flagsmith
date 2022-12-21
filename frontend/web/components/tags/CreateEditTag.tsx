@@ -5,9 +5,9 @@ import Permission from "common/providers/Permission";
 const Utils = require("common/utils/utils");
 import {useCreateTagMutation, useUpdateTagMutation} from "common/services/useTag";
 
+import InputGroup from '../base/forms/InputGroup'
 import Button from "../base/forms/Button";
 import Tag from "./Tag";
-const InputGroup = require("../base/forms/InputGroup");
 
 type CreateEditTagType = {
     projectId: string

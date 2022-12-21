@@ -1,9 +1,9 @@
 import React, { Component, useEffect, useRef, useState } from 'react';
 import moment from 'moment';
 import { FC } from 'react'; // we need this to make JSX compile
+import PanelSearch from '../PanelSearch'
 
 const ConfigProvider = require('common/providers/ConfigProvider');
-const PanelSearch = require('../../components/PanelSearch');
 const ProjectProvider = require('common/providers/ProjectProvider');
 import ToggleChip from '../ToggleChip';
 import Utils from 'common/utils/utils';

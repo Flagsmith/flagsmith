@@ -128,4 +128,4 @@ Input.propTypes = {
     onSearchChange: OptionalFunc,
 };
 
-module.exports = Input;
+export default Input

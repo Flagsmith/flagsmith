@@ -41,4 +41,4 @@ IdentitySegmentsProvider.propTypes = {
     projectId: RequiredString,
 };
 
-module.exports = IdentitySegmentsProvider;
+export default IdentitySegmentsProvider;

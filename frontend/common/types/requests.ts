@@ -11,8 +11,8 @@ export type Req = {
     projectId: string
   }>
   deleteSegment: {projectId:string, id:number}
-  updateSegment: {projectId:string, id:number, segment: Segment}
-  createSegment: {projectId:string, id:number, segment: Omit<Segment,"id">}
+  updateSegment: {projectId:string, segment: Segment}
+  createSegment: {projectId:string, segment: Omit<Segment,"id"|"uuid"|"project">}
   getAuditLogs: PagedRequest<{
     search?:string
     project: string
@@ -47,5 +47,6 @@ export type Req = {
     projectId: string
   }
   createTag: {projectId: string, tag:Omit<Tag,"id">}
+  getSegment: {projectId: string, id:string}
   // END OF TYPES
 }
