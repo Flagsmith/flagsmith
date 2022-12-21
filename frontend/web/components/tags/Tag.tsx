@@ -47,11 +47,20 @@ const Tag: FC<TagType> = ({onClick, tag, selected, deselectedColor, className, h
             className={cx('tag', { selected, hideNames: hideNames }, className)}
         >
             <div>
-                <div className="text-center">
-                    {selected && (
-                        <span className="icon ion-md-checkmark"/>
-                    )}
-                </div>
+                {tag.label ? (
+                    <Row space>
+                        {hideNames ? '' : tag.label}
+                        {selected && (
+                            <span className="icon ion-md-checkmark"/>
+                        )}
+                    </Row>
+                ) : (
+                    <div className="text-center">
+                        {selected && (
+                            <span className="icon ion-md-checkmark"/>
+                        )}
+                    </div>
+                )}
             </div>
         </div>
     )

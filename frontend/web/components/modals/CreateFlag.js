@@ -302,7 +302,9 @@ const CreateFlag = class extends Component {
                           tooltip={Constants.strings.TAGS_DESCRIPTION}
                           component={(
                               <AddEditTags
-                                readOnly={!!identity || !createFeature} projectId={this.props.projectId} value={this.state.tags}
+                                readOnly={!!identity || !createFeature}
+                                projectId={`${this.props.projectId}`}
+                                value={this.state.tags}
                                 onChange={tags => this.setState({ tags, settingsChanged: true })}
                               />
                             )}

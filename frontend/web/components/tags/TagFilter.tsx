@@ -16,14 +16,14 @@ type TagFilterType = {
 }
 
 const TagFilter: FC<TagFilterType> = ({
-                                          value: _value,
-                                          showUntagged,
-                                          onClearAll,
-                                          showClearAll,
-                                          projectId,
-                                          onChange,
-                                          children
-                                      }) => {
+  value: _value,
+  showUntagged,
+  onClearAll,
+  showClearAll,
+  projectId,
+  onChange,
+  children
+}) => {
     const {data: projectTags, isLoading: tagsLoading} = useGetTagsQuery({projectId})
 
     const isSelected = (tag: TTag) => _value?.includes(tag.id!)
@@ -49,28 +49,24 @@ const TagFilter: FC<TagFilterType> = ({
                                         key={unTagged.id}
                                         selected={isSelected(unTagged as any)}
                                         onClick={onSelect}
-                                        className="px-2 py-2 mr-2"
+                                        className="px-2 py-2"
                                         tag={unTagged as any}
                                     />
                                 </div>
                             )}
 
                             {projectTags?.map(tag => (
-                                <div className="mr-1">
-                                    <Tag
-                                        key={tag.id}
-                                        selected={isSelected(tag)}
-                                        onClick={onSelect}
-                                        className="px-2 py-2 mr-2"
-                                        tag={tag}
-                                    />
-
-                                </div>
+                                <Tag
+                                    key={tag.id}
+                                    selected={isSelected(tag)}
+                                    onClick={onSelect}
+                                    className="px-2 py-2 mr-1"
+                                    tag={tag}
+                                />
                             ))}
                         </Row>
 
                     </Flex>
-
 
                     {showClearAll && (
                         <Button

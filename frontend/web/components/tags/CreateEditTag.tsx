@@ -1,13 +1,13 @@
 import React, {FC, KeyboardEvent, useEffect, useRef, useState} from 'react'
-import {Tag as TTag} from "../../../common/types/responses";
-import Constants from "../../../common/constants";
-import Permission from "../../../common/providers/Permission";
+import {Tag as TTag} from "common/types/responses";
+import Constants from "common/constants";
+import Permission from "common/providers/Permission";
+const Utils = require("common/utils/utils");
+import {useCreateTagMutation, useUpdateTagMutation} from "common/services/useTag";
+
 import Button from "../base/forms/Button";
 import Tag from "./Tag";
-import {useCreateTagMutation, useUpdateTagMutation} from "../../../common/services/useTag";
-
 const InputGroup = require("../base/forms/InputGroup");
-const Utils = require("../");
 
 type CreateEditTagType = {
     projectId: string
@@ -15,7 +15,7 @@ type CreateEditTagType = {
     tag?: TTag
 }
 
-const CreateEditTag: FC<CreateEditTagType> = ({tag: _tag, projectId}) => {
+const CreateEditTag: FC<CreateEditTagType> = ({tag: _tag, projectId, onComplete:_onComplete}) => {
     const [tag, setTag] = useState<Partial<TTag> | undefined>(_tag);
     const isEdit = !!tag?.id;
     const [createTag, {data:createData, isLoading:creating,isSuccess:createSuccess}] = useCreateTagMutation()
@@ -48,7 +48,7 @@ const CreateEditTag: FC<CreateEditTagType> = ({tag: _tag, projectId}) => {
 
     const onComplete = (tag: TTag) => {
         setTag(tag);
-        onComplete?.(tag);
+        _onComplete?.(tag);
     }
 
     const save = () => {

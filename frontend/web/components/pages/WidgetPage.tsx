@@ -143,7 +143,7 @@ const FeatureList = class extends Component<FeatureListType> {
                                                                         showUntagged
                                                                         showClearAll={(this.state.tags && !!this.state.tags.length) || this.state.showArchived}
                                                                         onClearAll={() => this.setState({ showArchived: false, tags: [] }, this.filter)}
-                                                                        projectId={projectId} value={this.state.tags} onChange={(tags) => {
+                                                                        projectId={`${projectId}`} value={this.state.tags} onChange={(tags) => {
                                                                             FeatureListStore.isLoading = true;
                                                                             if (tags.includes('') && tags.length>1) {
                                                                                 if (!this.state.tags.includes('')) {

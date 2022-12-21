@@ -1,4 +1,4 @@
-import { Res } from 'common/types/responses'
+import {PagedResponse, Res, Tag} from 'common/types/responses'
 import { Req } from 'common/types/requests'
 import { service } from 'common/service'
 
@@ -16,7 +16,7 @@ export const tagService = service
     }),
     deleteTag: builder.mutation<Res['tag'], Req['deleteTag']>({
       query: (query: Req['deleteTag']) => ({
-        url: `projects/${query.projectId}/${query.id}/`,
+        url: `projects/${query.projectId}/tags/${query.id}/`,
         method: 'DELETE',
         body: {},
       }),
@@ -26,13 +26,16 @@ export const tagService = service
       query: (query: Req['getTags']) => ({
         url: `projects/${query.projectId}/tags/`,
       }),
+      transformResponse(baseQueryReturnValue: PagedResponse<Tag>) {
+        return baseQueryReturnValue.results;
+      },
       providesTags:[{ type: 'Tag', id: 'LIST' },],
     }),
     createTag: builder.mutation<Res['tag'], Req['createTag']>({
       query: (query: Req['createTag']) => ({
-        url: `tag`,
+        url: `projects/${query.projectId}/tags/`,
         method: 'POST',
-        body: query,
+        body: query.tag,
       }),
       invalidatesTags: [{ type: 'Tag', id: 'LIST' }],
     }),

@@ -7,6 +7,8 @@ import FeatureRow from '../FeatureRow';
 import FeatureListStore from '../../../common/stores/feature-list-store';
 import ProjectStore from '../../../common/stores/project-store';
 import Permission from "../../../common/providers/Permission";
+import { getTags } from "../../../common/services/useTag";
+import { getStore } from "../../../common/store";
 
 const FeaturesPage = class extends Component {
     static displayName = 'FeaturesPage';
@@ -24,6 +26,9 @@ const FeaturesPage = class extends Component {
             sort: { label: 'Name', sortBy: 'name', sortOrder: 'asc' },
         };
         ES6Component(this);
+        getTags(getStore(),{
+            projectId: `${this.props.match.params.projectId}`
+        })
         AppActions.getFeatures(this.props.match.params.projectId, this.props.match.params.environmentId, true, this.state.search, this.state.sort, 0, this.getFilter());
     }
 
@@ -186,7 +191,7 @@ const FeaturesPage = class extends Component {
                                                                         showUntagged
                                                                         showClearAll={(this.state.tags && !!this.state.tags.length) || this.state.showArchived}
                                                                         onClearAll={() => this.setState({ showArchived: false, tags: [] }, this.filter)}
-                                                                        projectId={projectId} value={this.state.tags} onChange={(tags) => {
+                                                                        projectId={`${projectId}`} value={this.state.tags} onChange={(tags) => {
                                                                             FeatureListStore.isLoading = true;
                                                                             if (tags.includes('') && tags.length>1) {
                                                                                 if (!this.state.tags.includes('')) {
@@ -200,17 +205,15 @@ const FeaturesPage = class extends Component {
                                                                             AsyncStorage.setItem(`${projectId}tags`, JSON.stringify(tags));
                                                                         }}
                                                                       >
-                                                                          <div className="mr-2">
-                                                                              <Tag
-                                                                                selected={this.state.showArchived}
-                                                                                onClick={() => {
-                                                                                    FeatureListStore.isLoading = true;
-                                                                                    this.setState({ showArchived: !this.state.showArchived }, this.filter);
-                                                                                }}
-                                                                                className="px-2 py-2 ml-2 mr-2"
-                                                                                tag={{ label: 'Archived' }}
-                                                                              />
-                                                                          </div>
+                                                                          <Tag
+                                                                            selected={this.state.showArchived}
+                                                                            onClick={() => {
+                                                                                FeatureListStore.isLoading = true;
+                                                                                this.setState({ showArchived: !this.state.showArchived }, this.filter);
+                                                                            }}
+                                                                            className="px-2 py-2 ml-2 mr-2"
+                                                                            tag={{ label: 'Archived' }}
+                                                                          />
                                                                       </TagFilter>
                                                                   </Row>
                                                                 )}

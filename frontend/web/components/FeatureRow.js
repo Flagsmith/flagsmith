@@ -140,7 +140,10 @@ class TheComponent extends Component {
                             ) : (
                                 <span/>
                             )}
-                            <TagValues projectId={projectId} value={projectFlag.tags}/>
+                            <TagValues
+                                projectId={`${projectId}`}
+                                value={projectFlag.tags}
+                            />
                         </Row>
                         <span className="text-small text-muted">
                             Created {moment(created_date).format('Do MMM YYYY HH:mma')}{' - '}

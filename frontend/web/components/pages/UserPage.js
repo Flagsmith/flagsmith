@@ -9,6 +9,9 @@ import FeatureListStore from '../../../common/stores/feature-list-store';
 import TagFilter from '../tags/TagFilter';
 import _data from '../../../common/data/base/_data';
 import Tag from "../tags/Tag";
+import { getTags } from "../../../common/services/useTag";
+import { getStore } from "../../../common/store";
+import TagValues from "../tags/TagValues";
 
 const returnIfDefined = (value, value2) => {
     if (value === null || value === undefined) {
@@ -46,8 +49,9 @@ const UserPage = class extends Component {
         AppActions.getIdentity(this.props.match.params.environmentId, this.props.match.params.id);
         AppActions.getIdentitySegments(this.props.match.params.projectId, this.props.match.params.id);
         AppActions.getFeatures(this.props.match.params.projectId, this.props.match.params.environmentId, true, this.state.search, this.state.sort, 0, this.getFilter());
-        this.getTags(params.projectId);
-
+        getTags(getStore(),{
+            projectId: `${params.projectId}`
+        })
         this.getActualFlags();
         API.trackPage(Constants.pages.USER);
     }
@@ -221,7 +225,7 @@ const UserPage = class extends Component {
                                                             showUntagged
                                                             showClearAll={(this.state.tags && !!this.state.tags.length) || this.state.showArchived}
                                                             onClearAll={() => this.setState({ showArchived: false, tags: [] }, this.filter)}
-                                                            projectId={projectId} value={this.state.tags} onChange={(tags) => {
+                                                            projectId={`${projectId}`} value={this.state.tags} onChange={(tags) => {
                                                                 FeatureListStore.isLoading = true;
                                                                 if (tags?.includes('') && tags?.length>1) {
                                                                     if (!this.state.tags.includes('')) {
@@ -294,9 +298,13 @@ const UserPage = class extends Component {
                                                                 className="flex flex-1"
                                                               >
                                                                   <Row>
-                                                                      <ButtonLink>
+                                                                      <ButtonLink className="mr-2">
                                                                           {name}
                                                                       </ButtonLink>
+                                                                      <TagValues
+                                                                          projectId={`${projectId}`}
+                                                                          value={projectFlag.tags}
+                                                                      />
                                                                   </Row>
                                                                   {hasUserOverride ? (
                                                                       <Row className="chip">
