@@ -105,7 +105,7 @@ class Project(LifecycleModelMixin, AbstractBaseExportableModel, SoftDeleteObject
         attribute already has the boundaries defined)
         """
         return (
-            self.feature_name_regex is None
+            not self.feature_name_regex
             or re.match(f"^{self.feature_name_regex}$", feature_name) is not None
         )
 

@@ -344,14 +344,11 @@ const CreateSegment = class extends Component {
                                 {Tab1}
                             </div>
                         </TabItem>
-                        {this.props.hasFeature('segment_associated_features') && (
-                            <TabItem tabLabel="Features">
-                                <div className="mt-4 mr-3 ml-3">
-                                    <AssociatedSegmentOverrides feature={this.props.segment.feature} projectId={this.props.projectId} id={this.props.segment.id}/>
-                                </div>
-                            </TabItem>
-                        )}
-
+                        <TabItem tabLabel="Features">
+                            <div className="mt-4 mr-3 ml-3">
+                                <AssociatedSegmentOverrides feature={this.props.segment.feature} projectId={this.props.projectId} id={this.props.segment.id}/>
+                            </div>
+                        </TabItem>
                         <TabItem tabLabel="Users">
                             <div className="mt-4 mr-3 ml-3">
                                 <InfoMessage>
