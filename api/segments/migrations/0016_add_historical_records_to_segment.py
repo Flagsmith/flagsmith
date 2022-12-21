@@ -13,7 +13,7 @@ class Migration(migrations.Migration):
         ('projects', '0016_soft_delete_projects'),
         migrations.swappable_dependency(settings.AUTH_USER_MODEL),
         ('features', '0048_add_master_api_key_to_historical_records'),
-        ('segments', '0014_add_description_to_segment_condition'),
+        ('segments', '0015_remove_max_length_from_condition_description'),
     ]
 
     operations = [
