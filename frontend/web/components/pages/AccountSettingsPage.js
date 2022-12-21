@@ -201,12 +201,10 @@ class TheComponent extends Component {
                                         <div className="col-md-12">
                                             <Row>
                                                 <Token style={{ width: 400 }} token={_data.token}/>
-                                                {Utils.getFlagsmithHasFeature("rotate_api_token") && (
-                                                    <Button onClick={this.invalidateToken}
-                                                            className="btn btn-danger">
-                                                        Invalidate
-                                                    </Button>
-                                                )}
+                                                <Button onClick={this.invalidateToken}
+                                                        className="btn btn-danger">
+                                                    Invalidate
+                                                </Button>
                                             </Row>
                                         </div>
                                     </div>
