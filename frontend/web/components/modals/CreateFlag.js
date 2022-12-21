@@ -6,7 +6,7 @@ import withSegmentOverrides from '../../../common/providers/withSegmentOverrides
 import data from '../../../common/data/base/_data';
 import ProjectStore from '../../../common/stores/project-store';
 import SegmentOverrides from '../SegmentOverrides';
-import AddEditTags from '../AddEditTags';
+import AddEditTags from '../tags/AddEditTags';
 import Constants from '../../../common/constants';
 import FlagOwners from '../FlagOwners';
 import FeatureListStore from '../../../common/stores/feature-list-store';

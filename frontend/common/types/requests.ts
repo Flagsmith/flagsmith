@@ -1,4 +1,4 @@
-import {Segment} from "./responses";
+import {Segment, Tag} from "./responses";
 
 export type PagedRequest<T> =  T & {
   page?:number
@@ -37,5 +37,15 @@ export type Req = {
   }>
   getPermission: {id:string, level: PermissionLevel}
   getAvailablePermissions: {level:PermissionLevel}
+  getTag: {id:string}
+  updateTag: {projectId: string, tag:Tag}
+  deleteTag: {
+    id: number
+    projectId: string
+  }
+  getTags: {
+    projectId: string
+  }
+  createTag: {projectId: string, tag:Omit<Tag,"id">}
   // END OF TYPES
 }

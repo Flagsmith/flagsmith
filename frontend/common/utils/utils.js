@@ -81,8 +81,8 @@ module.exports = Object.assign({}, require('./base/_utils'), {
         }
         return `${Project.api}environments/${environmentId}/identities/${userId}/traits/`;
     },
-    removeElementFromArray(array,index) {
-        return array.slice(0, index).concat(array.slice(index+1))
+    removeElementFromArray(array, index) {
+        return array.slice(0, index).concat(array.slice(index + 1));
     },
     findOperator(operator, value, operators) {
         const findAppended = `${value}`.includes(':') ? (operators || []).find((v) => {
@@ -263,9 +263,9 @@ module.exports = Object.assign({}, require('./base/_utils'), {
         }
 
         if (typeof featureState.integer_value === 'number') {
-            return Utils.getTypedValue(featureState.integer_value)
-        } else if (typeof featureState.float_value === 'number') {
-            return Utils.getTypedValue(featureState.float_value)
+            return Utils.getTypedValue(featureState.integer_value);
+        } if (typeof featureState.float_value === 'number') {
+            return Utils.getTypedValue(featureState.float_value);
         }
 
         return Utils.getTypedValue(featureState.string_value || featureState.boolean_value);
@@ -452,7 +452,7 @@ module.exports = Object.assign({}, require('./base/_utils'), {
                 break;
             }
             case 'AUTO_SEATS': {
-                valid = isScaleupOrGreater && Utils.getFlagsmithHasFeature("auto_seats");
+                valid = isScaleupOrGreater && Utils.getFlagsmithHasFeature('auto_seats');
                 break;
             }
             case 'FORCE_2FA': {

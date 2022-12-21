@@ -1,12 +1,12 @@
 import React, { FunctionComponent, Component } from 'react';
-import TagValues from './TagValues';
+import TagValues from './tags/TagValues';
 import HistoryIcon from './HistoryIcon';
 import ConfirmToggleFeature from './modals/ConfirmToggleFeature';
 import ConfirmRemoveFeature from './modals/ConfirmRemoveFeature';
 import CreateFlagModal from './modals/CreateFlag';
-import TagStore from '../../common/stores/tags-store'; // we need this to make JSX compile
 import ProjectStore from '../../common/stores/project-store';
-import Permission from "../../common/providers/Permission"; // we need this to make JSX compile
+import Permission from "../../common/providers/Permission";
+import { hasProtectedTag } from "../../common/utils/hasProtectedTag"; // we need this to make JSX compile
 
 
 class TheComponent extends Component {
@@ -73,7 +73,7 @@ class TheComponent extends Component {
         const { projectId, projectFlag, permission, environmentFlags, environmentId, projectFlags, removeFlag, toggleFlag } = this.props;
         const { name, id, enabled, created_date, description, type } = this.props.projectFlag;
         const readOnly = Utils.getFlagsmithHasFeature('read_only_mode');
-        const isProtected = TagStore.hasProtectedTag(projectFlag, parseInt(projectId));
+        const isProtected = hasProtectedTag(projectFlag, parseInt(projectId));
         const environment = ProjectStore.getEnvironment(environmentId);
         const changeRequestsEnabled = Utils.changeRequestsEnabled(environment && environment.minimum_change_request_approvals);
 
@@ -141,7 +141,6 @@ class TheComponent extends Component {
                                 <span/>
                             )}
                             <TagValues projectId={projectId} value={projectFlag.tags}/>
-
                         </Row>
                         <span className="text-small text-muted">
                             Created {moment(created_date).format('Do MMM YYYY HH:mma')}{' - '}

@@ -4,7 +4,6 @@ import cx from 'classnames';
 import DatePicker from 'react-datepicker';
 import data from '../../common/data/base/_data';
 import InfoMessage from './InfoMessage';
-import TagValues from './TagValues';
 import Token from './Token';
 import _data from '../../common/data/base/_data';
 

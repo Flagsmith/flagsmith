@@ -6,9 +6,9 @@ import CreateTraitModal from '../modals/CreateTrait';
 import TryIt from '../TryIt';
 import CreateSegmentModal from '../modals/CreateSegment';
 import FeatureListStore from '../../../common/stores/feature-list-store';
-import TagSelect from '../TagSelect';
-import { Tag } from '../AddEditTags';
+import TagFilter from '../tags/TagFilter';
 import _data from '../../../common/data/base/_data';
+import Tag from "../tags/Tag";
 
 const returnIfDefined = (value, value2) => {
     if (value === null || value === undefined) {
@@ -50,10 +50,6 @@ const UserPage = class extends Component {
 
         this.getActualFlags();
         API.trackPage(Constants.pages.USER);
-    }
-
-    getTags = (projectId) => {
-        AppActions.getTags(projectId);
     }
 
     onSave = () => {
@@ -221,17 +217,17 @@ const UserPage = class extends Component {
                                                   title="Features"
 
                                                   header={(
-                                                          <TagSelect
+                                                          <TagFilter
                                                             showUntagged
                                                             showClearAll={(this.state.tags && !!this.state.tags.length) || this.state.showArchived}
                                                             onClearAll={() => this.setState({ showArchived: false, tags: [] }, this.filter)}
                                                             projectId={projectId} value={this.state.tags} onChange={(tags) => {
                                                                 FeatureListStore.isLoading = true;
-                                                                if (tags.includes('') && tags.length>1) {
+                                                                if (tags?.includes('') && tags?.length>1) {
                                                                     if (!this.state.tags.includes('')) {
                                                                         this.setState({ tags: [''] }, this.filter);
                                                                     } else {
-                                                                        this.setState({ tags: tags.filter(v => !!v) }, this.filter);
+                                                                        this.setState({ tags: tags?.filter(v => !!v) }, this.filter);
                                                                     }
                                                                 } else {
                                                                     this.setState({ tags }, this.filter);
@@ -248,7 +244,7 @@ const UserPage = class extends Component {
                                                                     className="px-2 py-2 ml-2 mr-2"
                                                                     tag={{ label: 'Archived' }}
                                                                   />
-                                                          </TagSelect>
+                                                          </TagFilter>
                                                   )}
                                                   isLoading={FeatureListStore.isLoading}
                                                   onSortChange={(sort) => {

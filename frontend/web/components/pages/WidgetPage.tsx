@@ -1,8 +1,6 @@
 import React, { Component } from 'react';
 import TryIt from '../TryIt';
-import TagSelect from '../TagSelect';
-import TagStore from '../../../common/stores/tags-store';
-import { Tag } from '../AddEditTags';
+import TagFilter from '../tags/TagFilter';
 import FeatureRow from '../FeatureRow';
 import FeatureListStore from '../../../common/stores/feature-list-store';
 import ProjectStore from '../../../common/stores/project-store';
@@ -32,9 +30,6 @@ const FeatureList = class extends Component<FeatureListType> {
             sort: { label: 'Name', sortBy: 'name', sortOrder: 'asc' },
         };
         ES6Component(this);
-        this.listenTo(TagStore, 'loaded', () => {
-            const tags = TagStore.model && TagStore.model[parseInt(this.props.projectId)];
-        });
         AppActions.getProject(this.props.projectId);
         AppActions.getFeatures(this.props.projectId, this.props.environmentId, true, this.state.search, this.state.sort, 0, this.getFilter(), this.props.pageSize);
     }
@@ -61,12 +56,7 @@ const FeatureList = class extends Component<FeatureListType> {
 
     componentDidMount = () => {
         API.trackPage(Constants.pages.FEATURES);
-        this.getTags(this.props.projectId);
     };
-
-    getTags = (projectId) => {
-        AppActions.getTags(projectId);
-    }
 
     getFilter = () => ({
         tags: !this.state.tags || !this.state.tags.length ? undefined : this.state.tags.join(','),
@@ -149,7 +139,7 @@ const FeatureList = class extends Component<FeatureListType> {
                                                               items={projectFlags}
                                                               header={this.props.hideTags? null : (
                                                                   <Row className="px-0 pt-0">
-                                                                      <TagSelect
+                                                                      <TagFilter
                                                                         showUntagged
                                                                         showClearAll={(this.state.tags && !!this.state.tags.length) || this.state.showArchived}
                                                                         onClearAll={() => this.setState({ showArchived: false, tags: [] }, this.filter)}
@@ -178,7 +168,7 @@ const FeatureList = class extends Component<FeatureListType> {
                                                                                 tag={{ label: 'Archived' }}
                                                                               />
                                                                           </div>
-                                                                      </TagSelect>
+                                                                      </TagFilter>
                                                                   </Row>
                                                                 )}
                                                               renderRow={(projectFlag, i) => (

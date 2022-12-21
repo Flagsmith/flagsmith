@@ -3,7 +3,7 @@ module.exports = {
     'env': {
         'browser': true,
         'node': true,
-        'mocha': true
+        'mocha': true,
     },
     'extends': [
         'prettier',
@@ -18,7 +18,7 @@ module.exports = {
     ],
     'rules': {
         'indent': [
-            "error", 4,
+            'error', 4,
             {
                 SwitchCase: 1,
                 ignoredNodes: ['JSXElement', 'JSXElement > *', 'JSXAttribute', 'JSXIdentifier', 'JSXNamespacedName', 'JSXMemberExpression', 'JSXSpreadAttribute', 'JSXExpressionContainer', 'JSXOpeningElement', 'JSXClosingElement', 'JSXText', 'JSXEmptyExpression', 'JSXSpreadChild'],
@@ -26,8 +26,8 @@ module.exports = {
         ],
         'react/jsx-max-props-per-line': [1,
             {
-                'maximum': 3
-            }
+                'maximum': 3,
+            },
         ],
         'array-callback-return': 0,
         'camelcase': 0,
@@ -45,7 +45,7 @@ module.exports = {
         'no-nested-ternary': 0,
         'no-empty': 0,
         'no-new': 0,
-        'no-param-reassign': 0, //Disabled to it not looking for global components
+        'no-param-reassign': 0, // Disabled to it not looking for global components
         'no-plusplus': 0,
         'no-restricted-globals': 'off',
         'no-return-assign': 0,
@@ -61,11 +61,11 @@ module.exports = {
         'react/destructuring-assignment': 0,
         'react/forbid-prop-types': 0,
         'react/jsx-filename-extension': 0,
-        'react/jsx-indent': ["error", 4],
-        'react/jsx-indent-props': ["error", 2],
+        'react/jsx-indent': ['error', 4],
+        'react/jsx-indent-props': ['error', 2],
         'react/jsx-no-undef': 0,
         'react/jsx-one-expression-per-line': 0,
-        'react/jsx-tag-spacing': 0, //Disabled to it not looking for global components
+        'react/jsx-tag-spacing': 0, // Disabled to it not looking for global components
         'react/no-access-state-in-setstate': 0,
         'react/no-array-index-key': 0, // there are valid cases for this where a key can not be determined
         'react/no-direct-mutation-state': 0,
@@ -126,6 +126,6 @@ module.exports = {
         'testHelpers': true,
         'toast': true,
         'window': true,
-        'zE': true
-    }
+        'zE': true,
+    },
 };

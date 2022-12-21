@@ -60,44 +60,10 @@ const AppActions = Object.assign({}, require('./base/_app-actions'), {
         });
     },
 
-    getTags(projectId) {
-        Dispatcher.handleViewAction({
-            actionType: Actions.GET_TAGS,
-            projectId,
-        });
-    },
-
-    updateTag(projectId, data, onComplete) {
-        Dispatcher.handleViewAction({
-            actionType: Actions.UPDATE_TAG,
-            projectId,
-            data,
-            onComplete,
-        });
-    },
-
-    createTag(projectId, data, onComplete) {
-        Dispatcher.handleViewAction({
-            actionType: Actions.CREATE_TAG,
-            projectId,
-            data,
-            onComplete,
-        });
-    },
-
     migrateProject(projectId) {
         Dispatcher.handleViewAction({
             actionType: Actions.MIGRATE_PROJECT,
             projectId,
-        });
-    },
-
-    deleteTag(projectId, data, onComplete) {
-        Dispatcher.handleViewAction({
-            actionType: Actions.DELETE_TAG,
-            projectId,
-            data,
-            onComplete,
         });
     },
 

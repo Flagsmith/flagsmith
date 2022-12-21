@@ -1,9 +1,8 @@
 import React, { Component } from 'react';
 import CreateFlagModal from '../modals/CreateFlag';
 import TryIt from '../TryIt';
-import TagSelect from '../TagSelect';
-import TagStore from '../../../common/stores/tags-store';
-import { Tag } from '../AddEditTags';
+import TagFilter from '../tags/TagFilter';
+import Tag from '../tags/Tag';
 import FeatureRow from '../FeatureRow';
 import FeatureListStore from '../../../common/stores/feature-list-store';
 import ProjectStore from '../../../common/stores/project-store';
@@ -25,9 +24,6 @@ const FeaturesPage = class extends Component {
             sort: { label: 'Name', sortBy: 'name', sortOrder: 'asc' },
         };
         ES6Component(this);
-        this.listenTo(TagStore, 'loaded', () => {
-            const tags = TagStore.model && TagStore.model[parseInt(this.props.match.params.projectId)];
-        });
         AppActions.getFeatures(this.props.match.params.projectId, this.props.match.params.environmentId, true, this.state.search, this.state.sort, 0, this.getFilter());
     }
 
@@ -35,7 +31,6 @@ const FeaturesPage = class extends Component {
         const { match: { params } } = newProps;
         const { match: { params: oldParams } } = this.props;
         if (params.environmentId != oldParams.environmentId || params.projectId != oldParams.projectId) {
-            this.getTags(params.projectId);
             AppActions.getFeatures(params.projectId, params.environmentId, true, this.state.search, this.state.sort, 0, this.getFilter());
         }
     }
@@ -43,7 +38,6 @@ const FeaturesPage = class extends Component {
     componentDidMount = () => {
         API.trackPage(Constants.pages.FEATURES);
         const { match: { params } } = this.props;
-        this.getTags(params.projectId);
         AsyncStorage.setItem('lastEnv', JSON.stringify({
             orgId: AccountStore.getOrganisation().id,
             projectId: params.projectId,
@@ -58,11 +52,6 @@ const FeaturesPage = class extends Component {
           projectId={this.props.match.params.projectId}
         />, null, { className: 'side-modal fade create-feature-modal' });
     };
-
-
-    getTags = (projectId) => {
-        AppActions.getTags(projectId);
-    }
 
     componentWillReceiveProps(newProps) {
         if (newProps.match.params.environmentId != this.props.match.params.environmentId) {
@@ -193,7 +182,7 @@ const FeaturesPage = class extends Component {
                                                               items={projectFlags}
                                                               header={(
                                                                   <Row className="px-0 pt-0 pb-2">
-                                                                      <TagSelect
+                                                                      <TagFilter
                                                                         showUntagged
                                                                         showClearAll={(this.state.tags && !!this.state.tags.length) || this.state.showArchived}
                                                                         onClearAll={() => this.setState({ showArchived: false, tags: [] }, this.filter)}
@@ -222,7 +211,7 @@ const FeaturesPage = class extends Component {
                                                                                 tag={{ label: 'Archived' }}
                                                                               />
                                                                           </div>
-                                                                      </TagSelect>
+                                                                      </TagFilter>
                                                                   </Row>
                                                                 )}
                                                               renderRow={(projectFlag, i) => (

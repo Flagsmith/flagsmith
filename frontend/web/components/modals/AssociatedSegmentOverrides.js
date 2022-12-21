@@ -3,12 +3,10 @@ import { Component } from 'react';
 import { groupBy } from 'lodash';
 import _data from '../../../common/data/base/_data';
 import ProjectStore from '../../../common/stores/project-store';
-import TagValues from '../TagValues';
 import SegmentOverrides from '../SegmentOverrides';
 import withSegmentOverrides from '../../../common/providers/withSegmentOverrides';
 import FeatureListStore from '../../../common/stores/feature-list-store';
 import FlagSelect from '../FlagSelect';
-import { ButtonLink } from '../base/forms/Button';
 import InfoMessage from '../InfoMessage';
 import EnvironmentSelect from '../EnvironmentSelect';
 

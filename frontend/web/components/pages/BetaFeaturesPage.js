@@ -1,5 +1,4 @@
 import React, { Component } from 'react';
-import TagValues from '../TagValues';
 import Switch from '../Switch';
 import EditBetaFeatureModal from '../modals/EditBetaFeature';
 

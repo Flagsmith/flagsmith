@@ -101,6 +101,38 @@ export type AvailablePermission = {
   description: string
 }
 
+export type Tag = {
+  id: number
+  color: string
+  description: string
+  project: number
+  label: string
+}
+
+export type MultivariateFeatureStateValue = {
+  id: number;
+  multivariate_feature_option: number;
+  percentage_allocation: number;
+}
+
+export type ProjectFlag = {
+    change_request?: number;
+    created_at: string;
+    enabled: boolean;
+    environment: number;
+    feature: number;
+    feature_segment?: number;
+    feature_state_value: FlagsmithValue;
+    id: number;
+    identity?: number;
+    live_from: string;
+    multivariate_feature_state_values: MultivariateFeatureStateValue[];
+    tags?: number[]
+    updated_at: string;
+    uuid?: string;
+    version?: number;
+}
+
 export type Res = {
   segments: PagedResponse<Segment>;
   segment: {id:string};
@@ -109,5 +141,7 @@ export type Res = {
   identities: EdgePagedResponse<Identity>
   permission: Record<string, boolean>
   availablePermissions: AvailablePermission[]
+  tag: Tag
+  tags: Tag[]
   // END OF TYPES
 }
