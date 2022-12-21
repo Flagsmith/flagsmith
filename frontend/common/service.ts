@@ -9,7 +9,6 @@ const Project = require("./project")
 const _data = require('./data/base/_data.js')
 
 export const baseApiOptions = (queryArgs?: Partial<FetchBaseQueryArgs>) => {
-    debugger
     const res: Pick<
         CreateApiOptions<any, any, any, any>,
         | 'baseQuery'
