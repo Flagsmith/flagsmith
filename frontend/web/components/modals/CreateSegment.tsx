@@ -1,7 +1,6 @@
 import React, {FC, FormEvent, useEffect, useMemo, useState} from 'react';
 
 import Constants from 'common/constants';
-import IdentitySegmentsProvider from 'common/providers/IdentitySegmentsProvider'
 import useSearchThrottle from "common/useSearchThrottle";
 import {EdgePagedResponse, Identity, Segment, SegmentRule} from "common/types/responses";
 import {Req} from "common/types/requests";
@@ -11,7 +10,9 @@ import {
     useGetSegmentQuery,
     useUpdateSegmentMutation
 } from "common/services/useSegment";
+
 const Utils = require("common/utils/utils")
+const IdentitySegmentsProvider = require("common/providers/IdentitySegmentsProvider")
 const Format = require("common/format")
 
 import AssociatedSegmentOverrides from './AssociatedSegmentOverrides';
@@ -23,21 +24,24 @@ import Tabs from '../base/forms/Tabs';
 import Button, {ButtonLink, ButtonOutline} from "../base/forms/Button";
 import Switch from "../Switch";
 import Input from "../base/forms/Input";
+import PanelSearch from "../PanelSearch";
+import {hot} from "react-hot-loader";
+
 const InputGroup = require("../base/forms/InputGroup")
 
 const SEGMENT_ID_MAXLENGTH = Constants.forms.maxLength.SEGMENT_ID;
 
-const defaultSegment:Omit<Segment,"id"|"uuid"|"project"> & {id?:number, uuid?:string, project?:number} = {
+const defaultSegment: Omit<Segment, "id" | "uuid" | "project"> & { id?: number, uuid?: string, project?: number } = {
     name: "",
     description: "",
     rules: [{
         type: 'ALL',
-        conditions:[],
+        conditions: [],
         rules: [
             {
                 type: 'ANY',
                 conditions: [
-                    { ...Constants.defaultRule },
+                    {...Constants.defaultRule},
                 ],
                 rules: []
             },
@@ -46,49 +50,49 @@ const defaultSegment:Omit<Segment,"id"|"uuid"|"project"> & {id?:number, uuid?:st
 };
 
 type PageType = {
-    number:number,
+    number: number,
     pageType: Req['getIdentities']['pageType'],
-    pages:Req['getIdentities']['pages']
+    pages: Req['getIdentities']['pages']
 }
 
 type CreateSegmentType = {
     projectId: string
-    searchInput:string
+    searchInput: string
     environmentId: string
     identitiesLoading: boolean
-    setEnvironmentId: (env:string)=>void
-    setSearchInput: (search:string)=>void
+    setEnvironmentId: (env: string) => void
+    setSearchInput: (search: string) => void
     page: PageType
-    setPage: (page:PageType)=>void
+    setPage: (page: PageType) => void
     feature?: number
     identities?: EdgePagedResponse<Identity>
-    identity?:boolean
-    condensed?:boolean
+    identity?: boolean
+    condensed?: boolean
     isEdit?: boolean
-    onCancel?: ()=>void
-    onComplete?: (segment:Segment)=>void
-    readOnly?:boolean
+    onCancel?: () => void
+    onComplete?: (segment: Segment) => void
+    readOnly?: boolean
     segment?: Segment
 }
 
 const CreateSegment: FC<CreateSegmentType> = ({
-                                                  condensed,
-    environmentId,
-    feature,
-    identities,
-    identitiesLoading,
-    identity,
-    isEdit,
-    onCancel,
-    onComplete,
-    page,
-    projectId,
-    readOnly,
-    searchInput,
-    segment= defaultSegment,
-    setEnvironmentId,
-    setPage,
-    setSearchInput,
+  condensed,
+  environmentId,
+  feature,
+  identities,
+  identitiesLoading,
+  identity,
+  isEdit,
+  onCancel,
+  onComplete,
+  page,
+  projectId,
+  readOnly,
+  segment = defaultSegment,
+  setEnvironmentId,
+  searchInput,
+  setSearchInput,
+  setPage,
 }) => {
 
     const [createSegment, {isSuccess: createSuccess,data:createSegmentData, isError:createError, isLoading:creating}] = useCreateSegmentMutation()
@@ -97,32 +101,31 @@ const CreateSegment: FC<CreateSegmentType> = ({
     const isSaving = creating || updating;
     const [showDescriptions, setShowDescriptions] = useState(false);
     const [description, setDescription] = useState(segment.description);
-    const [id, setID] = useState<Segment['id']| undefined>(segment.id);
     const [name, setName] = useState<Segment['name']>(segment.name);
     const [rules, setRules] = useState<Segment['rules']>(segment.rules);
     const [tab, setTab] = useState(0);
 
-    const isError = createError||updateError;
+    const isError = createError || updateError;
 
     const addRule = (type = 'ANY') => {
         const newRules = rules.concat([]);
         newRules[0].rules = newRules[0].rules.concat({
             type,
-            rules:[],
+            rules: [],
             conditions: [
-                { ...Constants.defaultRule },
+                {...Constants.defaultRule},
             ],
         });
         setRules(newRules)
     }
 
-    const updateRule = (rulesIndex:number, elementNumber:number, newValue:SegmentRule) => {
+    const updateRule = (rulesIndex: number, elementNumber: number, newValue: SegmentRule) => {
         const newRules = rules.concat([])
         newRules[0].rules[elementNumber] = newValue;
         setRules(newRules);
     }
 
-    const removeRule = (rulesIndex:number, elementNumber:number) => {
+    const removeRule = (rulesIndex: number, elementNumber: number) => {
         const newRules = rules.concat([])
         newRules[0].rules.splice(elementNumber, 1);
         setRules(newRules);
@@ -132,7 +135,7 @@ const CreateSegment: FC<CreateSegmentType> = ({
         closeModal();
     }
 
-    const save = (e:FormEvent) => {
+    const save = (e: FormEvent) => {
         Utils.preventDefault(e);
         const segmentData = {
             description,
@@ -144,7 +147,7 @@ const CreateSegment: FC<CreateSegmentType> = ({
             if (segment) {
                 editSegment({
                     projectId,
-                    segment:{
+                    segment: {
                         ...segmentData,
                         project: segment.project!,
                         uuid: segment.uuid!,
@@ -166,20 +169,20 @@ const CreateSegment: FC<CreateSegmentType> = ({
         }
         const res = rules[0].rules.find(v => v.conditions.find(c => !Utils.validateRule(c)));
         return !res;
-    },[rules])
+    }, [rules])
 
-    useEffect(()=>{
-       setTimeout(()=>{
-           document.getElementById("segmentID")?.focus()
-       },500)
-    },[])
-    useEffect(()=>{
-        if(createSuccess) {
+    useEffect(() => {
+        setTimeout(() => {
+            document.getElementById("segmentID")?.focus()
+        }, 500)
+    }, [])
+    useEffect(() => {
+        if (createSuccess) {
             onComplete?.(createSegmentData!);
         }
     }, [createSuccess])
-    useEffect(()=>{
-        if(updateSuccess) {
+    useEffect(() => {
+        if (updateSuccess) {
             onComplete?.(updateSegmentData!);
         }
     }, [updateSuccess])
@@ -207,7 +210,7 @@ const CreateSegment: FC<CreateSegmentType> = ({
                                     Utils.getFlagsmithValue('segment_operators') ? JSON.parse(Utils.getFlagsmithValue('segment_operators')) : null
                                 }
                                 onRemove={() => removeRule(0, i)}
-                                onChange={(v:SegmentRule) => updateRule(0, i, v)}
+                                onChange={(v: SegmentRule) => updateRule(0, i, v)}
                             />
                         </div>
                     ))}
@@ -215,7 +218,7 @@ const CreateSegment: FC<CreateSegmentType> = ({
                 <Row className="justify-content-center">
                     {!readOnly && (
                         <div
-                            onClick={() => addRule('ANY')} style={{ marginTop: 20 }}
+                            onClick={() => addRule('ANY')} style={{marginTop: 20}}
                             className="text-center"
                         >
                             <ButtonOutline data-test="add-rule" type="button">
@@ -225,13 +228,15 @@ const CreateSegment: FC<CreateSegmentType> = ({
                     )}
                     {!readOnly && Utils.getFlagsmithHasFeature('not_operator') && (
                         <div
-                            onClick={() => addRule('NOT')} style={{ marginTop: 20 }}
+                            onClick={() => addRule('NOT')} style={{marginTop: 20}}
                             className="text-center"
                         >
                             {
                                 Utils.getFlagsmithValue('not_operator') ? (
                                     <Tooltip title={(
-                                        <ButtonOutline className="ml-2 btn--outline-danger" data-test="add-rule" type="button">
+                                        <ButtonOutline className="ml-2 btn--outline-danger" data-test="add-rule"
+                                                       type="button"
+                                        >
                                             Add AND NOT Condition
                                         </ButtonOutline>
                                     )}
@@ -239,7 +244,9 @@ const CreateSegment: FC<CreateSegmentType> = ({
                                         {`Note: If using clientside evaluations on your SDK, this feature is only supported by the following SDKs: ${JSON.parse(Utils.getFlagsmithValue('not_operator'))}`}
                                     </Tooltip>
                                 ) : (
-                                    <ButtonOutline className="ml-2 btn--outline-danger" data-test="add-rule" type="button">
+                                    <ButtonOutline className="ml-2 btn--outline-danger" data-test="add-rule"
+                                                   type="button"
+                                    >
                                         Add AND NOT Condition
                                     </ButtonOutline>
                                 )
@@ -251,7 +258,6 @@ const CreateSegment: FC<CreateSegmentType> = ({
         </div>
     );
 
-
     const Tab1 = (
         <form
             id="create-segment-modal"
@@ -260,7 +266,9 @@ const CreateSegment: FC<CreateSegmentType> = ({
             {!condensed && (
                 <div className="mt-4">
                     <InfoMessage>
-                        Learn more about rule and trait value type conversions <a href="https://docs-git-improvement-segment-rule-value-typing-flagsmith.vercel.app/basic-features/managing-segments#rule-typing">here</a>.
+                        Learn more about rule and trait value type conversions <a
+                        href="https://docs-git-improvement-segment-rule-value-typing-flagsmith.vercel.app/basic-features/managing-segments#rule-typing"
+                    >here</a>.
                     </InfoMessage>
                 </div>
             )}
@@ -278,7 +286,7 @@ const CreateSegment: FC<CreateSegmentType> = ({
                             readOnly={isEdit}
                             maxLength={SEGMENT_ID_MAXLENGTH}
                             value={name}
-                            onChange={(e:InputEvent) => setName(Format.enumeration.set(Utils.safeParseEventValue(e)).toLowerCase())}
+                            onChange={(e: InputEvent) => setName(Format.enumeration.set(Utils.safeParseEventValue(e)).toLowerCase())}
                             isValid={name && name.length}
                             type="text" title={isEdit ? 'ID' : 'ID*'}
                             placeholder="E.g. power_users"
@@ -298,7 +306,7 @@ const CreateSegment: FC<CreateSegmentType> = ({
                             readOnly: !!identity || readOnly,
                             name: 'featureDesc',
                         }}
-                        onChange={(e:InputEvent) => setDescription(Utils.safeParseEventValue(e))}
+                        onChange={(e: InputEvent) => setDescription(Utils.safeParseEventValue(e))}
                         isValid={name && name.length}
                         type="text" title="Description (optional)"
                         placeholder="e.g. 'People who have spent over $100' "
@@ -314,16 +322,21 @@ const CreateSegment: FC<CreateSegmentType> = ({
                         <span className="text-small text-muted">Note: Trait names are case sensitive</span>
                     </Flex>
                     <span>
-                        {showDescriptions? "Hide condition descriptions" : "Show condition descriptions"}
+                        {showDescriptions ? "Hide condition descriptions" : "Show condition descriptions"}
                     </span>
-                    <Switch checked={!!showDescriptions} onChange={()=>{setShowDescriptions(!showDescriptions)}}/>
+                    <Switch checked={!!showDescriptions} onChange={() => {
+                        setShowDescriptions(!showDescriptions)
+                    }}
+                    />
                 </Row>
                 {
                     rulesEl
                 }
             </div>
             {isError
-                && <div className="alert alert-danger">Error creating segment, please ensure you have entered a trait and value for each rule.</div>
+                &&
+                <div className="alert alert-danger">Error creating segment, please ensure you have entered a trait and
+                    value for each rule.</div>
             }
 
             {readOnly ? (
@@ -357,9 +370,9 @@ const CreateSegment: FC<CreateSegmentType> = ({
                             </Button>
                         ) : (
                             <Button
-                                type="submit" data-test="create-segment" disabled
+                                disabled
+                                type="submit" data-test="create-segment"
                                 id="create-feature-btn"
-                                disabled={isSaving || !name || !isValid}
                             >
                                 {isSaving ? 'Creating' : 'Create Segment'}
                             </Button>
@@ -372,11 +385,10 @@ const CreateSegment: FC<CreateSegmentType> = ({
         </form>
     );
 
-
     return (
         <div>
             {isEdit && !condensed ? (
-                <Tabs value={tab} onChange={(tab:number) => setTab(tab)}>
+                <Tabs value={tab} onChange={(tab: number) => setTab(tab)}>
                     <TabItem tabLabel="Rules">
                         <div className="mt-4 mr-3 ml-3">
                             {Tab1}
@@ -385,7 +397,9 @@ const CreateSegment: FC<CreateSegmentType> = ({
                     {Utils.getFlagsmithHasFeature('segment_associated_features') && (
                         <TabItem tabLabel="Features">
                             <div className="mt-4 mr-3 ml-3">
-                                <AssociatedSegmentOverrides feature={segment.feature} projectId={projectId} id={segment.id}/>
+                                <AssociatedSegmentOverrides feature={segment.feature} projectId={projectId}
+                                                            id={segment.id}
+                                />
                             </div>
                         </TabItem>
                     )}
@@ -393,7 +407,8 @@ const CreateSegment: FC<CreateSegmentType> = ({
                     <TabItem tabLabel="Users">
                         <div className="mt-4 mr-3 ml-3">
                             <InfoMessage>
-                                This is a random sample of Identities who are either in or out of this Segment based on the current Segment rules.
+                                This is a random sample of Identities who are either in or out of this Segment based on
+                                the current Segment rules.
                             </InfoMessage>
                             <div className="mt-2">
                                 <FormGroup>
@@ -403,7 +418,7 @@ const CreateSegment: FC<CreateSegmentType> = ({
                                         component={(
                                             <EnvironmentSelect
                                                 value={environmentId}
-                                                onChange={(environmentId) => {
+                                                onChange={(environmentId: string) => {
                                                     setEnvironmentId(environmentId)
                                                 }}
                                             />
@@ -421,30 +436,31 @@ const CreateSegment: FC<CreateSegmentType> = ({
                                         showExactFilter
                                         nextPage={() => {
                                             setPage({
-                                                number:page.number+1,
+                                                number: page.number + 1,
                                                 pageType: 'NEXT',
-                                                pages: identities?.last_evaluated_key? (page.pages||[]).concat([identities?.last_evaluated_key]) : undefined
+                                                pages: identities?.last_evaluated_key ? (page.pages || []).concat([identities?.last_evaluated_key]) : undefined
                                             })
                                         }}
                                         prevPage={() => {
                                             setPage({
-                                                number:page.number-1,
+                                                number: page.number - 1,
                                                 pageType: 'PREVIOUS',
-                                                pages: page.pages? Utils.removeElementFromArray(page.pages, page.pages.length-1) : undefined
+                                                pages: page.pages ? Utils.removeElementFromArray(page.pages, page.pages.length - 1) : undefined
                                             })
                                         }}
                                         goToPage={(newPage: number) => {
                                             setPage({
-                                                number:newPage,
+                                                number: newPage,
                                                 pageType: undefined,
                                                 pages: undefined
                                             })
                                         }}
                                         renderRow={({id, identifier}: {id:string, identifier:string}, index:number) => (
                                             <div key={id}>
-                                                <IdentitySegmentsProvider fetch id={id} projectId={this.props.projectId}>{({ isLoading: segmentsLoading, segments }) => {
+                                                <IdentitySegmentsProvider fetch id={id} projectId={projectId}>
+                                                    {({ segments }: {segments?:Segment[]}) => {
                                                     let inSegment = false;
-                                                    if (segments && segments.find(v => v.name === name)) {
+                                                    if (segments?.find(v => v.name === name)) {
                                                         inSegment = true;
                                                     }
                                                     return (
@@ -465,9 +481,9 @@ const CreateSegment: FC<CreateSegmentType> = ({
                                                 </IdentitySegmentsProvider>
                                             </div>
                                         )}
-                                        filterRow={(flag, search) => true}
+                                        filterRow={() => true}
                                         search={searchInput}
-                                        onChange={(e) => {
+                                        onChange={(e:InputEvent) => {
                                             setSearchInput(Utils.safeParseEventValue(e))
                                         }}
                                     />
@@ -476,28 +492,29 @@ const CreateSegment: FC<CreateSegmentType> = ({
                         </div>
                     </TabItem>
                 </Tabs>
-            ) :<div className="mt-4 mr-3 ml-3">{Tab1}</div>}
+            ) : <div className="mt-4 mr-3 ml-3">{Tab1}</div>}
         </div>
     )
 }
 
-
-
 type LoadingCreateSegmentType = {
-    segment?: number
-    projectId: string
+    condensed?: boolean
     environmentId: string
-    condensed?:boolean
+    isEdit?: boolean
+    readOnly?: boolean
+    onComplete?: () => void
+    projectId: string
+    segment?: number
 }
 
-const LoadingCreateSegment:FC<LoadingCreateSegmentType>  = (props) => {
+const LoadingCreateSegment: FC<LoadingCreateSegmentType> = (props) => {
     const [environmentId, setEnvironmentId] = useState(props.environmentId);
-    const {data:segmentData, isLoading} =  props.segment?
-        useGetSegmentQuery({projectId:`${props.projectId}`, id: `${props.segment}`})
-        : {data:null,isLoading:false}
+    const {data: segmentData, isLoading} = props.segment ?
+        useGetSegmentQuery({projectId: `${props.projectId}`, id: `${props.segment}`})
+        : {data: null, isLoading: false}
 
 
-    const [page, setPage] = useState<PageType>({number:1, pageType:undefined, pages:undefined});
+    const [page, setPage] = useState<PageType>({number: 1, pageType: undefined, pages: undefined});
 
     const {searchInput, search, setSearchInput} = useSearchThrottle(Utils.fromParam().search, () => {
         setPage({
@@ -509,7 +526,7 @@ const LoadingCreateSegment:FC<LoadingCreateSegmentType>  = (props) => {
 
     const isEdge = Utils.getIsEdge();
 
-    const { data:identities, isLoading:identitiesLoading } = useGetIdentitiesQuery({
+    const {data: identities, isLoading: identitiesLoading} = useGetIdentitiesQuery({
         pages: page.pages,
         page: page.number,
         search,
@@ -519,22 +536,20 @@ const LoadingCreateSegment:FC<LoadingCreateSegmentType>  = (props) => {
         isEdge
     })
 
-    return isLoading?<div className="text-center"><Loader/></div> : (
-        <CreateSegment {...props}
-           segment={segmentData||undefined}
-           condensed={condensed}
-           identities={identities}
-           setPage={setPage}
-           searchInput={searchInput}
-           setSearchInput={setSearchInput}
-           identitiesLoading={identitiesLoading}
-           page={page}
-           environmentId={environmentId}
-           setEnvironmentId={setEnvironmentId}
+    return isLoading ? <div className="text-center"><Loader/></div> : (
+        <CreateSegment
+            {...props}
+            segment={segmentData || undefined}
+            identities={identities}
+            setPage={setPage}
+            searchInput={searchInput}
+            setSearchInput={setSearchInput}
+            identitiesLoading={identitiesLoading}
+            page={page}
+            environmentId={environmentId}
+            setEnvironmentId={setEnvironmentId}
         />
     )
 }
 
 export default LoadingCreateSegment
-
-module.exports = hot(module)(ConfigProvider(LoadingCreateSegment));

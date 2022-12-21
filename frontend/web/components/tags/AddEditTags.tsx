@@ -10,6 +10,7 @@ import {Tag as TTag} from "../../../common/types/responses";
 import Button, {ButtonLink} from "../base/forms/Button";
 import Tag from "./Tag";
 import CreateEditTag from "./CreateEditTag";
+import Input from "../base/forms/Input";
 
 type AddEditTagsType = {
     value?: number[]

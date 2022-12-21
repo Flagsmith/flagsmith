@@ -9,6 +9,7 @@ export type Req = {
   getSegments: PagedRequest<{
     q?:string
     projectId: string
+    identity?:number
   }>
   deleteSegment: {projectId:string, id:number}
   updateSegment: {projectId:string, segment: Segment}

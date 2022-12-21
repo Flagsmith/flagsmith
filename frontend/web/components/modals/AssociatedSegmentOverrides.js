@@ -250,12 +250,12 @@ class SegmentOverridesInner extends Component {
                                 <Tooltip title={(
                                     <div className="chip mt-2">
                                             Priority: {segmentOverride && segmentOverride[0].priority + 1} of {originalSegmentOverrides.length}
-
                                         <a
-                                          href="#" className="font-weight-bold" className="ml-2"
+                                          href="#"
+                                          className="ml-2"
                                           onClick={this.openPriorities}
                                         >
-                                                    Edit
+                                            Edit
                                         </a>
                                     </div>
 

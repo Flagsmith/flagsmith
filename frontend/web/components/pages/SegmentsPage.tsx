@@ -11,6 +11,7 @@ import Button, {ButtonLink} from "../base/forms/Button";
 import {RouterChildContext} from "react-router";
 import {useHasPermission} from "../../../common/providers/Permission";
 import PanelSearch from '../PanelSearch'
+import useSearchThrottle from "../../../common/useSearchThrottle";
 
 const Utils = require('common/utils/utils')
 
@@ -42,9 +43,8 @@ const SegmentsPage: FC<SegmentsPageType> = (props) => {
     const {projectId, environmentId} = props.match.params;
     const preselect = useRef(Utils.fromParam().id);
     const hasNoOperators = !Utils.getFlagsmithValue('segment_operators');
-    const [search, _setSearch] = useState("");
-    const [searchInput, setSearchInput] = useState("");
 
+    const {search,setSearchInput,searchInput} = useSearchThrottle("")
     const [page, setPage] = useState(1);
     const {data, isLoading, error, refetch} = useGetSegmentsQuery({projectId, page, q: search, page_size: 100})
     const [removeSegment] = useDeleteSegmentMutation()
@@ -140,21 +140,16 @@ const SegmentsPage: FC<SegmentsPageType> = (props) => {
     if (data?.results.length) {
         hasHadResults.current = true
     }
-    const setSearch = useThrottle((search: string) => {
-        _setSearch(search)
-    }, 100)
-    useEffect(() => {
-        setSearch(searchInput)
-    }, [searchInput])
+
     const segments = data?.results
     return (
         <div data-test="segments-page" id="segments-page" className="app-container container">
             <div className="segments-page">
-                {isLoading && !hasHadResults.current && (!segments && !search) &&
+                {isLoading && !hasHadResults.current && (!segments && !searchInput) &&
                     <div className="centered-container"><Loader/></div>}
-                {(!isLoading || (segments || search)) && (
+                {(!isLoading || (segments || searchInput)) && (
                     <div>
-                        {hasHadResults.current || (segments && (segments.length || search)) ? (
+                        {hasHadResults.current || (segments && (segments.length || searchInput)) ? (
                             <div>
                                 <Row>
                                     <Flex>
@@ -265,10 +260,7 @@ const SegmentsPage: FC<SegmentsPageType> = (props) => {
                                         renderNoResults={(
                                             <div className="text-center"/>
                                         )}
-                                        filterRow={({
-                                                        name,
-                                                        feature
-                                                    }: Segment, search: string) => name.toLowerCase().indexOf(search) > -1}
+                                        filterRow={()=>true}
                                     />
                                 </FormGroup>
 

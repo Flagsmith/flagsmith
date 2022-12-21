@@ -43,4 +43,4 @@ const EnvironmentSelect = class extends Component {
 
 EnvironmentSelect.propTypes = {};
 
-export default ;
+export default EnvironmentSelect;
