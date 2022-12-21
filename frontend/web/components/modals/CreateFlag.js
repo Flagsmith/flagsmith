@@ -17,6 +17,7 @@ import { ButtonOutline } from '../base/forms/Button';
 import ChangeRequestStore from '../../../common/stores/change-requests-store';
 import { setInterceptClose } from '../../project/modals';
 import classNames from 'classnames'
+import InfoMessage from "../InfoMessage";
 const FEATURE_ID_MAXLENGTH = Constants.forms.maxLength.FEATURE_ID;
 
 const CreateFlag = class extends Component {
@@ -65,7 +66,7 @@ const CreateFlag = class extends Component {
                         const matchingVariation = (this.props.multivariate_options || this.props.environmentVariations).find(e => e.multivariate_feature_option === v.id);
                         return {
                             ...v,
-                            default_percentage_allocation: matchingVariation && matchingVariation.percentage_allocation || 0,
+                            default_percentage_allocation: v.default_percentage_allocation || (matchingVariation && matchingVariation.percentage_allocation) || 0,
                         };
                     }),
                 });
@@ -357,11 +358,20 @@ const CreateFlag = class extends Component {
         const is4EyesSegmentOverrides = is4Eyes && Utils.getFlagsmithHasFeature('4eyes_segment_overrides'); //
         const project = ProjectStore.model;
         const caseSensitive = Utils.getFlagsmithHasFeature("case_sensitive_flags") && project?.only_allow_lower_case_feature_names;
+        const regex = project?.feature_name_regex;
         const controlValue = Utils.calculateControl(multivariate_options);
         const invalid = !!multivariate_options && multivariate_options.length && controlValue < 0;
         const existingChangeRequest = this.props.changeRequest;
         const hideIdentityOverridesTab = Utils.getShouldHideIdentityOverridesTab();
         const noPermissions = this.props.noPermissions;
+        let regexValid = true;
+        try {
+            if(!isEdit && name && regex) {
+                regexValid = name.match(new RegExp(regex))
+            }
+        } catch (e) {
+            regexValid = false;
+        }
         const Settings = (projectAdmin, createFeature) => (
             <>
                 {!identity && this.state.tags && (
@@ -397,7 +407,6 @@ const CreateFlag = class extends Component {
                           name: 'featureDesc',
                       }}
                       onChange={e => this.setState({ description: Utils.safeParseEventValue(e), settingsChanged: true })}
-                      isValid={name && name.length}
                       ds
                       type="text" title={identity ? 'Description' : 'Description (optional)'}
                       placeholder="e.g. 'This determines what size the header is' "
@@ -411,7 +420,6 @@ const CreateFlag = class extends Component {
                               <Switch checked={this.state.is_archived} onChange={is_archived => this.setState({ is_archived, settingsChanged: true })}/>
                           )}
                           onChange={e => this.setState({ description: Utils.safeParseEventValue(e) })}
-                          isValid={name && name.length}
                           type="text"
                           title="Archived"
                           tooltip="Archiving a flag allows you to filter out flags from the Flagsmith dashboard that are no longer relevant.<br/>An archived flag will still return as normal in all SDK endpoints."
@@ -441,6 +449,7 @@ const CreateFlag = class extends Component {
                 )}
             </>
         );
+
         const Value = (projectAdmin, createFeature, hideValue) => (
             <>
                 {!isEdit && (
@@ -459,8 +468,11 @@ const CreateFlag = class extends Component {
                               const newName = Utils.safeParseEventValue(e).replace(/ /g, '_');
                               this.setState({ name: caseSensitive?newName.toLowerCase() : newName })
                           }}
-                          isValid={name && name.length}
-                          type="text" title={isEdit ? 'ID' : 'ID*'}
+                          isValid={!!name && regexValid}
+                          type="text" title={<>
+                            {isEdit ? 'ID' : 'ID*'}
+                            {!!regex && !isEdit && <div className="mt-2"> <InfoMessage> This must conform to the regular expression <code>{regex}</code></InfoMessage></div>}
+                        </>}
                           placeholder="E.g. header_size"
                         />
                     </FormGroup>
@@ -478,7 +490,6 @@ const CreateFlag = class extends Component {
                               valueChanged: true,
                           }}
                           onChange={e => this.setState({ description: Utils.safeParseEventValue(e) })}
-                          isValid={name && name.length}
                           type="text" title={identity ? 'Description' : 'Description (optional)'}
                           placeholder="No description"
                         />
@@ -979,7 +990,7 @@ const CreateFlag = class extends Component {
 
                                                                         <Button
                                                                           onClick={onCreateFeature} data-test="create-feature-btn" id="create-feature-btn"
-                                                                          disabled={isSaving || !name || invalid}
+                                                                          disabled={isSaving || !name || invalid || !regexValid}
                                                                         >
                                                                             {isSaving ? 'Creating' : 'Create Feature'}
                                                                         </Button>
