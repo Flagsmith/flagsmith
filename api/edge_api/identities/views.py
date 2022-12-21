@@ -21,9 +21,16 @@ from rest_framework.exceptions import (
     PermissionDenied,
     ValidationError,
 )
+from rest_framework.mixins import (
+    CreateModelMixin,
+    DestroyModelMixin,
+    ListModelMixin,
+    RetrieveModelMixin,
+)
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
+from rest_framework.viewsets import GenericViewSet
 
 from app.pagination import (
     EdgeIdentityPagination,
@@ -43,7 +50,10 @@ from environments.identities.serializers import (
     IdentityAllFeatureStatesSerializer,
 )
 from environments.models import Environment
-from environments.permissions.constants import MANAGE_IDENTITIES
+from environments.permissions.constants import (
+    MANAGE_IDENTITIES,
+    VIEW_IDENTITIES,
+)
 from environments.permissions.permissions import NestedEnvironmentPermissions
 from features.models import FeatureState
 from features.permissions import IdentityFeatureStatePermissions
@@ -65,7 +75,13 @@ trait_schema = APITraitSchema()
         paginator_inspectors=[EdgeIdentityPaginationInspector],
     ),
 )
-class EdgeIdentityViewSet(viewsets.ModelViewSet):
+class EdgeIdentityViewSet(
+    GenericViewSet,
+    CreateModelMixin,
+    RetrieveModelMixin,
+    DestroyModelMixin,
+    ListModelMixin,
+):
     serializer_class = EdgeIdentitySerializer
     pagination_class = EdgeIdentityPagination
     lookup_field = "identity_uuid"
@@ -125,9 +141,12 @@ class EdgeIdentityViewSet(viewsets.ModelViewSet):
             IsAuthenticated(),
             NestedEnvironmentPermissions(
                 action_permission_map={
-                    "retrieve": MANAGE_IDENTITIES,
-                    "get_traits": MANAGE_IDENTITIES,
+                    "retrieve": VIEW_IDENTITIES,
+                    "list": VIEW_IDENTITIES,
+                    "create": MANAGE_IDENTITIES,
+                    "get_traits": VIEW_IDENTITIES,
                     "update_traits": MANAGE_IDENTITIES,
+                    "perform_destroy": MANAGE_IDENTITIES,
                 },
             ),
         ]

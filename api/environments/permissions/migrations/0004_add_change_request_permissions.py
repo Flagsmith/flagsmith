@@ -10,6 +10,8 @@ from environments.permissions.constants import (
 )
 from permissions.models import ENVIRONMENT_PERMISSION_TYPE
 
+from core.migration_helpers import create_new_environment_permissions
+
 
 def add_change_request_permissions(apps, schema_editor):
     PermissionModel = apps.get_model("permissions", "PermissionModel")
@@ -36,39 +38,17 @@ def add_change_request_permissions(apps, schema_editor):
 
     new_permissions = [create_cr_permission_model, approve_cr_permission_model]
 
-    _add_new_permissions(
-        UserEnvironmentPermission, "userenvironmentpermission", new_permissions
+    create_new_environment_permissions(
+        UPDATE_FEATURE_STATE,
+        UserEnvironmentPermission,
+        "userenvironmentpermission",
+        new_permissions,
     )
-    _add_new_permissions(
+    create_new_environment_permissions(
+        UPDATE_FEATURE_STATE,
         UserPermissionGroupEnvironmentPermission,
         "userpermissiongroupenvironmentpermission",
         new_permissions,
-    )
-
-
-def _add_new_permissions(
-    model_class: type, reverse_attribute_name: str, permission_models: typing.List
-):
-    new_environment_permission_through_models = []
-    environment_permission_through_model_class = model_class.permissions.through
-
-    for environment_permission in model_class.objects.filter(
-        permissions__key=UPDATE_FEATURE_STATE
-    ):
-        new_environment_permission_through_models.extend(
-            [
-                environment_permission_through_model_class(
-                    **{
-                        f"{reverse_attribute_name}_id": environment_permission.id,
-                        "permissionmodel_id": permission_model.key,
-                    }
-                )
-                for permission_model in permission_models
-            ]
-        )
-
-    environment_permission_through_model_class.objects.bulk_create(
-        new_environment_permission_through_models
     )
 
 
