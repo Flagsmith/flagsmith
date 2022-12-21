@@ -37,8 +37,6 @@ class TheComponent extends Component {
             });
             const newItems = this.state.newItems || {};
             const selectedEnv = this.state.selectedEnv || ProjectStore.getEnvs()[0].name;
-            AppActions.getSegments(this.props.projectId, ProjectStore.getEnvs()[0].api_key);
-
             newItems[selectedEnv] = (newItems[selectedEnv] || []).filter((newItem) => {
                 const existingSegmentOverride = !!v[selectedEnv] && v[selectedEnv].find(s => newItem.feature.id === s.feature.id);
                 return !existingSegmentOverride;

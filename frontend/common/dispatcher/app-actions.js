@@ -350,42 +350,6 @@ const AppActions = Object.assign({}, require('./base/_app-actions'), {
             id,
         });
     },
-    getSegments(projectId, environmentId) {
-        Dispatcher.handleViewAction({
-            actionType: Actions.GET_SEGMENTS,
-            projectId,
-            environmentId,
-        });
-    },
-    searchSegments(projectId, environmentId, search) {
-        Dispatcher.handleViewAction({
-            actionType: Actions.SEARCH_SEGMENTS,
-            projectId,
-            environmentId,
-            search,
-        });
-    },
-    createSegment(projectId, segment) {
-        Dispatcher.handleViewAction({
-            actionType: Actions.CREATE_SEGMENT,
-            projectId,
-            data: segment,
-        });
-    },
-    editSegment(projectId, segment) {
-        Dispatcher.handleViewAction({
-            actionType: Actions.EDIT_SEGMENT,
-            projectId,
-            data: segment,
-        });
-    },
-    removeSegment(projectId, id) {
-        Dispatcher.handleViewAction({
-            actionType: Actions.REMOVE_SEGMENT,
-            projectId,
-            id,
-        });
-    },
     deleteIdentityTrait(envId, identity, id) {
         Dispatcher.handleViewAction({
             actionType: Actions.DELETE_IDENTITY_TRAIT,
