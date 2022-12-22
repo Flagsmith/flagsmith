@@ -228,7 +228,7 @@ const FeaturesPage = class extends Component {
                                                               renderFooter={()=>(
                                                                   <>
                                                                       <JSONReference className="mx-2 mt-4" showNamesButton title={"Features"} json={projectFlags}/>
-                                                                      <JSONReference className="mx-2" title={"Feature Values"} json={environmentFlags && Object.values(environmentFlags)}/>
+                                                                      <JSONReference className="mx-2" title={"Feature States"} json={environmentFlags && Object.values(environmentFlags)}/>
                                                                   </>
                                                               )}
                                                               renderRow={(projectFlag, i) => (
