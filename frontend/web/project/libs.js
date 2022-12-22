@@ -23,12 +23,6 @@ import Bootstrap from '../../node_modules/bootstrap/dist/js/bootstrap';
 // Add this line if you're using flagsmith via npm
 const _Project = require('../../common/project');
 
-window.Project = {
-    ..._Project,
-    ...window.projectOverrides, // environment.js (also app.yaml if using app engine)
-};
-
-
 window.isMobile = isMobile || $(window).width() <= 576;
 
 window.flagsmith = flagsmith;
@@ -108,6 +102,6 @@ if (typeof SENTRY_RELEASE_VERSION !== 'undefined' && Project.sentry && typeof Se
     });
 }
 
-if (projectOverrides.delighted) {
-    !(function (e, t, r, n) { if (!e[n]) { for (var a = e[n] = [], i = ['survey', 'reset', 'config', 'init', 'set', 'get', 'event', 'identify', 'track', 'page', 'screen', 'group', 'alias'], s = 0; s < i.length; s++) { const c = i[s]; a[c] = a[c] || (function (e) { return function () { const t = Array.prototype.slice.call(arguments); a.push([e, t]); }; }(c)); }a.SNIPPET_VERSION = '1.0.1'; const o = t.createElement('script'); o.type = 'text/javascript', o.async = !0, o.src = `https://d2yyd1h5u9mauk.cloudfront.net/integrations/web/v1/library/${r}/${n}.js`; const p = t.getElementsByTagName('script')[0]; p.parentNode.insertBefore(o, p); } }(window, document, projectOverrides.delighted, 'delighted'));
+if (Project.delighted) {
+    !(function (e, t, r, n) { if (!e[n]) { for (var a = e[n] = [], i = ['survey', 'reset', 'config', 'init', 'set', 'get', 'event', 'identify', 'track', 'page', 'screen', 'group', 'alias'], s = 0; s < i.length; s++) { const c = i[s]; a[c] = a[c] || (function (e) { return function () { const t = Array.prototype.slice.call(arguments); a.push([e, t]); }; }(c)); }a.SNIPPET_VERSION = '1.0.1'; const o = t.createElement('script'); o.type = 'text/javascript', o.async = !0, o.src = `https://d2yyd1h5u9mauk.cloudfront.net/integrations/web/v1/library/${r}/${n}.js`; const p = t.getElementsByTagName('script')[0]; p.parentNode.insertBefore(o, p); } }(window, document, Project.delighted, 'delighted'));
 }
