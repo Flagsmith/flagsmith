@@ -96,7 +96,7 @@ const CreateFlag = class extends Component {
             }, 500);
         }
         AppActions.getIdentities(this.props.environmentId, 3);
-        if (!projectOverrides.disableInflux && this.props.projectFlag && this.props.environmentFlag) {
+        if (!Project.disableInflux && this.props.projectFlag && this.props.environmentFlag) {
             this.getInfluxData();
         }
     };
@@ -911,7 +911,7 @@ const CreateFlag = class extends Component {
                                                                         </TabItem>
                                                                     )
                                                                 }
-                                                                { !existingChangeRequest && !projectOverrides.disableInflux && (Utils.getFlagsmithHasFeature('flag_analytics') && this.props.flagId) && (
+                                                                { !existingChangeRequest && !Project.disableInflux && (Utils.getFlagsmithHasFeature('flag_analytics') && this.props.flagId) && (
                                                                     <TabItem data-test="analytics" tabLabel="Analytics">
                                                                         <FormGroup className="mb-4 mr-3 ml-3">
                                                                             <Panel

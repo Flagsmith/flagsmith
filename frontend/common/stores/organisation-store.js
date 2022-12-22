@@ -39,7 +39,7 @@ const controller = {
                         }).catch(() => {
                         });
                     }
-                    if (projectOverrides.hideInviteLinks) {
+                    if (Project.hideInviteLinks) {
                         store.loaded();
                     } else {
                         data.get(`${Project.api}organisations/${id}/invite-links/`).then((links) => {
