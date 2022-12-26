@@ -155,6 +155,7 @@ INSTALLED_APPS = [
     "import_export",
     "task_processor",
     "softdelete",
+    "metadata",
 ]
 
 if GOOGLE_ANALYTICS_KEY or INFLUXDB_TOKEN:

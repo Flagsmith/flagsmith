@@ -4,6 +4,7 @@ from rest_framework import serializers
 from rest_framework.exceptions import PermissionDenied
 
 from environments.identities.models import Identity
+from metadata.serializers import MetadataSerializer
 from users.serializers import UserIdsSerializer, UserListSerializer
 from util.drf_writable_nested.serializers import (
     DeleteBeforeUpdateWritableNestedModelSerializer,
@@ -68,6 +69,7 @@ class ListCreateFeatureSerializer(DeleteBeforeUpdateWritableNestedModelSerialize
         many=True, required=False
     )
     owners = UserListSerializer(many=True, read_only=True)
+    metadata = MetadataSerializer(many=True, required=False)
 
     class Meta:
         model = Feature
@@ -85,6 +87,7 @@ class ListCreateFeatureSerializer(DeleteBeforeUpdateWritableNestedModelSerialize
             "owners",
             "uuid",
             "project",
+            "metadata",
         )
         read_only_fields = ("feature_segments", "created_date", "uuid", "project")
 
