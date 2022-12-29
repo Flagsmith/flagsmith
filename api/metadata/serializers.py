@@ -77,26 +77,25 @@ class FieldDataField(serializers.Field):
 class MetadataListSerializer(serializers.ListSerializer):
     def save(self, **kwargs):
         validated_data = [{**attrs, **kwargs} for attrs in self.validated_data]
-        content_type = ContentType.objects.get_for_model(kwargs["content_object"])
+        content_object = kwargs["content_object"]
+        content_type = ContentType.objects.get_for_model(content_object)
         instances = []
 
         # Create or update the metadata
         for metadata in validated_data:
             instance, _ = Metadata.objects.update_or_create(
                 content_type=content_type,
-                object_id=metadata["content_object"].id,
+                object_id=content_object.id,
                 field=metadata["field"],
                 defaults={"field_data": metadata["field_data"]},
             )
             instances.append(instance)
 
         # Delete the metadata that is not in the list
-        # TODO: fix this
         Metadata.objects.filter(
             ~Q(id__in=[instance.id for instance in instances]),
             content_type=content_type,
-            object_id=metadata["content_object"].id,
-            field=metadata["field"],
+            object_id=content_object.id,
         ).delete()
 
         return instances
