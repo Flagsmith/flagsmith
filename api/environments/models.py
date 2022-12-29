@@ -9,6 +9,7 @@ import boto3
 from core.models import abstract_base_auditable_model_factory
 from core.request_origin import RequestOrigin
 from django.conf import settings
+from django.contrib.contenttypes.fields import GenericRelation
 from django.core.cache import caches
 from django.db import models
 from django.db.models import Q
@@ -36,6 +37,7 @@ from environments.dynamodb import DynamoEnvironmentWrapper
 from environments.exceptions import EnvironmentHeaderNotPresentError
 from environments.managers import EnvironmentManager
 from features.models import Feature, FeatureSegment, FeatureState
+from metadata.models import Metadata
 from projects.models import Project
 from segments.models import Segment
 from webhooks.models import AbstractBaseWebhookModel
@@ -91,6 +93,7 @@ class Environment(
     banner_colour = models.CharField(
         null=True, blank=True, max_length=7, help_text="hex code for the banner colour"
     )
+    metadata = GenericRelation(Metadata)
 
     hide_disabled_flags = models.BooleanField(
         null=True,

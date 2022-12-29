@@ -19,6 +19,7 @@ from environments.permissions.permissions import (
     MasterAPIKeyEnvironmentPermissions,
     NestedEnvironmentPermissions,
 )
+from metadata.base_views import BaseMetadataView
 from permissions.serializers import (
     PermissionModelSerializer,
     UserObjectPermissionsSerializer,
@@ -63,9 +64,11 @@ logger = logging.getLogger(__name__)
         ]
     ),
 )
-class EnvironmentViewSet(viewsets.ModelViewSet):
+class EnvironmentViewSet(viewsets.ModelViewSet, BaseMetadataView):
     lookup_field = "api_key"
     permission_classes = [EnvironmentPermissions | MasterAPIKeyEnvironmentPermissions]
+    app_label = "environments"
+    model_name = "environment"
 
     def get_serializer_class(self):
         if self.action == "trait_keys":

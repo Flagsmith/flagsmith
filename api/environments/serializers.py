@@ -4,6 +4,7 @@ from rest_framework import serializers
 
 from environments.models import Environment, EnvironmentAPIKey, Webhook
 from features.serializers import FeatureStateSerializerFull
+from metadata.serializers import MetadataSerializer, MetadataSerializerMixin
 from organisations.models import Subscription
 from organisations.subscriptions.serializers.mixins import (
     ReadOnlyIfNotValidPlanMixin,
@@ -29,7 +30,9 @@ class EnvironmentSerializerFull(serializers.ModelSerializer):
         )
 
 
-class EnvironmentSerializerLight(serializers.ModelSerializer):
+class EnvironmentSerializerLight(serializers.ModelSerializer, MetadataSerializerMixin):
+    metadata = MetadataSerializer(required=False, many=True)
+
     class Meta:
         model = Environment
         fields = (
@@ -43,7 +46,23 @@ class EnvironmentSerializerLight(serializers.ModelSerializer):
             "banner_text",
             "banner_colour",
             "hide_disabled_flags",
+            "metadata",
         )
+
+    def save(self, **kwargs):
+        # maybe move this to a mixin
+        self.check_required_metadata(self.validated_data.pop("metadata", []))
+
+        metadata = self.initial_data.pop("metadata", None)
+        metadata_serializer = MetadataSerializer(
+            data=metadata, many=True, context=self.context
+        )
+        metadata_serializer.is_valid(raise_exception=True)
+
+        instance = super().save(**kwargs)
+
+        metadata_serializer.save(content_object=instance)
+        return instance
 
 
 class CreateUpdateEnvironmentSerializer(

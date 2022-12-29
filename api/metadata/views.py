@@ -2,11 +2,10 @@ from django.utils.decorators import method_decorator
 from drf_yasg2 import openapi
 from drf_yasg2.utils import swagger_auto_schema
 from rest_framework import viewsets
-from rest_framework.decorators import action
 
 from .models import MetadataField
 from .permissions import MetadataFieldPermissions
-from .serializers import MetadataFieldSerializer, MetadataSerializer
+from .serializers import MetadataFieldSerializer
 
 metadata_resource_map = {
     "feature": "features",
@@ -14,20 +13,9 @@ metadata_resource_map = {
     "project": "projects",
 }
 
-
-class MetadataViewSet(viewsets.ModelViewSet):
-    serializer_class = MetadataSerializer
-
-    @action(
-        detail=False,
-        url_path=r"supported-objects",
-        methods=["get"],
-    )
-    def get_supported_object_types(self):
-        return metadata_resource_map.keys()
-
-    def perform_create(self, serializer):
-        serializer.save()
+model_to_permission_map = {
+    "feature": lambda x: x.feature.project,
+}
 
 
 @method_decorator(
@@ -51,9 +39,6 @@ class MetadataFieldViewSet(viewsets.ModelViewSet):
     def get_queryset(self):
         queryset = MetadataField.objects.filter(
             organisation__in=self.request.user.organisations.all()
-        )
-        queryset = self.request.user.get_permitted_projects(
-            permissions=["VIEW_PROJECT"]
         )
         organisation_id = self.request.query_params.get("organisation")
         if organisation_id:
