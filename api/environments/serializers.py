@@ -30,7 +30,7 @@ class EnvironmentSerializerFull(serializers.ModelSerializer):
         )
 
 
-class EnvironmentSerializerLight(serializers.ModelSerializer, MetadataSerializerMixin):
+class EnvironmentSerializerLight(MetadataSerializerMixin, serializers.ModelSerializer):
     metadata = MetadataSerializer(required=False, many=True)
 
     class Meta:

@@ -21,36 +21,6 @@ class MetaDataModelFieldSerializer(serializers.ModelSerializer):
     class Meta:
         model = MetadataModelField
         fields = ("id", "field", "is_required")
-        read_only_fields = ("id",)
-
-
-# class AssignMetadataFieldSerializer(serializers.ModelSerializer):
-#     class Meta:
-#         model = MetadataModelField
-#         fields = ("id", "field", "is_required")
-#         read_only_fields = ("id",)
-
-
-# class ContentObjectSerializer(serializers.Serializer):
-#     content_type = serializers.CharField()
-#     object_id = serializers.IntegerField()
-
-#     def to_representation(self, value):
-#         content_type = self.parent.instance.content_type
-#         return {"object_type": content_type.name, "object_id": value.id}
-
-#     def to_internal_value(self, data):
-#         # TODO: restructure to avoid local import
-#         from .views import metadata_resource_map
-
-#         if data["object_type"] not in metadata_resource_map:
-#             raise serializers.ValidationError("Invalid content type")
-
-#         object_type = ContentType.objects.get(
-#             app_label=metadata_resource_map[data["object_type"]],
-#             model=data["object_type"],
-#         )
-#         return object_type.model_class().objects.get(pk=data["object_id"])
 
 
 class FieldDataField(serializers.Field):
@@ -106,8 +76,7 @@ class MetadataSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Metadata
-        fields = ("id", "field", "field_data")
-        read_only_fields = ("id",)
+        fields = ("field", "field_data")
         list_serializer_class = MetadataListSerializer
 
     def validate(self, data):
@@ -142,3 +111,20 @@ class MetadataSerializerMixin:
                 raise serializers.ValidationError(
                     f"Missing required metadata field {metadata_field.field.name}"
                 )
+
+    def save(self, **kwargs):
+        # TODO: improve this
+        self.check_required_metadata(self.validated_data.pop("metadata", []))
+
+        instance = super().save(**kwargs)
+
+        metadata = self.initial_data.pop("metadata", None)
+
+        if metadata:
+            metadata_serializer = MetadataSerializer(
+                data=metadata, many=True, context=self.context
+            )
+            metadata_serializer.is_valid(raise_exception=True)
+            metadata_serializer.save(content_object=instance)
+
+        return instance
