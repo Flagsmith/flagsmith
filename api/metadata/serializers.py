@@ -85,7 +85,7 @@ class MetadataSerializer(serializers.ModelSerializer):
         return data
 
     def to_representation(self, value):
-        # Convert field_data to it's appropriate type from string
+        # Convert field_data to its appropriate type from string
         field_type = value.field.field.type
         value = super().to_representation(value)
 
