@@ -115,16 +115,24 @@ class MetadataSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError("Invalid type")
         return data
 
-    def save(self, **kwargs):
-        return super().save(**kwargs)
+    def to_representation(self, value):
+        # Convert field_data to it's appropriate type from string
+        field_type = value.field.field.type
+        value = super().to_representation(value)
+
+        value["field_data"] = {
+            "str": str,
+            "int": int,
+            "float": float,
+            "bool": lambda v: v not in ("False", "false"),
+        }.get(field_type)(value["field_data"])
+
+        return value
 
 
 class MetadataSerializerMixin:
     def check_required_metadata(self, metadata_fields: list):
-        app_label = self.context["view"].app_label
-        model_name = self.context["view"].model_name
-
-        content_type = ContentType.objects.get(app_label=app_label, model=model_name)
+        content_type = ContentType.objects.get_for_model(self.Meta.model)
         required_metadata_fields = MetadataModelField.objects.filter(
             content_type=content_type, is_required=True
         )
