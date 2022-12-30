@@ -7,16 +7,6 @@ from .models import MetadataField
 from .permissions import MetadataFieldPermissions
 from .serializers import MetadataFieldSerializer
 
-metadata_resource_map = {
-    "feature": "features",
-    "environment": "environments",
-    "project": "projects",
-}
-
-model_to_permission_map = {
-    "feature": lambda x: x.feature.project,
-}
-
 
 @method_decorator(
     name="list",
