@@ -37,8 +37,8 @@ class Metadata(AbstractBaseExportableModel):
     content_type = models.ForeignKey(ContentType, on_delete=models.CASCADE)
     object_id = models.PositiveIntegerField()
     content_object = GenericForeignKey("content_type", "object_id")
-    field = models.ForeignKey(MetadataModelField, on_delete=models.CASCADE)
+    model_field = models.ForeignKey(MetadataModelField, on_delete=models.CASCADE)
     field_data = models.TextField(max_length=FIELD_DATA_MAX_LENGTH)
 
     class Meta:
-        unique_together = ("field", "content_type", "object_id")
+        unique_together = ("model_field", "content_type", "object_id")
