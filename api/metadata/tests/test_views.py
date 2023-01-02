@@ -25,9 +25,9 @@ def test_can_create_metadata_field(admin_client, organisation):
     assert response.json()["organisation"] == organisation.id
 
 
-def test_can_delete_metadata_field(admin_client, metadata_field):
+def test_can_delete_metadata_field(admin_client, a_metadata_field):
     # Given
-    url = reverse("api-v1:metadata:metadata-fields-detail", args=[metadata_field.id])
+    url = reverse("api-v1:metadata:metadata-fields-detail", args=[a_metadata_field.id])
 
     # When
     response = admin_client.delete(url, content_type="application/json")
@@ -36,9 +36,9 @@ def test_can_delete_metadata_field(admin_client, metadata_field):
     assert response.status_code == status.HTTP_204_NO_CONTENT
 
 
-def test_can_update_metadata_field(admin_client, metadata_field, organisation):
+def test_can_update_metadata_field(admin_client, a_metadata_field, organisation):
     # Given
-    url = reverse("api-v1:metadata:metadata-fields-detail", args=[metadata_field.id])
+    url = reverse("api-v1:metadata:metadata-fields-detail", args=[a_metadata_field.id])
 
     new_field_type = "bool"
     new_field_name = "new_field_name"
@@ -60,7 +60,7 @@ def test_can_update_metadata_field(admin_client, metadata_field, organisation):
     assert response.json()["type"] == new_field_type
 
 
-def test_can_list_metadata_fields(admin_client, metadata_field):
+def test_can_list_metadata_fields(admin_client, a_metadata_field):
     # Given
     url = reverse("api-v1:metadata:metadata-fields-list")
 
@@ -70,7 +70,7 @@ def test_can_list_metadata_fields(admin_client, metadata_field):
     # Then
     assert response.status_code == status.HTTP_200_OK
     assert len(response.json()["results"]) == 1
-    assert response.json()["results"][0]["id"] == metadata_field.id
+    assert response.json()["results"][0]["id"] == a_metadata_field.id
 
 
 def test_create_metadata_field_returns_403_for_non_org_admin(

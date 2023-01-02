@@ -56,7 +56,7 @@ class MetadataListSerializer(serializers.ListSerializer):
             instance, _ = Metadata.objects.update_or_create(
                 content_type=content_type,
                 object_id=content_object.id,
-                field=metadata["model_field"],
+                model_field=metadata["model_field"],
                 defaults={"field_data": metadata["field_data"]},
             )
             instances.append(instance)
@@ -86,7 +86,7 @@ class MetadataSerializer(serializers.ModelSerializer):
 
     def to_representation(self, value):
         # Convert field_data to its appropriate type(from string)
-        field_type = value.field.field.type
+        field_type = value.model_field.field.type
         value = super().to_representation(value)
 
         value["field_data"] = {
@@ -116,12 +116,11 @@ class MetadataSerializerMixin:
                 )
 
     def save(self, **kwargs):
-        # Make sure that `required` metadata fields are present
         self.validate_required_metadata()
 
         instance = super().save(**kwargs)
 
-        metadata = self.initial_data.pop("metadata", None)
+        metadata = self.get_initial().get("metadata", None)
 
         if metadata:
             metadata_serializer = MetadataSerializer(

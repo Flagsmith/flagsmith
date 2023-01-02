@@ -14,6 +14,7 @@ from environments.identities.traits.models import Trait
 from environments.models import Environment, EnvironmentAPIKey, Webhook
 from environments.permissions.models import UserEnvironmentPermission
 from features.models import Feature, FeatureState
+from metadata.models import Metadata
 from organisations.models import Organisation, OrganisationRole
 from projects.models import (
     Project,
@@ -529,6 +530,111 @@ def test_should_create_environments(
         assert UserEnvironmentPermission.objects.filter(
             user=admin_user, admin=True, environment__id=response.json()["id"]
         ).exists()
+
+
+@pytest.mark.parametrize(
+    "client", [lazy_fixture("master_api_key_client"), lazy_fixture("admin_client")]
+)
+def test_create_environment_without_required_metadata_returns_400(
+    project,
+    client,
+    required_a_environment_metadata_field,
+    optional_b_environment_metadata_field,
+):
+    # Given
+    url = reverse("api-v1:environments:environment-list")
+    description = "This is the description"
+    data = {
+        "name": "Test environment",
+        "project": project.id,
+        "description": description,
+    }
+
+    # When
+    response = client.post(url, data=data)
+
+    # Then
+    assert response.status_code == status.HTTP_400_BAD_REQUEST
+    assert "Missing required metadata field" in response.json()[0]
+
+
+@pytest.mark.parametrize(
+    "client", [lazy_fixture("master_api_key_client"), lazy_fixture("admin_client")]
+)
+def test_create_environment_with_required_metadata_returns_201(
+    project,
+    client,
+    required_a_environment_metadata_field,
+    optional_b_environment_metadata_field,
+):
+    # Given
+    url = reverse("api-v1:environments:environment-list")
+    description = "This is the description"
+    field_data = 10
+    data = {
+        "name": "Test environment",
+        "project": project.id,
+        "description": description,
+        "metadata": [
+            {
+                "model_field": required_a_environment_metadata_field.id,
+                "field_data": field_data,
+            },
+        ],
+    }
+
+    # When
+    response = client.post(url, data=json.dumps(data), content_type="application/json")
+
+    # Then
+    assert response.status_code == status.HTTP_201_CREATED
+    assert (
+        response.json()["metadata"][0]["model_field"]
+        == required_a_environment_metadata_field.field.id
+    )
+    assert response.json()["metadata"][0]["field_data"] == field_data
+
+
+@pytest.mark.parametrize(
+    "client", [lazy_fixture("master_api_key_client"), lazy_fixture("admin_client")]
+)
+def test_update_environment_metadata(
+    project,
+    client,
+    environment,
+    environment_metadata_a,
+    environment_metadata_b,
+):
+    # Given
+    url = reverse("api-v1:environments:environment-detail", args=[environment.api_key])
+    updated_field_data = 999
+
+    # Update metadata for field a (environment_metadata_a) and remove metadata for field b
+    data = {
+        "project": project.id,
+        "name": "New name",
+        "description": "new_data",
+        "metadata": [
+            {
+                "model_field": environment_metadata_a.model_field.id,
+                "field_data": updated_field_data,
+            },
+        ],
+    }
+
+    # When
+    response = client.put(url, data=json.dumps(data), content_type="application/json")
+
+    # Then
+    assert response.status_code == status.HTTP_200_OK
+    assert len(response.json()["metadata"]) == 1
+    # value for metadata field a was updated
+    assert response.json()["metadata"][0]["field_data"] == updated_field_data
+    environment_metadata_a.refresh_from_db()
+    environment_metadata_a.field_data = str(updated_field_data)
+
+    # and environment_metadata_b does not exists
+    assert Metadata.objects.filter(id=environment_metadata_b.id).exists() is False
 
 
 @pytest.mark.parametrize(
