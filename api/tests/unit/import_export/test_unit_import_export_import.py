@@ -27,7 +27,6 @@ def test_import_organisation(organisation):
 
     s3_client = boto3.client("s3")
     s3_client.put_object(Body=body, Bucket=bucket_name, Key=file_key)
-
     importer = OrganisationImporter(s3_client=s3_client)
 
     # When

@@ -3,6 +3,7 @@ import re
 
 import boto3
 from core.constants import STRING
+from django.contrib.contenttypes.models import ContentType
 from django.core.serializers.json import DjangoJSONEncoder
 from flag_engine.segments.constants import ALL_RULE
 from moto import mock_s3
@@ -16,6 +17,7 @@ from import_export.export import (
     S3OrganisationExporter,
     export_environments,
     export_features,
+    export_metadata,
     export_organisation,
     export_projects,
 )
@@ -28,6 +30,7 @@ from integrations.rudderstack.models import RudderstackConfiguration
 from integrations.segment.models import SegmentConfiguration
 from integrations.slack.models import SlackConfiguration, SlackEnvironment
 from integrations.webhook.models import WebhookConfiguration
+from metadata.models import Metadata, MetadataField, MetadataModelField
 from organisations.invites.models import InviteLink
 from organisations.models import Organisation, OrganisationWebhook
 from projects.models import Project
@@ -118,6 +121,33 @@ def test_export_environments(project):
 
     # When
     export = export_environments(project.organisation_id)
+
+    # Then
+    assert export
+
+    # TODO: test whether the export is importable
+
+
+def test_export_metadata(environment, organisation):
+    # Given
+    environment_type = ContentType.objects.get_for_model(environment)
+
+    metadata_field = MetadataField.objects.create(
+        name="test_field", type="int", organisation=organisation
+    )
+
+    environment_metadata_field = MetadataModelField.objects.create(
+        field=metadata_field, content_type=environment_type
+    )
+
+    Metadata.objects.create(
+        object_id=environment.id,
+        content_type=environment_type,
+        model_field=environment_metadata_field,
+        field_data="some_data",
+    )
+    # When
+    export = export_metadata(organisation.id)
 
     # Then
     assert export
