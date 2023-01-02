@@ -5,7 +5,7 @@ from django.db import models
 
 from organisations.models import Organisation
 
-FIELD_DATA_MAX_LENGTH = 2000
+FIELD_VALUE_MAX_LENGTH = 2000
 
 
 class FieldType(models.TextChoices):
@@ -41,7 +41,7 @@ class Metadata(AbstractBaseExportableModel):
     object_id = models.PositiveIntegerField()
     content_object = GenericForeignKey("content_type", "object_id")
     model_field = models.ForeignKey(MetadataModelField, on_delete=models.CASCADE)
-    field_data = models.TextField(max_length=FIELD_DATA_MAX_LENGTH)
+    field_value = models.TextField(max_length=FIELD_VALUE_MAX_LENGTH)
 
     class Meta:
         unique_together = ("model_field", "content_type", "object_id")

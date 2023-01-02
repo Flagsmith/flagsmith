@@ -336,7 +336,7 @@ def environment_metadata_a(environment, required_a_environment_metadata_field):
         object_id=environment.id,
         content_type=environment_type,
         model_field=required_a_environment_metadata_field,
-        field_data="10",
+        field_value="10",
     )
 
 
@@ -347,16 +347,5 @@ def environment_metadata_b(environment, optional_b_environment_metadata_field):
         object_id=environment.id,
         content_type=environment_type,
         model_field=optional_b_environment_metadata_field,
-        field_data="10",
+        field_value="10",
     )
-
-
-# @pytest.fixture()
-# def test_id_two_environment_metadata(environment, test_id_environment_metadata_field):
-#     environment_type = ContentType.objects.get_for_model(environment)
-#     return Metadata.objects.create(
-#         object_id=environment.id,
-#         content_type=environment_type,
-#         model_field=test_id_environment_metadata_field,
-#         field_data="some_data",
-#     )

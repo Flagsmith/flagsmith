@@ -3,7 +3,7 @@ from django.db.models import Q
 from rest_framework import serializers
 
 from .models import (
-    FIELD_DATA_MAX_LENGTH,
+    FIELD_VALUE_MAX_LENGTH,
     FieldType,
     Metadata,
     MetadataField,
@@ -34,9 +34,9 @@ class FieldDataField(serializers.Field):
         if data_type not in [field.value for field in FieldType.__members__.values()]:
             raise serializers.ValidationError("Invalid data type")
 
-        if data_type == str and len(data) > FIELD_DATA_MAX_LENGTH:
+        if data_type == str and len(data) > FIELD_VALUE_MAX_LENGTH:
             raise serializers.ValidationError(
-                f"Value string is too long. Must be less than {FIELD_DATA_MAX_LENGTH} character"
+                f"Value string is too long. Must be less than {FIELD_VALUE_MAX_LENGTH} character"
             )
         return data
 
@@ -57,7 +57,7 @@ class MetadataListSerializer(serializers.ListSerializer):
                 content_type=content_type,
                 object_id=content_object.id,
                 model_field=metadata["model_field"],
-                defaults={"field_data": metadata["field_data"]},
+                defaults={"field_value": metadata["field_value"]},
             )
             instances.append(instance)
 
@@ -72,29 +72,29 @@ class MetadataListSerializer(serializers.ListSerializer):
 
 
 class MetadataSerializer(serializers.ModelSerializer):
-    field_data = FieldDataField()
+    field_value = FieldDataField()
 
     class Meta:
         model = Metadata
-        fields = ("model_field", "field_data")
+        fields = ("model_field", "field_value")
         list_serializer_class = MetadataListSerializer
 
     def validate(self, data):
-        if type(data["field_data"]).__name__ != data["model_field"].field.type:
+        if type(data["field_value"]).__name__ != data["model_field"].field.type:
             raise serializers.ValidationError("Invalid type")
         return data
 
     def to_representation(self, value):
-        # Convert field_data to its appropriate type(from string)
+        # Convert field_value to its appropriate type(from string)
         field_type = value.model_field.field.type
         value = super().to_representation(value)
 
-        value["field_data"] = {
+        value["field_value"] = {
             "str": str,
             "int": int,
             "float": float,
             "bool": lambda v: v not in ("False", "false"),
-        }.get(field_type)(value["field_data"])
+        }.get(field_type)(value["field_value"])
 
         return value
 

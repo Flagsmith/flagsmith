@@ -570,7 +570,7 @@ def test_create_environment_with_required_metadata_returns_201(
     # Given
     url = reverse("api-v1:environments:environment-list")
     description = "This is the description"
-    field_data = 10
+    field_value = 10
     data = {
         "name": "Test environment",
         "project": project.id,
@@ -578,7 +578,7 @@ def test_create_environment_with_required_metadata_returns_201(
         "metadata": [
             {
                 "model_field": required_a_environment_metadata_field.id,
-                "field_data": field_data,
+                "field_value": field_value,
             },
         ],
     }
@@ -592,7 +592,7 @@ def test_create_environment_with_required_metadata_returns_201(
         response.json()["metadata"][0]["model_field"]
         == required_a_environment_metadata_field.field.id
     )
-    assert response.json()["metadata"][0]["field_data"] == field_data
+    assert response.json()["metadata"][0]["field_value"] == field_value
 
 
 @pytest.mark.parametrize(
@@ -607,7 +607,7 @@ def test_update_environment_metadata(
 ):
     # Given
     url = reverse("api-v1:environments:environment-detail", args=[environment.api_key])
-    updated_field_data = 999
+    updated_field_value = 999
 
     # Update metadata for field a (environment_metadata_a) and remove metadata for field b
     data = {
@@ -617,7 +617,7 @@ def test_update_environment_metadata(
         "metadata": [
             {
                 "model_field": environment_metadata_a.model_field.id,
-                "field_data": updated_field_data,
+                "field_value": updated_field_value,
             },
         ],
     }
@@ -629,9 +629,9 @@ def test_update_environment_metadata(
     assert response.status_code == status.HTTP_200_OK
     assert len(response.json()["metadata"]) == 1
     # value for metadata field a was updated
-    assert response.json()["metadata"][0]["field_data"] == updated_field_data
+    assert response.json()["metadata"][0]["field_value"] == updated_field_value
     environment_metadata_a.refresh_from_db()
-    environment_metadata_a.field_data = str(updated_field_data)
+    environment_metadata_a.field_value = str(updated_field_value)
 
     # and environment_metadata_b does not exists
     assert Metadata.objects.filter(id=environment_metadata_b.id).exists() is False

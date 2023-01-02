@@ -144,7 +144,7 @@ def test_export_metadata(environment, organisation):
         object_id=environment.id,
         content_type=environment_type,
         model_field=environment_metadata_field,
-        field_data="some_data",
+        field_value="some_data",
     )
     # When
     export = export_metadata(organisation.id)
