@@ -116,6 +116,7 @@ class MetadataSerializerMixin:
                 )
 
     def save(self, **kwargs):
+        # Make sure that `required` metadata fields are present
         self.validate_required_metadata()
 
         instance = super().save(**kwargs)
