@@ -1,4 +1,5 @@
 import pytest
+from django.contrib.contenttypes.models import ContentType
 from django.core.cache import cache
 from rest_framework.authtoken.models import Token
 from rest_framework.test import APIClient
@@ -18,6 +19,7 @@ from features.models import Feature, FeatureSegment, FeatureState
 from features.multivariate.models import MultivariateFeatureOption
 from features.value_types import STRING
 from features.workflows.core.models import ChangeRequest
+from metadata.models import Metadata, MetadataField, MetadataModelField
 from organisations.models import Organisation, OrganisationRole, Subscription
 from organisations.subscriptions.constants import CHARGEBEE, XERO
 from permissions.models import PermissionModel
@@ -294,3 +296,29 @@ def user_project_permission(test_user, project):
 @pytest.fixture(autouse=True)
 def task_processor_synchronously(settings):
     settings.TASK_RUN_METHOD = TaskRunMethod.SYNCHRONOUSLY
+
+
+@pytest.fixture()
+def metadata_field(organisation):
+    return MetadataField.objects.create(
+        name="test_field", type="int", organisation=organisation
+    )
+
+
+@pytest.fixture()
+def environment_metadata_field(organisation, metadata_field, environment):
+    environment_type = ContentType.objects.get_for_model(environment)
+    return MetadataModelField.objects.create(
+        organisation=organisation, field=metadata_field, content_type=environment_type
+    )
+
+
+@pytest.fixture()
+def environment_metadata(environment, environment_metadata_field):
+    environment_type = ContentType.objects.get_for_model(environment)
+    return Metadata.objects.create(
+        object_id=environment.id,
+        content_type=environment_type,
+        model_field=environment_metadata_field,
+        field_data="some_data",
+    )
