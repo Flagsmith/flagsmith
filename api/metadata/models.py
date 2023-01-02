@@ -23,6 +23,9 @@ class MetadataField(AbstractBaseExportableModel):
     description = models.TextField(blank=True, null=True)
     organisation = models.ForeignKey(Organisation, on_delete=models.CASCADE)
 
+    class Meta:
+        unique_together = ("name", "organisation")
+
 
 class MetadataModelField(AbstractBaseExportableModel):
     field = models.ForeignKey(MetadataField, on_delete=models.CASCADE)
