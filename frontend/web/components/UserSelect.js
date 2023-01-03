@@ -58,4 +58,4 @@ class TheComponent extends Component {
     }
 }
 
-module.exports = hot(module)(TheComponent);
+module.exports = TheComponent;

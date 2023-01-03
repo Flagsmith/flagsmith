@@ -291,4 +291,4 @@ class CompareEnvironments extends Component {
     }
 }
 
-module.exports = hot(module)(ConfigProvider(CompareEnvironments));
+module.exports = ConfigProvider(CompareEnvironments);

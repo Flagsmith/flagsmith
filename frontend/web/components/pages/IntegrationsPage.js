@@ -68,4 +68,4 @@ const ProjectSettingsPage = class extends Component {
 
 ProjectSettingsPage.propTypes = {};
 
-module.exports = hot(module)(ConfigProvider(ProjectSettingsPage));
+module.exports = (ProjectSettingsPage);

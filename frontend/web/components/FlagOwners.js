@@ -94,4 +94,4 @@ class TheComponent extends Component {
     }
 }
 
-export default hot(module)(ConfigProvider(TheComponent));
+export default ConfigProvider(TheComponent);

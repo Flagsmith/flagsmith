@@ -54,8 +54,6 @@ module.exports = {
                     use: [{
                         loader: 'style-loader',
                         options: {
-                            sourceMap: true,
-                            convertToAbsoluteUrls: false,
                         },
                     },
                     {
