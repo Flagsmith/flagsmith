@@ -362,8 +362,9 @@ module.exports = Object.assign({}, require('./base/_utils'), {
         if (typeof str !== 'string') {
             return str;
         }
-        const isFloat = /^[0-9]+[.]?[0-9]+$/.test(str);
-        const isNum = isFloat || /^\d+$/.test(str);
+
+        const isNum = /^\d+$/.test(str);
+
         if (isNum && parseInt(str) > Number.MAX_SAFE_INTEGER) {
             return `${str}`;
         }
