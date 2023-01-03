@@ -9,6 +9,21 @@ module.exports = Object.assign({}, require('./base/_utils'), {
             .replace(/\B(?=(\d{3})+(?!\d))/g, ',');
     },
 
+    loadScriptPromise(url){
+        return new Promise(function(resolve, reject){
+            const cb =  function(){
+                this.removeEventListener('load', cb)
+                resolve(null)
+            }
+            var head = document.getElementsByTagName('head')[0]
+            var script = document.createElement('script')
+            script.type = 'text/javascript'
+            script.addEventListener('load',cb)
+            script.src = url
+            head.appendChild(script)
+        })
+    },
+
     changeRequestsEnabled(value) {
         return typeof value === 'number';
     },
@@ -272,8 +287,13 @@ module.exports = Object.assign({}, require('./base/_utils'), {
             return null;
         }
 
+        if (typeof featureState.integer_value === 'number') {
+            return Utils.getTypedValue(featureState.integer_value)
+        } else if (typeof featureState.float_value === 'number') {
+            return Utils.getTypedValue(featureState.float_value)
+        }
 
-        return Utils.getTypedValue(typeof featureState.integer_value === 'number' ? featureState.integer_value : featureState.string_value || featureState.boolean_value);
+        return Utils.getTypedValue(featureState.string_value || featureState.boolean_value);
     },
     valueToFeatureState(value) {
         const val = Utils.getTypedValue(value);
@@ -355,8 +375,8 @@ module.exports = Object.assign({}, require('./base/_utils'), {
         if (typeof str !== 'string') {
             return str;
         }
-
-        const isNum = /^\d+$/.test(str);
+        const isFloat = /^[0-9]+[.]?[0-9]+$/.test(str);
+        const isNum = isFloat || /^\d+$/.test(str);
         if (isNum && parseInt(str) > Number.MAX_SAFE_INTEGER) {
             return `${str}`;
         }
@@ -424,7 +444,7 @@ module.exports = Object.assign({}, require('./base/_utils'), {
         if (!Utils.getFlagsmithHasFeature('plan_based_access')) {
             return true;
         }
-        if (!plan) {
+        if (!plan || plan === 'free') {
             return false;
         }
         const date = AccountStore.getDate();
@@ -457,7 +477,7 @@ module.exports = Object.assign({}, require('./base/_utils'), {
                 break;
             }
             case 'AUTO_SEATS': {
-                valid = isScaleupOrGreater;
+                valid = isScaleupOrGreater && Utils.getFlagsmithHasFeature("auto_seats");
                 break;
             }
             case 'FORCE_2FA': {

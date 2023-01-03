@@ -2,6 +2,7 @@ import React, { Component } from 'react';
 import cx from 'classnames';
 import ConfigProvider from '../../../common/providers/ConfigProvider';
 import ToggleChip from '../ToggleChip';
+import JSONReference from "../JSONReference";
 
 const AuditLogPage = class extends Component {
     static displayName = 'AuditLogPage'
@@ -106,6 +107,7 @@ const AuditLogPage = class extends Component {
                                     const auditLogPaging = _auditLogPaging && _auditLogPaging[env || this.props.match.params.projectId];
                                     return (
                                         <div>
+                                            <JSONReference title={"Audit"} json={auditLog}/>
                                             <div className="audit">
                                                 <div className="font-weight-bold mb-2">
                                                     Filter by environments:

@@ -100,7 +100,7 @@ const HomePage = class extends React.Component {
         const { email, password, organisation_name, first_name, last_name } = this.state;
         const redirect = Utils.fromParam().redirect ? `?redirect=${Utils.fromParam().redirect}` : '';
         const isInvite = document.location.href.indexOf('invite') != -1;
-        const isSignup = (!projectOverrides.preventSignup) && ((isInvite && document.location.href.indexOf('login') === -1) || document.location.href.indexOf('signup') != -1);
+        const isSignup = (!Project.preventSignup) && ((isInvite && document.location.href.indexOf('login') === -1) || document.location.href.indexOf('signup') != -1);
         const disableSignup = Project.preventSignup && isSignup;
         const preventEmailPassword = Project.preventEmailPassword;
         const disableForgotPassword = Project.preventForgotPassword;
@@ -327,7 +327,7 @@ const HomePage = class extends React.Component {
                                                 </AccountProvider>
                                             </Card>
 
-                                            {(!projectOverrides.preventSignup) && (
+                                            {(!Project.preventSignup) && (
 
                                                 <div>
                                                     {!preventEmailPassword && (

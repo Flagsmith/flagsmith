@@ -10,6 +10,7 @@ import TabItem from '../base/forms/TabItem';
 import AssociatedSegmentOverrides from './AssociatedSegmentOverrides';
 import InfoMessage from '../InfoMessage';
 import _data from "../../../common/data/base/_data";
+import JSONReference from "../JSONReference";
 
 const SEGMENT_ID_MAXLENGTH = Constants.forms.maxLength.SEGMENT_ID;
 
@@ -286,7 +287,9 @@ const CreateSegment = class extends Component {
                 {error
                     && <div className="alert alert-danger">Error creating segment, please ensure you have entered a trait and value for each rule.</div>
                 }
-
+                {isEdit && (
+                    <JSONReference title={"Segment"} json={this.props.segment}/>
+                )}
                 {this.props.readOnly ? (
                     <div className="text-right">
                         <Tooltip
@@ -344,14 +347,11 @@ const CreateSegment = class extends Component {
                                 {Tab1}
                             </div>
                         </TabItem>
-                        {this.props.hasFeature('segment_associated_features') && (
-                            <TabItem tabLabel="Features">
-                                <div className="mt-4 mr-3 ml-3">
-                                    <AssociatedSegmentOverrides feature={this.props.segment.feature} projectId={this.props.projectId} id={this.props.segment.id}/>
-                                </div>
-                            </TabItem>
-                        )}
-
+                        <TabItem tabLabel="Features">
+                            <div className="mt-4 mr-3 ml-3">
+                                <AssociatedSegmentOverrides feature={this.props.segment.feature} projectId={this.props.projectId} id={this.props.segment.id}/>
+                            </div>
+                        </TabItem>
                         <TabItem tabLabel="Users">
                             <div className="mt-4 mr-3 ml-3">
                                 <InfoMessage>

@@ -9,6 +9,7 @@ import FeatureListStore from '../../../common/stores/feature-list-store';
 import TagSelect from '../TagSelect';
 import { Tag } from '../AddEditTags';
 import _data from '../../../common/data/base/_data';
+import JSONReference from "../JSONReference";
 import Constants from "../../../common/constants";
 
 const returnIfDefined = (value, value2) => {
@@ -222,7 +223,13 @@ const UserPage = class extends Component {
                                                       itemHeight={70}
                                                       icon="ion-ios-rocket"
                                                       title="Features"
-
+                                                      renderFooter={()=>
+                                                          <>
+                                                              <JSONReference showNamesButton className="mt-4 mx-2" title={"Features"} json={projectFlags && Object.values(projectFlags)}/>
+                                                              <JSONReference className="mx-2" title={"Environment Feature States"} json={environmentFlags && Object.values(environmentFlags)}/>
+                                                              <JSONReference className="mx-2" title={"Identity Feature States"} json={identityFlags && Object.values(identityFlags)}/>
+                                                          </>
+                                                      }
                                                       header={(
                                                           <Row className="px-0 pt-0 pb-2">
                                                               <TagSelect
