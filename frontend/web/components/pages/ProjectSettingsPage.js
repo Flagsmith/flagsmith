@@ -264,6 +264,7 @@ const ProjectSettingsPage = class extends Component {
                                                                                         name="feature-name-regex"
                                                                                         onClick={this.forceSelectionRange}
                                                                                         onKeyUp={this.forceSelectionRange}
+                                                                                        showSuccess
                                                                                         onChange={e => {
                                                                                             let newRegex = Utils.safeParseEventValue(e).replace("$","");
                                                                                             if (!newRegex.startsWith("^")) {
