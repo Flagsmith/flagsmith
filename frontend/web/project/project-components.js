@@ -1,5 +1,4 @@
 import { PureComponent } from 'react';
-import { hot } from 'react-hot-loader';
 import Select from 'react-select';
 import Button, { ButtonLink, ButtonOutline, ButtonProject } from '../components/base/forms/Button';
 import RemoveIcon from '../components/RemoveIcon';
@@ -85,7 +84,6 @@ window.Loader = class extends PureComponent {
 
 window.Tooltip = require('../components/Toolip');
 
-global.hot = hot;
 global.ToggleChip = ToggleChip;
 global.RemoveIcon = RemoveIcon;
 global.Select = class extends PureComponent {
