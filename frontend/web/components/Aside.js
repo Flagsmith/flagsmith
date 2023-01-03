@@ -339,7 +339,7 @@ const Aside = class extends Component {
                                                                     onClick={onClick}
                                                                     active={environment.api_key === environmentId} title={environment.name}
                                                                   >
-                                                                      <Permission level="environment" permission="MANAGE_IDENTITIES" id={environment.api_key}>
+                                                                      <Permission level="environment" permission={Utils.getViewIdentitiesPermission()} id={environment.api_key}>
                                                                           {({ permission: manageIdentityPermission, isLoading: manageIdentityLoading }) => (
                                                                               <Permission level="environment" permission="ADMIN" id={environment.api_key}>
                                                                                   {({ permission: environmentAdmin, isLoading }) => (isLoading || manageIdentityLoading

@@ -650,9 +650,10 @@ const CreateFlag = class extends Component {
                                                                             </strong>
                                                                         </p>
 
-                                                                        <Permission level="environment" permission={Utils.getManageFeaturePermission(is4Eyes)} id={this.props.environmentId}>
+
+                                                                        <Permission level="environment" permission={Utils.getManageFeaturePermission(is4Eyes, identity)} id={this.props.environmentId}>
                                                                             {({ permission: savePermission }) => (
-                                                                                Utils.renderWithPermission(savePermission, Constants.environmentPermissions(Utils.getManageFeaturePermissionDescription(is4Eyes)), (
+                                                                                Utils.renderWithPermission(savePermission, Constants.environmentPermissions(Utils.getManageFeaturePermissionDescription(is4Eyes, identity)), (
                                                                                     <div className="text-right">
                                                                                         {!is4Eyes && (
                                                                                                 <>
@@ -717,7 +718,7 @@ const CreateFlag = class extends Component {
                                                                     >
                                                                         {!identity && isEdit && (
                                                                             <FormGroup className="mb-4 mr-3 ml-3">
-                                                                                <Permission level="environment" permission={Utils.getManageFeaturePermission()} id={this.props.environmentId}>
+                                                                                <Permission level="environment" permission={Utils.getManageFeaturePermission(false, identity)} id={this.props.environmentId}>
                                                                                     {({ permission: environmentAdmin }) => ((
                                                                                         <div>
                                                                                             <Panel
@@ -772,9 +773,9 @@ const CreateFlag = class extends Component {
                                                                                                             }
                                                                                                         </strong>
                                                                                                     </p>
-                                                                                                    <Permission level="environment" permission={Utils.getManageFeaturePermission(is4Eyes)} id={this.props.environmentId}>
+                                                                                                    <Permission level="environment" permission={Utils.getManageFeaturePermission(is4Eyes, identity)} id={this.props.environmentId}>
                                                                                                         {({ permission: savePermission }) => (
-                                                                                                            Utils.renderWithPermission(savePermission, Constants.environmentPermissions(Utils.getManageFeaturePermissionDescription(is4Eyes)), (
+                                                                                                            Utils.renderWithPermission(savePermission, Constants.environmentPermissions(Utils.getManageFeaturePermissionDescription(is4Eyes, identity)), (
                                                                                                                 <div className="text-right">
                                                                                                                     <Button
                                                                                                                       onClick={saveFeatureSegments} type="button" data-test="update-feature-segments-btn"

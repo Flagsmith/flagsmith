@@ -40,7 +40,14 @@ module.exports = Object.assign({}, require('./base/_utils'), {
         }
         return 'VIEW_ENVIRONMENT';
     },
-    getManageFeaturePermission(isChangeRequest) {
+    getViewIdentitiesPermission() {
+        if (Utils.getFlagsmithHasFeature("view_identities_permission")){
+            return "VIEW_IDENTITIES"
+        } else {
+            return "MANAGE_IDENTITIES"
+        }
+    },
+    getManageFeaturePermission(isChangeRequest, isUser) {
         if (isChangeRequest && Utils.getFlagsmithHasFeature('update_feature_state_permission')) {
             return 'CREATE_CHANGE_REQUEST';
         }
@@ -49,7 +56,7 @@ module.exports = Object.assign({}, require('./base/_utils'), {
         }
         return 'ADMIN';
     },
-    getManageFeaturePermissionDescription(isChangeRequest) {
+    getManageFeaturePermissionDescription(isChangeRequest, user) {
         if (isChangeRequest && Utils.getFlagsmithHasFeature('update_feature_state_permission')) {
             return 'Create Change Request';
         }
@@ -57,6 +64,12 @@ module.exports = Object.assign({}, require('./base/_utils'), {
             return 'Update Feature State';
         }
         return 'Admin';
+    },
+    getManageUserPermission() {
+        return 'MANAGE_IDENTITIES';
+    },
+    getManageUserPermissionDescription() {
+        return 'Manage Identities';
     },
     getTraitEndpointMethod() {
         if (Utils.getFlagsmithHasFeature('edge_identities') && ProjectStore.model && ProjectStore.model.use_edge_identities) {
