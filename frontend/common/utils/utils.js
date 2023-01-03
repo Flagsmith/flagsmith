@@ -65,6 +65,12 @@ module.exports = Object.assign({}, require('./base/_utils'), {
         }
         return 'Admin';
     },
+    getManageUserPermission() {
+        return 'MANAGE_IDENTITIES';
+    },
+    getManageUserPermissionDescription() {
+        return 'Manage Identities';
+    },
     getTraitEndpointMethod() {
         if (Utils.getFlagsmithHasFeature('edge_identities') && ProjectStore.model && ProjectStore.model.use_edge_identities) {
             return 'put';

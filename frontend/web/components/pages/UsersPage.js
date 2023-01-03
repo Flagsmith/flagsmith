@@ -69,7 +69,7 @@ const UsersPage = class extends Component {
 
         return (
             <div className="app-container container">
-                <Permission level="environment" permission={Utils.getManageFeaturePermission(false, true)} id={environmentId}>
+                <Permission level="environment" permission={Utils.getManageUserPermission()} id={environmentId}>
                     {({ permission }) => (
                         <div>
                             <div>
@@ -107,7 +107,7 @@ const UsersPage = class extends Component {
                                             )}
                                           place="right"
                                         >
-                                            {Constants.environmentPermissions('Admin')}
+                                            {Constants.environmentPermissions(Utils.getManageUserPermissionDescription())}
                                         </Tooltip>
                                     )}
                                 </Row>
@@ -151,7 +151,7 @@ const UsersPage = class extends Component {
                                                               </Link>
                                                           </Flex>
                                                           {
-                                                              Utils.renderWithPermission(permission, Constants.environmentPermissions(Utils.getManageFeaturePermissionDescription(false,true)), (
+                                                              Utils.renderWithPermission(permission, Constants.environmentPermissions(Utils.getManageUserPermissionDescription()), (
                                                                   <Column>
                                                                       <button
                                                                           disabled={!permission}
