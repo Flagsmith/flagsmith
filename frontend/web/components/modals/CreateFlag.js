@@ -18,6 +18,7 @@ import ChangeRequestStore from '../../../common/stores/change-requests-store';
 import { setInterceptClose } from '../../project/modals';
 import classNames from 'classnames'
 import InfoMessage from "../InfoMessage";
+import JSONReference from "../JSONReference";
 const FEATURE_ID_MAXLENGTH = Constants.forms.maxLength.FEATURE_ID;
 
 const CreateFlag = class extends Component {
@@ -630,6 +631,14 @@ const CreateFlag = class extends Component {
                                                                         )}
                                                                         >
                                                                             {Value(projectAdmin, createFeature)}
+
+                                                                            {isEdit && (
+                                                                                <>
+                                                                                    <JSONReference showNamesButton title={"Feature"} json={projectFlag}/>
+                                                                                    <JSONReference title={"Feature state"} json={this.props.environmentFlag}/>
+                                                                                </>
+                                                                            )}
+
                                                                         </Panel>
                                                                         <p className="text-right mt-4">
                                                                             {is4Eyes ? 'This will create a change request for the environment' : 'This will update the feature value for the environment'}
@@ -640,7 +649,6 @@ const CreateFlag = class extends Component {
                                                                                 }
                                                                             </strong>
                                                                         </p>
-
 
                                                                         <Permission level="environment" permission={Utils.getManageFeaturePermission(is4Eyes)} id={this.props.environmentId}>
                                                                             {({ permission: savePermission }) => (
@@ -674,6 +682,7 @@ const CreateFlag = class extends Component {
                                                                                                 </>
 
                                                                                         )}
+
                                                                                         {is4Eyes ? (
                                                                                             <Button
                                                                                               onClick={() => saveFeatureValue()} type="button" data-test="update-feature-btn"
@@ -947,6 +956,8 @@ const CreateFlag = class extends Component {
                                                                     )}
                                                                     >
                                                                         {Settings(projectAdmin, createFeature)}
+                                                                        <JSONReference className="mx-4" showNamesButton title={"Feature"} json={projectFlag}/>
+
                                                                         {isEdit && (
                                                                             <div className="text-right mr-3">
                                                                                 {createFeature ? (

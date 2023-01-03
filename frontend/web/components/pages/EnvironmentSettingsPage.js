@@ -11,6 +11,7 @@ import PaymentModal from '../modals/Payment';
 import Tabs from '../base/forms/Tabs'
 import TabItem from '../base/forms/TabItem'
 import { ColourSelect } from '../AddEditTags';
+import JSONReference from "../JSONReference";
 const EnvironmentSettingsPage = class extends Component {
     static displayName = 'EnvironmentSettingsPage'
 
@@ -155,6 +156,7 @@ const EnvironmentSettingsPage = class extends Component {
                                     <Tabs inline transparent uncontrolled>
                                         <TabItem tabLabel="General" tabIcon="ion-md-settings" >
                                             <div className="mt-4">
+                                                <JSONReference title={"Environment"} json={env}/>
                                                 <div>
                                                     <form onSubmit={this.saveEnv}>
                                                         <div className="row">

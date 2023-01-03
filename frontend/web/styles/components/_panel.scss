@@ -151,6 +151,9 @@
 		}
 		.panel-content {
 			background-color: $panel-bg-dark;
+			.hljs-header,.chip {
+				background-color: $panel-bg-darker;
+			}
 		}
 		.panel-heading {
 			h1, h2, h3 {
@@ -193,7 +196,7 @@
 		.panel {
 			background-color: $panel-bg-darker;
 			.panel-content {
-				background-color: $panel-bg-darker;
+				background-color: $panel-bg-darker
 			}
 		}
 	}
