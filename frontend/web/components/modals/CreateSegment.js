@@ -441,7 +441,7 @@ const LoadingCreateSegment  = (props) => {
 
     useEffect(()=>{
         if(props.segment) {
-            _data.get(`${Project.api}projects/${props.projectId}/segments/${props.segment}`).then((segment)=> {
+            _data.get(`${Project.api}projects/${props.projectId}/segments/${props.segment}/`).then((segment)=> {
                 setSegmentData(segment);
                 setLoading(false)
             })
