@@ -59,6 +59,7 @@ app.get('/config/project-overrides', (req, res) => {
         { name: 'superUserCreateOnly', value: envToBool('ONLY_SUPERUSERS_CAN_CREATE_ORGANISATIONS', false) },
         { name: 'flagsmith', value: process.env.FLAGSMITH_ON_FLAGSMITH_API_KEY },
         { name: 'heap', value: process.env.HEAP_API_KEY },
+        { name: 'headway', value: process.env.HEADWAY_API_KEY },
         { name: 'ga', value: process.env.GOOGLE_ANALYTICS_API_KEY },
         { name: 'sha', value: sha },
         { name: 'mixpanel', value: process.env.MIXPANEL_API_KEY },

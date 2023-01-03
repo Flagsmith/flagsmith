@@ -46,6 +46,7 @@ def project_overrides(request):
         "flagsmithRealtime": "ENABLE_FLAGSMITH_REALTIME",
         "flagsmithClientAPI": "FLAGSMITH_ON_FLAGSMITH_API_URL",
         "ga": "GOOGLE_ANALYTICS_API_KEY",
+        "headway": "HEADWAY_API_KEY",
         "hideInviteLinks": "DISABLE_INVITE_LINKS",
         "linkedin_api_key": "LINKEDIN_API_KEY",
         "maintenance": "MAINTENANCE_MODE",

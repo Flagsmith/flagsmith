@@ -9,6 +9,21 @@ module.exports = Object.assign({}, require('./base/_utils'), {
             .replace(/\B(?=(\d{3})+(?!\d))/g, ',');
     },
 
+    loadScriptPromise(url){
+        return new Promise(function(resolve, reject){
+            const cb =  function(){
+                this.removeEventListener('load', cb)
+                resolve(null)
+            }
+            var head = document.getElementsByTagName('head')[0]
+            var script = document.createElement('script')
+            script.type = 'text/javascript'
+            script.addEventListener('load',cb)
+            script.src = url
+            head.appendChild(script)
+        })
+    },
+
     changeRequestsEnabled(value) {
         return typeof value === 'number';
     },
