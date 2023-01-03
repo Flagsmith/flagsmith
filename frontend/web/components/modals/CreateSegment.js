@@ -458,4 +458,4 @@ const LoadingCreateSegment  = (props) => {
 
 export default LoadingCreateSegment
 
-module.exports = hot(module)(ConfigProvider(LoadingCreateSegment));
+module.exports = ConfigProvider(LoadingCreateSegment);
