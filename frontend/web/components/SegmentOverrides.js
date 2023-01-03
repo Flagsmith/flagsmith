@@ -460,4 +460,4 @@ class TheComponent extends Component {
     }
 }
 
-export default hot(module)(TheComponent);
+export default TheComponent;

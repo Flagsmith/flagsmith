@@ -476,4 +476,4 @@ const ChangeRequestsPage = class extends Component {
 
 ChangeRequestsPage.propTypes = {};
 
-module.exports = hot(module)(ConfigProvider(withSegmentOverrides(ChangeRequestsPage)));
+module.exports = ConfigProvider(withSegmentOverrides(ChangeRequestsPage));

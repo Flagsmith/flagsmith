@@ -381,4 +381,4 @@ const FeaturesPage = class extends Component {
 
 FeaturesPage.propTypes = {};
 
-module.exports = hot(module)(ConfigProvider(FeaturesPage));
+module.exports = ConfigProvider(FeaturesPage);

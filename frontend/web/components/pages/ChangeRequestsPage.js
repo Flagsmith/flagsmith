@@ -196,4 +196,4 @@ const ChangeRequestsPage = class extends Component {
 
 ChangeRequestsPage.propTypes = {};
 
-module.exports = hot(module)(ConfigProvider(ChangeRequestsPage));
+module.exports = ConfigProvider(ChangeRequestsPage);
