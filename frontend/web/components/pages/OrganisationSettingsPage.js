@@ -36,7 +36,7 @@ const OrganisationSettingsPage = class extends Component {
         }
         AppActions.getOrganisation(AccountStore.getOrganisation().id);
 
-        if (Utils.getFlagsmithHasFeature('usage_chart') && !projectOverrides.disableInflux) {
+        if (Utils.getFlagsmithHasFeature('usage_chart') && !Project.disableInflux) {
             AppActions.getInfluxData(AccountStore.getOrganisation().id);
         }
 
@@ -883,7 +883,7 @@ const OrganisationSettingsPage = class extends Component {
                                                 </FormGroup>
                                             </TabItem>
 
-                                            {Utils.getFlagsmithHasFeature('usage_chart') && !projectOverrides.disableInflux && (
+                                            {Utils.getFlagsmithHasFeature('usage_chart') && !Project.disableInflux && (
                                                 <TabItem tabLabel="Usage" tabIcon="ion-md-analytics" >
                                                     {this.state.tab === 3 && (
                                                         <div className="mt-4">
