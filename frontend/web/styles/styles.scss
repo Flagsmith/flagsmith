@@ -10,7 +10,9 @@
   text-align: center;
   line-height: 44px;
   margin-top: -10px;
-
+  position: sticky;
+  top: 0;
+  z-index: 1;
 }
 .display-none {
   display: none !important;
