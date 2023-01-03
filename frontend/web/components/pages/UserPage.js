@@ -233,7 +233,8 @@ const UserPage = class extends Component {
                                                                   </>
                                                               }
                                                               header={(
-                                                                  <TagSelect
+                                                                  <div className="pb-2">
+                                                                      <TagSelect
                                                                         showUntagged
                                                                         showClearAll={(this.state.tags && !!this.state.tags.length) || this.state.showArchived}
                                                                         onClearAll={() => this.setState({ showArchived: false, tags: [] }, this.filter)}
@@ -260,7 +261,8 @@ const UserPage = class extends Component {
                                                                             className="px-2 py-2 ml-2 mr-2"
                                                                             tag={{ label: 'Archived' }}
                                                                           />
-                                                                  </TagSelect>
+                                                                      </TagSelect>
+                                                                  </div>
                                                               )}
                                                               isLoading={FeatureListStore.isLoading}
                                                               onSortChange={(sort) => {
@@ -442,28 +444,27 @@ const UserPage = class extends Component {
                                                                   );
                                                               }
                                                             }
-                                                              renderNoResults={(
-                                                                  <Panel
-                                                                    icon="ion-ios-rocket"
-                                                                    title="Features"
-                                                                  >
-                                                                      <div className="text-center">
-                                                                            This user has no features yet.
-                                                                          {' '}
-                                                                          <br/>
-                                                                            When you start
-                                                                          {' '}
-                                                                          <Link
-                                                                            className="dark"
-                                                                            to={`project/${this.props.match.params.projectId}/environment/${this.props.match.params.environmentId}/features`}
-                                                                          >
-                                                                                creating features
-                                                                          </Link>
-                                                                          {' '}
-                                                                            for your project you will set them per user here.
-                                                                      </div>
-
-                                                                  </Panel>
+                                                              renderSearchWithNoResults
+                                                              renderNoResults={ this.state.tags?.length || this.state.showArchived ? (
+                                                                  <div >
+                                                                      No results
+                                                                  </div>
+                                                              ):(
+                                                                  <div className="text-center m-2">
+                                                                      This user has no features yet.
+                                                                      {' '}
+                                                                      <br/>
+                                                                      When you start
+                                                                      {' '}
+                                                                      <Link
+                                                                          className="dark"
+                                                                          to={`project/${this.props.match.params.projectId}/environment/${this.props.match.params.environmentId}/features`}
+                                                                      >
+                                                                          creating features
+                                                                      </Link>
+                                                                      {' '}
+                                                                      for your project you will set them per user here.
+                                                                  </div>
                                                                 )}
                                                               paging={FeatureListStore.paging}
                                                               search={this.state.search}
