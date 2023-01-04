@@ -5,6 +5,7 @@ import ProjectStore from '../../../common/stores/project-store';
 import PaymentModal from '../modals/Payment';
 import Tabs from '../base/forms/Tabs';
 import TabItem from '../base/forms/TabItem';
+import JSONReference from "../JSONReference";
 
 const ChangeRequestsPage = class extends Component {
     static displayName = 'ChangeRequestsPage';
@@ -92,6 +93,7 @@ const ChangeRequestsPage = class extends Component {
                                   nextPage={() => AppActions.getChangeRequests(this.props.match.params.environmentId, {}, dataPaging.next)}
                                   prevPage={() => AppActions.getChangeRequests(this.props.match.params.environmentId, {}, dataPaging.previous)}
                                   goToPage={page => AppActions.getChangeRequests(this.props.match.params.environmentId, {}, `${Project.api}environments/${environmentId}/list-change-requests/?page=${page}`)}
+                                  renderFooter={()=><JSONReference className="mt-4" title={"Change Requests"} json={data}/>}
                                   renderRow={({ title, user: _user, created_at, live_from, id }, index) => {
                                       const user = (OrganisationStore.model && OrganisationStore.model.users && OrganisationStore.model.users.find(v => v.id === _user)) || {};
                                       const isScheduled = new Date(live_from).valueOf() > new Date().valueOf();
@@ -128,6 +130,7 @@ const ChangeRequestsPage = class extends Component {
                               isLoading={ChangeRequestStore.isLoading || !dataScheduled || !OrganisationStore.model}
                               icon="ion-md-git-pull-request"
                               items={dataScheduled}
+                              renderFooter={()=><JSONReference className="mt-4" title={"Change Requests"} json={dataScheduled}/>}
                               paging={dataScheduledPaging}
                               nextPage={() => AppActions.getChangeRequests(this.props.match.params.environmentId, { live_from_after: this.state.live_after }, dataPaging.next)}
                               prevPage={() => AppActions.getChangeRequests(this.props.match.params.environmentId, { live_from_after: this.state.live_after }, dataPaging.previous)}
@@ -165,7 +168,7 @@ const ChangeRequestsPage = class extends Component {
                               nextPage={() => AppActions.getChangeRequests(this.props.match.params.environmentId, { committed: true }, dataPaging.next)}
                               prevPage={() => AppActions.getChangeRequests(this.props.match.params.environmentId, { committed: true }, dataPaging.previous)}
                               goToPage={page => AppActions.getChangeRequests(this.props.match.params.environmentId, { committed: true }, `${Project.api}environments/${environmentId}/list-change-requests/?page=${page}`)}
-
+                              renderFooter={()=><JSONReference className="mt-4" title={"Change Requests"} json={dataClosed}/>}
                               renderRow={({ title, user: _user, created_at, id }, index) => {
                                   const user = OrganisationStore.model && OrganisationStore.model.users.find(v => v.id === _user);
                                   return (
@@ -196,4 +199,4 @@ const ChangeRequestsPage = class extends Component {
 
 ChangeRequestsPage.propTypes = {};
 
-module.exports = hot(module)(ConfigProvider(ChangeRequestsPage));
+module.exports = ConfigProvider(ChangeRequestsPage);

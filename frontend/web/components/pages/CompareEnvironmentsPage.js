@@ -48,4 +48,4 @@ class TheComponent extends Component {
     }
 }
 
-module.exports = hot(module)(ConfigProvider(TheComponent));
+module.exports = ConfigProvider(TheComponent);

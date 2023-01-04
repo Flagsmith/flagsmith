@@ -22,7 +22,10 @@ from environments.identities.traits.serializers import (
     TraitSerializerBasic,
     TraitSerializerFull,
 )
-from environments.permissions.constants import MANAGE_IDENTITIES
+from environments.permissions.constants import (
+    MANAGE_IDENTITIES,
+    VIEW_IDENTITIES,
+)
 from environments.permissions.permissions import (
     EnvironmentKeyPermissions,
     NestedEnvironmentPermissions,
@@ -87,8 +90,8 @@ class TraitViewSet(viewsets.ModelViewSet):
                     "update": MANAGE_IDENTITIES,
                     "partial_update": MANAGE_IDENTITIES,
                     "destroy": MANAGE_IDENTITIES,
-                    "list": MANAGE_IDENTITIES,
-                    "retrieve": MANAGE_IDENTITIES,
+                    "list": VIEW_IDENTITIES,
+                    "retrieve": VIEW_IDENTITIES,
                 },
                 get_environment_from_object_callable=lambda t: t.identity.environment,
             ),
