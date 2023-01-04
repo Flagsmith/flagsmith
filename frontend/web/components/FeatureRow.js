@@ -218,7 +218,7 @@ class TheComponent extends Component {
                                             </button>
                                         )}
                                     >
-                                        {isProtected ? '<span>This feature has tagged as <bold>protected</bold>, <bold>permanent</bold>, <bold>do not delete</bold>, or <bold>read only</bold>. Please remove the tag before attempting to delete this flag.</span>' : 'Remove feature'}
+                                        {isProtected ? '<span>This feature has been tagged as <bold>protected</bold>, <bold>permanent</bold>, <bold>do not delete</bold>, or <bold>read only</bold>. Please remove the tag before attempting to delete this flag.</span>' : 'Remove feature'}
                                     </Tooltip>
                                 </Column>
                             ))}
