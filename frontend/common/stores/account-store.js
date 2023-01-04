@@ -259,7 +259,7 @@ const controller = {
                 }
             }
 
-            if (projectOverrides.delighted) {
+            if (Project.delighted) {
                 delighted.survey({
                     email: store.model.email, // customer email (optional)
                     name: `${store.model.first_name} ${store.model.last_name}`, // customer name (optional)

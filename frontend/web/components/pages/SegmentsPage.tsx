@@ -16,6 +16,7 @@ import Button, {ButtonLink} from "../base/forms/Button";
 import ConfirmRemoveSegment from '../modals/ConfirmRemoveSegment';
 import CreateSegmentModal from '../modals/CreateSegment';
 import PanelSearch from '../PanelSearch'
+import JSONReference from "../JSONReference";
 
 type SegmentsPageType = {
     router: RouterChildContext['router']
@@ -203,6 +204,7 @@ const SegmentsPage: FC<SegmentsPageType> = (props) => {
                                         id="segment-list"
                                         icon="ion-ios-globe"
                                         title="Segments"
+                                        renderFooter={()=><JSONReference className="mx-2 mt-4" title={"Segments"} json={segments}/>}
                                         items={sortBy(segments, (v) => {
                                             return `${v.feature ? 'z' : 'a'}${v.name}`
                                         })}

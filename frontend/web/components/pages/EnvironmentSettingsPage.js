@@ -10,6 +10,8 @@ import ServerSideSDKKeys from '../ServerSideSDKKeys';
 import PaymentModal from '../modals/Payment';
 import Tabs from '../base/forms/Tabs'
 import TabItem from '../base/forms/TabItem'
+import { ColourSelect } from '../AddEditTags';
+import JSONReference from "../JSONReference";
 import ColourSelect from '../tags/ColourSelect';
 const EnvironmentSettingsPage = class extends Component {
     static displayName = 'EnvironmentSettingsPage'
@@ -155,6 +157,7 @@ const EnvironmentSettingsPage = class extends Component {
                                     <Tabs inline transparent uncontrolled>
                                         <TabItem tabLabel="General" tabIcon="ion-md-settings" >
                                             <div className="mt-4">
+                                                <JSONReference title={"Environment"} json={env}/>
                                                 <div>
                                                     <form onSubmit={this.saveEnv}>
                                                         <div className="row">
@@ -198,38 +201,36 @@ const EnvironmentSettingsPage = class extends Component {
 
                                                     </form>
                                                 </div>
-                                                {Utils.getFlagsmithHasFeature("tag_environments") && (
-                                                    <div>
-                                                    <Row space>
-                                                        <div className="col-md-8 pl-0">
-                                                            <h3 className="m-b-0">Environment Banner</h3>
-                                                            <p className="mb-0">
-                                                                This will show a banner whenever you view its pages, this is generally used to warn people that they are viewing and editing a sensitive environment.
-                                                            </p>
-                                                        </div>
-                                                        <Switch
-                                                            onChange={(value)=>this.setState({banner_text:value?env.name + " Environment":null}, this.saveEnv)}
-                                                            checked={typeof this.state.banner_text === "string"}
-                                                        />
-                                                    </Row>
-                                                        {typeof this.state.banner_text === "string" && (
-                                                            <Row className="mt-2">
-                                                                <Input
-                                                                    style={{width:400}}
-                                                                    placeholder="Banner text"
-                                                                    value={this.state.banner_text}
-                                                                    onChange={(e)=>this.setState({banner_text:Utils.safeParseEventValue(e)})}
-                                                                />
-                                                                <div className="ml-2">
-                                                                    <ColourSelect value={this.state.banner_colour} onChange={(banner_colour)=>this.setState({banner_colour})}/>
-                                                                </div>
-                                                                <Button onClick={this.saveEnv} className="ml-2">
-                                                                    Save
-                                                                </Button>
-                                                            </Row>
-                                                        )}
+                                                <div>
+                                                <Row space>
+                                                    <div className="col-md-8 pl-0">
+                                                        <h3 className="m-b-0">Environment Banner</h3>
+                                                        <p className="mb-0">
+                                                            This will show a banner whenever you view its pages, this is generally used to warn people that they are viewing and editing a sensitive environment.
+                                                        </p>
                                                     </div>
-                                                )}
+                                                    <Switch
+                                                        onChange={(value)=>this.setState({banner_text:value?env.name + " Environment":null}, this.saveEnv)}
+                                                        checked={typeof this.state.banner_text === "string"}
+                                                    />
+                                                </Row>
+                                                    {typeof this.state.banner_text === "string" && (
+                                                        <Row className="mt-2">
+                                                            <Input
+                                                                style={{width:400}}
+                                                                placeholder="Banner text"
+                                                                value={this.state.banner_text}
+                                                                onChange={(e)=>this.setState({banner_text:Utils.safeParseEventValue(e)})}
+                                                            />
+                                                            <div className="ml-2">
+                                                                <ColourSelect value={this.state.banner_colour} onChange={(banner_colour)=>this.setState({banner_colour})}/>
+                                                            </div>
+                                                            <Button onClick={this.saveEnv} className="ml-2">
+                                                                Save
+                                                            </Button>
+                                                        </Row>
+                                                    )}
+                                                </div>
                                                     <FormGroup className="mt-4">
                                                         <Row space>
                                                             <div className="col-md-8 pl-0">

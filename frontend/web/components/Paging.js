@@ -36,7 +36,7 @@ export default class Paging extends PureComponent {
         return (
             <Row className="list-item paging py-0" style={isLoading ? { opacity: 0.5 } : {}}>
                 <Button
-                  disabled={isLoading||!paging.previous} className="icon btn-paging ion-ios-arrow-back"
+                  disabled={isLoading || !paging.previous} className="icon btn-paging ion-ios-arrow-back"
                   onClick={() => prevPage()}
                 />
                 <Row className="list-item">

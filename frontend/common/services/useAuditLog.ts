@@ -7,7 +7,6 @@ export const auditLogService = service
     .enhanceEndpoints({ addTagTypes: ['AuditLog'] })
     .injectEndpoints({
         endpoints: builder => ({
-
             getAuditLogs: builder.query<Res['auditLogs'], Req['getAuditLogs']>({
                 query: params => ({
                     url: `audit/?${Utils.toParam(params)}`,

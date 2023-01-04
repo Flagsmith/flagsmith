@@ -334,7 +334,9 @@ const CreateSegment: FC<CreateSegmentType> = ({
                 <div className="alert alert-danger">Error creating segment, please ensure you have entered a trait and
                     value for each rule.</div>
             }
-
+            {isEdit && (
+                <JSONReference title={"Segment"} json={this.props.segment}/>
+            )}
             {readOnly ? (
                 <div className="text-right">
                     <Tooltip
@@ -389,16 +391,13 @@ const CreateSegment: FC<CreateSegmentType> = ({
                             {Tab1}
                         </div>
                     </TabItem>
-                    {Utils.getFlagsmithHasFeature('segment_associated_features') && (
-                        <TabItem tabLabel="Features">
-                            <div className="mt-4 mr-3 ml-3">
-                                <AssociatedSegmentOverrides feature={segment.feature} projectId={projectId}
-                                                            id={segment.id}
-                                />
-                            </div>
-                        </TabItem>
-                    )}
-
+                    <TabItem tabLabel="Features">
+                        <div className="mt-4 mr-3 ml-3">
+                            <AssociatedSegmentOverrides feature={segment.feature} projectId={projectId}
+                                                        id={segment.id}
+                            />
+                        </div>
+                    </TabItem>
                     <TabItem tabLabel="Users">
                         <div className="mt-4 mr-3 ml-3">
                             <InfoMessage>
@@ -547,3 +546,5 @@ const LoadingCreateSegment: FC<LoadingCreateSegmentType> = (props) => {
 }
 
 export default LoadingCreateSegment
+
+module.exports = ConfigProvider(LoadingCreateSegment);

@@ -7,6 +7,7 @@ from environments.identities.traits.views import TraitViewSet
 from environments.permissions.constants import (
     MANAGE_IDENTITIES,
     VIEW_ENVIRONMENT,
+    VIEW_IDENTITIES,
 )
 from environments.permissions.models import UserEnvironmentPermission
 from environments.permissions.permissions import NestedEnvironmentPermissions
@@ -130,8 +131,8 @@ def test_edge_identity_view_set_get_permissions():
     assert isinstance(permissions[1], NestedEnvironmentPermissions)
 
     assert permissions[1].action_permission_map == {
-        "list": MANAGE_IDENTITIES,
-        "retrieve": MANAGE_IDENTITIES,
+        "list": VIEW_IDENTITIES,
+        "retrieve": VIEW_IDENTITIES,
         "create": MANAGE_IDENTITIES,
         "update": MANAGE_IDENTITIES,
         "partial_update": MANAGE_IDENTITIES,

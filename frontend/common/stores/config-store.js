@@ -2,10 +2,6 @@ const Dispatcher = require('../dispatcher/dispatcher');
 const BaseStore = require('./base/_store');
 window.Project = require('../project');
 
-window.Project = {
-    ...window.Project,
-    ...projectOverrides, // environment.js (also app.yaml if using app engine)
-};
 const controller = {
     get() {
         store.loading();
@@ -47,9 +43,9 @@ flagsmith.init({
     onChange: controller.loaded,
     api: Project.flagsmithClientAPI,
     cacheFlags: true,
-    realtime: projectOverrides.flagsmithRealtime,
+    realtime: Project.flagsmithRealtime,
     AsyncStorage,
-    enableAnalytics: projectOverrides.flagsmithAnalytics,
+    enableAnalytics: Project.flagsmithAnalytics,
 }).catch(() => {
     controller.onError();
 });

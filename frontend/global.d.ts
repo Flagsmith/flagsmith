@@ -7,11 +7,13 @@ declare global {
     var Row: typeof Component
     var toast: (value:string)=>void
     var Flex: typeof Component
+    var isMobile: boolean
     var FormGroup: typeof Component
     var Column: typeof Component
     var RemoveIcon: typeof Component
     var ConfigProvider: (Component:typeof Component)=> typeof Component
     var Loader: typeof Component
     var closeModal: ()=>void
+    var toast: (message:string)=>void
     var Tooltip: typeof FC<{title:ReactNode, place?:string, html?:boolean}>
 }

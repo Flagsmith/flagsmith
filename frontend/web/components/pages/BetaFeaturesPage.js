@@ -139,4 +139,4 @@ const BetaFeaturesPage = class extends Component {
 
 BetaFeaturesPage.propTypes = {};
 
-module.exports = hot(module)(ConfigProvider(BetaFeaturesPage));
+module.exports = ConfigProvider(BetaFeaturesPage);

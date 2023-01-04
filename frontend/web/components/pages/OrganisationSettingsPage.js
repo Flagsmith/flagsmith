@@ -16,6 +16,7 @@ import AdminAPIKeys from '../AdminAPIKeys';
 import Tabs from '../base/forms/Tabs'
 import TabItem from '../base/forms/TabItem'
 import InfoMessage from "../InfoMessage";
+import JSONReference from "../JSONReference";
 
 const OrganisationSettingsPage = class extends Component {
     static contextTypes = {
@@ -35,7 +36,7 @@ const OrganisationSettingsPage = class extends Component {
         }
         AppActions.getOrganisation(AccountStore.getOrganisation().id);
 
-        if (Utils.getFlagsmithHasFeature('usage_chart') && !projectOverrides.disableInflux) {
+        if (Utils.getFlagsmithHasFeature('usage_chart') && !Project.disableInflux) {
             AppActions.getInfluxData(AccountStore.getOrganisation().id);
         }
 
@@ -339,6 +340,8 @@ const OrganisationSettingsPage = class extends Component {
                                                 <FormGroup>
                                                     <div className="mt-4">
                                                         <div>
+                                                            <JSONReference title={"Organisation"} json={organisation}/>
+                                                            <JSONReference title={"Webhooks"} json={webhooks}/>
                                                             <form key={organisation.id} onSubmit={this.save}>
                                                                 <h5>Organisation Name</h5>
                                                                 <Row>
@@ -550,6 +553,9 @@ const OrganisationSettingsPage = class extends Component {
                                             </TabItem>
 
                                             <TabItem data-test="tab-permissions" tabLabel="Members" tabIcon="ion-md-people" >
+                                                <JSONReference showNamesButton className="mt-4" title={"Members"} json={users}/>
+                                                <JSONReference title={"Invite Links"} json={inviteLinks}/>
+
                                                 <FormGroup className="mt-4">
                                                     <h3>
                                                         Manage Users and Permissions
@@ -877,7 +883,7 @@ const OrganisationSettingsPage = class extends Component {
                                                 </FormGroup>
                                             </TabItem>
 
-                                            {Utils.getFlagsmithHasFeature('usage_chart') && !projectOverrides.disableInflux && (
+                                            {Utils.getFlagsmithHasFeature('usage_chart') && !Project.disableInflux && (
                                                 <TabItem tabLabel="Usage" tabIcon="ion-md-analytics" >
                                                     {this.state.tab === 3 && (
                                                         <div className="mt-4">
