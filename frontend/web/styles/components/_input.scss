@@ -19,7 +19,7 @@ textarea {
 		color:$input-placeholder-color-dark !important;
 	}
 	&:focus {
-		border-color: $bt-input-border-active !important;
+		border-color: $bt-input-border-active;
 	}
 }
 

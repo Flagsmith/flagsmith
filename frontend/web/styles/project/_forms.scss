@@ -46,7 +46,7 @@
             background-color: $input-bg-dark !important;
             color: $body-text-dark;
             &:focus {
-                border:1px solid $bt-input-border-active!important;
+                border:1px solid $bt-input-border-active;
             }
             &::placeholder{
                 color:$input-placeholder-color-dark !important;
@@ -59,10 +59,12 @@
     height:$input-height;
     &.invalid {
         input.input {
-            border-color: $brand-danger;
-        }
-        &.focus-validate input.input:focus {
             border-color: $brand-danger !important;
+        }
+    }
+    &.success {
+        input.input {
+            border-color: $brand-success !important;
         }
     }
 
@@ -71,7 +73,7 @@
         background-color: $input-bg;
         @include transition(all 200ms);
         &:focus {
-            border:1px solid $bt-input-border-active!important;
+            border:1px solid $bt-input-border-active;
         }
         border-radius: $border-radius-default;
         color:$body-text;

@@ -43,7 +43,8 @@ const RegexTester: FC<RegexTesterType> = ({regex:defaultRegex, onChange}) => {
                 inputProps={{
                     onClick: forceSelectionRange,
                     onKeyUp: forceSelectionRange,
-                    className:"focus-validate full-width"
+                    showSuccess: true,
+                    className:"full-width"
                 }}
 
                 onChange={(e: InputEvent) => {
@@ -64,8 +65,10 @@ const RegexTester: FC<RegexTesterType> = ({regex:defaultRegex, onChange}) => {
                 autoValidate
                 inputProps={{
                     autoValidate: true,
-                    className:"focus-validate full-width"
+                    className:"full-width",
+                    showSuccess: true
                 }}
+
                 isValid={valid}
                 onChange={(e: InputEvent) => {
                     setExampleText(Utils.safeParseEventValue(e))
