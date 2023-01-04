@@ -16,3 +16,5 @@ SWAGGER_SETTINGS["USE_SESSION_AUTH"] = False
 
 # Allow admin login with username and password
 ENABLE_ADMIN_ACCESS_USER_PASS = True
+
+SKIP_MIGRATION_TESTS = True

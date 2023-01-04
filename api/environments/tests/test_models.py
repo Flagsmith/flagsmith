@@ -9,7 +9,8 @@ from flag_engine.api.document_builders import (
     build_environment_api_key_document,
 )
 
-from audit.models import AuditLog, RelatedObjectType
+from audit.models import AuditLog
+from audit.related_object_type import RelatedObjectType
 from environments.identities.models import Identity
 from environments.models import (
     Environment,
@@ -336,6 +337,7 @@ def test_updated_at_gets_updated_when_environment_audit_log_created(environment)
     )
 
     # Then
+    environment.refresh_from_db()
     assert environment.updated_at == audit_log.created_date
 
 

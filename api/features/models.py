@@ -6,7 +6,10 @@ import typing
 import uuid
 from copy import deepcopy
 
-from core.models import AbstractBaseExportableModel
+from core.models import (
+    AbstractBaseExportableModel,
+    abstract_base_auditable_model_factory,
+)
 from django.core.exceptions import (
     NON_FIELD_ERRORS,
     ObjectDoesNotExist,
@@ -25,6 +28,18 @@ from django_lifecycle import (
 from ordered_model.models import OrderedModelBase
 from simple_history.models import HistoricalRecords
 
+from audit.constants import (
+    FEATURE_CREATED_MESSAGE,
+    FEATURE_DELETED_MESSAGE,
+    FEATURE_SEGMENT_UPDATED_MESSAGE,
+    FEATURE_STATE_UPDATED_MESSAGE,
+    FEATURE_UPDATED_MESSAGE,
+    IDENTITY_FEATURE_STATE_DELETED_MESSAGE,
+    IDENTITY_FEATURE_STATE_UPDATED_MESSAGE,
+    SEGMENT_FEATURE_STATE_DELETED_MESSAGE,
+    SEGMENT_FEATURE_STATE_UPDATED_MESSAGE,
+)
+from audit.related_object_type import RelatedObjectType
 from environments.identities.helpers import (
     get_hashed_percentage_for_object_ids,
 )
@@ -56,7 +71,11 @@ if typing.TYPE_CHECKING:
     from environments.models import Environment
 
 
-class Feature(CustomLifecycleModelMixin, AbstractBaseExportableModel):
+class Feature(
+    CustomLifecycleModelMixin,
+    AbstractBaseExportableModel,
+    abstract_base_auditable_model_factory(["uuid"]),
+):
     name = models.CharField(max_length=2000)
     created_date = models.DateTimeField("DateCreated", auto_now_add=True)
     project = models.ForeignKey(
@@ -76,12 +95,14 @@ class Feature(CustomLifecycleModelMixin, AbstractBaseExportableModel):
     description = models.TextField(null=True, blank=True)
     default_enabled = models.BooleanField(default=False)
     type = models.CharField(max_length=50, blank=True, default=STANDARD)
-    history = HistoricalRecords(excluded_fields=["uuid"])
     tags = models.ManyToManyField(Tag, blank=True)
     is_archived = models.BooleanField(default=False)
     owners = models.ManyToManyField(
         "users.FFAdminUser", related_name="owned_features", blank=True
     )
+
+    history_record_class_path = "features.models.HistoricalFeature"
+    related_object_type = RelatedObjectType.FEATURE
 
     class Meta:
         # Note: uniqueness is changed to reference lowercase name in explicit SQL in the migrations
@@ -129,6 +150,18 @@ class Feature(CustomLifecycleModelMixin, AbstractBaseExportableModel):
     def __str__(self):
         return "Project %s - Feature %s" % (self.project.name, self.name)
 
+    def get_create_log_message(self, history_instance) -> typing.Optional[str]:
+        return FEATURE_CREATED_MESSAGE % self.name
+
+    def get_delete_log_message(self, history_instance) -> typing.Optional[str]:
+        return FEATURE_DELETED_MESSAGE % self.name
+
+    def get_update_log_message(self, history_instance) -> typing.Optional[str]:
+        return FEATURE_UPDATED_MESSAGE % self.name
+
+    def _get_project(self) -> typing.Optional["Project"]:
+        return self.project
+
 
 def get_next_segment_priority(feature):
     feature_segments = FeatureSegment.objects.filter(feature=feature).order_by(
@@ -140,7 +173,14 @@ def get_next_segment_priority(feature):
         return feature_segments.first().priority + 1
 
 
-class FeatureSegment(AbstractBaseExportableModel, OrderedModelBase):
+class FeatureSegment(
+    AbstractBaseExportableModel,
+    abstract_base_auditable_model_factory(["uuid"]),
+    OrderedModelBase,
+):
+    history_record_class_path = "features.models.HistoricalFeatureSegment"
+    related_object_type = RelatedObjectType.FEATURE
+
     feature = models.ForeignKey(
         Feature, on_delete=models.CASCADE, related_name="feature_segments"
     )
@@ -179,9 +219,6 @@ class FeatureSegment(AbstractBaseExportableModel, OrderedModelBase):
     order_field_name = "priority"
     order_with_respect_to = ("feature", "environment")
 
-    # used for audit purposes
-    history = HistoricalRecords(excluded_fields=["uuid"])
-
     objects = FeatureSegmentManager()
 
     class Meta:
@@ -215,8 +252,51 @@ class FeatureSegment(AbstractBaseExportableModel, OrderedModelBase):
     def get_value(self):
         return get_correctly_typed_value(self.value_type, self.value)
 
+    def get_create_log_message(self, history_instance) -> typing.Optional[str]:
+        return FEATURE_SEGMENT_UPDATED_MESSAGE % (
+            self.feature.name,
+            self.environment.name,
+        )
 
-class FeatureState(LifecycleModelMixin, AbstractBaseExportableModel):
+    def get_update_log_message(self, history_instance) -> typing.Optional[str]:
+        return self.get_create_log_message(history_instance)
+
+    def get_delete_log_message(self, history_instance) -> typing.Optional[str]:
+        return SEGMENT_FEATURE_STATE_DELETED_MESSAGE % (
+            self.feature.name,
+            self.segment.name,
+        )
+
+    def get_audit_log_related_object_id(self, history_instance) -> typing.Optional[int]:
+        # TODO: this is here to maintain current behaviour but should probably be fixed
+        if history_instance.history_type == "-":
+            feature_state = (
+                self.feature_states.first()
+            )  # due to incorrect foreign key rather than 1-1
+            return getattr(feature_state, "id", None)
+        return self.feature_id
+
+    def get_audit_log_related_object_type(self, history_instance) -> RelatedObjectType:
+        # TODO: this is here to maintain current behaviour but should probably be fixed
+        if history_instance.history_type == "-":
+            return RelatedObjectType.FEATURE_STATE
+        return RelatedObjectType.FEATURE
+
+    def _get_environment(self) -> typing.Optional["Environment"]:
+        return self.environment
+
+    def _get_project(self) -> typing.Optional["Project"]:
+        return self.feature.project
+
+
+class FeatureState(
+    LifecycleModelMixin,
+    AbstractBaseExportableModel,
+    abstract_base_auditable_model_factory(["uuid"]),
+):
+    history_record_class_path = "features.models.HistoricalFeatureState"
+    related_object_type = RelatedObjectType.FEATURE_STATE
+
     feature = models.ForeignKey(
         Feature, related_name="feature_states", on_delete=models.CASCADE
     )
@@ -245,7 +325,6 @@ class FeatureState(LifecycleModelMixin, AbstractBaseExportableModel):
     )
 
     enabled = models.BooleanField(default=False)
-    history = HistoricalRecords(excluded_fields=["uuid"])
 
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
@@ -615,6 +694,60 @@ class FeatureState(LifecycleModelMixin, AbstractBaseExportableModel):
             .get("max_version", 0)
             + 1
         )
+
+    def get_create_log_message(self, history_instance) -> typing.Optional[str]:
+        return self.get_update_log_message(history_instance)
+
+    def get_update_log_message(self, history_instance) -> typing.Optional[str]:
+        if self.identity:
+            return IDENTITY_FEATURE_STATE_UPDATED_MESSAGE % (
+                self.feature.name,
+                self.identity.identifier,
+            )
+        elif self.feature_segment:
+            return SEGMENT_FEATURE_STATE_UPDATED_MESSAGE % (
+                self.feature.name,
+                self.feature_segment.segment.name,
+            )
+        return FEATURE_STATE_UPDATED_MESSAGE % self.feature.name
+
+    def get_delete_log_message(self, history_instance) -> typing.Optional[str]:
+        try:
+            if self.identity:
+                return IDENTITY_FEATURE_STATE_DELETED_MESSAGE % (
+                    self.feature.name,
+                    self.identity.identifier,
+                )
+            elif self.feature_segment:
+                return SEGMENT_FEATURE_STATE_DELETED_MESSAGE % (
+                    self.feature.name,
+                    self.feature_segment.segment.name,
+                )
+
+            # TODO: this is here to maintain current functionality, however, I'm not
+            #  sure that we want to create an audit log record in this case
+            return FEATURE_DELETED_MESSAGE % self.feature.name
+        except ObjectDoesNotExist:
+            # Account for cascade deletes
+            return None
+
+    def get_extra_audit_log_kwargs(self, history_instance) -> dict:
+        kwargs = super().get_extra_audit_log_kwargs(history_instance)
+
+        if (
+            history_instance.history_type == "+"
+            and self.feature_segment_id is None
+            and self.identity_id is None
+        ):
+            kwargs["skip_signals"] = "send_environments_to_dynamodb"
+
+        return kwargs
+
+    def _get_environment(self) -> typing.Optional["Environment"]:
+        return self.environment
+
+    def _get_project(self) -> typing.Optional["Project"]:
+        return self.feature.project
 
 
 class FeatureStateValue(AbstractBaseFeatureValueModel, AbstractBaseExportableModel):

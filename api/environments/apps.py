@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
 from __future__ import unicode_literals
 
-from django.apps import AppConfig
+from core.apps import BaseAppConfig
 
 
-class EnvironmentsConfig(AppConfig):
+class EnvironmentsConfig(BaseAppConfig):
     name = "environments"

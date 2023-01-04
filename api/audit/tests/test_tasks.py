@@ -1,4 +1,5 @@
-from audit.models import FEATURE_STATE_WENT_LIVE_MESSAGE, AuditLog
+from audit.constants import FEATURE_STATE_WENT_LIVE_MESSAGE
+from audit.models import AuditLog
 from audit.tasks import create_feature_state_went_live_audit_log
 
 

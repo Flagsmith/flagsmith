@@ -5,11 +5,8 @@ from django.urls import reverse
 from pytest_lazyfixture import lazy_fixture
 from rest_framework import status
 
-from audit.models import (
-    SEGMENT_FEATURE_STATE_DELETED_MESSAGE,
-    AuditLog,
-    RelatedObjectType,
-)
+from audit.constants import SEGMENT_FEATURE_STATE_DELETED_MESSAGE
+from audit.models import AuditLog, RelatedObjectType
 from environments.models import Environment
 from features.models import Feature, FeatureSegment
 from segments.models import Segment

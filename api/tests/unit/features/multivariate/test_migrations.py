@@ -1,8 +1,14 @@
 import typing
 
+import pytest
 from core.constants import STRING
+from django.conf import settings
 
 
+@pytest.mark.skipif(
+    settings.SKIP_MIGRATION_TESTS is True,
+    reason="Skip migration tests to speed up tests where necessary",
+)
 def test_remove_duplicate_mv_feature_state_values(migrator):
     # Given
     # We set the DB to be in the state prior to the migration we want to test

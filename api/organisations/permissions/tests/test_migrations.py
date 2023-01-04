@@ -1,7 +1,14 @@
+import pytest
+from django.conf import settings
+
 from organisations.models import OrganisationRole
 from organisations.permissions.permissions import CREATE_PROJECT
 
 
+@pytest.mark.skipif(
+    settings.SKIP_MIGRATION_TESTS is True,
+    reason="Skip migration tests to speed up tests where necessary",
+)
 def test_migration_creates_create_project_permissions_for_org_users(migrator):
     # Given
     # we use one of the dependencies of the migration we want to test to set the

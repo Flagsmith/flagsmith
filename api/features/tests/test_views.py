@@ -11,12 +11,11 @@ from pytest_lazyfixture import lazy_fixture
 from rest_framework import status
 from rest_framework.test import APIClient, APITestCase
 
-from audit.models import (
+from audit.constants import (
     IDENTITY_FEATURE_STATE_DELETED_MESSAGE,
     IDENTITY_FEATURE_STATE_UPDATED_MESSAGE,
-    AuditLog,
-    RelatedObjectType,
 )
+from audit.models import AuditLog, RelatedObjectType
 from environments.identities.models import Identity
 from environments.models import Environment
 from features.models import (

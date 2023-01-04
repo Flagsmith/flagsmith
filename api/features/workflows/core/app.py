@@ -1,6 +1,6 @@
-from django.apps import AppConfig
+from core.apps import BaseAppConfig
 
 
-class WorkflowsCoreAppConfig(AppConfig):
+class WorkflowsCoreAppConfig(BaseAppConfig):
     name = "features.workflows.core"
     label = "workflows_core"

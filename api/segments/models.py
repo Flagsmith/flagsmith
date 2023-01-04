@@ -3,11 +3,16 @@ import typing
 
 import semver
 from core.constants import BOOLEAN, FLOAT, INTEGER
-from core.models import AbstractBaseExportableModel
+from core.models import (
+    AbstractBaseExportableModel,
+    abstract_base_auditable_model_factory,
+)
 from django.core.exceptions import ValidationError
 from django.db import models
 from flag_engine.utils.semver import is_semver, remove_semver_suffix
 
+from audit.constants import SEGMENT_CREATED_MESSAGE, SEGMENT_UPDATED_MESSAGE
+from audit.related_object_type import RelatedObjectType
 from environments.identities.helpers import (
     get_hashed_percentage_for_object_ids,
 )
@@ -46,7 +51,12 @@ IS_NOT_SET = "IS_NOT_SET"
 IN = "IN"
 
 
-class Segment(AbstractBaseExportableModel):
+class Segment(
+    AbstractBaseExportableModel, abstract_base_auditable_model_factory(["uuid"])
+):
+    history_record_class_path = "segments.models.HistoricalSegment"
+    related_object_type = RelatedObjectType.SEGMENT
+
     name = models.CharField(max_length=2000)
     description = models.TextField(null=True, blank=True)
     project = models.ForeignKey(
@@ -69,6 +79,15 @@ class Segment(AbstractBaseExportableModel):
         return rules.count() > 0 and all(
             rule.does_identity_match(identity, traits) for rule in rules
         )
+
+    def get_create_log_message(self, history_instance) -> typing.Optional[str]:
+        return SEGMENT_CREATED_MESSAGE % self.name
+
+    def get_update_log_message(self, history_instance) -> typing.Optional[str]:
+        return SEGMENT_UPDATED_MESSAGE % self.name
+
+    def _get_project(self):
+        return self.project
 
 
 class SegmentRule(AbstractBaseExportableModel):
