@@ -30,6 +30,10 @@ RUN pip install google-re2==${GOOGLE_RE2_VERSION}
 ARG SAML_INSTALLED="0"
 RUN if [ "${SAML_INSTALLED}" = "1" ]; then apt-get update && apt-get install -y xmlsec1; fi;
 
+# python:3.10-slim ships with setuptools 65.5.0 which suffers with: https://www.cvedetails.com/cve/CVE-2022-40897/
+# hence update it to lastest version
+RUN pip install --upgrade setuptools
+
 # Install python dependencies
 RUN pip install -r requirements.txt --no-cache-dir --compile
 

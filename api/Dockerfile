@@ -16,6 +16,10 @@ COPY . .
 # pysaml2 dependency
 RUN apt update && apt install -y xmlsec1
 
+# python:3.10-slim ships with setuptools 65.5.0 which suffers with: https://www.cvedetails.com/cve/CVE-2022-40897/
+# hence update it to lastest version
+RUN pip install --upgrade setuptools
+
 # Install python dependencies
 RUN pip install -r requirements.txt --no-cache-dir --compile
 
