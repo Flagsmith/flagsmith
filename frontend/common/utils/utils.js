@@ -9,6 +9,21 @@ module.exports = Object.assign({}, require('./base/_utils'), {
             .replace(/\B(?=(\d{3})+(?!\d))/g, ',');
     },
 
+    loadScriptPromise(url){
+        return new Promise(function(resolve, reject){
+            const cb =  function(){
+                this.removeEventListener('load', cb)
+                resolve(null)
+            }
+            var head = document.getElementsByTagName('head')[0]
+            var script = document.createElement('script')
+            script.type = 'text/javascript'
+            script.addEventListener('load',cb)
+            script.src = url
+            head.appendChild(script)
+        })
+    },
+
     changeRequestsEnabled(value) {
         return typeof value === 'number';
     },
@@ -25,7 +40,14 @@ module.exports = Object.assign({}, require('./base/_utils'), {
         }
         return 'VIEW_ENVIRONMENT';
     },
-    getManageFeaturePermission(isChangeRequest) {
+    getViewIdentitiesPermission() {
+        if (Utils.getFlagsmithHasFeature("view_identities_permission")){
+            return "VIEW_IDENTITIES"
+        } else {
+            return "MANAGE_IDENTITIES"
+        }
+    },
+    getManageFeaturePermission(isChangeRequest, isUser) {
         if (isChangeRequest && Utils.getFlagsmithHasFeature('update_feature_state_permission')) {
             return 'CREATE_CHANGE_REQUEST';
         }
@@ -34,7 +56,7 @@ module.exports = Object.assign({}, require('./base/_utils'), {
         }
         return 'ADMIN';
     },
-    getManageFeaturePermissionDescription(isChangeRequest) {
+    getManageFeaturePermissionDescription(isChangeRequest, user) {
         if (isChangeRequest && Utils.getFlagsmithHasFeature('update_feature_state_permission')) {
             return 'Create Change Request';
         }
@@ -42,6 +64,12 @@ module.exports = Object.assign({}, require('./base/_utils'), {
             return 'Update Feature State';
         }
         return 'Admin';
+    },
+    getManageUserPermission() {
+        return 'MANAGE_IDENTITIES';
+    },
+    getManageUserPermissionDescription() {
+        return 'Manage Identities';
     },
     getTraitEndpointMethod() {
         if (Utils.getFlagsmithHasFeature('edge_identities') && ProjectStore.model && ProjectStore.model.use_edge_identities) {
@@ -350,8 +378,9 @@ module.exports = Object.assign({}, require('./base/_utils'), {
         if (typeof str !== 'string') {
             return str;
         }
-        const isFloat = /^[0-9]+[.]?[0-9]+$/.test(str);
-        const isNum = isFloat || /^\d+$/.test(str);
+
+        const isNum = /^\d+$/.test(str);
+
         if (isNum && parseInt(str) > Number.MAX_SAFE_INTEGER) {
             return `${str}`;
         }

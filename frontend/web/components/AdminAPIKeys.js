@@ -6,6 +6,7 @@ import data from '../../common/data/base/_data';
 import InfoMessage from './InfoMessage';
 import Token from './Token';
 import _data from '../../common/data/base/_data';
+import JSONReference from "./JSONReference";
 
 export class CreateAPIKey extends PureComponent {
     state = {
@@ -162,6 +163,7 @@ export default class AdminAPIKeys extends PureComponent {
         const apiKeys = this.state.apiKeys && this.state.apiKeys.results;
         return (
             <div>
+                <JSONReference className="mt-4" hideCondensedButton title={"Terraform API Keys"} json={apiKeys}/>
                 <Row space className="mt-4">
                     <h3>Terraform API Keys</h3>
                     <Button onClick={this.createAPIKey} disabled={this.state.isLoading}>

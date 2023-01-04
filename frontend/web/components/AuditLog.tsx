@@ -4,6 +4,7 @@ import Utils from 'common/utils/utils';
 import {AuditLogItem} from 'common/types/responses';
 import {useGetAuditLogsQuery} from 'common/services/useAuditLog';
 import useSearchThrottle from 'common/useSearchThrottle';
+import JSONReference from "./JSONReference";
 
 const ConfigProvider = require('common/providers/ConfigProvider');
 const PanelSearch = require('../components/PanelSearch');
@@ -101,6 +102,7 @@ const AuditLog: FC<AuditLogType> = (props) => {
             }}
             filterRow={() => true}
             renderRow={renderRow}
+            renderFooter={()=><JSONReference className="mt-4 ml-2" title={"Audit"} json={auditLog?.results}/>}
             renderNoResults={(
                 <FormGroup className='text-center'>
                     You have no
