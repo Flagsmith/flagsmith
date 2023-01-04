@@ -19,7 +19,7 @@ from environments.permissions.permissions import (
     MasterAPIKeyEnvironmentPermissions,
     NestedEnvironmentPermissions,
 )
-from metadata.base_views import BaseMetadataView
+from metadata.mixins import MetaDataViewMixin
 from permissions.serializers import (
     PermissionModelSerializer,
     UserObjectPermissionsSerializer,
@@ -64,7 +64,7 @@ logger = logging.getLogger(__name__)
         ]
     ),
 )
-class EnvironmentViewSet(viewsets.ModelViewSet, BaseMetadataView):
+class EnvironmentViewSet(MetaDataViewMixin, viewsets.ModelViewSet):
     lookup_field = "api_key"
     permission_classes = [EnvironmentPermissions | MasterAPIKeyEnvironmentPermissions]
     app_label = "environments"
