@@ -13,7 +13,8 @@ const CodeHelp = require('../CodeHelp');
 import CreateUserModal from '../modals/CreateUser';
 import RemoveIcon from '../RemoveIcon';
 const PanelSearch = require('../PanelSearch');
-import Button, {ButtonLink} from "../base/forms/Button"; // we need this to make JSX compile
+import Button, {ButtonLink} from "../base/forms/Button";
+import JSONReference from "../JSONReference"; // we need this to make JSX compile
 
 type UsersPageType = {
     router: RouterChildContext['router']
@@ -131,6 +132,7 @@ const UsersPage: FC<UsersPageType> = (props) => {
                         <FormGroup>
                             <PanelSearch
                                 renderSearchWithNoResults
+                                renderFooter={()=><JSONReference className="mx-2 mt-4" title={"Users"} json={identities?.results}/>}
                                 id="users-list"
                                 title="Users"
                                 className="no-pad"

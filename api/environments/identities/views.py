@@ -18,7 +18,10 @@ from environments.identities.serializers import (
 )
 from environments.identities.traits.serializers import TraitSerializerBasic
 from environments.models import Environment
-from environments.permissions.constants import MANAGE_IDENTITIES
+from environments.permissions.constants import (
+    MANAGE_IDENTITIES,
+    VIEW_IDENTITIES,
+)
 from environments.permissions.permissions import NestedEnvironmentPermissions
 from environments.sdk.serializers import (
     IdentifyWithTraitsSerializer,
@@ -62,7 +65,14 @@ class IdentityViewSet(viewsets.ModelViewSet):
         return [
             IsAuthenticated(),
             NestedEnvironmentPermissions(
-                action_permission_map={"retrieve": MANAGE_IDENTITIES}
+                action_permission_map={
+                    "list": VIEW_IDENTITIES,
+                    "retrieve": VIEW_IDENTITIES,
+                    "create": MANAGE_IDENTITIES,
+                    "update": MANAGE_IDENTITIES,
+                    "partial_update": MANAGE_IDENTITIES,
+                    "destroy": MANAGE_IDENTITIES,
+                },
             ),
         ]
 

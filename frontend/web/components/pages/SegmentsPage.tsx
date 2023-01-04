@@ -10,6 +10,7 @@ import useThrottle from "../../../common/useThrottle";
 import Button, {ButtonLink} from "../base/forms/Button";
 import {RouterChildContext} from "react-router";
 import {useHasPermission} from "../../../common/providers/Permission";
+import JSONReference from "../JSONReference";
 
 const Utils = require('common/utils/utils')
 const PanelSearch = require("../../components/PanelSearch")
@@ -207,6 +208,7 @@ const SegmentsPage: FC<SegmentsPageType> = (props) => {
                                         id="segment-list"
                                         icon="ion-ios-globe"
                                         title="Segments"
+                                        renderFooter={()=><JSONReference className="mx-2 mt-4" title={"Segments"} json={segments}/>}
                                         items={sortBy(segments, (v) => {
                                             return `${v.feature ? 'z' : 'a'}${v.name}`
                                         })}

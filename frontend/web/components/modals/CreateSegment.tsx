@@ -12,6 +12,7 @@ import _data from "../../../common/data/base/_data";
 import { useGetIdentitiesQuery } from "../../../common/services/useIdentity";
 import { Req } from "../../../common/types/requests";
 import useSearchThrottle from "../../../common/useSearchThrottle";
+import JSONReference from "../JSONReference";
 
 const SEGMENT_ID_MAXLENGTH = Constants.forms.maxLength.SEGMENT_ID;
 
@@ -283,7 +284,9 @@ const CreateSegment = class extends Component {
                 {error
                     && <div className="alert alert-danger">Error creating segment, please ensure you have entered a trait and value for each rule.</div>
                 }
-
+                {isEdit && (
+                    <JSONReference title={"Segment"} json={this.props.segment}/>
+                )}
                 {this.props.readOnly ? (
                     <div className="text-right">
                         <Tooltip
@@ -340,14 +343,11 @@ const CreateSegment = class extends Component {
                                 {Tab1}
                             </div>
                         </TabItem>
-                        {this.props.hasFeature('segment_associated_features') && (
-                            <TabItem tabLabel="Features">
-                                <div className="mt-4 mr-3 ml-3">
-                                    <AssociatedSegmentOverrides feature={this.props.segment.feature} projectId={this.props.projectId} id={this.props.segment.id}/>
-                                </div>
-                            </TabItem>
-                        )}
-
+                        <TabItem tabLabel="Features">
+                            <div className="mt-4 mr-3 ml-3">
+                                <AssociatedSegmentOverrides feature={this.props.segment.feature} projectId={this.props.projectId} id={this.props.segment.id}/>
+                            </div>
+                        </TabItem>
                         <TabItem tabLabel="Users">
                             <div className="mt-4 mr-3 ml-3">
                                 <InfoMessage>
@@ -453,7 +453,7 @@ const LoadingCreateSegment  = (props) => {
 
     useEffect(()=>{
         if(props.segment) {
-            _data.get(`${Project.api}projects/${props.projectId}/segments/${props.segment}`).then((segment)=> {
+            _data.get(`${Project.api}projects/${props.projectId}/segments/${props.segment}/`).then((segment)=> {
                 setSegmentData(segment);
                 setLoading(false)
             })
@@ -503,4 +503,4 @@ const LoadingCreateSegment  = (props) => {
 
 export default LoadingCreateSegment
 
-module.exports = hot(module)(ConfigProvider(LoadingCreateSegment));
+module.exports = ConfigProvider(LoadingCreateSegment);
