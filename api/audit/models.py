@@ -1,69 +1,31 @@
-import enum
+import typing
+from importlib import import_module
 
 from django.db import models
+from django.db.models import Model
 from django_lifecycle import AFTER_SAVE, LifecycleModel, hook
 
 from api_keys.models import MasterAPIKey
+from audit.related_object_type import RelatedObjectType
+from environments.models import Environment
 from projects.models import Project
-
-FEATURE_CREATED_MESSAGE = "New Flag / Remote Config created: %s"
-FEATURE_DELETED_MESSAGE = "Flag / Remote Config Deleted: %s"
-FEATURE_UPDATED_MESSAGE = "Flag / Remote Config updated: %s"
-SEGMENT_CREATED_MESSAGE = "New Segment created: %s"
-SEGMENT_UPDATED_MESSAGE = "Segment updated: %s"
-FEATURE_SEGMENT_UPDATED_MESSAGE = (
-    "Segment rules updated for flag: %s in environment: %s"
-)
-ENVIRONMENT_CREATED_MESSAGE = "New Environment created: %s"
-ENVIRONMENT_UPDATED_MESSAGE = "Environment updated: %s"
-FEATURE_STATE_UPDATED_MESSAGE = (
-    "Flag state / Remote Config value updated for feature: %s"
-)
-FEATURE_STATE_WENT_LIVE_MESSAGE = (
-    "Scheduled change to Flag state / Remote config value went live for feature: %s by"
-    " Change Request: %s"
-)
-
-IDENTITY_FEATURE_STATE_UPDATED_MESSAGE = (
-    "Flag state / Remote config value updated for feature '%s' and identity '%s'"
-)
-SEGMENT_FEATURE_STATE_UPDATED_MESSAGE = (
-    "Flag state / Remote config value updated for feature '%s' and segment '%s'"
-)
-IDENTITY_FEATURE_STATE_DELETED_MESSAGE = (
-    "Flag state / Remote config value deleted for feature '%s' and identity '%s'"
-)
-SEGMENT_FEATURE_STATE_DELETED_MESSAGE = (
-    "Flag state / Remote config value deleted for feature '%s' and segment '%s'"
-)
-
-CHANGE_REQUEST_CREATED_MESSAGE = "Change Request: %s created"
-CHANGE_REQUEST_APPROVED_MESSAGE = "Change Request: %s approved"
-CHANGE_REQUEST_COMMITTED_MESSAGE = "Change Request: %s committed"
-
-
-class RelatedObjectType(enum.Enum):
-    FEATURE = "Feature"
-    FEATURE_STATE = "Feature state"
-    SEGMENT = "Segment"
-    ENVIRONMENT = "Environment"
-    CHANGE_REQUEST = "Change request"
-
 
 RELATED_OBJECT_TYPES = ((tag.name, tag.value) for tag in RelatedObjectType)
 
 
 class AuditLog(LifecycleModel):
     created_date = models.DateTimeField("DateCreated", auto_now_add=True)
+
     project = models.ForeignKey(
-        Project, related_name="audit_logs", null=True, on_delete=models.SET_NULL
+        Project, related_name="audit_logs", null=True, on_delete=models.DO_NOTHING
     )
     environment = models.ForeignKey(
         "environments.Environment",
         related_name="audit_logs",
         null=True,
-        on_delete=models.SET_NULL,
+        on_delete=models.DO_NOTHING,
     )
+
     log = models.TextField()
     author = models.ForeignKey(
         "users.FFAdminUser",
@@ -90,46 +52,41 @@ class AuditLog(LifecycleModel):
     )
     is_system_event = models.BooleanField(default=False)
 
+    history_record_id = models.IntegerField(blank=True, null=True)
+    history_record_class_path = models.CharField(max_length=200, blank=True, null=True)
+
     class Meta:
         verbose_name_plural = "Audit Logs"
         ordering = ("-created_date",)
 
-    def __str__(self):
-        return "Audit Log %s" % self.id
+    @property
+    def history_record(self):
+        klass = self.get_history_record_model_class(self.history_record_class_path)
+        return klass.objects.get(id=self.history_record_id)
+
+    @staticmethod
+    def get_history_record_model_class(
+        history_record_class_path: str,
+    ) -> typing.Type[Model]:
+        module_path, class_name = history_record_class_path.rsplit(".", maxsplit=1)
+        module = import_module(module_path)
+        return getattr(module, class_name)
 
     @hook(AFTER_SAVE)
     def update_environments_updated_at(self):
         # Don't update the environments updated_at if the audit log
-        # is of CHANGE_REQUEST type since they(directly) don't impact
-        # value of a given feature in an environment
+        # is of CHANGE_REQUEST type (since they don't (directly) impact
+        # the value of a given feature in an environment) or ENVIRONMENT
+        # since the environment itself has no impact on the feature states
+        # within it
         if self.related_object_type == RelatedObjectType.CHANGE_REQUEST.name:
             return
 
         if self.environment:
-            self.environment.updated_at = self.created_date
-            self.environment.save()
+            environments = Environment.objects.filter(id=self.environment_id)
         else:
-            self.project.environments.update(updated_at=self.created_date)
+            environments = self.project.environments.all()
 
-    @classmethod
-    def create_record(
-        cls,
-        obj,
-        obj_type,
-        log_message,
-        author,
-        project=None,
-        environment=None,
-        persist=True,
-    ):
-        record = cls(
-            related_object_id=obj.id,
-            related_object_type=obj_type.name,
-            log=log_message,
-            author=author,
-            project=project,
-            environment=environment,
-        )
-        if persist:
-            record.save()
-        return record
+        # Use a queryset to perform update to prevent signals being called at this point.
+        # Since we're re-saving the environment, we don't want to duplicate signals.
+        environments.update(updated_at=self.created_date)

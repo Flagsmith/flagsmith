@@ -6,6 +6,7 @@ import typing
 from copy import deepcopy
 
 import boto3
+from core.models import abstract_base_auditable_model_factory
 from core.request_origin import RequestOrigin
 from django.conf import settings
 from django.core.cache import caches
@@ -19,8 +20,14 @@ from flag_engine.api.document_builders import (
     build_environment_document,
 )
 from rest_framework.request import Request
+from softdelete.models import SoftDeleteObject
 
 from app.utils import create_hash
+from audit.constants import (
+    ENVIRONMENT_CREATED_MESSAGE,
+    ENVIRONMENT_UPDATED_MESSAGE,
+)
+from audit.related_object_type import RelatedObjectType
 from environments.api_keys import (
     generate_client_api_key,
     generate_server_api_key,
@@ -43,7 +50,12 @@ environment_segments_cache = caches[settings.ENVIRONMENT_SEGMENTS_CACHE_NAME]
 environment_wrapper = DynamoEnvironmentWrapper()
 
 
-class Environment(LifecycleModel):
+class Environment(
+    LifecycleModel, abstract_base_auditable_model_factory(), SoftDeleteObject
+):
+    history_record_class_path = "environments.models.HistoricalEnvironment"
+    related_object_type = RelatedObjectType.ENVIRONMENT
+
     name = models.CharField(max_length=2000)
     created_date = models.DateTimeField("DateCreated", auto_now_add=True)
     description = models.TextField(null=True, blank=True, max_length=20000)
@@ -242,6 +254,12 @@ class Environment(LifecycleModel):
             return cls._get_environment_document_from_cache(api_key)
         return cls._get_environment_document_from_db(api_key)
 
+    def get_create_log_message(self, history_instance) -> typing.Optional[str]:
+        return ENVIRONMENT_CREATED_MESSAGE % self.name
+
+    def get_update_log_message(self, history_instance) -> typing.Optional[str]:
+        return ENVIRONMENT_UPDATED_MESSAGE % self.name
+
     @classmethod
     def _get_environment_document_from_cache(cls, api_key: str) -> dict:
         environment_document = environment_document_cache.get(api_key)
@@ -254,6 +272,12 @@ class Environment(LifecycleModel):
     def _get_environment_document_from_db(cls, api_key: str) -> dict:
         environment = cls.objects.filter_for_document_builder(api_key=api_key).get()
         return build_environment_document(environment)
+
+    def _get_environment(self):
+        return self
+
+    def _get_project(self):
+        return self.project
 
 
 class Webhook(AbstractBaseWebhookModel):

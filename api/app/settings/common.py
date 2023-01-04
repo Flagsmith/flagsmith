@@ -153,6 +153,7 @@ INSTALLED_APPS = [
     "django_filters",
     "import_export",
     "task_processor",
+    "softdelete",
 ]
 
 if GOOGLE_ANALYTICS_KEY or INFLUXDB_TOKEN:
@@ -818,3 +819,6 @@ PIPEDRIVE_IGNORE_DOMAINS = env.list(
 
 # List of plan ids that support seat upgrades
 AUTO_SEAT_UPGRADE_PLANS = env.list("AUTO_SEAT_UPGRADE_PLANS", default=[])
+
+
+SKIP_MIGRATION_TESTS = env.bool("SKIP_MIGRATION_TESTS", False)
