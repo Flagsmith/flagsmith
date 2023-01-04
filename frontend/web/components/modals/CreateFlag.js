@@ -279,6 +279,7 @@ const CreateFlag = class extends Component {
             multivariate_options,
             description,
             enabledSegment,
+            enabledIndentity,
         } = this.state;
         const { isEdit, projectFlag, identity, identityName } = this.props;
         const Provider = identity ? IdentityProvider : FeatureListProvider;
