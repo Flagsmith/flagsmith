@@ -23,7 +23,12 @@ RUN python -m venv /opt/venv
 ENV PATH="/opt/venv/bin:$PATH"
 
 COPY api/requirements.txt .
+
+# Make sure we are running latest pip and setuptools to avoid potential security warnings
 RUN pip install --upgrade pip
+RUN pip install --upgrade setuptools
+
+# Install our python dependencies
 RUN pip install -r requirements.txt
 
 
