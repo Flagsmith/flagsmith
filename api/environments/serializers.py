@@ -92,6 +92,15 @@ class CreateUpdateEnvironmentSerializer(
         return None
 
 
+class EnvironmentSerializerLightWithoutMetadata(EnvironmentSerializerLight):
+    class Meta(EnvironmentSerializerLight.Meta):
+        fields = [
+            field
+            for field in EnvironmentSerializerLight.Meta.fields
+            if field != "metadata"
+        ]
+
+
 class CloneEnvironmentSerializer(EnvironmentSerializerLight):
     class Meta:
         model = Environment
