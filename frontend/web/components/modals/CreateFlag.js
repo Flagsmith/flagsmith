@@ -97,7 +97,6 @@ const CreateFlag = class extends Component {
                 this.focusTimeout = null;
             }, 500);
         }
-        AppActions.getIdentities(this.props.environmentId, 3);
         if (!Project.disableInflux && this.props.projectFlag && this.props.environmentFlag) {
             this.getInfluxData();
         }
@@ -296,6 +295,7 @@ const CreateFlag = class extends Component {
         const controlValue = Utils.calculateControl(multivariate_options);
         const invalid = !!multivariate_options && multivariate_options.length && controlValue < 0;
         const existingChangeRequest = this.props.changeRequest;
+        const hideIdentityOverridesTab = Utils.getShouldHideIdentityOverridesTab();
         const noPermissions = this.props.noPermissions;
         let regexValid = true;
         try {
