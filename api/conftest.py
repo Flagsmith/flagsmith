@@ -10,6 +10,7 @@ from environments.models import Environment, EnvironmentAPIKey
 from environments.permissions.constants import (
     MANAGE_IDENTITIES,
     VIEW_ENVIRONMENT,
+    VIEW_IDENTITIES,
 )
 from environments.permissions.models import UserEnvironmentPermission
 from features.feature_types import MULTIVARIATE
@@ -266,6 +267,11 @@ def view_environment_permission():
 @pytest.fixture()
 def manage_identities_permission():
     return PermissionModel.objects.get(key=MANAGE_IDENTITIES)
+
+
+@pytest.fixture()
+def view_identities_permission():
+    return PermissionModel.objects.get(key=VIEW_IDENTITIES)
 
 
 @pytest.fixture()

@@ -7,6 +7,7 @@ import VariationOptions from './mv/VariationOptions';
 import FeatureListStore from '../../common/stores/feature-list-store';
 import CreateSegmentModal from './modals/CreateSegment';
 import SegmentSelect from "./SegmentSelect";
+import JSONReference from "./JSONReference";
 
 const arrayMoveMutate = (array, from, to) => {
     array.splice(to < 0 ? array.length + to : to, 0, array.splice(from, 1)[0]);
@@ -234,36 +235,43 @@ const SegmentOverrideListInner = ({ disabled, id, name, showEditSegment, environ
     return (
         <div>
             {items.map((value, index) => (
-                <InnerComponent
-                  id={id}
-                  name={name}
-                  segment={value.segment}
-                  onSortEnd={onSortEnd}
-                  disabled={disabled}
-                  showEditSegment={showEditSegment}
-                  environmentId={environmentId}
-                  projectId={projectId}
-                  multivariateOptions={multivariateOptions}
-                  key={value.segment.name}
-                  index={index}
-                  readOnly={readOnly}
-                  value={value}
-                  confirmRemove={() => confirmRemove(index)}
-                  controlValue={controlValue}
-                  toggle={() => toggle(index)}
-                  setValue={(value) => {
-                      setValue(index, value);
-                  }}
-                  setVariations={(i, override, mvOptions) => {
-                      const newValue = _.cloneDeep(mvOptions);
-                      newValue[i] = {
-                          ...newValue[i],
-                          percentage_allocation: override.default_percentage_allocation,
-                      };
-                      setVariations(index, newValue);
-                  }}
-                />
+                <>
+                    <InnerComponent
+                        id={id}
+                        name={name}
+                        segment={value.segment}
+                        onSortEnd={onSortEnd}
+                        disabled={disabled}
+                        showEditSegment={showEditSegment}
+                        environmentId={environmentId}
+                        projectId={projectId}
+                        multivariateOptions={multivariateOptions}
+                        key={value.segment.name}
+                        index={index}
+                        readOnly={readOnly}
+                        value={value}
+                        confirmRemove={() => confirmRemove(index)}
+                        controlValue={controlValue}
+                        toggle={() => toggle(index)}
+                        setValue={(value) => {
+                            setValue(index, value);
+                        }}
+                        setVariations={(i, override, mvOptions) => {
+                            const newValue = _.cloneDeep(mvOptions);
+                            newValue[i] = {
+                                ...newValue[i],
+                                percentage_allocation: override.default_percentage_allocation,
+                            };
+                            setVariations(index, newValue);
+                        }}
+                    />
+                    <div className="text-left">
+                        <JSONReference showNamesButton title={"Segment Override"} json={value}/>
+                    </div>
+                </>
+
             ))}
+
         </div>
     );
 };
@@ -430,27 +438,33 @@ class TheComponent extends Component {
 
 
                             {value && (
-                            <InnerComponent
-                              disabled={isLoading || this.props.readOnly}
-                              id={this.props.id}
-                              name={this.props.name}
-                              controlValue={this.props.controlValue}
-                              multivariateOptions={multivariateOptions}
-                              confirmRemove={this.confirmRemove}
-                              setVariations={this.setVariations}
-                              toggle={this.toggle}
-                              setValue={this.setValue}
-                              readOnly={this.props.readOnly}
-                              showEditSegment={this.props.showEditSegment}
-                              environmentId={this.props.environmentId}
-                              projectId={this.props.projectId}
-                              items={value.map(v => (
-                                  {
-                                      ...v,
-                                  }
-                              ))}
-                              onSortEnd={this.onSortEnd}
-                            />
+                                <>
+                                    <InnerComponent
+                                        disabled={isLoading || this.props.readOnly}
+                                        id={this.props.id}
+                                        name={this.props.name}
+                                        controlValue={this.props.controlValue}
+                                        multivariateOptions={multivariateOptions}
+                                        confirmRemove={this.confirmRemove}
+                                        setVariations={this.setVariations}
+                                        toggle={this.toggle}
+                                        setValue={this.setValue}
+                                        readOnly={this.props.readOnly}
+                                        showEditSegment={this.props.showEditSegment}
+                                        environmentId={this.props.environmentId}
+                                        projectId={this.props.projectId}
+                                        items={value.map(v => (
+                                            {
+                                                ...v,
+                                            }
+                                        ))}
+                                        onSortEnd={this.onSortEnd}
+                                    />
+                                    <div className="text-left mt-4">
+                                        <JSONReference showNamesButton title={"Segment Overrides"} json={value}/>
+                                    </div>
+                                </>
+
                             )}
                         </div>
                     )}
@@ -460,4 +474,4 @@ class TheComponent extends Component {
     }
 }
 
-export default hot(module)(TheComponent);
+export default TheComponent;

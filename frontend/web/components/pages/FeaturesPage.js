@@ -7,6 +7,7 @@ import { Tag } from '../AddEditTags';
 import FeatureRow from '../FeatureRow';
 import FeatureListStore from '../../../common/stores/feature-list-store';
 import ProjectStore from '../../../common/stores/project-store';
+import JSONReference from "../JSONReference";
 
 const FeaturesPage = class extends Component {
     static displayName = 'FeaturesPage';
@@ -224,6 +225,12 @@ const FeaturesPage = class extends Component {
                                                                       </TagSelect>
                                                                   </Row>
                                                                 )}
+                                                              renderFooter={()=>(
+                                                                  <>
+                                                                      <JSONReference className="mx-2 mt-4" showNamesButton title={"Features"} json={projectFlags}/>
+                                                                      <JSONReference className="mx-2" title={"Feature States"} json={environmentFlags && Object.values(environmentFlags)}/>
+                                                                  </>
+                                                              )}
                                                               renderRow={(projectFlag, i) => (
                                                                   <FeatureRow
                                                                     environmentFlags={environmentFlags}
@@ -381,4 +388,4 @@ const FeaturesPage = class extends Component {
 
 FeaturesPage.propTypes = {};
 
-module.exports = hot(module)(ConfigProvider(FeaturesPage));
+module.exports = ConfigProvider(FeaturesPage);

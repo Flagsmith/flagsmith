@@ -10,6 +10,7 @@ import TabItem from '../base/forms/TabItem';
 import AssociatedSegmentOverrides from './AssociatedSegmentOverrides';
 import InfoMessage from '../InfoMessage';
 import _data from "../../../common/data/base/_data";
+import JSONReference from "../JSONReference";
 
 const SEGMENT_ID_MAXLENGTH = Constants.forms.maxLength.SEGMENT_ID;
 
@@ -286,7 +287,9 @@ const CreateSegment = class extends Component {
                 {error
                     && <div className="alert alert-danger">Error creating segment, please ensure you have entered a trait and value for each rule.</div>
                 }
-
+                {isEdit && (
+                    <JSONReference title={"Segment"} json={this.props.segment}/>
+                )}
                 {this.props.readOnly ? (
                     <div className="text-right">
                         <Tooltip
@@ -441,7 +444,7 @@ const LoadingCreateSegment  = (props) => {
 
     useEffect(()=>{
         if(props.segment) {
-            _data.get(`${Project.api}projects/${props.projectId}/segments/${props.segment}`).then((segment)=> {
+            _data.get(`${Project.api}projects/${props.projectId}/segments/${props.segment}/`).then((segment)=> {
                 setSegmentData(segment);
                 setLoading(false)
             })
@@ -455,4 +458,4 @@ const LoadingCreateSegment  = (props) => {
 
 export default LoadingCreateSegment
 
-module.exports = hot(module)(ConfigProvider(LoadingCreateSegment));
+module.exports = ConfigProvider(LoadingCreateSegment);

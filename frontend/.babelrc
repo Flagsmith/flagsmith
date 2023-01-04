@@ -22,7 +22,6 @@
         "common": "./common"
       }
     }],
-    "react-hot-loader/babel",
     "@babel/plugin-proposal-class-properties",
     "babel-plugin-transform-object-rest-spread",
     "@babel/plugin-transform-modules-commonjs"

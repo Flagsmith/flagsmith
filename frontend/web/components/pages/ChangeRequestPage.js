@@ -12,6 +12,7 @@ import ProjectStore from '../../../common/stores/project-store';
 import ValueEditor from '../ValueEditor';
 import CreateFlagModal from '../modals/CreateFlag';
 import InfoMessage from '../InfoMessage';
+import JSONReference from "../JSONReference";
 
 const labelWidth = 200;
 const ChangeRequestsPage = class extends Component {
@@ -462,6 +463,8 @@ const ChangeRequestsPage = class extends Component {
                                         </Panel>
                                     </div>
                                 </div>
+                                <JSONReference className="mt-4" title={"Change Request"} json={ChangeRequestStore.model?.[id]}/>
+
                                 <Row>
                                     <div style={{ minHeight: 300 }}/>
                                 </Row>
@@ -476,4 +479,4 @@ const ChangeRequestsPage = class extends Component {
 
 ChangeRequestsPage.propTypes = {};
 
-module.exports = hot(module)(ConfigProvider(withSegmentOverrides(ChangeRequestsPage)));
+module.exports = ConfigProvider(withSegmentOverrides(ChangeRequestsPage));
