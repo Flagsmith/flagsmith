@@ -110,9 +110,11 @@ class IdentityTestCase(APITestCase):
             hide_disabled_flags=True,
         )
 
-        # with a single environment
+        # with a single environment(with  hide_disabled_flags enabled)
         environment = Environment.objects.create(
-            name="Test Environment 2", project=hide_disabled_flags_project
+            name="Test Environment 2",
+            project=hide_disabled_flags_project,
+            hide_disabled_flags=True,
         )
 
         # 2 features, both defaulted to True
@@ -928,3 +930,97 @@ def test_update_traits_does_not_make_extra_queries_if_traits_value_do_not_change
         identity.update_traits(trait_data_items)
 
     # Then - We only expect 1 query(for reading all the traits) should have been made
+
+
+def test_get_all_feature_states_does_not_exclude_disabled_if_it_is_disabled_for_environment(
+    project, environment, identity
+):
+    # Given
+    # a project with hide_disabled_flags enabled
+    project.hide_disabled_flags = True
+    project.save()
+
+    # with a single environment(with hide_disabled_flags disabled)
+    environment.hide_disabled_flags = False
+    environment.save()
+
+    # 2 features, both defaulted to True
+    feature = Feature.objects.create(
+        name="Test Feature",
+        project=project,
+        default_enabled=True,
+    )
+    feature_2 = Feature.objects.create(
+        name="Test Feature 2",
+        project=project,
+        default_enabled=True,
+    )
+
+    # with overridden feature states
+    FeatureState.objects.create(
+        feature=feature,
+        environment=environment,
+        enabled=True,
+        identity=identity,
+    )
+    FeatureState.objects.create(
+        feature=feature_2,
+        environment=environment,
+        enabled=False,
+        identity=identity,
+    )
+
+    # When
+    # we get flags for the identity
+    identity_flags = identity.get_all_feature_states()
+
+    # Then
+    # we get both the flags
+    assert len(identity_flags) == 2
+
+
+def test_get_all_feature_states_does_not_exclude_disabled_if_it_is_disabled_for_project(
+    project, environment, identity
+):
+    # Given
+    # a project with hide_disabled_flags disabled
+    project.hide_disabled_flags = False
+    project.save()
+
+    # with a single environment(with hide_disabled_flags enabled)
+    environment.hide_disabled_flags = True
+    environment.save()
+
+    # 2 features, both defaulted to True
+    feature = Feature.objects.create(
+        name="Test Feature",
+        project=project,
+        default_enabled=True,
+    )
+    feature_2 = Feature.objects.create(
+        name="Test Feature 2",
+        project=project,
+        default_enabled=True,
+    )
+
+    # with overridden feature states
+    FeatureState.objects.create(
+        feature=feature,
+        environment=environment,
+        enabled=True,
+        identity=identity,
+    )
+    FeatureState.objects.create(
+        feature=feature_2,
+        environment=environment,
+        enabled=False,
+        identity=identity,
+    )
+
+    # When
+    # we get flags for the identity
+    identity_flags = identity.get_all_feature_states()
+
+    # Then
+    # we get both the flags
+    assert len(identity_flags) == 2
