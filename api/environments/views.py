@@ -19,7 +19,6 @@ from environments.permissions.permissions import (
     MasterAPIKeyEnvironmentPermissions,
     NestedEnvironmentPermissions,
 )
-from metadata.mixins import MetaDataViewMixin
 from permissions.serializers import (
     PermissionModelSerializer,
     UserObjectPermissionsSerializer,
@@ -43,7 +42,7 @@ from .serializers import (
     CloneEnvironmentSerializer,
     CreateUpdateEnvironmentSerializer,
     EnvironmentAPIKeySerializer,
-    EnvironmentSerializerLight,
+    EnvironmentSerializerWithMetadata,
     WebhookSerializer,
 )
 
@@ -64,11 +63,9 @@ logger = logging.getLogger(__name__)
         ]
     ),
 )
-class EnvironmentViewSet(MetaDataViewMixin, viewsets.ModelViewSet):
+class EnvironmentViewSet(viewsets.ModelViewSet):
     lookup_field = "api_key"
     permission_classes = [EnvironmentPermissions | MasterAPIKeyEnvironmentPermissions]
-    app_label = "environments"
-    model_name = "environment"
 
     def get_serializer_class(self):
         if self.action == "trait_keys":
@@ -79,7 +76,7 @@ class EnvironmentViewSet(MetaDataViewMixin, viewsets.ModelViewSet):
             return CloneEnvironmentSerializer
         elif self.action in ("create", "update", "partial_update"):
             return CreateUpdateEnvironmentSerializer
-        return EnvironmentSerializerLight
+        return EnvironmentSerializerWithMetadata
 
     def get_serializer_context(self):
         context = super(EnvironmentViewSet, self).get_serializer_context()

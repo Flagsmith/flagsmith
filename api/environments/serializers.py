@@ -5,12 +5,13 @@ from rest_framework import serializers
 from environments.models import Environment, EnvironmentAPIKey, Webhook
 from features.serializers import FeatureStateSerializerFull
 from metadata.serializers import MetadataSerializer, MetadataSerializerMixin
-from organisations.models import Subscription
+from organisations.models import Organisation, Subscription
 from organisations.subscriptions.serializers.mixins import (
     ReadOnlyIfNotValidPlanMixin,
 )
 from projects.models import Project
 from projects.serializers import ProjectSerializer
+from util.drf_writable_nested.serializers import WritableNestedModelSerializer
 
 
 class EnvironmentSerializerFull(serializers.ModelSerializer):
@@ -30,9 +31,7 @@ class EnvironmentSerializerFull(serializers.ModelSerializer):
         )
 
 
-class EnvironmentSerializerLight(MetadataSerializerMixin, serializers.ModelSerializer):
-    metadata = MetadataSerializer(required=False, many=True)
-
+class EnvironmentSerializerLight(serializers.ModelSerializer):
     class Meta:
         model = Environment
         fields = (
@@ -65,8 +64,24 @@ class EnvironmentSerializerLight(MetadataSerializerMixin, serializers.ModelSeria
         return instance
 
 
+class EnvironmentSerializerWithMetadata(
+    MetadataSerializerMixin, WritableNestedModelSerializer, EnvironmentSerializerLight
+):
+
+    metadata = MetadataSerializer(required=False, many=True)
+
+    class Meta(EnvironmentSerializerLight.Meta):
+        fields = EnvironmentSerializerLight.Meta.fields + ("metadata",)
+
+    def get_organisation_from_validated_data(self, validated_data) -> Organisation:
+        return validated_data.get("project").organisation
+
+    def get_project_from_validated_data(self, validated_data) -> Project:
+        return validated_data.get("project")
+
+
 class CreateUpdateEnvironmentSerializer(
-    ReadOnlyIfNotValidPlanMixin, EnvironmentSerializerLight
+    ReadOnlyIfNotValidPlanMixin, EnvironmentSerializerWithMetadata
 ):
     invalid_plans = ("free",)
     field_names = ("minimum_change_request_approvals",)
@@ -90,15 +105,6 @@ class CreateUpdateEnvironmentSerializer(
             return getattr(self.instance.project.organisation, "subscription", None)
 
         return None
-
-
-class EnvironmentSerializerLightWithoutMetadata(EnvironmentSerializerLight):
-    class Meta(EnvironmentSerializerLight.Meta):
-        fields = [
-            field
-            for field in EnvironmentSerializerLight.Meta.fields
-            if field != "metadata"
-        ]
 
 
 class CloneEnvironmentSerializer(EnvironmentSerializerLight):

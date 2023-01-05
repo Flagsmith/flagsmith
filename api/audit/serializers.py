@@ -1,14 +1,14 @@
 from rest_framework import serializers
 
 from audit.models import AuditLog
-from environments.serializers import EnvironmentSerializerLightWithoutMetadata
+from environments.serializers import EnvironmentSerializerLight
 from projects.serializers import ProjectSerializer
 from users.serializers import UserListSerializer
 
 
 class AuditLogSerializer(serializers.ModelSerializer):
     author = UserListSerializer()
-    environment = EnvironmentSerializerLightWithoutMetadata()
+    environment = EnvironmentSerializerLight()
     project = ProjectSerializer()
 
     class Meta:

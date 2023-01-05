@@ -1,13 +1,17 @@
 from django.contrib.contenttypes.models import ContentType
-from django.db.models import Q
 from rest_framework import serializers
+
+from organisations.models import Organisation
+from projects.models import Project
+from util.drf_writable_nested.serializers import WritableNestedModelSerializer
+from util.util import str_to_bool
 
 from .models import (
     FIELD_VALUE_MAX_LENGTH,
-    FieldType,
     Metadata,
     MetadataField,
     MetadataModelField,
+    MetadataModelFieldIsRequiredFor,
 )
 
 
@@ -17,117 +21,97 @@ class MetadataFieldSerializer(serializers.ModelSerializer):
         fields = ("id", "name", "type", "description", "organisation")
 
 
-class MetaDataModelFieldSerializer(serializers.ModelSerializer):
+class MetadataModelFieldIsRequiredForSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = MetadataModelFieldIsRequiredFor
+        fields = ("content_type", "object_id")
+
+
+class MetaDataModelFieldSerializer(WritableNestedModelSerializer):
+    is_required_for = MetadataModelFieldIsRequiredForSerializer(
+        many=True, required=False
+    )
+
     class Meta:
         model = MetadataModelField
-        fields = ("id", "field", "is_required")
+        fields = ("id", "field", "content_type", "is_required_for")
 
 
-class FieldDataField(serializers.Field):
-    """
-    Custom field to handle the different types of data supported by the metadata field
-    """
+class ContentTypeSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = ContentType
+        fields = ("id", "app_label", "model")
 
-    def to_internal_value(self, data):
-        data_type = type(data).__name__
 
-        if data_type not in [field.value for field in FieldType.__members__.values()]:
-            raise serializers.ValidationError("Invalid data type")
+class MetadataSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Metadata
+        fields = ("id", "model_field", "field_value")
 
-        if data_type == str and len(data) > FIELD_VALUE_MAX_LENGTH:
+    def validate(self, data):
+        data = super().validate(data)
+        expected_type = data["model_field"].field.type
+
+        try:
+            casting_function = {
+                "int": int,
+                "float": float,
+                "str": str,
+                "bool": str_to_bool,
+            }[expected_type]
+            casting_function(data["field_value"])
+        except ValueError:
+            raise serializers.ValidationError(
+                f"Invalid data type. Must be the string representation of {expected_type}"
+            )
+
+        if expected_type == "str" and len(data["field_value"]) > FIELD_VALUE_MAX_LENGTH:
             raise serializers.ValidationError(
                 f"Value string is too long. Must be less than {FIELD_VALUE_MAX_LENGTH} character"
             )
         return data
 
-    def to_representation(self, value):
-        return value
-
-
-class MetadataListSerializer(serializers.ListSerializer):
-    def save(self, **kwargs):
-        validated_data = [{**attrs, **kwargs} for attrs in self.validated_data]
-        content_object = kwargs["content_object"]
-        content_type = ContentType.objects.get_for_model(content_object)
-        instances = []
-
-        # Create or update the metadata
-        for metadata in validated_data:
-            instance, _ = Metadata.objects.update_or_create(
-                content_type=content_type,
-                object_id=content_object.id,
-                model_field=metadata["model_field"],
-                defaults={"field_value": metadata["field_value"]},
-            )
-            instances.append(instance)
-
-        # Delete the metadata not in the list
-        Metadata.objects.filter(
-            ~Q(id__in=[instance.id for instance in instances]),
-            content_type=content_type,
-            object_id=content_object.id,
-        ).delete()
-
-        return instances
-
-
-class MetadataSerializer(serializers.ModelSerializer):
-    field_value = FieldDataField()
-
-    class Meta:
-        model = Metadata
-        fields = ("model_field", "field_value")
-        list_serializer_class = MetadataListSerializer
-
-    def validate(self, data):
-        if type(data["field_value"]).__name__ != data["model_field"].field.type:
-            raise serializers.ValidationError("Invalid type")
-        return data
-
-    def to_representation(self, value):
-        # Convert field_value to its appropriate type(from string)
-        field_type = value.model_field.field.type
-        value = super().to_representation(value)
-
-        value["field_value"] = {
-            "str": str,
-            "int": int,
-            "float": float,
-            "bool": lambda v: v not in ("False", "false"),
-        }.get(field_type)(value["field_value"])
-
-        return value
-
 
 class MetadataSerializerMixin:
-    def validate_required_metadata(self):
-        metadata = self.validated_data.pop("metadata", [])
+    def get_organisation_from_validated_data(self, validated_data) -> Organisation:
+        raise NotImplementedError()
+
+    def get_project_from_validated_data(self, validated_data) -> Project:
+        raise NotImplementedError()
+
+    def get_fetch_method(self, model_name):
+        return {
+            "project": self.get_project_from_validated_data,
+            "organisation": self.get_organisation_from_validated_data,
+        }[model_name]
+
+    def validate_required_metadata(self, data):
+        metadata = data.get("metadata", [])
 
         content_type = ContentType.objects.get_for_model(self.Meta.model)
 
-        required_metadata_fields = MetadataModelField.objects.filter(
-            content_type=content_type, is_required=True
+        organisation = self.get_organisation_from_validated_data(data)
+        required_for_qs = MetadataModelFieldIsRequiredFor.objects.filter(
+            model_field__content_type=content_type,
+            model_field__field__organisation=organisation,
         )
+        for required_for in required_for_qs:
+            model_name = required_for.content_type.model
+            object = self.get_fetch_method(model_name)(data)
+            if object.id == required_for.object_id:
+                if not any(
+                    [
+                        field["model_field"] == required_for.model_field
+                        for field in metadata
+                    ]
+                ):
+                    raise serializers.ValidationError(
+                        {
+                            "metadata": f"Missing required metadata field: {required_for.model_field.field.name}"
+                        }
+                    )
 
-        for metadata_field in required_metadata_fields:
-            if not any([field["model_field"] == metadata_field for field in metadata]):
-                raise serializers.ValidationError(
-                    f"Missing required metadata field {metadata_field.field.name}"
-                )
-
-    def save(self, **kwargs):
-        self.validate_required_metadata()
-
-        instance = super().save(**kwargs)
-
-        metadata = self.get_initial().get("metadata", None)
-
-        if metadata:
-            metadata_serializer = MetadataSerializer(
-                data=metadata, many=True, context=self.context
-            )
-
-            metadata_serializer.is_valid(raise_exception=True)
-            metadata_serializer.save(content_object=instance)
-
-        return instance
+    def validate(self, data):
+        data = super().validate(data)
+        self.validate_required_metadata(data)
+        return data

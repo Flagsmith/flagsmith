@@ -1,9 +1,11 @@
 import json
 import re
+import uuid
 
 import boto3
 from core.constants import STRING
 from django.contrib.contenttypes.models import ContentType
+from django.core.management import call_command
 from django.core.serializers.json import DjangoJSONEncoder
 from flag_engine.segments.constants import ALL_RULE
 from moto import mock_s3
@@ -128,7 +130,7 @@ def test_export_environments(project):
     # TODO: test whether the export is importable
 
 
-def test_export_metadata(environment, organisation):
+def test_export_metadata(environment, organisation, settings):
     # Given
     environment_type = ContentType.objects.get_for_model(environment)
 
@@ -140,19 +142,41 @@ def test_export_metadata(environment, organisation):
         field=metadata_field, content_type=environment_type
     )
 
-    Metadata.objects.create(
+    environment_metadata = Metadata.objects.create(
         object_id=environment.id,
         content_type=environment_type,
         model_field=environment_metadata_field,
         field_value="some_data",
     )
     # When
-    export = export_metadata(organisation.id)
+    exported_environment = export_environments(environment.project.organisation_id)
+    exported_metadata = export_metadata(organisation.id)
 
-    # Then
-    assert export
+    data = exported_environment + exported_metadata
 
-    # TODO: test whether the export is importable
+    # Now,to mimic a somewhat clean import, let's remove the metadata field
+    # Which in turn will remove the metadata object
+    metadata_field.delete()
+
+    # and the environment(use hard_delete instead of (soft)delete to avoid api_key collision)
+    environment.hard_delete()
+
+    # Next, let's load the data
+    file_path = f"/tmp/{uuid.uuid4()}.json"
+    with open(file_path, "a+") as f:
+        f.write(json.dumps(data, cls=DjangoJSONEncoder))
+        f.seek(0)
+
+        call_command("loaddata", f.name, format="json")
+
+    # Finally, all the loaded objects should now exists
+    assert MetadataField.objects.filter(uuid=metadata_field.uuid)
+
+    # and metadata correctly points to the loaded environment
+    metadata = Metadata.objects.get(uuid=environment_metadata.uuid)
+    loaded_environment = Environment.objects.get(api_key=environment.api_key)
+
+    assert metadata.content_object == loaded_environment
 
 
 def test_export_features(project, environment, segment, admin_user):

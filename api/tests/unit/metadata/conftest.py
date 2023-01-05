@@ -19,5 +19,4 @@ def environment_metadata_field_different_org(environment):
     return MetadataModelField.objects.create(
         content_type=environment_type,
         field=another_field,
-        is_required=False,
     )

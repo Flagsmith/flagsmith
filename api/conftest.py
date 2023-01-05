@@ -19,7 +19,12 @@ from features.models import Feature, FeatureSegment, FeatureState
 from features.multivariate.models import MultivariateFeatureOption
 from features.value_types import STRING
 from features.workflows.core.models import ChangeRequest
-from metadata.models import Metadata, MetadataField, MetadataModelField
+from metadata.models import (
+    Metadata,
+    MetadataField,
+    MetadataModelField,
+    MetadataModelFieldIsRequiredFor,
+)
 from organisations.models import Organisation, OrganisationRole, Subscription
 from organisations.subscriptions.constants import CHARGEBEE, XERO
 from permissions.models import PermissionModel
@@ -309,13 +314,23 @@ def b_metadata_field(organisation):
 
 
 @pytest.fixture()
-def required_a_environment_metadata_field(organisation, a_metadata_field, environment):
+def required_a_environment_metadata_field(
+    organisation,
+    a_metadata_field,
+    environment,
+    project,
+    project_content_type,
+):
     environment_type = ContentType.objects.get_for_model(environment)
-    return MetadataModelField.objects.create(
+    model_field = MetadataModelField.objects.create(
         field=a_metadata_field,
         content_type=environment_type,
-        is_required=True,
     )
+
+    MetadataModelFieldIsRequiredFor.objects.create(
+        content_type=project_content_type, object_id=project.id, model_field=model_field
+    )
+    return model_field
 
 
 @pytest.fixture()
@@ -325,7 +340,6 @@ def optional_b_environment_metadata_field(organisation, b_metadata_field, enviro
     return MetadataModelField.objects.create(
         field=b_metadata_field,
         content_type=environment_type,
-        is_required=False,
     )
 
 
@@ -349,3 +363,18 @@ def environment_metadata_b(environment, optional_b_environment_metadata_field):
         model_field=optional_b_environment_metadata_field,
         field_value="10",
     )
+
+
+@pytest.fixture()
+def environment_content_type():
+    return ContentType.objects.get_for_model(Environment)
+
+
+@pytest.fixture()
+def project_content_type():
+    return ContentType.objects.get_for_model(Project)
+
+
+@pytest.fixture(autouse=True)
+def task_processor_synchronously(settings):
+    settings.TASK_RUN_METHOD = TaskRunMethod.SYNCHRONOUSLY

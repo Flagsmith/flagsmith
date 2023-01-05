@@ -555,7 +555,7 @@ def test_create_environment_without_required_metadata_returns_400(
 
     # Then
     assert response.status_code == status.HTTP_400_BAD_REQUEST
-    assert "Missing required metadata field" in response.json()[0]
+    assert "Missing required metadata field" in response.json()["metadata"][0]
 
 
 @pytest.mark.parametrize(
@@ -592,7 +592,7 @@ def test_create_environment_with_required_metadata_returns_201(
         response.json()["metadata"][0]["model_field"]
         == required_a_environment_metadata_field.field.id
     )
-    assert response.json()["metadata"][0]["field_value"] == field_value
+    assert response.json()["metadata"][0]["field_value"] == str(field_value)
 
 
 @pytest.mark.parametrize(
@@ -618,6 +618,7 @@ def test_update_environment_metadata(
             {
                 "model_field": environment_metadata_a.model_field.id,
                 "field_value": updated_field_value,
+                "id": environment_metadata_a.id,
             },
         ],
     }
@@ -628,8 +629,9 @@ def test_update_environment_metadata(
     # Then
     assert response.status_code == status.HTTP_200_OK
     assert len(response.json()["metadata"]) == 1
+
     # value for metadata field a was updated
-    assert response.json()["metadata"][0]["field_value"] == updated_field_value
+    assert response.json()["metadata"][0]["field_value"] == str(updated_field_value)
     environment_metadata_a.refresh_from_db()
     environment_metadata_a.field_value = str(updated_field_value)
 
