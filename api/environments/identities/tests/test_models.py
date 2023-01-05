@@ -110,7 +110,7 @@ class IdentityTestCase(APITestCase):
             hide_disabled_flags=True,
         )
 
-        # with a single environment(with  hide_disabled_flags enabled)
+        # with a single environment(with hide_disabled_flags enabled)
         environment = Environment.objects.create(
             name="Test Environment 2",
             project=hide_disabled_flags_project,
