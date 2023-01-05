@@ -592,7 +592,9 @@ class SDKFeatureStates(GenericAPIView):
     @property
     def _additional_filters(self) -> Q:
         exclude_hide_disabled = Q(
-            feature__project__hide_disabled_flags=True, enabled=False
+            feature__project__hide_disabled_flags=True,
+            environment__hide_disabled_flags=True,
+            enabled=False,
         )
         return Q(feature_segment=None, identity=None) & ~exclude_hide_disabled
 

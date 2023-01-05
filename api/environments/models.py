@@ -95,7 +95,7 @@ class Environment(
     hide_disabled_flags = models.BooleanField(
         default=False,
         help_text="If true will exclude flags from SDK which are "
-        "disabled. NOTE: This will override the project setting.",
+        "disabled. NOTE: For this to work you must enable hide_disabled flags for the project",
     )
 
     objects = EnvironmentManager()
