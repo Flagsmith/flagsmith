@@ -233,7 +233,7 @@ const UserPage = class extends Component {
                                                                   </>
                                                               }
                                                               header={(
-                                                                  <Row className="px-0 pt-0 pb-2">
+                                                                  <div className="pb-2">
                                                                       <TagSelect
                                                                         showUntagged
                                                                         showClearAll={(this.state.tags && !!this.state.tags.length) || this.state.showArchived}
@@ -252,19 +252,17 @@ const UserPage = class extends Component {
                                                                             AsyncStorage.setItem(`${projectId}tags`, JSON.stringify(tags));
                                                                         }}
                                                                       >
-                                                                          <div className="mr-2 mb-2">
-                                                                              <Tag
-                                                                                selected={this.state.showArchived}
-                                                                                onClick={() => {
-                                                                                    FeatureListStore.isLoading = true;
-                                                                                    this.setState({ showArchived: !this.state.showArchived }, this.filter);
-                                                                                }}
-                                                                                className="px-2 py-2 ml-2 mr-2"
-                                                                                tag={{ label: 'Archived' }}
-                                                                              />
-                                                                          </div>
+                                                                          <Tag
+                                                                            selected={this.state.showArchived}
+                                                                            onClick={() => {
+                                                                                FeatureListStore.isLoading = true;
+                                                                                this.setState({ showArchived: !this.state.showArchived }, this.filter);
+                                                                            }}
+                                                                            className="px-2 py-2 ml-2 mr-2"
+                                                                            tag={{ label: 'Archived' }}
+                                                                          />
                                                                       </TagSelect>
-                                                                  </Row>
+                                                                  </div>
                                                               )}
                                                               isLoading={FeatureListStore.isLoading}
                                                               onSortChange={(sort) => {
@@ -310,7 +308,7 @@ const UserPage = class extends Component {
                                                                   }
                                                                   return (
                                                                       <Row
-                                                                        className={`list-item clickable ${flagDifferent && 'flag-different'}`} key={id} space
+                                                                        className={`list-item clickable py-1 ${flagDifferent && 'flag-different'}`} key={id} space
                                                                         data-test={`user-feature-${i}`}
                                                                       >
                                                                           <div
@@ -446,28 +444,27 @@ const UserPage = class extends Component {
                                                                   );
                                                               }
                                                             }
-                                                              renderNoResults={(
-                                                                  <Panel
-                                                                    icon="ion-ios-rocket"
-                                                                    title="Features"
-                                                                  >
-                                                                      <div className="text-center">
-                                                                            This user has no features yet.
-                                                                          {' '}
-                                                                          <br/>
-                                                                            When you start
-                                                                          {' '}
-                                                                          <Link
-                                                                            className="dark"
-                                                                            to={`project/${this.props.match.params.projectId}/environment/${this.props.match.params.environmentId}/features`}
-                                                                          >
-                                                                                creating features
-                                                                          </Link>
-                                                                          {' '}
-                                                                            for your project you will set them per user here.
-                                                                      </div>
-
-                                                                  </Panel>
+                                                              renderSearchWithNoResults
+                                                              renderNoResults={ this.state.tags?.length || this.state.showArchived ? (
+                                                                  <div >
+                                                                      No results
+                                                                  </div>
+                                                              ):(
+                                                                  <div className="text-center m-2">
+                                                                      This user has no features yet.
+                                                                      {' '}
+                                                                      <br/>
+                                                                      When you start
+                                                                      {' '}
+                                                                      <Link
+                                                                          className="dark"
+                                                                          to={`project/${this.props.match.params.projectId}/environment/${this.props.match.params.environmentId}/features`}
+                                                                      >
+                                                                          creating features
+                                                                      </Link>
+                                                                      {' '}
+                                                                      for your project you will set them per user here.
+                                                                  </div>
                                                                 )}
                                                               paging={FeatureListStore.paging}
                                                               search={this.state.search}

@@ -23,8 +23,8 @@ function recursivePageGet(url, parentRes) {
 }
 const controller = {
 
-    getFeatures: (projectId, environmentId, force, page, filter) => {
-        if (!store.model || store.envId !== environmentId || force) { // todo: change logic a bit
+    getFeatures: (projectId, environmentId, force, page, filter, pageSize) => {
+        if (!store.model || store.envId !== environmentId || force) {
             store.loading();
             store.envId = environmentId;
             store.projectId = projectId;
@@ -37,7 +37,7 @@ const controller = {
                 filterUrl = `&${Utils.toParam(store.filter)}`;
             }
 
-            let featuresEndpoint = `${Project.api}projects/${projectId}/features/?page=${page || 1}&page_size=${PAGE_SIZE}${filterUrl}`;
+            let featuresEndpoint = typeof page === 'string'? page: `${Project.api}projects/${projectId}/features/?page=${page || 1}&page_size=${pageSize||PAGE_SIZE}${filterUrl}`;
             if (store.search) {
                 featuresEndpoint += `&search=${store.search}`;
             }
@@ -423,9 +423,9 @@ const controller = {
                 store.saved();
             });
     },
-    searchFeatures: _.throttle((search, environmentId, projectId, filter) => {
+    searchFeatures: _.throttle((search, environmentId, projectId, filter, pageSize) => {
         store.search = search;
-        controller.getFeatures(projectId, environmentId, true, 0, filter);
+        controller.getFeatures(projectId, environmentId, true, 0, filter, pageSize);
     }, 1000),
 };
 
@@ -460,14 +460,14 @@ store.dispatcherIndex = Dispatcher.register(store, (payload) => {
 
     switch (action.actionType) {
         case Actions.SEARCH_FLAGS:
-            controller.searchFeatures(action.search, action.environmentId, action.projectId, action.filter);
+            controller.searchFeatures(action.search, action.environmentId, action.projectId, action.filter, action.pageSize);
             break;
         case Actions.GET_FLAGS:
             store.search = action.search || '';
             if (action.sort) {
                 store.sort = action.sort;
             }
-            controller.getFeatures(action.projectId, action.environmentId, action.force, action.page, action.filter);
+            controller.getFeatures(action.projectId, action.environmentId, action.force, action.page, action.filter, action.pageSize);
             break;
         case Actions.REFRESH_FEATURES:
             if (action.projectId === store.projectId && action.environmentId === store.environmentId) {

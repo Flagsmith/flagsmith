@@ -112,7 +112,7 @@ class TheComponent extends Component {
         return (
             <Row
               style={{ flexWrap: 'nowrap' }}
-              className={this.props.canDelete ? 'list-item clickable py-2' : 'list-item py-1'} key={id} space
+              className={`list-item clickable ${this.props.widget?"py-1":"py-2"}`} key={id} space
               data-test={`feature-item-${this.props.index}`}
             >
                 <div
@@ -120,36 +120,34 @@ class TheComponent extends Component {
                   onClick={() => !readOnly && this.editFlag(projectFlag, environmentFlags[id])}
                 >
                     <div>
-                        <ButtonLink>
-                            {name}
-                        </ButtonLink>
-                        {projectFlag.owners && !!projectFlag.owners.length ? (
-                            <Tooltip
-                              title={(
-                                  <ButtonLink>
-                                      <span className="ion ion-md-person px-2"/>
-                                  </ButtonLink>
-)}
-                              place="right"
-                            >
-                                {`Flag assigned to ${projectFlag.owners.map(v => `${v.first_name} ${v.last_name}`).join(', ')}`}
-                            </Tooltip>
-
-                        ) : (
-                            <span/>
-                        )}
-                    </div>
-                    <div className="list-item-footer faint">
                         <Row>
-                            {(
-                                <TagValues projectId={projectId} value={projectFlag.tags}/>
-                        )}
-                            <div>
-                            Created {moment(created_date).format('Do MMM YYYY HH:mma')}{' - '}
-                                {description || 'No description'}
-                            </div>
+                            <ButtonLink className="mr-2">
+                                {name}
+                            </ButtonLink>
+                            {projectFlag.owners && !!projectFlag.owners.length ? (
+                                <Tooltip
+                                    title={(
+                                        <ButtonLink>
+                                            <span className="ion ion-md-person pr-2"/>
+                                        </ButtonLink>
+                                    )}
+                                    place="right"
+                                >
+                                    {`Flag assigned to ${projectFlag.owners.map(v => `${v.first_name} ${v.last_name}`).join(', ')}`}
+                                </Tooltip>
+
+                            ) : (
+                                <span/>
+                            )}
+                            <TagValues projectId={projectId} value={projectFlag.tags}/>
+
                         </Row>
+                        <span className="text-small text-muted">
+                            Created {moment(created_date).format('Do MMM YYYY HH:mma')}{' - '}
+                            {description || 'No description'}
+                        </span>
                     </div>
+
                 </div>
                 <Row>
                     <Row style={{
@@ -183,7 +181,7 @@ class TheComponent extends Component {
                         </Column>
                     </Row>
 
-                    {AccountStore.getOrganisationRole() === 'ADMIN' && (
+                    {AccountStore.getOrganisationRole() === 'ADMIN' && !this.props.hideAudit && (
                     <Tooltip
                       html
                       title={(
@@ -201,29 +199,32 @@ class TheComponent extends Component {
                         Feature history
                     </Tooltip>
                     )}
-                    <Permission level="project" permission="DELETE_FEATURE" id={projectId}>
-                        {({ permission: removeFeaturePermission }) => Utils.renderWithPermission(removeFeaturePermission, Constants.projectPermissions('Delete Feature'), (
-                            <Column>
-                                <Tooltip
-                                  html
-                                  title={(
-                                      <button
-                                        disabled={!removeFeaturePermission || readOnly || isProtected}
-                                        onClick={() => this.confirmRemove(projectFlag, () => {
-                                            removeFlag(projectId, projectFlag);
-                                        })}
-                                        className="btn btn--with-icon"
-                                        data-test={`remove-feature-btn-${this.props.index}`}
-                                      >
-                                          <RemoveIcon/>
-                                      </button>
-                                )}
-                                >
-                                    {isProtected ? '<span>This feature has tagged as <bold>protected</bold>, <bold>permanent</bold>, <bold>do not delete</bold>, or <bold>read only</bold>. Please remove the tag before attempting to delete this flag.</span>' : 'Remove feature'}
-                                </Tooltip>
-                            </Column>
-                        ))}
-                    </Permission>
+                    {!this.props.hideRemove && (
+                        <Permission level="project" permission="DELETE_FEATURE" id={projectId}>
+                            {({ permission: removeFeaturePermission }) => Utils.renderWithPermission(removeFeaturePermission, Constants.projectPermissions('Delete Feature'), (
+                                <Column>
+                                    <Tooltip
+                                        html
+                                        title={(
+                                            <button
+                                                disabled={!removeFeaturePermission || readOnly || isProtected}
+                                                onClick={() => this.confirmRemove(projectFlag, () => {
+                                                    removeFlag(projectId, projectFlag);
+                                                })}
+                                                className="btn btn--with-icon"
+                                                data-test={`remove-feature-btn-${this.props.index}`}
+                                            >
+                                                <RemoveIcon/>
+                                            </button>
+                                        )}
+                                    >
+                                        {isProtected ? '<span>This feature has been tagged as <bold>protected</bold>, <bold>permanent</bold>, <bold>do not delete</bold>, or <bold>read only</bold>. Please remove the tag before attempting to delete this flag.</span>' : 'Remove feature'}
+                                    </Tooltip>
+                                </Column>
+                            ))}
+                        </Permission>
+                    )}
+
                 </Row>
             </Row>
         );
