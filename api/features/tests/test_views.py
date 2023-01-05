@@ -650,7 +650,7 @@ class SDKFeatureStatesTestCase(APITestCase):
         # but enabled ones are
         assert response_json[0]["feature"]["id"] == enabled_flag.id
 
-    def test_get_flags_exclude_disabled_included_disabled_if_it_is_disabled_for_environment(
+    def test_get_flags_includes_disabled_if_it_is_not_enabled_for_environment(
         self,
     ):
         # Given
@@ -685,7 +685,7 @@ class SDKFeatureStatesTestCase(APITestCase):
         # both flags are returned
         assert len(response_json) == 2
 
-    def test_get_flags_exclude_disabled_includes_disabled_if_it_is_disabled_for_project(
+    def test_get_flags_includes_disabled_if_it_is_not_enabled_for_project(
         self,
     ):
         # Given
