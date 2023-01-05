@@ -4,9 +4,6 @@
 	&__log {
 		font-weight: bold;
 	}
-	&__author {
-		color: $body-text-faint;
-	}
 	&__date {
 		font-weight: bold;
 	}
@@ -17,10 +14,6 @@
 
 .dark {
 	.audit {
-
-		&__author {
-			color: $body-text-faint-dark;
-		}
 		&__item:nth-child(odd) {
 			background: $dark-bg-0;
 		}

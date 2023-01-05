@@ -82,7 +82,7 @@ const JSONReference: FC<JSONReferenceType> = ({title, json, className, hideConde
                     setVisible(!visible);
                 }}
                 >
-                    <Flex style={isMobile ? {overflowX: 'scroll'} : {}}>
+                    <Flex>
                         <div>
                                     <pre className="hljs-header">
                                         <span className="ion-md-document"/>
@@ -136,7 +136,6 @@ const JSONReference: FC<JSONReferenceType> = ({title, json, className, hideConde
                             </Highlight>
                         </div>
                     </div>
-
                 )}
             </div>
         </>

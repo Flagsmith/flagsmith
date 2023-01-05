@@ -20,15 +20,15 @@ class TagSelect extends PureComponent {
         const showUntagged = this.props.showUntagged && { color: '#666', label: 'Untagged', id: '' };
         const showClearAll = this.props.showClearAll;
         return (
-            <Row className="tag-filter mx-2 mt-3">
+            <Row className="tag-filter mx-2 mt-4">
                 <div className="ml-1">
                     <Row>
 
                         <Flex>
-                            <Row>
+                            <Row className="tag-filter-list">
                                 {this.props.children}
                                 {showUntagged && (
-                                    <div className="mr-1 mb-2">
+                                    <div className="mr-1">
                                         <Tag
                                           key={showUntagged.id}
                                           selected={this.isSelected(showUntagged)}
@@ -40,7 +40,7 @@ class TagSelect extends PureComponent {
                                 )}
 
                                 {projectTags.map(tag => (
-                                    <div className="mr-1 mb-2">
+                                    <div className="mr-1">
                                         <Tag
                                           key={tag.id}
                                           selected={this.isSelected(tag)}

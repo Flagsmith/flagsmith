@@ -19,6 +19,9 @@
     }
 }
 .tag-filter {
+    .tag-filter-list {
+        gap: 8px;
+    }
     .tag {
         opacity: 0.75;
         min-width: 100px;

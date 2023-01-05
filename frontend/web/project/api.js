@@ -115,7 +115,13 @@ global.API = {
                 require('js-cookie').remove(key, { path: '/', domain: Project.cookieDomain });
                 require('js-cookie').remove(key, { path: '/' });
             } else {
-                require('js-cookie').set(key, v, { path: '/', expires: 30 });
+                if (E2E) {
+                    // Since E2E is not https, we can't set secure cookies
+                    require('js-cookie').set(key, v, { path: '/', expires: 30 });
+                } else {
+                    // We need samesite secure cookies to allow for IFrame embeds from 3rd parties
+                    require('js-cookie').set(key, v, { path: '/', sameSite: 'none', secure:true, expires: 30 });
+                }
             }
         } catch (e) {
 
