@@ -71,11 +71,11 @@ module.exports = Object.assign({}, require('./base/_utils'), {
     getManageUserPermissionDescription() {
         return 'Manage Identities';
     },
-    getTraitEndpointMethod() {
+    getTraitEndpointMethod(id) {
         if (Utils.getFlagsmithHasFeature('edge_identities') && ProjectStore.model && ProjectStore.model.use_edge_identities) {
             return 'put';
         }
-        return 'post';
+        return id ? 'put' : 'post';
     },
     getIsEdge() {
         if (Utils.getFlagsmithHasFeature('edge_identities') && ProjectStore.model && ProjectStore.model.use_edge_identities) {
@@ -97,11 +97,11 @@ module.exports = Object.assign({}, require('./base/_utils'), {
         }
         return false;
     },
-    getUpdateTraitEndpoint(environmentId, userId) {
+    getUpdateTraitEndpoint(environmentId, userId, id) {
         if (Utils.getFlagsmithHasFeature('edge_identities') && ProjectStore.model && ProjectStore.model.use_edge_identities) {
             return `${Project.api}environments/${environmentId}/edge-identities/${userId}/update-traits/`;
         }
-        return `${Project.api}traits/`;
+        return `${Project.api}environments/${environmentId}/identities/${userId}/traits/${id ? `${id}/` : ''}`;
     },
     getTraitEndpoint(environmentId, userId) {
         if (Utils.getFlagsmithHasFeature('edge_identities') && ProjectStore.model && ProjectStore.model.use_edge_identities) {
