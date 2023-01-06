@@ -637,6 +637,7 @@ def test_get_flags_hide_disabled_flags(
     environment.save()
 
     Feature.objects.create(name="disabled_flag", project=project, default_enabled=False)
+    Feature.objects.create(name="enabled_flag", project=project, default_enabled=True)
 
     url = reverse("api-v1:flags")
 
@@ -646,8 +647,7 @@ def test_get_flags_hide_disabled_flags(
 
     # Then
     assert response.status_code == status.HTTP_200_OK
-
-    assert bool(response.json()) == disabled_flag_returned
+    assert len(response.json()) == (2 if disabled_flag_returned else 1)
 
 
 @pytest.mark.parametrize(

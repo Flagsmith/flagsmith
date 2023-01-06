@@ -901,14 +901,26 @@ def test_get_all_feature_hide_disabled_flags(
     environment.save()
 
     # 2 features, both defaulted to True
-    feature = Feature.objects.create(
-        name="Test Feature",
+    feature_one = Feature.objects.create(
+        name="Test Feature one",
         project=project,
         default_enabled=True,
     )
-    # with (disabled)overridden feature states
+    feature_two = Feature.objects.create(
+        name="Test Feature two",
+        project=project,
+        default_enabled=True,
+    )
+    # with one disabled
     FeatureState.objects.create(
-        feature=feature,
+        feature=feature_one,
+        environment=environment,
+        enabled=False,
+        identity=identity,
+    )
+    # and one enabled overridden feature state
+    FeatureState.objects.create(
+        feature=feature_two,
         environment=environment,
         enabled=False,
         identity=identity,
