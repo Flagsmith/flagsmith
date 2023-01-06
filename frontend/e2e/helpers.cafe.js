@@ -62,7 +62,7 @@ export const createTrait = async (index, id, value) => {
     await waitForElementVisible(byId(`user-trait-value-${index}`));
     const expectedValue = typeof value === 'string' ? `"${value}"` : `${value}`;
     await assertTextContent(byId(`user-trait-value-${index}`), expectedValue);
-    await t.wait(5000)
+    await t.wait(10000)
 };
 
 export const deleteTrait = async (index) => {
