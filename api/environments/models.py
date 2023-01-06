@@ -96,7 +96,7 @@ class Environment(
         null=True,
         blank=True,
         help_text="If true will exclude flags from SDK which are "
-        "disabled. NOTE: For this to work you must enable hide_disabled flags for the project",
+        "disabled. NOTE: If set, this will override the project `hide_disabled_flags`",
     )
 
     objects = EnvironmentManager()
