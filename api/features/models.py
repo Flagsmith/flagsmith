@@ -29,16 +29,20 @@ from ordered_model.models import OrderedModelBase
 from simple_history.models import HistoricalRecords
 
 from audit.constants import (
+    DATETIME_FORMAT,
     FEATURE_CREATED_MESSAGE,
     FEATURE_DELETED_MESSAGE,
     FEATURE_SEGMENT_UPDATED_MESSAGE,
+    FEATURE_STATE_SCHEDULED_MESSAGE,
     FEATURE_STATE_UPDATED_MESSAGE,
     FEATURE_UPDATED_MESSAGE,
     IDENTITY_FEATURE_STATE_CREATED_MESSAGE,
     IDENTITY_FEATURE_STATE_DELETED_MESSAGE,
+    IDENTITY_FEATURE_STATE_SCHEDULED_MESSAGE,
     IDENTITY_FEATURE_STATE_UPDATED_MESSAGE,
     SEGMENT_FEATURE_STATE_CREATED_MESSAGE,
     SEGMENT_FEATURE_STATE_DELETED_MESSAGE,
+    SEGMENT_FEATURE_STATE_SCHEDULED_MESSAGE,
     SEGMENT_FEATURE_STATE_UPDATED_MESSAGE,
 )
 from audit.related_object_type import RelatedObjectType
@@ -695,19 +699,50 @@ class FeatureState(
         )
 
     def get_create_log_message(self, history_instance) -> typing.Optional[str]:
+        # TODO: refactor this!
+        if self.change_request and not self.change_request.committed_at:
+            return
+
+        scheduled = False
+        if self.live_from > timezone.now():
+            scheduled = True
+
         if self.identity:
-            return IDENTITY_FEATURE_STATE_CREATED_MESSAGE % (
+            base_message = (
+                IDENTITY_FEATURE_STATE_SCHEDULED_MESSAGE
+                if scheduled
+                else IDENTITY_FEATURE_STATE_CREATED_MESSAGE
+            )
+            args = (
                 self.feature.name,
                 self.identity.identifier,
             )
+            if scheduled:
+                args = (self.live_from.strftime(DATETIME_FORMAT), *args)
+            return base_message % args
         elif self.feature_segment:
-            return SEGMENT_FEATURE_STATE_CREATED_MESSAGE % (
-                self.feature.name,
-                self.identity.identifier,
+            base_message = (
+                SEGMENT_FEATURE_STATE_SCHEDULED_MESSAGE
+                if scheduled
+                else SEGMENT_FEATURE_STATE_CREATED_MESSAGE
             )
-        return FEATURE_CREATED_MESSAGE % self.feature.name
+            args = (self.feature.name, self.feature_segment.segment.name)
+            if scheduled:
+                args = (self.live_from.strftime(DATETIME_FORMAT), *args)
+            return base_message % args
+
+        base_message = (
+            FEATURE_STATE_SCHEDULED_MESSAGE if scheduled else FEATURE_CREATED_MESSAGE
+        )
+        args = (self.feature.name,)
+        if scheduled:
+            args = (self.live_from.strftime(DATETIME_FORMAT), *args)
+        return base_message % args
 
     def get_update_log_message(self, history_instance) -> typing.Optional[str]:
+        if self.change_request and not self.change_request.committed_at:
+            return
+
         if self.identity:
             return IDENTITY_FEATURE_STATE_UPDATED_MESSAGE % (
                 self.feature.name,
