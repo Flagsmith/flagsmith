@@ -36,11 +36,9 @@ from audit.constants import (
     FEATURE_STATE_SCHEDULED_MESSAGE,
     FEATURE_STATE_UPDATED_MESSAGE,
     FEATURE_UPDATED_MESSAGE,
-    IDENTITY_FEATURE_STATE_CREATED_MESSAGE,
     IDENTITY_FEATURE_STATE_DELETED_MESSAGE,
     IDENTITY_FEATURE_STATE_SCHEDULED_MESSAGE,
     IDENTITY_FEATURE_STATE_UPDATED_MESSAGE,
-    SEGMENT_FEATURE_STATE_CREATED_MESSAGE,
     SEGMENT_FEATURE_STATE_DELETED_MESSAGE,
     SEGMENT_FEATURE_STATE_SCHEDULED_MESSAGE,
     SEGMENT_FEATURE_STATE_UPDATED_MESSAGE,
@@ -155,6 +153,9 @@ class Feature(
 
     def __str__(self):
         return "Project %s - Feature %s" % (self.project.name, self.name)
+
+    def get_create_log_message(self, history_instance) -> typing.Optional[str]:
+        return FEATURE_CREATED_MESSAGE % self.name
 
     def get_delete_log_message(self, history_instance) -> typing.Optional[str]:
         return FEATURE_DELETED_MESSAGE % self.name
@@ -711,7 +712,7 @@ class FeatureState(
             base_message = (
                 IDENTITY_FEATURE_STATE_SCHEDULED_MESSAGE
                 if scheduled
-                else IDENTITY_FEATURE_STATE_CREATED_MESSAGE
+                else IDENTITY_FEATURE_STATE_UPDATED_MESSAGE
             )
             args = (
                 self.feature.name,
@@ -724,7 +725,7 @@ class FeatureState(
             base_message = (
                 SEGMENT_FEATURE_STATE_SCHEDULED_MESSAGE
                 if scheduled
-                else SEGMENT_FEATURE_STATE_CREATED_MESSAGE
+                else SEGMENT_FEATURE_STATE_UPDATED_MESSAGE
             )
             args = (self.feature.name, self.feature_segment.segment.name)
             if scheduled:
