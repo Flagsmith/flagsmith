@@ -34,8 +34,10 @@ from audit.constants import (
     FEATURE_SEGMENT_UPDATED_MESSAGE,
     FEATURE_STATE_UPDATED_MESSAGE,
     FEATURE_UPDATED_MESSAGE,
+    IDENTITY_FEATURE_STATE_CREATED_MESSAGE,
     IDENTITY_FEATURE_STATE_DELETED_MESSAGE,
     IDENTITY_FEATURE_STATE_UPDATED_MESSAGE,
+    SEGMENT_FEATURE_STATE_CREATED_MESSAGE,
     SEGMENT_FEATURE_STATE_DELETED_MESSAGE,
     SEGMENT_FEATURE_STATE_UPDATED_MESSAGE,
 )
@@ -149,9 +151,6 @@ class Feature(
 
     def __str__(self):
         return "Project %s - Feature %s" % (self.project.name, self.name)
-
-    def get_create_log_message(self, history_instance) -> typing.Optional[str]:
-        return FEATURE_CREATED_MESSAGE % self.name
 
     def get_delete_log_message(self, history_instance) -> typing.Optional[str]:
         return FEATURE_DELETED_MESSAGE % self.name
@@ -696,7 +695,17 @@ class FeatureState(
         )
 
     def get_create_log_message(self, history_instance) -> typing.Optional[str]:
-        return self.get_update_log_message(history_instance)
+        if self.identity:
+            return IDENTITY_FEATURE_STATE_CREATED_MESSAGE % (
+                self.feature.name,
+                self.identity.identifier,
+            )
+        elif self.feature_segment:
+            return SEGMENT_FEATURE_STATE_CREATED_MESSAGE % (
+                self.feature.name,
+                self.identity.identifier,
+            )
+        return FEATURE_CREATED_MESSAGE % self.feature.name
 
     def get_update_log_message(self, history_instance) -> typing.Optional[str]:
         if self.identity:

@@ -15,8 +15,14 @@ FEATURE_STATE_WENT_LIVE_MESSAGE = (
     "Scheduled change to Flag state / Remote config value went live for feature: %s by"
     " Change Request: %s"
 )
+IDENTITY_FEATURE_STATE_CREATED_MESSAGE = (
+    "Identity override created for feature '%s' and identity '%s'"
+)
 IDENTITY_FEATURE_STATE_UPDATED_MESSAGE = (
     "Flag state / Remote config value updated for feature '%s' and identity '%s'"
+)
+SEGMENT_FEATURE_STATE_CREATED_MESSAGE = (
+    "Segment override created for feature '%s' and segment '%s'"
 )
 SEGMENT_FEATURE_STATE_UPDATED_MESSAGE = (
     "Flag state / Remote config value updated for feature '%s' and segment '%s'"
