@@ -107,9 +107,9 @@ class Identity(models.Model):
                 current_flag = identity_flags[flag.feature_id]
                 if flag > current_flag:
                     identity_flags[flag.feature_id] = flag
-
-        if self.environment.get_hide_disabled_flags():
+        if self.environment.get_hide_disabled_flags() is True:
             # filter out any flags that are disabled
+            # Note: done here instead of the DB because of CH1245
             return [value for value in identity_flags.values() if value.enabled]
 
         return list(identity_flags.values())

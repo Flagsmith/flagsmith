@@ -609,133 +609,22 @@ class SDKFeatureStatesTestCase(APITestCase):
             self.environment.updated_at.timestamp()
         )
 
-    def test_get_flags_exclude_disabled(
-        self,
-    ):
-        # Given
-        # a project with hide_disabled_flags enabled
-        project_flag_disabled = Project.objects.create(
-            name="Project Flag Disabled",
-            organisation=self.organisation,
-            hide_disabled_flags=True,
-        )
-
-        # and a set of features and environments for that project
-        other_environment = Environment.objects.create(
-            name="Test Environment 2",
-            project=project_flag_disabled,
-            hide_disabled_flags=True,
-        )
-        disabled_flag = Feature.objects.create(
-            name="Flag 1", project=project_flag_disabled
-        )
-        enabled_flag = Feature.objects.create(
-            name="Flag 2", project=project_flag_disabled, default_enabled=True
-        )
-
-        # When
-        # we get all flags for an environment
-        self.client.credentials(HTTP_X_ENVIRONMENT_KEY=other_environment.api_key)
-        response = self.client.get(self.url)
-
-        # Then
-        assert response.status_code == status.HTTP_200_OK
-        response_json = response.json()
-        assert len(response_json) == 1
-
-        # disabled flags are not returned
-        for flag in response_json:
-            assert flag["feature"]["id"] != disabled_flag.id
-
-        # but enabled ones are
-        assert response_json[0]["feature"]["id"] == enabled_flag.id
-
-    def test_get_flags_includes_disabled_if_it_is_not_enabled_for_environment(
-        self,
-    ):
-        # Given
-        # a project with hide_disabled_flags enabled
-        project_flag_disabled = Project.objects.create(
-            name="Project Flag Disabled",
-            organisation=self.organisation,
-            hide_disabled_flags=True,
-        )
-
-        # an environment with hide_disabled_flags disabled
-        other_environment = Environment.objects.create(
-            name="Test Environment 2",
-            project=project_flag_disabled,
-            hide_disabled_flags=False,
-        )
-        # and a set of features for that project
-        Feature.objects.create(name="disabled_flag", project=project_flag_disabled)
-        Feature.objects.create(
-            name="enabled_flag", project=project_flag_disabled, default_enabled=True
-        )
-
-        # When
-        # we get all flags for an environment
-        self.client.credentials(HTTP_X_ENVIRONMENT_KEY=other_environment.api_key)
-        response = self.client.get(self.url)
-
-        # Then
-        assert response.status_code == status.HTTP_200_OK
-        response_json = response.json()
-
-        # both flags are returned
-        assert len(response_json) == 2
-
-    def test_get_flags_includes_disabled_if_it_is_not_enabled_for_project(
-        self,
-    ):
-        # Given
-        # a project with hide_disabled_flags disabled
-        project_flag_disabled = Project.objects.create(
-            name="Project Flag Disabled",
-            organisation=self.organisation,
-            hide_disabled_flags=False,
-        )
-
-        # an environment with hide_disabled_flags enabled
-        other_environment = Environment.objects.create(
-            name="Test Environment 2",
-            project=project_flag_disabled,
-            hide_disabled_flags=False,
-        )
-        # and a set of features for that project
-        Feature.objects.create(name="disabled_flag", project=project_flag_disabled)
-        Feature.objects.create(
-            name="enabled_flag", project=project_flag_disabled, default_enabled=True
-        )
-
-        # When
-        # we get all flags for an environment
-        self.client.credentials(HTTP_X_ENVIRONMENT_KEY=other_environment.api_key)
-        response = self.client.get(self.url)
-
-        # Then
-        assert response.status_code == status.HTTP_200_OK
-        response_json = response.json()
-
-        # both flags are returned
-        assert len(response_json) == 2
-
 
 @pytest.mark.parametrize(
-    "environment_value, project_value, expected_result",
+    "environment_value, project_value, disabled_flag_returned",
     (
-        (True, True, True),
-        (True, False, True),
-        (False, True, False),
-        (False, False, False),
-        (None, True, True),
-        (None, False, False),
+        (True, True, False),
+        (True, False, False),
+        (False, True, True),
+        (False, False, True),
+        (None, True, False),
+        (None, False, True),
     ),
 )
 def test_get_flags_hide_disabled_flags(
     environment_value,
     project_value,
-    expected_result,
+    disabled_flag_returned,
     project,
     environment,
     api_client,
@@ -758,7 +647,7 @@ def test_get_flags_hide_disabled_flags(
     # Then
     assert response.status_code == status.HTTP_200_OK
 
-    assert (len(response.json()) == 0) == expected_result
+    assert bool(response.json()) == disabled_flag_returned
 
 
 @pytest.mark.parametrize(
