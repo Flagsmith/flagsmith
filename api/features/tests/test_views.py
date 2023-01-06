@@ -722,6 +722,46 @@ class SDKFeatureStatesTestCase(APITestCase):
 
 
 @pytest.mark.parametrize(
+    "environment_value, project_value, expected_result",
+    (
+        (True, True, True),
+        (True, False, True),
+        (False, True, False),
+        (False, False, False),
+        (None, True, True),
+        (None, False, False),
+    ),
+)
+def test_get_flags_hide_disabled_flags(
+    environment_value,
+    project_value,
+    expected_result,
+    project,
+    environment,
+    api_client,
+):
+    # Given
+    project.hide_disabled_flags = project_value
+    project.save()
+
+    environment.hide_disabled_flags = environment_value
+    environment.save()
+
+    Feature.objects.create(name="disabled_flag", project=project, default_enabled=False)
+
+    url = reverse("api-v1:flags")
+
+    # When
+    api_client.credentials(HTTP_X_ENVIRONMENT_KEY=environment.api_key)
+    response = api_client.get(url)
+
+    # Then
+    assert response.status_code == status.HTTP_200_OK
+
+    assert (len(response.json()) == 0) == expected_result
+
+
+@pytest.mark.parametrize(
     "client", [(lazy_fixture("master_api_key_client")), (lazy_fixture("admin_client"))]
 )
 def test_get_feature_states_by_uuid(client, environment, feature, feature_state):

@@ -93,7 +93,8 @@ class Environment(
     )
 
     hide_disabled_flags = models.BooleanField(
-        default=False,
+        null=True,
+        blank=True,
         help_text="If true will exclude flags from SDK which are "
         "disabled. NOTE: For this to work you must enable hide_disabled flags for the project",
     )
@@ -265,6 +266,12 @@ class Environment(
 
     def get_update_log_message(self, history_instance) -> typing.Optional[str]:
         return ENVIRONMENT_UPDATED_MESSAGE % self.name
+
+    def get_hide_disabled_flags(self) -> bool:
+        if self.hide_disabled_flags is not None:
+            return self.hide_disabled_flags
+
+        return self.project.hide_disabled_flags
 
     @classmethod
     def _get_environment_document_from_cache(cls, api_key: str) -> dict:
