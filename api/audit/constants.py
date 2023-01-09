@@ -19,7 +19,7 @@ FEATURE_STATE_WENT_LIVE_MESSAGE = (
     " Change Request: %s"
 )
 IDENTITY_FEATURE_STATE_SCHEDULED_MESSAGE = (
-    "Identity override scheduled for %s for feature '%s' and identity '%s' at %s"
+    "Identity override scheduled for %s for feature '%s' and identity '%s'"
 )
 IDENTITY_FEATURE_STATE_CREATED_MESSAGE = (
     "Identity override created for feature '%s' and identity '%s'"

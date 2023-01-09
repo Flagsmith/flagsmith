@@ -43,11 +43,6 @@ from audit.related_object_type import RelatedObjectType
 from environments.identities.helpers import (
     get_hashed_percentage_for_object_ids,
 )
-from features.audit_helpers import (
-    get_environment_feature_state_created_audit_message,
-    get_identity_override_created_audit_message,
-    get_segment_override_created_audit_message,
-)
 from features.constants import ENVIRONMENT, FEATURE_SEGMENT, IDENTITY
 from features.custom_lifecycle import CustomLifecycleModelMixin
 from features.feature_states.models import AbstractBaseFeatureValueModel
@@ -68,6 +63,8 @@ from features.value_types import (
 )
 from projects.models import Project
 from projects.tags.models import Tag
+
+from . import audit_helpers
 
 logger = logging.getLogger(__name__)
 
@@ -713,11 +710,11 @@ class FeatureState(
             return
 
         if self.identity_id:
-            return get_identity_override_created_audit_message(self)
+            return audit_helpers.get_identity_override_created_audit_message(self)
         elif self.feature_segment_id:
-            return get_segment_override_created_audit_message(self)
+            return audit_helpers.get_segment_override_created_audit_message(self)
 
-        return get_environment_feature_state_created_audit_message(self)
+        return audit_helpers.get_environment_feature_state_created_audit_message(self)
 
     def get_update_log_message(self, history_instance) -> typing.Optional[str]:
         if self.change_request and not self.change_request.committed_at:
