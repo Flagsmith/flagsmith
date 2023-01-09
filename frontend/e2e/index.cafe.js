@@ -2,9 +2,13 @@ const createTestCafe = require('testcafe');
 const fs = require('fs');
 const path = require('path');
 const { fork } = require('child_process');
-
+const _options = require("../.testcaferc")
 const upload = require('../bin/upload-file');
-
+const options = {
+    ..._options,
+    browsers: process.env.E2E_DEV ? ['chrome'] : ['chrome:headless'],
+    debugOnFail: !!process.env.E2E_DEV
+}
 let testcafe;
 let server;
 const dir = path.join(__dirname, '../reports/screen-captures');
@@ -25,15 +29,13 @@ createTestCafe()
         const runner = testcafe.createRunner();
         return runner
             .src(['./e2e/init.cafe.js'])
-            .browsers(process.env.E2E_DEV ? ['chrome'] : ['chrome:headless']) // always headless
-            .run()
+            .run(options)
             .then((v) => {
                 if (!v) {
                     return runner
                         .src(['./e2e/cafe'])
-                        .browsers(process.env.E2E_DEV ? ['chrome'] : ['chrome:headless'])
                         .concurrency(2)
-                        .run();
+                        .run(options);
                 }
                 return v;
             });

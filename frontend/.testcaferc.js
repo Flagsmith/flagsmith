@@ -6,6 +6,8 @@ module.exports = {
     "hostname": "localhost",
     quarantineMode: false,
     skipJsErrors: true,
+    selectorTimeout: 20000,
+    assertionTimeout: 20000,
     cache: true,
     "videoPath": "reports/screen-captures",
     "videoOptions": {
