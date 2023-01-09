@@ -29,23 +29,24 @@ from ordered_model.models import OrderedModelBase
 from simple_history.models import HistoricalRecords
 
 from audit.constants import (
-    DATETIME_FORMAT,
     FEATURE_CREATED_MESSAGE,
     FEATURE_DELETED_MESSAGE,
     FEATURE_SEGMENT_UPDATED_MESSAGE,
-    FEATURE_STATE_SCHEDULED_MESSAGE,
     FEATURE_STATE_UPDATED_MESSAGE,
     FEATURE_UPDATED_MESSAGE,
     IDENTITY_FEATURE_STATE_DELETED_MESSAGE,
-    IDENTITY_FEATURE_STATE_SCHEDULED_MESSAGE,
     IDENTITY_FEATURE_STATE_UPDATED_MESSAGE,
     SEGMENT_FEATURE_STATE_DELETED_MESSAGE,
-    SEGMENT_FEATURE_STATE_SCHEDULED_MESSAGE,
     SEGMENT_FEATURE_STATE_UPDATED_MESSAGE,
 )
 from audit.related_object_type import RelatedObjectType
 from environments.identities.helpers import (
     get_hashed_percentage_for_object_ids,
+)
+from features.audit_helpers import (
+    get_environment_feature_state_created_audit_message,
+    get_identity_override_created_audit_message,
+    get_segment_override_created_audit_message,
 )
 from features.constants import ENVIRONMENT, FEATURE_SEGMENT, IDENTITY
 from features.custom_lifecycle import CustomLifecycleModelMixin
@@ -431,6 +432,10 @@ class FeatureState(
             and self.live_from <= timezone.now()
         )
 
+    @property
+    def is_scheduled(self) -> bool:
+        return self.live_from > timezone.now()
+
     def clone(
         self,
         env: "Environment",
@@ -700,45 +705,19 @@ class FeatureState(
         )
 
     def get_create_log_message(self, history_instance) -> typing.Optional[str]:
-        # TODO: refactor this!
-        if self.change_request and not self.change_request.committed_at:
+        if self.change_request_id and not self.change_request.committed_at:
+            # change requests create feature states that may not ever go live,
+            # since we already include the change requests in the audit log
+            # we don't want to create separate audit logs for the associated
+            # feature states
             return
 
-        scheduled = False
-        if self.live_from > timezone.now():
-            scheduled = True
+        if self.identity_id:
+            return get_identity_override_created_audit_message(self)
+        elif self.feature_segment_id:
+            return get_segment_override_created_audit_message(self)
 
-        if self.identity:
-            base_message = (
-                IDENTITY_FEATURE_STATE_SCHEDULED_MESSAGE
-                if scheduled
-                else IDENTITY_FEATURE_STATE_UPDATED_MESSAGE
-            )
-            args = (
-                self.feature.name,
-                self.identity.identifier,
-            )
-            if scheduled:
-                args = (self.live_from.strftime(DATETIME_FORMAT), *args)
-            return base_message % args
-        elif self.feature_segment:
-            base_message = (
-                SEGMENT_FEATURE_STATE_SCHEDULED_MESSAGE
-                if scheduled
-                else SEGMENT_FEATURE_STATE_UPDATED_MESSAGE
-            )
-            args = (self.feature.name, self.feature_segment.segment.name)
-            if scheduled:
-                args = (self.live_from.strftime(DATETIME_FORMAT), *args)
-            return base_message % args
-
-        base_message = (
-            FEATURE_STATE_SCHEDULED_MESSAGE if scheduled else FEATURE_CREATED_MESSAGE
-        )
-        args = (self.feature.name,)
-        if scheduled:
-            args = (self.live_from.strftime(DATETIME_FORMAT), *args)
-        return base_message % args
+        return get_environment_feature_state_created_audit_message(self)
 
     def get_update_log_message(self, history_instance) -> typing.Optional[str]:
         if self.change_request and not self.change_request.committed_at:
