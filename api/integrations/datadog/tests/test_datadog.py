@@ -1,20 +1,48 @@
+import json
+
+import pytest
+
 from integrations.datadog.datadog import EVENTS_API_URI, DataDogWrapper
 
 
-def test_datadog_initialized_correctly():
+@pytest.mark.parametrize(
+    "base_url, expected_events_url",
+    (
+        ("https://test.com", f"https://test.com/{EVENTS_API_URI}"),
+        ("https://test.com/", f"https://test.com/{EVENTS_API_URI}"),
+    ),
+)
+def test_datadog_initialized_correctly(base_url, expected_events_url):
     # Given
     api_key = "123key"
-    base_url = "http://test.com"
 
     # When initialized
     data_dog = DataDogWrapper(base_url=base_url, api_key=api_key)
 
     # Then
-    expected_url = f"{base_url}{EVENTS_API_URI}?api_key={api_key}"
-    assert data_dog.url == expected_url
+    assert data_dog.events_url == expected_events_url
 
 
-def test_datatog_when_generate_event_data_with_correct_values_then_success():
+def test_datadog_track_event(mocker):
+    # Given
+    base_url = "https://test.com"
+    api_key = "key"
+    mock_session = mocker.MagicMock()
+
+    datadog = DataDogWrapper(base_url=base_url, api_key=api_key, session=mock_session)
+
+    event = {"foo": "bar"}
+
+    # When
+    datadog._track_event(event)
+
+    # Then
+    mock_session.post.assert_called_once_with(
+        f"{datadog.events_url}?api_key={api_key}", data=json.dumps(event)
+    )
+
+
+def test_datadog_when_generate_event_data_with_correct_values_then_success():
     # Given
     log = "some log data"
     email = "tes@email.com"
@@ -34,7 +62,7 @@ def test_datatog_when_generate_event_data_with_correct_values_then_success():
     assert event_data["tags"][0] == "env:" + env
 
 
-def test_datatog_when_generate_event_data_with_with_missing_values_then_success():
+def test_datadog_when_generate_event_data_with_with_missing_values_then_success():
     # Given no log or email data
     log = None
     email = None
@@ -53,7 +81,7 @@ def test_datatog_when_generate_event_data_with_with_missing_values_then_success(
     assert event_data["tags"][0] == f"env:{env}"
 
 
-def test_datatog_when_generate_event_data_with_with_missing_env_then_success():
+def test_datadog_when_generate_event_data_with_with_missing_env_then_success():
     # Given environment
     log = "some log data"
     email = "tes@email.com"
