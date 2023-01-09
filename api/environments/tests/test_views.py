@@ -540,12 +540,14 @@ def test_audit_log_entry_created_when_environment_updated(environment, project, 
     url = reverse("api-v1:environments:environment-detail", args=[environment.api_key])
     banner_text = "production environment be careful"
     banner_colour = "#FF0000"
+    hide_disabled_flags = True
 
     data = {
         "project": project.id,
         "name": "New name",
         "banner_text": banner_text,
         "banner_colour": banner_colour,
+        "hide_disabled_flags": hide_disabled_flags,
     }
 
     # When
@@ -561,6 +563,7 @@ def test_audit_log_entry_created_when_environment_updated(environment, project, 
     )
     assert response.json()["banner_text"] == banner_text
     assert response.json()["banner_colour"] == banner_colour
+    assert response.json()["hide_disabled_flags"] == hide_disabled_flags
 
 
 @pytest.mark.parametrize(

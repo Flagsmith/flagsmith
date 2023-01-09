@@ -42,6 +42,7 @@ class EnvironmentSerializerLight(serializers.ModelSerializer):
             "allow_client_traits",
             "banner_text",
             "banner_colour",
+            "hide_disabled_flags",
         )
 
 
