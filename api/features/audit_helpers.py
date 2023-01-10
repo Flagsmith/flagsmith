@@ -4,8 +4,8 @@ from audit.constants import (
     DATETIME_FORMAT,
     FEATURE_CREATED_MESSAGE,
     FEATURE_STATE_SCHEDULED_MESSAGE,
-    IDENTITY_FEATURE_STATE_CREATED_MESSAGE,
     IDENTITY_FEATURE_STATE_SCHEDULED_MESSAGE,
+    IDENTITY_FEATURE_STATE_UPDATED_MESSAGE,
     SEGMENT_FEATURE_STATE_SCHEDULED_MESSAGE,
     SEGMENT_FEATURE_STATE_UPDATED_MESSAGE,
 )
@@ -18,7 +18,7 @@ def get_identity_override_created_audit_message(feature_state: "FeatureState") -
     base_message = (
         IDENTITY_FEATURE_STATE_SCHEDULED_MESSAGE
         if feature_state.is_scheduled
-        else IDENTITY_FEATURE_STATE_CREATED_MESSAGE
+        else IDENTITY_FEATURE_STATE_UPDATED_MESSAGE
     )
     args = (
         feature_state.feature.name,

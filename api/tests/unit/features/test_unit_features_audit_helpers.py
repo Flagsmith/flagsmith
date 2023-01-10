@@ -34,7 +34,7 @@ one_hour_ago = timezone.now() - timedelta(hours=1)
             "test_feature",
             "test_environment",
             "test_identity",
-            "Identity override created for feature 'test_feature' and identity 'test_identity'",
+            "Flag state / Remote config value updated for feature 'test_feature' and identity 'test_identity'",
         ),
     ),
 )
