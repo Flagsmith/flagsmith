@@ -137,11 +137,8 @@ def organisation_info(request, organisation_id):
 
     # If self-hosted and running without an Influx DB data store, we don't want to/cant show usage
     if settings.INFLUXDB_TOKEN:
-        date_range = "30d"
-
-        if request.GET.get("date_range"):
-            date_range = request.GET["date_range"]
-            context["date_range"] = date_range
+        date_range = request.GET.get("date_range", "30d")
+        context["date_range"] = date_range
 
         event_list, labels = get_event_list_for_organisation(
             organisation_id, date_range
