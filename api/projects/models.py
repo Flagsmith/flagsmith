@@ -8,7 +8,12 @@ from django.conf import settings
 from django.core.cache import caches
 from django.db import models
 from django.utils import timezone
-from django_lifecycle import BEFORE_CREATE, LifecycleModelMixin, hook
+from django_lifecycle import (
+    AFTER_SAVE,
+    BEFORE_CREATE,
+    LifecycleModelMixin,
+    hook,
+)
 from softdelete.models import SoftDeleteObject
 
 from organisations.models import Organisation
@@ -20,6 +25,7 @@ from permissions.models import (
 from projects.managers import ProjectManager
 
 project_segments_cache = caches[settings.PROJECT_SEGMENTS_CACHE_LOCATION]
+environment_cache = caches[settings.ENVIRONMENT_CACHE_NAME]
 
 
 class Project(LifecycleModelMixin, AbstractBaseExportableModel, SoftDeleteObject):
@@ -87,6 +93,12 @@ class Project(LifecycleModelMixin, AbstractBaseExportableModel, SoftDeleteObject
         self.enable_dynamo_db = self.enable_dynamo_db or (
             settings.EDGE_RELEASE_DATETIME is not None
             and settings.EDGE_RELEASE_DATETIME < timezone.now()
+        )
+
+    @hook(AFTER_SAVE)
+    def clear_environments_cache(self):
+        environment_cache.delete_many(
+            self.environments.values_list("api_key", flat=True)
         )
 
     @property

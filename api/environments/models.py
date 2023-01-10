@@ -42,7 +42,7 @@ from webhooks.models import AbstractBaseWebhookModel
 
 logger = logging.getLogger(__name__)
 
-environment_cache = caches[settings.ENVIRONMENT_CACHE_LOCATION]
+environment_cache = caches[settings.ENVIRONMENT_CACHE_NAME]
 environment_document_cache = caches[settings.ENVIRONMENT_DOCUMENT_CACHE_LOCATION]
 environment_segments_cache = caches[settings.ENVIRONMENT_SEGMENTS_CACHE_NAME]
 
@@ -117,6 +117,10 @@ class Environment(
                 else feature.default_enabled,
             )
 
+    @hook(AFTER_SAVE)
+    def clear_environment_cache(self):
+        environment_cache.delete(self.api_key)
+
     def __str__(self):
         return "Project %s - Environment %s" % (self.project.name, self.name)
 
@@ -181,7 +185,9 @@ class Environment(
                     .defer("description")
                     .get()
                 )
-                environment_cache.set(api_key, environment, timeout=60)
+                environment_cache.set(
+                    api_key, environment, timeout=settings.ENVIRONMENT_CACHE_SECONDS
+                )
             return environment
         except cls.DoesNotExist:
             logger.info("Environment with api_key %s does not exist" % api_key)

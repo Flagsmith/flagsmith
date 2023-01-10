@@ -7,7 +7,7 @@ from rest_framework.exceptions import AuthenticationFailed
 from environments.api_keys import SERVER_API_KEY_PREFIX
 from environments.models import Environment
 
-environment_cache = caches[settings.ENVIRONMENT_CACHE_LOCATION]
+environment_cache = caches[settings.ENVIRONMENT_CACHE_NAME]
 
 
 class EnvironmentKeyAuthentication(BaseAuthentication):

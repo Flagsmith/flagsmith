@@ -491,8 +491,17 @@ if ENABLE_DB_LOGGING:
 
 CACHE_FLAGS_SECONDS = env.int("CACHE_FLAGS_SECONDS", default=0)
 FLAGS_CACHE_LOCATION = "environment-flags"
-ENVIRONMENT_CACHE_LOCATION = "environment-objects"
 CHARGEBEE_CACHE_LOCATION = "chargebee-objects"
+
+ENVIRONMENT_CACHE_SECONDS = env.int("ENVIRONMENT_CACHE_SECONDS", default=60)
+ENVIRONMENT_CACHE_BACKEND = env.str(
+    "ENVIRONMENT_CACHE_BACKEND",
+    default="django.core.cache.backends.locmem.LocMemCache",
+)
+ENVIRONMENT_CACHE_NAME = "environment-objects"
+ENVIRONMENT_CACHE_LOCATION = env.str(
+    "ENVIRONMENT_CACHE_LOCATION", default=ENVIRONMENT_CACHE_NAME
+)
 
 GET_FLAGS_ENDPOINT_CACHE_SECONDS = env.int(
     "GET_FLAGS_ENDPOINT_CACHE_SECONDS", default=0
@@ -541,9 +550,10 @@ CACHES = {
         "BACKEND": "django.core.cache.backends.locmem.LocMemCache",
         "LOCATION": "unique-snowflake",
     },
-    ENVIRONMENT_CACHE_LOCATION: {
-        "BACKEND": "django.core.cache.backends.locmem.LocMemCache",
+    ENVIRONMENT_CACHE_NAME: {
+        "BACKEND": ENVIRONMENT_CACHE_BACKEND,
         "LOCATION": ENVIRONMENT_CACHE_LOCATION,
+        "TIMEOUT": ENVIRONMENT_CACHE_SECONDS,
     },
     FLAGS_CACHE_LOCATION: {
         "BACKEND": "django.core.cache.backends.locmem.LocMemCache",
