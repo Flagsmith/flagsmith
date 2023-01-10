@@ -125,8 +125,10 @@ class Organisation(LifecycleModelMixin, AbstractBaseExportableModel, SoftDeleteO
         from environments.models import Environment
 
         environment_cache.delete_many(
-            Environment.objects.filter(project__organisation=self).values_list(
-                "api_key", flat=True
+            list(
+                Environment.objects.filter(project__organisation=self).values_list(
+                    "api_key", flat=True
+                )
             )
         )
 

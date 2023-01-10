@@ -98,7 +98,7 @@ class Project(LifecycleModelMixin, AbstractBaseExportableModel, SoftDeleteObject
     @hook(AFTER_SAVE)
     def clear_environments_cache(self):
         environment_cache.delete_many(
-            self.environments.values_list("api_key", flat=True)
+            list(self.environments.values_list("api_key", flat=True))
         )
 
     @property
