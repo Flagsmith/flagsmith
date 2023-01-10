@@ -14,7 +14,13 @@ from django.db import models
 from django.db.models import Q
 from django.utils import timezone
 from django.utils.translation import ugettext_lazy as _
-from django_lifecycle import AFTER_CREATE, AFTER_SAVE, LifecycleModel, hook
+from django_lifecycle import (
+    AFTER_CREATE,
+    AFTER_SAVE,
+    AFTER_UPDATE,
+    LifecycleModel,
+    hook,
+)
 from flag_engine.api.document_builders import (
     build_environment_api_key_document,
     build_environment_document,
@@ -117,9 +123,10 @@ class Environment(
                 else feature.default_enabled,
             )
 
-    @hook(AFTER_SAVE)
+    @hook(AFTER_UPDATE)
     def clear_environment_cache(self):
-        environment_cache.delete(self.api_key)
+        # TODO: this could rebuild the cache itself (using an async task)
+        environment_cache.delete(self.initial_value("api_key"))
 
     def __str__(self):
         return "Project %s - Environment %s" % (self.project.name, self.name)

@@ -1,3 +1,4 @@
+from copy import copy
 from datetime import timedelta
 from unittest import mock
 
@@ -365,3 +366,26 @@ def test_change_request_audit_logs_does_not_update_updated_at(environment):
     # Then
     assert environment.updated_at == updated_at_before_audit_log
     assert environment.updated_at != audit_log.created_date
+
+
+def test_save_environment_clears_environment_cache(mocker, project):
+    # Given
+    mock_environment_cache = mocker.patch("environments.models.environment_cache")
+    environment = Environment.objects.create(name="test environment", project=project)
+
+    # perform an update of the name to verify basic functionality
+    environment.name = "updated"
+    environment.save()
+
+    # and update the api key to verify that the original api key is used to clear cache
+    old_key = copy(environment.api_key)
+    new_key = "some-new-key"
+    environment.api_key = new_key
+
+    # When
+    environment.save()
+
+    # Then
+    mock_calls = mock_environment_cache.delete.mock_calls
+    assert len(mock_calls) == 2
+    assert mock_calls[0][1][0] == mock_calls[1][1][0] == old_key
