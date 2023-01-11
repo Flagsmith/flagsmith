@@ -218,14 +218,6 @@ const CreateSegment = class extends Component {
               id="create-segment-modal"
               onSubmit={this.save}
             >
-                {!this.props.condensed && (
-                    <div className="mt-4">
-                        <InfoMessage>
-                            Learn more about rule and trait value type conversions <a href="https://docs-git-improvement-segment-rule-value-typing-flagsmith.vercel.app/basic-features/managing-segments#rule-typing">here</a>.
-                        </InfoMessage>
-                    </div>
-                )}
-
                 {!isEdit && (
                     <Row className="mb-4">
                         <label className="mr-2 mb-0" htmlFor="segmentID">
@@ -250,7 +242,6 @@ const CreateSegment = class extends Component {
                     </Row>
                 )}
 
-
                 {!this.props.condensed && (
                     <FormGroup className="mb-4">
                         <InputGroup
@@ -267,7 +258,6 @@ const CreateSegment = class extends Component {
                         />
                     </FormGroup>
                 )}
-
 
                 <div className="form-group ">
                     <Row className="mt-2 mb-2">
@@ -333,6 +323,13 @@ const CreateSegment = class extends Component {
                     </div>
                 )}
 
+                {!this  .props.condensed && (
+                    <div className="mt-4">
+                        <InfoMessage>
+                            Learn more about rule and trait value type conversions <a href="https://docs-git-improvement-segment-rule-value-typing-flagsmith.vercel.app/basic-features/managing-segments#rule-typing">here</a>.
+                        </InfoMessage>
+                    </div>
+                )}
             </form>
         );
 
