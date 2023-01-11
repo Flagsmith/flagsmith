@@ -34,7 +34,7 @@ class EdgeIdentityPaginationInspector(PaginatorInspector):
                 openapi.IN_QUERY,
                 "Used as the starting point for the page",
                 required=False,
-                type=openapi.TYPE_INTEGER,
+                type=openapi.TYPE_STRING,
             ),
         ]
 
