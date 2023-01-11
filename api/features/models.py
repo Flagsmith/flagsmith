@@ -64,6 +64,8 @@ from features.value_types import (
 from projects.models import Project
 from projects.tags.models import Tag
 
+from . import audit_helpers
+
 logger = logging.getLogger(__name__)
 
 if typing.TYPE_CHECKING:
@@ -427,6 +429,10 @@ class FeatureState(
             and self.live_from <= timezone.now()
         )
 
+    @property
+    def is_scheduled(self) -> bool:
+        return self.live_from > timezone.now()
+
     def clone(
         self,
         env: "Environment",
@@ -696,9 +702,24 @@ class FeatureState(
         )
 
     def get_create_log_message(self, history_instance) -> typing.Optional[str]:
-        return self.get_update_log_message(history_instance)
+        if self.change_request_id and not self.change_request.committed_at:
+            # change requests create feature states that may not ever go live,
+            # since we already include the change requests in the audit log
+            # we don't want to create separate audit logs for the associated
+            # feature states
+            return
+
+        if self.identity_id:
+            return audit_helpers.get_identity_override_created_audit_message(self)
+        elif self.feature_segment_id:
+            return audit_helpers.get_segment_override_created_audit_message(self)
+
+        return audit_helpers.get_environment_feature_state_created_audit_message(self)
 
     def get_update_log_message(self, history_instance) -> typing.Optional[str]:
+        if self.change_request and not self.change_request.committed_at:
+            return
+
         if self.identity:
             return IDENTITY_FEATURE_STATE_UPDATED_MESSAGE % (
                 self.feature.name,

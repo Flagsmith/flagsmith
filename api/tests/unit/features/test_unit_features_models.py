@@ -4,6 +4,7 @@ import pytest
 from django.utils import timezone
 
 from features.models import Feature, FeatureState
+from features.workflows.core.models import ChangeRequest
 
 now = timezone.now()
 yesterday = now - timedelta(days=1)
@@ -125,3 +126,53 @@ def test_creating_a_feature_with_defaults_does_not_set_defaults_if_disabled(
     feature_state = FeatureState.objects.get(feature=feature, environment=environment)
     assert feature_state.enabled is False
     assert not feature_state.get_feature_state_value()
+
+
+def test_feature_state_get_create_log_message_returns_nothing_if_uncommitted_change_request(
+    environment, feature, admin_user, mocker
+):
+    # Given
+    change_request = ChangeRequest.objects.create(
+        environment=environment, title="Test CR", user=admin_user
+    )
+    feature_state = FeatureState.objects.create(
+        environment=environment,
+        feature=feature,
+        change_request=change_request,
+        version=None,
+    )
+
+    # When
+    message = feature_state.get_create_log_message(
+        mocker.MagicMock(id="history_instance")
+    )  # history instance is irrelevant here
+
+    # Then
+    assert message is None
+
+
+@pytest.mark.parametrize(
+    "feature_segment_id, identity_id, expected_function_name",
+    (
+        (1, None, "get_segment_override_created_audit_message"),
+        (None, 1, "get_identity_override_created_audit_message"),
+        (None, None, "get_environment_feature_state_created_audit_message"),
+    ),
+)
+def test_feature_state_get_create_log_message_calls_correct_helper_function(
+    mocker, feature_segment_id, identity_id, expected_function_name
+):
+    # Given
+    mock_audit_helpers = mocker.patch("features.models.audit_helpers")
+    feature_state = FeatureState(
+        feature_segment_id=feature_segment_id, identity_id=identity_id
+    )
+
+    # When
+    feature_state.get_create_log_message(
+        mocker.MagicMock(id="history_instance")
+    )  # history instance is irrelevant here
+
+    # Then
+    expected_function = getattr(mock_audit_helpers, expected_function_name)
+    expected_function.assert_called_once_with(feature_state)
