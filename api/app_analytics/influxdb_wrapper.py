@@ -126,7 +126,7 @@ def get_events_for_organisation(organisation_id: id, date_range: str = "30d"):
     return total
 
 
-def get_event_list_for_organisation(organisation_id: int):
+def get_event_list_for_organisation(organisation_id: int, date_range: str = "30d"):
     """
     Query influx db for usage for given organisation id
 
@@ -138,13 +138,15 @@ def get_event_list_for_organisation(organisation_id: int):
         filters=f'|> filter(fn:(r) => r._measurement == "api_call") \
                   |> filter(fn: (r) => r["organisation_id"] == "{organisation_id}")',
         extra="|> aggregateWindow(every: 24h, fn: sum)",
+        date_range=date_range,
     )
     dataset = defaultdict(list)
     labels = []
     for result in results:
         for record in result.records:
             dataset[record["resource"]].append(record["_value"])
-            if len(labels) != 31:
+            required_records = int(date_range[:-1]) + 1
+            if len(labels) != required_records:
                 labels.append(record.values["_time"].strftime("%Y-%m-%d"))
     return dataset, labels
 
