@@ -27,6 +27,7 @@ from django_lifecycle import (
 )
 from ordered_model.models import OrderedModelBase
 from simple_history.models import HistoricalRecords
+from softdelete.models import SoftDeleteObject
 
 from audit.constants import (
     FEATURE_CREATED_MESSAGE,
@@ -77,6 +78,7 @@ class Feature(
     CustomLifecycleModelMixin,
     AbstractBaseExportableModel,
     abstract_base_auditable_model_factory(["uuid"]),
+    SoftDeleteObject,
 ):
     name = models.CharField(max_length=2000)
     created_date = models.DateTimeField("DateCreated", auto_now_add=True)
@@ -179,6 +181,7 @@ class FeatureSegment(
     AbstractBaseExportableModel,
     abstract_base_auditable_model_factory(["uuid"]),
     OrderedModelBase,
+    SoftDeleteObject,
 ):
     history_record_class_path = "features.models.HistoricalFeatureSegment"
     related_object_type = RelatedObjectType.FEATURE
@@ -295,6 +298,7 @@ class FeatureState(
     LifecycleModelMixin,
     AbstractBaseExportableModel,
     abstract_base_auditable_model_factory(["uuid"]),
+    SoftDeleteObject,
 ):
     history_record_class_path = "features.models.HistoricalFeatureState"
     related_object_type = RelatedObjectType.FEATURE_STATE
@@ -771,7 +775,9 @@ class FeatureState(
         return self.feature.project
 
 
-class FeatureStateValue(AbstractBaseFeatureValueModel, AbstractBaseExportableModel):
+class FeatureStateValue(
+    AbstractBaseFeatureValueModel, AbstractBaseExportableModel, SoftDeleteObject
+):
     feature_state = models.OneToOneField(
         FeatureState, related_name="feature_state_value", on_delete=models.CASCADE
     )
