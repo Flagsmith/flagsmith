@@ -103,12 +103,14 @@ def get_events_for_organisation(organisation_id: id, date_range: str = "30d"):
     :param organisation_id: an id of the organisation to get usage for
     :return: a number of request counts for organisation
     """
-    filters = f'|> filter(fn:(r) => r._measurement == "api_call") \
-    |> filter(fn: (r) => r["_field"] == "request_count") \
-    |> filter(fn: (r) => r["organisation_id"] == "{organisation_id}")'
-
     result = InfluxDBWrapper.influx_query_manager(
-        filters=filters,
+        filters=build_filter_string(
+            [
+                'r._measurement == "api_call"',
+                'r["_field"] == "request_count"',
+                f'r["organisation_id"] == "{organisation_id}"',
+            ]
+        ),
         drop_columns=(
             "organisation",
             "project",
@@ -168,17 +170,19 @@ def get_multiple_event_list_for_organisation(
     :return: a number of requests for flags, traits, identities, environment-document
     """
 
-    filters = f'|> filter(fn:(r) => r._measurement == "api_call") \
-    |> filter(fn: (r) => r["organisation_id"] == "{organisation_id}")'
+    filters = [
+        'r._measurement == "api_call"',
+        f'r["organisation_id"] == "{organisation_id}"',
+    ]
 
     if project_id:
-        filters += f'|> filter(fn: (r) => r["project_id"] == "{project_id}")'
+        filters.append(f'r["project_id"] == "{project_id}"')
 
     if environment_id:
-        filters += f'|> filter(fn: (r) => r["environment_id"] == "{environment_id}")'
+        filters.append(f'r["environment_id"] == "{environment_id}"')
 
     results = InfluxDBWrapper.influx_query_manager(
-        filters=filters,
+        filters=build_filter_string(filters),
         extra="|> aggregateWindow(every: 24h, fn: sum)",
     )
     if not results:
@@ -287,3 +291,9 @@ def get_top_organisations(date_range: str, limit: str = ""):
                 )
 
     return dataset
+
+
+def build_filter_string(filter_expressions: typing.List[str]) -> str:
+    return "|> ".join(
+        ["", *[f"filter(fn: (r) => {exp})" for exp in filter_expressions]]
+    )

@@ -40,14 +40,18 @@ def test_write(monkeypatch):
 
 
 def test_influx_db_query_when_get_events_then_query_api_called(monkeypatch):
-    query = (
-        f'from(bucket:"{read_bucket}") |> range(start: -30d, stop: now()) '
-        f'|> filter(fn:(r) => r._measurement == "api_call")         '
-        f'|> filter(fn: (r) => r["_field"] == "request_count")         '
-        f'|> filter(fn: (r) => r["organisation_id"] == "{org_id}") '
-        f'|> drop(columns: ["organisation", "project", "project_id", "environment", '
-        f'"environment_id"])'
-        f"|> sum()"
+    expected_query = (
+        (
+            f'from(bucket:"{read_bucket}") |> range(start: -30d, stop: now()) '
+            f'|> filter(fn:(r) => r._measurement == "api_call")         '
+            f'|> filter(fn: (r) => r["_field"] == "request_count")         '
+            f'|> filter(fn: (r) => r["organisation_id"] == "{org_id}") '
+            f'|> drop(columns: ["organisation", "project", "project_id", "environment", '
+            f'"environment_id"])'
+            f"|> sum()"
+        )
+        .replace(" ", "")
+        .replace("\n", "")
     )
     mock_influxdb_client = mock.MagicMock()
     monkeypatch.setattr(
@@ -61,7 +65,11 @@ def test_influx_db_query_when_get_events_then_query_api_called(monkeypatch):
     get_events_for_organisation(org_id)
 
     # Then
-    mock_query_api.query.assert_called_once_with(org=influx_org, query=query)
+    mock_query_api.query.assert_called_once()
+
+    call = mock_query_api.query.mock_calls[0]
+    assert call[2]["org"] == influx_org
+    assert call[2]["query"].replace(" ", "").replace("\n", "") == expected_query
 
 
 def test_influx_db_query_when_get_events_list_then_query_api_called(monkeypatch):
@@ -92,14 +100,18 @@ def test_influx_db_query_when_get_events_list_then_query_api_called(monkeypatch)
 def test_influx_db_query_when_get_multiple_events_for_organistation_then_query_api_called(
     monkeypatch,
 ):
-    query = (
-        f'from(bucket:"{read_bucket}") '
-        "|> range(start: -30d, stop: now()) "
-        '|> filter(fn:(r) => r._measurement == "api_call")                   '
-        f'|> filter(fn: (r) => r["organisation_id"] == "{org_id}") '
-        '|> drop(columns: ["organisation", "organisation_id", "type", "project", '
-        '"project_id", "environment", "environment_id", "host"])'
-        "|> aggregateWindow(every: 24h, fn: sum)"
+    expected_query = (
+        (
+            f'from(bucket:"{read_bucket}") '
+            "|> range(start: -30d, stop: now()) "
+            '|> filter(fn:(r) => r._measurement == "api_call")                   '
+            f'|> filter(fn: (r) => r["organisation_id"] == "{org_id}") '
+            '|> drop(columns: ["organisation", "organisation_id", "type", "project", '
+            '"project_id", "environment", "environment_id", "host"])'
+            "|> aggregateWindow(every: 24h, fn: sum)"
+        )
+        .replace(" ", "")
+        .replace("\n", "")
     )
     mock_influxdb_client = mock.MagicMock()
     monkeypatch.setattr(
@@ -113,7 +125,11 @@ def test_influx_db_query_when_get_multiple_events_for_organistation_then_query_a
     get_multiple_event_list_for_organisation(org_id)
 
     # Then
-    mock_query_api.query.assert_called_once_with(org=influx_org, query=query)
+    mock_query_api.query.assert_called_once()
+
+    call = mock_query_api.query.mock_calls[0]
+    assert call[2]["org"] == influx_org
+    assert call[2]["query"].replace(" ", "").replace("\n", "") == expected_query
 
 
 def test_influx_db_query_when_get_multiple_events_for_feature_then_query_api_called(

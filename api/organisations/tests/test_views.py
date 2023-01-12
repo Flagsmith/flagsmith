@@ -362,15 +362,19 @@ class OrganisationTestCase(TestCase):
 
         influx_org = settings.INFLUXDB_ORG
         read_bucket = settings.INFLUXDB_BUCKET + "_downsampled_15m"
-        query = (
-            f'from(bucket:"{read_bucket}") '
-            f"|> range(start: -30d, stop: now()) "
-            f'|> filter(fn:(r) => r._measurement == "api_call")         '
-            f'|> filter(fn: (r) => r["_field"] == "request_count")         '
-            f'|> filter(fn: (r) => r["organisation_id"] == "{organisation.id}") '
-            f'|> drop(columns: ["organisation", "project", "project_id", '
-            f'"environment", "environment_id"])'
-            f"|> sum()"
+        expected_query = (
+            (
+                f'from(bucket:"{read_bucket}") '
+                f"|> range(start: -30d, stop: now()) "
+                f'|> filter(fn:(r) => r._measurement == "api_call")         '
+                f'|> filter(fn: (r) => r["_field"] == "request_count")         '
+                f'|> filter(fn: (r) => r["organisation_id"] == "{organisation.id}") '
+                f'|> drop(columns: ["organisation", "project", "project_id", '
+                f'"environment", "environment_id"])'
+                f"|> sum()"
+            )
+            .replace(" ", "")
+            .replace("\n", "")
         )
 
         # When
@@ -378,9 +382,11 @@ class OrganisationTestCase(TestCase):
 
         # Then
         assert response.status_code == status.HTTP_200_OK
-        mock_influxdb_client.query_api.return_value.query.assert_called_once_with(
-            org=influx_org, query=query
-        )
+        mock_influxdb_client.query_api.return_value.query.assert_called_once()
+
+        call = mock_influxdb_client.query_api.return_value.query.mock_calls[0]
+        assert call[2]["org"] == influx_org
+        assert call[2]["query"].replace(" ", "").replace("\n", "") == expected_query
 
     @override_settings(ENABLE_CHARGEBEE=True)
     @mock.patch("organisations.serializers.get_subscription_data_from_hosted_page")
@@ -903,3 +909,36 @@ def test_can_invite_user_with_permission_groups(
     # and
     invite = Invite.objects.get(email=invited_email)
     assert user_permission_group in invite.permission_groups.all()
+
+
+@pytest.mark.parametrize(
+    "query_string, expected_filter_args",
+    (
+        ("", {}),
+        ("project_id=1", {"project_id": 1}),
+        ("project_id=1&environment_id=1", {"project_id": 1, "environment_id": 1}),
+        ("environment_id=1", {"environment_id": 1}),
+    ),
+)
+def test_organisation_get_influx_data(
+    mocker, admin_client, organisation, query_string, expected_filter_args
+):
+    # Given
+    base_url = reverse(
+        "api-v1:organisations:organisation-get-influx-data", args=[organisation.id]
+    )
+    url = f"{base_url}?{query_string}"
+    mock_get_multiple_event_list_for_organisation = mocker.patch(
+        "organisations.views.get_multiple_event_list_for_organisation"
+    )
+    mock_get_multiple_event_list_for_organisation.return_value = []
+
+    # When
+    response = admin_client.get(url)
+
+    # Then
+    assert response.status_code == status.HTTP_200_OK
+    mock_get_multiple_event_list_for_organisation.assert_called_once_with(
+        str(organisation.id), **expected_filter_args
+    )
+    assert response.json() == {"events_list": []}
