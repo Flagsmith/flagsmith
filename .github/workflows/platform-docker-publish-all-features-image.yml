@@ -2,10 +2,6 @@ name: Publish Flagsmith Private Cloud Image
 
 on:
     push:
-        tags:
-            - "*"
-        branches:
-            - "improvement/docker-fixes"
 
 env:
   FLAGSMITH_SAML_REVISION: v0.2.1
@@ -79,9 +75,9 @@ jobs:
               id: docker_build
               uses: docker/build-push-action@v3
               with:
-                  platforms: linux/amd64
+                  platforms: linux/amd64,linux/arm64
                   file: Dockerfile
-                  push: true
+                  push: false
                   tags: ${{ steps.meta.outputs.tags }}
                   context: .
                   build-args: |
