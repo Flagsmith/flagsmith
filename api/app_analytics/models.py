@@ -2,8 +2,6 @@ from django.db import models
 
 from environments.models import Environment
 from features.models import Feature
-from organisations.models import Organisation
-from projects.models import Project
 
 
 class Resource(models.IntegerChoices):
@@ -13,9 +11,11 @@ class Resource(models.IntegerChoices):
     ENVIRONMENT_DOCUMENT = 4
 
 
+# TODO: should we store organisation/project?
 class APIUsage(models.Model):
-    organisation = models.ForeignKey(Organisation, on_delete=models.CASCADE)
-    project = models.ForeignKey(Project, on_delete=models.CASCADE)
+    # organisation = models.ForeignKey(Organisation, on_delete=models.CASCADE)
+    # project = models.ForeignKey(Project, on_delete=models.CASCADE)
+
     environment = models.ForeignKey(Environment, on_delete=models.CASCADE)
     created_at = models.DateTimeField(auto_now_add=True)
     host = models.CharField(max_length=255)
