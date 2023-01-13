@@ -83,6 +83,11 @@ def test_update_feature_state(client, environment, feature_state, feature, ident
 
     url = reverse("api-v1:features:featurestates-detail", args=[feature_state])
 
+    # TODO: fix this test!
+    #  the issue here is that writable nested serializers think this is an update to the feature state
+    #  value since we're not passing the id of the existing entity. We'll need to resolve this to assume
+    #  that we're always updating the existing one. (I'm not sure why it doesn't automatically assume
+    #  this for 1-to-1 relationships already...
     feature_state_value = "New value"
     data = {
         "enabled": True,

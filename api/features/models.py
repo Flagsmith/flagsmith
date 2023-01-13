@@ -75,11 +75,15 @@ if typing.TYPE_CHECKING:
     from environments.models import Environment
 
 
+class FeatureManager(UUIDNaturalKeyManagerMixin, SoftDeleteManager):
+    pass
+
+
 class Feature(
+    SoftDeleteObject,
     CustomLifecycleModelMixin,
     AbstractBaseExportableModel,
     abstract_base_auditable_model_factory(["uuid"]),
-    SoftDeleteObject,
 ):
     name = models.CharField(max_length=2000)
     created_date = models.DateTimeField("DateCreated", auto_now_add=True)
@@ -108,6 +112,8 @@ class Feature(
 
     history_record_class_path = "features.models.HistoricalFeature"
     related_object_type = RelatedObjectType.FEATURE
+
+    objects = FeatureManager()
 
     class Meta:
         # Note: uniqueness is changed to reference lowercase name in explicit SQL in the migrations
@@ -299,10 +305,10 @@ class FeatureStateManager(UUIDNaturalKeyManagerMixin, SoftDeleteManager):
 
 
 class FeatureState(
+    SoftDeleteObject,
     LifecycleModelMixin,
     AbstractBaseExportableModel,
     abstract_base_auditable_model_factory(["uuid"]),
-    SoftDeleteObject,
 ):
     history_record_class_path = "features.models.HistoricalFeatureState"
     related_object_type = RelatedObjectType.FEATURE_STATE
@@ -781,6 +787,10 @@ class FeatureState(
         return self.feature.project
 
 
+class FeatureStateValueManager(UUIDNaturalKeyManagerMixin, SoftDeleteManager):
+    pass
+
+
 class FeatureStateValue(
     AbstractBaseFeatureValueModel, AbstractBaseExportableModel, SoftDeleteObject
 ):
@@ -789,6 +799,8 @@ class FeatureStateValue(
     )
 
     history = HistoricalRecords(excluded_fields=["uuid"])
+
+    objects = FeatureStateValueManager()
 
     def clone(self, feature_state: FeatureState) -> "FeatureStateValue":
         clone = deepcopy(self)

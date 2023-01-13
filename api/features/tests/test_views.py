@@ -661,3 +661,19 @@ def test_get_feature_states_by_uuid(client, environment, feature, feature_state)
 
     response_json = response.json()
     assert response_json["uuid"] == str(feature_state.uuid)
+
+
+@pytest.mark.parametrize(
+    "client", [(lazy_fixture("master_api_key_client")), (lazy_fixture("admin_client"))]
+)
+def test_deleted_features_are_not_listed(client, project, environment, feature):
+    # Given
+    url = reverse("api-v1:projects:project-features-list", args=[project.id])
+    feature.delete()
+
+    # When
+    response = client.get(url)
+
+    # Then
+    assert response.status_code == status.HTTP_200_OK
+    assert response.json()["count"] == 0
