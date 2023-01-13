@@ -10,7 +10,10 @@ from environments.permissions.constants import (
 )
 
 if settings.SKIP_MIGRATION_TESTS is True:
-    pytest.skip("Skip migration tests to speed up tests where necessary", allow_module_level=True)
+    pytest.skip(
+        "Skip migration tests to speed up tests where necessary",
+        allow_module_level=True,
+    )
 
 
 def test_add_change_request_permissions_adds_correct_permissions_if_user_has_update_fs(
