@@ -57,4 +57,10 @@ class ProjectAdmin(admin.ModelAdmin):
     list_filter = ("created_date", "enable_dynamo_db")
     list_select_related = ("organisation",)
     search_fields = ("organisation__name",)
-    fields = ("name", "organisation", "hide_disabled_flags", "enable_dynamo_db")
+    fields = (
+        "name",
+        "organisation",
+        "hide_disabled_flags",
+        "enable_dynamo_db",
+        "enable_realtime_updates",
+    )
