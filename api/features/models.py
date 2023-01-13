@@ -8,6 +8,7 @@ from copy import deepcopy
 
 from core.models import (
     AbstractBaseExportableModel,
+    UUIDNaturalKeyManagerMixin,
     abstract_base_auditable_model_factory,
 )
 from django.core.exceptions import (
@@ -27,7 +28,7 @@ from django_lifecycle import (
 )
 from ordered_model.models import OrderedModelBase
 from simple_history.models import HistoricalRecords
-from softdelete.models import SoftDeleteObject
+from softdelete.models import SoftDeleteManager, SoftDeleteObject
 
 from audit.constants import (
     FEATURE_CREATED_MESSAGE,
@@ -181,7 +182,6 @@ class FeatureSegment(
     AbstractBaseExportableModel,
     abstract_base_auditable_model_factory(["uuid"]),
     OrderedModelBase,
-    SoftDeleteObject,
 ):
     history_record_class_path = "features.models.HistoricalFeatureSegment"
     related_object_type = RelatedObjectType.FEATURE
@@ -294,6 +294,10 @@ class FeatureSegment(
         return self.feature.project
 
 
+class FeatureStateManager(UUIDNaturalKeyManagerMixin, SoftDeleteManager):
+    pass
+
+
 class FeatureState(
     LifecycleModelMixin,
     AbstractBaseExportableModel,
@@ -343,6 +347,8 @@ class FeatureState(
         null=True,
         related_name="feature_states",
     )
+
+    objects = FeatureStateManager()
 
     class Meta:
         ordering = ["id"]

@@ -249,20 +249,14 @@ class ProjectFeatureTestCase(TestCase):
         # Then
         assert (
             AuditLog.objects.filter(
-                related_object_type=RelatedObjectType.FEATURE_STATE.name
+                log=IDENTITY_FEATURE_STATE_DELETED_MESSAGE
+                % (
+                    feature.name,
+                    identity.identifier,
+                )
             ).count()
             == 1
         )
-
-        # and
-        expected_log_message = IDENTITY_FEATURE_STATE_DELETED_MESSAGE % (
-            feature.name,
-            identity.identifier,
-        )
-        audit_log = AuditLog.objects.get(
-            related_object_type=RelatedObjectType.FEATURE_STATE.name
-        )
-        assert audit_log.log == expected_log_message
 
     def test_when_add_tags_from_different_project_on_feature_create_then_failed(self):
         # Given - set up data
