@@ -331,7 +331,7 @@ const OrganisationSettingsPage = class extends Component {
                                 const { max_seats } = subscriptionMeta || organisation.subscription || { max_seats: 1 };
                                 const autoSeats = Utils.getPlansPermission("AUTO_SEATS")
                                 const usedSeats = organisation.num_seats >= max_seats;
-                                const overSeats = organisation.num_seats > max_seats;
+                                const overSeats = paymentsEnabled && organisation.num_seats > max_seats;
                                 const needsUpgradeForAdditionalSeats = overSeats || (!autoSeats && usedSeats);
                                 return (
                                     <div>
