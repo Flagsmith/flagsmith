@@ -66,6 +66,7 @@ INFLUXDB_ORG = env.str("INFLUXDB_ORG", default="")
 
 ALLOWED_HOSTS = env.list("DJANGO_ALLOWED_HOSTS", default=[])
 USE_X_FORWARDED_HOST = env.bool("USE_X_FORWARDED_HOST", default=False)
+USE_CUSTOM_ANALYTICS = env.bool("USE_CUSTOM_ANALYTICS", default=False)
 
 CSRF_TRUSTED_ORIGINS = env.list("DJANGO_CSRF_TRUSTED_ORIGINS", default=[])
 
@@ -158,7 +159,7 @@ INSTALLED_APPS = [
     "metadata",
 ]
 
-if GOOGLE_ANALYTICS_KEY or INFLUXDB_TOKEN:
+if GOOGLE_ANALYTICS_KEY or INFLUXDB_TOKEN or USE_CUSTOM_ANALYTICS:
     INSTALLED_APPS.append("app_analytics")
 
 SITE_ID = 1
@@ -166,6 +167,8 @@ SITE_ID = 1
 db_conn_max_age = env.int("DJANGO_DB_CONN_MAX_AGE", 60)
 DJANGO_DB_CONN_MAX_AGE = None if db_conn_max_age == -1 else db_conn_max_age
 
+DATABASE_ROUTERS = ["app.routers.PrimaryReplicaRouter"]
+NUM_DB_REPLICAS = 0
 # Allows collectstatic to run without a database, mainly for Docker builds to collectstatic at build time
 if "DATABASE_URL" in os.environ:
     DATABASES = {
@@ -182,7 +185,12 @@ if "DATABASE_URL" in os.environ:
         DATABASES[f"replica_{i}"] = dj_database_url.parse(
             db_url, conn_max_age=DJANGO_DB_CONN_MAX_AGE
         )
-    DATABASE_ROUTERS = ("app.routers.PrimaryReplicaRouter",)
+
+    if "ANALYTICS_DATABASE_URL" in os.environ:
+        DATABASES["analytics"] = dj_database_url.parse(
+            env("ANALYTICS_DATABASE_URL"), conn_max_age=DJANGO_DB_CONN_MAX_AGE
+        )
+        DATABASE_ROUTERS.insert(0, "app.routers.AnalyticsRouter")
 elif "DJANGO_DB_NAME" in os.environ:
     # If there is no DATABASE_URL configured, check for old style DB config parameters
     DATABASES = {
@@ -196,6 +204,18 @@ elif "DJANGO_DB_NAME" in os.environ:
             "CONN_MAX_AGE": DJANGO_DB_CONN_MAX_AGE,
         },
     }
+    if "DJANGO_DB_NAME_ANALYTICS" in os.environ:
+        DATABASES["analytics"] = {
+            "ENGINE": "django.db.backends.postgresql",
+            "NAME": os.environ["DJANGO_DB_NAME_ANALYTICS"],
+            "USER": os.environ["DJANGO_DB_USER_ANALYTICS"],
+            "PASSWORD": os.environ["DJANGO_DB_PASSWORD_ANALYTICS"],
+            "HOST": os.environ["DJANGO_DB_HOST_ANALYTICS"],
+            "PORT": os.environ["DJANGO_DB_PORT_ANALYTICS"],
+            "CONN_MAX_AGE": DJANGO_DB_CONN_MAX_AGE,
+        }
+
+        DATABASE_ROUTERS.insert(0, "app.routers.AnalyticsRouter")
 
 LOGIN_THROTTLE_RATE = env("LOGIN_THROTTLE_RATE", "20/min")
 SIGNUP_THROTTLE_RATE = env("SIGNUP_THROTTLE_RATE", "10000/min")
@@ -262,6 +282,8 @@ if GOOGLE_ANALYTICS_KEY:
 
 if INFLUXDB_TOKEN:
     MIDDLEWARE.append("app_analytics.middleware.InfluxDBMiddleware")
+if USE_CUSTOM_ANALYTICS:
+    MIDDLEWARE.append("app_analytics.middleware.APIUsageMiddleware")
 
 ALLOWED_ADMIN_IP_ADDRESSES = env.list("ALLOWED_ADMIN_IP_ADDRESSES", default=list())
 if len(ALLOWED_ADMIN_IP_ADDRESSES) > 0:
