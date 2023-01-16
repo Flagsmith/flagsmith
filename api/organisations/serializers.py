@@ -220,6 +220,11 @@ class InfluxDataSerializer(serializers.Serializer):
     events_list = serializers.ListSerializer(child=serializers.DictField())
 
 
+class InfluxDataQuerySerializer(serializers.Serializer):
+    project_id = serializers.IntegerField(required=False)
+    environment_id = serializers.IntegerField(required=False)
+
+
 class GetHostedPageForSubscriptionUpgradeSerializer(serializers.Serializer):
     plan_id = serializers.CharField(write_only=True)
     subscription_id = serializers.CharField(write_only=True)
