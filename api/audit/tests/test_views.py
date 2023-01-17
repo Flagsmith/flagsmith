@@ -87,3 +87,20 @@ def test_audit_log_can_be_filtered_by_is_system_event(
     assert response.json()["count"] == 1
     assert response.status_code == status.HTTP_200_OK
     assert response.json()["results"][0]["is_system_event"] is True
+
+
+def test_audit_log_filter_by_project_returns_environment_events(
+    admin_client, project, environment
+):
+    # Given
+    audit_log = AuditLog.objects.create(environment=environment)
+
+    url = reverse("api-v1:audit-list")
+
+    # When
+    response = admin_client.get(url, {"project": project.id})
+
+    # Then
+    assert response.status_code == status.HTTP_200_OK
+    assert response.json()["count"] == 1
+    assert response.json()["results"][0]["id"] == audit_log.id
