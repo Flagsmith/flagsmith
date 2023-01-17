@@ -35,32 +35,37 @@ class APIUsageBucket(models.Model):
 
 
 # TODO: move to tasks
-def populate_bucket(bucket_size: int):
-    now = timezone.now()
-    process_from = now - timezone.timedelta(minutes=bucket_size + 1)
-    data = (
-        APIUsageRaw.objects.filter(created_at__gt=process_from)
-        .values("environment_id", "resource")
-        .annotate(count=models.Count("id"))
-    )
-    for row in data:
-        APIUsageBucket.objects.create(
-            environment_id=row["environment_id"],
-            resource=row["resource"],
-            total_count=row["count"],
-            bucket_size=bucket_size,
-            created_at=now,
+def populate_bucket(bucket_size: int = 30, process_last: int = 60 * 6):
+    assert process_last % bucket_size == 0
+
+    current_minute = timezone.now().replace(second=0, microsecond=0)
+    process_till = current_minute
+
+    for i in range(1, (process_last // bucket_size) + 1):
+        process_from = current_minute - timezone.timedelta(minutes=i * bucket_size)
+
+        data = (
+            APIUsageRaw.objects.filter(
+                created_at__lt=process_till,
+                created_at__gt=process_from,
+            )
+            .values("environment_id", "resource")
+            .annotate(count=models.Count("id"))
         )
+        for row in data:
+            APIUsageBucket.objects.create(
+                environment_id=row["environment_id"],
+                resource=row["resource"],
+                total_count=row["count"],
+                bucket_size=bucket_size,
+                created_at=process_from,
+            )
+        process_till = process_from
 
 
-class APIUsageByDay(models.Model):
-    environment_id = models.PositiveIntegerField()
-    resource = models.IntegerField(choices=Resource.choices)
-    total_count = models.PositiveIntegerField()
-    date = models.DateField()
-
+class APIUsageByDay(APIUsageBucket):
     class Meta:
-        unique_together = (("environment_id", "resource", "date"),)
+        proxy = True
 
 
 class FeatureEvaluation(models.Model):
