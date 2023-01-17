@@ -2,13 +2,16 @@
 from __future__ import unicode_literals
 
 import logging
-from datetime import datetime
+from datetime import date, datetime, timedelta
 
 from app_analytics.influxdb_wrapper import (
     get_events_for_organisation,
     get_multiple_event_list_for_organisation,
 )
+from app_analytics.models import APIUsageByDay
+from django.conf import settings
 from django.contrib.sites.shortcuts import get_current_site
+from django.db.models import Sum
 from drf_yasg2.utils import swagger_auto_schema
 from rest_framework import status, viewsets
 from rest_framework.authentication import BasicAuthentication
@@ -138,6 +141,14 @@ class OrganisationViewSet(viewsets.ModelViewSet):
     @action(detail=True, methods=["GET"])
     def usage(self, request, pk):
         organisation = self.get_object()
+        if settings.USE_CUSTOM_ANALYTICS:
+            events = APIUsageByDay.objects.filter(
+                environment_id__in=organisation.project.all().values_list(
+                    "environment_id", flat=True
+                ),
+                date__lte=date.today(),
+                date__gte=date.today() - timedelta(days=30),
+            ).aggregate(total_count=Sum("total_count"))["total_count"]
 
         try:
             events = get_events_for_organisation(organisation.id)
@@ -220,6 +231,38 @@ class OrganisationViewSet(viewsets.ModelViewSet):
                 )
             }
         )
+        serializer.is_valid(raise_exception=True)
+        return Response(serializer.data)
+
+    @action(detail=True, methods=["GET"], url_path="usage-data")
+    def get_usage_data(self, request, pk):
+        organisation = self.get_object()
+        qs = APIUsageByDay.objects.filter(
+            environment_id__in=organisation.project.all().values_list(
+                "environment_id", flat=True
+            ),
+            created_date=datetime.now() - datetime.timedelta(days=30),
+        )
+        if "environment_id" in request.query_params.get("environment"):
+            qs.filter(environment_id=request.query_params.get("environment"))
+        if "project_id" in request.query_params.get("project"):
+            qs.filter(project_id=request.query_params.get("project"))
+        # qs.values("resource", "created_date").annotate(count=Count("*"))
+
+        events_list = []
+        # TODO: implement this
+        # for event in qs:
+        #     events_list.append(
+        #         {
+        #             "Flags": event.resource,
+        #             "name": event.created_date,
+        #             "Identities": event.count,
+        #             "Traits": event.count,
+        #             "Environment-Document": event.count,
+        #         }
+        #     )
+
+        serializer = self.get_serializer(data={"events_list": events_list})
         serializer.is_valid(raise_exception=True)
         return Response(serializer.data)
 

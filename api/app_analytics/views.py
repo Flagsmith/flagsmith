@@ -1,5 +1,6 @@
 import logging
 
+from app_analytics.tasks import track_feature_evaluation
 from app_analytics.track import track_feature_evaluation_influxdb
 from django.conf import settings
 from rest_framework import status
@@ -34,6 +35,8 @@ class SDKAnalyticsFlags(GenericAPIView):
                 content_type="application/json",
                 status=status.HTTP_200_OK,
             )
+        if settings.USE_CUSTOM_ANALYTICS:
+            track_feature_evaluation.delay(args=(request.environment.id, request.data))
 
         if settings.INFLUXDB_TOKEN:
             track_feature_evaluation_influxdb(request.environment.id, request.data)
