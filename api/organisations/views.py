@@ -8,7 +8,7 @@ from app_analytics.influxdb_wrapper import (
     get_events_for_organisation,
     get_multiple_event_list_for_organisation,
 )
-from app_analytics.models import APIUsageByDay
+from app_analytics.models import APIUsageByDay, Resource
 from django.conf import settings
 from django.contrib.sites.shortcuts import get_current_site
 from django.db.models import Sum
@@ -237,32 +237,40 @@ class OrganisationViewSet(viewsets.ModelViewSet):
     @action(detail=True, methods=["GET"], url_path="usage-data")
     def get_usage_data(self, request, pk):
         organisation = self.get_object()
+        filters = InfluxDataQuerySerializer(data=request.query_params)
+        filters.is_valid(raise_exception=True)
+
         qs = APIUsageByDay.objects.filter(
             environment_id__in=organisation.project.all().values_list(
                 "environment_id", flat=True
             ),
             created_date=datetime.now() - datetime.timedelta(days=30),
         )
-        if "environment_id" in request.query_params.get("environment"):
-            qs.filter(environment_id=request.query_params.get("environment"))
-        if "project_id" in request.query_params.get("project"):
-            qs.filter(project_id=request.query_params.get("project"))
-        # qs.values("resource", "created_date").annotate(count=Count("*"))
+        qs = qs.filter(**filters.data).values("resource", "date", "total_count")
+
+        def get_count_from_qs(qs, date, resource) -> int:
+            return next(
+                filter(
+                    lambda obj: obj["date"] == date and obj["resource"] == resource, qs
+                ),
+                {},
+            ).get_total_count(0)
 
         events_list = []
-        # TODO: implement this
-        # for event in qs:
-        #     events_list.append(
-        #         {
-        #             "Flags": event.resource,
-        #             "name": event.created_date,
-        #             "Identities": event.count,
-        #             "Traits": event.count,
-        #             "Environment-Document": event.count,
-        #         }
-        #     )
-
-        serializer = self.get_serializer(data={"events_list": events_list})
+        dates = set(obj["date"] for obj in qs)
+        for day in dates:
+            events_list.append(
+                {
+                    "Flags": get_count_from_qs(qs, date, Resource.FLAGS),
+                    "name": day,
+                    "Identities": get_count_from_qs(qs, date, Resource.IDENTITIES),
+                    "Traits": get_count_from_qs(qs, date, Resource.TRAITS),
+                    "Environment-Document": get_count_from_qs(
+                        qs, date, Resource.ENVIRONMENT_DOCUMENT
+                    ),
+                }
+            )
+        serializer = InfluxDataSerializer(data={"events_list": events_list})
         serializer.is_valid(raise_exception=True)
         return Response(serializer.data)
 
