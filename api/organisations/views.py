@@ -2,16 +2,13 @@
 from __future__ import unicode_literals
 
 import logging
-from datetime import date, datetime, timedelta
+from datetime import datetime
 
-from app_analytics.influxdb_wrapper import (
-    get_events_for_organisation,
-    get_multiple_event_list_for_organisation,
+from app_analytics.analytics_db_service import (
+    get_total_events_count,
+    get_usage_data,
 )
-from app_analytics.models import APIUsageByDay, Resource
-from django.conf import settings
 from django.contrib.sites.shortcuts import get_current_site
-from django.db.models import Sum
 from drf_yasg2.utils import swagger_auto_schema
 from rest_framework import status, viewsets
 from rest_framework.authentication import BasicAuthentication
@@ -141,25 +138,7 @@ class OrganisationViewSet(viewsets.ModelViewSet):
     @action(detail=True, methods=["GET"])
     def usage(self, request, pk):
         organisation = self.get_object()
-        if settings.USE_CUSTOM_ANALYTICS:
-            events = APIUsageByDay.objects.filter(
-                environment_id__in=organisation.project.all().values_list(
-                    "environment_id", flat=True
-                ),
-                date__lte=date.today(),
-                date__gte=date.today() - timedelta(days=30),
-            ).aggregate(total_count=Sum("total_count"))["total_count"]
-
-        try:
-            events = get_events_for_organisation(organisation.id)
-        except (TypeError, ValueError):
-            # TypeError can be thrown when getting service account if not configured
-            # ValueError can be thrown if GA returns a value that cannot be converted to integer
-            return Response(
-                {"error": "Couldn't get number of events for organisation."},
-                status=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            )
-
+        events = get_total_events_count(organisation)
         return Response({"events": events}, status=status.HTTP_200_OK)
 
     @action(detail=True, methods=["POST"], url_path="update-subscription")
@@ -223,54 +202,10 @@ class OrganisationViewSet(viewsets.ModelViewSet):
     def get_influx_data(self, request, pk):
         filters = InfluxDataQuerySerializer(data=request.query_params)
         filters.is_valid(raise_exception=True)
-
-        serializer = self.get_serializer(
-            data={
-                "events_list": get_multiple_event_list_for_organisation(
-                    pk, **filters.data
-                )
-            }
-        )
-        serializer.is_valid(raise_exception=True)
-        return Response(serializer.data)
-
-    @action(detail=True, methods=["GET"], url_path="usage-data")
-    def get_usage_data(self, request, pk):
         organisation = self.get_object()
-        filters = InfluxDataQuerySerializer(data=request.query_params)
-        filters.is_valid(raise_exception=True)
+        events_list = get_usage_data(organisation, filters.data)
 
-        qs = APIUsageByDay.objects.filter(
-            environment_id__in=organisation.project.all().values_list(
-                "environment_id", flat=True
-            ),
-            created_date=datetime.now() - datetime.timedelta(days=30),
-        )
-        qs = qs.filter(**filters.data).values("resource", "date", "total_count")
-
-        def get_count_from_qs(qs, date, resource) -> int:
-            return next(
-                filter(
-                    lambda obj: obj["date"] == date and obj["resource"] == resource, qs
-                ),
-                {},
-            ).get_total_count(0)
-
-        events_list = []
-        dates = set(obj["date"] for obj in qs)
-        for day in dates:
-            events_list.append(
-                {
-                    "Flags": get_count_from_qs(qs, date, Resource.FLAGS),
-                    "name": day,
-                    "Identities": get_count_from_qs(qs, date, Resource.IDENTITIES),
-                    "Traits": get_count_from_qs(qs, date, Resource.TRAITS),
-                    "Environment-Document": get_count_from_qs(
-                        qs, date, Resource.ENVIRONMENT_DOCUMENT
-                    ),
-                }
-            )
-        serializer = InfluxDataSerializer(data={"events_list": events_list})
+        serializer = self.get_serializer(data={"events_list": events_list})
         serializer.is_valid(raise_exception=True)
         return Response(serializer.data)
 
