@@ -1,6 +1,7 @@
 from datetime import date
 
 from django.db import models
+from django.utils import timezone
 
 
 class Resource(models.IntegerChoices):
@@ -23,6 +24,33 @@ class APIUsageRaw(models.Model):
 class APIUsageAggBucketWindow(models.IntegerChoices):
     HOUR = 1
     DAY = 2
+
+
+class APIUsageBucket(models.Model):
+    environment_id = models.PositiveIntegerField()
+    resource = models.IntegerField(choices=Resource.choices)
+    total_count = models.PositiveIntegerField()
+    created_at = models.DateTimeField(auto_now_add=True)
+    bucket_size = models.PositiveIntegerField(help_text="Bucket size in minutes")
+
+
+# TODO: move to tasks
+def populate_bucket(bucket_size: int):
+    now = timezone.now()
+    process_from = now - timezone.timedelta(minutes=bucket_size + 1)
+    data = (
+        APIUsageRaw.objects.filter(created_at__gt=process_from)
+        .values("environment_id", "resource")
+        .annotate(count=models.Count("id"))
+    )
+    for row in data:
+        APIUsageBucket.objects.create(
+            environment_id=row["environment_id"],
+            resource=row["resource"],
+            total_count=row["count"],
+            bucket_size=bucket_size,
+            created_at=now,
+        )
 
 
 class APIUsageByDay(models.Model):
