@@ -93,7 +93,12 @@ def test_audit_log_filter_by_project_returns_environment_events(
     admin_client, project, environment
 ):
     # Given
-    audit_log = AuditLog.objects.create(environment=environment)
+    audit_log = AuditLog(environment=environment)
+
+    # Note: we skip the hooks to ensure that project isn't set by hook
+    # (to test logic for old data that we don't want to have to migrate)
+    audit_log.save(skip_hooks=True)
+    assert audit_log.project is None
 
     url = reverse("api-v1:audit-list")
 
