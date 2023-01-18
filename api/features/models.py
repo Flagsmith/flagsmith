@@ -27,8 +27,9 @@ from django_lifecycle import (
     hook,
 )
 from ordered_model.models import OrderedModelBase
+from safedelete.managers import SafeDeleteManager
+from safedelete.models import SafeDeleteModel
 from simple_history.models import HistoricalRecords
-from softdelete.models import SoftDeleteManager, SoftDeleteObject
 
 from audit.constants import (
     FEATURE_CREATED_MESSAGE,
@@ -75,12 +76,12 @@ if typing.TYPE_CHECKING:
     from environments.models import Environment
 
 
-class FeatureManager(UUIDNaturalKeyManagerMixin, SoftDeleteManager):
+class FeatureManager(UUIDNaturalKeyManagerMixin, SafeDeleteManager):
     pass
 
 
 class Feature(
-    SoftDeleteObject,
+    SafeDeleteModel,
     CustomLifecycleModelMixin,
     AbstractBaseExportableModel,
     abstract_base_auditable_model_factory(["uuid"]),
@@ -116,8 +117,8 @@ class Feature(
     objects = FeatureManager()
 
     class Meta:
-        # Note: uniqueness is changed to reference lowercase name in explicit SQL in the migrations
-        unique_together = ("name", "project")
+        # Note: uniqueness index is added in explicit SQL in the migrations (See 0005, 0050)
+        # TODO: after upgrade to Django 4.0 use UniqueConstraint()
         ordering = ("id",)  # explicit ordering to prevent pagination warnings
 
     @hook(AFTER_CREATE)
@@ -300,12 +301,12 @@ class FeatureSegment(
         return self.feature.project
 
 
-class FeatureStateManager(UUIDNaturalKeyManagerMixin, SoftDeleteManager):
+class FeatureStateManager(UUIDNaturalKeyManagerMixin, SafeDeleteManager):
     pass
 
 
 class FeatureState(
-    SoftDeleteObject,
+    SafeDeleteModel,
     LifecycleModelMixin,
     AbstractBaseExportableModel,
     abstract_base_auditable_model_factory(["uuid"]),
@@ -787,12 +788,12 @@ class FeatureState(
         return self.feature.project
 
 
-class FeatureStateValueManager(UUIDNaturalKeyManagerMixin, SoftDeleteManager):
+class FeatureStateValueManager(UUIDNaturalKeyManagerMixin, SafeDeleteManager):
     pass
 
 
 class FeatureStateValue(
-    AbstractBaseFeatureValueModel, AbstractBaseExportableModel, SoftDeleteObject
+    AbstractBaseFeatureValueModel, AbstractBaseExportableModel, SafeDeleteModel
 ):
     feature_state = models.OneToOneField(
         FeatureState, related_name="feature_state_value", on_delete=models.CASCADE

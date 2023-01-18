@@ -154,6 +154,7 @@ INSTALLED_APPS = [
     "import_export",
     "task_processor",
     "softdelete",
+    "safedelete",
 ]
 
 if GOOGLE_ANALYTICS_KEY or INFLUXDB_TOKEN:
@@ -822,3 +823,5 @@ AUTO_SEAT_UPGRADE_PLANS = env.list("AUTO_SEAT_UPGRADE_PLANS", default=[])
 
 
 SKIP_MIGRATION_TESTS = env.bool("SKIP_MIGRATION_TESTS", False)
+
+SAFE_DELETE_FIELD_NAME = "deleted_at"
