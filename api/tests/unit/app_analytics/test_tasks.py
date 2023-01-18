@@ -8,46 +8,27 @@ from django.utils import timezone
 
 @pytest.mark.django_db(databases=["analytics"])
 def test_populate_bucket_15m_bucket():
-    pass
     # Given
-    # environment_id = 1
-    # # start now at -1 minutes for now events to be included
-    # # in the first 15m buckets
-    # now = timezone.now() - timezone.timedelta(minutes=1)
-    # past_15m = now - timezone.timedelta(minutes=15)
-    # past_30m = past_15m - timezone.timedelta(minutes=15)
-    # past_45m = past_30m - timezone.timedelta(minutes=15)
-    # past_60m = past_45m - timezone.timedelta(minutes=15)
+    environment_id = 1
+    bucket_size = 15
+    now = timezone.now()
 
-    # # Two events in the first 15 minutes
-    # now_events = create_events(environment_id, 2, now)
+    for _ in range(5):
+        create_events(environment_id, 2, now)
+        now = now - timezone.timedelta(minutes=15)
 
-    # # Two events in the past 15 minutes
-    # past_15m_events = create_events(environment_id, 2, past_15m)
+    # When
+    populate_bucket(bucket_size, process_last=50)
 
-    # # Two events in the past 30 minutes
-    # past_30m_events = create_events(environment_id, 2, past_30m)
+    # Then
+    assert APIUsageBucket.objects.filter(bucket_size=15).count() == 3
 
-    # # Two events in the past 45 minutes
-    # past_45m_events = create_events(environment_id, 2, past_30m)
+    # all three buckets are 15 minutes apart
+    buckets = APIUsageBucket.objects.all().order_by("created_at")
 
-    # # Two events in the past 60 minutes
-    # past_60m_events = create_events(environment_id, 2, past_30m)
-
-    # # When
-    # populate_bucket(bucket_size=15, process_last=50)
-
-    # # Then
-    # assert APIUsageBucket.objects.count() == 3
-
-    # There should be 3 buckets
-    # first_bucket_created_at = timezone.now().replace(second=0, microsecond=0)
-    # first_buckets = APIUsageBucket.objects.get(
-    #     created_at=timezone.now().replace(second=0, microsecond=0)
-    # )
-    # for bucket in APIUsageBucket.objects.all():
-    #     print("bucket -------->", bucket.created_at.isoformat())
-    #     print("bucket -------->", bucket.total_count)
+    buckets[0].created_at == buckets[1].created_at + timezone.timedelta(
+        minutes=15
+    ) == buckets[0].created_at + timezone.timedelta(minutes=30)
 
 
 def create_events(environment_id: str, how_many: int, when: datetime):
@@ -70,11 +51,11 @@ def create_events(environment_id: str, how_many: int, when: datetime):
 def test_populate_bucket_using_a_bucket():
     # Given
     environment_id = 1
+
     # let's create 3 5m buckets
     now = timezone.now().replace(second=0, microsecond=0)
-    buckets = []
-    for i in range(3):
-        bucket = APIUsageBucket.objects.create(
+    for _ in range(3):
+        APIUsageBucket.objects.create(
             environment_id=environment_id,
             resource=Resource.FLAGS,
             total_count=100,
@@ -82,7 +63,6 @@ def test_populate_bucket_using_a_bucket():
             bucket_size=5,
         )
         now = now - timezone.timedelta(minutes=5)
-        buckets.append(bucket)
 
     # When
     populate_bucket(bucket_size=15, process_last=50, source_bucket_size=5)
