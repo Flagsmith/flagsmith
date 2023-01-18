@@ -70,11 +70,6 @@ def populate_bucket(
 
     for i in range(1, (process_last // bucket_size) + 1):
         process_from = current_minute - timezone.timedelta(minutes=i * bucket_size)
-        print("Processing from", process_from, "till", process_till)
-        print("doing some magic")
-        print("doing some magic")
-        print("doing some magic")
-        print("doing some magic")
 
         data = get_source_data(process_from, process_till, source_bucket)
         for row in data:
