@@ -1,7 +1,12 @@
+from datetime import datetime
+
+from django.db.models import Count, Q, Sum
+from django.utils import timezone
+
 from environments.models import Environment
 from task_processor.decorators import register_task_handler
 
-from .models import APIUsageRaw, FeatureEvaluation, Resource
+from .models import APIUsageBucket, APIUsageRaw, FeatureEvaluation, Resource
 
 
 @register_task_handler()
@@ -31,3 +36,54 @@ def track_request(resource: str, host: str, environment_key: str):
         resource=get_resource_enum(resource),
         host=host,
     )
+
+
+def get_source_data(
+    process_from: datetime, process_till: datetime, source_bucket: str = None
+):
+    filters = Q(
+        created_at__lte=process_till,
+        created_at__gte=process_from,
+    )
+    if source_bucket:
+        return (
+            APIUsageBucket.objects.filter(filters, bucket_size=source_bucket)
+            .values("environment_id", "resource")
+            .annotate(count=Sum("total_count"))
+        )
+    return (
+        APIUsageRaw.objects.filter(filters)
+        .values("environment_id", "resource")
+        .annotate(count=Count("id"))
+    )
+
+
+@register_task_handler()
+def populate_bucket(
+    bucket_size: int = 30, process_last: int = 60 * 5, source_bucket: str = None
+):
+    current_minute = timezone.now().replace(second=0, microsecond=0)
+    if bucket_size >= 60:
+        current_minute = current_minute.replace(minute=0)
+
+    process_till = current_minute
+
+    for i in range(1, (process_last // bucket_size) + 1):
+        process_from = current_minute - timezone.timedelta(minutes=i * bucket_size)
+        print("Processing from", process_from, "till", process_till)
+        print("doing some magic")
+        print("doing some magic")
+        print("doing some magic")
+        print("doing some magic")
+
+        data = get_source_data(process_from, process_till, source_bucket)
+        for row in data:
+            APIUsageBucket.objects.create(
+                environment_id=row["environment_id"],
+                resource=row["resource"],
+                total_count=row["count"],
+                bucket_size=bucket_size,
+                created_at=process_from,
+            )
+
+        process_till = process_from
