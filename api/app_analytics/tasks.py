@@ -39,15 +39,15 @@ def track_request(resource: str, host: str, environment_key: str):
 
 
 def get_source_data(
-    process_from: datetime, process_till: datetime, source_bucket: str = None
+    process_from: datetime, process_till: datetime, source_bucket_size: int = None
 ):
     filters = Q(
         created_at__lte=process_till,
         created_at__gte=process_from,
     )
-    if source_bucket:
+    if source_bucket_size:
         return (
-            APIUsageBucket.objects.filter(filters, bucket_size=source_bucket)
+            APIUsageBucket.objects.filter(filters, bucket_size=source_bucket_size)
             .values("environment_id", "resource")
             .annotate(count=Sum("total_count"))
         )
@@ -60,18 +60,17 @@ def get_source_data(
 
 @register_task_handler()
 def populate_bucket(
-    bucket_size: int = 30, process_last: int = 60 * 5, source_bucket: str = None
+    bucket_size: int = 30, process_last: int = 60 * 5, source_bucket_size: int = None
 ):
-    current_minute = timezone.now().replace(second=0, microsecond=0)
+    current_time = timezone.now().replace(second=0, microsecond=0)
     if bucket_size >= 60:
-        current_minute = current_minute.replace(minute=0)
+        current_time = current_time.replace(minute=0)
 
-    process_till = current_minute
+    process_till = current_time
 
     for i in range(1, (process_last // bucket_size) + 1):
-        process_from = current_minute - timezone.timedelta(minutes=i * bucket_size)
-
-        data = get_source_data(process_from, process_till, source_bucket)
+        process_from = current_time - timezone.timedelta(minutes=i * bucket_size)
+        data = get_source_data(process_from, process_till, source_bucket_size)
         for row in data:
             APIUsageBucket.objects.create(
                 environment_id=row["environment_id"],
