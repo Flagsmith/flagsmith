@@ -25,10 +25,11 @@ def test_populate_bucket_15m_bucket():
 
     # all three buckets are 15 minutes apart
     buckets = APIUsageBucket.objects.all().order_by("created_at")
-
-    buckets[0].created_at == buckets[1].created_at + timezone.timedelta(
-        minutes=15
-    ) == buckets[0].created_at + timezone.timedelta(minutes=30)
+    assert (
+        buckets[0].created_at + timezone.timedelta(minutes=30)
+        == buckets[1].created_at + timezone.timedelta(minutes=15)
+        == buckets[2].created_at
+    )
 
 
 def create_events(environment_id: str, how_many: int, when: datetime):
