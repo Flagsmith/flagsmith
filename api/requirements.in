@@ -50,4 +50,3 @@ djangorestframework-api-key
 backoff
 pymemcache
 django-softdelete
-django-safedelete
