@@ -4,6 +4,9 @@ from django.db import migrations
 
 from core.migration_helpers import PostgresOnlyRunSQL
 
+# Migration to remove index created by unique_together statement and, for Postgres databases,
+# update the current functional index (on lower case feature name and project) to add a condition
+# to only apply the index for non deleted features.
 
 _drop_index_sql = 'DROP INDEX CONCURRENTLY "lowercase_feature_name";'
 _create_index_sql_without_filter = 'CREATE UNIQUE INDEX CONCURRENTLY "lowercase_feature_name" ON "features_feature" (lower(name), project_id);'
