@@ -8,7 +8,6 @@ from copy import deepcopy
 
 from core.models import (
     AbstractBaseExportableModel,
-    UUIDNaturalKeyManagerMixin,
     abstract_base_auditable_model_factory,
 )
 from django.core.exceptions import (
@@ -28,7 +27,7 @@ from django_lifecycle import (
 )
 from ordered_model.models import OrderedModelBase
 from simple_history.models import HistoricalRecords
-from softdelete.models import SoftDeleteManager, SoftDeleteObject
+from softdelete.models import SoftDeleteObject
 
 from audit.constants import (
     FEATURE_CREATED_MESSAGE,
@@ -50,7 +49,12 @@ from features.custom_lifecycle import CustomLifecycleModelMixin
 from features.feature_states.models import AbstractBaseFeatureValueModel
 from features.feature_types import MULTIVARIATE, STANDARD
 from features.helpers import get_correctly_typed_value
-from features.managers import FeatureSegmentManager
+from features.managers import (
+    FeatureManager,
+    FeatureSegmentManager,
+    FeatureStateManager,
+    FeatureStateValueManager,
+)
 from features.multivariate.models import MultivariateFeatureStateValue
 from features.utils import (
     get_boolean_from_string,
@@ -73,10 +77,6 @@ logger = logging.getLogger(__name__)
 if typing.TYPE_CHECKING:
     from environments.identities.models import Identity
     from environments.models import Environment
-
-
-class FeatureManager(UUIDNaturalKeyManagerMixin, SoftDeleteManager):
-    pass
 
 
 class Feature(
@@ -298,10 +298,6 @@ class FeatureSegment(
 
     def _get_project(self) -> typing.Optional["Project"]:
         return self.feature.project
-
-
-class FeatureStateManager(UUIDNaturalKeyManagerMixin, SoftDeleteManager):
-    pass
 
 
 class FeatureState(
@@ -785,10 +781,6 @@ class FeatureState(
 
     def _get_project(self) -> typing.Optional["Project"]:
         return self.feature.project
-
-
-class FeatureStateValueManager(UUIDNaturalKeyManagerMixin, SoftDeleteManager):
-    pass
 
 
 class FeatureStateValue(
