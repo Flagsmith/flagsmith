@@ -27,9 +27,8 @@ from django_lifecycle import (
     hook,
 )
 from ordered_model.models import OrderedModelBase
-from safedelete.managers import SafeDeleteManager
-from safedelete.models import SafeDeleteModel
 from simple_history.models import HistoricalRecords
+from softdelete.models import SoftDeleteManager, SoftDeleteObject
 
 from audit.constants import (
     FEATURE_CREATED_MESSAGE,
@@ -76,12 +75,12 @@ if typing.TYPE_CHECKING:
     from environments.models import Environment
 
 
-class FeatureManager(UUIDNaturalKeyManagerMixin, SafeDeleteManager):
+class FeatureManager(UUIDNaturalKeyManagerMixin, SoftDeleteManager):
     pass
 
 
 class Feature(
-    SafeDeleteModel,
+    SoftDeleteObject,
     CustomLifecycleModelMixin,
     AbstractBaseExportableModel,
     abstract_base_auditable_model_factory(["uuid"]),
@@ -301,12 +300,12 @@ class FeatureSegment(
         return self.feature.project
 
 
-class FeatureStateManager(UUIDNaturalKeyManagerMixin, SafeDeleteManager):
+class FeatureStateManager(UUIDNaturalKeyManagerMixin, SoftDeleteManager):
     pass
 
 
 class FeatureState(
-    SafeDeleteModel,
+    SoftDeleteObject,
     LifecycleModelMixin,
     AbstractBaseExportableModel,
     abstract_base_auditable_model_factory(["uuid"]),
@@ -788,12 +787,12 @@ class FeatureState(
         return self.feature.project
 
 
-class FeatureStateValueManager(UUIDNaturalKeyManagerMixin, SafeDeleteManager):
+class FeatureStateValueManager(UUIDNaturalKeyManagerMixin, SoftDeleteManager):
     pass
 
 
 class FeatureStateValue(
-    AbstractBaseFeatureValueModel, AbstractBaseExportableModel, SafeDeleteModel
+    AbstractBaseFeatureValueModel, AbstractBaseExportableModel, SoftDeleteObject
 ):
     feature_state = models.OneToOneField(
         FeatureState, related_name="feature_state_value", on_delete=models.CASCADE

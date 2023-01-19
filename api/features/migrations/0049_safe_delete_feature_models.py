@@ -16,19 +16,9 @@ class Migration(migrations.Migration):
             field=models.DateTimeField(db_index=True, editable=False, null=True),
         ),
         migrations.AddField(
-            model_name='feature',
-            name='deleted_by_cascade',
-            field=models.BooleanField(default=False, editable=False),
-        ),
-        migrations.AddField(
             model_name='featurestate',
             name='deleted_at',
             field=models.DateTimeField(db_index=True, editable=False, null=True),
-        ),
-        migrations.AddField(
-            model_name='featurestate',
-            name='deleted_by_cascade',
-            field=models.BooleanField(default=False, editable=False),
         ),
         migrations.AddField(
             model_name='featurestatevalue',
@@ -36,19 +26,9 @@ class Migration(migrations.Migration):
             field=models.DateTimeField(db_index=True, editable=False, null=True),
         ),
         migrations.AddField(
-            model_name='featurestatevalue',
-            name='deleted_by_cascade',
-            field=models.BooleanField(default=False, editable=False),
-        ),
-        migrations.AddField(
             model_name='historicalfeature',
             name='deleted_at',
             field=models.DateTimeField(db_index=True, editable=False, null=True),
-        ),
-        migrations.AddField(
-            model_name='historicalfeature',
-            name='deleted_by_cascade',
-            field=models.BooleanField(default=False, editable=False),
         ),
         migrations.AddField(
             model_name='historicalfeaturestate',
@@ -56,18 +36,8 @@ class Migration(migrations.Migration):
             field=models.DateTimeField(db_index=True, editable=False, null=True),
         ),
         migrations.AddField(
-            model_name='historicalfeaturestate',
-            name='deleted_by_cascade',
-            field=models.BooleanField(default=False, editable=False),
-        ),
-        migrations.AddField(
             model_name='historicalfeaturestatevalue',
             name='deleted_at',
             field=models.DateTimeField(db_index=True, editable=False, null=True),
-        ),
-        migrations.AddField(
-            model_name='historicalfeaturestatevalue',
-            name='deleted_by_cascade',
-            field=models.BooleanField(default=False, editable=False),
         ),
     ]
