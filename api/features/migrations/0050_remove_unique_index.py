@@ -2,11 +2,12 @@
 
 from django.db import migrations
 
+from core.migration_helpers import PostgresOnlyRunSQL
 
-_drop_index_sql = 'DROP INDEX "lowercase_feature_name";'
 
-_forward_sql = f'{_drop_index_sql} CREATE UNIQUE INDEX "lowercase_feature_name" ON "features_feature" (lower(name), project_id) WHERE deleted_at IS NULL;'
-_reverse_sql = f'{_drop_index_sql} CREATE UNIQUE INDEX "lowercase_feature_name" ON "features_feature" (lower(name), project_id);'
+_drop_index_sql = 'DROP INDEX CONCURRENTLY "lowercase_feature_name";'
+_create_index_sql_without_filter = 'CREATE UNIQUE INDEX CONCURRENTLY "lowercase_feature_name" ON "features_feature" (lower(name), project_id);'
+_create_index_sql_with_filter = 'CREATE UNIQUE INDEX CONCURRENTLY "lowercase_feature_name" ON "features_feature" (lower(name), project_id) WHERE deleted_at IS NULL;'
 
 
 class Migration(migrations.Migration):
@@ -19,10 +20,6 @@ class Migration(migrations.Migration):
 
     operations = [
         migrations.AlterUniqueTogether(name="feature", unique_together=set()),
-        migrations.SeparateDatabaseAndState(
-            state_operations=[],
-            database_operations=[
-                migrations.RunSQL(_forward_sql, reverse_sql=_reverse_sql),
-            ],
-        ),
+        PostgresOnlyRunSQL(_drop_index_sql, reverse_sql=_create_index_sql_without_filter),
+        PostgresOnlyRunSQL(_create_index_sql_with_filter, reverse_sql=_drop_index_sql),
     ]
