@@ -263,11 +263,11 @@ const CreateSegment = class extends Component {
                     <Row className="mt-2 mb-2">
                         <Flex>
                             <label className="cols-sm-2 control-label">Include users when the following rules apply:</label>
-                            <span className="text-small text-muted">Note: Trait names are case sensitive</span>
+                            <span className="text-small text-muted">
+                                Trait names are case sensitive. Learn more about rule and trait value type conversions <a href="https://docs-git-improvement-segment-rule-value-typing-flagsmith.vercel.app/basic-features/managing-segments#rule-typing">here</a>.
+                            </span>
                         </Flex>
-                        <span>
-                            {this.state.showDescriptions? "Hide condition descriptions" : "Show condition descriptions"}
-                        </span>
+                        <span className="text-small">{this.state.showDescriptions? "Hide descriptions" : "Show descriptions"}</span>
                         <Switch checked={!!this.state.showDescriptions} onChange={()=>{this.setState({showDescriptions:!this.state.showDescriptions})}}/>
                     </Row>
                     {
@@ -320,14 +320,6 @@ const CreateSegment = class extends Component {
                             )}
                         </Row>
 
-                    </div>
-                )}
-
-                {!this  .props.condensed && (
-                    <div className="mt-4">
-                        <InfoMessage>
-                            Learn more about rule and trait value type conversions <a href="https://docs-git-improvement-segment-rule-value-typing-flagsmith.vercel.app/basic-features/managing-segments#rule-typing">here</a>.
-                        </InfoMessage>
                     </div>
                 )}
             </form>
