@@ -102,7 +102,6 @@ const OrgEnvironmentSelect: FC<OrgProjectSelectType> = ({
                             <ButtonOutline
                                 style={{ width: 80 }} className="btn-secondary ml-2 mr-4" onClick={() => {
                                 navigator.clipboard.writeText(projectId);
-                                toast('Copied');
                             }}
                             >Copy
                             </ButtonOutline>
@@ -123,7 +122,6 @@ const OrgEnvironmentSelect: FC<OrgProjectSelectType> = ({
                             <ButtonOutline
                                 style={{ width: 80 }} className="btn-secondary ml-2 mr-4" onClick={() => {
                                 navigator.clipboard.writeText(environmentId);
-                                toast('Copied');
                             }}
                             >Copy
                             </ButtonOutline>

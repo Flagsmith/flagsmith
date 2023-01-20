@@ -264,7 +264,7 @@ export default function Widget() {
     }
 
     return <div className="text-center pt-5">
-        <h3>Please enter the required Options to get started.</h3>
+        <h3>Please select the environment you wish to use.</h3>
         <div className="widget-container">
             <Provider store={getStore()}>
                 <OrgEnvironmentSelect
