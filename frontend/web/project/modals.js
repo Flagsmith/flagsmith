@@ -122,12 +122,13 @@ const Modal = class extends React.Component {
                       <div className="modal-content">
                           <div className="modal-header">
                               {this.header()}
-                              {isMobile && (
+                              {isMobile ? (
                               <button onClick={() => this.refs.modal.close()} className="modal-close-btn">
                                   <span className="icon ion-md-close"/>
                               </button>
+                              ): (
+                                  <span onClick={this.close} className="icon close ion-md-close"/>
                               )}
-                              <span onClick={this.close} className="icon close ion-md-close"/>
                           </div>
                           <div className="modal-body">{this.body()}</div>
                           <div className="modal-footer">{this.footer()}</div>

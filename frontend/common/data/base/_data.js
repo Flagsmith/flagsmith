@@ -26,7 +26,6 @@ module.exports = {
                     };
                     document.getElementById('e2e-error').innerText = JSON.stringify(error);
                 }
-                API.log(response.url, response.status, err);
             });
         return Promise.reject(response);
     },
@@ -102,7 +101,6 @@ module.exports = {
                 return {};
             })
             .then((response) => {
-                API.log(url, 200, response);
                 return response;
             });
     },

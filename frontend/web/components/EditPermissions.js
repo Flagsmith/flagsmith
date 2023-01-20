@@ -7,7 +7,7 @@ import AvailablePermissionsProvider from '../../common/providers/AvailablePermis
 import _data from '../../common/data/base/_data';
 import UserGroupList from './UserGroupList';
 import InfoMessage from './InfoMessage';
-// import propTypes from 'prop-types';
+import ConfigProvider from 'common/providers/ConfigProvider';
 
 class _EditPermissionsModal extends Component {
   static displayName = 'EditPermissionsModal';

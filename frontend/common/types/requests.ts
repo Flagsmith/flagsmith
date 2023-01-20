@@ -18,5 +18,12 @@ export type Req = {
     project: string
     environments?: string
   }>
+  getOrganisations: {}
+  getProjects: {
+    organisationId: string
+  }
+  getEnvironments: {
+    projectId: string
+  }
   // END OF TYPES
 }

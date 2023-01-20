@@ -23,6 +23,7 @@ import getBuildVersion from '../project/getBuildVersion'
 import { Provider } from "react-redux";
 import { getStore } from "../../common/store";
 import { resolveAuthFlow } from "@datadog/ui-extensions-sdk";
+import ConfigProvider from 'common/providers/ConfigProvider';
 
 const App = class extends Component {
     static propTypes = {

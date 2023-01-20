@@ -2,6 +2,7 @@ const BaseStore = require('./base/_store');
 const OrganisationStore = require('./organisation-store');
 
 const data = require('../data/base/_data');
+const { getIsWidget } = require("../../web/components/pages/WidgetPage");
 
 const controller = {
 
@@ -31,7 +32,9 @@ const controller = {
                     cb();
                 }
             }).catch(() => {
-                document.location.href = '/404?entity=project';
+                if(!getIsWidget()) {
+                    document.location.href = '/404?entity=project';
+                }
             });
         } else if (!store.model || !store.model.environments || store.id !== id) {
             store.loading();
@@ -51,7 +54,9 @@ const controller = {
                     cb();
                 }
             }).catch(() => {
-                document.location.href = '/404?entity=project';
+                if(!getIsWidget()) {
+                    document.location.href = '/404?entity=project';
+                }
             });
         }
     },

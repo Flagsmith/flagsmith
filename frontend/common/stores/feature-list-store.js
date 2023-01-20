@@ -1,6 +1,7 @@
 const BaseStore = require('./base/_store');
 const OrganisationStore = require('./organisation-store');
 const data = require('../data/base/_data');
+const { getIsWidget } = require("../../web/components/pages/WidgetPage");
 
 let createdFirstFeature = false;
 const PAGE_SIZE = 200;
@@ -37,7 +38,7 @@ const controller = {
                 filterUrl = `&${Utils.toParam(store.filter)}`;
             }
 
-            let featuresEndpoint = typeof page === 'string'? page: `${Project.api}projects/${projectId}/features/?page=${page || 1}&page_size=${pageSize||PAGE_SIZE}${filterUrl}`;
+            let featuresEndpoint = typeof page === 'string' ? page : `${Project.api}projects/${projectId}/features/?page=${page || 1}&page_size=${pageSize || PAGE_SIZE}${filterUrl}`;
             if (store.search) {
                 featuresEndpoint += `&search=${store.search}`;
             }
@@ -74,7 +75,9 @@ const controller = {
                 };
                 store.loaded();
             }).catch((e) => {
-                document.location.href = '/404?entity=environment';
+                if(!getIsWidget()) {
+                    document.location.href = '/404?entity=environment';
+                }
                 API.ajaxHandler(store, e);
             });
         }
