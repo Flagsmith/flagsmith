@@ -3,7 +3,7 @@ from importlib import import_module
 
 from django.db import models
 from django.db.models import Model
-from django_lifecycle import AFTER_SAVE, LifecycleModel, hook
+from django_lifecycle import AFTER_SAVE, BEFORE_CREATE, LifecycleModel, hook
 
 from api_keys.models import MasterAPIKey
 from audit.related_object_type import RelatedObjectType
@@ -90,3 +90,8 @@ class AuditLog(LifecycleModel):
         # Use a queryset to perform update to prevent signals being called at this point.
         # Since we're re-saving the environment, we don't want to duplicate signals.
         environments.update(updated_at=self.created_date)
+
+    @hook(BEFORE_CREATE)
+    def add_project(self):
+        if self.environment and self.project is None:
+            self.project = self.environment.project
