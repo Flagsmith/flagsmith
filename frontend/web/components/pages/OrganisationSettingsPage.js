@@ -477,7 +477,6 @@ const OrganisationSettingsPage = class extends Component {
                                                             )}
                                                             renderNoResults={(
                                                                 <Panel
-                                                                    id="users-list"
                                                                     icon="ion-md-cloud"
                                                                     title={(
                                                                         <Tooltip
@@ -704,7 +703,7 @@ const OrganisationSettingsPage = class extends Component {
                                                                                 id="org-members-list"
                                                                                 title="Members"
                                                                                 className="no-pad"
-                                                                                items={users}
+                                                                                items={ _.sortBy(users,"first_name")}
                                                                                 itemHeight={65}
                                                                                 renderRow={(user, i) => {
                                                                                     const { id, first_name, last_name, email, role } = user;
@@ -797,7 +796,7 @@ const OrganisationSettingsPage = class extends Component {
                                                                                     id="org-invites-list"
                                                                                     title="Invites Pending"
                                                                                     className="no-pad"
-                                                                                    items={invites}
+                                                                                    items={_.sortBy(invites,'email')}
                                                                                     renderRow={({ id, email, date_created, invited_by, link }, i) => (
                                                                                         <Row
                                                                                             data-test={`pending-invite-${i}`}
@@ -828,7 +827,7 @@ const OrganisationSettingsPage = class extends Component {
                                                                                                                 id="resend-invite"
                                                                                                                 type="button"
                                                                                                                 onClick={() => AppActions.resendInvite(id)}
-                                                                                                                className="btn btn--anchor"
+                                                                                                                className="btn btn--link"
                                                                                                             >
                                                                                                                 Resend
                                                                                                             </button>
