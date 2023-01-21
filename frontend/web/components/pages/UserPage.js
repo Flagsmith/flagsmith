@@ -109,7 +109,7 @@ const UserPage = class extends Component {
         />);
     }
 
-    editFlag = (projectFlag, environmentFlag, identityFlag, multivariate_feature_state_values) => {
+    editFeature = (projectFlag, environmentFlag, identityFlag, multivariate_feature_state_values) => {
         history.replaceState(
             {},
             null,
@@ -298,7 +298,7 @@ const UserPage = class extends Component {
                                                                   const flagDifferent = flagEnabledDifferent || flagValueDifferent;
                                                                   const onClick = () => {
                                                                       if(permission) {
-                                                                          this.editFlag(_.find(projectFlags, { id }), environmentFlags && environmentFlags[id], (identityFlags && identityFlags[id]) || actualFlags[name], identityFlags && identityFlags[id] && identityFlags[id].multivariate_feature_state_values);
+                                                                          this.editFeature(_.find(projectFlags, { id }), environmentFlags && environmentFlags[id], (identityFlags && identityFlags[id]) || actualFlags[name], identityFlags && identityFlags[id] && identityFlags[id].multivariate_feature_state_values);
                                                                       }
                                                                   }
 
