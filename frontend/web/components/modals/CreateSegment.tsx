@@ -13,6 +13,7 @@ import { useGetIdentitiesQuery } from "../../../common/services/useIdentity";
 import { Req } from "../../../common/types/requests";
 import useSearchThrottle from "../../../common/useSearchThrottle";
 import JSONReference from "../JSONReference";
+import ConfigProvider from 'common/providers/ConfigProvider';
 
 const SEGMENT_ID_MAXLENGTH = Constants.forms.maxLength.SEGMENT_ID;
 

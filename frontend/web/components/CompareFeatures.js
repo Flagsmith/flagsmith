@@ -4,6 +4,7 @@ import FlagSelect from './FlagSelect';
 import ProjectStore from '../../common/stores/project-store';
 import data from '../../common/data/base/_data';
 import FeatureRow from './FeatureRow';
+import ConfigProvider from 'common/providers/ConfigProvider';
 
 const featureNameWidth = 300;
 
@@ -35,7 +36,7 @@ class CompareEnvironments extends Component {
     fetch =() => {
         if (this.state.flagId) {
             Promise.all([
-                data.get(`${Project.api}projects/${this.props.projectId}/features/${this.state.flagId}`),
+                data.get(`${Project.api}projects/${this.props.projectId}/features/${this.state.flagId}/`),
             ].concat(ProjectStore.getEnvs().map(v => (
                 data.get(`${Project.api}environments/${v.api_key}/featurestates/?feature=${this.state.flagId}`)
             )))).then(([_flag, ...rest]) => {

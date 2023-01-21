@@ -47,6 +47,7 @@ export type Project =  {
   enable_realtime_updates: boolean;
   environments: Environment[];
 }
+export type ProjectSummary = Omit<Project, 'environments'>
 export type AuditLogItem = {
   id: number;
   created_date: string;
@@ -63,11 +64,35 @@ export type AuditLogItem = {
   related_object_type: string;
   is_system_event: boolean;
 }
-
 export type Identity = {
   id?: string
   identifier: string
   identity_uuid?: string
+}
+export type Subscription = {
+  id: number;
+  uuid: string;
+  subscription_id: string|null;
+  subscription_date: string;
+  plan: string|null;
+  max_seats: number;
+  max_api_calls: number;
+  cancellation_date: string | null;
+  customer_id: string;
+  payment_method: string;
+  notes: string|null;
+}
+export type Organisation = {
+  id: number;
+  name: string;
+  created_date: string;
+  webhook_notification_email: string | null;
+  num_seats: number;
+  subscription: Subscription;
+  role: string;
+  persist_trait_data: boolean;
+  block_access_to_admin: boolean;
+  restrict_project_create_to_admin: boolean;
 }
 
 export type Res = {
@@ -76,5 +101,8 @@ export type Res = {
   auditLogs: PagedResponse<AuditLogItem>;
   identity: {id:string} //todo: we don't consider this until we migrate identity-store
   identities: EdgePagedResponse<Identity>
+  organisations: PagedResponse<Organisation>
+  projects: ProjectSummary[]
+  environments: PagedResponse<Environment>
   // END OF TYPES
 }
