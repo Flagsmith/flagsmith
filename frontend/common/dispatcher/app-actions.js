@@ -431,13 +431,6 @@ const AppActions = Object.assign({}, require('./base/_app-actions'), {
             id,
         });
     },
-    // Segments
-    selectEnvironment(data) {
-        Dispatcher.handleViewAction({
-            actionType: Actions.SELECT_ENVIRONMENT,
-            data,
-        });
-    },
     getSegments(projectId, environmentId) {
         Dispatcher.handleViewAction({
             actionType: Actions.GET_SEGMENTS,
