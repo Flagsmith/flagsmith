@@ -224,6 +224,7 @@ class TheComponent extends Component {
                             ))}
                         </Permission>
                     )}
+
                 </Row>
             </Row>
         );

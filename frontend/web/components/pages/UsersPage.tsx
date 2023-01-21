@@ -4,6 +4,7 @@ import {Link} from "react-router-dom";
 
 const Permission = require("common/providers/Permission")
 const AccountStore = require("common/stores/account-store")
+import ConfigProvider from "common/providers/ConfigProvider";
 import {PermissionCallback} from "common/types";
 import Constants from 'common/constants';
 import {useDeleteIdentityMutation, useGetIdentitiesQuery} from "common/services/useIdentity";
