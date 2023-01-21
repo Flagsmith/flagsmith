@@ -8,7 +8,9 @@ const SamlForm = class extends React.Component {
 
     constructor() {
         super();
-        this.state = {};
+        this.state = {
+            saml: API.getCookie("saml") || ""
+        };
     }
 
     submit = (e) => {
@@ -20,6 +22,7 @@ const SamlForm = class extends React.Component {
 
         data.post(`${Project.api}auth/saml/${this.state.saml}/request/`)
             .then((res) => {
+                API.setCookie("saml", this.state.saml)
                 if (res.headers && res.headers.Location) {
                     document.location.href = res.headers.Location;
                 } else {
