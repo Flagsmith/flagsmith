@@ -1,7 +1,9 @@
 import Utils from 'common/utils/utils';
-import React, { FC } from 'react';
+import React, { FC, useState } from 'react';
 import { Bar, Tooltip as _Tooltip, BarChart, ResponsiveContainer, XAxis, YAxis } from 'recharts';
 import { useGetOrganisationUsageQuery } from '../../common/services/useOrganisationUsage';
+import ProjectFilter from './ProjectFilter';
+import EnvironmentFilter from './EnvironmentFilter';
 
 type OrganisationUsageType = {
   organisationId: string
@@ -32,7 +34,10 @@ const LegendItem: FC<LegendItemType> = ({title, value, colour}) => {
 };
 
 const OrganisationUsage: FC<OrganisationUsageType> = ({organisationId}) => {
-  const {data} = useGetOrganisationUsageQuery({organisationId})
+  const [project, setProject] = useState<string|undefined>();
+  const [environment, setEnvironment] = useState<string|undefined>();
+
+  const {data} = useGetOrganisationUsageQuery({organisationId, projectId: project, environmentId: environment})
   const colours = [
     "#6633ff",
     "#00a696",
@@ -42,6 +47,22 @@ const OrganisationUsage: FC<OrganisationUsageType> = ({organisationId}) => {
 
     return data?.totals?  (
       <div className="mt-4">
+        <Row className="mb-5">
+          <strong>Project</strong>
+          <div className="mx-2" style={{width:200}}>
+            <ProjectFilter showAll organisationId={organisationId} onChange={setProject} value={project}/>
+          </div>
+          {project && (
+            <>
+              <strong className="ml-2">
+                Environment
+              </strong>
+              <div className="ml-2" style={{width:200}}>
+                <EnvironmentFilter showAll projectId={project} onChange={setEnvironment} value={environment}/>
+              </div>
+            </>
+          )}
+        </Row>
         <div className="row">
           <LegendItem colour={colours[0]} value={data.totals.flags} title="Flags"/>
           <LegendItem colour={colours[1]} value={data.totals.traits} title="Traits"/>

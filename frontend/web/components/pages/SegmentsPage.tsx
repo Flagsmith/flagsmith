@@ -11,8 +11,7 @@ import Button, {ButtonLink} from "../base/forms/Button";
 import {RouterChildContext} from "react-router";
 import JSONReference from "../JSONReference";
 import ConfigProvider from 'common/providers/ConfigProvider';
-
-const Utils = require('common/utils/utils')
+import Utils from 'common/utils/utils'
 const Permission = require('common/providers/Permission')
 const PanelSearch = require("../../components/PanelSearch")
 const Panel = require("../../components/base/grid/Panel")
