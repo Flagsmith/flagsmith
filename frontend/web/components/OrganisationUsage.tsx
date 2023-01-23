@@ -4,7 +4,7 @@ import { Bar, Tooltip as _Tooltip, BarChart, ResponsiveContainer, XAxis, YAxis }
 import { useGetOrganisationUsageQuery } from '../../common/services/useOrganisationUsage';
 import ProjectFilter from './ProjectFilter';
 import EnvironmentFilter from './EnvironmentFilter';
-
+import moment from 'moment'
 type OrganisationUsageType = {
   organisationId: string
 }
@@ -47,22 +47,25 @@ const OrganisationUsage: FC<OrganisationUsageType> = ({organisationId}) => {
 
     return data?.totals?  (
       <div className="mt-4">
-        <Row className="mb-5">
-          <strong>Project</strong>
-          <div className="mx-2" style={{width:200}}>
-            <ProjectFilter showAll organisationId={organisationId} onChange={setProject} value={project}/>
-          </div>
-          {project && (
-            <>
-              <strong className="ml-2">
-                Environment
-              </strong>
-              <div className="ml-2" style={{width:200}}>
-                <EnvironmentFilter showAll projectId={project} onChange={setEnvironment} value={environment}/>
-              </div>
-            </>
-          )}
-        </Row>
+        {Utils.getFlagsmithHasFeature("usage_filter") && (
+          <Row className="mb-5">
+            <strong>Project</strong>
+            <div className="mx-2" style={{width:200}}>
+              <ProjectFilter showAll organisationId={organisationId} onChange={setProject} value={project}/>
+            </div>
+            {project && (
+              <>
+                <strong className="ml-2">
+                  Environment
+                </strong>
+                <div className="ml-2" style={{width:200}}>
+                  <EnvironmentFilter showAll projectId={project} onChange={setEnvironment} value={environment}/>
+                </div>
+              </>
+            )}
+          </Row>
+        )}
+
         <div className="row">
           <LegendItem colour={colours[0]} value={data.totals.flags} title="Flags"/>
           <LegendItem colour={colours[1]} value={data.totals.traits} title="Traits"/>
@@ -71,9 +74,14 @@ const OrganisationUsage: FC<OrganisationUsageType> = ({organisationId}) => {
         </div>
         <ResponsiveContainer height={400} width="100%">
           <BarChart data={data.events_list}>
-            <XAxis allowDataOverflow={false} dataKey="name" />
+            <XAxis
+              padding={{ left: 30, right: 30 }}
+              allowDataOverflow={false}
+              dataKey="name" interval={5}
+              tickFormatter={(v)=>moment(v).format("Do MMM YYYY")}
+            />
             <YAxis allowDataOverflow={false} />
-            <_Tooltip />
+            <_Tooltip labelFormatter={(v)=>moment(v).format("Do MMM YYYY")} />
             <Bar dataKey="Flags" stackId="a" fill={colours[0]} />
             <Bar dataKey="Identities" stackId="a" fill={colours[1]} />
             <Bar dataKey="Traits" stackId="a" fill={colours[2]} />
