@@ -94,8 +94,8 @@ export type Res = {
   segments: PagedResponse<Segment>;
   segment: {id:string};
   auditLogs: PagedResponse<AuditLogItem>;
-  organisations: PagedResponse<Organisation>
-  projects: ProjectSummary[]
-  environments: PagedResponse<Environment>
+  organisations: PagedResponse<Organisation>;
+  projects: ProjectSummary[];
+  environments: PagedResponse<Environment>;
   // END OF TYPES
 }
