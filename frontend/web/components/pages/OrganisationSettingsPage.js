@@ -332,7 +332,7 @@ const OrganisationSettingsPage = class extends Component {
                                 const autoSeats = Utils.getPlansPermission("AUTO_SEATS")
                                 const usedSeats = organisation.num_seats >= max_seats;
                                 const overSeats = paymentsEnabled && organisation.num_seats > max_seats;
-                                const needsUpgradeForAdditionalSeats = overSeats || (!autoSeats && usedSeats);
+                                const needsUpgradeForAdditionalSeats = overSeats || (!autoSeats && usedSeats && paymentsEnabled);
                                 return (
                                     <div>
                                         <Tabs inline transparent value={this.state.tab || 0} onChange={(tab) => this.setState({ tab })}>
@@ -571,11 +571,10 @@ const OrganisationSettingsPage = class extends Component {
                                                                 {isLoading && <div className="centered-container"><Loader /></div>}
                                                                 {!isLoading && (
                                                                     <div>
-
                                                                         <Tabs inline transparent uncontrolled>
                                                                             <TabItem tabLabel="Members">
 
-                                                                                <Row space className="mt-5">
+                                                                                <Row space className="mt-4">
                                                                                     <h3 className="m-b-0">Team Members</h3>
                                                                                     <Button
                                                                                         disabled={needsUpgradeForAdditionalSeats}
@@ -586,7 +585,7 @@ const OrganisationSettingsPage = class extends Component {
                                                                                         Invite members
                                                                                     </Button>
                                                                                 </Row>
-                                                                            <FormGroup className="mt-4">
+                                                                            <FormGroup className="mt-2">
                                                                                 {paymentsEnabled && !isLoading && (
                                                                                     <InfoMessage>
                                                                                         {'You are currently using '}
