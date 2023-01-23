@@ -330,9 +330,9 @@ const OrganisationSettingsPage = class extends Component {
                             {({ isLoading, name, error, projects, usage, users, invites, influx_data, inviteLinks, subscriptionMeta, invalidateInviteLink }) => {
                                 const { max_seats } = subscriptionMeta || organisation.subscription || { max_seats: 1 };
                                 const autoSeats = Utils.getPlansPermission("AUTO_SEATS")
-                                const usedSeats = organisation.num_seats >= max_seats;
+                                const usedSeats = paymentsEnabled && organisation.num_seats >= max_seats;
                                 const overSeats = paymentsEnabled && organisation.num_seats > max_seats;
-                                const needsUpgradeForAdditionalSeats = overSeats || (!autoSeats && usedSeats && paymentsEnabled);
+                                const needsUpgradeForAdditionalSeats = overSeats || (!autoSeats && usedSeats);
                                 return (
                                     <div>
                                         <Tabs inline transparent value={this.state.tab || 0} onChange={(tab) => this.setState({ tab })}>
