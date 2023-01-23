@@ -33,7 +33,7 @@ export type Environment = {
   minimum_change_request_approvals?: number;
   allow_client_traits: boolean;
 }
-export type Project = {
+export type Project =  {
   id: number;
   uuid: string;
   name: string;
@@ -62,7 +62,6 @@ export type AuditLogItem = {
   related_object_type: string;
   is_system_event: boolean;
 }
-
 
 export type Res = {
   segments: PagedResponse<Segment>;
