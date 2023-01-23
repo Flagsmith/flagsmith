@@ -219,14 +219,6 @@ const CreateSegment = class extends Component {
               id="create-segment-modal"
               onSubmit={this.save}
             >
-                {!this.props.condensed && (
-                    <div className="mt-4">
-                        <InfoMessage>
-                            Learn more about rule and trait value type conversions <a href="https://docs-git-improvement-segment-rule-value-typing-flagsmith.vercel.app/basic-features/managing-segments#rule-typing">here</a>.
-                        </InfoMessage>
-                    </div>
-                )}
-
                 {!isEdit && (
                     <Row className="mb-4">
                         <label className="mr-2 mb-0" htmlFor="segmentID">
@@ -251,7 +243,6 @@ const CreateSegment = class extends Component {
                     </Row>
                 )}
 
-
                 {!this.props.condensed && (
                     <FormGroup className="mb-4">
                         <InputGroup
@@ -269,16 +260,15 @@ const CreateSegment = class extends Component {
                     </FormGroup>
                 )}
 
-
                 <div className="form-group ">
                     <Row className="mt-2 mb-2">
                         <Flex>
                             <label className="cols-sm-2 control-label">Include users when the following rules apply:</label>
-                            <span className="text-small text-muted">Note: Trait names are case sensitive</span>
+                            <span className="text-small text-muted">
+                                Trait names are case sensitive. Learn more about rule and trait value type conversions <a href="https://docs-git-improvement-segment-rule-value-typing-flagsmith.vercel.app/basic-features/managing-segments#rule-typing">here</a>.
+                            </span>
                         </Flex>
-                        <span>
-                            {this.state.showDescriptions? "Hide condition descriptions" : "Show condition descriptions"}
-                        </span>
+                        <span className="text-small">{this.state.showDescriptions? "Hide descriptions" : "Show descriptions"}</span>
                         <Switch checked={!!this.state.showDescriptions} onChange={()=>{this.setState({showDescriptions:!this.state.showDescriptions})}}/>
                     </Row>
                     {
@@ -333,7 +323,6 @@ const CreateSegment = class extends Component {
 
                     </div>
                 )}
-
             </form>
         );
 
