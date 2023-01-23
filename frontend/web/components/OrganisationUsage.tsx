@@ -23,7 +23,9 @@ const LegendItem: FC<LegendItemType> = ({title, value, colour}) => {
     <div className="col-md-3 text-center mb-4">
       <h1>{Utils.numberWithCommas(value)}</h1>
       <Row className="justify-content-center">
-        <span style={{backgroundColor:colour, display:"inline-block", width:20, height:20}}/>
+        {!!colour && (
+          <span style={{backgroundColor:colour, display:"inline-block", width:20, height:20}}/>
+        )}
         <span className="text-muted ml-2">
           {title}
         </span>
