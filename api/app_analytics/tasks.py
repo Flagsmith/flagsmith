@@ -43,7 +43,7 @@ def get_source_data(
 ):
     filters = Q(
         created_at__lte=process_till,
-        created_at__gte=process_from,
+        created_at__gt=process_from,
     )
     if source_bucket_size:
         return (
@@ -58,19 +58,27 @@ def get_source_data(
     )
 
 
-@register_task_handler()
-def populate_bucket(
-    bucket_size: int = 30, process_last: int = 60 * 5, source_bucket_size: int = None
-):
+def get_start_of_current_bucket(bucket_size: int):
     current_time = timezone.now().replace(second=0, microsecond=0)
-    if bucket_size >= 60:
-        current_time = current_time.replace(minute=0)
+    # calculate start of 'current' bucket
+    start_of_current_bucket = current_time - timezone.timedelta(
+        minutes=current_time.minute % bucket_size
+    )
+    return start_of_current_bucket
 
-    process_till = current_time
 
-    for i in range(1, (process_last // bucket_size) + 1):
-        process_from = current_time - timezone.timedelta(minutes=i * bucket_size)
-        data = get_source_data(process_from, process_till, source_bucket_size)
+@register_task_handler()
+def populate_bucket(bucket_size: int, run_every: int, source_bucket_size: int = None):
+    start_of_current_bucket = get_start_of_current_bucket(
+        bucket_size,
+    )
+
+    for i in range(1, (run_every // bucket_size) + 1):
+        process_from = start_of_current_bucket - timezone.timedelta(
+            minutes=bucket_size * i
+        )
+        process_to = process_from + timezone.timedelta(minutes=bucket_size)
+        data = get_source_data(process_from, process_to, source_bucket_size)
         for row in data:
             APIUsageBucket.objects.create(
                 environment_id=row["environment_id"],
@@ -79,5 +87,3 @@ def populate_bucket(
                 bucket_size=bucket_size,
                 created_at=process_from,
             )
-
-        process_till = process_from
