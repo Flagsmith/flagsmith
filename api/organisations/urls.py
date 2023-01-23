@@ -1,3 +1,4 @@
+from app_analytics.views import UsageDataAPIViewSet
 from django.conf.urls import include, url
 from rest_framework_nested import routers
 
@@ -49,6 +50,11 @@ organisations_router.register(
     "user-group-permissions",
     UserPermissionGroupOrganisationPermissionViewSet,
     basename="organisation-user-group-permission",
+)
+organisations_router.register(
+    "usage-data",
+    UsageDataAPIViewSet,
+    basename="organisation-usage-data",
 )
 
 app_name = "organisations"
