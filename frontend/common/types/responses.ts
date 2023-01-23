@@ -33,7 +33,7 @@ export type Environment = {
   minimum_change_request_approvals?: number;
   allow_client_traits: boolean;
 }
-export type Project =  {
+export type Project = {
   id: number;
   uuid: string;
   name: string;
@@ -68,5 +68,21 @@ export type Res = {
   segments: PagedResponse<Segment>;
   segment: {id:string};
   auditLogs: PagedResponse<AuditLogItem>;
+  organisationUsage: {
+    totals: {
+      flags: number;
+      environmentDocument: number;
+      identities: number;
+      traits: number;
+      total: number;
+    };
+    events_list: {
+      "Environment-document": number|null;
+      Flags: number|null;
+      Identities: number|null;
+      Traits: number|null;
+      name: string;
+    }[]
+  }
   // END OF TYPES
 }

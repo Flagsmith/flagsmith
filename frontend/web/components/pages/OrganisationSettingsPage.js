@@ -17,6 +17,7 @@ import Tabs from '../base/forms/Tabs'
 import TabItem from '../base/forms/TabItem'
 import InfoMessage from "../InfoMessage";
 import JSONReference from "../JSONReference";
+import OrganisationUsage from '../OrganisationUsage';
 
 const OrganisationSettingsPage = class extends Component {
     static contextTypes = {
@@ -35,11 +36,6 @@ const OrganisationSettingsPage = class extends Component {
             return;
         }
         AppActions.getOrganisation(AccountStore.getOrganisation().id);
-
-        if (Utils.getFlagsmithHasFeature('usage_chart') && !Project.disableInflux) {
-            AppActions.getInfluxData(AccountStore.getOrganisation().id);
-        }
-
         this.props.getWebhooks();
     }
 
@@ -180,109 +176,6 @@ const OrganisationSettingsPage = class extends Component {
         />);
     };
 
-    drawChart = (data) => {
-        if (data && data.events_list) { // protect against influx setup incorrectly
-            let totalFlags = 0;
-            let totalTraits = 0;
-            let totalEnvironmentDocument = 0;
-            let totalIdentities = 0;
-            data.events_list.map((v) => {
-                totalEnvironmentDocument += v['Environment-document'] || 0;
-                totalFlags += v.Flags || 0;
-                totalTraits += v.Traits || 0;
-                totalIdentities += v.Identities || 0;
-            });
-            return (
-                <div>
-                    <div className="flex-row header--icon">
-                        <h5>API usage</h5>
-
-                    </div>
-                    <div className="col-md-6 row mb-2">
-                        <table className="table">
-                            <thead>
-                                <th style={{ width: 200, borderBottom: '1px solid #ccc' }}>
-                                    <td>
-                                        Usage type
-                                    </td>
-                                </th>
-                                <th style={{ borderBottom: '1px solid #ccc' }}>
-                                    <td>
-                                        API calls
-                                    </td>
-                                </th>
-                            </thead>
-                            <tbody>
-                                <tr style={{ borderBottom: '1px solid #ccc' }}>
-                                    <td>
-                                        Environment Document
-                                    </td>
-                                    <td>
-                                        {Utils.numberWithCommas(totalEnvironmentDocument)}
-                                    </td>
-                                </tr>
-                                <tr style={{ borderBottom: '1px solid #ccc' }}>
-                                    <td>
-                                        Flags
-                                    </td>
-                                    <td>
-                                        {Utils.numberWithCommas(totalFlags)}
-                                    </td>
-                                </tr>
-                                <tr style={{ borderBottom: '1px solid #ccc' }}>
-                                    <td>
-                                        Identities
-                                    </td>
-                                    <td>
-                                        {Utils.numberWithCommas(totalIdentities)}
-                                    </td>
-                                </tr>
-                                <tr style={{ borderBottom: '1px solid #ccc' }}>
-                                    <td>
-                                        Traits
-                                    </td>
-                                    <td>
-                                        {Utils.numberWithCommas(totalTraits)}
-                                    </td>
-                                </tr>
-                                <tr style={{ borderTop: '1px solid #ccc' }}>
-                                    <td>
-                                        <strong>
-                                            Total
-                                        </strong>
-                                    </td>
-                                    <td>
-                                        <strong>
-                                            {Utils.numberWithCommas(totalFlags + totalIdentities + totalTraits)}
-                                        </strong>
-                                    </td>
-                                </tr>
-                            </tbody>
-                        </table>
-                    </div>
-
-                    <ResponsiveContainer height={400} width="100%">
-                        <BarChart data={data.events_list}>
-                            <CartesianGrid strokeDasharray="3 5" />
-                            <XAxis allowDataOverflow={false} dataKey="name" />
-                            <YAxis allowDataOverflow={false} />
-                            <_Tooltip />
-                            <Legend />
-                            <Bar dataKey="Flags" stackId="a" fill="#6633ff" />
-                            <Bar dataKey="Identities" stackId="a" fill="#00a696" />
-                            <Bar dataKey="Traits" stackId="a" fill="#f18e7f" />
-                            <Bar
-                                name="Environment Document" dataKey="Environment-document" stackId="a"
-                                fill="#F6D46E"
-                            />
-                        </BarChart>
-                    </ResponsiveContainer>
-                </div>
-            );
-        }
-        return null;
-    }
-
     editUserPermissions = (user) => {
         openModal('Edit Organisation Permissions', <EditPermissionsModal
             name={`${user.first_name} ${user.last_name}`}
@@ -327,7 +220,7 @@ const OrganisationSettingsPage = class extends Component {
                         organisation,
                     }, { createOrganisation, selectOrganisation, deleteOrganisation }) => !!organisation && (
                         <OrganisationProvider>
-                            {({ isLoading, name, error, projects, usage, users, invites, influx_data, inviteLinks, subscriptionMeta, invalidateInviteLink }) => {
+                            {({ isLoading, name, error, users, invites, inviteLinks, subscriptionMeta, invalidateInviteLink }) => {
                                 const { max_seats } = subscriptionMeta || organisation.subscription || { max_seats: 1 };
                                 const autoSeats = Utils.getPlansPermission("AUTO_SEATS")
                                 const usedSeats = organisation.num_seats >= max_seats;
@@ -886,24 +779,7 @@ const OrganisationSettingsPage = class extends Component {
                                             {Utils.getFlagsmithHasFeature('usage_chart') && !Project.disableInflux && (
                                                 <TabItem tabLabel="Usage" tabIcon="ion-md-analytics" >
                                                     {this.state.tab === 3 && (
-                                                        <div className="mt-4">
-                                                            {!isLoading && usage != null ? (
-                                                                <div>
-                                                                    {Utils.getFlagsmithHasFeature('usage_chart') ? this.drawChart(influx_data) : (
-                                                                        <>
-                                                                            <div className="flex-row header--icon">
-                                                                                <h5>API usage</h5>
-                                                                            </div>
-                                                                            <span>
-                                                                                {'You have made '}
-                                                                                <strong>{`${Utils.numberWithCommas(usage)}`}</strong>
-                                                                                {' requests over the past 30 days.'}
-                                                                            </span>
-                                                                        </>
-                                                                    )}
-                                                                </div>
-                                                            ) : <div className="text-center"><Loader /></div>}
-                                                        </div>
+                                                        <OrganisationUsage organisationId={AccountStore.getOrganisation().id}/>
                                                     )}
                                                 </TabItem>
                                             )}

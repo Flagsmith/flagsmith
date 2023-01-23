@@ -40,7 +40,7 @@ class TheComponent extends Component {
 
         return (
             <OrganisationProvider>
-                {({ isLoading, name, error, projects, usage, users, invites, influx_data, inviteLinks }) => {
+                {({ users }) => {
                     const ownerUsers = this.getOwners(users, this.state.owners || []);
                     const res = (
                         <div>
