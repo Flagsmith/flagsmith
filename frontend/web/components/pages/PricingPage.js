@@ -2,6 +2,7 @@ import React from 'react';
 import Footer from '../Footer';
 import PricingPanel from '../PricingPanel';
 import Feedback from '../modals/Feedback';
+import ConfigProvider from 'common/providers/ConfigProvider';
 
 const PricingPage = class extends React.Component {
     static contextTypes = {

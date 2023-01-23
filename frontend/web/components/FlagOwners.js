@@ -1,8 +1,7 @@
 import React, { Component } from 'react';
-import { ListItem } from '@material-ui/core';
 import data from '../../common/data/base/_data';
 import UserSelect from './UserSelect';
-import AuditLogIcon from './svg/AuditLogIcon';
+import ConfigProvider from 'common/providers/ConfigProvider';
 
 class TheComponent extends Component {
     state = {};

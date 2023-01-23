@@ -1,9 +1,9 @@
 import React, { Component } from 'react';
+import Constants from 'common/constants';
+import ConfigProvider from 'common/providers/ConfigProvider';
 import Highlight from '../Highlight';
 import ErrorMessage from '../ErrorMessage';
-import Constants from '../../../common/constants';
 import TestWebhook from '../TestWebhook';
-
 const exampleJSON = Constants.exampleWebhook;
 
 const CreateWebhook = class extends Component {

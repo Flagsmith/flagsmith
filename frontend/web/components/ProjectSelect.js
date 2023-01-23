@@ -1,4 +1,5 @@
 import React, { Component } from 'react';
+import ConfigProvider from 'common/providers/ConfigProvider';
 
 const ProjectSelect = class extends Component {
     static displayName = 'ProjectSelect'

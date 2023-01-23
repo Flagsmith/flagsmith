@@ -46,6 +46,7 @@ export type Project =  {
   enable_realtime_updates: boolean;
   environments: Environment[];
 }
+export type ProjectSummary = Omit<Project, 'environments'>
 export type AuditLogItem = {
   id: number;
   created_date: string;
@@ -57,16 +58,45 @@ export type AuditLogItem = {
     last_name: string;
   };
   environment?: Environment;
-  project: Omit<Project, 'environments'>;
+  project: ProjectSummary;
   related_object_id: number;
   related_object_type: string;
   is_system_event: boolean;
+}
+export type Subscription = {
+  id: number;
+  uuid: string;
+  subscription_id: string|null;
+  subscription_date: string;
+  plan: string|null;
+  max_seats: number;
+  max_api_calls: number;
+  cancellation_date: string | null;
+  customer_id: string;
+  payment_method: string;
+  notes: string|null;
+}
+
+export type Organisation = {
+  id: number;
+  name: string;
+  created_date: string;
+  webhook_notification_email: string | null;
+  num_seats: number;
+  subscription: Subscription;
+  role: string;
+  persist_trait_data: boolean;
+  block_access_to_admin: boolean;
+  restrict_project_create_to_admin: boolean;
 }
 
 export type Res = {
   segments: PagedResponse<Segment>;
   segment: {id:string};
   auditLogs: PagedResponse<AuditLogItem>;
+  organisations: PagedResponse<Organisation>;
+  projects: ProjectSummary[];
+  environments: PagedResponse<Environment>;
   organisationUsage: {
     totals: {
       flags: number;

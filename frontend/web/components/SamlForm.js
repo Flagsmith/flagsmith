@@ -1,7 +1,7 @@
 import React from 'react';
-import { FormGroup } from '@material-ui/core';
 import data from '../../common/data/base/_data';
 import ErrorMessage from './ErrorMessage';
+import ConfigProvider from 'common/providers/ConfigProvider';
 
 const SamlForm = class extends React.Component {
     static displayName = 'SamlForm'
@@ -48,7 +48,6 @@ const SamlForm = class extends React.Component {
                         Continue
                     </Button>
                 </div>
-
             </form>
         );
     }
