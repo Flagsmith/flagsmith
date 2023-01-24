@@ -1,8 +1,8 @@
 
 import React, { Component } from 'react';
-import _data from '../../common/data/base/_data';
-import ProjectStore from '../../common/stores/project-store';
-
+import _data from 'common/data/base/_data';
+import ProjectStore from 'common/stores/project-store';
+import ConfigProvider from 'common/providers/ConfigProvider';
 const CreateEditIntegration = require('./modals/CreateEditIntegrationModal');
 
 class Integration extends Component {
