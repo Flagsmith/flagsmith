@@ -1,5 +1,8 @@
+import Project from '../project';
+
 const BaseStore = require('./base/_store');
-window.Project = require('../project');
+
+window.Project = Project;
 
 const controller = {
     get() {

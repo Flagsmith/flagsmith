@@ -7,7 +7,7 @@ import {Req} from "../../common/types/requests"; // we need this to make JSX com
 import {components} from 'react-select'
 import {SelectProps} from "@material-ui/core/Select/Select";
 type SelectType  = {name:string, label:string, feature?:number}
-const Utils = require('common/utils/utils.js')
+import Utils from 'common/utils/utils'
 type SegmentSelectType = {
     projectId: string
     "data-test"?:string

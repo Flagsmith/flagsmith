@@ -12,6 +12,7 @@ declare global {
     var Column: typeof Component
     var RemoveIcon: typeof Component
     var Loader: typeof Component
+    var E2E: boolean
     var closeModal: ()=>void
     var toast: (message:string)=>void
     var Tooltip: typeof FC<{title:ReactNode, place?:string, html?:boolean}>

@@ -75,6 +75,16 @@ module.exports = {
         'react/no-unescaped-entities': 0, // there are valid cases for this where a key can not be determined
         'react/require-default-props': 0,
     },
+    'settings': {
+        'import/resolver': {
+            'alias': {
+                map: [
+                    ['common', './common'],
+                ],
+                extensions: ['.ts', '.tsx', '.js', '.jsx', '.json'],
+            },
+        },
+    },
     'globals': {
         '$': true,
         '$crisp': true,

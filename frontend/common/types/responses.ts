@@ -59,15 +59,10 @@ export type AuditLogItem = {
     last_name: string;
   };
   environment?: Environment;
-  project: Omit<Project, 'environments'>;
+  project: ProjectSummary;
   related_object_id: number;
   related_object_type: string;
   is_system_event: boolean;
-}
-export type Identity = {
-  id?: string
-  identifier: string
-  identity_uuid?: string
 }
 export type Subscription = {
   id: number;
@@ -82,6 +77,7 @@ export type Subscription = {
   payment_method: string;
   notes: string|null;
 }
+
 export type Organisation = {
   id: number;
   name: string;
@@ -94,15 +90,19 @@ export type Organisation = {
   block_access_to_admin: boolean;
   restrict_project_create_to_admin: boolean;
 }
-
+export type Identity = {
+  id?: string
+  identifier: string
+  identity_uuid?: string
+}
 export type Res = {
   segments: PagedResponse<Segment>;
   segment: {id:string};
   auditLogs: PagedResponse<AuditLogItem>;
+  organisations: PagedResponse<Organisation>;
+  projects: ProjectSummary[];
+  environments: PagedResponse<Environment>;
   identity: {id:string} //todo: we don't consider this until we migrate identity-store
   identities: EdgePagedResponse<Identity>
-  organisations: PagedResponse<Organisation>
-  projects: ProjectSummary[]
-  environments: PagedResponse<Environment>
   // END OF TYPES
 }

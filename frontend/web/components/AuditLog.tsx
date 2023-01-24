@@ -13,6 +13,7 @@ const ProjectProvider = require('common/providers/ProjectProvider');
 type AuditLogType = {
     environmentId: string
     projectId: string
+    onErrorChange?:(error:boolean) => void
     pageSize:number
     onErrorChange?:(error:boolean) => void
     onSearchChange?:(search:string)=>void
