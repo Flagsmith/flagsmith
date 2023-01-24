@@ -6,7 +6,7 @@ class UsageDataSerializer(serializers.Serializer):
     identities = serializers.IntegerField()
     traits = serializers.IntegerField()
     environment_document = serializers.IntegerField()
-    date = serializers.CharField()
+    day = serializers.CharField()
 
 
 class UsageDataQuerySerializer(serializers.Serializer):

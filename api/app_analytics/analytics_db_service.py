@@ -1,4 +1,5 @@
 from datetime import date, timedelta
+from typing import List
 
 from app_analytics.influxdb_wrapper import (
     get_events_for_organisation,
@@ -8,9 +9,12 @@ from django.conf import settings
 from django.db.models import Sum
 
 from .models import APIUsageByDay, Resource
+from .schemas import UsageData, UsageDataSchema
 
 
-def get_usage_data(organisation, environment_id=None, project_id=None):
+def get_usage_data(
+    organisation, environment_id=None, project_id=None
+) -> List[UsageData]:
     if settings.USE_CUSTOM_ANALYTICS:
         return get_usage_data_from_local_db(
             organisation, environment_id=environment_id, project_id=project_id
@@ -20,13 +24,18 @@ def get_usage_data(organisation, environment_id=None, project_id=None):
     )
 
 
-def get_usage_data_from_influxdb(organisation, environment_id=None, project_id=None):
-    return get_multiple_event_list_for_organisation(
+def get_usage_data_from_influxdb(
+    organisation, environment_id=None, project_id=None
+) -> List[UsageData]:
+    events_list = get_multiple_event_list_for_organisation(
         organisation.pk, environment_id, project_id
     )
+    return UsageDataSchema(many=True).load(events_list)
 
 
-def get_usage_data_from_local_db(organisation, environment_id=None, project_id=None):
+def get_usage_data_from_local_db(
+    organisation, environment_id=None, project_id=None
+) -> List[UsageData]:
     if settings.USE_CUSTOM_ANALYTICS:
         qs = APIUsageByDay.objects.filter(
             environment_id__in=organisation.project.all().values_list(
@@ -49,21 +58,21 @@ def get_usage_data_from_local_db(organisation, environment_id=None, project_id=N
                 {},
             ).get_total_count(0)
 
-        events_list = []
+        usage_list = []
         dates = set(obj["date"] for obj in qs)
         for day in dates:
-            events_list.append(
-                {
-                    "Flags": get_count_from_qs(qs, date, Resource.FLAGS),
-                    "name": day,
-                    "Identities": get_count_from_qs(qs, date, Resource.IDENTITIES),
-                    "Traits": get_count_from_qs(qs, date, Resource.TRAITS),
-                    "Environment-Document": get_count_from_qs(
+            usage_list.append(
+                UsageData(
+                    flags=get_count_from_qs(qs, date, Resource.FLAGS),
+                    day=day,
+                    identities=get_count_from_qs(qs, date, Resource.IDENTITIES),
+                    traits=get_count_from_qs(qs, date, Resource.TRAITS),
+                    environment_document=get_count_from_qs(
                         qs, date, Resource.ENVIRONMENT_DOCUMENT
                     ),
-                }
+                )
             )
-        return events_list
+        return usage_list
 
 
 def get_total_events_count(organisation) -> int:
