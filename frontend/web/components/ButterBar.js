@@ -1,7 +1,7 @@
 import React from 'react';
 import { Component } from 'react';
-import ConfigProvider from '../../common/providers/ConfigProvider';
-import ProjectStore from '../../common/stores/project-store'
+import ConfigProvider from 'common/providers/ConfigProvider';
+import ProjectStore from 'common/stores/project-store'
 class ButterBar extends Component {
     static contextTypes = {
         router: propTypes.object.isRequired,

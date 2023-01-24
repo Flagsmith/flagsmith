@@ -7,12 +7,12 @@ import { BrowserRouter as Router } from 'react-router-dom';
 import { createBrowserHistory } from 'history';
 import ToastMessages from './project/toast';
 import routes from './routes';
-
+import Utils from 'common/utils/utils'
 import AccountStore from '../common/stores/account-store';
 import data from '../common/data/base/_data';
 
 
-window.Utils = require('../common/utils/utils');
+window.Utils = Utils;
 window.Constants = require('../common/constants');
 
 window.openModal = require('./project/modals').openModal;

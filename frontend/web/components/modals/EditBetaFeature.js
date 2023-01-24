@@ -1,20 +1,7 @@
 import React, { Component } from 'react';
-import { Bar, BarChart, CartesianGrid, ResponsiveContainer, Tooltip as RechartsTooltip, XAxis, YAxis } from 'recharts';
-import Tabs from '../base/forms/Tabs';
-import TabItem from '../base/forms/TabItem';
-import withSegmentOverrides from '../../../common/providers/withSegmentOverrides';
-import data from '../../../common/data/base/_data';
-import ProjectStore from '../../../common/stores/project-store';
-import _data from '../../../common/data/base/_data';
-import SegmentOverrides from '../SegmentOverrides';
-import AddEditTags from '../AddEditTags';
-import Constants from '../../../common/constants';
-import FlagOwners from '../FlagOwners';
-import FeatureListStore from '../../../common/stores/feature-list-store';
-import ChangeRequestModal from './ChangeRequestModal';
-import Feature from '../Feature';
-import { ButtonOutline } from '../base/forms/Button';
-import ChangeRequestStore from '../../../common/stores/change-requests-store';
+import withSegmentOverrides from 'common/providers/withSegmentOverrides';
+import Constants from 'common/constants';
+import ConfigProvider from 'common/providers/ConfigProvider';
 import ValueEditor from '../ValueEditor';
 
 const FEATURE_ID_MAXLENGTH = Constants.forms.maxLength.FEATURE_ID;

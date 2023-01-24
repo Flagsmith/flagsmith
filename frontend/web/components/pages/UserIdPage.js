@@ -1,5 +1,6 @@
 import React, { Component } from 'react';
-import data from '../../../common/data/base/_data';
+import data from 'common/data/base/_data';
+import ConfigProvider from 'common/providers/ConfigProvider';
 
 const UserPage = class extends Component {
     static displayName = 'UserPage'

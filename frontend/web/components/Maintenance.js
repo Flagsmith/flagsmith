@@ -1,4 +1,5 @@
 import React from 'react';
+import ConfigProvider from 'common/providers/ConfigProvider';
 
 const HomePage = class extends React.Component {
     static contextTypes = {
@@ -23,7 +24,6 @@ const HomePage = class extends React.Component {
                           {' '}Check <a target="_blank" href="https://twitter.com/getflagsmith">@getflagsmith</a> for updates.
                       </>
                 }
-
                 <br/>
                 <p className="small">
                     Sorry for the inconvenience, we will be back up and running shortly.

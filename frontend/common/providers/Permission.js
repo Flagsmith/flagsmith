@@ -1,7 +1,7 @@
 import React, { Component } from 'react';
 import propTypes from 'prop-types';
 import PermissionsStore from '../stores/permissions-store';
-import ConfigProvider from './ConfigProvider';
+import ConfigProvider from 'common/providers/ConfigProvider';
 
 const Permission = class extends Component {
   static displayName = 'Permission'

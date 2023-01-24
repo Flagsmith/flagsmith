@@ -2,6 +2,7 @@ import React, { Component } from 'react';
 import Tabs from './base/forms/Tabs';
 import TabItem from './base/forms/TabItem';
 import Highlight from './Highlight';
+import ConfigProvider from 'common/providers/ConfigProvider';
 
 const getGithubLink = (key) => {
     switch (key) {

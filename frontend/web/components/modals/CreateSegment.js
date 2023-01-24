@@ -11,6 +11,7 @@ import AssociatedSegmentOverrides from './AssociatedSegmentOverrides';
 import InfoMessage from '../InfoMessage';
 import _data from "../../../common/data/base/_data";
 import JSONReference from "../JSONReference";
+import ConfigProvider from 'common/providers/ConfigProvider';
 
 const SEGMENT_ID_MAXLENGTH = Constants.forms.maxLength.SEGMENT_ID;
 

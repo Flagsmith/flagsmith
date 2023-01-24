@@ -1,5 +1,5 @@
 import React from 'react';
-import { ContactForm } from './ContactForm';
+import ConfigProvider from 'common/providers/ConfigProvider';
 
 const PricingPanel = class extends React.Component {
     static displayName = 'PricingPanel'

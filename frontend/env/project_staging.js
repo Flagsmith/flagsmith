@@ -1,4 +1,4 @@
-const globalThis = typeof window === "undefined"? global : window;
+const globalThis = typeof window === 'undefined' ? global : window;
 module.exports = global.Project = {
     api: 'https://api-staging.flagsmith.com/api/v1/',
     flagsmithClientAPI: 'https://edge.api.flagsmith.com/api/v1/',
@@ -13,5 +13,5 @@ module.exports = global.Project = {
     chargebee: {
         site: 'flagsmith-test',
     },
-    ...(globalThis.projectOverrides||{})
+    ...(globalThis.projectOverrides || {}),
 };

@@ -1,8 +1,8 @@
 import React, { Component } from 'react';
 import ConfirmRemoveEnvironment from '../modals/ConfirmRemoveEnvironment';
-import ProjectStore from '../../../common/stores/project-store';
-import ConfigProvider from '../../../common/providers/ConfigProvider';
-import withWebhooks from '../../../common/providers/withWebhooks';
+import ProjectStore from 'common/stores/project-store';
+import ConfigProvider from 'common/providers/ConfigProvider';
+import withWebhooks from 'common/providers/withWebhooks';
 import CreateWebhookModal from '../modals/CreateWebhook';
 import ConfirmRemoveWebhook from '../modals/ConfirmRemoveWebhook';
 import EditPermissions from '../EditPermissions';
@@ -491,7 +491,6 @@ const EnvironmentSettingsPage = class extends Component {
                                             </FormGroup>
                                         </TabItem>
                                     </Tabs>
-
                                 )}
                             </div>
                         );

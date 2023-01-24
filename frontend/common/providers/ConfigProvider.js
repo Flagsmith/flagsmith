@@ -3,11 +3,12 @@ import flagsmith from 'flagsmith';
 import propTypes from 'prop-types';
 import ConfigStore from '../stores/config-store';
 
-module.exports = (WrappedComponent) => {
+export default (WrappedComponent) => {
     class HOC extends Component {
         static contextTypes = {
             router: propTypes.object.isRequired,
         };
+
         constructor(props) {
             super(props);
             this.state = {

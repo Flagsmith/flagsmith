@@ -1,4 +1,5 @@
 import React from 'react';
+import ConfigProvider from 'common/providers/ConfigProvider';
 
 const Blocked = class extends React.Component {
     static contextTypes = {

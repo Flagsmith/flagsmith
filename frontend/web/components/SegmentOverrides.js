@@ -8,6 +8,7 @@ import FeatureListStore from '../../common/stores/feature-list-store';
 import CreateSegmentModal from './modals/CreateSegment';
 import SegmentSelect from "./SegmentSelect";
 import JSONReference from "./JSONReference";
+import ConfigProvider from 'common/providers/ConfigProvider';
 
 const arrayMoveMutate = (array, from, to) => {
     array.splice(to < 0 ? array.length + to : to, 0, array.splice(from, 1)[0]);

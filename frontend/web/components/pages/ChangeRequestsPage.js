@@ -1,7 +1,8 @@
 import React, { Component } from 'react';
-import ChangeRequestStore from '../../../common/stores/change-requests-store';
-import OrganisationStore from '../../../common/stores/organisation-store';
-import ProjectStore from '../../../common/stores/project-store';
+import ChangeRequestStore from 'common/stores/change-requests-store';
+import OrganisationStore from 'common/stores/organisation-store';
+import ProjectStore from 'common/stores/project-store';
+import ConfigProvider from 'common/providers/ConfigProvider';
 import PaymentModal from '../modals/Payment';
 import Tabs from '../base/forms/Tabs';
 import TabItem from '../base/forms/TabItem';
@@ -210,7 +211,6 @@ const ChangeRequestsPage = class extends Component {
                          </div>
                         )}
                 </Flex>
-
             </div>
         );
     }

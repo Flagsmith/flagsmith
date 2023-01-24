@@ -4,8 +4,8 @@ import { SortableContainer, SortableElement } from 'react-sortable-hoc';
 import ProjectStore from '../../common/stores/project-store';
 import ValueEditor from './ValueEditor';
 import VariationOptions from './mv/VariationOptions';
-import FeatureListStore from '../../common/stores/feature-list-store';
-
+import FeatureListStore from 'common/stores/feature-list-store';
+import ConfigProvider from 'common/providers/ConfigProvider';
 const arrayMoveMutate = (array, from, to) => {
     array.splice(to < 0 ? array.length + to : to, 0, array.splice(from, 1)[0]);
 };

@@ -2,8 +2,8 @@
 import React, { Component } from 'react';
 import Button from '../base/forms/Button';
 import ErrorMessage from '../ErrorMessage';
-import _data from '../../../common/data/base/_data';
-import ConfigProvider from '../../../common/providers/ConfigProvider';
+import _data from 'common/data/base/_data';
+import ConfigProvider from 'common/providers/ConfigProvider';
 import TwoFactor from '../TwoFactor';
 import PaymentModal from '../modals/Payment';
 import Token from '../Token';

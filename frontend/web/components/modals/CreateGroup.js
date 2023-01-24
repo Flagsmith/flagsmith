@@ -1,7 +1,7 @@
 import React, { Component } from 'react';
+import UserGroupsProvider from 'common/providers/UserGroupsProvider';
+import ConfigProvider from 'common/providers/ConfigProvider';
 import Switch from '../Switch';
-import UserGroupsProvider from '../../../common/providers/UserGroupsProvider';
-
 const CreateGroup = class extends Component {
     static displayName = 'CreateGroup'
 

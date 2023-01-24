@@ -1,5 +1,5 @@
-const data = require('../../common/data/base/_data');
-
+const data = require('common/data/base/_data');
+import ConfigProvider from 'common/providers/ConfigProvider';
 const Footer = class extends React.Component {
   state = {
       operational: true,

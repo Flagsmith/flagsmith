@@ -2,8 +2,7 @@ import React from 'react';
 import { Component } from 'react';
 import cx from 'classnames';
 import Highlight from './Highlight';
-import ConfigProvider from '../../common/providers/ConfigProvider';
-
+import ConfigProvider from 'common/providers/ConfigProvider';
 
 const toml = require('toml');
 const yaml = require('yaml');

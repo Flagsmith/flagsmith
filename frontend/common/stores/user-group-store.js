@@ -25,7 +25,7 @@ const controller = {
             .then((res) => {
                 let prom = Promise.resolve();
                 if (group.users) {
-                    prom = data.post(`${Project.api}organisations/${orgId}/groups/${res.id}/add-users/`, { user_ids: group.users.map(u => u.id) })
+                    prom = data.post(`${Project.api}organisations/${orgId}/groups/${res.id}/add-users/`, { user_ids: group.users.map(u => u.id) });
                 }
                 prom.then(() => {
                     controller.getGroups(orgId);
@@ -35,20 +35,16 @@ const controller = {
     },
     updateGroup: (orgId, group) => {
         store.saving();
-        data.put(`${Project.api}organisations/${orgId}/groups/${group.id}/`, group).then((currentGroup)=>{
-            const toRemove = group.usersToRemove.filter((toRemove)=>{
-                return !!currentGroup.users.find((user)=>user.id === toRemove.id)
-            })
-            const toAdd = group.users.filter((toRemove)=>{
-                return !currentGroup.users.find((user)=>user.id === toRemove.id)
-            })
+        data.put(`${Project.api}organisations/${orgId}/groups/${group.id}/`, group).then((currentGroup) => {
+            const toRemove = group.usersToRemove.filter(toRemove => !!currentGroup.users.find(user => user.id === toRemove.id));
+            const toAdd = group.users.filter(toRemove => !currentGroup.users.find(user => user.id === toRemove.id));
 
             Promise.all([
                 data.post(`${Project.api}organisations/${orgId}/groups/${group.id}/add-users/`, { user_ids: toAdd.map(u => u.id) }),
                 data.post(`${Project.api}organisations/${orgId}/groups/${group.id}/remove-users/`, { user_ids: toRemove.map(u => u.id) }),
             ]).then(() => {
                 controller.getGroups(orgId);
-            })
+            });
         })
 
             .catch(e => API.ajaxHandler(store, e));

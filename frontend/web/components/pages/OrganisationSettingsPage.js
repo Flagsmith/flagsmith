@@ -17,6 +17,7 @@ import Tabs from '../base/forms/Tabs'
 import TabItem from '../base/forms/TabItem'
 import InfoMessage from "../InfoMessage";
 import JSONReference from "../JSONReference";
+import ConfigProvider from 'common/providers/ConfigProvider';
 
 const OrganisationSettingsPage = class extends Component {
     static contextTypes = {

@@ -1,6 +1,5 @@
 import React, { Component } from 'react';
-import { Link } from 'react-router';
-import ConfigProvider from '../../../common/providers/ConfigProvider';
+import ConfigProvider from 'common/providers/ConfigProvider';
 
 class CreateOrganisationPage extends Component {
     static displayName = 'CreateOrganisastionPage'

@@ -9,19 +9,19 @@ module.exports = Object.assign({}, require('./base/_utils'), {
             .replace(/\B(?=(\d{3})+(?!\d))/g, ',');
     },
 
-    loadScriptPromise(url){
-        return new Promise(function(resolve, reject){
-            const cb =  function(){
-                this.removeEventListener('load', cb)
-                resolve(null)
-            }
-            var head = document.getElementsByTagName('head')[0]
-            var script = document.createElement('script')
-            script.type = 'text/javascript'
-            script.addEventListener('load',cb)
-            script.src = url
-            head.appendChild(script)
-        })
+    loadScriptPromise(url) {
+        return new Promise((resolve, reject) => {
+            const cb = function () {
+                this.removeEventListener('load', cb);
+                resolve(null);
+            };
+            const head = document.getElementsByTagName('head')[0];
+            const script = document.createElement('script');
+            script.type = 'text/javascript';
+            script.addEventListener('load', cb);
+            script.src = url;
+            head.appendChild(script);
+        });
     },
 
     changeRequestsEnabled(value) {
@@ -41,11 +41,10 @@ module.exports = Object.assign({}, require('./base/_utils'), {
         return 'VIEW_ENVIRONMENT';
     },
     getViewIdentitiesPermission() {
-        if (Utils.getFlagsmithHasFeature("view_identities_permission")){
-            return "VIEW_IDENTITIES"
-        } else {
-            return "MANAGE_IDENTITIES"
+        if (Utils.getFlagsmithHasFeature('view_identities_permission')) {
+            return 'VIEW_IDENTITIES';
         }
+        return 'MANAGE_IDENTITIES';
     },
     getManageFeaturePermission(isChangeRequest, isUser) {
         if (isChangeRequest && Utils.getFlagsmithHasFeature('update_feature_state_permission')) {
@@ -288,9 +287,9 @@ module.exports = Object.assign({}, require('./base/_utils'), {
         }
 
         if (typeof featureState.integer_value === 'number') {
-            return Utils.getTypedValue(featureState.integer_value)
-        } else if (typeof featureState.float_value === 'number') {
-            return Utils.getTypedValue(featureState.float_value)
+            return Utils.getTypedValue(featureState.integer_value);
+        } if (typeof featureState.float_value === 'number') {
+            return Utils.getTypedValue(featureState.float_value);
         }
 
         return Utils.getTypedValue(featureState.string_value || featureState.boolean_value);
@@ -478,7 +477,7 @@ module.exports = Object.assign({}, require('./base/_utils'), {
                 break;
             }
             case 'AUTO_SEATS': {
-                valid = isScaleupOrGreater && Utils.getFlagsmithHasFeature("auto_seats");
+                valid = isScaleupOrGreater && Utils.getFlagsmithHasFeature('auto_seats');
                 break;
             }
             case 'FORCE_2FA': {
