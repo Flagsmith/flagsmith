@@ -517,6 +517,7 @@ module.exports = Object.assign({}, require('./base/_utils'), {
                 return 'Scale-Up';
             case 'enterprise':
             case 'enterprise-annual':
+            case 'enterprise-saas-annual-v2':
                 return 'Enterprise';
             default:
                 return 'Free';
