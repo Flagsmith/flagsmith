@@ -50,7 +50,7 @@ export default class TheComponent extends PureComponent {
                           className="no-pad"
                           itemHeight={64}
                           icon="ion-md-people"
-                          items={userGroups}
+                          items={_.sortBy(userGroups, 'name')}
                           paging={userGroupsPaging}
                           nextPage={() => AppActions.getGroupsPage(this.props.orgId, userGroupsPaging.next)}
                           prevPage={() => AppActions.getGroupsPage(this.props.orgId, userGroupsPaging.previous)}

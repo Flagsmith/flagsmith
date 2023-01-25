@@ -275,7 +275,7 @@ export default class EditPermissions extends PureComponent {
                                                 id="org-members-list"
                                                 title=""
                                                 className="panel--transparent"
-                                                items={users}
+                                                items={_.sortBy(users, 'first_name')}
                                                 renderRow={({ id, first_name, last_name, email, role }) => {
                                                     const onClick = () => {
                                                         if (role !== 'ADMIN') {
