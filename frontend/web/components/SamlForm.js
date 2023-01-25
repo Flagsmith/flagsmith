@@ -60,9 +60,9 @@ const SamlForm = class extends React.Component {
                             }
                             this.setState({ remember });
                         }} id="organisation" className="mr-2"
-                        type="checkbox" checked={this.state.marketing_consent_given}
+                        type="checkbox" checked={this.state.remember}
                     />
-                    <label className="mb-0" htmlFor="organisation">Remember Organisation</label>
+                    <label className="mb-0" htmlFor="organisation">Remember this SAML organisation</label>
                 </Row>
 
                 <div className="text-right">
