@@ -9,7 +9,8 @@ const SamlForm = class extends React.Component {
     constructor() {
         super();
         this.state = {
-            saml: API.getCookie("saml") || ""
+            saml: API.getCookie("saml") || "",
+            remember: true
         };
     }
 
@@ -22,7 +23,9 @@ const SamlForm = class extends React.Component {
 
         data.post(`${Project.api}auth/saml/${this.state.saml}/request/`)
             .then((res) => {
-                API.setCookie("saml", this.state.saml)
+                if (this.state.remember) {
+                    API.setCookie("saml", this.state.saml)
+                }
                 if (res.headers && res.headers.Location) {
                     document.location.href = res.headers.Location;
                 } else {
@@ -46,6 +49,22 @@ const SamlForm = class extends React.Component {
                 {
                     this.state.error && <ErrorMessage error="Please check your organisation name and try again."/>
                 }
+
+                <Row className="text-right mb-4">
+                    <Flex/>
+                    <input
+                        onChange={(e) => {
+                            const remember = !this.state.remember;
+                            if(!remember) {
+                                API.setCookie("saml", null)
+                            }
+                            this.setState({ remember });
+                        }} id="organisation" className="mr-2"
+                        type="checkbox" checked={this.state.marketing_consent_given}
+                    />
+                    <label className="mb-0" htmlFor="organisation">Remember Organisation</label>
+                </Row>
+
                 <div className="text-right">
                     <Button disabled={this.state.isLoading} type="submit" disabled={!this.state.saml}>
                         Continue
