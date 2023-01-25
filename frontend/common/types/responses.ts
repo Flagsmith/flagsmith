@@ -97,5 +97,21 @@ export type Res = {
   organisations: PagedResponse<Organisation>;
   projects: ProjectSummary[];
   environments: PagedResponse<Environment>;
+  organisationUsage: {
+    totals: {
+      flags: number;
+      environmentDocument: number;
+      identities: number;
+      traits: number;
+      total: number;
+    };
+    events_list: {
+      "Environment-document": number|null;
+      Flags: number|null;
+      Identities: number|null;
+      Traits: number|null;
+      name: string;
+    }[]
+  }
   // END OF TYPES
 }

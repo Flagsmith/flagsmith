@@ -93,7 +93,6 @@ const Constants = {
         'VIEW_FEATURE': { 'event': 'Feature viewed', 'category': 'Features' },
         'VIEW_SEGMENT': { 'event': 'Segment viewed', 'category': 'Segment' },
         'UPDATE_USER_ROLE': { 'event': 'Updated user role', 'category': 'Organisation' },
-        'GET_INFLUX_DATA': { 'event': 'Get Influx data', 'category': 'Organisation' },
     },
     modals: {
         'PAYMENT': 'Payment Modal',
