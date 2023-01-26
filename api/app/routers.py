@@ -57,7 +57,7 @@ class AnalyticsRouter:
         """
         if (
             obj1._meta.app_label in self.route_app_labels
-            or obj2._meta.app_label in self.route_app_labels
+            and obj2._meta.app_label in self.route_app_labels
         ):
             return True
         return None
