@@ -37,17 +37,22 @@ def get_usage_data_from_influxdb(
     return UsageDataSchema(many=True).load(events_list)
 
 
-def get_usage_data_from_local_db(
-    organisation, environment_id=None, project_id=None
-) -> List[UsageData]:
+def _get_environment_ids_for_org(organisation) -> List[int]:
     environment_ids = Environment.objects.filter(
         project_id__in=organisation.projects.all().values_list("id", flat=True)
     ).values_list("id", flat=True)
+    # We have do to this in order to avoid django from generating a query
+    # that tries to use environments and projects table
+    # (because they do not exists in analytics database)
+    return [id for id in environment_ids]
 
-    environment_ids = [id for id in environment_ids]
 
+def get_usage_data_from_local_db(
+    organisation, environment_id=None, project_id=None
+) -> List[UsageData]:
     qs = APIUsageBucket.objects.filter(
-        environment_id__in=environment_ids, bucket_size=USAGE_READ_BUCKET_SIZE
+        environment_id__in=_get_environment_ids_for_org(organisation),
+        bucket_size=USAGE_READ_BUCKET_SIZE,
     )
     if project_id:
         qs = qs.filter(project_id=project_id)
@@ -91,13 +96,8 @@ def get_total_events_count(organisation) -> int:
     Return total number of events for an organisation in the last 30 days
     """
     if settings.USE_CUSTOM_ANALYTICS:
-        environment_ids = Environment.objects.filter(
-            project_id__in=organisation.projects.all().values_list("id", flat=True)
-        ).values_list("id", flat=True)
-
-        environment_ids = [id for id in environment_ids]
         events = APIUsageBucket.objects.filter(
-            environment_id__in=environment_ids,
+            environment_id__in=_get_environment_ids_for_org(organisation),
             created_at__date__lte=date.today(),
             created_at__date__gt=date.today() - timedelta(days=30),
             bucket_size=USAGE_READ_BUCKET_SIZE,
