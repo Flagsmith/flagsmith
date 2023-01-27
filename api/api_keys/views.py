@@ -19,3 +19,6 @@ class MasterAPIKeyViewSet(viewsets.ModelViewSet):
         return MasterAPIKey.objects.filter(
             organisation_id=self.kwargs.get("organisation_pk")
         )
+
+    def perform_create(self, serializer):
+        serializer.save(organisation_id=self.kwargs.get("organisation_pk"))
