@@ -3,15 +3,25 @@ from typing import List
 
 from app_analytics.influxdb_wrapper import (
     get_events_for_organisation,
+    get_multiple_event_list_for_feature,
     get_multiple_event_list_for_organisation,
+)
+from app_analytics.models import (
+    APIUsageBucket,
+    FeatureEvaluationBucket,
+    Resource,
+)
+from app_analytics.schemas import (
+    FeatureUsageData,
+    FeatureUsageDataSchema,
+    UsageData,
+    UsageDataSchema,
 )
 from django.conf import settings
 from django.db.models import Sum
 
 from environments.models import Environment
-
-from .models import APIUsageBucket, Resource
-from .schemas import UsageData, UsageDataSchema
+from features.models import Feature
 
 USAGE_READ_BUCKET_SIZE = 15
 
@@ -105,3 +115,35 @@ def get_total_events_count(organisation) -> int:
     else:
         events = get_events_for_organisation(organisation.id)
     return events
+
+
+def get_usage_data_for_feature(feature: Feature, environment_id: int, period: int = 30):
+    if settings.USE_CUSTOM_ANALYTICS:
+        return get_usage_data_for_feature_from_local_db(feature, environment_id, period)
+    influx_data = get_multiple_event_list_for_feature(
+        feature_name=feature.name, environment_id=environment_id, period=f"{period}d"
+    )
+    return FeatureUsageDataSchema(many=True).load(influx_data)
+
+
+def get_usage_data_for_feature_from_local_db(
+    feature: Feature, environment_id: int, period: int = 30
+) -> FeatureUsageData:
+    qs = FeatureEvaluationBucket.objects.filter(
+        environment_id=environment_id,
+        bucket_size=USAGE_READ_BUCKET_SIZE,
+    )
+    usage_list = []
+    today = date.today()
+    for i in range(period):
+        process_from = today - timedelta(days=i)
+        process_till = process_from + timedelta(days=1)
+        event = (
+            qs.filter(
+                created_at__date__gte=process_from, created_at__date__lt=process_till
+            )
+            .values("created_at__date", "feature_name")
+            .annotate(count=Sum("total_count"))
+        ).first()
+        usage_list.append(FeatureUsageData(day=process_from, count=event["count"]))
+    return usage_list

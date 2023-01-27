@@ -26,7 +26,18 @@ class APIUsageBucket(models.Model):
     bucket_size = models.PositiveIntegerField(help_text="Bucket size in minutes")
 
 
-class FeatureEvaluation(models.Model):
-    feature_id = models.PositiveIntegerField()
+class FeatureEvaluationRaw(models.Model):
+    feature_name = models.CharField(max_length=2000)
+    environment_id = models.PositiveIntegerField()
     evaluation_count = models.IntegerField(default=0)
     created_at = models.DateTimeField(auto_now_add=True)
+
+
+# TODO: create abstract base class for bucket
+class FeatureEvaluationBucket(models.Model):
+    feature_name = models.CharField(max_length=2000)
+    environment_id = models.PositiveIntegerField()
+
+    total_count = models.PositiveIntegerField()
+    created_at = models.DateTimeField()
+    bucket_size = models.PositiveIntegerField(help_text="Bucket size in minutes")

@@ -6,14 +6,25 @@ from django.utils import timezone
 from environments.models import Environment
 from task_processor.decorators import register_task_handler
 
-from .models import APIUsageBucket, APIUsageRaw, FeatureEvaluation, Resource
+from .models import (
+    APIUsageBucket,
+    APIUsageRaw,
+    FeatureEvaluationBucket,
+    FeatureEvaluationRaw,
+    Resource,
+)
 
 
 @register_task_handler()
 def track_feature_evaluation(environment_id, feature_evaluations):
-    for feature_id, evaluation_count in feature_evaluations.items():
-        kwargs = {"feature_id": feature_id, "environment_id": environment_id}
-        FeatureEvaluation.objects.create(**kwargs)
+    feature_evaluations = []
+    for feature_name, evaluation_count in feature_evaluations.items():
+        feature_evaluations.append(
+            FeatureEvaluationRaw(
+                feature_name=feature_name, environment_id=environment_id
+            )
+        )
+        FeatureEvaluationRaw.objects.bulk_create(**feature_evaluations)
 
 
 # TODO: improve this
@@ -58,6 +69,28 @@ def get_source_data(
     )
 
 
+def get_source_data_feature_evaluation(
+    process_from: datetime, process_till: datetime, source_bucket_size: int = None
+):
+    filters = Q(
+        created_at__lte=process_till,
+        created_at__gt=process_from,
+    )
+    if source_bucket_size:
+        return (
+            FeatureEvaluationBucket.objects.filter(
+                filters, bucket_size=source_bucket_size
+            )
+            .values("environment_id", "feature_name")
+            .annotate(count=Sum("total_count"))
+        )
+    return (
+        FeatureEvaluationRaw.objects.filter(filters, bucket_size=source_bucket_size)
+        .values("environment_id", "feature_name")
+        .annotate(count=Sum("evaluation_count"))
+    )
+
+
 def get_start_of_current_bucket(bucket_size: int):
     current_time = timezone.now().replace(second=0, microsecond=0)
     # calculate start of 'current' bucket
@@ -68,7 +101,9 @@ def get_start_of_current_bucket(bucket_size: int):
 
 
 @register_task_handler()
-def populate_bucket(bucket_size: int, run_every: int, source_bucket_size: int = None):
+def populate_api_usage_bucket(
+    bucket_size: int, run_every: int, source_bucket_size: int = None
+):
     start_of_current_bucket = get_start_of_current_bucket(
         bucket_size,
     )
@@ -83,6 +118,32 @@ def populate_bucket(bucket_size: int, run_every: int, source_bucket_size: int = 
             APIUsageBucket.objects.create(
                 environment_id=row["environment_id"],
                 resource=row["resource"],
+                total_count=row["count"],
+                bucket_size=bucket_size,
+                created_at=process_from,
+            )
+
+
+@register_task_handler()
+def populate_feature_evaluation_bucket(
+    bucket_size: int, run_every: int, source_bucket_size: int = None
+):
+    start_of_current_bucket = get_start_of_current_bucket(
+        bucket_size,
+    )
+
+    for i in range(1, (run_every // bucket_size) + 1):
+        process_from = start_of_current_bucket - timezone.timedelta(
+            minutes=bucket_size * i
+        )
+        process_to = process_from + timezone.timedelta(minutes=bucket_size)
+        data = get_source_data_feature_evaluation(
+            process_from, process_to, source_bucket_size
+        )
+        for row in data:
+            FeatureEvaluationBucket.objects.create(
+                environment_id=row["environment_id"],
+                feature_name=row["feature_name"],
                 total_count=row["count"],
                 bucket_size=bucket_size,
                 created_at=process_from,
