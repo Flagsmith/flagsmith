@@ -17,7 +17,7 @@ class MasterAPIKeyViewSet(viewsets.ModelViewSet):
 
     def get_queryset(self):
         return MasterAPIKey.objects.filter(
-            organisation_id=self.kwargs.get("organisation_pk")
+            organisation_id=self.kwargs.get("organisation_pk"), revoked=False
         )
 
     def perform_create(self, serializer):
