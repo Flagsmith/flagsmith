@@ -17,6 +17,11 @@ const controller = {
             }).catch(e => API.ajaxHandler(store, e));
     },
     getChangeRequests: (envId, { committed, live_from_after }, page) => {
+        const has4EyesPermission = Utils.getPlansPermission('4_EYES');
+        if (!has4EyesPermission) {
+            return;
+        }
+
         if (!envId) {
             return;
         }

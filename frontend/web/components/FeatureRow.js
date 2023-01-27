@@ -71,7 +71,7 @@ class TheComponent extends Component {
     render() {
         const { projectId, projectFlag, permission, environmentFlags, environmentId, projectFlags, removeFlag, toggleFlag } = this.props;
         const { name, id, created_date, description } = this.props.projectFlag;
-        const readOnly = Utils.getFlagsmithHasFeature('read_only_mode');
+        const readOnly = this.props.readOnly || Utils.getFlagsmithHasFeature('read_only_mode');
         const isProtected = TagStore.hasProtectedTag(projectFlag, parseInt(projectId));
         const environment = ProjectStore.getEnvironment(environmentId);
         const changeRequestsEnabled = Utils.changeRequestsEnabled(environment && environment.minimum_change_request_approvals);

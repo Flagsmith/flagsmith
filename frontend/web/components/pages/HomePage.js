@@ -1,5 +1,5 @@
 import React from 'react';
-import { GoogleLogin, GoogleOAuthProvider, useGoogleLogin } from '@react-oauth/google';
+import { GoogleOAuthProvider } from '@react-oauth/google';
 import ForgotPasswordModal from '../ForgotPasswordModal';
 import Card from '../Card';
 import { ButtonLink } from '../base/forms/Button';
@@ -7,6 +7,7 @@ import NavIconSmall from '../svg/NavIconSmall';
 import SamlForm from '../SamlForm';
 import data from '../../../common/data/base/_data';
 import GoogleButton from '../GoogleButton';
+import ConfigProvider from 'common/providers/ConfigProvider';
 
 const HomePage = class extends React.Component {
     static contextTypes = {
@@ -532,7 +533,6 @@ const HomePage = class extends React.Component {
                         </div>
                     )}
                 </AccountProvider>
-
             </>
         );
     }

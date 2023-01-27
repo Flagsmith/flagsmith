@@ -1,10 +1,10 @@
 import React, { Component } from 'react';
 import EditIdentityModal from './UserPage';
 import CreateUserModal from '../modals/CreateUser';
-import EnvironmentTraitsProvider from '../../../common/providers/EnvironmentTraitsProvider';
 import RemoveIcon from '../RemoveIcon';
 import JSONReference from "../JSONReference";
 import Constants from "../../../common/constants";
+import ConfigProvider from 'common/providers/ConfigProvider';
 
 const UsersPage = class extends Component {
     static displayName = 'UsersPage'

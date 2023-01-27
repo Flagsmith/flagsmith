@@ -11,6 +11,7 @@ import { Tag } from '../AddEditTags';
 import _data from '../../../common/data/base/_data';
 import JSONReference from "../JSONReference";
 import Constants from "../../../common/constants";
+import ConfigProvider from 'common/providers/ConfigProvider';
 
 const returnIfDefined = (value, value2) => {
     if (value === null || value === undefined) {
