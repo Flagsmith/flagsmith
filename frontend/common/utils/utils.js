@@ -3,6 +3,13 @@ const semver = require('semver');
 const ProjectStore = require('../../common/stores/project-store');
 
 let flagsmithBetaFeatures = null;
+const planNames = {
+    free: 'Free',
+    scaleUp: 'Scale-Up',
+    sideProject: 'Side Project',
+    startup:  'Startup',
+    enterprise:  'Enterprise'
+}
 module.exports = Object.assign({}, require('./base/_utils'), {
     numberWithCommas(x) {
         return x.toString()
@@ -444,20 +451,21 @@ module.exports = Object.assign({}, require('./base/_utils'), {
     },
     getPlanPermission: (plan, permission) => {
         let valid = true;
+        const planName = Utils.getPlanName(plan)
         if (!Utils.getFlagsmithHasFeature('plan_based_access')) {
             return true;
         }
-        if (!plan || plan === 'free') {
+        if (!plan || planName === planNames.free) {
             return false;
         }
         const date = AccountStore.getDate();
         const cutOff = moment('03-11-20', 'DD-MM-YY');
-        if (date && moment(date)
-            .valueOf() < cutOff.valueOf()) {
-            return true;
-        }
-        const isSideProjectOrGreater = !plan.includes('side-project');
-        const isScaleupOrGreater = !plan.includes('side-project') && !plan.includes('startup');
+        // if (date && moment(date)
+        //     .valueOf() < cutOff.valueOf()) {
+        //     return true;
+        // }
+        const isSideProjectOrGreater = planName !== planNames.sideProject;
+        const isScaleupOrGreater = isSideProjectOrGreater && planName!== planNames.startup;
         switch (permission) {
             case 'FLAG_OWNERS': {
                 valid = isScaleupOrGreater;
@@ -503,26 +511,18 @@ module.exports = Object.assign({}, require('./base/_utils'), {
     },
 
     getPlanName: (plan) => {
-        switch (plan) {
-            case 'side-project':
-            case 'side-project-annual':
-                return 'Side Project';
-            case 'startup':
-            case 'startup-annual':
-            case 'startup-v2':
-            case 'startup-annual-v2':
-                return 'Startup';
-            case 'scale-up':
-            case 'scale-up-annual':
-            case 'scale-up-v2':
-            case 'scale-up-annual-v2':
-            case 'scale-up-12-months-v2':
-                return 'Scale-Up';
-            case 'enterprise':
-            case 'enterprise-annual':
-                return 'Enterprise';
-            default:
-                return 'Free';
+        if (plan && plan.includes("scale-up")) {
+            return planNames.scaleUp;
         }
+        if (plan && plan.includes("side-project")) {
+            return planNames.sideProject;
+        }
+        if (plan && plan.includes("startup")) {
+            return planNames.startup;
+        }
+        if (plan && plan.includes("enterprise")) {
+            return planNames.enterprise;
+        }
+        return planNames.free
     },
 });
