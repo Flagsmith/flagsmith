@@ -351,9 +351,7 @@ const CreateSegment = class extends Component {
                                                   component={(
                                                       <EnvironmentSelect
                                                         value={environmentId}
-                                                        onChange={(environmentId) => {
-                                                            setEnvironmentId(environmentId)
-                                                        }}
+                                                        onChange={setEnvironmentId}
                                                       />
 )}
                                                 />
