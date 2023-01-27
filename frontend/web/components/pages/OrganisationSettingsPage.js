@@ -224,8 +224,8 @@ const OrganisationSettingsPage = class extends Component {
                             {({ isLoading, name, error, users, invites, inviteLinks, subscriptionMeta, invalidateInviteLink }) => {
                                 const { max_seats } = subscriptionMeta || organisation.subscription || { max_seats: 1 };
                                 const autoSeats = Utils.getPlansPermission("AUTO_SEATS")
-                                const usedSeats = organisation.num_seats >= max_seats;
-                                const overSeats = organisation.num_seats > max_seats;
+                                const usedSeats = paymentsEnabled && organisation.num_seats >= max_seats;
+                                const overSeats = paymentsEnabled && organisation.num_seats > max_seats;
                                 const needsUpgradeForAdditionalSeats = overSeats || (!autoSeats && usedSeats);
                                 return (
                                     <div>
@@ -464,11 +464,10 @@ const OrganisationSettingsPage = class extends Component {
                                                                 {isLoading && <div className="centered-container"><Loader /></div>}
                                                                 {!isLoading && (
                                                                     <div>
-
                                                                         <Tabs inline transparent uncontrolled>
                                                                             <TabItem tabLabel="Members">
 
-                                                                                <Row space className="mt-5">
+                                                                                <Row space className="mt-4">
                                                                                     <h3 className="m-b-0">Team Members</h3>
                                                                                     <Button
                                                                                         disabled={needsUpgradeForAdditionalSeats}
@@ -479,7 +478,7 @@ const OrganisationSettingsPage = class extends Component {
                                                                                         Invite members
                                                                                     </Button>
                                                                                 </Row>
-                                                                            <FormGroup className="mt-4">
+                                                                            <FormGroup className="mt-2">
                                                                                 {paymentsEnabled && !isLoading && (
                                                                                     <InfoMessage>
                                                                                         {'You are currently using '}
