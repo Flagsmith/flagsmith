@@ -66,7 +66,7 @@ INFLUXDB_ORG = env.str("INFLUXDB_ORG", default="")
 
 ALLOWED_HOSTS = env.list("DJANGO_ALLOWED_HOSTS", default=[])
 USE_X_FORWARDED_HOST = env.bool("USE_X_FORWARDED_HOST", default=False)
-USE_CUSTOM_ANALYTICS = env.bool("USE_CUSTOM_ANALYTICS", default=False)
+USE_POSTGRES_FOR_ANALYTICS = env.bool("USE_POSTGRES_FOR_ANALYTICS", default=False)
 
 CSRF_TRUSTED_ORIGINS = env.list("DJANGO_CSRF_TRUSTED_ORIGINS", default=[])
 
@@ -157,10 +157,11 @@ INSTALLED_APPS = [
     "task_processor",
     "softdelete",
     "metadata",
+    "app_analytics",
 ]
-
-if GOOGLE_ANALYTICS_KEY or INFLUXDB_TOKEN or USE_CUSTOM_ANALYTICS:
-    INSTALLED_APPS.append("app_analytics")
+# TODO: this
+# if GOOGLE_ANALYTICS_KEY or INFLUXDB_TOKEN or USE_POSTGRES_FOR_ANALYTICS:
+#     INSTALLED_APPS.append("app_analytics")
 
 SITE_ID = 1
 
@@ -282,7 +283,7 @@ if GOOGLE_ANALYTICS_KEY:
 
 if INFLUXDB_TOKEN:
     MIDDLEWARE.append("app_analytics.middleware.InfluxDBMiddleware")
-if USE_CUSTOM_ANALYTICS:
+if USE_POSTGRES_FOR_ANALYTICS:
     MIDDLEWARE.append("app_analytics.middleware.APIUsageMiddleware")
 
 ALLOWED_ADMIN_IP_ADDRESSES = env.list("ALLOWED_ADMIN_IP_ADDRESSES", default=list())

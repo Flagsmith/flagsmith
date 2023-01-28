@@ -29,7 +29,7 @@ USAGE_READ_BUCKET_SIZE = 15
 def get_usage_data(
     organisation, environment_id=None, project_id=None
 ) -> List[UsageData]:
-    if settings.USE_CUSTOM_ANALYTICS:
+    if settings.USE_POSTGRES_FOR_ANALYTICS:
         return get_usage_data_from_local_db(
             organisation, environment_id=environment_id, project_id=project_id
         )
@@ -105,7 +105,7 @@ def get_total_events_count(organisation) -> int:
     """
     Return total number of events for an organisation in the last 30 days
     """
-    if settings.USE_CUSTOM_ANALYTICS:
+    if settings.USE_POSTGRES_FOR_ANALYTICS:
         events = APIUsageBucket.objects.filter(
             environment_id__in=_get_environment_ids_for_org(organisation),
             created_at__date__lte=date.today(),
@@ -118,7 +118,7 @@ def get_total_events_count(organisation) -> int:
 
 
 def get_usage_data_for_feature(feature: Feature, environment_id: int, period: int = 30):
-    if settings.USE_CUSTOM_ANALYTICS:
+    if settings.USE_POSTGRES_FOR_ANALYTICS:
         return get_usage_data_for_feature_from_local_db(feature, environment_id, period)
     influx_data = get_multiple_event_list_for_feature(
         feature_name=feature.name, environment_id=environment_id, period=f"{period}d"

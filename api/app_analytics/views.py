@@ -46,7 +46,7 @@ class SDKAnalyticsFlags(GenericAPIView):
                 content_type="application/json",
                 status=status.HTTP_200_OK,
             )
-        if settings.USE_CUSTOM_ANALYTICS:
+        if settings.USE_POSTGRES_FOR_ANALYTICS:
             track_feature_evaluation.delay(args=(request.environment.id, request.data))
 
         if settings.INFLUXDB_TOKEN:
