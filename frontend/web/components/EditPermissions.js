@@ -7,7 +7,7 @@ import AvailablePermissionsProvider from '../../common/providers/AvailablePermis
 import _data from '../../common/data/base/_data';
 import UserGroupList from './UserGroupList';
 import InfoMessage from './InfoMessage';
-// import propTypes from 'prop-types';
+import ConfigProvider from 'common/providers/ConfigProvider';
 
 class _EditPermissionsModal extends Component {
   static displayName = 'EditPermissionsModal';
@@ -275,7 +275,7 @@ export default class EditPermissions extends PureComponent {
                                                 id="org-members-list"
                                                 title=""
                                                 className="panel--transparent"
-                                                items={users}
+                                                items={_.sortBy(users, 'first_name')}
                                                 renderRow={({ id, first_name, last_name, email, role }) => {
                                                     const onClick = () => {
                                                         if (role !== 'ADMIN') {

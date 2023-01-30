@@ -4,6 +4,7 @@ import CreateGroupModal from '../modals/CreateGroup';
 import withAuditWebhooks from '../../../common/providers/withAuditWebhooks';
 import Button from '../base/forms/Button';
 import { EditPermissionsModal } from '../EditPermissions';
+import ConfigProvider from 'common/providers/ConfigProvider';
 
 const OrganisationGroupsPage = class extends Component {
     static contextTypes = {

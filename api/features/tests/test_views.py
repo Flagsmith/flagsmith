@@ -609,43 +609,45 @@ class SDKFeatureStatesTestCase(APITestCase):
             self.environment.updated_at.timestamp()
         )
 
-    def test_get_flags_exclude_disabled(self):
 
-        # Given
-        # a project with hide_disabled_flags enabled
-        project_flag_disabled = Project.objects.create(
-            name="Project Flag Disabled",
-            organisation=self.organisation,
-            hide_disabled_flags=True,
-        )
+@pytest.mark.parametrize(
+    "environment_value, project_value, disabled_flag_returned",
+    (
+        (True, True, False),
+        (True, False, False),
+        (False, True, True),
+        (False, False, True),
+        (None, True, False),
+        (None, False, True),
+    ),
+)
+def test_get_flags_hide_disabled_flags(
+    environment_value,
+    project_value,
+    disabled_flag_returned,
+    project,
+    environment,
+    api_client,
+):
+    # Given
+    project.hide_disabled_flags = project_value
+    project.save()
 
-        # and a set of features and environments for that project
-        other_environment = Environment.objects.create(
-            name="Test Environment 2", project=project_flag_disabled
-        )
-        disabled_flag = Feature.objects.create(
-            name="Flag 1", project=project_flag_disabled
-        )
-        enabled_flag = Feature.objects.create(
-            name="Flag 2", project=project_flag_disabled, default_enabled=True
-        )
+    environment.hide_disabled_flags = environment_value
+    environment.save()
 
-        # When
-        # we get all flags for an environment
-        self.client.credentials(HTTP_X_ENVIRONMENT_KEY=other_environment.api_key)
-        response = self.client.get(self.url)
+    Feature.objects.create(name="disabled_flag", project=project, default_enabled=False)
+    Feature.objects.create(name="enabled_flag", project=project, default_enabled=True)
 
-        # Then
-        assert response.status_code == status.HTTP_200_OK
-        response_json = response.json()
-        assert len(response_json) == 1
+    url = reverse("api-v1:flags")
 
-        # disabled flags are not returned
-        for flag in response_json:
-            assert flag["feature"]["id"] != disabled_flag.id
+    # When
+    api_client.credentials(HTTP_X_ENVIRONMENT_KEY=environment.api_key)
+    response = api_client.get(url)
 
-        # but enabled ones are
-        assert response_json[0]["feature"]["id"] == enabled_flag.id
+    # Then
+    assert response.status_code == status.HTTP_200_OK
+    assert len(response.json()) == (2 if disabled_flag_returned else 1)
 
 
 @pytest.mark.parametrize(
