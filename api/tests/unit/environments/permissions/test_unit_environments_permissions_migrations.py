@@ -9,11 +9,13 @@ from environments.permissions.constants import (
     VIEW_IDENTITIES,
 )
 
+if settings.SKIP_MIGRATION_TESTS is True:
+    pytest.skip(
+        "Skip migration tests to speed up tests where necessary",
+        allow_module_level=True,
+    )
 
-@pytest.mark.skipif(
-    settings.SKIP_MIGRATION_TESTS is True,
-    reason="Skip migration tests to speed up tests where necessary",
-)
+
 def test_add_change_request_permissions_adds_correct_permissions_if_user_has_update_fs(
     environment, django_user_model, migrator
 ):
@@ -65,10 +67,6 @@ def test_add_change_request_permissions_adds_correct_permissions_if_user_has_upd
     ) == [APPROVE_CHANGE_REQUEST, CREATE_CHANGE_REQUEST, UPDATE_FEATURE_STATE]
 
 
-@pytest.mark.skipif(
-    settings.SKIP_MIGRATION_TESTS is True,
-    reason="Skip migration tests to speed up tests where necessary",
-)
 def test_add_change_request_permissions_does_nothing_if_user_does_not_have_update_fs(
     environment, django_user_model, migrator
 ):

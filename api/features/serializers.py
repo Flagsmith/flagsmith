@@ -1,10 +1,13 @@
 import django.core.exceptions
+from drf_writable_nested import WritableNestedModelSerializer
 from rest_framework import serializers
 from rest_framework.exceptions import PermissionDenied
 
 from environments.identities.models import Identity
 from users.serializers import UserIdsSerializer, UserListSerializer
-from util.drf_writable_nested.serializers import WritableNestedModelSerializer
+from util.drf_writable_nested.serializers import (
+    DeleteBeforeUpdateWritableNestedModelSerializer,
+)
 
 from .models import Feature, FeatureState, FeatureStateValue
 from .multivariate.serializers import (
@@ -60,7 +63,7 @@ class FeatureQuerySerializer(serializers.Serializer):
             raise serializers.ValidationError("Tag IDs must be integers.")
 
 
-class ListCreateFeatureSerializer(WritableNestedModelSerializer):
+class ListCreateFeatureSerializer(DeleteBeforeUpdateWritableNestedModelSerializer):
     multivariate_options = NestedMultivariateFeatureOptionSerializer(
         many=True, required=False
     )

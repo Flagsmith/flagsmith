@@ -39,6 +39,14 @@ def create_audit_log_from_historical_record(
 ):
     model_class = AuditLog.get_history_record_model_class(history_record_class_path)
     history_instance = model_class.objects.get(history_id=history_instance_id)
+
+    if (
+        history_instance.history_type == "~"
+        and history_instance.diff_against(history_instance.prev_record).changes == []
+    ):
+        # don't write audit log if no changes
+        return
+
     instance = history_instance.instance
     history_user = user_model.objects.filter(id=history_user_id).first()
 

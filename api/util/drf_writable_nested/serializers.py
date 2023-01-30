@@ -28,7 +28,7 @@ class NestedUpdateMixinDeleteBeforeUpdate(NestedUpdateMixin):
         return instance
 
 
-class WritableNestedModelSerializer(
+class DeleteBeforeUpdateWritableNestedModelSerializer(
     NestedCreateMixin, NestedUpdateMixinDeleteBeforeUpdate, serializers.ModelSerializer
 ):
     pass

@@ -25,7 +25,8 @@ class Migration(migrations.Migration):
             database_operations=[
                 PostgresOnlyRunSQL(
                     'CREATE INDEX CONCURRENTLY IF NOT EXISTS "environments_identity_environment_id_created_date_idx" '
-                    'ON "environments_identity" ("environment_id", "created_date");'
+                    'ON "environments_identity" ("environment_id", "created_date");',
+                    reverse_sql='DROP INDEX CONCURRENTLY IF EXISTS "environments_identity_environment_id_created_date_idx"'
                 )
             ],
         )
