@@ -27,6 +27,7 @@ from django_lifecycle import (
 )
 from ordered_model.models import OrderedModelBase
 from simple_history.models import HistoricalRecords
+from softdelete.models import SoftDeleteObject
 
 from audit.constants import (
     FEATURE_CREATED_MESSAGE,
@@ -48,7 +49,12 @@ from features.custom_lifecycle import CustomLifecycleModelMixin
 from features.feature_states.models import AbstractBaseFeatureValueModel
 from features.feature_types import MULTIVARIATE, STANDARD
 from features.helpers import get_correctly_typed_value
-from features.managers import FeatureSegmentManager
+from features.managers import (
+    FeatureManager,
+    FeatureSegmentManager,
+    FeatureStateManager,
+    FeatureStateValueManager,
+)
 from features.multivariate.models import MultivariateFeatureStateValue
 from features.utils import (
     get_boolean_from_string,
@@ -74,6 +80,7 @@ if typing.TYPE_CHECKING:
 
 
 class Feature(
+    SoftDeleteObject,
     CustomLifecycleModelMixin,
     AbstractBaseExportableModel,
     abstract_base_auditable_model_factory(["uuid"]),
@@ -106,9 +113,11 @@ class Feature(
     history_record_class_path = "features.models.HistoricalFeature"
     related_object_type = RelatedObjectType.FEATURE
 
+    objects = FeatureManager()
+
     class Meta:
-        # Note: uniqueness is changed to reference lowercase name in explicit SQL in the migrations
-        unique_together = ("name", "project")
+        # Note: uniqueness index is added in explicit SQL in the migrations (See 0005, 0050)
+        # TODO: after upgrade to Django 4.0 use UniqueConstraint()
         ordering = ("id",)  # explicit ordering to prevent pagination warnings
 
     @hook(AFTER_CREATE)
@@ -292,6 +301,7 @@ class FeatureSegment(
 
 
 class FeatureState(
+    SoftDeleteObject,
     LifecycleModelMixin,
     AbstractBaseExportableModel,
     abstract_base_auditable_model_factory(["uuid"]),
@@ -339,6 +349,8 @@ class FeatureState(
         null=True,
         related_name="feature_states",
     )
+
+    objects = FeatureStateManager()
 
     class Meta:
         ordering = ["id"]
@@ -771,12 +783,16 @@ class FeatureState(
         return self.feature.project
 
 
-class FeatureStateValue(AbstractBaseFeatureValueModel, AbstractBaseExportableModel):
+class FeatureStateValue(
+    AbstractBaseFeatureValueModel, AbstractBaseExportableModel, SoftDeleteObject
+):
     feature_state = models.OneToOneField(
         FeatureState, related_name="feature_state_value", on_delete=models.CASCADE
     )
 
     history = HistoricalRecords(excluded_fields=["uuid"])
+
+    objects = FeatureStateValueManager()
 
     def clone(self, feature_state: FeatureState) -> "FeatureStateValue":
         clone = deepcopy(self)
