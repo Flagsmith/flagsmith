@@ -1,0 +1,30 @@
+name: Platform Pull Requests
+
+on:
+    pull_request:
+        types: [opened, synchronize, reopened, ready_for_review]
+
+jobs:
+    run-e2e-tests:
+        if: github.event.pull_request.draft == false
+        runs-on: ubuntu-latest
+        name: E2E tests Staging
+
+        steps:
+            - name: Cloning repo
+              uses: actions/checkout@v3
+
+            - name: Run Staging E2E Tests
+              working-directory: frontend
+              env:
+                E2E_TEST_TOKEN_STAGING: ${{ secrets.TEST_TOKEN_KYLE }}
+                ENV: staging
+                SLACK_TOKEN: ${{ secrets.SLACK_TOKEN }}
+                STATIC_ASSET_CDN_URL: /
+              run: |
+                wget -q ${{ secrets.CHROME_URL }}
+                sudo apt install --allow-downgrades -y ./google-chrome*.deb -f
+                google-chrome --version
+                node -v
+                npm i
+                npm run test:staging

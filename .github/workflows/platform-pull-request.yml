@@ -1,30 +1,42 @@
 name: Platform Pull Requests
 
 on:
-    pull_request:
-        types: [opened, synchronize, reopened, ready_for_review]
+  pull_request:
+    types: [opened, synchronize, reopened, ready_for_review]
 
 jobs:
-    run-e2e-tests:
-        if: github.event.pull_request.draft == false
-        runs-on: ubuntu-latest
-        name: Full E2E tests
+  run-e2e-tests:
+    if: github.event.pull_request.draft == false
+    runs-on: ubuntu-latest
+    name: Full E2E tests
 
-        steps:
-            - name: Cloning repo
-              uses: actions/checkout@v3
+    services:
+      postgres:
+        image: postgres:11.12-alpine
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: flagsmith
+        ports: ['5432:5432']
+        options: --health-cmd pg_isready --health-interval 10s --health-timeout 5s --health-retries 5
 
-            - name: Run Staging E2E Tests
-              working-directory: frontend
-              env:
-                E2E_TEST_TOKEN_STAGING: ${{ secrets.TEST_TOKEN_KYLE }}
-                ENV: staging
-                SLACK_TOKEN: ${{ secrets.SLACK_TOKEN }}
-                STATIC_ASSET_CDN_URL: /
-              run: |
-                wget -q ${{ secrets.CHROME_URL }}
-                sudo apt install --allow-downgrades -y ./google-chrome*.deb -f
-                google-chrome --version
-                node -v
-                npm i
-                npm run test:staging
+    steps:
+      - name: Cloning repo
+        uses: actions/checkout@v3
+
+      - name: Run Local API
+        uses: ./.github/actions/run-local-api
+        with:
+          e2e_test_token: some-token
+          # As per https://stackoverflow.com/q/65497331/421808 172.17.0.1 seems like the only way to resolve host DB
+          database_url: postgres://postgres:postgres@172.17.0.1:5432/flagsmith
+          sentry_sdk_dsn: ${{ secrets.SENTRY_SDK_DSN }}
+          sendgrid_api_key: ${{ secrets.SENDGRID_API_KEY }}
+
+      - name: E2E tests Local
+        uses: ./.github/actions/e2e-tests
+        with:
+          e2e_test_token: some-token
+          slack_token: ${{ secrets.SLACK_TOKEN }}
+          environment: local
+          enable_influxdb_features: false
