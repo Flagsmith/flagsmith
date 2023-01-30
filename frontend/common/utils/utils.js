@@ -306,7 +306,7 @@ module.exports = Object.assign({}, require('./base/_utils'), {
 
         if (typeof val === 'boolean') {
             return {
-                type: 'bool',
+                value_type: 'bool',
                 boolean_value: val,
                 integer_value: null,
                 string_value: null,
@@ -315,7 +315,7 @@ module.exports = Object.assign({}, require('./base/_utils'), {
 
         if (typeof val === 'number') {
             return {
-                type: 'int',
+                value_type: 'int',
                 boolean_value: null,
                 integer_value: val,
                 string_value: null,
@@ -323,7 +323,7 @@ module.exports = Object.assign({}, require('./base/_utils'), {
         }
 
         return {
-            type: 'unicode',
+            value_type: 'unicode',
             boolean_value: null,
             integer_value: null,
             string_value: value === null ? null : val || '',
