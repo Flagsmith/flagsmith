@@ -10,6 +10,7 @@ import Permission from "../../../common/providers/Permission";
 import { getTags } from "../../../common/services/useTag";
 import { getStore } from "../../../common/store";
 import JSONReference from "../JSONReference";
+import ConfigProvider from 'common/providers/ConfigProvider';
 
 const FeaturesPage = class extends Component {
     static displayName = 'FeaturesPage';

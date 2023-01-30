@@ -7,12 +7,12 @@ import { BrowserRouter as Router } from 'react-router-dom';
 import { createBrowserHistory } from 'history';
 import ToastMessages from './project/toast';
 import routes from './routes';
-
+import Utils from 'common/utils/utils'
 import AccountStore from '../common/stores/account-store';
 import data from '../common/data/base/_data';
 
 
-window.Utils = require('../common/utils/utils');
+window.Utils = Utils;
 window.Constants = require('../common/constants');
 
 window.openModal = require('./project/modals').openModal;
@@ -91,7 +91,7 @@ ReactDOM.render(<ToastMessages/>, document.getElementById('toast'));
 if (E2E) {
     document.body.classList.add('disable-transitions');
 }
-const isWidget = document.location.href.includes("/datadog")
+const isWidget = document.location.href.includes("/widget")
 if (!E2E && Project.crispChat && !isWidget) {
     window.$crisp = [];
     window.CRISP_WEBSITE_ID = Project.crispChat;

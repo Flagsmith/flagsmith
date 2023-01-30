@@ -4,7 +4,7 @@ import ErrorMessage from '../ErrorMessage';
 import Button from "../base/forms/Button";
 import {FC} from 'react'
 import {useCreateIdentitiesMutation} from "common/services/useIdentity"; // we need this to make JSX compile
-const Utils = require("../../../common/utils/utils")
+import Utils from 'common/utils/utils'
 type CreateUserType = {
     environmentId: string
 }

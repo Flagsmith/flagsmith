@@ -203,21 +203,6 @@ a, .btn, button{
         }
     }
 
-
-    &--anchor {
-        box-shadow: none;
-        background: white;
-        padding: 0px 10px;
-        height: 34px;
-        line-height: 34px;
-        &:hover {
-            box-shadow: none;
-            background: white;
-            color: $bt-link-color-hover;
-        }
-        color: $bt-link-color;
-    }
-
     &--condensed {
         padding: 0px 0px;
     }

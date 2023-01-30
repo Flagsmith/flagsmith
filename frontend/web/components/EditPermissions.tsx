@@ -9,6 +9,7 @@ const AccountStore = require('common/stores/account-store');
 const Format = require('common/utils/format');
 const Project = require('common/project');
 const PanelSearch = require('./PanelSearch');
+import ConfigProvider from 'common/providers/ConfigProvider';
 import Button, {ButtonLink} from "./base/forms/Button";
 import InfoMessage from './InfoMessage';
 import Switch from './Switch';
@@ -17,7 +18,7 @@ import Tabs from './base/forms/Tabs';
 import UserGroupList from './UserGroupList';
 import {PermissionLevel} from "common/types/requests";
 import {RouterChildContext} from "react-router";
-import {useGetAvailablePermissionsQuery} from "../../common/services/useAvailablePermissions";
+import {useGetAvailablePermissionsQuery} from "common/services/useAvailablePermissions";
 
 
 type EditPermissionModalType = {

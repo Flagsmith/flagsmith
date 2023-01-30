@@ -2,7 +2,10 @@ import logging
 import typing
 
 from core.helpers import get_current_site_url
-from core.models import AbstractBaseExportableModel
+from core.models import (
+    AbstractBaseExportableModel,
+    abstract_base_auditable_model_factory,
+)
 from django.conf import settings
 from django.core.mail import send_mail
 from django.db import models
@@ -17,13 +20,12 @@ from django_lifecycle import (
     hook,
 )
 
-from audit.models import (
+from audit.constants import (
     CHANGE_REQUEST_APPROVED_MESSAGE,
     CHANGE_REQUEST_COMMITTED_MESSAGE,
     CHANGE_REQUEST_CREATED_MESSAGE,
-    AuditLog,
-    RelatedObjectType,
 )
+from audit.related_object_type import RelatedObjectType
 from audit.tasks import create_feature_state_went_live_audit_log
 from features.models import FeatureState
 
@@ -33,12 +35,21 @@ from .exceptions import (
 )
 
 if typing.TYPE_CHECKING:
+    from environments.models import Environment
+    from projects.models import Project
     from users.models import FFAdminUser
 
 logger = logging.getLogger(__name__)
 
 
-class ChangeRequest(LifecycleModelMixin, AbstractBaseExportableModel):
+class ChangeRequest(
+    LifecycleModelMixin,
+    AbstractBaseExportableModel,
+    abstract_base_auditable_model_factory(["uuid"]),
+):
+    related_object_type = RelatedObjectType.CHANGE_REQUEST
+    history_record_class_path = "features.workflows.core.models.HistoricalChangeRequest"
+
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
@@ -104,29 +115,32 @@ class ChangeRequest(LifecycleModelMixin, AbstractBaseExportableModel):
         self.committed_by = committed_by
         self.save()
 
-    @hook(AFTER_CREATE)
-    def create_cr_created_audit_log(self):
-        message = CHANGE_REQUEST_CREATED_MESSAGE % self.title
-        AuditLog.objects.create(
-            author=self.user,
-            project=self.environment.project,
-            environment=self.environment,
-            related_object_type=RelatedObjectType.CHANGE_REQUEST.name,
-            related_object_id=self.id,
-            log=message,
-        )
+    def get_create_log_message(self, history_instance) -> typing.Optional[str]:
+        return CHANGE_REQUEST_CREATED_MESSAGE % self.title
 
-    @hook(AFTER_SAVE, when="committed_at", was=None, is_not=None)
-    def create_cr_committed_audit_log(self):
-        message = CHANGE_REQUEST_COMMITTED_MESSAGE % self.title
-        AuditLog.objects.create(
-            author=self.committed_by,
-            project=self.environment.project,
-            environment=self.environment,
-            related_object_type=RelatedObjectType.CHANGE_REQUEST.name,
-            related_object_id=self.id,
-            log=message,
-        )
+    def get_update_log_message(self, history_instance) -> typing.Optional[str]:
+        if (
+            history_instance.prev_record
+            and history_instance.prev_record.committed_at is None
+            and self.committed_at is not None
+        ):
+            return CHANGE_REQUEST_COMMITTED_MESSAGE % self.title
+
+    def get_audit_log_author(self, history_instance) -> typing.Optional["FFAdminUser"]:
+        if history_instance.history_type == "+":
+            return self.user
+        elif history_instance.history_type == "~" and (
+            history_instance.prev_record
+            and history_instance.prev_record.committed_at is None
+            and self.committed_at is not None
+        ):
+            return self.committed_by
+
+    def _get_environment(self) -> typing.Optional["Environment"]:
+        return self.environment
+
+    def _get_project(self) -> typing.Optional["Project"]:
+        return self.environment.project
 
     def is_approved(self):
         return self.environment.minimum_change_request_approvals is None or (
@@ -167,7 +181,12 @@ class ChangeRequest(LifecycleModelMixin, AbstractBaseExportableModel):
             )
 
 
-class ChangeRequestApproval(LifecycleModel):
+class ChangeRequestApproval(LifecycleModel, abstract_base_auditable_model_factory()):
+    related_object_type = RelatedObjectType.CHANGE_REQUEST
+    history_record_class_path = (
+        "features.workflows.core.models.HistoricalChangeRequestApproval"
+    )
+
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
     change_request = models.ForeignKey(
         ChangeRequest, on_delete=models.CASCADE, related_name="approvals"
@@ -221,15 +240,22 @@ class ChangeRequestApproval(LifecycleModel):
             ),
         )
 
-    @hook(AFTER_CREATE, when="approved_at", is_not=None)
-    @hook(AFTER_UPDATE, when="approved_at", was=None, is_not=None)
-    def create_cr_approved_audit_logs(self):
-        message = CHANGE_REQUEST_APPROVED_MESSAGE % self.change_request.title
-        AuditLog.objects.create(
-            author=self.user,
-            project=self.change_request.environment.project,
-            environment=self.change_request.environment,
-            related_object_type=RelatedObjectType.CHANGE_REQUEST.name,
-            related_object_id=self.id,
-            log=message,
-        )
+    def get_create_log_message(self, history_instance) -> typing.Optional[str]:
+        if self.approved_at is not None:
+            return CHANGE_REQUEST_APPROVED_MESSAGE % self.change_request.title
+
+    def get_update_log_message(self, history_instance) -> typing.Optional[str]:
+        if (
+            history_instance.prev_record.approved_at is None
+            and self.approved_at is not None
+        ):
+            return CHANGE_REQUEST_APPROVED_MESSAGE % self.change_request.title
+
+    def get_audit_log_related_object_id(self, history_instance) -> int:
+        return self.change_request_id
+
+    def get_audit_log_author(self, history_instance) -> "FFAdminUser":
+        return self.user
+
+    def _get_environment(self):
+        return self.change_request.environment

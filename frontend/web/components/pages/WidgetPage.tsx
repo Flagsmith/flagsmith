@@ -1,19 +1,23 @@
-import React, {Component} from 'react';
+import React, {Component, useEffect, useState} from 'react';
 import TagFilter from '../tags/TagFilter';
+import Tag from "../tags/Tag";
 import FeatureRow from '../FeatureRow';
 import FeatureListStore from '../../../common/stores/feature-list-store';
 import ProjectStore from '../../../common/stores/project-store';
 import {useCustomWidgetOptionString} from '@datadog/ui-extensions-react';
 import client from "../datadog-client";
-const Utils = require("common/utils/utils")
+import NavIconSmall from '../svg/NavIconSmall';
 const AppActions = require("common/dispatcher/app-actions")
 const ES6Component = require("common/ES6Component")
-import NavIconSmall from '../svg/NavIconSmall';
 import AuditLog from "../AuditLog";
 import {getStore} from "../../../common/store";
-import {Provider} from 'react-redux';
 import Permission from "../../../common/providers/Permission";
-import Tag from "../tags/Tag";
+import {Provider} from 'react-redux';
+import OrgEnvironmentSelect from "../OrgEnvironmentSelect";
+let isWidget = false;
+export const getIsWidget = ()=> {
+    return isWidget;
+}
 
 type FeatureListType = {
     projectId: string
@@ -80,7 +84,7 @@ const FeatureList = class extends Component<FeatureListType> {
     }
 
     filter = () => {
-        AppActions.searchFeatures(this.props.projectId, this.props.environmentId, true, this.state.search, this.state.sort, 0, this.getFilter(), pageSize);
+        AppActions.searchFeatures(this.props.projectId, this.props.environmentId, true, this.state.search, this.state.sort, 0, this.getFilter(), this.props.pageSize);
     }
 
     createFeaturePermission(el) {
@@ -100,113 +104,114 @@ const FeatureList = class extends Component<FeatureListType> {
         return (
             <Provider store={getStore()}>
                 <div className="widget-container" data-test="features-page" id="features-page">
-                <FeatureListProvider onSave={this.onSave} onError={this.onError}>
-                    {({ projectFlags, environmentFlags }, { environmentHasFlag, toggleFlag, editFlag, removeFlag }) => {
-                        const isLoading = FeatureListStore.isLoading;
-                        return (
-                            <div>
-                                {isLoading && (!projectFlags || !projectFlags.length) && <div className="centered-container"><Loader/></div>}
-                                {(!isLoading || (projectFlags && !!projectFlags.length)) && (
-                                    <div>
-                                        {(projectFlags && projectFlags.length) || ((this.state.showArchived || typeof this.state.search === 'string' || !!this.state.tags.length) && !isLoading) ? (
-                                            <div>
-                                                <Permission level="environment" permission={Utils.getManageFeaturePermission(Utils.changeRequestsEnabled(environment && environment.minimum_change_request_approvals))} id={this.props.environmentId}>
-                                                    {({ permission, isLoading }) => (
-                                                        <div>
-                                                            <PanelSearch
-                                                              className="no-pad"
-                                                              id="features-list"
-                                                              icon="ion-ios-rocket"
-                                                              title="Features"
-                                                              renderSearchWithNoResults
-                                                              itemHeight={65}
-                                                              isLoading={FeatureListStore.isLoading}
-                                                              paging={FeatureListStore.paging}
-                                                              search={this.state.search}
-                                                              onChange={(e) => {
-                                                                  this.setState({ search: Utils.safeParseEventValue(e) }, () => {
-                                                                      AppActions.searchFeatures(this.props.projectId, this.props.environmentId, true, this.state.search, this.state.sort, 0, this.getFilter(),pageSize);
-                                                                  });
-                                                              }}
-                                                              nextPage={() => AppActions.getFeatures(this.props.projectId, this.props.environmentId, true, this.state.search, this.state.sort, FeatureListStore.paging.next||1, this.getFilter(), pageSize)}
-                                                              prevPage={() => AppActions.getFeatures(this.props.projectId, this.props.environmentId, true, this.state.search, this.state.sort, FeatureListStore.paging.previous, this.getFilter(), pageSize)}
-                                                              goToPage={page => AppActions.getFeatures(this.props.projectId, this.props.environmentId, true, this.state.search, this.state.sort, page, this.getFilter())}
-                                                              onSortChange={(sort) => {
-                                                                  this.setState({ sort }, () => {
-                                                                      AppActions.getFeatures(this.props.projectId, this.props.environmentId, true, this.state.search, this.state.sort, 0, this.getFilter(), pageSize);
-                                                                  });
-                                                              }}
-                                                              sorting={[
-                                                                  { label: 'Name', value: 'name', order: 'asc', default: true },
-                                                                  { label: 'Created Date', value: 'created_date', order: 'asc' },
-                                                              ]}
-                                                              items={projectFlags}
-                                                              header={this.props.hideTags? null : (
-                                                                  <Row className="px-0 pt-0">
-                                                                      <TagFilter
-                                                                        showUntagged
-                                                                        showClearAll={(this.state.tags && !!this.state.tags.length) || this.state.showArchived}
-                                                                        onClearAll={() => this.setState({ showArchived: false, tags: [] }, this.filter)}
-                                                                        projectId={`${projectId}`} value={this.state.tags} onChange={(tags) => {
-                                                                            FeatureListStore.isLoading = true;
-                                                                            if (tags.includes('') && tags.length>1) {
-                                                                                if (!this.state.tags.includes('')) {
-                                                                                    this.setState({ tags: [''] }, this.filter);
-                                                                                } else {
-                                                                                    this.setState({ tags: tags.filter(v => !!v) }, this.filter);
-                                                                                }
-                                                                            } else {
-                                                                                this.setState({ tags }, this.filter);
-                                                                            }
-                                                                            AsyncStorage.setItem(`${projectId}tags`, JSON.stringify(tags));
-                                                                        }}
-                                                                      >
-                                                                          <div className="mr-2">
-                                                                              <Tag
-                                                                                selected={this.state.showArchived}
-                                                                                onClick={() => {
-                                                                                    FeatureListStore.isLoading = true;
-                                                                                    this.setState({ showArchived: !this.state.showArchived }, this.filter);
-                                                                                }}
-                                                                                className="px-2 py-2 ml-2 mr-2"
-                                                                                tag={{ label: 'Archived' }}
-                                                                              />
-                                                                          </div>
-                                                                      </TagFilter>
-                                                                  </Row>
-                                                                )}
-                                                              renderRow={(projectFlag, i) => (
-                                                                  <FeatureRow
-                                                                    hideRemove
-                                                                    hideAudit
-                                                                    widget
-                                                                    environmentFlags={environmentFlags}
-                                                                    projectFlags={projectFlags}
-                                                                    permission={permission}
-                                                                    environmentId={environmentId}
-                                                                    projectId={projectId}
-                                                                    index={i}
-                                                                    toggleFlag={toggleFlag}
-                                                                    editFlag={editFlag}
-                                                                    removeFlag={removeFlag}
-                                                                    projectFlag={projectFlag}
-                                                                  />
-                                                              )}
-                                                              filterRow={({ name }, search) => true}
-                                                            />
-                                                        </div>
-                                                    )}
+                    <FeatureListProvider onSave={this.onSave} onError={this.onError}>
+                        {({ projectFlags, environmentFlags }, { environmentHasFlag, toggleFlag, editFlag, removeFlag }) => {
+                            const isLoading = FeatureListStore.isLoading;
+                            return (
+                                <div>
+                                    {isLoading && (!projectFlags || !projectFlags.length) && <div className="centered-container"><Loader/></div>}
+                                    {(!isLoading || (projectFlags && !!projectFlags.length)) && (
+                                        <div>
+                                            {(projectFlags && projectFlags.length) || ((this.state.showArchived || typeof this.state.search === 'string' || !!this.state.tags.length) && !isLoading) ? (
+                                                <div>
+                                                    <Permission level="environment" permission={Utils.getManageFeaturePermission(Utils.changeRequestsEnabled(environment && environment.minimum_change_request_approvals))} id={this.props.environmentId}>
+                                                        {({ permission, isLoading }) => (
+                                                            <div>
+                                                                <PanelSearch
+                                                                    className="no-pad"
+                                                                    id="features-list"
+                                                                    icon="ion-ios-rocket"
+                                                                    title="Features"
+                                                                    renderSearchWithNoResults
+                                                                    itemHeight={65}
+                                                                    isLoading={FeatureListStore.isLoading}
+                                                                    paging={FeatureListStore.paging}
+                                                                    search={this.state.search}
+                                                                    onChange={(e) => {
+                                                                        this.setState({ search: Utils.safeParseEventValue(e) }, () => {
+                                                                            AppActions.searchFeatures(this.props.projectId, this.props.environmentId, true, this.state.search, this.state.sort, 0, this.getFilter(),pageSize);
+                                                                        });
+                                                                    }}
+                                                                    nextPage={() => AppActions.getFeatures(this.props.projectId, this.props.environmentId, true, this.state.search, this.state.sort, FeatureListStore.paging.next||1, this.getFilter(), this.props.pageSize)}
+                                                                    prevPage={() => AppActions.getFeatures(this.props.projectId, this.props.environmentId, true, this.state.search, this.state.sort, FeatureListStore.paging.previous, this.getFilter(), this.props.pageSize)}
+                                                                    goToPage={page => AppActions.getFeatures(this.props.projectId, this.props.environmentId, true, this.state.search, this.state.sort, page, this.getFilter())}
+                                                                    onSortChange={(sort) => {
+                                                                        this.setState({ sort }, () => {
+                                                                            AppActions.getFeatures(this.props.projectId, this.props.environmentId, true, this.state.search, this.state.sort, 0, this.getFilter(), this.props.pageSize);
+                                                                        });
+                                                                    }}
+                                                                    sorting={[
+                                                                        { label: 'Name', value: 'name', order: 'asc', default: true },
+                                                                        { label: 'Created Date', value: 'created_date', order: 'asc' },
+                                                                    ]}
+                                                                    items={projectFlags}
+                                                                    header={this.props.hideTags? null : (
+                                                                      <Row className="px-0 pt-0">
+                                                                          <TagFilter
+                                                                              showUntagged
+                                                                              showClearAll={(this.state.tags && !!this.state.tags.length) || this.state.showArchived}
+                                                                              onClearAll={() => this.setState({ showArchived: false, tags: [] }, this.filter)}
+                                                                              projectId={`${projectId}`} value={this.state.tags} onChange={(tags) => {
+                                                                              FeatureListStore.isLoading = true;
+                                                                              if (tags.includes('') && tags.length>1) {
+                                                                                  if (!this.state.tags.includes('')) {
+                                                                                      this.setState({ tags: [''] }, this.filter);
+                                                                                  } else {
+                                                                                      this.setState({ tags: tags.filter(v => !!v) }, this.filter);
+                                                                                  }
+                                                                              } else {
+                                                                                  this.setState({ tags }, this.filter);
+                                                                              }
+                                                                              AsyncStorage.setItem(`${projectId}tags`, JSON.stringify(tags));
+                                                                          }}
+                                                                          >
+                                                                              <div className="mr-2">
+                                                                                  <Tag
+                                                                                    selected={this.state.showArchived}
+                                                                                    onClick={() => {
+                                                                                        FeatureListStore.isLoading = true;
+                                                                                        this.setState({ showArchived: !this.state.showArchived }, this.filter);
+                                                                                    }}
+                                                                                    className="px-2 py-2 ml-2 mr-2"
+                                                                                    tag={{ label: 'Archived' }}
+                                                                                  />
+                                                                              </div>
+                                                                          </TagFilter>
+                                                                      </Row>
+                                                                    )}
+                                                                    renderRow={(projectFlag, i) => (
+                                                                        <FeatureRow
+                                                                            hideRemove
+                                                                            hideAudit
+                                                                            widget
+                                                                            readOnly
+                                                                            environmentFlags={environmentFlags}
+                                                                            projectFlags={projectFlags}
+                                                                            permission={permission}
+                                                                            environmentId={environmentId}
+                                                                            projectId={projectId}
+                                                                            index={i}
+                                                                            toggleFlag={toggleFlag}
+                                                                            editFlag={editFlag}
+                                                                            removeFlag={removeFlag}
+                                                                            projectFlag={projectFlag}
+                                                                        />
+                                                                    )}
+                                                                    filterRow={({ name }, search) => true}
+                                                                />
+                                                            </div>
+                                                        )}
 
-                                                </Permission>
-                                            </div>
-                                        ) : null}
-                                    </div>
-                                )}
-                            </div>
-                        );
-                    }}
-                </FeatureListProvider>
-            </div>
+                                                    </Permission>
+                                                </div>
+                                            ) : null}
+                                        </div>
+                                    )}
+                                </div>
+                            );
+                        }}
+                    </FeatureListProvider>
+                </div>
             </Provider>
         )
     }
@@ -224,13 +229,29 @@ export default function Widget() {
     if (!API.getCookie("t")) {
         return null
     }
+    const [error, setError] = useState<string|null>(null);
+    const [_projectId, setProjectId] = useState<string|null>(projectId||null);
+    const [_environmentId, setEnvironmentId] = useState<string|null>(environmentId||null);
+    const [organisationId, setOrganisationId] = useState<string|null>(null);
+    isWidget = true;
 
-    if (projectId && environmentId) {
-        if (id === "flagsmith_audit_widget") {
+    useEffect(()=>{
+        setProjectId(environmentId||null)
+    },[environmentId])
+
+    useEffect(()=>{
+        setProjectId(projectId||null)
+    },[projectId])
+
+    if (!API.getCookie("t")) {
+        return null
+    }
+    if (projectId && environmentId && !error) {
+        if (isAudit) {
             return (
                 <Provider store={getStore()}>
                     <div className="widget-container">
-                        <AuditLog environmentId={environmentId} projectId={projectId} pageSize={parseInt(pageSize)}/>
+                        <AuditLog onErrorChange={setError} environmentId={environmentId} projectId={projectId} pageSize={parseInt(pageSize)}/>
                     </div>
                 </Provider>
             )
@@ -239,35 +260,19 @@ export default function Widget() {
     }
 
     return <div className="text-center pt-5">
-        <div className="mb-4">
-            <NavIconSmall className="signup-icon" />
+        <h3>Please select the environment you wish to use.</h3>
+        <div className="widget-container">
+            <Provider store={getStore()}>
+                <OrgEnvironmentSelect
+                    useApiKey={!isAudit}
+                    organisationId={organisationId}
+                    environmentId={_environmentId}
+                    projectId={_projectId}
+                    onOrganisationChange={setOrganisationId}
+                    onProjectChange={setProjectId}
+                    onEnvironmentChange={setEnvironmentId}
+                />
+            </Provider>
         </div>
-        <h3>Please enter the required Options to get started.</h3>
-        {isAudit? (
-                <p>
-                    You can find your Project ID and numeric Environment ID when viewing your audit log in the <a target="_blank" className="text-primary" href="https://app.flagsmith.com/">Flagsmith Dashboard.</a>
-                    <div className="text-center mt-2">
-                        {isAudit ? (
-                            <img src="/static/images/dd-instructions-audit.png"/>
-
-                        ) : (
-                            <img src="/static/images/dd-instructions.png"/>
-                        )}
-                    </div>
-                </p>
-            ) : (
-            <p>
-                You can find your Project ID and Environment ID when viewing your environment in the <a target="_blank" className="text-primary" href="https://app.flagsmith.com/">Flagsmith Dashboard.</a>
-                <div className="text-center mt-2">
-                    {isAudit ? (
-                        <img src="/static/images/dd-instructions-audit.png"/>
-
-                    ) : (
-                        <img src="/static/images/dd-instructions.png"/>
-                    )}
-                </div>
-            </p>
-            )}
-
     </div>
 }
