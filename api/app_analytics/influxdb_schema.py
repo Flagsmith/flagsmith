@@ -12,6 +12,11 @@ class FeatureEvaluationDataSchema(Schema):
 
     @pre_load
     def preprocess(self, data, **kwargs):
+        # the data returned by influx db looks like this:
+        # {
+        #     "datetime": "2021-01-01",
+        #     "some_feature_name": 10
+        # }
         valid_data = {"day": data.pop("datetime")}
         valid_data["count"] = data.popitem()[1]
         return valid_data
