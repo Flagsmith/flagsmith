@@ -13,7 +13,7 @@ import {
     setText, viewFeature,
     waitForElementVisible,
     waitAndRefresh, logResults,
-} from '../helpers.cafe';
+} from '../e2e/helpers.cafe';
 
 const email = 'nightwatch@solidstategroup.com';
 const password = 'str0ngp4ssw0rd!';
