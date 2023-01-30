@@ -65,18 +65,18 @@ def get_usage_data_from_local_db(
         .values("created_at__date", "resource")
         .annotate(count=Sum("total_count"))
     )
-    resource_count_map = {}
+    data_by_day = {}
     for row in qs:
         day = row["created_at__date"]
-        if day not in resource_count_map:
-            resource_count_map[day] = UsageData(day=day)
+        if day not in data_by_day:
+            data_by_day[day] = UsageData(day=day)
         setattr(
-            resource_count_map[day],
+            data_by_day[day],
             Resource.get_lowercased_name(row["resource"]),
             row["count"],
         )
 
-    return resource_count_map.values()
+    return data_by_day.values()
 
 
 def get_total_events_count(organisation) -> int:
@@ -84,15 +84,15 @@ def get_total_events_count(organisation) -> int:
     Return total number of events for an organisation in the last 30 days
     """
     if settings.USE_POSTGRES_FOR_ANALYTICS:
-        events = APIUsageBucket.objects.filter(
+        count = APIUsageBucket.objects.filter(
             environment_id__in=_get_environment_ids_for_org(organisation),
             created_at__date__lte=date.today(),
             created_at__date__gt=date.today() - timedelta(days=30),
             bucket_size=settings.ANALYTICS_READ_BUCKET_SIZE,
         ).aggregate(total_count=Sum("total_count"))["total_count"]
     else:
-        events = get_events_for_organisation(organisation.id)
-    return events
+        count = get_events_for_organisation(organisation.id)
+    return count
 
 
 def get_feature_evaluation_data(

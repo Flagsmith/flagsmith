@@ -1,4 +1,3 @@
-import logging
 from datetime import datetime
 
 from django.db.models import Count, Q, Sum
@@ -13,8 +12,6 @@ from .models import (
     FeatureEvaluationBucket,
     FeatureEvaluationRaw,
 )
-
-logger = logging.getLogger()
 
 
 @register_task_handler()
@@ -43,9 +40,9 @@ def track_request(resource: int, host: str, environment_key: str):
     )
 
 
-def get_source_data(
+def _get_api_usage_source_data(
     process_from: datetime, process_till: datetime, source_bucket_size: int = None
-):
+) -> dict:
     filters = Q(
         created_at__lte=process_till,
         created_at__gt=process_from,
@@ -63,9 +60,9 @@ def get_source_data(
     )
 
 
-def get_source_data_feature_evaluation(
+def _get_feature_evaluation_source_data(
     process_from: datetime, process_till: datetime, source_bucket_size: int = None
-):
+) -> dict:
     filters = Q(
         created_at__lte=process_till,
         created_at__gt=process_from,
@@ -85,9 +82,8 @@ def get_source_data_feature_evaluation(
     )
 
 
-def get_start_of_current_bucket(bucket_size: int):
+def get_start_of_current_bucket(bucket_size: int) -> datetime:
     current_time = timezone.now().replace(second=0, microsecond=0)
-    # calculate start of 'current' bucket
     start_of_current_bucket = current_time - timezone.timedelta(
         minutes=current_time.minute % bucket_size
     )
@@ -107,7 +103,7 @@ def populate_api_usage_bucket(
             minutes=bucket_size * i
         )
         process_to = process_from + timezone.timedelta(minutes=bucket_size)
-        data = get_source_data(process_from, process_to, source_bucket_size)
+        data = _get_api_usage_source_data(process_from, process_to, source_bucket_size)
         for row in data:
             APIUsageBucket.objects.create(
                 environment_id=row["environment_id"],
@@ -131,7 +127,7 @@ def populate_feature_evaluation_bucket(
             minutes=bucket_size * i
         )
         process_to = process_from + timezone.timedelta(minutes=bucket_size)
-        data = get_source_data_feature_evaluation(
+        data = _get_feature_evaluation_source_data(
             process_from, process_to, source_bucket_size
         )
         for row in data:

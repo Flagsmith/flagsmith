@@ -15,6 +15,19 @@ from app_analytics.tasks import (
 from django.utils import timezone
 
 
+def create_api_usage_event(environment_id: str, when: datetime):
+    event = APIUsageRaw.objects.create(
+        environment_id=environment_id,
+        host="host1",
+        resource=Resource.FLAGS,
+    )
+    # update created_at
+    event.created_at = when
+    event.save()
+
+    return event
+
+
 @pytest.mark.freeze_time("2023-01-19T09:09:47.325132+00:00")
 @pytest.mark.django_db(databases=["analytics"])
 def test_populate_api_usage_bucket_15m_bucket(freezer):
@@ -25,14 +38,13 @@ def test_populate_api_usage_bucket_15m_bucket(freezer):
     # let's create events at every 1 minutes
     # for the last two hours, i.e: from 9:09:47 to 7:10:47
     for i in range(60 * 2):
-        create_events(environment_id, 1, now - timezone.timedelta(minutes=1 * i))
-        # now = now - timezone.timedelta(minutes=1)
+        create_api_usage_event(environment_id, now - timezone.timedelta(minutes=1 * i))
 
     # Next, let's go 1 hr back in the past and run this
     freezer.move_to(timezone.now() - timezone.timedelta(hours=1))
     populate_api_usage_bucket(bucket_size, run_every=60)
 
-    # Then - it should have created four buckets
+    # Then - we should have four buckets
     buckets = APIUsageBucket.objects.filter(bucket_size=15).order_by("created_at").all()
 
     assert len(buckets) == 4
@@ -54,7 +66,7 @@ def test_populate_api_usage_bucket_15m_bucket(freezer):
     freezer.move_to(timezone.now() + timezone.timedelta(hours=1))
     populate_api_usage_bucket(bucket_size, run_every=60)
 
-    # Then - it should have created four more buckets
+    # Then - we should have another four buckets created by the second run
     buckets = APIUsageBucket.objects.filter(bucket_size=15).order_by("created_at").all()
     assert len(buckets) == 8
 
@@ -85,10 +97,10 @@ def test_populate_api_usage_bucket(freezer, bucket_size, runs_every):
     # let's create events at every 1 minutes
     # for the last two hours, i.e: from 9:09:47
     for i in range(runs_every * 2):
-        create_events(environment_id, 1, now - timezone.timedelta(minutes=1 * i))
+        create_api_usage_event(environment_id, now - timezone.timedelta(minutes=1 * i))
         # create events in some other environments as well - just to make sure
         # we don't aggregate them in the same environment
-        create_events(999, 1, now - timezone.timedelta(minutes=1 * i))
+        create_api_usage_event(999, now - timezone.timedelta(minutes=1 * i))
 
     # When
     populate_api_usage_bucket(bucket_size, run_every=runs_every)
@@ -110,22 +122,6 @@ def test_populate_api_usage_bucket(freezer, bucket_size, runs_every):
     for bucket in buckets:
         start_time = start_time - timezone.timedelta(minutes=bucket_size)
         assert bucket.created_at == start_time
-
-
-def create_events(environment_id: str, how_many: int, when: datetime):
-    events = []
-    for _ in range(how_many):
-        event = APIUsageRaw.objects.create(
-            environment_id=environment_id,
-            host="host1",
-            resource=Resource.FLAGS,
-        )
-        # update created_at
-        event.created_at = when
-        event.save()
-        events.append(events)
-
-    return events
 
 
 @pytest.mark.freeze_time("2023-01-19T09:00:00+00:00")
