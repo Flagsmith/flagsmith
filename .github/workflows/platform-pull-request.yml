@@ -17,7 +17,7 @@ jobs:
             - name: Run Staging E2E Tests
               working-directory: frontend
               env:
-                E2E_TEST_TOKEN_STAGING: ${{ secrets.E2E_TEST_TOKEN }}
+                E2E_TEST_TOKEN_STAGING: ${{ secrets.TEST_TOKEN_KYLE }}
                 ENV: staging
                 SLACK_TOKEN: ${{ secrets.SLACK_TOKEN }}
                 STATIC_ASSET_CDN_URL: /
