@@ -33,154 +33,93 @@ jobs:
                   sentry_sdk_dsn: ${{ secrets.SENTRY_SDK_DSN }}
                   sendgrid_api_key: ${{ secrets.SENDGRID_API_KEY }}
 
-            - name: Run E2E tests against local
-              uses: ./.github/actions/e2e-tests
-              with:
-                e2e_test_token: some-token
-                slack_token: ${{ secrets.SLACK_TOKEN }}
-                environment: local
-                enable_influxdb_features: false
+    run-e2e-tests-docker-unified:
+      if: github.event.pull_request.draft == false
+      runs-on: ubuntu-latest
+      name: Full E2E tests with unified image in Docker
 
-            - name: Run E2E tests against local2
-              uses: ./.github/actions/e2e-tests
-              with:
-                e2e_test_token: some-token
-                slack_token: ${{ secrets.SLACK_TOKEN }}
-                environment: local
-                enable_influxdb_features: false
+      steps:
+        - name: Cloning repo
+          uses: actions/checkout@v3
 
-            - name: Run E2E tests against local3
-              uses: ./.github/actions/e2e-tests
-              with:
-                e2e_test_token: some-token
-                slack_token: ${{ secrets.SLACK_TOKEN }}
-                environment: local
-                enable_influxdb_features: false
+        - name: Run docker-compose with unified-image
+          working-directory: frontend
+          env:
+            E2E_TEST_TOKEN_STAGING: ${{ secrets.E2E_TEST_TOKEN }}
+            ENV: staging
+            SLACK_TOKEN: ${{ secrets.SLACK_TOKEN }}
+            STATIC_ASSET_CDN_URL: /
+          run: |
+            docker-compose -f docker-compose-e2e-tests.yml build
+            docker-compose -f docker-compose-e2e-tests.yml run frontend npm run test
 
-            - name: Run E2E tests against local4
-              uses: ./.github/actions/e2e-tests
-              with:
-                e2e_test_token: some-token
-                slack_token: ${{ secrets.SLACK_TOKEN }}
-                environment: local
-                enable_influxdb_features: false
+        - name: Run docker-compose with unified-image
+          working-directory: frontend
+          env:
+            E2E_TEST_TOKEN_STAGING: ${{ secrets.E2E_TEST_TOKEN }}
+            ENV: staging
+            SLACK_TOKEN: ${{ secrets.SLACK_TOKEN }}
+            STATIC_ASSET_CDN_URL: /
+          run: |
+            docker-compose -f docker-compose-e2e-tests.yml build
+            docker-compose -f docker-compose-e2e-tests.yml run frontend npm run test
 
-            - name: Run E2E tests against local2
-              uses: ./.github/actions/e2e-tests
-              with:
-                e2e_test_token: some-token
-                slack_token: ${{ secrets.SLACK_TOKEN }}
-                environment: local
-                enable_influxdb_features: false
 
-            - name: Run E2E tests against local3
-              uses: ./.github/actions/e2e-tests
-              with:
-                e2e_test_token: some-token
-                slack_token: ${{ secrets.SLACK_TOKEN }}
-                environment: local
-                enable_influxdb_features: false
+        - name: Run docker-compose with unified-image
+          working-directory: frontend
+          env:
+            E2E_TEST_TOKEN_STAGING: ${{ secrets.E2E_TEST_TOKEN }}
+            ENV: staging
+            SLACK_TOKEN: ${{ secrets.SLACK_TOKEN }}
+            STATIC_ASSET_CDN_URL: /
+          run: |
+            docker-compose -f docker-compose-e2e-tests.yml build
+            docker-compose -f docker-compose-e2e-tests.yml run frontend npm run test
 
-            - name: Run E2E tests against local4
-              uses: ./.github/actions/e2e-tests
-              with:
-                e2e_test_token: some-token
-                slack_token: ${{ secrets.SLACK_TOKEN }}
-                environment: local
-                enable_influxdb_features: false
 
-            - name: Run E2E tests against local2
-              uses: ./.github/actions/e2e-tests
-              with:
-                e2e_test_token: some-token
-                slack_token: ${{ secrets.SLACK_TOKEN }}
-                environment: local
-                enable_influxdb_features: false
+        - name: Run docker-compose with unified-image
+          working-directory: frontend
+          env:
+            E2E_TEST_TOKEN_STAGING: ${{ secrets.E2E_TEST_TOKEN }}
+            ENV: staging
+            SLACK_TOKEN: ${{ secrets.SLACK_TOKEN }}
+            STATIC_ASSET_CDN_URL: /
+          run: |
+            docker-compose -f docker-compose-e2e-tests.yml build
+            docker-compose -f docker-compose-e2e-tests.yml run frontend npm run test
 
-            - name: Run E2E tests against local3
-              uses: ./.github/actions/e2e-tests
-              with:
-                e2e_test_token: some-token
-                slack_token: ${{ secrets.SLACK_TOKEN }}
-                environment: local
-                enable_influxdb_features: false
 
-            - name: Run E2E tests against local4
-              uses: ./.github/actions/e2e-tests
-              with:
-                e2e_test_token: some-token
-                slack_token: ${{ secrets.SLACK_TOKEN }}
-                environment: local
-                enable_influxdb_features: false
+        - name: Run docker-compose with unified-image
+          working-directory: frontend
+          env:
+            E2E_TEST_TOKEN_STAGING: ${{ secrets.E2E_TEST_TOKEN }}
+            ENV: staging
+            SLACK_TOKEN: ${{ secrets.SLACK_TOKEN }}
+            STATIC_ASSET_CDN_URL: /
+          run: |
+            docker-compose -f docker-compose-e2e-tests.yml build
+            docker-compose -f docker-compose-e2e-tests.yml run frontend npm run test
 
-            - name: Run E2E tests against local2
-              uses: ./.github/actions/e2e-tests
-              with:
-                e2e_test_token: some-token
-                slack_token: ${{ secrets.SLACK_TOKEN }}
-                environment: local
-                enable_influxdb_features: false
 
-            - name: Run E2E tests against local3
-              uses: ./.github/actions/e2e-tests
-              with:
-                e2e_test_token: some-token
-                slack_token: ${{ secrets.SLACK_TOKEN }}
-                environment: local
-                enable_influxdb_features: false
+        - name: Run docker-compose with unified-image
+          working-directory: frontend
+          env:
+            E2E_TEST_TOKEN_STAGING: ${{ secrets.E2E_TEST_TOKEN }}
+            ENV: staging
+            SLACK_TOKEN: ${{ secrets.SLACK_TOKEN }}
+            STATIC_ASSET_CDN_URL: /
+          run: |
+            docker-compose -f docker-compose-e2e-tests.yml build
+            docker-compose -f docker-compose-e2e-tests.yml run frontend npm run test
 
-            - name: Run E2E tests against local4
-              uses: ./.github/actions/e2e-tests
-              with:
-                e2e_test_token: some-token
-                slack_token: ${{ secrets.SLACK_TOKEN }}
-                environment: local
-                enable_influxdb_features: false
 
-            - name: Run E2E tests against local2
-              uses: ./.github/actions/e2e-tests
-              with:
-                e2e_test_token: some-token
-                slack_token: ${{ secrets.SLACK_TOKEN }}
-                environment: local
-                enable_influxdb_features: false
-
-            - name: Run E2E tests against local3
-              uses: ./.github/actions/e2e-tests
-              with:
-                e2e_test_token: some-token
-                slack_token: ${{ secrets.SLACK_TOKEN }}
-                environment: local
-                enable_influxdb_features: false
-
-            - name: Run E2E tests against local4
-              uses: ./.github/actions/e2e-tests
-              with:
-                e2e_test_token: some-token
-                slack_token: ${{ secrets.SLACK_TOKEN }}
-                environment: local
-                enable_influxdb_features: false
-
-            - name: Run E2E tests against local2
-              uses: ./.github/actions/e2e-tests
-              with:
-                e2e_test_token: some-token
-                slack_token: ${{ secrets.SLACK_TOKEN }}
-                environment: local
-                enable_influxdb_features: false
-
-            - name: Run E2E tests against local3
-              uses: ./.github/actions/e2e-tests
-              with:
-                e2e_test_token: some-token
-                slack_token: ${{ secrets.SLACK_TOKEN }}
-                environment: local
-                enable_influxdb_features: false
-
-            - name: Run E2E tests against local4
-              uses: ./.github/actions/e2e-tests
-              with:
-                e2e_test_token: some-token
-                slack_token: ${{ secrets.SLACK_TOKEN }}
-                environment: local
-                enable_influxdb_features: false
+        - name: Run docker-compose with unified-image
+          working-directory: frontend
+          env:
+            E2E_TEST_TOKEN_STAGING: ${{ secrets.E2E_TEST_TOKEN }}
+            ENV: staging
+            SLACK_TOKEN: ${{ secrets.SLACK_TOKEN }}
+            STATIC_ASSET_CDN_URL: /
+          run: |
+            docker-compose -f docker-compose-e2e-tests.yml build
+            docker-compose -f docker-compose-e2e-tests.yml run frontend npm run test
