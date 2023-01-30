@@ -1,14 +1,23 @@
 from datetime import datetime
 
 import pytest
-from app_analytics.models import APIUsageBucket, APIUsageRaw, Resource
-from app_analytics.tasks import populate_bucket
+from app_analytics.models import (
+    APIUsageBucket,
+    APIUsageRaw,
+    FeatureEvaluationRaw,
+    Resource,
+)
+from app_analytics.tasks import (
+    populate_api_usage_bucket,
+    track_feature_evaluation,
+    track_request,
+)
 from django.utils import timezone
 
 
 @pytest.mark.freeze_time("2023-01-19T09:09:47.325132+00:00")
 @pytest.mark.django_db(databases=["analytics"])
-def test_populate_bucket_15m_bucket(freezer):
+def test_populate_api_usage_bucket_15m_bucket(freezer):
     # Given
     environment_id = 1
     bucket_size = 15
@@ -21,7 +30,7 @@ def test_populate_bucket_15m_bucket(freezer):
 
     # Next, let's go 1 hr back in the past and run this
     freezer.move_to(timezone.now() - timezone.timedelta(hours=1))
-    populate_bucket(bucket_size, run_every=60)
+    populate_api_usage_bucket(bucket_size, run_every=60)
 
     # Then - it should have created four buckets
     buckets = APIUsageBucket.objects.filter(bucket_size=15).order_by("created_at").all()
@@ -43,7 +52,7 @@ def test_populate_bucket_15m_bucket(freezer):
 
     # Now, let's move forward 1hr and run this again
     freezer.move_to(timezone.now() + timezone.timedelta(hours=1))
-    populate_bucket(bucket_size, run_every=60)
+    populate_api_usage_bucket(bucket_size, run_every=60)
 
     # Then - it should have created four more buckets
     buckets = APIUsageBucket.objects.filter(bucket_size=15).order_by("created_at").all()
@@ -69,7 +78,7 @@ def test_populate_bucket_15m_bucket(freezer):
 )
 @pytest.mark.freeze_time("2023-01-19T09:09:47.325132+00:00")
 @pytest.mark.django_db(databases=["analytics"])
-def test_populate_bucket(freezer, bucket_size, runs_every):
+def test_populate_api_usage_bucket(freezer, bucket_size, runs_every):
     # Given
     environment_id = 1
     now = timezone.now()
@@ -82,7 +91,7 @@ def test_populate_bucket(freezer, bucket_size, runs_every):
         create_events(999, 1, now - timezone.timedelta(minutes=1 * i))
 
     # When
-    populate_bucket(bucket_size, run_every=runs_every)
+    populate_api_usage_bucket(bucket_size, run_every=runs_every)
 
     # Then
     buckets = (
@@ -121,7 +130,7 @@ def create_events(environment_id: str, how_many: int, when: datetime):
 
 @pytest.mark.freeze_time("2023-01-19T09:00:00+00:00")
 @pytest.mark.django_db(databases=["analytics"])
-def test_populate_bucket_using_a_bucket(freezer):
+def test_populate_api_usage_bucket_using_a_bucket(freezer):
     # Given
     environment_id = 1
 
@@ -141,7 +150,53 @@ def test_populate_bucket_using_a_bucket(freezer):
     freezer.move_to(timezone.now().replace(minute=47))
 
     # When
-    populate_bucket(bucket_size=15, run_every=60, source_bucket_size=5)
+    populate_api_usage_bucket(bucket_size=15, run_every=60, source_bucket_size=5)
 
     # Then
     assert APIUsageBucket.objects.filter(bucket_size=15, total_count=300).count() == 1
+
+
+@pytest.mark.django_db(databases=["analytics", "default"])
+def test_track_request(environment):
+    # Given
+    host = "testserver"
+    environment_key = environment.api_key
+    resource = Resource.FLAGS
+
+    # When
+    track_request(resource, host, environment_key)
+
+    # Then
+    assert (
+        APIUsageRaw.objects.filter(
+            resource=resource, host=host, environment_id=environment.id
+        ).count()
+        == 1
+    )
+
+
+@pytest.mark.django_db(databases=["analytics"])
+def test_track_feature_evaluation():
+    # Given
+    environment_id = 1
+    feature_evaluations = {
+        "feature1": 10,
+        "feature2": 20,
+    }
+
+    # When
+    track_feature_evaluation(environment_id, feature_evaluations)
+
+    # Then
+    assert (
+        FeatureEvaluationRaw.objects.filter(
+            environment_id=environment_id, feature_name="feature1", evaluation_count=10
+        ).count()
+        == 1
+    )
+    assert (
+        FeatureEvaluationRaw.objects.filter(
+            environment_id=environment_id, feature_name="feature2", evaluation_count=20
+        ).count()
+        == 1
+    )

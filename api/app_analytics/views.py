@@ -21,7 +21,11 @@ from features.models import FeatureState
 from organisations.models import Organisation
 
 from .permissions import UsageDataPermission
-from .serializers import UsageDataQuerySerializer, UsageDataSerializer
+from .serializers import (
+    UsageDataQuerySerializer,
+    UsageDataSerializer,
+    UsageTotalCountSerializer,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -101,21 +105,28 @@ class UsageDataAPIViewSet(viewsets.GenericViewSet):
         organisation_pk = self.kwargs.get("organisation_pk")
         return Organisation.objects.get(pk=organisation_pk)
 
+    @swagger_auto_schema(
+        responses={200: UsageTotalCountSerializer()},
+    )
     @action(detail=False, methods=["GET"])
-    def total_count(self, request, pk):
+    def total_count(self, request, organisation_pk=None):
         organisation = self._get_organisation()
-        events = get_total_events_count(organisation)
+        count = get_total_events_count(organisation)
+        serializer = UsageTotalCountSerializer(data={"count": count})
+        serializer.is_valid(raise_exception=True)
 
-        return Response({"count": events}, status=status.HTTP_200_OK)
+        return Response(serializer.data)
 
-    @swagger_auto_schema(responses={200: UsageDataSerializer()})
-    def list(self, request):
+    @swagger_auto_schema(
+        query_serializer=UsageDataQuerySerializer(),
+        responses={200: UsageDataSerializer()},
+    )
+    def list(self, request, organisation_pk=None):
         filters = UsageDataQuerySerializer(data=request.query_params)
         filters.is_valid(raise_exception=True)
 
         organisation = self._get_organisation()
-        usage_data = get_usage_data(organisation, filters.data)
-        serializer = UsageDataSerializer(data=usage_data)
-        serializer.is_valid(raise_exception=True)
+        usage_data = get_usage_data(organisation, **filters.data)
+        serializer = UsageDataSerializer(usage_data, many=True)
 
         return Response(serializer.data)

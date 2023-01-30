@@ -2,7 +2,7 @@ import logging
 import typing
 from functools import reduce
 
-from app_analytics.analytics_db_service import get_usage_data_for_feature
+from app_analytics.analytics_db_service import get_feature_evaluation_data
 from app_analytics.influxdb_wrapper import get_multiple_event_list_for_feature
 from core.constants import FLAGSMITH_UPDATED_AT_HEADER
 from core.permissions import HasMasterAPIKey
@@ -46,6 +46,7 @@ from .permissions import (
     MasterAPIKeyFeatureStatePermissions,
 )
 from .serializers import (
+    FeatureEvaluationDataSerializer,
     FeatureInfluxDataSerializer,
     FeatureOwnerInputSerializer,
     FeatureQuerySerializer,
@@ -54,7 +55,6 @@ from .serializers import (
     FeatureStateSerializerFull,
     FeatureStateSerializerWithIdentity,
     FeatureStateValueSerializer,
-    FeatureUsageDataSerializer,
     GetInfluxDataQuerySerializer,
     GetUsageDataQuerySerializer,
     ListCreateFeatureSerializer,
@@ -212,19 +212,19 @@ class FeatureViewSet(viewsets.ModelViewSet):
 
     @swagger_auto_schema(
         query_serializer=GetUsageDataQuerySerializer(),
-        responses={200: FeatureUsageDataSerializer()},
+        responses={200: FeatureEvaluationDataSerializer()},
     )
-    @action(detail=True, methods=["GET"], url_path="usage-data")
-    def get_usage_data(self, request, pk, project_pk):
+    @action(detail=True, methods=["GET"], url_path="evaluation-data")
+    def get_evaluation_data(self, request, pk, project_pk):
         feature = get_object_or_404(Feature, pk=pk)
 
         query_serializer = GetUsageDataQuerySerializer(data=request.query_params)
         query_serializer.is_valid(raise_exception=True)
-        usage_data = get_usage_data_for_feature(
+
+        usage_data = get_feature_evaluation_data(
             feature_name=feature.name, **query_serializer.data
         )
-        serializer = FeatureUsageDataSerializer(data=usage_data)
-        serializer.is_valid(raise_exception=True)
+        serializer = FeatureEvaluationDataSerializer(usage_data, many=True)
 
         return Response(serializer.data)
 

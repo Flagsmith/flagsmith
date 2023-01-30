@@ -12,13 +12,14 @@ from app_analytics.models import (
     Resource,
 )
 from app_analytics.schemas import (
-    FeatureUsageData,
-    FeatureUsageDataSchema,
+    FeatureEvaluationData,
+    FeatureEvaluationDataSchema,
     UsageData,
     UsageDataSchema,
 )
 from django.conf import settings
 from django.db.models import Sum
+from django.utils import timezone
 
 from environments.models import Environment
 from features.models import Feature
@@ -51,14 +52,14 @@ def _get_environment_ids_for_org(organisation) -> List[int]:
     environment_ids = Environment.objects.filter(
         project_id__in=organisation.projects.all().values_list("id", flat=True)
     ).values_list("id", flat=True)
-    # We have do to this in order to avoid django from generating a query
-    # that tries to use environments and projects table
-    # (because they do not exists in analytics database)
+    # We need to do this to prevent Django from generating a query that
+    # references the environments and projects tables,
+    # as they do not exist in the analytics database.
     return [id for id in environment_ids]
 
 
 def get_usage_data_from_local_db(
-    organisation, environment_id=None, project_id=None
+    organisation, environment_id=None, project_id=None, period: int = 30
 ) -> List[UsageData]:
     qs = APIUsageBucket.objects.filter(
         environment_id__in=_get_environment_ids_for_org(organisation),
@@ -69,36 +70,27 @@ def get_usage_data_from_local_db(
     if environment_id:
         qs = qs.filter(environment_id=environment_id)
 
-    def get_count_from_qs(qs, resource) -> int:
-        return next(
-            filter(lambda obj: obj["resource"] == resource, qs),
-            {},
-        ).get("count", 0)
+    qs = (
+        qs.filter(
+            created_at__date__lte=timezone.now(),
+            created_at__date__gt=timezone.now() - timedelta(days=30),
+        )
+        .order_by("created_at")
+        .values("created_at__date", "resource")
+        .annotate(count=Sum("total_count"))
+    )
+    resource_count_map = {}
+    for row in qs:
+        day = row["created_at__date"]
+        if day not in resource_count_map:
+            resource_count_map[day] = UsageData(day=day)
+        setattr(
+            resource_count_map[day],
+            Resource.get_lowercased_name(row["resource"]),
+            row["count"],
+        )
 
-    usage_list = []
-    today = date.today()
-    for i in range(30):
-        process_from = today - timedelta(days=i)
-        process_till = process_from + timedelta(days=1)
-        events = (
-            qs.filter(
-                created_at__date__gte=process_from, created_at__date__lt=process_till
-            )
-            .values("created_at__date", "resource")
-            .annotate(count=Sum("total_count"))
-        )
-        usage_list.append(
-            UsageData(
-                day=process_from,
-                flags=get_count_from_qs(events, Resource.FLAGS),
-                identities=get_count_from_qs(events, Resource.IDENTITIES),
-                traits=get_count_from_qs(events, Resource.TRAITS),
-                environment_document=get_count_from_qs(
-                    events, Resource.ENVIRONMENT_DOCUMENT
-                ),
-            )
-        )
-    return usage_list
+    return resource_count_map.values()
 
 
 def get_total_events_count(organisation) -> int:
@@ -117,33 +109,39 @@ def get_total_events_count(organisation) -> int:
     return events
 
 
-def get_usage_data_for_feature(feature: Feature, environment_id: int, period: int = 30):
+def get_feature_evaluation_data(
+    feature: Feature, environment_id: int, period: int = 30
+):
     if settings.USE_POSTGRES_FOR_ANALYTICS:
-        return get_usage_data_for_feature_from_local_db(feature, environment_id, period)
+        return get_feature_evaluation_data_from_local_db(
+            feature, environment_id, period
+        )
     influx_data = get_multiple_event_list_for_feature(
         feature_name=feature.name, environment_id=environment_id, period=f"{period}d"
     )
-    return FeatureUsageDataSchema(many=True).load(influx_data)
+    return FeatureEvaluationDataSchema(many=True).load(influx_data)
 
 
-def get_usage_data_for_feature_from_local_db(
+def get_feature_evaluation_data_from_local_db(
     feature: Feature, environment_id: int, period: int = 30
-) -> FeatureUsageData:
-    qs = FeatureEvaluationBucket.objects.filter(
-        environment_id=environment_id,
-        bucket_size=USAGE_READ_BUCKET_SIZE,
+) -> List[FeatureEvaluationData]:
+    feature_evaluation_data = (
+        FeatureEvaluationBucket.objects.filter(
+            environment_id=environment_id,
+            bucket_size=USAGE_READ_BUCKET_SIZE,
+            created_at__date__lte=timezone.now(),
+            created_at__date__gt=timezone.now() - timedelta(days=period),
+        )
+        .order_by("created_at")
+        .values("created_at__date", "feature_name", "environment_id")
+        .annotate(count=Sum("total_count"))
     )
     usage_list = []
-    today = date.today()
-    for i in range(period):
-        process_from = today - timedelta(days=i)
-        process_till = process_from + timedelta(days=1)
-        event = (
-            qs.filter(
-                created_at__date__gte=process_from, created_at__date__lt=process_till
+    for data in feature_evaluation_data:
+        usage_list.append(
+            FeatureEvaluationData(
+                day=data["created_at__date"],
+                count=data["count"],
             )
-            .values("created_at__date", "feature_name")
-            .annotate(count=Sum("total_count"))
-        ).first()
-        usage_list.append(FeatureUsageData(day=process_from, count=event["count"]))
+        )
     return usage_list

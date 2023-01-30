@@ -322,7 +322,7 @@ class FeatureInfluxDataSerializer(serializers.Serializer):
     events_list = serializers.ListSerializer(child=serializers.DictField())
 
 
-class FeatureUsageDataSerializer(serializers.Serializer):
+class FeatureEvaluationDataSerializer(serializers.Serializer):
     day = serializers.CharField()
     count = serializers.IntegerField()
 
@@ -334,10 +334,10 @@ class GetInfluxDataQuerySerializer(serializers.Serializer):
 
 
 class GetUsageDataQuerySerializer(serializers.Serializer):
-    period = serializers.CharField(
-        required=False, default="1", help_text="number of days"
+    period = serializers.IntegerField(
+        required=False, default=30, help_text="number of days"
     )
-    environment_id = serializers.CharField(required=True)
+    environment_id = serializers.IntegerField(required=True)
 
 
 class WritableNestedFeatureStateSerializer(FeatureStateSerializerBasic):

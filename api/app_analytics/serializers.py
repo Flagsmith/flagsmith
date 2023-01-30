@@ -12,3 +12,7 @@ class UsageDataSerializer(serializers.Serializer):
 class UsageDataQuerySerializer(serializers.Serializer):
     project_id = serializers.IntegerField(required=False)
     environment_id = serializers.IntegerField(required=False)
+
+
+class UsageTotalCountSerializer(serializers.Serializer):
+    count = serializers.IntegerField()

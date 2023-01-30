@@ -1,3 +1,4 @@
+from .models import Resource
 from .tasks import track_request
 from .track import (
     TRACKED_RESOURCE_ACTIONS,
@@ -42,7 +43,7 @@ class APIUsageMiddleware:
         if resource in TRACKED_RESOURCE_ACTIONS:
             track_request.delay(
                 kwargs={
-                    "resource": resource,
+                    "resource": Resource.get_from_resource_name(resource),
                     "host": request.get_host(),
                     "environment_key": request.headers.get("X-Environment-Key"),
                 }

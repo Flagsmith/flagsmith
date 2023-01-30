@@ -4,9 +4,9 @@ from __future__ import unicode_literals
 import logging
 from datetime import datetime
 
-from app_analytics.analytics_db_service import (
-    get_total_events_count,
-    get_usage_data,
+from app_analytics.influxdb_wrapper import (
+    get_events_for_organisation,
+    get_multiple_event_list_for_organisation,
 )
 from django.contrib.sites.shortcuts import get_current_site
 from drf_yasg2.utils import swagger_auto_schema
@@ -135,10 +135,26 @@ class OrganisationViewSet(viewsets.ModelViewSet):
         serializer.save()
         return Response(serializer.data, status=200)
 
-    @action(detail=True, methods=["GET"])
+    @swagger_auto_schema(
+        deprecated=True,
+        operation_description="Please use ​​/api​/v1​/organisations​/{organisation_pk}​/usage-data​/total_count​/",
+    )
+    @action(
+        detail=True,
+        methods=["GET"],
+    )
     def usage(self, request, pk):
         organisation = self.get_object()
-        events = get_total_events_count(organisation)
+        try:
+            events = get_events_for_organisation(organisation.id)
+        except (TypeError, ValueError):
+            # TypeError can be thrown when getting service account if not configured
+            # ValueError can be thrown if GA returns a value that cannot be converted to integer
+            return Response(
+                {"error": "Couldn't get number of events for organisation."},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            )
+
         return Response({"events": events}, status=status.HTTP_200_OK)
 
     @action(detail=True, methods=["POST"], url_path="update-subscription")
@@ -197,15 +213,22 @@ class OrganisationViewSet(viewsets.ModelViewSet):
         serializer.save()
         return Response(serializer.data)
 
-    @swagger_auto_schema(query_serializer=InfluxDataQuerySerializer())
+    @swagger_auto_schema(
+        deprecated=True,
+        operation_description="Please use ​​/api​/v1​/organisations​/{organisation_pk}​/usage-data​/",
+        query_serializer=InfluxDataQuerySerializer(),
+    )
     @action(detail=True, methods=["GET"], url_path="influx-data")
     def get_influx_data(self, request, pk):
         filters = InfluxDataQuerySerializer(data=request.query_params)
         filters.is_valid(raise_exception=True)
-        organisation = self.get_object()
-        events_list = get_usage_data(organisation, filters.data)
-
-        serializer = self.get_serializer(data={"events_list": events_list})
+        serializer = self.get_serializer(
+            data={
+                "events_list": get_multiple_event_list_for_organisation(
+                    pk, **filters.data
+                )
+            }
+        )
         serializer.is_valid(raise_exception=True)
         return Response(serializer.data)
 

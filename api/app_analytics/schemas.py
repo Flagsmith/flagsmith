@@ -14,12 +14,12 @@ class UsageData:
 
 
 @dataclass
-class FeatureUsageData:
+class FeatureEvaluationData:
     day: date
     count: int = 0
 
 
-class FeatureUsageDataSchema(Schema):
+class FeatureEvaluationDataSchema(Schema):
     count = fields.Integer(allow_none=True)
     day = fields.Date(allow_none=True)
 
@@ -34,7 +34,7 @@ class FeatureUsageDataSchema(Schema):
 
     @post_load
     def make_usage_data(self, data, **kwargs):
-        return FeatureUsageData(**data)
+        return FeatureEvaluationData(**data)
 
 
 class UsageDataSchema(Schema):

@@ -7,6 +7,27 @@ class Resource(models.IntegerChoices):
     TRAITS = 3
     ENVIRONMENT_DOCUMENT = 4
 
+    @classmethod
+    def get_lowercased_name(cls, resource: int) -> str:
+        member = next(filter(lambda member: member.value == resource, cls), None)
+        if not member:
+            raise ValueError("Invalid resource: {resource}")
+
+        return member.name.lower()
+
+    @classmethod
+    def get_from_resource_name(cls, resource: str) -> int:
+        return (
+            {
+                "flags": cls.FLAGS,
+                "identities": cls.IDENTITIES,
+                "traits": cls.TRAITS,
+                "environment-document": cls.ENVIRONMENT_DOCUMENT,
+            }
+            .get(resource)
+            .value
+        )
+
 
 class APIUsageRaw(models.Model):
     environment_id = models.PositiveIntegerField()
@@ -33,7 +54,6 @@ class FeatureEvaluationRaw(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
 
 
-# TODO: create abstract base class for bucket
 class FeatureEvaluationBucket(models.Model):
     feature_name = models.CharField(max_length=2000)
     environment_id = models.PositiveIntegerField()

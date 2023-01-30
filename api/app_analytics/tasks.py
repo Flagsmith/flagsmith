@@ -1,3 +1,4 @@
+import logging
 from datetime import datetime
 
 from django.db.models import Count, Q, Sum
@@ -11,40 +12,33 @@ from .models import (
     APIUsageRaw,
     FeatureEvaluationBucket,
     FeatureEvaluationRaw,
-    Resource,
 )
+
+logger = logging.getLogger()
 
 
 @register_task_handler()
 def track_feature_evaluation(environment_id, feature_evaluations):
-    feature_evaluations = []
+    feature_evaluation_objects = []
     for feature_name, evaluation_count in feature_evaluations.items():
-        feature_evaluations.append(
+        feature_evaluation_objects.append(
             FeatureEvaluationRaw(
-                feature_name=feature_name, environment_id=environment_id
+                feature_name=feature_name,
+                environment_id=environment_id,
+                evaluation_count=evaluation_count,
             )
         )
-        FeatureEvaluationRaw.objects.bulk_create(**feature_evaluations)
-
-
-# TODO: improve this
-def get_resource_enum(resource):
-    return {
-        "flags": Resource.FLAGS,
-        "identities": Resource.IDENTITIES,
-        "traits": Resource.TRAITS,
-        "environment_document": Resource.ENVIRONMENT_DOCUMENT,
-    }.get(resource)
+    FeatureEvaluationRaw.objects.bulk_create(feature_evaluation_objects)
 
 
 @register_task_handler()
-def track_request(resource: str, host: str, environment_key: str):
+def track_request(resource: int, host: str, environment_key: str):
     environment = Environment.get_from_cache(environment_key)
     if environment is None:
         return
     APIUsageRaw.objects.create(
         environment_id=environment.id,
-        resource=get_resource_enum(resource),
+        resource=resource,
         host=host,
     )
 
