@@ -10,7 +10,6 @@ import ServerSideSDKKeys from '../ServerSideSDKKeys';
 import PaymentModal from '../modals/Payment';
 import Tabs from '../base/forms/Tabs'
 import TabItem from '../base/forms/TabItem'
-import { ColourSelect } from '../AddEditTags';
 import JSONReference from "../JSONReference";
 import ColourSelect from '../tags/ColourSelect';
 const EnvironmentSettingsPage = class extends Component {
