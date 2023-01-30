@@ -306,6 +306,34 @@ module.exports = Object.assign({}, require('./base/_utils'), {
 
         if (typeof val === 'boolean') {
             return {
+                type: 'bool',
+                boolean_value: val,
+                integer_value: null,
+                string_value: null,
+            };
+        }
+
+        if (typeof val === 'number') {
+            return {
+                type: 'int',
+                boolean_value: null,
+                integer_value: val,
+                string_value: null,
+            };
+        }
+
+        return {
+            type: 'unicode',
+            boolean_value: null,
+            integer_value: null,
+            string_value: value === null ? null : val || '',
+        };
+    },
+    valueToTrait(value) {
+        const val = Utils.getTypedValue(value);
+
+        if (typeof val === 'boolean') {
+            return {
                 value_type: 'bool',
                 boolean_value: val,
                 integer_value: null,

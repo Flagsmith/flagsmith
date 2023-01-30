@@ -65,7 +65,7 @@ const controller = {
             {
                 identity: Utils.getShouldSendIdentityToTraits() ? { identifier: store.model && store.model.identity.identifier } : undefined,
                 trait_key,
-                ...(Utils.getIsEdge() ? { trait_value } : Utils.valueToFeatureState(trait_value)),
+                ...(Utils.getIsEdge() ? { trait_value } : Utils.valueToTrait(trait_value)),
             })
             .then(() => controller.getIdentity(environmentId, identity)
                 .then(() => store.saved()))
