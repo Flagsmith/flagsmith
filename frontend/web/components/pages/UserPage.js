@@ -5,13 +5,14 @@ import CreateFlagModal from '../modals/CreateFlag';
 import CreateTraitModal from '../modals/CreateTrait';
 import TryIt from '../TryIt';
 import CreateSegmentModal from '../modals/CreateSegment';
-import FeatureListStore from '../../../common/stores/feature-list-store';
+import FeatureListStore from 'common/stores/feature-list-store';
 import TagSelect from '../TagSelect';
 import { Tag } from '../AddEditTags';
-import _data from '../../../common/data/base/_data';
+import _data from 'common/data/base/_data';
 import JSONReference from "../JSONReference";
-import Constants from "../../../common/constants";
-import Permission from "../../../common/providers/Permission";
+import Constants from "common/constants";
+import Permission from "common/providers/Permission";
+import ConfigProvider from 'common/providers/ConfigProvider';
 
 const returnIfDefined = (value, value2) => {
     if (value === null || value === undefined) {

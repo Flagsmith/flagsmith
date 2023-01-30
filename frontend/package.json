@@ -141,6 +141,7 @@
     "eslint-plugin-jsx-a11y": "6.1.2",
     "eslint-plugin-prettier": "3.0.0",
     "eslint-plugin-react": "7.11.1",
+    "eslint-import-resolver-alias": "^1.1.2",
     "eslint-import-resolver-typescript": "^3.5.2",
     "nodemon": "^2.0.16",
     "raw-loader": "0.5.1",

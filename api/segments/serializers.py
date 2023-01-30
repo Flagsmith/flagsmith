@@ -3,12 +3,6 @@ from rest_framework.exceptions import ValidationError
 from rest_framework.serializers import ListSerializer
 from rest_framework_recursive.fields import RecursiveField
 
-from audit.models import (
-    SEGMENT_CREATED_MESSAGE,
-    SEGMENT_UPDATED_MESSAGE,
-    AuditLog,
-    RelatedObjectType,
-)
 from segments.models import Condition, Segment, SegmentRule
 
 from . import models
@@ -66,13 +60,11 @@ class SegmentSerializer(serializers.ModelSerializer):
         rules_data = validated_data.pop("rules", [])
         segment = Segment.objects.create(**validated_data)
         self._create_segment_rules(rules_data, segment=segment)
-        self._create_audit_log(segment, True)
         return segment
 
     def update(self, instance, validated_data):
         rules_data = validated_data.pop("rules", [])
         self._update_segment_rules(rules_data, segment=instance)
-        self._create_audit_log(instance, False)
         return super().update(instance, validated_data)
 
     def _update_segment_rules(self, rules_data, segment=None):
@@ -82,7 +74,6 @@ class SegmentSerializer(serializers.ModelSerializer):
         """
         segment.rules.set([])
         self._create_segment_rules(rules_data, segment=segment)
-        segment.save()
 
     def _create_segment_rules(self, rules_data, segment=None, rule=None):
         if all(x is None for x in {segment, rule}):
@@ -111,24 +102,6 @@ class SegmentSerializer(serializers.ModelSerializer):
     def _create_conditions(conditions_data, rule):
         for condition in conditions_data:
             Condition.objects.create(rule=rule, **condition)
-
-    def _create_audit_log(self, instance, created):
-        message = (
-            SEGMENT_CREATED_MESSAGE % instance.name
-            if created
-            else SEGMENT_UPDATED_MESSAGE % instance.name
-        )
-        request = self.context.get("request")
-        AuditLog.objects.create(
-            author=None if request.user.is_anonymous else request.user,
-            related_object_id=instance.id,
-            related_object_type=RelatedObjectType.SEGMENT.name,
-            project=instance.project,
-            log=message,
-            master_api_key=request.master_api_key
-            if request.user.is_anonymous
-            else None,
-        )
 
 
 class SegmentSerializerBasic(serializers.ModelSerializer):

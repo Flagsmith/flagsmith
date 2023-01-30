@@ -1,6 +1,7 @@
 import React, { Component } from 'react';
 import Select from 'react-select';
-import Permission from "../../../common/providers/Permission";
+import ConfigProvider from 'common/providers/ConfigProvider';
+import Permission from "common/providers/Permission";
 
 const CreateEnvironmentPage = class extends Component {
     static displayName = 'CreateEnvironmentPage'
@@ -166,7 +167,6 @@ const CreateEnvironmentPage = class extends Component {
                                 </div>
                             )}
                         </div>
-
                     ))}
                 </Permission>
             </div>

@@ -391,7 +391,7 @@ def test_create_feature_returns_400_if_name_does_not_matches_regex(client, proje
 @pytest.mark.parametrize(
     "client", [lazy_fixture("master_api_key_client"), lazy_fixture("admin_client")]
 )
-def test_audit_log_created_when_feature_created(client, project):
+def test_audit_log_created_when_feature_created(client, project, environment):
     # Given
     url = reverse("api-v1:projects:project-features-list", args=[project.id])
     data = {"name": "Test feature flag", "type": "FLAG", "project": project.id}

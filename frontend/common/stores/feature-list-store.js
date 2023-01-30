@@ -1,6 +1,7 @@
 const BaseStore = require('./base/_store');
 const OrganisationStore = require('./organisation-store');
 const data = require('../data/base/_data');
+const { getIsWidget } = require("../../web/components/pages/WidgetPage");
 
 let createdFirstFeature = false;
 const PAGE_SIZE = 200;
@@ -74,7 +75,9 @@ const controller = {
                 };
                 store.loaded();
             }).catch((e) => {
-                document.location.href = '/404?entity=environment';
+                if(!getIsWidget()) {
+                    document.location.href = '/404?entity=environment';
+                }
                 API.ajaxHandler(store, e);
             });
         }
@@ -499,4 +502,4 @@ store.dispatcherIndex = Dispatcher.register(store, (payload) => {
     }
 });
 controller.store = store;
-module.exports = controller.store;
+export default controller.store;

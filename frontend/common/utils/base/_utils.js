@@ -51,7 +51,7 @@ const Utils = {
         };
     },
 
-    toParam(obj) { // {min:100,max:200} -> ?min=100&max=200
+    toParam(obj) { // {min:100,max:200} -> min=100&max=200
         return Object.keys(obj).filter(v => obj[v] !== undefined).map(k => `${encodeURIComponent(k)}=${encodeURIComponent(obj[k])}`).join('&');
     },
 

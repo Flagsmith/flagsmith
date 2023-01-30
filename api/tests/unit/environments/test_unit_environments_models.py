@@ -314,3 +314,28 @@ def test_get_segments_from_cache_does_not_hit_db_if_cache_hit(
     assert segments == [segment_featurestate.feature_segment.segment]
 
     mock_environment_segments_cache.set.assert_not_called()
+
+
+@pytest.mark.parametrize(
+    "environment_value, project_value, expected_result",
+    (
+        (True, True, True),
+        (True, False, True),
+        (False, True, False),
+        (False, False, False),
+        (None, True, True),
+        (None, False, False),
+    ),
+)
+def test_get_hide_disabled_flags(
+    project, environment, environment_value, project_value, expected_result
+):
+    # Given
+    project.hide_disabled_flags = project_value
+    project.save()
+
+    environment.hide_disabled_flags = environment_value
+    environment.save()
+
+    # Then
+    assert environment.get_hide_disabled_flags() is expected_result
