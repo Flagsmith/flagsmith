@@ -1,21 +1,18 @@
 from datetime import date, timedelta
 from typing import List
 
+from app_analytics.dataclasses import FeatureEvaluationData, UsageData
+from app_analytics.influxdb_wrapper import get_events_for_organisation
 from app_analytics.influxdb_wrapper import (
-    get_events_for_organisation,
-    get_multiple_event_list_for_feature,
-    get_multiple_event_list_for_organisation,
+    get_feature_evaluation_data as get_feature_evaluation_data_from_influxdb,
+)
+from app_analytics.influxdb_wrapper import (
+    get_usage_data as get_usage_data_from_influxdb,
 )
 from app_analytics.models import (
     APIUsageBucket,
     FeatureEvaluationBucket,
     Resource,
-)
-from app_analytics.schemas import (
-    FeatureEvaluationData,
-    FeatureEvaluationDataSchema,
-    UsageData,
-    UsageDataSchema,
 )
 from django.conf import settings
 from django.db.models import Sum
@@ -37,15 +34,6 @@ def get_usage_data(
     return get_usage_data_from_influxdb(
         organisation, environment_id=environment_id, project_id=project_id
     )
-
-
-def get_usage_data_from_influxdb(
-    organisation, environment_id=None, project_id=None
-) -> List[UsageData]:
-    events_list = get_multiple_event_list_for_organisation(
-        organisation.pk, environment_id, project_id
-    )
-    return UsageDataSchema(many=True).load(events_list)
 
 
 def _get_environment_ids_for_org(organisation) -> List[int]:
@@ -111,15 +99,14 @@ def get_total_events_count(organisation) -> int:
 
 def get_feature_evaluation_data(
     feature: Feature, environment_id: int, period: int = 30
-):
+) -> List[FeatureEvaluationData]:
     if settings.USE_POSTGRES_FOR_ANALYTICS:
         return get_feature_evaluation_data_from_local_db(
             feature, environment_id, period
         )
-    influx_data = get_multiple_event_list_for_feature(
+    return get_feature_evaluation_data_from_influxdb(
         feature_name=feature.name, environment_id=environment_id, period=f"{period}d"
     )
-    return FeatureEvaluationDataSchema(many=True).load(influx_data)
 
 
 def get_feature_evaluation_data_from_local_db(

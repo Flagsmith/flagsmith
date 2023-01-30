@@ -4,7 +4,7 @@ from unittest import TestCase, mock
 
 import pytest
 import pytz
-from app_analytics.schemas import FeatureEvaluationData
+from app_analytics.dataclasses import FeatureEvaluationData
 from core.constants import FLAGSMITH_UPDATED_AT_HEADER
 from django.forms import model_to_dict
 from django.urls import reverse

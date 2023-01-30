@@ -16,7 +16,6 @@ class UsageDataPermission(BasePermission):
             "User does not have sufficient privileges to perform this action"
         )
 
-    # def has_object_permission(self, request, view, obj):
-    #     organisation_id = view.kwargs.get("organisation_pk")
-    #     organisation = Organisation.objects.get(id=organisation_id)
-    #     return request.user.is_organisation_admin(organisation)
+    def has_object_permission(self, request, view, obj):
+        # Object level permissions are not required for the usage data API
+        return NotImplementedError

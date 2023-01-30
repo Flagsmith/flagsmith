@@ -1,22 +1,6 @@
-from dataclasses import dataclass
-from datetime import date
-
 from marshmallow import INCLUDE, Schema, fields, post_load, pre_load
 
-
-@dataclass
-class UsageData:
-    day: date
-    flags: int = 0
-    traits: int = 0
-    identities: int = 0
-    environment_document: int = 0
-
-
-@dataclass
-class FeatureEvaluationData:
-    day: date
-    count: int = 0
+from .dataclasses import FeatureEvaluationData, UsageData
 
 
 class FeatureEvaluationDataSchema(Schema):

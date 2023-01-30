@@ -1,6 +1,6 @@
 from datetime import date, timedelta
 
-from app_analytics.schemas import UsageData
+from app_analytics.dataclasses import UsageData
 from app_analytics.views import SDKAnalyticsFlags
 from django.urls import reverse
 from rest_framework import status

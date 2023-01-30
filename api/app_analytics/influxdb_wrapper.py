@@ -9,6 +9,9 @@ from sentry_sdk import capture_exception
 from urllib3 import Retry
 from urllib3.exceptions import HTTPError
 
+from .dataclasses import FeatureEvaluationData, UsageData
+from .influxdb_schema import FeatureEvaluationDataSchema, UsageDataSchema
+
 logger = logging.getLogger(__name__)
 
 url = settings.INFLUXDB_URL
@@ -96,7 +99,7 @@ class InfluxDBWrapper:
             return []
 
 
-def get_events_for_organisation(organisation_id: id, date_range: str = "30d"):
+def get_events_for_organisation(organisation_id: id, date_range: str = "30d") -> int:
     """
     Query influx db for usage for given organisation id
 
@@ -197,6 +200,15 @@ def get_multiple_event_list_for_organisation(
     return dataset
 
 
+def get_usage_data(
+    organisation_id: int, project_id: int = None, environment_id=None
+) -> typing.List[UsageData]:
+    events_list = get_multiple_event_list_for_organisation(
+        organisation_id, project_id, environment_id
+    )
+    return UsageDataSchema(many=True).load(events_list)
+
+
 def get_multiple_event_list_for_feature(
     environment_id: int,
     feature_name: str,
@@ -249,6 +261,15 @@ def get_multiple_event_list_for_feature(
             dataset[i]["datetime"] = record.values["_time"].strftime("%Y-%m-%d")
 
     return dataset
+
+
+def get_feature_evaluation_data(
+    environment_id, feature_name, period: str = "30d"
+) -> typing.List[FeatureEvaluationData]:
+    data = get_multiple_event_list_for_feature(
+        feature_name=feature_name, environment_id=environment_id, period=period
+    )
+    return FeatureEvaluationDataSchema(many=True).load(data)
 
 
 def get_top_organisations(date_range: str, limit: str = ""):
