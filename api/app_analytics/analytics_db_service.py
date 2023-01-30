@@ -21,8 +21,6 @@ from django.utils import timezone
 from environments.models import Environment
 from features.models import Feature
 
-USAGE_READ_BUCKET_SIZE = 15
-
 
 def get_usage_data(
     organisation, environment_id=None, project_id=None
@@ -51,7 +49,7 @@ def get_usage_data_from_local_db(
 ) -> List[UsageData]:
     qs = APIUsageBucket.objects.filter(
         environment_id__in=_get_environment_ids_for_org(organisation),
-        bucket_size=USAGE_READ_BUCKET_SIZE,
+        bucket_size=settings.ANALYTICS_READ_BUCKET_SIZE,
     )
     if project_id:
         qs = qs.filter(project_id=project_id)
@@ -90,7 +88,7 @@ def get_total_events_count(organisation) -> int:
             environment_id__in=_get_environment_ids_for_org(organisation),
             created_at__date__lte=date.today(),
             created_at__date__gt=date.today() - timedelta(days=30),
-            bucket_size=USAGE_READ_BUCKET_SIZE,
+            bucket_size=settings.ANALYTICS_READ_BUCKET_SIZE,
         ).aggregate(total_count=Sum("total_count"))["total_count"]
     else:
         events = get_events_for_organisation(organisation.id)
@@ -115,7 +113,7 @@ def get_feature_evaluation_data_from_local_db(
     feature_evaluation_data = (
         FeatureEvaluationBucket.objects.filter(
             environment_id=environment_id,
-            bucket_size=USAGE_READ_BUCKET_SIZE,
+            bucket_size=settings.ANALYTICS_READ_BUCKET_SIZE,
             created_at__date__lte=timezone.now(),
             created_at__date__gt=timezone.now() - timedelta(days=period),
         )

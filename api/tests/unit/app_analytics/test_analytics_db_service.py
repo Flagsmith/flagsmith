@@ -2,7 +2,6 @@ from datetime import date, timedelta
 
 import pytest
 from app_analytics.analytics_db_service import (
-    USAGE_READ_BUCKET_SIZE,
     get_feature_evaluation_data_from_local_db,
     get_total_events_count,
     get_usage_data_from_local_db,
@@ -16,9 +15,11 @@ from django.utils import timezone
 
 
 @pytest.mark.django_db(databases=["analytics", "default"])
-def test_get_usage_data_from_local_db(organisation, environment):
+def test_get_usage_data_from_local_db(organisation, environment, settings):
     environment_id = environment.id
     now = timezone.now()
+    read_bucket_size = 15
+    settings.ANALYTICS_BUCKET_SIZE = read_bucket_size
 
     # Given - some initial data
     for i in range(31):
@@ -27,7 +28,7 @@ def test_get_usage_data_from_local_db(organisation, environment):
                 environment_id=environment_id,
                 resource=resource,
                 total_count=10,
-                bucket_size=USAGE_READ_BUCKET_SIZE,
+                bucket_size=read_bucket_size,
                 created_at=now - timedelta(days=i),
             )
             # some data in different bucket
@@ -35,7 +36,7 @@ def test_get_usage_data_from_local_db(organisation, environment):
                 environment_id=environment_id,
                 resource=resource,
                 total_count=10,
-                bucket_size=USAGE_READ_BUCKET_SIZE - 1,
+                bucket_size=read_bucket_size - 1,
                 created_at=now - timedelta(days=i),
             )
             # some data in different environment
@@ -43,7 +44,7 @@ def test_get_usage_data_from_local_db(organisation, environment):
                 environment_id=999999,
                 resource=resource,
                 total_count=10,
-                bucket_size=USAGE_READ_BUCKET_SIZE - 1,
+                bucket_size=read_bucket_size,
                 created_at=now - timedelta(days=i),
             )
 
@@ -66,6 +67,8 @@ def test_get_total_events_count(organisation, environment, settings):
     settings.USE_POSTGRES_FOR_ANALYTICS = True
     environment_id = environment.id
     now = timezone.now()
+    read_bucket_size = 15
+    settings.ANALYTICS_BUCKET_SIZE = read_bucket_size
 
     # Given - some initial data
     for i in range(31):
@@ -74,7 +77,7 @@ def test_get_total_events_count(organisation, environment, settings):
                 environment_id=environment_id,
                 resource=resource,
                 total_count=10,
-                bucket_size=USAGE_READ_BUCKET_SIZE,
+                bucket_size=read_bucket_size,
                 created_at=now - timedelta(days=i),
             )
             # some data in different bucket
@@ -82,7 +85,7 @@ def test_get_total_events_count(organisation, environment, settings):
                 environment_id=environment_id,
                 resource=resource,
                 total_count=10,
-                bucket_size=USAGE_READ_BUCKET_SIZE - 1,
+                bucket_size=read_bucket_size - 1,
                 created_at=now - timedelta(days=i),
             )
             # some data in different environment
@@ -90,7 +93,7 @@ def test_get_total_events_count(organisation, environment, settings):
                 environment_id=999999,
                 resource=resource,
                 total_count=10,
-                bucket_size=USAGE_READ_BUCKET_SIZE - 1,
+                bucket_size=read_bucket_size,
                 created_at=now - timedelta(days=i),
             )
     # When
@@ -101,10 +104,12 @@ def test_get_total_events_count(organisation, environment, settings):
 
 
 @pytest.mark.django_db(databases=["analytics", "default"])
-def test_get_feature_evaluation_data_from_local_db(feature, environment):
+def test_get_feature_evaluation_data_from_local_db(feature, environment, settings):
     environment_id = environment.id
     feature_name = feature.name
     now = timezone.now()
+    read_bucket_size = 15
+    settings.ANALYTICS_BUCKET_SIZE = read_bucket_size
 
     # Given - some initial data
     for i in range(31):
@@ -112,7 +117,7 @@ def test_get_feature_evaluation_data_from_local_db(feature, environment):
             environment_id=environment_id,
             feature_name=feature_name,
             total_count=10,
-            bucket_size=USAGE_READ_BUCKET_SIZE,
+            bucket_size=read_bucket_size,
             created_at=now - timedelta(days=i),
         )
         # some data in different bucket
@@ -120,7 +125,7 @@ def test_get_feature_evaluation_data_from_local_db(feature, environment):
             environment_id=environment_id,
             feature_name=feature_name,
             total_count=10,
-            bucket_size=USAGE_READ_BUCKET_SIZE - 1,
+            bucket_size=read_bucket_size - 1,
             created_at=now - timedelta(days=i),
         )
 
@@ -129,7 +134,7 @@ def test_get_feature_evaluation_data_from_local_db(feature, environment):
             environment_id=99999,
             feature_name=feature_name,
             total_count=10,
-            bucket_size=USAGE_READ_BUCKET_SIZE - 1,
+            bucket_size=read_bucket_size,
             created_at=now - timedelta(days=i),
         )
 

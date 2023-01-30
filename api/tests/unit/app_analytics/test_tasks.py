@@ -134,7 +134,7 @@ def test_populate_api_usage_bucket_using_a_bucket(freezer):
     # Given
     environment_id = 1
 
-    # let's create 3 5m buckets
+    # let's create 3, 5m buckets
     now = timezone.now()
     for _ in range(3):
         APIUsageBucket.objects.create(
