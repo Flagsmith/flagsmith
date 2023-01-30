@@ -57,18 +57,19 @@ export const createTrait = async (index, id, value) => {
     await setText('[name="traitID"]', id);
     await setText('[name="traitValue"]', value);
     await click('#create-trait-btn');
-    await t.wait(500);
+    await t.wait(10000);
     await t.eval(() => location.reload(true));
     await waitForElementVisible(byId(`user-trait-value-${index}`));
     const expectedValue = typeof value === 'string' ? `"${value}"` : `${value}`;
     await assertTextContent(byId(`user-trait-value-${index}`), expectedValue);
-    await t.wait(10000)
 };
 
 export const deleteTrait = async (index) => {
     await click(byId(`delete-user-trait-${index}`));
     await click('#confirm-btn-yes');
     await waitForElementNotExist(byId(`user-trait-${index}`));
+    await t.wait(10000);
+    await t.eval(() => location.reload(true));
 };
 
 // eslint-disable-next-line no-console
