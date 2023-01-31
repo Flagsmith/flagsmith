@@ -1,6 +1,6 @@
 import logging
 import typing
-from datetime import datetime
+from datetime import datetime, timedelta
 from inspect import getmodule
 from threading import Thread
 
@@ -14,15 +14,18 @@ from task_processor.task_run_method import TaskRunMethod
 logger = logging.getLogger(__name__)
 
 
-def register_task_handler(task_name: str = None):
+def register_task_handler(task_name: str = None, run_every: timedelta = None):
     def decorator(f: typing.Callable):
         nonlocal task_name
 
         task_name = task_name or f.__name__
         task_module = getmodule(f).__name__.rsplit(".")[-1]
         task_identifier = f"{task_module}.{task_name}"
-
         register_task(task_identifier, f)
+        if run_every and not settings.TASK_RUN_METHOD == TaskRunMethod.TASK_PROCESSOR:
+            raise ValueError(
+                "run_every can only be used with TASK_PROCESSOR run method"
+            )
 
         def delay(
             *,
@@ -41,7 +44,6 @@ def register_task_handler(task_name: str = None):
                 return
 
             if settings.TASK_RUN_METHOD == TaskRunMethod.SYNCHRONOUSLY:
-                logger.debug("Running task '%s' synchronously", task_identifier)
                 f(*args, **kwargs)
             elif settings.TASK_RUN_METHOD == TaskRunMethod.SEPARATE_THREAD:
                 logger.debug("Running task '%s' in separate thread", task_identifier)
@@ -51,6 +53,7 @@ def register_task_handler(task_name: str = None):
                 task = Task.schedule_task(
                     schedule_for=delay_until or timezone.now(),
                     task_identifier=task_identifier,
+                    run_every=run_every,
                     args=args,
                     kwargs=kwargs,
                 )

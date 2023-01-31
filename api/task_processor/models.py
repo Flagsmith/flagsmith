@@ -1,7 +1,7 @@
 import json
 import typing
 import uuid
-from datetime import datetime
+from datetime import datetime, timedelta
 
 from django.db import models
 from django.utils import timezone
@@ -14,6 +14,7 @@ class Task(models.Model):
     uuid = models.UUIDField(unique=True, default=uuid.uuid4)
     created_at = models.DateTimeField(auto_now_add=True)
     scheduled_for = models.DateTimeField(blank=True, null=True, default=timezone.now)
+    run_every = models.DurationField(blank=True, null=True)
 
     task_identifier = models.CharField(max_length=200)
     serialized_args = models.TextField(blank=True, null=True)
@@ -38,12 +39,14 @@ class Task(models.Model):
     def create(
         cls,
         task_identifier: str,
+        run_every: timedelta = None,
         *,
         args: typing.Tuple[typing.Any] = None,
         kwargs: typing.Dict[str, typing.Any] = None,
     ) -> "Task":
         return Task(
             task_identifier=task_identifier,
+            run_every=run_every,
             serialized_args=cls._serialize_data(args or tuple()),
             serialized_kwargs=cls._serialize_data(kwargs or dict()),
         )
@@ -53,13 +56,41 @@ class Task(models.Model):
         cls,
         schedule_for: datetime,
         task_identifier: str,
+        run_every: timedelta = None,
         *,
         args: typing.Tuple[typing.Any] = None,
         kwargs: typing.Dict[str, typing.Any] = None,
     ) -> "Task":
-        task = cls.create(task_identifier=task_identifier, args=args, kwargs=kwargs)
+        task = cls.create(
+            task_identifier=task_identifier,
+            run_every=run_every,
+            args=args,
+            kwargs=kwargs,
+        )
         task.scheduled_for = schedule_for
         return task
+
+    @property
+    def is_next_run_scheduled(self) -> bool:
+        return (
+            Task.objects.filter(
+                task_identifier=self.task_identifier,
+                run_every=self.run_every,
+                scheduled_for=self.scheduled_for + self.run_every,
+            )
+            .exclude(id=self.id)
+            .exists()
+        )
+
+    def schedule_next_run(self) -> "Task":
+        next_task_schedule = self.scheduled_for + self.run_every
+        return Task(
+            scheduled_for=next_task_schedule,
+            task_identifier=self.task_identifier,
+            run_every=self.run_every,
+            serialized_args=self.serialized_args,
+            serialized_kwargs=self.serialized_kwargs,
+        )
 
     def run(self):
         return self.callable(*self.args, **self.kwargs)

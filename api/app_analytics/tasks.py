@@ -1,5 +1,6 @@
 from datetime import datetime
 
+from django.conf import settings
 from django.db.models import Count, Q, Sum
 from django.utils import timezone
 
@@ -90,7 +91,6 @@ def get_start_of_current_bucket(bucket_size: int) -> datetime:
     return start_of_current_bucket
 
 
-@register_task_handler()
 def populate_api_usage_bucket(
     bucket_size: int, run_every: int, source_bucket_size: int = None
 ):
@@ -114,7 +114,18 @@ def populate_api_usage_bucket(
             )
 
 
-@register_task_handler()
+if settings.USE_POSTGRES_FOR_ANALYTICS:
+
+    @register_task_handler(run_every=60)
+    def populate_bucket_size_task(
+        bucket_size: int, run_every: int, source_bucket_size: int = None
+    ):
+        populate_api_usage_bucket(bucket_size, run_every, source_bucket_size)
+        populate_feature_evaluation_bucket(bucket_size, run_every, source_bucket_size)
+
+    populate_bucket_size_task.delay(settings.ANALYTICS_READ_BUCKET_SIZE, 60)
+
+
 def populate_feature_evaluation_bucket(
     bucket_size: int, run_every: int, source_bucket_size: int = None
 ):
